@@ -45,7 +45,7 @@ import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {minWinSendToChildWin, openABSFileLocated, openPacketNewWindow} from "@/utils/openWebsite"
-import {sorterFunction} from "../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import {parseStatusCodes, sorterFunction} from "../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import emiter from "@/utils/eventBus/eventBus"
 import {HTTPHistoryAnalysisPageInfo, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -1035,12 +1035,19 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
 })
 
 interface QueryAnalyzedHTTPFlowRuleFilter {
-    RuleVerboseName?: string
-    ExtractedContent?: string
+    Methods: string[]
+    SearchURL: string
+    StatusCode: string
+    RuleVerboseName: string
+    ExtractedContent: string
 }
 export interface HTTPFlowRuleData {
     Id: number
     HTTPFlowId: number
+    Method: string
+    StatusCode: string
+    Url: string
+    IPAddress: string
     RuleVerboseName: string
     Rule: string
     ExtractedContent: string
@@ -1076,6 +1083,9 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
     const tableRef = useRef<any>(null)
     const [loading, setLoading] = useState<boolean>(false)
     const [tableQuery, setTableQuery] = useState<QueryAnalyzedHTTPFlowRuleFilter>({
+        Methods: [],
+        StatusCode: "",
+        SearchURL: "",
         RuleVerboseName: "",
         ExtractedContent: ""
     })
@@ -1126,14 +1136,47 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
     const queryUpdateData = useDebounceFn(
         () => {
             try {
-                if (tableQuery.RuleVerboseName || tableQuery.ExtractedContent) {
+                if (
+                    tableQuery.Methods.length > 0 ||
+                    tableQuery.StatusCode ||
+                    tableQuery.SearchURL ||
+                    tableQuery.RuleVerboseName ||
+                    tableQuery.ExtractedContent
+                ) {
                     const newDataTable = sorterFunction(tableData, getSorterTable()) || []
                     const l = newDataTable.length
                     const searchList: HTTPFlowRuleData[] = []
                     for (let index = 0; index < l; index++) {
                         const record = newDataTable[index]
+
+                        let methodsIsPush = true
+                        let statusCodeIsPush = true
+                        let searchURLIsPush = true
+
                         let ruleVerboseNameIsPush = true
                         let extractedContentIsPush = true
+
+                        if (tableQuery.Methods.length) {
+                            methodsIsPush = tableQuery.Methods.includes(record.Method)
+                        }
+
+                        if (tableQuery.StatusCode) {
+                            const statusCodes = parseStatusCodes(tableQuery.StatusCode)
+                            const codeIsPushArr: boolean[] = []
+                            for (let index = 0; index < statusCodes.length; index++) {
+                                const element = statusCodes[index]
+                                if (record.StatusCode == element) {
+                                    codeIsPushArr.push(true)
+                                } else {
+                                    codeIsPushArr.push(false)
+                                }
+                            }
+                            statusCodeIsPush = codeIsPushArr.includes(true)
+                        }
+
+                        if (tableQuery.SearchURL) {
+                            searchURLIsPush = record.Url.includes(tableQuery.SearchURL)
+                        }
 
                         if (tableQuery.RuleVerboseName) {
                             ruleVerboseNameIsPush = record.RuleVerboseName.toLocaleLowerCase().includes(
@@ -1147,7 +1190,13 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                             )
                         }
 
-                        if (ruleVerboseNameIsPush && extractedContentIsPush) {
+                        if (
+                            methodsIsPush &&
+                            statusCodeIsPush &&
+                            searchURLIsPush &&
+                            ruleVerboseNameIsPush &&
+                            extractedContentIsPush
+                        ) {
                             searchList.push(record)
                         }
                     }
@@ -1268,6 +1317,71 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                 title: "数据包ID",
                 dataKey: "HTTPFlowId",
                 width: 100
+            },
+            {
+                title: "方法",
+                dataKey: "Method",
+                width: 80,
+                filterProps: {
+                    filterKey: "Methods",
+                    filtersType: "select",
+                    filterMultiple: true,
+                    filters: [
+                        {
+                            label: "GET",
+                            value: "GET"
+                        },
+                        {
+                            label: "POST",
+                            value: "POST"
+                        },
+                        {
+                            label: "HEAD",
+                            value: "HEAD"
+                        },
+                        {
+                            label: "PUT",
+                            value: "PUT"
+                        },
+                        {
+                            label: "DELETE",
+                            value: "DELETE"
+                        }
+                    ]
+                }
+            },
+            {
+                title: "状态码",
+                dataKey: "StatusCode",
+                width: 100,
+                filterProps: {
+                    filterKey: "StatusCode",
+                    filtersType: "input",
+                    filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />,
+                    filterInputProps: {
+                        placeholder: "支持输入200,200-204格式，多个用逗号分隔",
+                        wrapperStyle: {width: 270},
+                        onRegular: (value) => {
+                            // 只允许输入数字、逗号和连字符，去掉所有其他字符
+                            return value.replace(/[^0-9,-]/g, "")
+                        }
+                    }
+                }
+            },
+            {
+                title: "URL",
+                dataKey: "Url",
+                width: 400,
+                filterProps: {
+                    filterKey: "SearchURL",
+                    filtersType: "input",
+                    filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
+                }
+            },
+            {
+                title: "IP",
+                dataKey: "IPAddress",
+                width: 200
             },
             {
                 title: "规则名",

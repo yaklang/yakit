@@ -7,7 +7,6 @@ import {HTTPFlowDetail, HTTPFlowDetailProp} from "../HTTPFlowDetail"
 import {info, yakitNotify, yakitFailed} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTimestamp} from "../../utils/timeUtil"
-import {useHotkeys} from "react-hotkeys-hook"
 import {
     useCreation,
     useDebounceEffect,
@@ -77,9 +76,6 @@ import {
     OutlineSearchIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {YakitEditorKeyCode} from "../yakitUI/YakitEditor/YakitEditorType"
-import {YakitSystem} from "@/yakitGVDefine"
-import {convertKeyboard} from "../yakitUI/YakitEditor/editorUtils"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
@@ -107,6 +103,8 @@ import {getGlobalShortcutKeyEvents} from "@/utils/globalShortcutKey/events/globa
 import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {isEqual} from "lodash"
+import {defalutColumnsOrder} from "@/pages/hTTPHistoryAnalysis/HTTPHistory/HTTPHistoryFilter"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -1584,7 +1582,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 setBackgroundRefresh(!!value)
             })
             .catch(() => {})
-    }, [])
+    }, [inViewport])
 
     // 实时更新滚动条位置
     const scrollSize = useRef<{scrollTop: number; scrollBottomPercent: number}>({scrollTop: 0, scrollBottomPercent: 0})
@@ -1715,47 +1713,50 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     ).run
 
     // 需要完全排除列字段，表格不可能出现的列
-    const noColumnsKey: string[] = []
+    const noColumnsKey: string[] = ["Payloads"]
     // 排除展示的列
     const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(noColumnsKey)
     // 默认所有列展示顺序
-    const defalutColumnsOrderRef = useRef<string[]>([
-        "Method",
-        "StatusCode",
-        "Url",
-        "FromPlugin",
-        "Tags",
-        "IPAddress",
-        "BodyLength",
-        "HtmlTitle",
-        "GetParamsTotal",
-        "ContentType",
-        "DurationMs",
-        "UpdatedAt",
-        "RequestSizeVerbose"
-    ])
+    const defalutColumnsOrderRef = useRef<string[]>(defalutColumnsOrder.filter((key) => !noColumnsKey.includes(key)))
     // 所有列展示顺序
     const [columnsOrder, setColumnsOrder] = useState<string[]>([])
     useEffect(() => {
-        // 获取不展示列
-        getRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey).then((res) => {
-            if (res) {
-                const arr = res.split(",")
-                setExcludeColumnsKey([...arr, ...noColumnsKey])
-            }
-        })
-        // 获取所有列顺序
-        getRemoteValue(RemoteHistoryGV.HistroyColumnsOrder).then((res) => {
-            try {
-                const arr = JSON.parse(res) || []
-                // 确保顺序缓存里面的key一定在默认所有列中存在
-                const realArr = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
-                // 如果列表有新增列，顺序从新再次缓存
-                setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(realArr))
-                setColumnsOrder(realArr)
-            } catch (error) {}
-        })
-    }, [pageType])
+        if (inViewport) {
+            Promise.allSettled([
+                getRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey),
+                getRemoteValue(RemoteHistoryGV.HistroyColumnsOrder)
+            ]).then((res) => {
+                let refreshTabelKey = false
+                if (res[0].status === "fulfilled") {
+                    const arr = res[0].value.split(",")
+                    const excludeKeys = [...arr, ...noColumnsKey].filter((key) => key)
+                    if (!isEqual(excludeKeys, excludeColumnsKey)) {
+                        refreshTabelKey = true
+                        setExcludeColumnsKey(excludeKeys)
+                    }
+                }
+                if (res[1].status === "fulfilled") {
+                    try {
+                        const arr = JSON.parse(res[1].value) || []
+                        // 确保顺序缓存里面的key一定在默认所有列中存在
+                        const realArr = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
+                        setRemoteValue(
+                            RemoteHistoryGV.HistroyColumnsOrder,
+                            JSON.stringify(realArr.filter((key) => !noColumnsKey.includes(key)))
+                        )
+                        if (!isEqual(realArr, columnsOrder)) {
+                            refreshTabelKey = true
+                            setColumnsOrder(realArr)
+                        }
+                    } catch (error) {}
+                }
+
+                if (refreshTabelKey) {
+                    setTableKeyNumber(uuidv4())
+                }
+            })
+        }
+    }, [inViewport])
     // 表格可配置列
     const configColumnRef = useRef<ColumnAllInfoItem[]>([])
     // 表格的key值
@@ -2098,18 +2099,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         </div>
                     )
                 }
-                // 此处排序会使偏移量新数据进入时乱序(ps：后续处理，考虑此处排序时偏移量新增数据在页面上不更新)
-                // sorterProps: {
-                //     sorter: true
-                // }
             },
             {
                 title: "请求时间",
                 dataKey: "UpdatedAt",
-                // sorterProps: {
-                //     sorterKey: "updated_at",
-                //     sorter: true
-                // },
                 filterProps: {
                     filterKey: "UpdatedAt",
                     filtersType: "dateTime"
@@ -2172,7 +2165,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         let finalColumns: ColumnsTypeProps[] = []
         // 排序
         if (columnsOrder.length) {
-            // 提取 Id 和 action 和 Payloads
+            // 提取 Id 和 action
             const idColumn = columnArr.find((col) => col.dataKey === "Id")
             const actionColumn = columnArr.find((col) => col.dataKey === "action")
             // 过滤掉 Id 和 action以及不可能出现的列
@@ -4273,7 +4266,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             )}
             {advancedSetVisible && (
                 <AdvancedSet
-                    columnsAllStr={JSON.stringify(configColumnRef.current)}
+                    columnsAllStr={JSON.stringify(
+                        configColumnRef.current.filter((item) => !noColumnsKey.includes(item.dataKey))
+                    )}
                     onCancel={() => {
                         setAdvancedSetVisible(false)
                     }}
@@ -5010,13 +5005,14 @@ interface AdvancedSetSaveItem {
     configColumnsAll: ColumnAllInfoItem[]
 }
 interface AdvancedSetProps {
+    showBackgroundRefresh?: boolean
     columnsAllStr: string
     onCancel: () => void
     onSave: (setting: AdvancedSetSaveItem) => void
     defalutColumnsOrder: string[]
 }
-const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
-    const {columnsAllStr, onCancel, onSave, defalutColumnsOrder} = props
+export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
+    const {showBackgroundRefresh = true, columnsAllStr, onCancel, onSave, defalutColumnsOrder} = props
     /** ---------- 后台刷新 Start ---------- */
     const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
     const oldBackgroundRefresh = useRef<boolean>(false)
@@ -5134,23 +5130,25 @@ const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
             maskClosable={false}
         >
             <div className={style["history-advanced-set-cont"]}>
-                <div className={style["history-advanced-set-item"]}>
-                    <div className={style["history-advanced-set-item-title"]}>刷新配置</div>
-                    <div className={style["history-advanced-set-item-cont"]}>
-                        <div className={style["backgroundRefresh"]}>
-                            <YakitCheckbox
-                                checked={backgroundRefresh}
-                                onChange={(e) => {
-                                    setBackgroundRefresh(e.target.checked)
-                                }}
-                            />
-                            <span className={style["title-style"]}>后台刷新</span>
-                            <Tooltip title='勾选后不在当前页面也会刷新流量数据'>
-                                <OutlineInformationcircleIcon className={style["hint-style"]} />
-                            </Tooltip>
+                {showBackgroundRefresh && (
+                    <div className={style["history-advanced-set-item"]}>
+                        <div className={style["history-advanced-set-item-title"]}>刷新配置</div>
+                        <div className={style["history-advanced-set-item-cont"]}>
+                            <div className={style["backgroundRefresh"]}>
+                                <YakitCheckbox
+                                    checked={backgroundRefresh}
+                                    onChange={(e) => {
+                                        setBackgroundRefresh(e.target.checked)
+                                    }}
+                                />
+                                <span className={style["title-style"]}>后台刷新</span>
+                                <Tooltip title='勾选后不在当前页面也会刷新流量数据'>
+                                    <OutlineInformationcircleIcon className={style["hint-style"]} />
+                                </Tooltip>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
                 <div className={style["history-advanced-set-item"]}>
                     <div className={style["history-advanced-set-item-title"]}>
                         列表展示字段和顺序
