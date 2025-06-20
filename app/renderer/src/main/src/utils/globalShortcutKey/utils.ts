@@ -126,7 +126,7 @@ export const parseShortcutKeyEvent = (keys: string[]): string | null => {
     try {
         const triggerKeys = sortKeysCombination(keys).join("")
         const pageKeyInfo = pageEventMaps[currentPageHandler || "global"]
-        
+
         if (!pageKeyInfo) return null
         const pageEvents = pageKeyInfo.getEvents()
         const pageEventKeys = Object.keys(pageEvents)
@@ -158,15 +158,18 @@ export const handleShortcutKey = (ev: KeyboardEvent) => {
     const keys = convertKeyEventToKeyCombination(ev)
     if (!keys) return
     if (getIsActiveShortcutKeyPage()) {
-        emiter.emit("onGlobalShortcutKey",  `setShortcutKey(${keys.join("|")})`)
+        emiter.emit("onGlobalShortcutKey", `setShortcutKey(${keys.join("|")})`)
         return
     } else {
         const eventName = parseShortcutKeyEvent(keys)
         if (!eventName) return
-        emiter.emit("onGlobalShortcutKey", JSON.stringify({
-            eventName,
-            currentFocus
-        }) )
+        emiter.emit(
+            "onGlobalShortcutKey",
+            JSON.stringify({
+                eventName,
+                currentFocus
+            })
+        )
         return
     }
 }

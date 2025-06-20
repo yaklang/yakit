@@ -5,6 +5,12 @@ import {
     setStorageGlobalShortcutKeyEvents
 } from "./global"
 import {
+    getHttpFuzzerShortcutKeyEvents,
+    getStorageHttpFuzzerShortcutKeyEvents,
+    resetHttpFuzzerShortcutKeyEvents,
+    setStorageHttpFuzzerShortcutKeyEvents
+} from "./page/httpFuzzer"
+import {
     getPluginHubShortcutKeyEvents,
     getStoragePluginHubShortcutKeyEvents,
     resetPluginHubShortcutKeyEvents,
@@ -63,6 +69,8 @@ export enum ShortcutKeyPage {
     Global = "global",
 
     /* 页面快捷键 */
+    // WebFuzzer
+    HTTPFuzzer = YakitRoute.HTTPFuzzer,
     // 插件仓库
     PluginHub = YakitRoute.Plugin_Hub,
 
@@ -78,14 +86,21 @@ export enum ShortcutKeyPage {
 }
 export type ShortcutKeyPageName = `${ShortcutKeyPage}`
 
-const {Yakit, EnpriTrace,IRify} = PRODUCT_RELEASE_EDITION
+const {Yakit, EnpriTrace, IRify} = PRODUCT_RELEASE_EDITION
 /** 存放全局和所有页面的快捷键映射事件集合 */
 export const pageEventMaps: Record<ShortcutKeyPage, PageToEventInfo> = {
     global: {
         getEvents: getGlobalShortcutKeyEvents,
         resetEvents: resetGlobalShortcutKeyEvents,
         getStorage: getStorageGlobalShortcutKeyEvents,
-        setStorage: setStorageGlobalShortcutKeyEvents,
+        setStorage: setStorageGlobalShortcutKeyEvents
+    },
+    httpFuzzer: {
+        getEvents: getHttpFuzzerShortcutKeyEvents,
+        resetEvents: resetHttpFuzzerShortcutKeyEvents,
+        getStorage: getStorageHttpFuzzerShortcutKeyEvents,
+        setStorage: setStorageHttpFuzzerShortcutKeyEvents,
+        scopeShow: [Yakit, EnpriTrace]
     },
     "plugin-hub": {
         getEvents: getPluginHubShortcutKeyEvents,
@@ -105,7 +120,7 @@ export const pageEventMaps: Record<ShortcutKeyPage, PageToEventInfo> = {
         getEvents: getYakRunnerShortcutKeyEvents,
         resetEvents: resetYakRunnerShortcutKeyEvents,
         getStorage: getStorageYakRunnerShortcutKeyEvents,
-        setStorage: setStorageYakRunnerShortcutKeyEvents,
+        setStorage: setStorageYakRunnerShortcutKeyEvents
         // scopeShow: [IRify]
     },
     "chat-cs": {

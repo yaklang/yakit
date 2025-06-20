@@ -36,7 +36,6 @@ import {
     ChevronRightIcon,
     ChromeSvgIcon,
     ClockIcon,
-    PaperAirplaneIcon,
     SearchIcon,
     StopIcon,
     ArrowsRetractIcon,
@@ -151,6 +150,17 @@ import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 import {WebFuzzerDroppedProps} from "./FuzzerSequence/FuzzerSequenceType"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import {
+    convertKeyboardToUIKey,
+    registerShortcutKeyHandle,
+    unregisterShortcutKeyHandle
+} from "@/utils/globalShortcutKey/utils"
+import {
+    getHttpFuzzerShortcutKeyEvents,
+    getStorageHttpFuzzerShortcutKeyEvents
+} from "@/utils/globalShortcutKey/events/page/httpFuzzer"
+import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -722,6 +732,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     useEffect(() => {
         inViewportRef.current = inViewport
         if (inViewport) {
+            registerShortcutKeyHandle(ShortcutKeyPage.HTTPFuzzer)
+            getStorageHttpFuzzerShortcutKeyEvents()
             onRefWebFuzzerValue()
             emiter.on("onRefWebFuzzer", onRefWebFuzzerValue)
             emiter.on("onSwitchTypeWebFuzzerPage", onFuzzerAdvancedConfigShowType)
@@ -1566,10 +1578,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 >
                     美化
                 </YakitButton>
-                <YakitCheckableTag
-                    checked={hex}
-                    onChange={setHex}
-                >
+                <YakitCheckableTag checked={hex} onChange={setHex}>
                     HEX
                 </YakitCheckableTag>
                 <YakitButton
@@ -1799,6 +1808,22 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return false
         }
     }, [advancedConfigShowType, advancedConfigShow])
+
+    useShortcutKeyTrigger(
+        "sendRequest*httpFuzzer",
+        useMemoizedFn(() => {
+            if (inViewport && !loading && isPause) {
+                sendRequest()
+            }
+        })
+    )
+    const sendRequest = useMemoizedFn(() => {
+        setRedirectedResponse(undefined)
+        sendFuzzerSettingInfo()
+        onValidateHTTPFuzzer()
+        getNewCurrentPage()
+    })
+
     return (
         <>
             <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
@@ -1836,18 +1861,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             继续
                                         </YakitButton>
                                     ) : (
-                                        <YakitButton
-                                            onClick={() => {
-                                                setRedirectedResponse(undefined)
-                                                sendFuzzerSettingInfo()
-                                                onValidateHTTPFuzzer()
-                                                getNewCurrentPage()
-                                            }}
-                                            icon={<PaperAirplaneIcon />}
-                                            type={"primary"}
-                                            size='large'
-                                        >
-                                            发送请求
+                                        <YakitButton onClick={sendRequest} type={"primary"} size='large'>
+                                            发送请求{" "}
+                                            {convertKeyboardToUIKey(
+                                                getHttpFuzzerShortcutKeyEvents()["sendRequest*httpFuzzer"].keys
+                                            )}
                                         </YakitButton>
                                     )}
                                 </>
