@@ -738,6 +738,7 @@ service Yak {
   rpc RenameFingerprintGroup(RenameFingerprintGroupRequest) returns (DbOperateMessage); // 重命名指纹组
   rpc DeleteFingerprintGroup(DeleteFingerprintGroupRequest) returns (DbOperateMessage); // 删除指纹组
 
+
   // 指纹 与 组 工具接口
   rpc BatchUpdateFingerprintToGroup(BatchUpdateFingerprintToGroupRequest) returns (DbOperateMessage); // 批量更新 规则与组关系表
   rpc GetFingerprintGroupSetByFilter(GetFingerprintGroupSetRequest)returns (FingerprintGroups);
@@ -746,6 +747,7 @@ service Yak {
   // 导入导出指纹
   rpc ExportFingerprint(ExportFingerprintRequest) returns (stream DataTransferProgress);
   rpc ImportFingerprint(ImportFingerprintRequest) returns (stream DataTransferProgress);
+
 
   // 反弹shell命令生成
   rpc GetReverseShellProgramList(GetReverseShellProgramListRequest) returns (GetReverseShellProgramListResponse);
@@ -839,9 +841,35 @@ service Yak {
   rpc ImportNote(ImportNoteRequest) returns (stream ImportNoteResponse);
   rpc ExportNote(ExportNoteRequest) returns (stream ExportNoteResponse);
 
+  // AI Task
   rpc StartAITask(stream AIInputEvent) returns(stream AIOutputEvent);
+  rpc QueryAITask(AITaskQueryRequest) returns (AITaskQueryResponse);
+
+  rpc StartAITriage(stream AITriageInputEvent) returns(stream AIOutputEvent);
+
+  // AI forge curd
+  rpc CreateAIForge(AIForge) returns (DbOperateMessage);
+  rpc UpdateAIForge(AIForge) returns (DbOperateMessage);
+  rpc DeleteAIForge(AIForgeFilter) returns (DbOperateMessage);
+  rpc QueryAIForge(QueryAIForgeRequest) returns (QueryAIForgeResponse);
+
+  // mcp server
   rpc StartMcpServer(StartMcpServerRequest) returns(stream StartMcpServerResponse);
   rpc GetToolSetList(Empty) returns(GetToolSetListResponse);
+
+  rpc GetAIToolList(GetAIToolListRequest) returns(GetAIToolListResponse);
+  rpc DeleteAITool(DeleteAIToolRequest) returns(DbOperateMessage);
+  rpc SaveAITool(SaveAIToolRequest) returns(DbOperateMessage);
+  rpc ToggleAIToolFavorite(ToggleAIToolFavoriteRequest) returns(ToggleAIToolFavoriteResponse);
+  rpc AIToolGenerateMetadata(AIToolGenerateMetadataRequest) returns(AIToolGenerateMetadataResponse);
+
+  // Local Model Management
+  rpc IsLlamaServerReady(Empty) returns (IsLlamaServerReadyResponse);
+  rpc IsLocalModelReady(IsLocalModelReadyRequest) returns (IsLocalModelReadyResponse);
+  rpc InstallLlamaServer(InstallLlamaServerRequest) returns (stream ExecResult);
+  rpc StartLocalModel(StartLocalModelRequest) returns (stream ExecResult);
+  rpc DownloadLocalModel(DownloadLocalModelRequest) returns (stream ExecResult);
+  rpc GetSupportedLocalModels(Empty) returns (GetSupportedLocalModelsResponse);
 }
 
 message GetToolSetListResponse {
@@ -857,6 +885,60 @@ message ResourceSetInfo {
   string Name = 1;
 }
 
+
+message AIToolGenerateMetadataRequest {
+  string ToolName = 1;
+  string Content = 2;
+}
+
+message AIToolGenerateMetadataResponse {
+  string Name = 1;
+  string Description = 2;
+  repeated string Keywords = 3;
+}
+
+message SaveAIToolRequest {
+  string Name = 1;
+  string Description = 2;
+  string Content = 3;
+  string ToolPath = 4;
+  repeated string Keywords = 5;
+}
+
+message DeleteAIToolRequest {
+  repeated string ToolNames = 1;
+}
+
+message ToggleAIToolFavoriteRequest {
+  string ToolName = 1;
+}
+
+message ToggleAIToolFavoriteResponse {
+  bool IsFavorite = 1;
+  string Message = 2;
+}
+
+message AITool {
+  string Name = 1;
+  string Description = 2;
+  string Content = 3;
+  string ToolPath = 4;
+  repeated string Keywords = 5;
+  bool IsFavorite = 6;
+}
+
+message GetAIToolListResponse {
+  repeated AITool Tools = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message GetAIToolListRequest {
+  string Query = 1;
+  string ToolName = 2;
+  Paging Pagination = 3;
+  bool OnlyFavorites = 4;
+}
 message AIOutputEvent {
   string CoordinatorId = 1;
   string Type = 2;
@@ -869,10 +951,15 @@ message AIOutputEvent {
   bytes Content = 9;
   int64 Timestamp = 10;
   string TaskIndex = 11;
+  bool DisableMarkdown = 13;
 }
 
 message AIInputEvent {
   bool IsStart = 1;
+
+  bool IsConfigHotpatch = 8;
+  string HotpatchType = 9;
+  // 如果是配置热补丁，那么 Params 就是热补丁的参数
   AIStartParams Params = 2;
 
   bool IsInteractiveMessage = 3;
@@ -882,6 +969,20 @@ message AIInputEvent {
   bool IsSyncMessage = 6;
   string SyncType = 7;
 }
+
+
+message AITriageInputEvent {
+  bool IsStart = 1;
+  AIStartParams Params = 2;
+
+  bool IsInteractiveMessage = 3;
+  string InteractiveId = 4;
+  string InteractiveJSONInput = 5;
+
+  bool IsFreeInput = 6;
+  string FreeInput = 7;
+}
+
 
 message McpConfig {
   string Type = 1;
@@ -952,6 +1053,69 @@ message AIStartParams {
 
   // 是否允许生成报告，默认不允许
   bool AllowGenerateReport = 24;
+
+  int64 TaskMaxContinueCount = 25;
+}
+
+message AITaskFilter {
+
+}
+
+message AITaskQueryRequest {
+  Paging Pagination = 1;
+  AITaskFilter Filter = 2;
+}
+
+message AITaskQueryResponse {
+  Paging Pagination = 1;
+  repeated AITask Data = 2;
+  int64 Total = 3;
+}
+
+message AITask {
+  string CoordinatorId = 1;
+  string Name = 2;
+  int64 Seq = 3;
+  string UserInput = 4;
+  string ForgeName = 5;
+}
+
+message AIForgeFilter {
+  string ForgeName = 1;
+  string ForgeType = 2; // enum: yak or config
+  string Keyword = 3;
+  // tag
+  repeated string Tag = 4;
+}
+
+message AIForge {
+  int64 Id = 1;
+  string ForgeName = 2;
+  string ForgeContent = 3; // yak type is yak script, config type is empty
+  string ForgeType = 4; // yak or config
+  string Description = 5;
+  string ParamsUIConfig = 6; // json config for UI
+  string Params = 7; // cli parameters
+  string UserPersistentData = 8; // for user preferences
+  repeated string ToolNames = 9;
+  repeated string ToolKeywords = 10;
+  string Action = 11;
+  repeated string Tag = 12;
+  string InitPrompt = 13; // 初始提示语
+  string PersistentPrompt = 14; // 持久化提示语
+  string PlanPrompt = 15; // 计划提示语
+  string ResultPrompt = 16; // 结果提示语
+}
+
+message QueryAIForgeRequest {
+  Paging Pagination = 1;
+  AIForgeFilter Filter = 2;
+}
+
+message QueryAIForgeResponse {
+  Paging Pagination = 1;
+  repeated AIForge Data = 2;
+  int64 Total = 3;
 }
 
 message StartMcpServerRequest {
@@ -2007,7 +2171,7 @@ message GetProjectsRequest {
   int64 FolderId = 4;
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
-  string Type = 6; 
+  string Type = 6;
   // this type effect response.ProjectTotal, this type mark kind of frontend 
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
@@ -4252,6 +4416,7 @@ message QueryYakScriptRequest {
   repeated string ExcludeTypes = 19;
   int64 IsMITMParamPlugins = 20; //0->默认全部 1->是mitm带参数插件 2->mitm不带参数
   string FieldKeywords = 21;
+  string VectorSearchContent = 22;
 }
 
 message PluginGroup {
@@ -5133,6 +5298,10 @@ message HTTPFlowRuleData{
   int64 HTTPFlowId = 2;
   string RuleVerboseName = 3;
   string Rule = 4;
+  int64 StatusCode =5;
+  string Url = 6;
+  string Method = 7;
+  string IPAddress= 8;
 }
 
 message ExportHTTPFlowsRequest {
@@ -5947,7 +6116,6 @@ message UpdateFingerprintRequest {
   string RuleName = 2;
   FingerprintRule Rule = 3;
 }
-
 message FingerprintGroup {
   string GroupName = 1;
   int64  Count = 2;
@@ -6015,12 +6183,15 @@ message SyntaxFlowRule{
   bool AllowIncluded = 12;
   string IncludedName = 13;
   string Tag = 14;
+
+
   //字段弃用，使用新结构来做
   string AlertDesc = 15;
 
   string Hash = 16;
 
   repeated string GroupName = 17;
+
   map<string, AlertMessage> AlertMsg = 19;
 }
 
@@ -6037,7 +6208,6 @@ message AlertMessage{
   string Tag = 10;
   map<string, string> Extra = 11;
 }
-
 message  SyntaxFlowRuleInput{
   string RuleName = 1; // RuleName作为索引，因此不能update RuleName
   string Content = 2;
@@ -6705,7 +6875,7 @@ message UpdateNoteRequest {
 }
 
 message DeleteNoteRequest {
-    NoteFilter Filter = 1;
+  NoteFilter Filter = 1;
 }
 
 message QueryNoteRequest {
@@ -6758,6 +6928,49 @@ message ListAiModelRequest{
 
 message ListAiModelResponse{
   repeated string ModelName = 1;
+}
+
+// Local Model Messages
+message IsLlamaServerReadyResponse {
+  bool Ok = 1;
+  string Reason = 2;
+}
+
+message IsLocalModelReadyRequest {
+  string ModelName = 1;
+}
+
+message IsLocalModelReadyResponse {
+  bool Ok = 1;
+  string Reason = 2;
+}
+
+message InstallLlamaServerRequest {
+  string Proxy = 1;
+}
+
+message StartLocalModelRequest {
+  string ModelName = 1;
+  string Host = 2;
+  int32 Port = 3;
+}
+
+message DownloadLocalModelRequest {
+  string ModelName = 1;
+  string Proxy = 2;
+}
+
+message LocalModelConfig {
+  string Name = 1;
+  string Type = 2;
+  string FileName = 3;
+  string DownloadURL = 4;
+  string Description = 5;
+  int32 DefaultPort = 6;
+}
+
+message GetSupportedLocalModelsResponse {
+  repeated LocalModelConfig Models = 1;
 }
 
 
@@ -6924,5 +7137,3 @@ message SingleManualHijackInfoMessage{
 
   string Method = 16;
 }
-
-
