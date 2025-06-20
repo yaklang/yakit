@@ -17,6 +17,8 @@ export interface AIAgentContextDispatcher {
     setChats?: Dispatch<SetStateAction<AIChatInfo[]>>
     getChats?: () => AIChatInfo[]
     setActiveChat?: Dispatch<SetStateAction<AIChatInfo | undefined>>
+    // 向 tirage 发送问题信息
+    onSendTriage?: (content: string) => void
 }
 
 export interface AIAgentContextValue {
@@ -38,6 +40,7 @@ export default createContext<AIAgentContextValue>({
         getSetting: undefined,
         setChats: undefined,
         getChats: undefined,
-        setActiveChat: undefined
+        setActiveChat: undefined,
+        onSendTriage: undefined
     }
 })

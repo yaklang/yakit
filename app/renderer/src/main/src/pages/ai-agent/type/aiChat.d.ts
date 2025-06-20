@@ -1,11 +1,13 @@
 import {KVPair} from "@/models/kv"
+import {PaginationSchema} from "@/pages/invoker/schema"
+import {number} from "echarts"
 
+// #region AI-(Task|Triage)
 export interface McpConfig {
     Type: string
     Key: string
     Url: string
 }
-
 export interface AIStartParams {
     CoordinatorId?: string
     Sequence?: number
@@ -80,6 +82,7 @@ export interface AIStartParams {
     /** 是否允许生成报告，默认不允许 */
     AllowGenerateReport?: boolean
 }
+
 export interface AIInputEvent {
     IsStart?: boolean
     Params?: AIStartParams // 提问问题相关
@@ -91,6 +94,19 @@ export interface AIInputEvent {
     IsSyncMessage?: boolean
     SyncType?: string
 }
+
+export interface AITriageInputEvent {
+    IsStart?: boolean
+    Params?: AIStartParams // 上下文AI配置
+
+    IsInteractiveMessage?: boolean // 暂无用
+    InteractiveId?: string // 暂无用
+    InteractiveJSONInput?: string // 暂无用
+
+    IsFreeInput?: boolean
+    FreeInput?: string
+}
+
 export interface AIOutputEvent {
     CoordinatorId: string
     Type: string
@@ -109,7 +125,7 @@ export interface AIOutputEvent {
     TaskIndex: string
 }
 
-/** UI 渲染, 计划相关信息 */
+/** UI 渲染, Review相关信息 */
 export interface AIChatReview {
     type: "plan_review_require" | "tool_use_review_require" | "task_review_require" | "require_user_interactive"
     data:
@@ -267,3 +283,59 @@ export declare namespace AIChatMessage {
         options: AIRequireOption[]
     }
 }
+// #endregion
+
+// #region AI-Forge
+export interface AIForge {
+    Id: number
+    ForgeName: string
+    // yak type is yak script, config type is empty
+    /** yak 类型为脚本代码, config 类型为空 */
+    ForgeContent?: string
+    // yak or config
+    ForgeType: "yak" | "config"
+    Description?: string
+    // json config for UI
+    ParamsUIConfig?: string
+    // cli parameters
+    Params?: string
+    // for user preferences
+    UserPersistentData?: string
+    /** 可选，列表 */
+    ToolNames?: string[]
+    /** 可选，手输 */
+    ToolKeywords?: string[]
+    Action?: string
+    /** 可选，手输 */
+    Tag?: string[]
+    // 初始提示语
+    InitPrompt?: string
+    // 持久化提示语
+    PersistentPrompt?: string
+    // 计划提示语
+    PlanPrompt?: string
+    // 结果提示语
+    ResultPrompt?: string
+}
+
+export interface AIForgeFilter {
+    /** name 模糊搜索 */
+    ForgeName?: string
+    ForgeNames?: string[]
+    ForgeType?: AIForge["ForgeType"]
+    /** 多个字段的内容进行模糊搜索 */
+    Keyword?: string
+    Tag?: string
+}
+
+export interface QueryAIForgeRequest {
+    Pagination: PaginationSchema
+    Filter?: AIForgeFilter
+}
+
+export interface QueryAIForgeResponse {
+    Pagination: PaginationSchema
+    Data: AIForge[]
+    Total: number
+}
+// #endregion

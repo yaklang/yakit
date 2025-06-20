@@ -213,7 +213,7 @@ function useChatData(params?: UseChatDataParams) {
         console.log("send-ai---\n", token, params)
 
         review.current = undefined
-        ipcRenderer.invoke("send-ai-agent-chat", token, params)
+        ipcRenderer.invoke("send-ai-task", token, params)
     })
     // #endregion
 
@@ -424,12 +424,12 @@ function useChatData(params?: UseChatDataParams) {
                 handleFailTaskState()
             }, 300)
         })
-        console.log("start-ai-agent-chat", token, params)
-        ipcRenderer.invoke("start-ai-agent-chat", token, params)
+        console.log("start-ai-task", token, params)
+        ipcRenderer.invoke("start-ai-task", token, params)
     })
 
     const onClose = useMemoizedFn((token: string) => {
-        ipcRenderer.invoke("cancel-ai-agent-chat", token).catch(() => {})
+        ipcRenderer.invoke("cancel-ai-task", token).catch(() => {})
         yakitNotify("info", "AI 任务已取消")
         setTimeout(() => {
             ipcRenderer.removeAllListeners(`${token}-data`)

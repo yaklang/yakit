@@ -11,7 +11,6 @@ import {
     AIAgentChatBody,
     AIAgentChatFooter,
     AIAgentChatReview,
-    AIAgentEmpty,
     AIChatLeftSide,
     AIChatLogs
 } from "./chatTemplate/AIAgentChatTemplate"
@@ -22,6 +21,7 @@ import {yakitNotify} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {formatAIAgentSetting} from "./utils"
+import {AIAgentWelcome} from "./AIAgentWelcome/AIAgentWelcome"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
@@ -530,7 +530,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                         </div>
                     </div>
                 ) : (
-                    <AIAgentEmpty question={question} setQuestion={setQuestion} onSearch={handleStartChat} />
+                    <AIAgentWelcome question={question} setQuestion={setQuestion} onSearch={handleStartChat} />
                 )}
             </div>
 

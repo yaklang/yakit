@@ -9,7 +9,6 @@ async function newSSE(url) {
     return transport
 }
 const {handleIPCError} = require("../handleIPC")
-const handlerHelper = require("./handleStreamWithContext")
 
 /**
  * @typedef {Object} ClientConfig
@@ -246,30 +245,4 @@ module.exports = (win, getClient) => {
     ipcMain.handle("cancel-callTool-mcp-client", async (e, token) => {
         return await handleCancelCallTool(token)
     })
-
-    let aiChatStreamPool = new Map()
-    // 开始执行 AI Agent 聊天
-    ipcMain.handle("start-ai-agent-chat", async (e, token, params) => {
-        let stream = getClient().StartAITask()
-        handlerHelper.registerHandler(win, stream, aiChatStreamPool, token)
-        try {
-            stream.write({...params})
-        } catch (error) {
-            throw new Error(error)
-        }
-    })
-    // 聊天过程发送 AI Agent 聊天消息
-    ipcMain.handle("send-ai-agent-chat", async (e, token, params) => {
-        const currentStream = aiChatStreamPool.get(token)
-        if (!currentStream) {
-            return Promise.reject("stream no exist")
-        }
-        try {
-            currentStream.write({...params})
-        } catch (error) {
-            throw new Error(error)
-        }
-    })
-    // 取消 AI Agent 聊天F
-    ipcMain.handle("cancel-ai-agent-chat", handlerHelper.cancelHandler(aiChatStreamPool))
 }
