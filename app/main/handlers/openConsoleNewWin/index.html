@@ -1,21 +1,24 @@
 <!DOCTYPE html>
-<html lang="zh-cn">
+<html lang="zh-cn" data-theme="light">
 
 <head>
   <meta charset="UTF-8">
   <title>引擎 Console</title>
   <link rel="stylesheet" href="./xterm@5.3.0/xterm.css">
+  <link rel="stylesheet" href="./theme.css">
   <style>
     html,
     body {
       height: 100%;
       margin: 0;
-      background: #E8E9E8;
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+      overflow: hidden;
     }
 
     #terminal {
       width: 100vw;
       height: 100vh;
+      background: var(--Colors-Use-Neutral-Bg-Hover);
     }
   </style>
 </head>
@@ -30,36 +33,29 @@
       term.write(data)
     })
 
+    const getCssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     const term = new window.Terminal({
       convertEol: true,
       theme: {
-        foreground: "#536870",
-        background: "#E8E9E8",
-        cursor: "#536870",
-
-        black: "#002831",
-        brightBlack: "#001e27",
-
-        red: "#d11c24",
-        brightRed: "#bd3613",
-
-        green: "#738a05",
-        brightGreen: "#475b62",
-
-        yellow: "#a57706",
-        brightYellow: "#536870",
-
-        blue: "#2176c7",
-        brightBlue: "#708284",
-
-        magenta: "#c61c6f",
-        brightMagenta: "#5956ba",
-
-        cyan: "#259286",
-        brightCyan: "#819090",
-
-        white: "#eae3cb",
-        brightWhite: "#fcf4dc"
+        foreground: getCssVar('--Colors-Use-Neutral-Text-2-Primary'),
+        background: getCssVar('--Colors-Use-Neutral-Bg-Hover'),
+        cursor: getCssVar('--Colors-Use-Neutral-Text-2-Primary'),
+        black: getCssVar('--Colors-Use-Basic-Black'),
+        brightBlack: getCssVar('--yakit-colors-Neutral-100'),
+        red: getCssVar('--yakit-colors-Error-80'),
+        brightRed: getCssVar('--yakit-colors-Error-60'),
+        green: getCssVar('--yakit-colors-Green-80'),
+        brightGreen: getCssVar('--yakit-colors-Green-60'),
+        yellow: getCssVar('--yakit-colors-Yellow-80'),
+        brightYellow: getCssVar('--yakit-colors-Yellow-60'),
+        blue: getCssVar('--yakit-colors-Blue-80'),
+        brightBlue: getCssVar('--yakit-colors-Blue-60'),
+        magenta: getCssVar('--yakit-colors-Magenta-80'),
+        brightMagenta: getCssVar('--yakit-colors-Magenta-60'),
+        cyan: getCssVar('--yakit-colors-Cyan-80'),
+        brightCyan: getCssVar('--yakit-colors-Cyan-60'),
+        white: getCssVar('--yakit-colors-Neutral-10'),
+        brightWhite: getCssVar('--yakit-colors-Neutral-0')
       }
     })
     const fitAddon = new window.FitAddon.FitAddon()

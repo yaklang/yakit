@@ -1,0 +1,11 @@
+html[data-theme=light] {
+  --yakit-colors-Neutral-0: #ffffff;
+  --yakit-colors-Neutral-40: #d9dde4;
+  --yakit-colors-Neutral-80: #868c97;
+}
+
+html[data-theme=dark] {
+  --yakit-colors-Neutral-0: #171717;
+  --yakit-colors-Neutral-40: #5f636b;
+  --yakit-colors-Neutral-80: #c8d0dd;
+}
