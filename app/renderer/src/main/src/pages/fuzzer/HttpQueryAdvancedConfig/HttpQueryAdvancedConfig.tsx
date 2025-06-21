@@ -438,7 +438,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
                                 <YakitSwitch />
                             </Form.Item>
-                            <Form.Item label='HTTP配置'>
+                            <Form.Item label='TLS配置'>
                                 <div style={{display: "flex"}}>
                                     <Form.Item name='isGmTLS' style={{marginBottom: 0}}>
                                         <YakitCheckableTag
