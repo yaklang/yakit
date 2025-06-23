@@ -1,5 +1,6 @@
 const {ipcMain, shell} = require("electron")
 const childProcess = require("child_process")
+const spawn = require("cross-spawn")
 const process = require("process")
 const path = require("path")
 const os = require("os")
@@ -221,30 +222,53 @@ module.exports = {
 
                 console.info("YAK-VERSION process is executing...")
                 isFetchingVersion = true
-                childProcess.execFile(getLatestYakLocalEngine(), ["-v"], {timeout: 5000}, (err, stdout, stderr) => {
-                    engineLogOutputFileAndUI(win, `${stdout.toString("utf-8")}`)
-                    if (err) {
-                        engineLogOutputFileAndUI(win, `${err.toString("utf-8")}`)
-                        if (stderr) {
-                            engineLogOutputFileAndUI(win, `${stderr.toString("utf-8")}`)
-                        }
-                        yakVersionEmitter.emit("version", err, null)
+                const child = spawn(getLatestYakLocalEngine(), ["-v"], {timeout: 5200})
+                let stdout = ""
+                let stderr = ""
+                let finished = false
+                const timer = setTimeout(() => {
+                    if (!finished) {
+                        finished = true
+                        child.kill()
+                        const error = new Error("----- [yak -v] 获取版本超时 -----")
+                        engineLogOutputFileAndUI(win, error.toString())
+                        yakVersionEmitter.emit("version", error, null)
                         isFetchingVersion = false
-                        return
                     }
+                }, 5000)
+                child.stdout.on("data", (data) => {
+                    stdout += data.toString("utf-8")
+                })
+                child.stderr.on("data", (data) => {
+                    stderr += data.toString("utf-8")
+                })
+                child.on("error", (err) => {
+                    if (finished) return
+                    finished = true
+                    clearTimeout(timer)
+                    engineLogOutputFileAndUI(win, `${err.toString("utf-8")}`)
                     if (stderr) {
-                        engineLogOutputFileAndUI(win, `${stderr.toString("utf-8")}`)
-                        return
+                        engineLogOutputFileAndUI(win, `${stderr}`)
                     }
-                    // const version = stdout.replaceAll("yak version ()", "").trim();
+                    yakVersionEmitter.emit("version", err, null)
+                    isFetchingVersion = false
+                })
+                child.on("close", (code) => {
+                    if (finished) return
+                    engineLogOutputFileAndUI(win, `${stdout}`)
                     const match = /.*?yak(\.exe)?\s+version\s+(\S+)/.exec(stdout)
                     const version = match && match[2]
                     if (!version) {
-                        engineLogOutputFileAndUI(win, "[unknown reason] cannot fetch yak version (yak -v)")
-                        const error = new Error("[unknown reason] cannot fetch yak version (yak -v)")
-                        yakVersionEmitter.emit("version", error, null)
-                        isFetchingVersion = false
+                        engineLogOutputFileAndUI(win, "----- 引擎无法获取yak本地版本 -----")
+                        if (code !== 0 || stderr) {
+                            engineLogOutputFileAndUI(win, `${stderr}` || `Process exited with code ${code}`)
+                            const error = new Error(`${stderr}` || `Process exited with code ${code}`)
+                            yakVersionEmitter.emit("version", error, null)
+                            isFetchingVersion = false
+                        }
                     } else {
+                        finished = true
+                        clearTimeout(timer)
                         engineLogOutputFileAndUI(win, `----- 获取到yak本地版本: ${version}-----`)
                         latestVersionCache = version
                         yakVersionEmitter.emit("version", null, version)
@@ -275,31 +299,58 @@ module.exports = {
                         return
                     }
 
-                    childProcess.execFile(commandPath, ["-v"], {timeout: 20000}, (error, stdout, stderr) => {
-                        if (error) {
-                            let errorMessage = `命令执行失败: ${error.message}\nStdout: ${stdout}\nStderr: ${stderr}`
-                            if (error.code === "ENOENT") {
-                                errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
-                            } else if (error.killed) {
-                                errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
-                            } else if (error.signal) {
-                                errorMessage = `引擎由于信号而终止: ${error.signal}\nStderr: ${stderr}`
-                            } else if (error.code === "ETIMEDOUT") {
-                                errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nerror: ${error.message}\nStderr: ${stderr}`
-                            }
-
+                    const child = spawn(commandPath, ["-v"], {timeout: 20200})
+                    let stdout = ""
+                    let stderr = ""
+                    let finished = false
+                    const timer = setTimeout(() => {
+                        if (!finished) {
+                            finished = true
+                            child.kill()
+                            let errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`
                             engineLogOutputFileAndUI(win, `${errorMessage}`)
-
+                            reject(new Error(errorMessage))
+                        }
+                    }, 20000)
+                    child.stdout.on("data", (data) => {
+                        stdout += data.toString()
+                    })
+                    child.stderr.on("data", (data) => {
+                        stderr += data.toString()
+                    })
+                    child.on("error", (error) => {
+                        if (finished) return
+                        finished = true
+                        clearTimeout(timer)
+                        let errorMessage = `命令执行失败: ${error.message}\nStdout: ${stdout}\nStderr: ${stderr}`
+                        if (error.code === "ENOENT") {
+                            errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
+                        } else if (error.killed) {
+                            errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
+                        } else if (error.signal) {
+                            errorMessage = `引擎由于信号而终止: ${error.signal}\nStderr: ${stderr}`
+                        }
+                        engineLogOutputFileAndUI(win, `${errorMessage}`)
+                        reject(new Error(errorMessage))
+                    })
+                    child.on("close", (code, signal) => {
+                        if (finished) return
+                        if (code !== 0) {
+                            let errorMessage = `命令执行失败: 退出码 ${code}\nStdout: ${stdout}\nStderr: ${stderr}`
+                            if (signal) {
+                                errorMessage = `引擎由于信号而终止: ${signal}\nStderr: ${stderr}`
+                            }
+                            engineLogOutputFileAndUI(win, `${errorMessage}`)
                             reject(new Error(errorMessage))
                             return
                         }
-
                         if (stderr) {
                             engineLogOutputFileAndUI(win, `Stderr: ${stderr}`)
-                            reject(stderr)
+                            reject(new Error(stderr))
                             return
                         }
-
+                        finished = true
+                        clearTimeout(timer)
                         resolve(stdout)
                     })
                 })

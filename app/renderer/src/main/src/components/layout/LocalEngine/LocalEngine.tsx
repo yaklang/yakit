@@ -204,13 +204,9 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const handleCheckEngineVersion = useMemoizedFn(async () => {
             setLog(["获取引擎版本号并检查更新..."])
             try {
-                const promise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("Fetch local engine timeout")), 5100)
-                )
                 const [res1, res2] = await Promise.allSettled([
                     // 本地
-                    Promise.race([grpcFetchLocalYakVersion(true), promise]),
-                    // grpcFetchLocalYakVersion(true),
+                    grpcFetchLocalYakVersion(true),
                     // 内置
                     grpcFetchBuildInYakVersion(true)
                 ])
@@ -226,6 +222,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         ])
                     )
 
+                    if (!currentYak.current) {
+                        setTimeout(() => {
+                            handleLinkLocalEnging()
+                        }, 500)
+                        return
+                    }
+
                     if (isResetBuiltInReason.current && !!buildInYak.current) {
                         setShowYak(true)
                         return
@@ -240,7 +243,9 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     }
                 } else {
                     setLog((old) => old.concat([`错误: ${res1.reason}`]))
-                    setYakitStatus("checkError")
+                    setTimeout(() => {
+                        handleLinkLocalEnging()
+                    }, 500)
                 }
             } catch (error) {
                 setLog((old) => old.concat([`错误: ${error}`]))
@@ -297,21 +302,25 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 localYaklang = localYaklang.startsWith("v") ? localYaklang.slice(1) : localYaklang
                 setLog((old) => old.concat([`引擎版本号——${localYaklang}`, "准备开始本地连接中"]))
                 currentYak.current = localYaklang
-                setTimeout(() => {
-                    handleLinkLocalEnging()
-                }, 1000)
             } catch (error) {
                 setLog((old) => old.concat([`错误: ${error}`]))
-                setYakitStatus("checkError")
             }
+            setTimeout(() => {
+                handleLinkLocalEnging()
+            }, 1000)
         })
 
         /** 开始进行本地引擎连接 */
         const handleLinkLocalEnging = useMemoizedFn(() => {
-            // 开始连接本地引擎
-            onLinkEngine(localPort.current)
-            // 启动本地连接后，重置所有检查状态，并后续不会在进行检查
-            handleResetAllStatus()
+            if (localPort.current === 0) {
+                setLog(["本地引擎-端口：0，请尝试切换端口"])
+                setYakitStatus("")
+            } else {
+                // 开始连接本地引擎
+                onLinkEngine(localPort.current)
+                // 启动本地连接后，重置所有检查状态，并后续不会在进行检查
+                handleResetAllStatus()
+            }
         })
 
         /** 初始化所有引擎连接前检查状态 */

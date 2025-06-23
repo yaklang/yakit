@@ -1690,7 +1690,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                     {stopScreen}
 
-                                    <HelpDoc system={system} engineLink={engineLink} />
+                                    <HelpDoc system={system} />
 
                                     {engineLink && (
                                         <>
@@ -1764,7 +1764,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         </>
                                     )}
 
-                                    <HelpDoc system={system} engineLink={engineLink} />
+                                    <HelpDoc system={system} />
 
                                     {stopScreen}
 

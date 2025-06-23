@@ -93,6 +93,7 @@
         "axios": "^0.26.1",
         "chrome-launcher": "^0.15.0",
         "compressing": "^1.8.0",
+        "cross-spawn": "^7.0.6",
         "dompurify": "^3.0.5",
         "electron-is-dev": "^2.0.0",
         "electron-updater": "^4.3.9",
