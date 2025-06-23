@@ -1,0 +1,141 @@
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column {
+    display: flex;
+    flex-direction: column;
+}
+.ai-tool-list-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    overflow: hidden;
+    .ai-tool-list-header {
+        @extend %display-flex-center;
+        gap: 4px;
+        padding: 8px 12px 0;
+    }
+    .ai-tool-list-total {
+        height: 16px;
+        padding: 0px 8px;
+        border-radius: 8px;
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+    .ai-tool-list {
+        .tool-icon {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Neutral-Disable);
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+        .star-icon-active {
+            svg {
+                color: var(--Colors-Use-Main-Primary);
+            }
+        }
+        .ai-tool-list-item {
+            @extend %display-column;
+            gap: 4px;
+            padding: 12px;
+            cursor: pointer;
+            height: 120px;
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+            overflow: hidden;
+            &:hover {
+                background: var(--Colors-Use-Neutral-Bg-Hover);
+            }
+            &:nth-last-child(2) {
+                border-bottom-color: transparent;
+            }
+            .ai-tool-list-item-content {
+                @extend %display-column;
+                gap: 4px;
+            }
+        }
+        .ai-tool-list-item-heard {
+            @extend %display-flex-center;
+            justify-content: space-between;
+            gap: 4px;
+            flex-shrink: 0;
+            overflow: hidden;
+            height: 24px;
+            &-name {
+                @extend %display-flex-center;
+                gap: 4px;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+                overflow: hidden;
+
+                &-text {
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    word-break: break-all;
+                }
+            }
+            &-extra {
+                @extend %display-flex-center;
+                gap: 4px;
+                justify-content: flex-end;
+            }
+        }
+        .ai-tool-list-item-description {
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+            letter-spacing: 0.5px;
+            height: 48px;
+            flex-shrink: 0;
+
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+        .ai-tool-list-item-keywords {
+            flex-shrink: 0;
+            height: 18px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+            &-tag {
+                border-radius: 20px;
+            }
+        }
+    }
+}
+
+.terminal-popover {
+    width: 300px;
+
+    :global {
+        .ant-popover-inner-content {
+            height: 250px;
+            padding: 4px;
+        }
+
+        .ant-popover-inner {
+            border-radius: 4px;
+        }
+
+        .ant-popover-arrow {
+            right: 0;
+        }
+
+        .ant-popover-placement-top,
+        .ant-popover-placement-topLeft,
+        .ant-popover-placement-topRight {
+            padding-bottom: 8px;
+        }
+    }
+}

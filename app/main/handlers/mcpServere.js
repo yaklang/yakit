@@ -272,4 +272,38 @@ module.exports = (win, getClient) => {
     })
     // 取消 AI Agent 聊天F
     ipcMain.handle("cancel-ai-agent-chat", handlerHelper.cancelHandler(aiChatStreamPool))
+
+    const asyncGetAIToolList = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAIToolList(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
+    /**获取工具列表 */
+    ipcMain.handle("GetAIToolList", async (e, param) => {
+        return await asyncGetAIToolList(param)
+    })
+
+    const asyncToggleAIToolFavorite = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ToggleAIToolFavorite(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
+    /**获取工具列表 */
+    ipcMain.handle("ToggleAIToolFavorite", async (e, param) => {
+        return await asyncToggleAIToolFavorite(param)
+    })
 }

@@ -61,7 +61,7 @@ export interface RenderMCPClientInfo extends MCPClientInfo {
 // #region UI左侧组件定义
 export interface AIAgentSideListProps {}
 // 侧边栏 tab 类型
-export type AIAgentTab = "history" | "setting" //  | "mcp"
+export type AIAgentTab = "history" | "setting" | "tool" //  | "mcp"
 
 // 全局配置
 export interface AIChatSettingProps {}
