@@ -30,11 +30,10 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {MITMRuleFromModal} from "./MITMRuleFromModal"
 import {randomString} from "@/utils/randomUtil"
-import {MITMResponse} from "../MITMPage"
 import {failed, success, yakitNotify} from "@/utils/notification"
 import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfigure"
 import update from "immutability-helper"
@@ -51,6 +50,9 @@ import {
     MITMContentReplacersRequest
 } from "../MITMHacker/utils"
 import MITMContext from "../Context/MITMContext"
+import ReactResizeDetector from "react-resize-detector"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {OutlineSearchIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -155,7 +157,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             excludeBatchMenuKey = "",
             onSetRules,
             onRefreshCom,
-            inMouseEnterTable = false,
+            inMouseEnterTable = false
         } = props
         const mitmContent = useContext(MITMContext)
 
@@ -839,9 +841,43 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 </div>
             )
         }
+
+        const [tableTitleBodyWidth, setTableTitleBodyWidth] = useState<number>(0)
+        const [valueSearch, setValueSearch] = useState<string>("")
+        const onSearch = useMemoizedFn(() => {})
+        const searchEle = useMemo(() => {
+            return (
+                <YakitInput.Search
+                    size='small'
+                    placeholder='请输入关键字搜索'
+                    value={valueSearch}
+                    onChange={(e) => {
+                        const {value} = e.target
+                        setValueSearch(value)
+                    }}
+                    style={{maxWidth: 200}}
+                    onSearch={onSearch}
+                    onPressEnter={(e) => {
+                        e.preventDefault()
+                        onSearch()
+                    }}
+                />
+            )
+        }, [valueSearch])
+
         const content = () => {
             return (
                 <div className={styles["mitm-rule-table"]}>
+                    <ReactResizeDetector
+                        onResize={(width, height) => {
+                            if (!width || !height) return
+                            setTableTitleBodyWidth(width)
+                        }}
+                        handleWidth={true}
+                        handleHeight={true}
+                        refreshMode={"debounce"}
+                        refreshRate={50}
+                    />
                     <TableVirtualResize<MITMContentReplacerRule>
                         currentIndex={currentIndex}
                         isRefresh={isRefresh}
@@ -856,6 +892,21 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                         }
                         extra={
                             <div className={styles["table-title-body"]}>
+                                <div className={styles["table-search"]}>
+                                    <>{tableTitleBodyWidth >= 670 && searchEle}</>
+                                    <>
+                                        {tableTitleBodyWidth < 670 && (
+                                            <YakitPopover content={searchEle}>
+                                                <YakitButton
+                                                    icon={<OutlineSearchIcon />}
+                                                    size='small'
+                                                    type='outline2'
+                                                    isHover={!!valueSearch}
+                                                />
+                                            </YakitPopover>
+                                        )}
+                                    </>
+                                </div>
                                 <div className={styles["table-switch"]}>
                                     <span className={styles["switch-text"]}>全部禁用</span>
                                     <YakitSwitch checked={isAllBan} onChange={(c) => onAllBan(c)} />

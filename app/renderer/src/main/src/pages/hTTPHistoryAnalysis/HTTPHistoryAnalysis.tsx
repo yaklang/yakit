@@ -702,7 +702,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                         display: fullScreenSecondNode ? "none" : ""
                     }}
                     lineStyle={{display: fullScreenFirstNode || fullScreenSecondNode ? "none" : ""}}
-                    firstMinSize={600}
+                    firstMinSize={650}
                     secondMinSize={500}
                     secondNode={
                         <div className={styles["AnalysisMain-right"]}>
