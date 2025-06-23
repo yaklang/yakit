@@ -85,7 +85,13 @@ export const sortKeysCombination = (keys: string[]): string[] => {
 export const convertKeyboardToUIKey = (inputKeys: string[]): string | null => {
     const inputs = sortKeysCombination(inputKeys)
     const funcKeys = SystemInfo.system === "Darwin" ? macKeyToUIMaps : windowsKeyToUIMaps
-    const outputKeys = inputs.map((item) => funcKeys[item] || item)
+    const outputKeys = inputs.map((item) => {
+        const key = funcKeys[item] || item
+        if (key === "Enter") {
+            return "↵"
+        }
+        return key
+    })
     return outputKeys.join(SystemInfo.system === "Darwin" ? " " : "+")
 }
 
