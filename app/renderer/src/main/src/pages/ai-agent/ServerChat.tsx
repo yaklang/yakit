@@ -11,7 +11,6 @@ import {
     AIAgentChatBody,
     AIAgentChatFooter,
     AIAgentChatReview,
-    AIAgentEmpty,
     AIChatLeftSide,
     AIChatLogs
 } from "./chatTemplate/AIAgentChatTemplate"
@@ -22,6 +21,7 @@ import {yakitNotify} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {formatAIAgentSetting} from "./utils"
+import {AIAgentWelcome} from "./AIAgentWelcome/AIAgentWelcome"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
@@ -216,10 +216,13 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
 
     // 开始提问
     const handleStartChat = useThrottleFn(
-        () => {
-            if (!question || !question.trim() || execute) return
+        (request: AIStartParams) => {
+            if (execute) return
             if (requestLoading.current) return
-            handleRequestParams(question.trim())
+            if (!request.UserQuery) {
+                request.UserQuery = question.trim()
+            }
+            handleRequestParams(request)
         },
         {wait: 500, trailing: false}
     ).run
@@ -261,12 +264,12 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     })
 
     // 构建提问参数并执行
-    const handleRequestParams = useMemoizedFn((qs: string) => {
+    const handleRequestParams = useMemoizedFn((request: AIStartParams) => {
         requestLoading.current = true
         const info: AIChatInfo = {
             id: randomString(10),
-            name: question,
-            question: question,
+            name: request.UserQuery,
+            question: request.UserQuery,
             time: Date.now()
         }
         setQuestion("")
@@ -276,7 +279,9 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
             IsStart: true,
             Params: {
                 ...formatAIAgentSetting(setting),
-                UserQuery: question
+                UserQuery: request.UserQuery,
+                ForgeName: request.ForgeName || undefined,
+                ForgeParams: request.ForgeParams || undefined
             }
         })
         handleSubmitAfterChangState()
@@ -530,7 +535,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                         </div>
                     </div>
                 ) : (
-                    <AIAgentEmpty question={question} setQuestion={setQuestion} onSearch={handleStartChat} />
+                    <AIAgentWelcome question={question} setQuestion={setQuestion} onSearch={handleStartChat} />
                 )}
             </div>
 

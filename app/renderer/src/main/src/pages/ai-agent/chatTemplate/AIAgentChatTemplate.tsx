@@ -6,7 +6,6 @@ import {
     AIAgentChatReviewProps,
     AIAgentChatStreamProps,
     AIAgentChatTextareaProps,
-    AIAgentEmptyProps,
     AIChatLeftSideProps,
     AIChatLogsProps,
     ChatStreamCollapseProps
@@ -38,7 +37,6 @@ import {
     SolidHashtagIcon,
     SolidLightbulbIcon,
     SolidLightningboltIcon,
-    SolidPaperairplaneIcon,
     SolidStopIcon,
     SolidToolIcon,
     SolidVariableIcon
@@ -51,69 +49,12 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {handleFlatAITree} from "../useChatData"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import YakitRunQuickly from "@/assets/aiAgent/yakit_run_quickly.gif"
 import {ContextPressureEcharts, ResponseSpeedEcharts} from "./AIEcharts"
 import AIPlanReviewTree from "../aiPlanReviewTree/AIPlanReviewTree"
+import {yakitNotify} from "@/utils/notification"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
-import {yakitNotify} from "@/utils/notification"
-
-/** @name 欢迎页 */
-export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
-    const {onSearch} = props
-
-    const [question, setQuestion] = useControllableValue<string>(props, {
-        defaultValue: "",
-        valuePropName: "question",
-        trigger: "setQuestion"
-    })
-
-    const isQuestion = useMemo(() => {
-        return !!(question && question.trim())
-    }, [question])
-
-    return (
-        <div className={styles["ai-agent-empty"]}>
-            <div className={styles["empty-header"]}>
-                <img className={styles["img-wrapper"]} src={YakitRunQuickly} alt='牛牛快跑' />
-                <div className={styles["title"]}>AI-Agent 安全助手</div>
-                <div className={styles["sub-title"]}>专注于安全编码与漏洞分析的智能助手</div>
-            </div>
-
-            <div className={styles["empty-input"]}>
-                <div className={styles["ai-agent-input"]}>
-                    <Input.TextArea
-                        className={styles["question-textArea"]}
-                        bordered={false}
-                        placeholder='请下发任务, AI-Agent将执行(shift + enter 换行)'
-                        value={question}
-                        autoSize={true}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        onKeyDown={(e) => {
-                            const keyCode = e.keyCode ? e.keyCode : e.key
-                            const shiftKey = e.shiftKey
-                            if (keyCode === 13 && shiftKey) {
-                                e.stopPropagation()
-                                e.preventDefault()
-                                setQuestion(`${question}\n`)
-                            }
-                            if (keyCode === 13 && !shiftKey) {
-                                e.stopPropagation()
-                                e.preventDefault()
-                                onSearch()
-                            }
-                        }}
-                    />
-
-                    <div className={styles["question-footer"]}>
-                        <YakitButton disabled={!isQuestion} icon={<SolidPaperairplaneIcon />} onClick={onSearch} />
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-})
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -1047,7 +988,7 @@ export const AIChatLogs: React.FC<AIChatLogsProps> = memo((props) => {
     )
 })
 
-const AIAgentChatTextarea: React.FC<AIAgentChatTextareaProps> = memo((props) => {
+export const AIAgentChatTextarea: React.FC<AIAgentChatTextareaProps> = memo((props) => {
     const {className, bordered, autoSize, ...rest} = props
 
     return (

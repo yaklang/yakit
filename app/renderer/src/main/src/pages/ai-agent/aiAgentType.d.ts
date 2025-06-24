@@ -93,13 +93,6 @@ export interface ServerInfoModalProps {
 // 对话框
 export interface ServerChatProps {}
 
-// 欢迎页
-export interface AIAgentEmptyProps {
-    question: string
-    setQuestion: Dispatch<SetStateAction<string>>
-    onSearch: () => void
-}
-
 // 对话框左侧侧边栏
 export interface AIChatLeftSideProps {
     expand: boolean

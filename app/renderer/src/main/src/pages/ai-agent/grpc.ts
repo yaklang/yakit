@@ -1,10 +1,12 @@
-import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
+import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {RenderMCPClientInfo} from "./aiAgentType"
 import {MCPCallToolRequest, MCPClientResource} from "./type/mcpClient"
+import {AIForge, AIForgeFilter, QueryAIForgeRequest, QueryAIForgeResponse} from "./type/aiChat"
 
 const {ipcRenderer} = window.require("electron")
 
+// #region 本地 MCP 服务器相关 grpc 接口
 /** @name 连接mcp服务器 */
 export const grpcConnectMCPClient: APIFunc<RenderMCPClientInfo, MCPClientResource> = (param, hiddenError) => {
     return new Promise(async (resolve, reject) => {
@@ -70,3 +72,55 @@ export const grpcMCPClientCancelCallTool: APIFunc<string, string> = (token, hidd
             })
     })
 }
+// #endregion
+
+// #region AI-Forge 相关 grpc 接口
+/** @name 创建 AI-Forge */
+export const grpcCreateAIForge: APIFunc<AIForge, undefined> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("CreateAIForge", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "创建AI-Forge失败:" + e)
+                reject(e)
+            })
+    })
+}
+/** @name 编辑 AI-Forge */
+export const grpcUpdateAIForge: APIFunc<AIForge, undefined> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("UpdateAIForge", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "修改AI-Forge失败:" + e)
+                reject(e)
+            })
+    })
+}
+/** @name 删除 AI-Forge */
+export const grpcDeleteAIForge: APIFunc<AIForgeFilter, undefined> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("DeleteAIForge", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "删除AI-Forge失败:" + e)
+                reject(e)
+            })
+    })
+}
+/** @name 查询 AI-Forge */
+export const grpcQueryAIForge: APIFunc<QueryAIForgeRequest, QueryAIForgeResponse> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("QueryAIForge", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "查询AI-Forge失败:" + e)
+                reject(e)
+            })
+    })
+}
+// #endregion

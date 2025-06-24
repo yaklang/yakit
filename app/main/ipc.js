@@ -325,5 +325,12 @@ module.exports = {
         } catch (error) {
             console.log("mcpServere.js-error", error)
         }
+
+        // ai-agent
+        try {
+            require("./handlers/ai-agent")(win, getClient)
+        } catch (error) {
+            console.log("ai-agent.js-error", error)
+        }
     }
 }

@@ -4,9 +4,14 @@ import {AIChatInfo} from "../type/aiChat"
 
 export interface AIAgentContextStore {
     mcpServers: RenderMCPClientInfo[]
+    /** 全局配置 */
     setting: AIAgentSetting
+    /** 历史对话 */
     chats: AIChatInfo[]
+    /** 当前展示对话 */
     activeChat?: AIChatInfo
+    /** ai-triage 建议 forges */
+    aiTriageForges: string[]
 }
 
 export interface AIAgentContextDispatcher {
@@ -17,6 +22,8 @@ export interface AIAgentContextDispatcher {
     setChats?: Dispatch<SetStateAction<AIChatInfo[]>>
     getChats?: () => AIChatInfo[]
     setActiveChat?: Dispatch<SetStateAction<AIChatInfo | undefined>>
+    // 向 tirage 发送问题信息
+    onSendTriage?: (content: string) => void
 }
 
 export interface AIAgentContextValue {
@@ -29,7 +36,8 @@ export default createContext<AIAgentContextValue>({
         mcpServers: [],
         setting: {},
         chats: [],
-        activeChat: undefined
+        activeChat: undefined,
+        aiTriageForges: []
     },
     dispatcher: {
         setMCPServers: undefined,
@@ -38,6 +46,7 @@ export default createContext<AIAgentContextValue>({
         getSetting: undefined,
         setChats: undefined,
         getChats: undefined,
-        setActiveChat: undefined
+        setActiveChat: undefined,
+        onSendTriage: undefined
     }
 })
