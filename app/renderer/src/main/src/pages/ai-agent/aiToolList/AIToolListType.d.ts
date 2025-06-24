@@ -11,4 +11,5 @@ export interface AITool {
 }
 export interface AIToolListItemProps {
     item: AITool
+    onSetData: (value: AITool) => void
 }

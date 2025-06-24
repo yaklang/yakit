@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {AITool, AIToolListItemProps, AIToolListProps, ToolQueryType} from "./AIToolListType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {
     GetAIToolListRequest,
     GetAIToolListResponse,
@@ -40,6 +40,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
     const [spinning, setSpinning] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(false)
     const [isRef, setIsRef] = useState<boolean>(false)
+    const [recalculation, setRecalculation] = useState<boolean>(false)
     const [response, setResponse] = useState<GetAIToolListResponse>({
         Tools: [],
         Pagination: genDefaultPagination(20),
@@ -109,6 +110,18 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
             getList()
         }, 200)
     })
+    const onSetData = useMemoizedFn((item: AITool) => {
+        setResponse((preV) => ({
+            ...preV,
+            Tools: preV.Tools.map((ele) => {
+                if (ele.Name === item.Name) {
+                    return {...ele, IsFavorite: item.IsFavorite}
+                }
+                return {...ele}
+            })
+        }))
+        setRecalculation((v) => !v)
+    })
     return (
         <div className={styles["ai-tool-list-wrapper"]} ref={toolListRef}>
             <div className={styles["ai-tool-list-header"]}>
@@ -136,7 +149,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
                     renderRow={(rowData: AITool, index: number) => {
                         return (
                             <React.Fragment key={rowData.Name}>
-                                <AIToolListItem item={rowData} />
+                                <AIToolListItem item={rowData} onSetData={onSetData} />
                             </React.Fragment>
                         )
                     }}
@@ -148,6 +161,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
                     defItemHeight={120}
                     rowKey='Name'
                     isRef={isRef}
+                    recalculation={recalculation}
                 />
             </YakitSpin>
         </div>
@@ -167,8 +181,7 @@ const colors: YakitTagColor[] = [
     "yellow"
 ]
 const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
-    const {item} = props
-    const [isFavorite, setIsFavorite] = useState<boolean>(item.IsFavorite)
+    const {item, onSetData} = props
     const onCopy = useMemoizedFn((e) => {
         e.stopPropagation()
         setClipboardText(item.Name)
@@ -179,9 +192,31 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
             ToolName: item.Name
         }
         grpcToggleAIToolFavorite(params).then(() => {
-            setIsFavorite((v) => !v)
+            onSetData({
+                ...item,
+                IsFavorite: !item.IsFavorite
+            })
         })
     })
+    const tags = useCreation(() => {
+        return (
+            <div className={styles["ai-tool-list-item-keywords"]}>
+                {item.Keywords.map((keyword) => {
+                    const number = Math.floor(Math.random() * colors.length)
+                    return (
+                        <YakitTag
+                            size='small'
+                            key={keyword}
+                            className={styles["ai-tool-list-item-keywords-tag"]}
+                            color={colors[number]}
+                        >
+                            {keyword}
+                        </YakitTag>
+                    )
+                })}
+            </div>
+        )
+    }, [item.Keywords])
     return (
         <>
             <YakitPopover
@@ -197,7 +232,7 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                         </div>
                         <div className={styles["ai-tool-list-item-heard-extra"]}>
                             <YakitButton type='text2' icon={<OutlineDocumentduplicateIcon />} onClick={onCopy} />
-                            {isFavorite ? (
+                            {item.IsFavorite ? (
                                 <YakitButton
                                     type='text2'
                                     icon={<SolidStarIcon className={styles["star-icon-active"]} />}
@@ -209,21 +244,7 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                         </div>
                     </div>
                     <div className={styles["ai-tool-list-item-description"]}>{item.Description}</div>
-                    <div className={styles["ai-tool-list-item-keywords"]}>
-                        {item.Keywords.map((keyword) => {
-                            const number = Math.floor(Math.random() * colors.length)
-                            return (
-                                <YakitTag
-                                    size='small'
-                                    key={keyword}
-                                    className={styles["ai-tool-list-item-keywords-tag"]}
-                                    color={colors[number]}
-                                >
-                                    {keyword}
-                                </YakitTag>
-                            )
-                        })}
-                    </div>
+                    {tags}
                 </div>
             </YakitPopover>
         </>
