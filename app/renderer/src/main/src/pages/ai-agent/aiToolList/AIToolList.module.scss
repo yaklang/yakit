@@ -33,6 +33,9 @@
                 height: 16px;
             }
         }
+        .star-icon {
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        }
         .star-icon-active {
             svg {
                 color: var(--Colors-Use-Main-Primary);

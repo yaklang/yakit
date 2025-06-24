@@ -15,11 +15,10 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {SolidStarIcon, SolidToolIcon} from "@/assets/icon/solid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineDocumentduplicateIcon, OutlineStarIcon} from "@/assets/icon/outline"
+import {OutlineStarIcon} from "@/assets/icon/outline"
 import styles from "./AIToolList.module.scss"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
-import {setClipboardText} from "@/utils/clipboard"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
@@ -182,10 +181,6 @@ const colors: YakitTagColor[] = [
 ]
 const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
     const {item, onSetData} = props
-    const onCopy = useMemoizedFn((e) => {
-        e.stopPropagation()
-        setClipboardText(item.Name)
-    })
     const onFavorite = useMemoizedFn((e) => {
         e.stopPropagation()
         const params: ToggleAIToolFavoriteRequest = {
@@ -231,7 +226,10 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                             <span className={styles["ai-tool-list-item-heard-name-text"]}>{item.Name}</span>
                         </div>
                         <div className={styles["ai-tool-list-item-heard-extra"]}>
-                            <YakitButton type='text2' icon={<OutlineDocumentduplicateIcon />} onClick={onCopy} />
+                            <CopyComponents
+                                copyText={item.Name}
+                                iconColor='var(--Colors-Use-Neutral-Text-3-Secondary)'
+                            />
                             {item.IsFavorite ? (
                                 <YakitButton
                                     type='text2'
@@ -239,7 +237,11 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                                     onClick={onFavorite}
                                 />
                             ) : (
-                                <YakitButton type='text2' icon={<OutlineStarIcon />} onClick={onFavorite} />
+                                <YakitButton
+                                    type='text2'
+                                    icon={<OutlineStarIcon className={styles["star-icon"]} />}
+                                    onClick={onFavorite}
+                                />
                             )}
                         </div>
                     </div>
