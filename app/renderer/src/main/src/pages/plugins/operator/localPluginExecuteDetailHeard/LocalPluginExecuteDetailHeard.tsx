@@ -758,7 +758,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     validateStatus={validateStatus}
                     help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
-                    <HTTPPacketYakitEditor originValue={defaultValue} readOnly={disabled} onlyBasicMenu={true} />
+                    <HTTPPacketYakitEditor originValue={defaultValue} readOnly={disabled} onlyBasicMenu={true} noLineNumber={true} noMiniMap={true} />
                 </Form.Item>
             )
         case "yak":
@@ -794,7 +794,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     validateStatus={validateStatus}
                     help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
-                    <YakitEditor type={language} readOnly={disabled} />
+                    <YakitEditor type={language} readOnly={disabled} noLineNumber={true} noMiniMap={true} />
                 </Form.Item>
             )
         case "json":
