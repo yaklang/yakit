@@ -23,13 +23,12 @@ export interface AIPlanReviewTreeItemProps {
     /**删除节点 */
     onRemoveNode: (item: AIChatMessage.PlanTask) => void
     /**修改当前编辑的值 */
-    setItem: (
-        item: AIChatMessage.PlanTask,
-        option: {
-            label: PlanTaskType
-            value: string
-        }
-    ) => void
+    setItem: (item: AIChatMessage.PlanTask, option: SetItemOption) => void
+}
+
+export interface SetItemOption {
+    label: PlanTaskType
+    value: string | string[]
 }
 
 export interface ContentEditableDivProps {
