@@ -209,6 +209,8 @@ export declare namespace AIChatMessage {
         subtasks?: PlanTask[]
         /**评阅时树节点是否被删 */
         isRemove: boolean
+        /**关联工具 */
+        tools: string[]
     }
     /** 计划审阅选项 */
     export interface ReviewSelector {

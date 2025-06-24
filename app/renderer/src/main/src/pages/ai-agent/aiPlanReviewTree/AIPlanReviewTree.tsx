@@ -5,7 +5,7 @@ import {
     AIPlanReviewTreeLineProps,
     AIPlanReviewTreeProps,
     ContentEditableDivProps,
-    PlanTaskType
+    SetItemOption
 } from "./AIPlanReviewTreeType"
 import styles from "./AIPlanReviewTree.module.scss"
 import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
@@ -17,6 +17,8 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {AIChatMessage} from "../type/aiChat"
 import {yakitNotify} from "@/utils/notification"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {SolidToolIcon} from "@/assets/icon/solid"
 
 const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => {
     const {editable} = props
@@ -53,7 +55,8 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
             name: `name-我是添加的子节点`,
             goal: `goal-我是添加的子节点`,
             state: "wait",
-            isRemove: false
+            isRemove: false,
+            tools: []
         }
 
         // 找到父任务的位置
@@ -143,7 +146,8 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
             name: `新增任务 ${newSiblingIndex}`,
             goal: `这是 ${newSiblingIndex} 的目标`,
             state: "wait",
-            isRemove: false
+            isRemove: false,
+            tools: []
         }
 
         // 确定插入位置
@@ -207,27 +211,19 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
         })
         setList([...newList])
     })
-    const setItem = useMemoizedFn(
-        (
-            item: AIChatMessage.PlanTask,
-            option: {
-                label: PlanTaskType
-                value: string
-            }
-        ) => {
-            const {label, value} = option
-            const newList = list.map((ele: AIChatMessage.PlanTask) => {
-                if (ele.index === item.index) {
-                    ele = {
-                        ...ele,
-                        [label]: value
-                    }
+    const setItem = useMemoizedFn((item: AIChatMessage.PlanTask, option: SetItemOption) => {
+        const {label, value} = option
+        const newList = list.map((ele: AIChatMessage.PlanTask) => {
+            if (ele.index === item.index) {
+                ele = {
+                    ...ele,
+                    [label]: value
                 }
-                return {...ele}
-            })
-            setList([...newList])
-        }
-    )
+            }
+            return {...ele}
+        })
+        setList([...newList])
+    })
     return (
         <div className={styles["ai-plan-review-tree"]}>
             {list.length > 0 ? (
@@ -320,6 +316,9 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
     const onSetGoal = useMemoizedFn((value: string) => {
         setItem(item, {label: "goal", value})
     })
+    const onSetTool = useMemoizedFn((value: string[]) => {
+        setItem(item, {label: "tools", value})
+    })
     return (
         <div
             className={styles["ai-plan-review-tree-item"]}
@@ -375,6 +374,21 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                 {expand && !item?.isRemove && (
                     <div className={styles["body"]}>
                         <ContentEditableDiv value={item.goal} editable={editable} setValue={onSetGoal} />
+                        <div className={styles["related-tools"]}>
+                            <div className={styles["related-tools-heard"]}>
+                                <SolidToolIcon />
+                                <span>关联工具</span>
+                            </div>
+                            <YakitSelect
+                                size='middle'
+                                value={item.tools}
+                                onChange={onSetTool}
+                                bordered={false}
+                                mode='tags'
+                                options={[]}
+                                disabled={!editable || !!item?.isRemove}
+                            />
+                        </div>
                     </div>
                 )}
             </div>
