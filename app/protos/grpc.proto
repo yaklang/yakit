@@ -508,6 +508,7 @@ service Yak {
   rpc ImportMITMReplacerRules(ImportMITMReplacerRulesRequest) returns (Empty);
   rpc GetCurrentRules(Empty) returns (MITMContentReplacers);
   rpc SetCurrentRules(MITMContentReplacers) returns (Empty);
+  rpc QueryMITMReplacerRules(QueryMITMReplacerRulesRequest) returns (QueryMITMReplacerRulesResponse);
   rpc GenerateURL(GenerateURLRequest) returns (GenerateURLResponse);
 
   rpc ExtractDataToFile(stream ExtractDataToFileRequest) returns (stream ExtractDataToFileResult);
@@ -6929,4 +6930,10 @@ message SingleManualHijackInfoMessage{
   string Method = 16;
 }
 
+message QueryMITMReplacerRulesRequest{
+  string KeyWord =1;
+}
 
+message QueryMITMReplacerRulesResponse{
+  MITMContentReplacers Rules = 1;
+}
