@@ -22,7 +22,7 @@
     overflow: hidden;
 }
 .ai-agent-chat-mini {
-    padding-left: 28px;
+    padding-left: 26px;
 }
 
 /* ---------- AIAgentSideList ----------*/
@@ -127,6 +127,9 @@
                 }
             }
         }
+    }
+    .side-list-bar-hidden {
+        border-right: 0;
     }
 
     .side-list-body {

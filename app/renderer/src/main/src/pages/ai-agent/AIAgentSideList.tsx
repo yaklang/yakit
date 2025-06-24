@@ -49,7 +49,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
 
     return (
         <div className={styles["ai-agent-side-list"]}>
-            <div className={styles["side-list-bar"]}>
+            <div className={classNames(styles["side-list-bar"], {[styles["side-list-bar-hidden"]]: hiddenActive})}>
                 {AIAgentTabList.map((item) => {
                     const isActive = item.key === active
                     return (

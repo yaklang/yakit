@@ -1,11 +1,10 @@
-import React, {memo, useEffect, useMemo, useState} from "react"
+import React, {memo, useEffect, useState} from "react"
 import {AIChatSettingProps, FormItemSliderProps} from "./type"
 import useStore from "../useContext/useStore"
 import useDispatcher from "../useContext/useDispatcher"
 import {Form, Slider, Tooltip} from "antd"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {useMemoizedFn, useUpdateEffect} from "ahooks"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import cloneDeep from "lodash/cloneDeep"
@@ -40,18 +39,18 @@ export const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
     // AI主动问用户问题相关逻辑
     const AllowPlanUserInteractValue = Form.useWatch("AllowPlanUserInteract", form)
 
-    const forgeList = useMemo(() => {
-        return [
-            {label: "fragment_summarizer", value: "fragment_summarizer"},
-            {label: "long_text_summarizer", value: "long_text_summarizer"},
-            {label: "xss", value: "xss"},
-            {label: "sqlinject", value: "sqlinject"},
-            {label: "travelmaster", value: "travelmaster"},
-            {label: "pimatrix", value: "pimatrix"},
-            {label: "netscan", value: "netscan"},
-            {label: "recon", value: "recon"}
-        ]
-    }, [])
+    // const forgeList = useMemo(() => {
+    //     return [
+    //         {label: "fragment_summarizer", value: "fragment_summarizer"},
+    //         {label: "long_text_summarizer", value: "long_text_summarizer"},
+    //         {label: "xss", value: "xss"},
+    //         {label: "sqlinject", value: "sqlinject"},
+    //         {label: "travelmaster", value: "travelmaster"},
+    //         {label: "pimatrix", value: "pimatrix"},
+    //         {label: "netscan", value: "netscan"},
+    //         {label: "recon", value: "recon"}
+    //     ]
+    // }, [])
 
     return (
         <div className={styles["ai-chat-setting"]}>
@@ -100,7 +99,7 @@ export const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <Form.Item label='使用默认系统配置AI' name='UseDefaultAIConfig' valuePropName='checked'>
                     <YakitSwitch />
                 </Form.Item>
-                <Form.Item label='任务模板' name='ForgeName'>
+                {/* <Form.Item label='任务模板' name='ForgeName'>
                     <YakitAutoComplete
                         size={"small"}
                         showSearch
@@ -108,7 +107,7 @@ export const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                         placeholder='请输入任务模板'
                         filterOption={true}
                     />
-                </Form.Item>
+                </Form.Item> */}
                 <Form.Item
                     label={
                         <>
