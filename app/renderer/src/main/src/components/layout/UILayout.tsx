@@ -739,6 +739,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** ---------- yakit和yaklang的更新(以连接引擎的状态下) & kill引擎进程 Start ---------- */
     // 更新yakit-modal
     const [yakitDownload, setYakitDownload] = useState<boolean>(false)
+    // 是否为内网yakit更新
+    const [intranetYakit, setIntranetYakit] = useState<boolean>(false)
     // 更新yaklang前置-关闭所有引擎进程modal
     const [yaklangKillPss, setYaklangKillPss] = useState<boolean>(false)
     const [yaklangKillBuildInEngine, setYaklangKillBuildInEngine] = useState<boolean>(false)
@@ -762,6 +764,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     // 监听UI上的更新yakit或yaklang更新功能
     const handleActiveDownloadModal = useMemoizedFn((type: string) => {
         if (yaklangKillPss || yakitDownload) return
+        if (type === "intranetYakit") {
+            setYakitDownload(true)
+            setIntranetYakit(true)
+        }
         if (type === "yakit") setYakitDownload(true)
         if (type === "yaklang") setYaklangKillPss(true)
     })
@@ -1896,7 +1902,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     }
                                 />
                                 {/* 更新yakit */}
-                                <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload} />
+                                <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload} intranetYakit={intranetYakit}/>
                             </div>
                         )}
 

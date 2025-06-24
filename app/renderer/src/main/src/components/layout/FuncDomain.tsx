@@ -1310,7 +1310,7 @@ interface UIOpUpdateProps {
     lastVersion: string
     role?: string | null
     updateContent?: string
-    onDownload: (type: "yakit" | "yaklang") => any
+    onDownload: (type: "yakit" | "yaklang" | "intranetYakit") => any
     onUpdateEdit?: (type: "yakit" | "yaklang") => any
     isUpdate: boolean
 
@@ -1391,7 +1391,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     ) : lastVersion === "" ? (
                         "获取失败"
                     ) : isUpdate ? (
-                        <div className={styles["update-btn"]} onClick={() => onDownload("yakit")}>
+                        <div className={styles["update-btn"]} onClick={() => onDownload(intranet ? "intranetYakit" : "yakit")}>
                             <UpdateSvgIcon style={{marginRight: 4}} />
                             立即下载
                         </div>
@@ -1824,18 +1824,14 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     // 内网版号
     const [yakitLastIntranetVersion, setYakitLastIntranetVersion] = useState<string>("")
     useEffect(() => {
-        console.log("fetchYakitLastVersion---", yakitVersion, yakitLastVersion, eeSystemConfig)
         if (!isEnpriTrace()) return
         // 是否从内网读取版本号
         let intranet = false
         eeSystemConfig.forEach((item) => {
-            if (item.configName === "clientUpdateType") {
-                if (item.content === "auto") {
-                    intranet = true
-                }
+            if (item.configName === "clientUpdateType" && item.isOpen) {
+                intranet = true
             }
         })
-        console.log("是否从内网读取版本号---", intranet)
         setIsIntranet(intranet)
     }, [eeSystemConfig])
 
@@ -1849,7 +1845,6 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     // 从内网读取版本号
                     grpcFetchLatestYakitVersion(undefined, true)
                         .then((data: string) => {
-                            console.log("内网版本号---", data, url)
                             // 企业版初次进入时 如若配置文件为强制更新则需弹出提示框
                             if (isUpdateEnpriTraceRef.current) {
                                 const isUpdateYakit = data !== "" && removePrefixV(data) !== removePrefixV(yakitVersion)
@@ -1999,29 +1994,31 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         }
     }, [isEngineLink])
 
-    const onDownload = useMemoizedFn((type: "yakit" | "yaklang") => {
+    // intranetYakit为内网Yakit
+    const onDownload = useMemoizedFn((type: "yakit" | "yaklang" | "intranetYakit") => {
         setShow(false)
-        if (type === "yakit") {
+        if (["yakit","intranetYakit"].includes(type)) {
             emiter.emit("activeUpdateYakitOrYaklang", type)
         } else {
             emiter.emit("downYaklangSpecifyVersion", JSON.stringify({version: yaklangLastVersion}))
         }
     })
 
-    // 内网Yakit下载
-    const onIntranetDownload = useMemoizedFn(() => {
-        setShow(false)
-    })
-
     const [isYakitUpdateWait, setIsYakitUpdateWait] = useState<boolean>(false)
+    const [isIntranetYakitUpdateWait, setIsIntranetYakitUpdateWait] = useState<boolean>(false)
     /** 监听 yakit 下载后不安装，在 UI 上提示安装按钮 */
     useEffect(() => {
         const onsetIsYakitUpdateWait = () => {
             setIsYakitUpdateWait(true)
         }
+        const onsetIsYakitIntranetUpdateWait = () => {
+            setIsIntranetYakitUpdateWait(true)
+        }
         emiter.on("downloadedYakitFlag", onsetIsYakitUpdateWait)
+        emiter.on("downloadedYakitIntranetFlag", onsetIsYakitIntranetUpdateWait)
         return () => {
             emiter.off("downloadedYakitFlag", onsetIsYakitUpdateWait)
+            emiter.off("downloadedYakitIntranetFlag", onsetIsYakitIntranetUpdateWait)
         }
     }, [])
 
@@ -2224,7 +2221,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     <UIOpUpdateYakit
                                         version={yakitVersion}
                                         lastVersion={yakitLastIntranetVersion}
-                                        onDownload={onIntranetDownload}
+                                        isUpdateWait={isIntranetYakitUpdateWait}
+                                        onDownload={onDownload}
                                         role={userInfo.role}
                                         isUpdate={isUpdateYakitIntranet}
                                         intranet={true}
@@ -2356,7 +2354,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                         <YakitButton
                             size='max'
                             onClick={() => {
-                                onIntranetDownload()
+                                onDownload("intranetYakit")
                                 setShowEnpriTraceUpdateHint(false)
                             }}
                         >

@@ -12,7 +12,7 @@ import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {safeFormatDownloadProcessState} from "../utils"
-import {grpcFetchLatestYakitVersion} from "@/apiUtils/grpc"
+import {grpcFetchIntranetYakitVersion, grpcFetchLatestYakitVersion} from "@/apiUtils/grpc"
 import {WebsiteGV} from "@/enums/website"
 
 import classNames from "classnames"
@@ -24,11 +24,12 @@ interface DownloadYakitProps {
     system: YakitSystem
     visible: boolean
     setVisible: (flag: boolean) => any
+    intranetYakit: boolean
 }
 
 /** @name Yakit软件更新下载弹窗 */
 export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
-    const {system, visible, setVisible} = props
+    const {system, visible, setVisible, intranetYakit} = props
 
     /** 常见问题弹窗是否展示 */
     const [qsShow, setQSShow] = useState<boolean>(false)
@@ -57,15 +58,41 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
             if (isCommunityEdition() || isEnpriTrace()) {
                 isBreakRef.current = true
                 setDownloadProgress(undefined)
-                grpcFetchLatestYakitVersion()
+                if (intranetYakit) {
+                    // 处理内网版本
+                    grpcFetchIntranetYakitVersion()
+                    .then((filePath: string) => {
+                        ipcRenderer
+                            .invoke("download-latest-intranet-yakit", filePath)
+                            .then(() => {
+                                if (!isBreakRef.current) return
+                                success("下载完毕")
+                                if (!getDownloadProgress()?.size) return
+                                setDownloadProgress({
+                                    time: {
+                                        elapsed: downloadProgress?.time.elapsed || 0,
+                                        remaining: 0
+                                    },
+                                    speed: 0,
+                                    percent: 100,
+                                    // @ts-ignore
+                                    size: getDownloadProgress().size
+                                })
+                                ipcRenderer.invoke("open-yakit-path")
+                                emiter.emit("downloadedYakitIntranetFlag")
+                            })
+                    })
+                }
+                else{
+                    grpcFetchLatestYakitVersion()
                     .then((data: string) => {
                         let version = data
                         if (version.startsWith("v")) version = version.slice(1)
 
                         ipcRenderer
                             .invoke("download-latest-yakit", version, {
-                                isEnterprise:isEnterpriseEdition(),
-                                isIRify:isIRify()
+                                isEnterprise: isEnterpriseEdition(),
+                                isIRify: isIRify()
                             })
                             .then(() => {
                                 if (!isBreakRef.current) return
@@ -94,6 +121,7 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                         if (!isBreakRef.current) return
                         setVisible(false)
                     })
+                }
             }
             // 如需编写 Yakit-EE 下载功能，可在此处添加
 
