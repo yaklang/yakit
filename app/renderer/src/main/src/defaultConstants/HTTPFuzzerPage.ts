@@ -217,9 +217,29 @@ afterRequest = func(https, originReq, req, originRsp, rsp) {
 // rsp 响应
 // params 之前提取器/mirrorHTTPFlow中提取到的参数
 // 返回值会作为下一个请求的参数
+/** 如需使用，取消注释修改内容即可
 mirrorHTTPFlow = func(req, rsp, params) {
+    // statusCode = poc.GetStatusCodeFromResponse(rsp)
+    // params["current_status_code"] = sprint(statusCode) // 即可在下一个请求中使用，或“提取数据”中发现
     return params
 }
+*/
+
+// retryHandler 允许对重试的请求做处理，定义为 func(https bool, req []byte, rsp []byte) bool
+//     本热加载函数暂时不支持热加载重新执行
+// https 请求是否为https请求
+// req 请求
+// rsp 响应
+// 返回值为是否重试, true 为重试, false 为不重试
+/** 如需使用，取消注释修改内容即可
+retryHandler = func(https, req, rsp) {
+    // 如果响应码为403，则重试
+    // if poc.GetStatusCodeFromResponse(rsp) == 403 {
+    //     return true
+    // }
+    return false
+}
+*/
 `
 
 export const HotPatchTempDefault = [
