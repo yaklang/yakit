@@ -151,10 +151,7 @@ import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/edit
 import {WebFuzzerDroppedProps} from "./FuzzerSequence/FuzzerSequenceType"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
-import {
-    convertKeyboardToUIKey,
-    registerShortcutKeyHandle
-} from "@/utils/globalShortcutKey/utils"
+import {convertKeyboardToUIKey, registerShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"
 import {
     getHttpFuzzerShortcutKeyEvents,
     getStorageHttpFuzzerShortcutKeyEvents
@@ -728,6 +725,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             emiter.off("onSetAdvancedConfigShow", onSetAdvancedConfigShow)
         }
     }, [])
+
+    useShortcutKeyTrigger(
+        "saveHistoryData*httpFuzzer",
+        useMemoizedFn(() => {
+            if (inViewport) {
+                emiter.emit("onSaveHistoryDataHttpFuzzer")
+            }
+        })
+    )
+
     useEffect(() => {
         inViewportRef.current = inViewport
         if (inViewport) {

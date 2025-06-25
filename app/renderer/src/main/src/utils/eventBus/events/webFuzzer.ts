@@ -30,4 +30,6 @@ export type WebFuzzerEventProps = {
 
     /** 全局刷新器返回数据-发送请求里丢弃包的数量 */
     onGetDiscardPackageCount: string
+    /** 保存webfuzzer历史记录 */
+    onSaveHistoryDataHttpFuzzer?: string
 }

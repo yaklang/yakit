@@ -2444,6 +2444,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     const onSaveHTTPFuzzer = useMemoizedFn(async () => {
+        if (loading) return
         const wfPageInfo = pages.get(YakitRoute.HTTPFuzzer)?.pageList || []
         const pageData: FuzzerConfig[] = getFuzzerProcessedCacheData(wfPageInfo).map((item) => ({
             PageId: item.id,
@@ -2466,9 +2467,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         JSON.stringify(historySequenceList)
                     )
                 }
+                yakitNotify("success", "保存fuzzer历史成功")
             })
             .finally(() => setTimeout(() => setLoading(false), 200))
     })
+    // webfuzzer页面触发快捷键事件
+    useEffect(() => {
+        emiter.on("onSaveHistoryDataHttpFuzzer", onSaveHTTPFuzzer)
+        return () => {
+            emiter.off("onSaveHistoryDataHttpFuzzer", onSaveHTTPFuzzer)
+        }
+    }, [])
     return (
         <Content>
             <YakitSpin spinning={loading}>

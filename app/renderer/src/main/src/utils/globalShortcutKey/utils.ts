@@ -1,5 +1,11 @@
 import {SystemInfo} from "@/constants/hardware"
-import {KeyboardToKeyTableMaps, macKeyToUIMaps, NumpadKeyTableMaps, windowsKeyToUIMaps} from "./keyMaps"
+import {
+    KeyboardToKeyTableMaps,
+    keyToSameUIMaps,
+    macKeyToUIMaps,
+    NumpadKeyTableMaps,
+    windowsKeyToUIMaps
+} from "./keyMaps"
 import {YakitKeyMod} from "./keyboard"
 import emiter from "../eventBus/eventBus"
 import {pageEventMaps, ShortcutKeyPageName} from "./events/pageMaps"
@@ -85,7 +91,7 @@ export const sortKeysCombination = (keys: string[]): string[] => {
 export const convertKeyboardToUIKey = (inputKeys: string[]): string | null => {
     const inputs = sortKeysCombination(inputKeys)
     const funcKeys = SystemInfo.system === "Darwin" ? macKeyToUIMaps : windowsKeyToUIMaps
-    const outputKeys = inputs.map((item) => funcKeys[item] || item)
+    const outputKeys = inputs.map((item) => keyToSameUIMaps[item] || funcKeys[item] || item)
     return outputKeys.join(SystemInfo.system === "Darwin" ? " " : "+")
 }
 

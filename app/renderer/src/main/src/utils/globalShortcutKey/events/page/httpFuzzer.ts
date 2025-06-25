@@ -5,7 +5,9 @@ import {addScopeShow} from "../global"
 
 export enum HttpFuzzerShortcutKey {
     /** 发送请求 */
-    HttpFuzzerSendRequest = "sendRequest*httpFuzzer"
+    HttpFuzzerSendRequest = "sendRequest*httpFuzzer",
+    /** 保存WebFuzzer历史数据 */
+    SaveHistoryData = "saveHistoryData*httpFuzzer"
 }
 
 type EventsType = Record<`${HttpFuzzerShortcutKey}`, ShortcutKeyEventInfo>
@@ -14,6 +16,10 @@ const HttpFuzzerShortcutKeyEvents: EventsType = {
     "sendRequest*httpFuzzer": {
         name: "发送请求",
         keys: [YakitKeyMod.Alt, YakitKeyBoard.Enter]
+    },
+    "saveHistoryData*httpFuzzer": {
+        name: "保存WebFuzzer历史数据",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_S]
     }
 }
 
