@@ -1,6 +1,9 @@
 import {SystemInfo} from "@/constants/hardware"
 import {YakitKeyBoard, YakitKeyMod} from "./keyboard"
 
+export const keyToSameUIMaps: Partial<Record<YakitKeyBoard, string>> = {
+    Enter: "↵"
+}
 export const windowsKeyToUIMaps: Record<YakitKeyMod, string> = {
     Alt: "Alt",
     Shift: "Shift",
