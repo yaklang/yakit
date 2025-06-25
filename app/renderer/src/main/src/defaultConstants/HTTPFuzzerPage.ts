@@ -226,7 +226,7 @@ mirrorHTTPFlow = func(req, rsp, params) {
 */
 
 // retryHandler 允许对重试的请求做处理，定义为 func(https bool, req []byte, rsp []byte) bool
-//     本热加载函数暂时不支持热加载重新执行
+//     本热加载函数暂时不支持热加载重新执行，在 1.4.2-beta7 之后支持
 // https 请求是否为https请求
 // req 请求
 // rsp 响应
