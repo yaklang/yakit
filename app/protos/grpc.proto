@@ -922,6 +922,7 @@ message AITool {
 message GetAIToolListResponse {
   repeated AITool Tools = 1;
   Paging Pagination = 2;
+  int64 Total = 3;
 }
 
 message GetAIToolListRequest {
