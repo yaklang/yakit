@@ -1,22 +1,25 @@
 import React, {useState} from "react"
 import ReactECharts, {EChartsOption} from "echarts-for-react"
-import {useDebounceEffect, useDebounceFn, useUpdateEffect} from "ahooks"
+import {useDebounceFn, useUpdateEffect} from "ahooks"
 import {formatNumberUnits} from "../utils"
 
 //#region 上下文压力 echarts图表
-interface ContextPressureEchartsProps {
-    data: number[]
+export interface ContextPressureEchartsProps {
+    dataEcharts: {
+        data: number[]
+        xAxis: string[]
+    }
     threshold: number
 }
 export const ContextPressureEcharts: React.FC<ContextPressureEchartsProps> = React.memo((props) => {
-    const {data, threshold} = props
-    const [option, setOption] = useState<EChartsOption>(getContextPressureOption(data, threshold))
+    const {dataEcharts, threshold} = props
+    const [option, setOption] = useState<EChartsOption>(getContextPressureOption(dataEcharts, threshold))
     useUpdateEffect(() => {
         onSetOption()
-    }, [data, threshold])
+    }, [dataEcharts, threshold])
     const onSetOption = useDebounceFn(
         () => {
-            const newOption = getContextPressureOption(data, threshold)
+            const newOption = getContextPressureOption(dataEcharts, threshold)
             setOption(newOption)
         },
         {wait: 500, leading: true}
@@ -34,7 +37,11 @@ const color = {
     }
 }
 /**获取 上下文压力echarts得option*/
-const getContextPressureOption = (data: number[], threshold: number): EChartsOption => {
+const getContextPressureOption = (
+    dataEcharts: ContextPressureEchartsProps["dataEcharts"],
+    threshold: number
+): EChartsOption => {
+    const {data, xAxis} = dataEcharts
     const maxValue = Math.max(...data)
     const minValue = Math.min(...data)
     const yMax = threshold > maxValue ? threshold * 2 : minValue + maxValue
@@ -49,7 +56,18 @@ const getContextPressureOption = (data: number[], threshold: number): EChartsOpt
         },
         tooltip: {
             trigger: "axis",
-            formatter: "{c0}",
+            formatter: (params) => {
+                return `
+                <div>
+                    <div>
+                        ${params[0]?.axisValue || "-"}
+                    </div>
+                    <div style="font-weight: 600;">
+                        ${params[0]?.data?.value || "-"}
+                    </div>
+                </div>
+                `
+            },
             padding: [4, 8],
             textStyle: {
                 color: "#353639"
@@ -57,6 +75,7 @@ const getContextPressureOption = (data: number[], threshold: number): EChartsOpt
         },
         xAxis: {
             type: "category",
+            data: xAxis,
             axisLabel: {show: false},
             axisTick: {show: false},
             axisLine: {
@@ -186,17 +205,20 @@ const getContextPressureOption = (data: number[], threshold: number): EChartsOpt
 
 //#region 响应速度 echarts图表
 interface ResponseSpeedEchartsProps {
-    data: number[]
+    dataEcharts: {
+        data: number[]
+        xAxis: string[]
+    }
 }
 export const ResponseSpeedEcharts: React.FC<ResponseSpeedEchartsProps> = React.memo((props) => {
-    const {data} = props
-    const [option, setOption] = useState<EChartsOption>(getResponseSpeedOption(data))
+    const {dataEcharts} = props
+    const [option, setOption] = useState<EChartsOption>(getResponseSpeedOption(dataEcharts))
     useUpdateEffect(() => {
         onSetOption()
-    }, [data])
+    }, [dataEcharts])
     const onSetOption = useDebounceFn(
         () => {
-            const newOption = getResponseSpeedOption(data)
+            const newOption = getResponseSpeedOption(dataEcharts)
             setOption(newOption)
         },
         {wait: 500, leading: true}
@@ -204,7 +226,8 @@ export const ResponseSpeedEcharts: React.FC<ResponseSpeedEchartsProps> = React.m
     return <ReactECharts option={option} style={{width: 230, height: 100}} />
 })
 
-const getResponseSpeedOption = (data: number[]): EChartsOption => {
+const getResponseSpeedOption = (dataEcharts: ResponseSpeedEchartsProps["dataEcharts"]): EChartsOption => {
+    const {data, xAxis} = dataEcharts
     const length = data.length
     const maxValue = Math.max(...data)
     const avg = !!length ? data.reduce((a, b) => a + b) / length : 0
@@ -219,7 +242,18 @@ const getResponseSpeedOption = (data: number[]): EChartsOption => {
         },
         tooltip: {
             trigger: "axis",
-            formatter: "{c0}",
+            formatter: (params) => {
+                return `
+                <div>
+                    <div>
+                        ${params[0]?.axisValue || "-"}
+                    </div>
+                    <div style="font-weight: 600;">
+                        ${params[0]?.data?.value || "-"}
+                    </div>
+                </div>
+                `
+            },
             padding: [4, 8],
             textStyle: {
                 color: "#353639"
@@ -227,6 +261,7 @@ const getResponseSpeedOption = (data: number[]): EChartsOption => {
         },
         xAxis: {
             type: "category",
+            data: xAxis,
             axisLabel: {show: false},
             axisTick: {show: false},
             axisLine: {
