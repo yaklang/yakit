@@ -191,6 +191,12 @@ module.exports = (win, getClient) => {
 
   const asyncDownloadFingerprint = (savePath) => {
     return new Promise((resolve, reject) => {
+      if (!fs.existsSync(yakProjects)) {
+        try {
+          fs.mkdirSync(yakProjects, { recursive: true })
+        } catch (error) { }
+      }
+      
       // 判断是否有写入权限
       const dir = path.dirname(savePath)
       try {
