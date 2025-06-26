@@ -1,4 +1,4 @@
-import React, {ChangeEvent, useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     ExecuteEnterNodeByPluginParamsProps,
     FormExtraSettingProps,
@@ -26,7 +26,7 @@ import {
     YakitFormDraggerContent,
     YakitFormDraggerContentPath
 } from "@/components/yakitUI/YakitForm/YakitForm"
-import {failed, warn} from "@/utils/notification"
+import {failed} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import classNames from "classnames"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -502,13 +502,19 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
 
 /**执行的入口通过插件参数生成组件 */
 export const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsProps> = React.memo((props) => {
-    const {paramsList, pluginType, isExecuting,jsonSchemaListRef,jsonSchemaInitial} = props
+    const {paramsList, pluginType, isExecuting, jsonSchemaListRef, jsonSchemaInitial} = props
 
     return (
         <>
             {paramsList.map((item) => (
                 <React.Fragment key={item.Field + item.FieldVerbose}>
-                    <FormContentItemByType item={item} pluginType={pluginType} disabled={isExecuting} jsonSchemaListRef={jsonSchemaListRef} jsonSchemaInitial={jsonSchemaInitial}/>
+                    <FormContentItemByType
+                        item={item}
+                        pluginType={pluginType}
+                        disabled={isExecuting}
+                        jsonSchemaListRef={jsonSchemaListRef}
+                        jsonSchemaInitial={jsonSchemaInitial}
+                    />
                 </React.Fragment>
             ))}
         </>
@@ -516,7 +522,7 @@ export const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginPa
 })
 /**插件执行输入》输出form表单的组件item */
 export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React.memo((props) => {
-    const {item, disabled, pluginType,jsonSchemaListRef,jsonSchemaInitial} = props
+    const {item, disabled, pluginType, jsonSchemaListRef, jsonSchemaInitial} = props
     let extraSetting: FormExtraSettingProps | undefined = undefined
     try {
         extraSetting = JSON.parse(item.ExtraSetting || "{}") || {
@@ -625,7 +631,7 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
 
 /**执行表单单个项 */
 export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (props) => {
-    const {item, extraSetting, codeType, disabled, pluginType,jsonSchemaListRef,jsonSchemaInitial} = props
+    const {item, extraSetting, codeType, disabled, pluginType, jsonSchemaListRef, jsonSchemaInitial} = props
     const [validateStatus, setValidateStatus] = useState<"success" | "error">("success")
 
     const formProps = {
@@ -758,7 +764,14 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     validateStatus={validateStatus}
                     help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
-                    <HTTPPacketYakitEditor originValue={defaultValue} readOnly={disabled} onlyBasicMenu={true} noLineNumber={true} noMiniMap={true} />
+                    <HTTPPacketYakitEditor
+                        type='http'
+                        originValue={defaultValue}
+                        readOnly={disabled}
+                        onlyBasicMenu={true}
+                        noLineNumber={true}
+                        noMiniMap={true}
+                    />
                 </Form.Item>
             )
         case "yak":
@@ -805,16 +818,22 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
             try {
                 schema = JSON.parse(item.JsonSchema || "{}")
                 uiSchema = JSON.parse(item.UISchema || "{}")
-                if(jsonSchemaInitial&&jsonSchemaInitial[item.Field]){
+                if (jsonSchemaInitial && jsonSchemaInitial[item.Field]) {
                     value = JSON.parse(jsonSchemaInitial[item.Field])
                 }
             } catch (error) {
                 console.error("Parse JsonSchema failed:", error)
             }
-            return <JsonFormWrapper field={item.Field} schema={schema} uiSchema={uiSchema}
-            jsonSchemaListRef={jsonSchemaListRef} disabled={disabled}
-            value={value}
-            />
+            return (
+                <JsonFormWrapper
+                    field={item.Field}
+                    schema={schema}
+                    uiSchema={uiSchema}
+                    jsonSchemaListRef={jsonSchemaListRef}
+                    disabled={disabled}
+                    value={value}
+                />
+            )
         default:
             return <></>
     }
@@ -931,7 +950,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
                 </>
             )}
             {requestType === "httpFlowId" && (
-                <Form.Item label='请求ID' name='httpFlowId' rules={[{ required: true }]}>
+                <Form.Item label='请求ID' name='httpFlowId' rules={[{required: true}]}>
                     <YakitInput.TextArea placeholder='请输入请求ID,多个请求Id用“英文逗号”分隔' disabled={disabled} />
                 </Form.Item>
             )}
