@@ -368,4 +368,12 @@ module.exports = (win, getClient) => {
         let stream = getClient().DownloadSyntaxFlowRule(params)
         handlerHelper.registerHandler(win, stream, streamDownloadSyntaxFlowRuleMap, token)
     })
+
+    // 结果对比
+    const streamNewSSADiffMap = new Map()
+    ipcMain.handle("cancel-NewSSADiff", handlerHelper.cancelHandler(streamNewSSADiffMap))
+    ipcMain.handle("NewSSADiff", (e, params, token) => {
+        let stream = getClient().NewSSADiff(params)
+        handlerHelper.registerHandler(win, stream, streamNewSSADiffMap, token)
+    })
 }
