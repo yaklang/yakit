@@ -1,20 +1,12 @@
 import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
-import {Paging} from "@/utils/yakQueryHTTPFlow"
-import {AITool} from "./AIToolListType"
+import {
+    GetAIToolListRequest,
+    GetAIToolListResponse,
+    ToggleAIToolFavoriteRequest,
+    ToggleAIToolFavoriteResponse
+} from "../type/aiChat"
 const {ipcRenderer} = window.require("electron")
-
-export interface GetAIToolListRequest {
-    Query: string
-    ToolName: string
-    Pagination: Paging
-    OnlyFavorites: boolean
-}
-export interface GetAIToolListResponse {
-    Tools: AITool[]
-    Pagination: Paging
-    Total:number
-}
 
 export const grpcGetAIToolList: APIFunc<GetAIToolListRequest, GetAIToolListResponse> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
@@ -28,13 +20,6 @@ export const grpcGetAIToolList: APIFunc<GetAIToolListRequest, GetAIToolListRespo
     })
 }
 
-export interface ToggleAIToolFavoriteRequest {
-    ToolName: string
-}
-export interface ToggleAIToolFavoriteResponse {
-    IsFavorite: boolean
-    Message: string
-}
 export const grpcToggleAIToolFavorite: APIFunc<ToggleAIToolFavoriteRequest, ToggleAIToolFavoriteResponse> = (
     params,
     hiddenError
