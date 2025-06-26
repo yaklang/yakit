@@ -1,5 +1,6 @@
 import moment from "moment"
 
+/** @name 将unix时间戳转换为 YYYY-MM-DD HH:mm:ss */
 export const formatTimestamp = (i: number, onlyTime?: boolean) => {
     if (onlyTime) {
         return formatTime(i)
@@ -7,12 +8,32 @@ export const formatTimestamp = (i: number, onlyTime?: boolean) => {
     return moment.unix(i).format("YYYY-MM-DD HH:mm:ss")
 }
 
+/** @name 将unix时间戳转换为 HH:mm:ss */
 export const formatTime = (i: number) => {
     return moment.unix(i).format("HH:mm:ss")
 }
 
+/** @name 将unix时间戳转换为 YYYY-MM-DD */
 export const formatDate = (i: number) => {
     return moment.unix(i).format("YYYY-MM-DD")
+}
+
+/** @name 将时间戳转换为 YYYY-MM-DD HH:mm:ss */
+export const formatTimeYMD = (time: number): string => {
+    return moment(time).format("YYYY-MM-DD HH:mm:ss")
+}
+
+/** @name 将纳秒转换为 YYYY-MM-DD HH:mm:ss */
+export const formatTimeNS = (time: number): string => {
+    const timestampNs = BigInt(`${time}`)
+    const divisor = BigInt(1000000) // 1e6
+
+    const quotient = timestampNs / divisor
+    const remainder = timestampNs % divisor
+
+    const timestampMs = Number(quotient) + Number(remainder) / 1e6
+
+    return moment(timestampMs).format("YYYY-MM-DD HH:mm:ss")
 }
 
 // 24小时内返回(X小时前) 超过返回(X天前) 再超过返回(正常日期)

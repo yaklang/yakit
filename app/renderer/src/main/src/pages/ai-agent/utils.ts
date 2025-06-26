@@ -1,7 +1,6 @@
 import {yakitNotify} from "@/utils/notification"
 import {AIAgentSetting, RenderResourcesTemplates, RenderTools, RenderToolsParam} from "./aiAgentType"
 import cloneDeep from "lodash/cloneDeep"
-import moment from "moment"
 import isNil from "lodash/isNil"
 
 /** 处理默认值不同数据类型 */
@@ -187,29 +186,6 @@ export const formatMCPResourceTemplates = (templates: any[]): RenderResourcesTem
         yakitNotify("error", "资源模板数据格式化失败")
     }
     return data
-}
-
-/** @name 将时间戳转换为 YYYY-MM-DD HH:mm:ss */
-export const formatTime = (time: number): string => {
-    return moment(time).format("YYYY-MM-DD HH:mm:ss")
-}
-
-/** @name 将纳秒转换为 YYYY-MM-DD HH:mm:ss */
-export const formatTimeNS = (time: number): string => {
-    const timestampNs = BigInt(`${time}`)
-    const divisor = BigInt(1000000) // 1e6
-
-    const quotient = timestampNs / divisor
-    const remainder = timestampNs % divisor
-
-    const timestampMs = Number(quotient) + Number(remainder) / 1e6
-
-    return moment(timestampMs).format("YYYY-MM-DD HH:mm:ss")
-}
-
-/** @name 将unix时间戳转换为 YYYY-MM-DD HH:mm:ss */
-export const formatTimeUnix = (time: number): string => {
-    return moment.unix(time).format("YYYY-MM-DD HH:mm:ss")
 }
 
 // #region chat相关工具
