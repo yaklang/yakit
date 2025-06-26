@@ -160,6 +160,7 @@ const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = (props) => {
                     "Via",
                     "X-Imforwards",
                     "X-Powered-By",
+                    "X-Requested-With"
                 ]}
                 setValue={Header => setHeader({...header, Header})} value={header.Header}/>
             <InputItem

@@ -93,6 +93,7 @@ const httpHeaderSuggestions = [
         "Via",
         "X-Imforwards",
         "X-Powered-By",
+        "X-Requested-With",
     ].map(i => {
         return {
             kind: languages.CompletionItemKind.Snippet,
@@ -302,7 +303,7 @@ monaco.languages.setMonarchTokensProvider(fuzzHTTPMonacoSpec, {
             [/(Cookie)(:)/g, ["http.header.danger", { token: "delimiter", next: "@http_cookie" }]],
             [/(Content-Type)(:)/g, ["http.header.danger", { token: "delimiter", next: "@content_type" }]],
             [/(Content-Length|Host|Origin|Referer)(:)/g, ["http.header.danger", { token: "delimiter", next: "@http_header_value" }]],
-            [/(Authorization|X-Forward|Real|User-Agent|Protection|CSP)(:)/g, ["http.header.danger", { token: "delimiter", next: "@http_header_value" }]],
+            [/(Authorization|X-Forward|Real|User-Agent|Protection|CSP|X-Requested-With)(:)/g, ["http.header.danger", { token: "delimiter", next: "@http_header_value" }]],
             [/Sec/, "http.header.warning", "@sec_http_header"],
             [/:/, "delimiter", "@http_header_value"],
             [/\S/, "http.header.info"],

@@ -584,7 +584,8 @@ const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.memo((prop
                             "X-Forwarded-For",
                             "Via",
                             "X-Imforwards",
-                            "X-Powered-By"
+                            "X-Powered-By",
+                            "X-Requested-With"
                         ].map((ele) => ({value: ele, label: ele}))}
                         filterOption={(inputValue, option) => {
                             if (option?.value && typeof option?.value === "string") {
