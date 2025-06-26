@@ -11,6 +11,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
 
+const AIToolList = React.lazy(() => import("./aiToolList/AIToolList"))
+
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
 
@@ -96,6 +98,14 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                             onEmiter("new-chat")
                         }}
                     />
+                </div>
+                <div
+                    className={classNames(styles["active-content"], {
+                        [styles["hidden-content"]]: active !== "tool"
+                    })}
+                    tabIndex={active !== "tool" ? -1 : 1}
+                >
+                    <AIToolList />
                 </div>
             </div>
         </div>
