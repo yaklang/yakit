@@ -13,6 +13,8 @@ const {
 } = require("../handlers/utils/network")
 const {testEngineAvaiableVersion} = require("../ipc")
 const {engineLogOutputFileAndUI} = require("../logFile")
+const process = require("process")
+const childProcess = require("child_process")
 const spawn = require("cross-spawn")
 
 module.exports = (win, getClient) => {
@@ -118,8 +120,17 @@ module.exports = (win, getClient) => {
                 if (!finished) {
                     finished = true
                     child.kill()
-                    engineLogOutputFileAndUI(win, "----- 引擎获取端口超时 -----")
-                    reject("引擎获取端口超时，请重置内置引擎")
+                    try {
+                        if (process.platform === "win32") {
+                            childProcess.exec(`taskkill /PID ${child.pid} /T /F`)
+                        } else {
+                            process.kill(child.pid, "SIGKILL")
+                        }
+                    } catch (e) {
+                    } finally {
+                        engineLogOutputFileAndUI(win, "----- 引擎获取端口超时 -----")
+                        reject("引擎获取端口超时，请重置内置引擎")
+                    }
                 }
             }, 5000)
             child.stdout.on("data", (data) => {

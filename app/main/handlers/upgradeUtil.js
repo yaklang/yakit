@@ -230,10 +230,19 @@ module.exports = {
                     if (!finished) {
                         finished = true
                         child.kill()
-                        const error = new Error("----- [yak -v] 获取版本超时 -----")
-                        engineLogOutputFileAndUI(win, error.toString())
-                        yakVersionEmitter.emit("version", error, null)
-                        isFetchingVersion = false
+                        try {
+                            if (process.platform === "win32") {
+                                childProcess.exec(`taskkill /PID ${child.pid} /T /F`)
+                            } else {
+                                process.kill(child.pid, "SIGKILL")
+                            }
+                        } catch (e) {
+                        } finally {
+                            const error = new Error("[yak -v] 获取版本超时，已强制终止")
+                            engineLogOutputFileAndUI(win, error.toString())
+                            yakVersionEmitter.emit("version", error, null)
+                            isFetchingVersion = false
+                        }
                     }
                 }, 5000)
                 child.stdout.on("data", (data) => {
@@ -307,9 +316,18 @@ module.exports = {
                         if (!finished) {
                             finished = true
                             child.kill()
-                            let errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`
-                            engineLogOutputFileAndUI(win, `${errorMessage}`)
-                            reject(new Error(errorMessage))
+                            try {
+                                if (process.platform === "win32") {
+                                    childProcess.exec(`taskkill /PID ${child.pid} /T /F`)
+                                } else {
+                                    process.kill(child.pid, "SIGKILL")
+                                }
+                            } catch (e) {
+                            } finally {
+                                let errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`
+                                engineLogOutputFileAndUI(win, `${errorMessage}`)
+                                reject(new Error(errorMessage))
+                            }
                         }
                     }, 20000)
                     child.stdout.on("data", (data) => {
