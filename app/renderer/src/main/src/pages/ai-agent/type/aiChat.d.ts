@@ -340,3 +340,32 @@ export interface QueryAIForgeResponse {
     Total: number
 }
 // #endregion
+
+//#region ai tool
+export interface AITool {
+    Name: string
+    Description: string
+    Content: string
+    ToolPath: string
+    Keywords: string[]
+    IsFavorite: boolean
+}
+export interface GetAIToolListRequest {
+    Query: string
+    ToolName: string
+    Pagination: PaginationSchema
+    OnlyFavorites: boolean
+}
+export interface GetAIToolListResponse {
+    Tools: AITool[]
+    Pagination: PaginationSchema
+    Total: number
+}
+export interface ToggleAIToolFavoriteRequest {
+    ToolName: string
+}
+export interface ToggleAIToolFavoriteResponse {
+    IsFavorite: boolean
+    Message: string
+}
+//#endregion
