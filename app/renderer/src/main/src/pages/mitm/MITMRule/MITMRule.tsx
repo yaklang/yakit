@@ -1,5 +1,5 @@
 import {Divider, Modal, Tooltip} from "antd"
-import React, {ReactNode, useContext, useEffect, useImperativeHandle, useMemo, useState} from "react"
+import React, {ReactNode, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     MITMContentReplacerRule,
     MITMRuleProp,
@@ -30,11 +30,10 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {MITMRuleFromModal} from "./MITMRuleFromModal"
 import {randomString} from "@/utils/randomUtil"
-import {MITMResponse} from "../MITMPage"
 import {failed, success, yakitNotify} from "@/utils/notification"
 import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfigure"
 import update from "immutability-helper"
@@ -51,6 +50,10 @@ import {
     MITMContentReplacersRequest
 } from "../MITMHacker/utils"
 import MITMContext from "../Context/MITMContext"
+import ReactResizeDetector from "react-resize-detector"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {useCampare} from "@/hook/useCompare/useCompare"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -155,7 +158,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             excludeBatchMenuKey = "",
             onSetRules,
             onRefreshCom,
-            inMouseEnterTable = false,
+            inMouseEnterTable = false
         } = props
         const mitmContent = useContext(MITMContext)
 
@@ -200,13 +203,16 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             })
         }, [visible])
         useEffect(() => {
-            onGetCurrentRules()
+            setAddRule([])
+            clearnSearch()
+            setTimeout(() => {
+                onGetCurrentRules()
+            }, 50)
         }, [visible])
         useEffect(() => {
             grpcClientMITMContentReplacerUpdate(mitmVersion).on((replacers) => {
                 const newRules = (replacers || []).map((ele) => ({...ele, Id: ele.Index}))
                 setRules(newRules)
-                setBanAndNoReplace(newRules)
             })
             return () => {
                 grpcClientMITMContentReplacerUpdate(mitmVersion).remove()
@@ -219,24 +225,37 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                     const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
                     setRules(newRules)
-                    setBanAndNoReplace(newRules)
                     setIsRefresh(!isRefresh)
                 })
                 .finally(() => setTimeout(() => setLoading(false), 100))
         })
         const setBanAndNoReplace = useMemoizedFn((rules: MITMContentReplacerRule[]) => {
-            const listReplace = rules.filter((item) => item.NoReplace === false)
-            const listDisabled = rules.filter((item) => item.Disabled === false)
-            setIsNoReplace(listReplace.length === 0)
-            setIsAllBan(listDisabled.length === 0)
+            if (rules.length) {
+                const listReplace = rules.filter((item) => item.NoReplace === false)
+                const listDisabled = rules.filter((item) => item.Disabled === false)
+                setIsNoReplace(listReplace.length === 0)
+                setIsAllBan(listDisabled.length === 0)
+            } else {
+                setIsNoReplace(false)
+                setIsAllBan(false)
+            }
         })
 
-        const onSelectAll = (newSelectedRowKeys: string[], selected: MITMContentReplacerRule[], checked: boolean) => {
-            const rows = selected.filter((ele) => !ele.Disabled)
-            setIsAllSelect(checked)
-            setSelectedRowKeys(rows.map((ele: any) => ele.Index))
-            setSelectedRows(rows)
-        }
+        const onSelectAll = useMemoizedFn(
+            (newSelectedRowKeys: string[], selected: MITMContentReplacerRule[], checked: boolean) => {
+                if (checked) {
+                    const rows = searchFlag
+                        ? searchRules.filter((ele) => !ele.Disabled)
+                        : rules.filter((ele) => !ele.Disabled)
+                    setSelectedRowKeys(rows.map((ele: any) => ele.Id))
+                    setSelectedRows(rows)
+                } else {
+                    setSelectedRowKeys([])
+                    setSelectedRows([])
+                }
+                setIsAllSelect(checked)
+            }
+        )
 
         const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: MITMContentReplacerRule) => {
             if (c) {
@@ -245,7 +264,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             } else {
                 setIsAllSelect(false)
                 const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== keys)
-                const newSelectedRows = selectedRows.filter((ele) => ele.Index !== rows.Index)
+                const newSelectedRows = selectedRows.filter((ele) => ele.Id !== rows.Id)
                 setSelectedRowKeys(newSelectedRowKeys)
                 setSelectedRows(newSelectedRows)
             }
@@ -592,6 +611,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 rules[index] = obj
                 setRules([...rules])
             } else {
+                setAddRule((prev) => [obj, ...prev])
                 const newRules = [obj, ...rules].sort((a, b) => a.Index - b.Index)
                 setRules(newRules)
                 setCurrentIndex(newRules.length - 1)
@@ -611,6 +631,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     .invoke("SetCurrentRules", {Rules: newRules})
                     .then((e) => {
                         setVisible(false)
+                        setAddRule([])
                         if (saveOk) {
                             saveOk()
                         } else {
@@ -657,6 +678,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                                 .then((val) => {
                                     emiter.emit("onRefreshRuleEvent", mitmVersion)
                                     setVisible(false)
+                                    setAddRule([])
                                     if (saveOk) {
                                         saveOk()
                                     } else {
@@ -678,6 +700,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                         .then((val) => {
                             emiter.emit("onRefreshRuleEvent", mitmVersion)
                             setVisible(false)
+                            setAddRule([])
                             if (saveOk) {
                                 saveOk()
                             } else {
@@ -692,7 +715,27 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             }
         })
         useEffect(() => {
-            onSetRules && onSetRules(rules.map((item, index) => ({...item, Index: index + 1})))
+            const r = rules.map((item, index) => ({...item, Index: index + 1}))
+            onSetRules && onSetRules(r)
+            setBanAndNoReplace(r)
+            setAddRule((prev) => {
+                return prev.map((item) => {
+                    const match = r.find((r) => r.Id === item.Id)
+                    if (match) {
+                        return {...match}
+                    }
+                    return item
+                })
+            })
+
+            setSearchRules((prev) => {
+                return prev
+                    .map((item, index) => {
+                        const edited = r.find((r) => r.Id == item.Id)
+                        return edited ? edited : null
+                    })
+                    .filter(Boolean) as MITMContentReplacerRule[]
+            })
         }, [rules])
 
         const onBatchNoReplaceOrBan = useMemoizedFn((checked: boolean, text: string) => {
@@ -706,6 +749,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             })
             setRules([...newRules])
             setSelectedRowKeys([])
+            setIsAllSelect(false)
             setTimeout(() => {
                 setLoading(false)
             }, 200)
@@ -735,6 +779,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             const newRules: MITMContentReplacerRule[] = rules.map((item) => ({...item, Disabled: checked}))
             setRules(newRules)
             setSelectedRowKeys([])
+            setIsAllSelect(false)
             setTimeout(() => {
                 setLoading(false)
             }, 200)
@@ -752,6 +797,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             })
             setRules(newRules)
             setSelectedRowKeys([])
+            setIsAllSelect(false)
             setTimeout(() => {
                 setLoading(false)
             }, 200)
@@ -774,7 +820,10 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         })
 
         const onOkImport = useMemoizedFn(() => {
-            onGetCurrentRules()
+            clearnSearch()
+            setTimeout(() => {
+                onGetCurrentRules()
+            }, 50)
         })
 
         const onClose = useMemoizedFn(() => {
@@ -839,9 +888,100 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 </div>
             )
         }
+
+        const [addRule, setAddRule] = useState<MITMContentReplacerRule[]>([])
+        const [tableTitleBodyWidth, setTableTitleBodyWidth] = useState<number>(0)
+        const [valueSearch, setValueSearch] = useState<string>("")
+        const [searchRules, setSearchRules] = useState<MITMContentReplacerRule[]>([])
+        const [searchFlag, setSearchFlag] = useState<boolean>(false)
+        const clearnSearch = useMemoizedFn(() => {
+            setValueSearch("")
+            setSearchFlag(false)
+            setSearchRules([])
+            setIsRefresh(!isRefresh)
+
+            setSelectedRowKeys([])
+            setSelectedRows([])
+            setIsAllSelect(false)
+        })
+        const onSearch = useMemoizedFn((searchValue?: string) => {
+            setLoading(true)
+            const realValue = (searchValue || "").trim()
+            if (realValue === "") {
+                clearnSearch()
+                setTimeout(() => setLoading(false), 100)
+            } else {
+                setSearchFlag(true)
+                ipcRenderer
+                    .invoke("QueryMITMReplacerRules", {KeyWord: realValue})
+                    .then((rsp) => {
+                        const newRules = rsp.Rules.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                        // 确保newRules为最新的rules数据
+                        rules.forEach((item) => {
+                            const idx = newRules.findIndex((i) => i.Id == item.Id)
+                            if (idx !== -1) {
+                                newRules[idx] = {
+                                    ...item
+                                }
+                            }
+                        })
+
+                        // 只保留 rules 里还存在的项
+                        const rulesIdSet = new Set(rules.map((item) => item.Id))
+                        const filteredRules = newRules.filter((item) => rulesIdSet.has(item.Id))
+
+                        // 新加规则 前端匹配搜索
+                        const lower = realValue.toLowerCase()
+                        const arr = addRule.filter((item) => {
+                            return (
+                                (item.VerboseName && item.VerboseName.toLowerCase().includes(lower)) ||
+                                (item.Rule && item.Rule.toLowerCase().includes(lower))
+                            )
+                        })
+
+                        setSearchRules([...filteredRules, ...arr].sort((a, b) => a.Index - b.Index))
+
+                        setIsRefresh(!isRefresh)
+
+                        setSelectedRowKeys([])
+                        setSelectedRows([])
+                        setIsAllSelect(false)
+                    })
+                    .finally(() => setTimeout(() => setLoading(false), 100))
+            }
+        })
+        const searchEle = useMemo(() => {
+            return (
+                <YakitInput.Search
+                    size='small'
+                    placeholder='请输入关键字搜索'
+                    style={{maxWidth: 200}}
+                    value={valueSearch}
+                    onChange={(e) => {
+                        setValueSearch(e.target.value)
+                    }}
+                    onSearch={onSearch}
+                    onPressEnter={(e) => {
+                        e.preventDefault()
+                        onSearch(e.currentTarget.value)
+                    }}
+                />
+            )
+        }, [valueSearch])
+
         const content = () => {
             return (
                 <div className={styles["mitm-rule-table"]}>
+                    <ReactResizeDetector
+                        onResize={(width, height) => {
+                            if (!width || !height) return
+                            setTableTitleBodyWidth(width)
+                        }}
+                        handleWidth={true}
+                        handleHeight={true}
+                        refreshMode={"debounce"}
+                        refreshRate={50}
+                    />
                     <TableVirtualResize<MITMContentReplacerRule>
                         currentIndex={currentIndex}
                         isRefresh={isRefresh}
@@ -856,6 +996,21 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                         }
                         extra={
                             <div className={styles["table-title-body"]}>
+                                <div className={styles["table-search"]}>
+                                    <>{tableTitleBodyWidth >= 670 && searchEle}</>
+                                    <>
+                                        {tableTitleBodyWidth < 670 && (
+                                            <YakitPopover content={searchEle}>
+                                                <YakitButton
+                                                    icon={<OutlineSearchIcon />}
+                                                    size='small'
+                                                    type='outline2'
+                                                    isHover={searchFlag}
+                                                />
+                                            </YakitPopover>
+                                        )}
+                                    </>
+                                </div>
                                 <div className={styles["table-switch"]}>
                                     <span className={styles["switch-text"]}>全部禁用</span>
                                     <YakitSwitch checked={isAllBan} onChange={(c) => onAllBan(c)} />
@@ -911,7 +1066,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                             </div>
                         }
                         renderKey='Id'
-                        data={rules}
+                        data={searchFlag ? searchRules : rules}
                         rowSelection={{
                             isAll: isAllSelect,
                             type: "checkbox",
@@ -920,7 +1075,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                             onChangeCheckboxSingle: onSelectChange
                         }}
                         pagination={{
-                            total: rules.length,
+                            total: searchFlag ? searchRules.length : rules.length,
                             limit: 20,
                             page: 1,
                             onChange: () => {}

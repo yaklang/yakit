@@ -429,6 +429,21 @@ module.exports = (win, getClient) => {
         return await asyncGetCurrentRules(params)
     })
 
+    const asyncQueryMITMReplacerRules = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryMITMReplacerRules(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryMITMReplacerRules", async (e, params) => {
+        return await asyncQueryMITMReplacerRules(params)
+    })
+
     // asyncSetCurrentRules wrapper
     const asyncSetCurrentRules = (params) => {
         return new Promise((resolve, reject) => {
