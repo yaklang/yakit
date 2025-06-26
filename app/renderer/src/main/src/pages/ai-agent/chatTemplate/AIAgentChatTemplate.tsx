@@ -27,7 +27,7 @@ import {
     OutlineWarpIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {formatNumberUnits, formatTime, formatTimeUnix} from "../utils"
+import {formatNumberUnits} from "../utils"
 import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import {Input, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -49,12 +49,13 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {handleFlatAITree} from "../useChatData"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {ContextPressureEcharts, ResponseSpeedEcharts} from "./AIEcharts"
+import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "./AIEcharts"
 import AIPlanReviewTree from "../aiPlanReviewTree/AIPlanReviewTree"
 import {yakitNotify} from "@/utils/notification"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
+import {formatTime, formatTimestamp, formatTimeYMD} from "@/utils/timeUtil"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -70,15 +71,21 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     })
 
     // 上下文压力集合
-    const currentPressures = useMemo(() => {
-        return pressure.map((item) => item.current_cost_token_size) || []
+    const currentPressuresEcharts: ContextPressureEchartsProps["dataEcharts"] = useMemo(() => {
+        const data: number[] = []
+        const xAxis: string[] = []
+        pressure.forEach((item) => {
+            data.push(item.current_cost_token_size)
+            xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
+        })
+        return {data, xAxis}
     }, [pressure])
     // 最新的上下文压力
     const lastPressure = useMemo(() => {
-        const length = currentPressures.length
+        const length = currentPressuresEcharts.data.length
         if (length === 0) return 0
-        return currentPressures[length - 1] || 0
-    }, [currentPressures])
+        return currentPressuresEcharts.data[length - 1] || 0
+    }, [currentPressuresEcharts.data])
     // 上下文压力预设值
     const pressureThreshold = useMemo(() => {
         const length = pressure.length
@@ -87,15 +94,21 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     }, [pressure])
 
     // 首字符延迟集合
-    const firstCosts = useMemo(() => {
-        return cost.map((item) => item.ms) || []
+    const currentCostEcharts = useMemo(() => {
+        const data: number[] = []
+        const xAxis: string[] = []
+        cost.forEach((item) => {
+            data.push(item.ms)
+            xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
+        })
+        return {data, xAxis}
     }, [cost])
     // 最新的首字符延迟
     const lastFirstCost = useMemo(() => {
-        const length = firstCosts.length
+        const length = currentCostEcharts.data.length
         if (length === 0) return 0
-        return firstCosts[length - 1] || 0
-    }, [firstCosts])
+        return currentCostEcharts.data[length - 1] || 0
+    }, [currentCostEcharts])
 
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>
@@ -126,8 +139,8 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                         </div>
                     </div>
 
-                    {currentPressures.length > 0 && (
-                        <ContextPressureEcharts data={currentPressures} threshold={pressureThreshold} />
+                    {currentPressuresEcharts?.data?.length > 0 && (
+                        <ContextPressureEcharts dataEcharts={currentPressuresEcharts} threshold={pressureThreshold} />
                     )}
                 </div>
 
@@ -141,7 +154,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                             {`${lastFirstCost < 0 ? "-" : lastFirstCost}ms`}
                         </div>
                     </div>
-                    {firstCosts.length > 0 && <ResponseSpeedEcharts data={firstCosts} />}
+                    {currentCostEcharts?.data?.length > 0 && <ResponseSpeedEcharts dataEcharts={currentCostEcharts} />}
                 </div>
             </div>
         </div>
@@ -190,7 +203,7 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
                         </div>
                     </div>
                     <div className={styles["divider-style"]}></div>
-                    <div className={styles["info-time"]}>创建时间: {formatTime(info.time)}</div>
+                    <div className={styles["info-time"]}>创建时间: {formatTimeYMD(info.time)}</div>
                 </div>
             </div>
 
@@ -347,7 +360,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                                             {taskAnswerToIconMap[type] || <SolidLightningboltIcon />}
                                             <div className={styles["task-type-header-title"]}>{type}</div>
                                             <div className={styles["task-type-header-time"]}>
-                                                {formatTimeUnix(timestamp)}
+                                                {formatTimestamp(timestamp)}
                                             </div>
                                         </div>
                                     }
