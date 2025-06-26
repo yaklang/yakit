@@ -1,15 +1,9 @@
 import React, {useEffect, useRef, useState} from "react"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {AITool, AIToolListItemProps, AIToolListProps, ToolQueryType} from "./AIToolListType"
+import {AIToolListItemProps, AIToolListProps, ToolQueryType} from "./AIToolListType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
-import {
-    GetAIToolListRequest,
-    GetAIToolListResponse,
-    grpcGetAIToolList,
-    grpcToggleAIToolFavorite,
-    ToggleAIToolFavoriteRequest
-} from "./utils"
+import {grpcGetAIToolList, grpcToggleAIToolFavorite} from "./utils"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
@@ -21,6 +15,7 @@ import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {AITool, GetAIToolListRequest, GetAIToolListResponse, ToggleAIToolFavoriteRequest} from "../type/aiChat"
 
 const toolTypeOptions = [
     {

@@ -4,8 +4,9 @@ import {AIAgentTabList} from "./defaultConstant"
 import {AIAgentSideListProps, AIAgentTab, AIAgentTriggerEventInfo} from "./aiAgentType"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 // import {MCPServer} from "./MCPServer"
-import {AIChatSetting} from "./AIChatSetting"
-import {HistoryChat} from "./HistoryChat"
+import {HistoryChat} from "./historyChat/HistoryChat"
+import {AIChatSetting} from "./AIChatSetting/AIChatSetting"
+import {ForgeName} from "./forgeName/ForgeName"
 import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
@@ -48,7 +49,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
 
     return (
         <div className={styles["ai-agent-side-list"]}>
-            <div className={styles["side-list-bar"]}>
+            <div className={classNames(styles["side-list-bar"], {[styles["side-list-bar-hidden"]]: hiddenActive})}>
                 {AIAgentTabList.map((item) => {
                     const isActive = item.key === active
                     return (
@@ -80,15 +81,6 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
 
                 <div
                     className={classNames(styles["active-content"], {
-                        [styles["hidden-content"]]: active !== "setting"
-                    })}
-                    tabIndex={active !== "setting" ? -1 : 1}
-                >
-                    <AIChatSetting />
-                </div>
-
-                <div
-                    className={classNames(styles["active-content"], {
                         [styles["hidden-content"]]: active !== "history"
                     })}
                     tabIndex={active !== "history" ? -1 : 1}
@@ -99,6 +91,25 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                         }}
                     />
                 </div>
+
+                <div
+                    className={classNames(styles["active-content"], {
+                        [styles["hidden-content"]]: active !== "setting"
+                    })}
+                    tabIndex={active !== "setting" ? -1 : 1}
+                >
+                    <AIChatSetting />
+                </div>
+
+                <div
+                    className={classNames(styles["active-content"], {
+                        [styles["hidden-content"]]: active !== "forgeName"
+                    })}
+                    tabIndex={active !== "forgeName" ? -1 : 1}
+                >
+                    <ForgeName />
+                </div>
+
                 <div
                     className={classNames(styles["active-content"], {
                         [styles["hidden-content"]]: active !== "tool"
