@@ -104,5 +104,7 @@ export enum YakitRoute {
     /** Java 反编译 */
     Yak_Java_Decompiler = "yak-java-decompiler",
     // 指纹库
-    FingerprintManage = "fingerprint-manage"
+    FingerprintManage = "fingerprint-manage",
+    // ssa-result-diff
+    Ssa_Result_Diff = "ssa-result-diff"
 }
