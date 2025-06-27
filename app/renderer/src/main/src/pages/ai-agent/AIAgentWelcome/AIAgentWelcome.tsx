@@ -16,10 +16,10 @@ import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {AIAgentChatTextarea} from "../chatTemplate/AIAgentChatTemplate"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {getYakExecutorParam} from "@/pages/plugins/editDetails/utils"
+import {TextAreaRef} from "antd/lib/input/TextArea"
 
 import classNames from "classnames"
 import styles from "./AIAgentWelcome.module.scss"
-
 export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo((props) => {
     const {onSearch} = props
 
@@ -43,6 +43,14 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo((props) => {
         [question],
         {wait: 500}
     )
+    // #endregion
+
+    // #region 设置光标处的选项列表
+    const qsInputRef = useRef<TextAreaRef>(null)
+    const handleGetCursorPosition = useMemoizedFn(() => {
+        if (qsInputRef && qsInputRef.current) {
+        }
+    })
     // #endregion
 
     // #region  AI-Forge 模板相关逻辑
@@ -170,6 +178,7 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo((props) => {
             <div className={styles["welcome-input"]}>
                 <div className={styles["ai-agent-input"]}>
                     <Input.TextArea
+                        ref={qsInputRef}
                         className={styles["question-textArea"]}
                         bordered={false}
                         placeholder='请下发任务, AI-Agent将执行(shift + enter 换行)'
@@ -189,6 +198,15 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo((props) => {
                                 e.preventDefault()
                                 onSearch({UserQuery: ""})
                             }
+                        }}
+                        onFocus={() => {
+                            console.log(11111)
+                            setTimeout(() => {
+                                handleGetCursorPosition()
+                            }, 1000)
+                        }}
+                        onBlur={() => {
+                            console.log(22222)
                         }}
                     />
 
