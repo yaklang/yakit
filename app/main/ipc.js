@@ -291,8 +291,6 @@ module.exports = {
 
         // register open new console window
         require("./handlers/openConsoleNewWin/index").register(win, getClient)
-        // 读取企业版静态资源
-        require("./handlers/staticEE").register(win, getClient)
 
         // 接口注册
         const api = fs.readdirSync(path.join(__dirname, "./api"))
