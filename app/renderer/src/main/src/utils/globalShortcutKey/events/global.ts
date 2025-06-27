@@ -40,7 +40,7 @@ export enum GlobalShortcutKey {
 }
 const {Yakit, EnpriTrace} = PRODUCT_RELEASE_EDITION
 
-type EventsType = Record<GlobalShortcutKey, ShortcutKeyEventInfo>
+type EventsType = Record<`${GlobalShortcutKey}`, ShortcutKeyEventInfo>
 
 const globalShortcutKeyEvents: EventsType = {
     screenshot: {

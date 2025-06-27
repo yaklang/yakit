@@ -73,7 +73,7 @@ import {OutlineArrowleftIcon, OutlineArrowrightIcon, OutlineLoadingIcon} from "@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
-import {getGlobalShortcutKeyEvents} from "@/utils/globalShortcutKey/events/global"
+import {getGlobalShortcutKeyEvents, GlobalShortcutKey} from "@/utils/globalShortcutKey/events/global"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "@/utils/prettifyPacket"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
@@ -345,7 +345,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                                     <div className={styles["content-style"]}>发送并跳转</div>
                                     <div className={classNames(styles["keybind-style"], "keys-style")}>
                                         {convertKeyboardToUIKey(
-                                            getGlobalShortcutKeyEvents()["sendAndJump*common"].keys
+                                            getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys
                                         )}
                                     </div>
                                 </div>
@@ -357,7 +357,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                                 <div className={styles["context-menu-keybind-wrapper"]}>
                                     <div className={styles["content-style"]}>仅发送</div>
                                     <div className={classNames(styles["keybind-style"], "keys-style")}>
-                                        {convertKeyboardToUIKey(getGlobalShortcutKeyEvents()["send*common"].keys)}
+                                        {convertKeyboardToUIKey(getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys)}
                                     </div>
                                 </div>
                             )
