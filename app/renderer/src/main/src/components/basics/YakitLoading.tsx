@@ -164,6 +164,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
                             {showEngineLog ? "隐藏日志" : "查看日志"}
                         </YakitButton>
+                        <Divider type='vertical' style={{margin: 0}} />
+                        {changePortBtn()}
                     </div>
                 </>
             )
@@ -309,6 +311,12 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
                     {showEngineLog ? "隐藏日志" : "查看日志"}
                 </YakitButton>
+                {!["ready", "link"].includes(yakitStatus) && (
+                    <>
+                        <Divider type='vertical' style={{margin: 0}} />
+                        {changePortBtn()}
+                    </>
+                )}
             </div>
         )
     }, [yakitStatus, restartLoading, remoteControlRefreshLoading, engineMode, showEngineLog])
