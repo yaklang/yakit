@@ -180,7 +180,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [engineLink])
 
     // 获取企业版配置信息
-    const {eeSystemConfig, setEeSystemConfig} = useEeSystemConfig()
+    const {eeSystemConfig} = useEeSystemConfig()
     const isLoginFirstRef = useRef<boolean>(true) // 只是登录的那一下需要传login参数的标志
     useDebounceEffect(
         () => {
@@ -318,22 +318,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
         grpcExportProject(params)
     })
-    //#endregion
-    useEffect(() => {
-        if (engineLink && isEnpriTrace()) {
-            NetWorkApi<any, API.SystemConfigResponse>({
-                method: "get",
-                url: "system/config"
-            })
-                .then((config) => {
-                    const data = config.data || []
-                    setEeSystemConfig([...data])
-                })
-                .catch(() => {
-                    setEeSystemConfig([])
-                })
-        }
-    }, [engineLink])
 
     /** ---------- 引擎状态和连接相关逻辑 Start ---------- */
     /** 插件漏洞信息库自检 */

@@ -36,18 +36,21 @@ export const grpcFetchIntranetYakitVersion: APIOptionalFunc<GrpcToHTTPRequestPro
                 params: {
                     page: 1,
                     limit: 10,
+                    orderBy: "updated_at",
+                    order: "desc",
                     keywords: version
                 }
             })
                 .then((res) => {
-                    let filePath:string = ""
-                    if (res.data.length>0 ) {
+                    let filePath: string = ""
+                    if (res.data.length > 0) {
                         filePath = res.data[0].filePath
                     }
                     resolve(filePath)
                 })
                 .catch((e) => {
                     if (!hiddenError) yakitNotify("error", "获取内网最新软件版本失败:" + e)
+                    reject(e)
                 })
                 .finally(() => {})
         })

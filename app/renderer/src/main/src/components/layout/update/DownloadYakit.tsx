@@ -81,6 +81,15 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                                 ipcRenderer.invoke("open-yakit-path")
                                 emiter.emit("downloadedYakitIntranetFlag")
                             })
+                            .catch((e: any) => {
+                                if (!isBreakRef.current) return
+                                failed(`下载失败: ${e}`)
+                            })
+                            .finally(() => setVisible(false))
+                    })
+                    .catch((e: any) => {
+                        if (!isBreakRef.current) return
+                        setVisible(false)
                     })
                 }
                 else{
