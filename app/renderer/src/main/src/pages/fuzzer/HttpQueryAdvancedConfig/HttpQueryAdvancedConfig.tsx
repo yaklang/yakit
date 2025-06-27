@@ -55,7 +55,7 @@ import {
     filterModeOptions,
     matchersConditionOptions
 } from "../MatcherAndExtractionCard/constants"
-import {DefFuzzerConcurrent} from "@/defaultConstants/HTTPFuzzerPage"
+import {defaultAdvancedConfigValue, DefFuzzerConcurrent} from "@/defaultConstants/HTTPFuzzerPage"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 
 const {ipcRenderer} = window.require("electron")
@@ -619,10 +619,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 batchTarget: new Uint8Array(),
                                                 disableHotPatch: false,
                                                 enableRandomChunked: false,
-                                                randomChunkedMinLength: 0,
-                                                randomChunkedMaxLength: 0,
-                                                randomChunkedMinDelay: 0,
-                                                randomChunkedMaxDelay: 0
+                                                randomChunkedMinLength:
+                                                    defaultAdvancedConfigValue.randomChunkedMinLength,
+                                                randomChunkedMaxLength:
+                                                    defaultAdvancedConfigValue.randomChunkedMaxLength,
+                                                randomChunkedMinDelay: defaultAdvancedConfigValue.randomChunkedMinDelay,
+                                                randomChunkedMaxDelay: defaultAdvancedConfigValue.randomChunkedMaxDelay
                                             }
                                             onReset(restValue)
                                         }}

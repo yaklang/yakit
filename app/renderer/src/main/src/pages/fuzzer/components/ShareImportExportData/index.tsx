@@ -27,7 +27,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {randomString} from "@/utils/randomUtil"
 import {generateGroupId} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
 import {MultipleNodeInfo} from "@/pages/layout/mainOperatorContent/MainOperatorContentType"
-import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
+import {defaultAdvancedConfigValue, DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
@@ -85,10 +85,10 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
         inheritCookies: value.InheritCookies,
         inheritVariables: value.InheritVariables,
         enableRandomChunked: !!value.EnableRandomChunked,
-        randomChunkedMinLength: value.RandomChunkedMinLength || 0,
-        randomChunkedMaxLength: value.RandomChunkedMaxLength || 0,
-        randomChunkedMinDelay: value.RandomChunkedMinDelay || 0,
-        randomChunkedMaxDelay: value.RandomChunkedMaxDelay || 0
+        randomChunkedMinLength: value.RandomChunkedMinLength || defaultAdvancedConfigValue.randomChunkedMinLength,
+        randomChunkedMaxLength: value.RandomChunkedMaxLength || defaultAdvancedConfigValue.randomChunkedMaxLength,
+        randomChunkedMinDelay: value.RandomChunkedMinDelay || defaultAdvancedConfigValue.randomChunkedMinDelay,
+        randomChunkedMaxDelay: value.RandomChunkedMaxDelay || defaultAdvancedConfigValue.randomChunkedMaxDelay
     }
     return resProps
 }

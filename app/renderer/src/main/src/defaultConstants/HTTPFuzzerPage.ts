@@ -45,10 +45,10 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     timeout: 30,
     // Random Chunked
     enableRandomChunked: false,
-    randomChunkedMinLength: 0,
-    randomChunkedMaxLength: 0,
-    randomChunkedMinDelay: 0,
-    randomChunkedMaxDelay: 0,
+    randomChunkedMinLength: 10,
+    randomChunkedMaxLength: 25,
+    randomChunkedMinDelay: 50,
+    randomChunkedMaxDelay: 100,
     // 批量目标
     batchTarget: new Uint8Array(),
     // 发包配置

@@ -436,6 +436,11 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         DelayMinSeconds: value.minDelaySeconds,
         DelayMaxSeconds: value.maxDelaySeconds,
         RepeatTimes: value.repeatTimes,
+        EnableRandomChunked: !!value.enableRandomChunked,
+        RandomChunkedMinLength: value.randomChunkedMinLength,
+        RandomChunkedMaxLength: value.randomChunkedMaxLength,
+        RandomChunkedMinDelay: value.randomChunkedMinDelay,
+        RandomChunkedMaxDelay: value.randomChunkedMaxDelay,
 
         // retry config
         MaxRetryTimes: value.maxRetryTimes,
@@ -1463,7 +1468,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             maxDelaySeconds: val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0,
             timeout: val.timeout ? Number(val.timeout) : 0,
             dialTimeoutSeconds: val.dialTimeoutSeconds ? Number(val.dialTimeoutSeconds) : 0,
-            repeatTimes: val.repeatTimes ? Number(val.repeatTimes) : 0
+            repeatTimes: val.repeatTimes ? Number(val.repeatTimes) : 0,
+            randomChunkedMinLength: val.randomChunkedMinLength ? Number(val.randomChunkedMinLength) : defaultAdvancedConfigValue.randomChunkedMinLength,
+            randomChunkedMaxLength: val.randomChunkedMaxLength ? Number(val.randomChunkedMaxLength) : defaultAdvancedConfigValue.randomChunkedMaxLength,
+            randomChunkedMinDelay: val.randomChunkedMinDelay ? Number(val.randomChunkedMinDelay) : defaultAdvancedConfigValue.randomChunkedMinDelay,
+            randomChunkedMaxDelay: val.randomChunkedMaxDelay ? Number(val.randomChunkedMaxDelay) : defaultAdvancedConfigValue.randomChunkedMaxDelay
         }
         setAdvancedConfigValue(newValue)
     })
