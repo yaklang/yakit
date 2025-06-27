@@ -83,7 +83,12 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
         methodGet: value.MutateMethods.find((item) => item.Type === "Get")?.Value || [{Key: "", Value: ""}],
         methodPost: value.MutateMethods.find((item) => item.Type === "Post")?.Value || [{Key: "", Value: ""}],
         inheritCookies: value.InheritCookies,
-        inheritVariables: value.InheritVariables
+        inheritVariables: value.InheritVariables,
+        enableRandomChunked: !!value.EnableRandomChunked,
+        randomChunkedMinLength: value.RandomChunkedMinLength || 0,
+        randomChunkedMaxLength: value.RandomChunkedMaxLength || 0,
+        randomChunkedMinDelay: value.RandomChunkedMinDelay || 0,
+        randomChunkedMaxDelay: value.RandomChunkedMaxDelay || 0
     }
     return resProps
 }

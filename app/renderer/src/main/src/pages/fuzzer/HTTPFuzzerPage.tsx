@@ -340,6 +340,12 @@ export interface FuzzerRequestProps {
 
     /** 是否由引擎进行丢弃包逻辑 */
     EngineDropPacket?: boolean
+    // Random Chunked
+    EnableRandomChunked?: boolean
+    RandomChunkedMinLength?: number
+    RandomChunkedMaxLength?: number
+    RandomChunkedMinDelay?: number
+    RandomChunkedMaxDelay?: number
 }
 
 export const showDictsAndSelect = (fun: (i: string) => any) => {
@@ -2304,6 +2310,12 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
     const isShowSystemProxy = useCreation(() => {
         return systemProxy?.Enable && !advancedConfigValue.noSystemProxy && !advancedConfigValue.proxy.length
     }, [systemProxy, advancedConfigValue.noSystemProxy, advancedConfigValue.proxy])
+    const onCloseRandomChunked = useMemoizedFn(() => {
+        setAdvancedConfigValue({
+            ...advancedConfigValue,
+            enableRandomChunked: false
+        })
+    })
     return (
         <div className={styles["display-flex"]} ref={divRef}>
             {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
@@ -2345,6 +2357,11 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
                         <YakitTag color='danger'>匹配失败</YakitTag>
                     )}
                 </>
+            )}
+            {advancedConfigValue.enableRandomChunked && (
+                <YakitTag closable onClose={onCloseRandomChunked}>
+                    开启Chunk
+                </YakitTag>
             )}
         </div>
     )

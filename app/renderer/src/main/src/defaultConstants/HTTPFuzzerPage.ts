@@ -43,6 +43,12 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     actualHost: "",
     dialTimeoutSeconds: 10,
     timeout: 30,
+    // Random Chunked
+    enableRandomChunked: false,
+    randomChunkedMinLength: 0,
+    randomChunkedMaxLength: 0,
+    randomChunkedMinDelay: 0,
+    randomChunkedMaxDelay: 0,
     // 批量目标
     batchTarget: new Uint8Array(),
     // 发包配置
