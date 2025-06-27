@@ -86,6 +86,7 @@ import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {YakitDropdownMenu} from "../yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {
+    grpcFetchIntranetYakitVersion,
     grpcFetchLatestYakitVersion,
     grpcFetchLatestYakVersion,
     grpcFetchLocalYakitVersion,
@@ -1391,7 +1392,10 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     ) : lastVersion === "" ? (
                         "获取失败"
                     ) : isUpdate ? (
-                        <div className={styles["update-btn"]} onClick={() => onDownload(intranet ? "intranetYakit" : "yakit")}>
+                        <div
+                            className={styles["update-btn"]}
+                            onClick={() => onDownload(intranet ? "intranetYakit" : "yakit")}
+                        >
                             <UpdateSvgIcon style={{marginRight: 4}} />
                             立即下载
                         </div>
@@ -1837,35 +1841,28 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     useUpdateEffect(() => {
         if (isIntranet) {
-            getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
-                try {
-                    if (!setting) return
-                    const value = JSON.parse(setting)
-                    let url = value.BaseUrl
-                    // 从内网读取版本号
-                    grpcFetchLatestYakitVersion(undefined, true)
-                        .then((data: string) => {
-                            // 企业版初次进入时 如若配置文件为强制更新则需弹出提示框
-                            if (isUpdateEnpriTraceRef.current) {
-                                const isUpdateYakit = data !== "" && removePrefixV(data) !== removePrefixV(yakitVersion)
-                                // 是否强制更新
-                                let forceUpdate = false
-                                eeSystemConfig.forEach((item) => {
-                                    if (item.configName === "forceUpdate") {
-                                        forceUpdate = item.isOpen
-                                    }
-                                })
-                                if (isUpdateYakit && forceUpdate) {
-                                    isUpdateEnpriTraceRef.current = false
-                                    setShowEnpriTraceUpdateHint(true)
-                                }
-                            }
-                            setYakitLastIntranetVersion(data)
-                        })
-                        .catch(() => {
-                            setYakitLastIntranetVersion("")
-                        })
-                } catch (error) {}
+            // 从内网读取版本号
+            grpcFetchIntranetYakitVersion().then((filePath: string) => {
+                const match = filePath.match(/EnpriTrace-([\d.-]+)/)
+                const version = match ? match[1] : ""
+                const data = `v${version.endsWith('-') ? version.slice(0, -1) : version}` // 去掉末尾的'-'符号
+                
+                // 企业版初次进入时 如若配置文件为强制更新则需弹出提示框
+                if (isUpdateEnpriTraceRef.current && data.length > 0) {
+                    const isUpdateYakit = data !== "" && removePrefixV(data) !== removePrefixV(yakitVersion)
+                    // 是否强制更新
+                    let forceUpdate = false
+                    eeSystemConfig.forEach((item) => {
+                        if (item.configName === "forceUpdate") {
+                            forceUpdate = item.isOpen
+                        }
+                    })
+                    if (isUpdateYakit && forceUpdate) {
+                        isUpdateEnpriTraceRef.current = false
+                        setShowEnpriTraceUpdateHint(true)
+                    }
+                }
+                setYakitLastIntranetVersion(data)
             })
         }
     }, [isIntranet])
@@ -1997,7 +1994,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     // intranetYakit为内网Yakit
     const onDownload = useMemoizedFn((type: "yakit" | "yaklang" | "intranetYakit") => {
         setShow(false)
-        if (["yakit","intranetYakit"].includes(type)) {
+        if (["yakit", "intranetYakit"].includes(type)) {
             emiter.emit("activeUpdateYakitOrYaklang", type)
         } else {
             emiter.emit("downYaklangSpecifyVersion", JSON.stringify({version: yaklangLastVersion}))

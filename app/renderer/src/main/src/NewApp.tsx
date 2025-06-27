@@ -21,6 +21,7 @@ import {handleFetchSystemInfo} from "./constants/hardware"
 import {closeWebSocket, startWebSocket} from "./utils/webSocket/webSocket"
 import {startShortcutKeyMonitor, stopShortcutKeyMonitor} from "./utils/globalShortcutKey/utils"
 import {getStorageGlobalShortcutKeyEvents} from "./utils/globalShortcutKey/events/global"
+import emiter from "./utils/eventBus/eventBus"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
@@ -248,14 +249,28 @@ function NewApp() {
     const isSyncData = useMemoizedFn((token) => {
         if (isEnpriTrace()) {
             let syncData = false
+            let autoUploadProject = {
+                isOpen: false,
+                day: 10
+            }
             eeSystemConfig.forEach((item) => {
                 if (item.configName === "syncData") {
                     syncData = item.isOpen
+                }
+                if (item.configName === "autoUploadProject") {
+                    autoUploadProject = {
+                        isOpen: item.isOpen,
+                        day: !Number.isNaN(+item.content) ? +item.content : 10
+                    }
                 }
             })
             if (syncData) {
                 aboutLoginUpload(token)
                 loginHTTPFlowsToOnline(token)
+            }
+            // 自动上传项目
+            if (autoUploadProject.isOpen && userInfo.isLogin) {
+                emiter.emit("autoUploadProject",JSON.stringify(autoUploadProject.day))
             }
         } else {
             aboutLoginUpload(token)

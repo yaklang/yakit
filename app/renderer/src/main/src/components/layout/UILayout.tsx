@@ -241,6 +241,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             })
         }
     }, [userInfo.isLogin])
+
+    useEffect(() => {
+        emiter.on("autoUploadProject", (data) => {
+            try {
+              onGetProjects(JSON.parse(data).day)  
+            } catch (error) {}
+        })
+        return () => {
+            emiter.off("autoUploadProject")
+        }
+    },[])
+
     const onGetProjects = useMemoizedFn((day) => {
         const time = moment().subtract(day, "days").startOf("day")
         const query: ProjectParamsProp = {
