@@ -180,7 +180,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [engineLink])
 
     // 获取企业版配置信息
-    const {eeSystemConfig, setEeSystemConfig} = useEeSystemConfig()
+    const {eeSystemConfig} = useEeSystemConfig()
     const isLoginFirstRef = useRef<boolean>(true) // 只是登录的那一下需要传login参数的标志
     useDebounceEffect(
         () => {
@@ -241,6 +241,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             })
         }
     }, [userInfo.isLogin])
+
+    useEffect(() => {
+        emiter.on("autoUploadProject", (data) => {
+            try {
+              onGetProjects(JSON.parse(data).day)  
+            } catch (error) {}
+        })
+        return () => {
+            emiter.off("autoUploadProject")
+        }
+    },[])
+
     const onGetProjects = useMemoizedFn((day) => {
         const time = moment().subtract(day, "days").startOf("day")
         const query: ProjectParamsProp = {
@@ -306,22 +318,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
         grpcExportProject(params)
     })
-    //#endregion
-    useEffect(() => {
-        if (engineLink && isEnpriTrace()) {
-            NetWorkApi<any, API.SystemConfigResponse>({
-                method: "get",
-                url: "system/config"
-            })
-                .then((config) => {
-                    const data = config.data || []
-                    setEeSystemConfig([...data])
-                })
-                .catch(() => {
-                    setEeSystemConfig([])
-                })
-        }
-    }, [engineLink])
 
     /** ---------- 引擎状态和连接相关逻辑 Start ---------- */
     /** 插件漏洞信息库自检 */
@@ -739,6 +735,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** ---------- yakit和yaklang的更新(以连接引擎的状态下) & kill引擎进程 Start ---------- */
     // 更新yakit-modal
     const [yakitDownload, setYakitDownload] = useState<boolean>(false)
+    // 是否为内网yakit更新
+    const [intranetYakit, setIntranetYakit] = useState<boolean>(false)
     // 更新yaklang前置-关闭所有引擎进程modal
     const [yaklangKillPss, setYaklangKillPss] = useState<boolean>(false)
     const [yaklangKillBuildInEngine, setYaklangKillBuildInEngine] = useState<boolean>(false)
@@ -762,6 +760,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     // 监听UI上的更新yakit或yaklang更新功能
     const handleActiveDownloadModal = useMemoizedFn((type: string) => {
         if (yaklangKillPss || yakitDownload) return
+        if (type === "intranetYakit") {
+            setYakitDownload(true)
+            setIntranetYakit(true)
+        }
         if (type === "yakit") setYakitDownload(true)
         if (type === "yaklang") setYaklangKillPss(true)
     })
@@ -1896,7 +1898,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     }
                                 />
                                 {/* 更新yakit */}
-                                <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload} />
+                                <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload} intranetYakit={intranetYakit}/>
                             </div>
                         )}
 

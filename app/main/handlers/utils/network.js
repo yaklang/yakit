@@ -10,6 +10,7 @@ const path = require("path")
 const {loadExtraFilePath} = require("../../filePath")
 const {HttpsProxyAgent} = require("hpagent")
 const electronIsDev = require("electron-is-dev")
+const {HttpSetting} = require("../../state")
 
 const add_proxy = process.env.https_proxy || process.env.HTTPS_PROXY
 
@@ -299,7 +300,7 @@ const getYakEngineDownloadUrl = async (version) => {
 const getSuffix = () => {
     let system_mode = ""
     // 开发环境是不添加-legacy
-    if(electronIsDev) return ""
+    if (electronIsDev) return ""
     try {
         system_mode = fs.readFileSync(loadExtraFilePath(path.join("bins", "yakit-system-mode.txt"))).toString("utf8")
     } catch (error) {
@@ -402,6 +403,23 @@ const downloadYakitEE = async (version, isIRify, destination, progressHandler, o
     )
 }
 
+/** 下载 Yakit 内网版 进度 */
+const downloadIntranetYakit = async (filePath, destination, progressHandler, onFinished, onError) => {
+    const match = filePath.match(/yakit-projects(\/[^]+)$/);
+    // 私有域地址
+    const downloadUrl = `${HttpSetting.httpBaseURL}/install_package${match[1]}`
+    requestWithProgress(
+        downloadUrl,
+        destination,
+        {
+            httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host)
+        },
+        progressHandler,
+        onFinished,
+        onError
+    )
+}
+
 module.exports = {
     getCheckTextUrl,
     fetchSpecifiedYakVersionHash,
@@ -413,6 +431,7 @@ module.exports = {
     downloadYakitCommunity,
     downloadYakEngine,
     downloadYakitEE,
+    downloadIntranetYakit,
     getYakEngineDownloadUrl,
     getAvailableOSSDomain,
     getDownloadUrl

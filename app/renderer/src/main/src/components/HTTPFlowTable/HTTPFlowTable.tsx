@@ -99,7 +99,7 @@ import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 import {showYakitDrawer, YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import MITMContext from "@/pages/mitm/Context/MITMContext"
-import {getGlobalShortcutKeyEvents} from "@/utils/globalShortcutKey/events/global"
+import {getGlobalShortcutKeyEvents, GlobalShortcutKey} from "@/utils/globalShortcutKey/events/global"
 import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
@@ -1848,6 +1848,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             },
             {
+                title: "Host",
+                dataKey: "Host",
+                width: 200,
+            },
+            {
+                title: "Path",
+                dataKey: "Path",
+                width: 400,
+            },
+            {
                 title: "相关插件",
                 dataKey: "FromPlugin",
                 width: 200,
@@ -2510,6 +2520,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     key: "url"
                 },
                 {
+                    title: "Host",
+                    key: "host"
+                },
+                {
+                    title: "Path",
+                    key: "path"
+                },
+                {
                     title: "相关插件",
                     key: "from_plugin"
                 },
@@ -2907,12 +2925,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 {
                     key: "sendAndJumpToWebFuzzer",
                     label: "发送并跳转",
-                    keybindings: getGlobalShortcutKeyEvents()["sendAndJump*common"].keys
+                    keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys
                 },
                 {
                     key: "sendToWebFuzzer",
                     label: "仅发送",
-                    keybindings: getGlobalShortcutKeyEvents()["send*common"].keys
+                    keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys
                 }
             ],
             onClickBatch: () => {}
@@ -2927,12 +2945,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 {
                     key: "sendAndJumpToWS",
                     label: "发送并跳转",
-                    keybindings: getGlobalShortcutKeyEvents()["sendAndJump*common"].keys
+                    keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys
                 },
                 {
                     key: "sendToWS",
                     label: "仅发送",
-                    keybindings: getGlobalShortcutKeyEvents()["send*common"].keys
+                    keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys
                 }
             ],
             onClickBatch: () => {}

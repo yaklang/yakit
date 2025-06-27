@@ -1,6 +1,8 @@
 import {yakitNotify} from "@/utils/notification"
 import {APIFunc, APINoRequestFunc, APIOptionalFunc} from "./type"
 import {fetchEnv, getReleaseEditionName} from "@/utils/envfile"
+import {NetWorkApi} from "@/services/fetch"
+import {API} from "@/services/swagger/resposeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -21,6 +23,37 @@ export const grpcFetchLatestYakitVersion: APIOptionalFunc<GrpcToHTTPRequestProps
                 if (!hiddenError) yakitNotify("error", "获取最新软件版本失败:" + e)
                 reject(e)
             })
+    })
+}
+
+/** @name 获取Yakit内网最新版本号 */
+export const grpcFetchIntranetYakitVersion: APIOptionalFunc<GrpcToHTTPRequestProps, string> = (config, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer.invoke("update-enpritrace-info").then(({version}) => {
+            NetWorkApi<unknown, API.UploadDataResponse>({
+                method: "get",
+                url: "upload/yak/data",
+                params: {
+                    page: 1,
+                    limit: 10,
+                    orderBy: "updated_at",
+                    order: "desc",
+                    keywords: version
+                }
+            })
+                .then((res) => {
+                    let filePath: string = ""
+                    if (res.data.length > 0) {
+                        filePath = res.data[0].filePath
+                    }
+                    resolve(filePath)
+                })
+                .catch((e) => {
+                    if (!hiddenError) yakitNotify("error", "获取内网最新软件版本失败:" + e)
+                    reject(e)
+                })
+                .finally(() => {})
+        })
     })
 }
 

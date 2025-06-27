@@ -88,7 +88,7 @@ export type ShortcutKeyPageName = `${ShortcutKeyPage}`
 
 const {Yakit, EnpriTrace, IRify} = PRODUCT_RELEASE_EDITION
 /** 存放全局和所有页面的快捷键映射事件集合 */
-export const pageEventMaps: Record<ShortcutKeyPage, PageToEventInfo> = {
+export const pageEventMaps: Record<`${ShortcutKeyPage}`, PageToEventInfo> = {
     global: {
         getEvents: getGlobalShortcutKeyEvents,
         resetEvents: resetGlobalShortcutKeyEvents,

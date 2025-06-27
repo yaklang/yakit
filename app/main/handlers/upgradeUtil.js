@@ -21,7 +21,13 @@ const {
     loadExtraFilePath,
     yakitInstallDir
 } = require("../filePath")
-const {downloadYakitEE, downloadYakitCommunity, downloadYakEngine, getDownloadUrl} = require("./utils/network")
+const {
+    downloadYakitEE,
+    downloadYakitCommunity,
+    downloadIntranetYakit,
+    downloadYakEngine,
+    getDownloadUrl
+} = require("./utils/network")
 const {engineCancelRequestWithProgress, yakitCancelRequestWithProgress} = require("./utils/requestWithProgress")
 const {getCheckTextUrl} = require("../handlers/utils/network")
 const {engineLogOutputFileAndUI} = require("../logFile")
@@ -523,9 +529,31 @@ module.exports = {
             return await asyncDownloadLatestYakit(version, type)
         })
 
+        const asyncDownloadLatestIntranetYakit = (filePath) => {
+            return new Promise(async (resolve, reject) => {
+                const dest = path.join(yakitInstallDir, path.basename(filePath))
+                // 内网版下载
+                await downloadIntranetYakit(
+                    filePath,
+                    dest,
+                    (state) => {
+                        if (!!state) {
+                            win.webContents.send("download-yakit-engine-progress", state)
+                        }
+                    },
+                    resolve,
+                    reject
+                )
+            })
+        }
+
+        ipcMain.handle("download-latest-intranet-yakit", async (e, filePath) => {
+            return await asyncDownloadLatestIntranetYakit(filePath)
+        })
+
         ipcMain.handle("download-enpriTrace-latest-yakit", async (e, url) => {
             return await new Promise((resolve, reject) => {
-                downloadYakitByDownloadUrl(resolve, reject, url)
+                downloadIntranetYakitByDownloadUrl(resolve, reject, url)
             })
         })
 

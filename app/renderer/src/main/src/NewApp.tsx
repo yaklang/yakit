@@ -21,6 +21,7 @@ import {handleFetchSystemInfo} from "./constants/hardware"
 import {closeWebSocket, startWebSocket} from "./utils/webSocket/webSocket"
 import {startShortcutKeyMonitor, stopShortcutKeyMonitor} from "./utils/globalShortcutKey/utils"
 import {getStorageGlobalShortcutKeyEvents} from "./utils/globalShortcutKey/events/global"
+import emiter from "./utils/eventBus/eventBus"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
@@ -119,6 +120,24 @@ function NewApp() {
         testYak()
     }
 
+    // 获取企业版配置信息
+    const {eeSystemConfig, setEeSystemConfig} = useEeSystemConfig()
+    const initSystemConfig = useMemoizedFn(() => {
+        if (isEnpriTrace()) {
+            NetWorkApi<any, API.SystemConfigResponse>({
+                method: "get",
+                url: "system/config"
+            })
+                .then((config) => {
+                    const data = config.data || []
+                    setEeSystemConfig([...data])
+                })
+                .catch(() => {
+                    setEeSystemConfig([])
+                })
+        }
+    })
+
     const testYak = () => {
         getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
             if (!setting) {
@@ -128,6 +147,9 @@ function NewApp() {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: data.BaseUrl}) // 同步
                         setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({BaseUrl: data.BaseUrl}))
                         refreshLogin()
+                        setTimeout(() => {
+                            initSystemConfig()
+                        }, 200)
                     })
                     .catch((e) => {
                         failed(`获取失败:${e}`)
@@ -143,6 +165,9 @@ function NewApp() {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: values.BaseUrl}) // 同步
                         setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
                         refreshLogin()
+                        setTimeout(() => {
+                            initSystemConfig()
+                        }, 200)
                     })
                     .catch((e: any) => failed("设置私有域失败:" + e))
             }
@@ -215,7 +240,6 @@ function NewApp() {
 
     // 退出时 确保渲染进程各类事项已经处理完毕
     const {dynamicStatus} = yakitDynamicStatus()
-    const {eeSystemConfig} = useEeSystemConfig()
     useEffect(() => {
         ipcRenderer.on("close-windows-renderer", async (e, res: any) => {
             // 如果关闭按钮有其他的弹窗 则不显示 showMessageBox
@@ -248,14 +272,28 @@ function NewApp() {
     const isSyncData = useMemoizedFn((token) => {
         if (isEnpriTrace()) {
             let syncData = false
+            let autoUploadProject = {
+                isOpen: false,
+                day: 10
+            }
             eeSystemConfig.forEach((item) => {
                 if (item.configName === "syncData") {
                     syncData = item.isOpen
+                }
+                if (item.configName === "autoUploadProject") {
+                    autoUploadProject = {
+                        isOpen: item.isOpen,
+                        day: !Number.isNaN(+item.content) ? +item.content : 10
+                    }
                 }
             })
             if (syncData) {
                 aboutLoginUpload(token)
                 loginHTTPFlowsToOnline(token)
+            }
+            // 自动上传项目
+            if (autoUploadProject.isOpen && userInfo.isLogin) {
+                emiter.emit("autoUploadProject", JSON.stringify(autoUploadProject.day))
             }
         } else {
             aboutLoginUpload(token)
