@@ -65,15 +65,8 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
                     const originValueStr = text ? Buffer.from(text).toString() : ""
                     return (
                         <YakitTag enableCopy copyText={originValueStr} className={styles["fuzzable-param-list-tag"]}>
-                            <span
-                                className='content-ellipsis'
-                                title={`${
-                                    originValueStr.length > 200
-                                        ? `${originValueStr.substring(0, 200)}...`
-                                        : originValueStr
-                                }`}
-                            >
-                                {originValueStr.length > 200 ? originValueStr.substring(0, 200) : originValueStr}
+                            <span className='content-ellipsis' title={`${originValueStr}`}>
+                                {originValueStr}
                             </span>
                         </YakitTag>
                     )
@@ -122,6 +115,12 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
             isShowTitle={false}
             titleHeight={0.01}
             containerClassName={styles["fuzzable-param-list-container"]}
+            pagination={{
+                page: 1,
+                limit: 10,
+                total: list.length,
+                onChange: () => {}
+            }}
         />
     )
 }
