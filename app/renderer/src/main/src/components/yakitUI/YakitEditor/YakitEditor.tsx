@@ -752,6 +752,19 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const fixContentTypeFun = useMemoizedFn(() => fixContentType)
     const originalContentTypeFun = useMemoizedFn(() => originalContentType)
     const fixContentTypeHoverMessageFun = useMemoizedFn(() => fixContentTypeHoverMessage)
+    const isDecoratingRef = useRef(false)
+    const safeDeltaDecorations = () => {
+        if (isDecoratingRef.current) return
+        isDecoratingRef.current = true
+        try {
+            if (deltaDecorationsRef.current) {
+                disableUnicodeDecodeRef.current = props.disableUnicodeDecode
+                deltaDecorationsRef.current()
+            }
+        } finally {
+            isDecoratingRef.current = false
+        }
+    }
     useEffect(() => {
         if (!editor) {
             return
@@ -1039,7 +1052,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
 
         editor.onDidChangeModelContent(() => {
-            current = model.deltaDecorations(current, generateDecorations())
+            try {
+                safeDeltaDecorations()
+            } catch (e) {
+                // console.error("deltaDecorations error", e)
+            }
         })
         current = model.deltaDecorations(current, generateDecorations())
 
@@ -1050,10 +1067,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
     }, [editor])
     useEffect(() => {
-        if (deltaDecorationsRef.current) {
-            disableUnicodeDecodeRef.current = props.disableUnicodeDecode
-            deltaDecorationsRef.current()
-        }
+        safeDeltaDecorations()
     }, [
         JSON.stringify(highLightText),
         JSON.stringify(highLightFind),
