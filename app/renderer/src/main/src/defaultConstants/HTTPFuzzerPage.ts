@@ -158,7 +158,8 @@ export const emptyFuzzer: FuzzerResponse = {
     IsAutoFixContentType: false,
     OriginalContentType: "",
     FixContentType: "",
-    IsSetContentTypeOptions: false
+    IsSetContentTypeOptions: false,
+    RandomChunkedData: []
 }
 
 export const HotPatchDefaultContent = `// 使用标签 {{yak(handle|param)}} 可以触发热加载调用

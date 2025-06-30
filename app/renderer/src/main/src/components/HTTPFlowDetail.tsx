@@ -5,7 +5,7 @@ import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
 import {IMonacoEditor, NewHTTPPacketEditor, RenderTypeOptionVal} from "../utils/editors"
 import {failed, yakitNotify} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
-import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
+import {FuzzerResponse, RandomChunkedResponse} from "../pages/fuzzer/HTTPFuzzerPage"
 import {HTTPHistorySourcePageType, HTTPPacketFuzzable} from "./HTTPHistory"
 import {Buffer} from "buffer"
 import {Uint8ArrayToString} from "@/utils/str"
@@ -50,6 +50,7 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
+const RandomChunkedDataTable = React.lazy(() => import("./HTTPFlowTable/RandomChunkedDataTable/RandomChunkedDataTable"))
 export type SendToFuzzerFunc = (req: Uint8Array, isHttps: boolean) => any
 
 export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
@@ -82,6 +83,8 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     noOpenPacketNewWindow?: boolean
     noPacketModifier?: boolean
     showHeaderInfo?: boolean
+
+    randomChunkedData?: RandomChunkedResponse[]
 }
 
 export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
@@ -89,6 +92,7 @@ export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
     onClosed?: () => any
     index?: number
     data?: FuzzerResponse[]
+    randomChunkedData?: RandomChunkedResponse[]
 }
 
 export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDetail) => {
@@ -142,6 +146,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
             isBehind={index === undefined ? undefined : index === (rsp?.data || []).length - 1}
             fetchRequest={fetchInfo}
             loading={loading}
+            randomChunkedData={rsp.randomChunkedData}
         />
     )
 }
@@ -416,7 +421,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                 ""
                             )}
                         </div>
-
                         <Row gutter={8}>
                             <Col span={12}>
                                 <Card
@@ -530,6 +534,9 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                 </Card>
                             </Col>
                         </Row>
+                        {props.randomChunkedData && props.randomChunkedData?.length > 0 && (
+                            <RandomChunkedDataTable data={props.randomChunkedData} />
+                        )}
                         <Row gutter={8}>
                             <Col span={12}>
                                 <YakitCollapse defaultActiveKey={"request"}>
