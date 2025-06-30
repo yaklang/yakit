@@ -647,6 +647,21 @@ module.exports = (win, getClient) => {
         return await asyncDeleteHotPatchTemplate(params)
     })
 
+    const asyncUpdateHotPatchTemplate = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpdateHotPatchTemplate(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("UpdateHotPatchTemplate", async (e, params) => {
+        return await asyncUpdateHotPatchTemplate(params)
+    })
+
     const asyncUploadHotPatchTemplateToOnline = (params) => {
         return new Promise((resolve, reject) => {
             getClient().UploadHotPatchTemplateToOnline(params, (err, data) => {

@@ -99,6 +99,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     const [hotPatchCodeOpen, setHotPatchCodeOpen] = useState<boolean>(false)
     const initHotPatchCodeOpen = useRef<boolean>(false)
     const [refreshHotCodeList, setRefreshHotCodeList] = useState<boolean>(true)
+    const tempNameRef = useRef<string>("")
 
     useEffect(() => {
         getRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
@@ -141,8 +142,8 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             let m = YakitModalConfirm({
                 width: 420,
                 type: "white",
-                onCancelText: "不保存",
-                onOkText: "保存",
+                onCancelText: "取消",
+                onOkText: "确认",
                 icon: <ExclamationCircleOutlined />,
                 style: {top: "20%"},
                 onOk: () => {
@@ -154,11 +155,28 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     props.onCancel()
                     m.destroy()
                 },
-                content: "是否保存修改的热加载代码和配置"
+                content: "是否启用修改的热加载代码和配置"
             })
         } else {
             props.onCancel()
         }
+    })
+
+    const onUpdateTemplate = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("UpdateHotPatchTemplate", {
+                Data: {
+                    Type: "fuzzer",
+                    Content: params.HotPatchCode,
+                    Name: tempNameRef.current
+                }
+            })
+            .then((res) => {
+                yakitNotify("success", "更新模板 " + tempNameRef.current + " 成功")
+            })
+            .catch((error) => {
+                yakitNotify("error", "更新模板 " + tempNameRef.current + " 失败：" + error)
+            })
     })
 
     return (
@@ -260,7 +278,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                         <YakitPopconfirm
                             title={"点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作"}
                             onConfirm={(e) => {
-                                saveCode(HotPatchDefaultContent)
+                                tempNameRef.current = ""
                                 setParams({...params, HotPatchCode: HotPatchDefaultContent})
                             }}
                         >
@@ -310,32 +328,39 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                             type='outline1'
                             onClick={() => setAddHotCodeTemplateVisible(true)}
                         >
-                            保存模板
+                            另存为
                         </YakitButton>
+                        <Tooltip title='更新当前模板并保存'>
+                            <YakitButton
+                                disabled={!params.HotPatchCode || !tempNameRef.current}
+                                type='outline1'
+                                onClick={onUpdateTemplate}
+                            >
+                                保存模板
+                            </YakitButton>
+                        </Tooltip>
                         <AddHotCodeTemplate
                             type='fuzzer'
                             hotPatchTempLocal={hotPatchTempLocal}
                             hotPatchCode={params.HotPatchCode}
                             visible={addHotCodeTemplateVisible}
                             onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
-                            onSaveHotCodeOk={() => {
+                            onSaveHotCodeOk={(tempName) => {
+                                tempNameRef.current = tempName || ""
                                 setRefreshHotCodeList((prev) => !prev)
                             }}
                         ></AddHotCodeTemplate>
                         <YakitButton
                             type={"primary"}
                             onClick={() => {
-                                try {
-                                    saveCode(params.HotPatchCode)
-                                    setTimeout(() => {
-                                        yakitNotify("success", "保存成功")
-                                    }, 100)
-                                } catch (error) {
-                                    yakitNotify("error", "保存失败:" + error)
-                                }
+                                saveCode(params.HotPatchCode)
+                                setTimeout(() => {
+                                    yakitNotify("success", "启用成功")
+                                    props.onCancel()
+                                }, 100)
                             }}
                         >
-                            保存
+                            确认
                         </YakitButton>
                     </Space>
                 </div>
@@ -345,11 +370,15 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                             type='fuzzer'
                             hotPatchTempLocal={hotPatchTempLocal}
                             onSetHotPatchTempLocal={setHotPatchTempLocal}
-                            onClickHotCode={(temp) => {
+                            onClickHotCode={(temp, tempName) => {
+                                tempNameRef.current = tempName || ""
                                 setParams({...getParams(), HotPatchCode: temp})
                             }}
                             dropdown={false}
                             refreshList={refreshHotCodeList}
+                            onDeleteLocalTempOk={() => {
+                                tempNameRef.current = ""
+                            }}
                         ></HotCodeTemplate>
                         <div className={styles["hotCode-editor"]}>
                             <YakitEditor
@@ -425,12 +454,21 @@ interface HotCodeTemplateProps {
     type: HotCodeType
     hotPatchTempLocal: HotPatchTempItem[]
     onSetHotPatchTempLocal: (hotPatchTempLocal: HotPatchTempItem[]) => void
-    onClickHotCode: (temp: string) => void
+    onClickHotCode: (temp: string, tempName?: string) => void
     dropdown?: boolean
     refreshList?: boolean
+    onDeleteLocalTempOk?: () => void
 }
 export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props) => {
-    const {type, hotPatchTempLocal, onSetHotPatchTempLocal, onClickHotCode, dropdown = true, refreshList} = props
+    const {
+        type,
+        hotPatchTempLocal,
+        onSetHotPatchTempLocal,
+        onClickHotCode,
+        dropdown = true,
+        refreshList,
+        onDeleteLocalTempOk
+    } = props
     const [hotCodeTempVisible, setHotCodeTempVisible] = useState<boolean>(false)
     const [tab, setTab] = useState<"local" | "online">("local")
     const [viewCurHotCode, setViewCurrHotCode] = useState<string>("")
@@ -509,7 +547,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     .invoke("QueryHotPatchTemplate", params)
                     .then((res: QueryHotPatchTemplateResponse) => {
                         if (click) {
-                            onClickHotCode(res.Data[0].Content)
+                            onClickHotCode(res.Data[0].Content, item.name)
                             setHotCodeTempVisible(false)
                         }
                         setViewCurrHotCode(res.Data[0].Content)
@@ -535,6 +573,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                 .then((res: {Message: DbOperateMessage}) => {
                     onSetHotPatchTempLocal(hotPatchTempLocal.filter((i) => i.name !== item.name))
                     yakitNotify("success", "删除成功")
+                    onDeleteLocalTempOk && onDeleteLocalTempOk()
                 })
                 .catch((error) => {
                     yakitNotify("error", error + "")
@@ -835,7 +874,7 @@ interface AddHotCodeTemplateProps {
     hotPatchCode: string
     visible: boolean
     onSetAddHotCodeTemplateVisible: (visible: boolean) => void
-    onSaveHotCodeOk?: () => void
+    onSaveHotCodeOk?: (tempName?: string) => void
 }
 export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo((props) => {
     const {type, hotPatchTempLocal, hotPatchCode, visible, onSetAddHotCodeTemplateVisible, onSaveHotCodeOk} = props
@@ -867,9 +906,9 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
             .invoke("CreateHotPatchTemplate", params)
             .then((res) => {
                 yakitNotify("success", "保存成功")
-                addHotPatchTempNameRef.current = ""
+                onSaveHotCodeOk && onSaveHotCodeOk(addHotPatchTempNameRef.current)
                 onSetAddHotCodeTemplateVisible(false)
-                onSaveHotCodeOk && onSaveHotCodeOk()
+                addHotPatchTempNameRef.current = ""
             })
             .catch((error) => {
                 yakitNotify("error", error + "")
