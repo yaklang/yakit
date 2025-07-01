@@ -863,7 +863,46 @@ service Yak {
   rpc SaveAITool(SaveAIToolRequest) returns(DbOperateMessage);
   rpc ToggleAIToolFavorite(ToggleAIToolFavoriteRequest) returns(ToggleAIToolFavoriteResponse);
   rpc AIToolGenerateMetadata(AIToolGenerateMetadataRequest) returns(AIToolGenerateMetadataResponse);
+
+  // Local Model Management
+  rpc IsLlamaServerReady(Empty) returns (IsLlamaServerReadyResponse);
+  rpc IsLocalModelReady(IsLocalModelReadyRequest) returns (IsLocalModelReadyResponse);
+  rpc InstallLlamaServer(InstallLlamaServerRequest) returns (stream ExecResult);
+  rpc StartLocalModel(StartLocalModelRequest) returns (stream ExecResult);
+  rpc DownloadLocalModel(DownloadLocalModelRequest) returns (stream ExecResult);
+  rpc GetSupportedLocalModels(Empty) returns (GetSupportedLocalModelsResponse);
+
+  rpc IsSearchVectorDatabaseReady(IsSearchVectorDatabaseReadyRequest) returns (IsSearchVectorDatabaseReadyResponse);
+  rpc InitSearchVectorDatabase(InitSearchVectorDatabaseRequest) returns (stream ExecResult);
+  rpc GetAllVectorStoreCollections(Empty) returns (GetAllVectorStoreCollectionsResponse);
+  rpc DeleteSearchVectorDatabase(DeleteSearchVectorDatabaseRequest) returns (GeneralResponse);
 }
+
+message DeleteSearchVectorDatabaseRequest {
+  repeated string CollectionNames = 1;
+}
+
+message VectorStoreCollection{
+  string Name = 1;
+  string Description = 2;
+}
+message GetAllVectorStoreCollectionsResponse {
+  repeated VectorStoreCollection Collections = 1;
+}
+message IsSearchVectorDatabaseReadyRequest{
+  repeated string CollectionNames = 1;
+}
+message IsSearchVectorDatabaseReadyResponse {
+  bool IsReady = 1;
+  repeated string NotReadyCollectionNames = 2;
+  string Message = 3;
+}
+
+message InitSearchVectorDatabaseRequest {
+  string Proxy = 1;
+  repeated string CollectionNames = 2;
+}
+
 
 message GetToolSetListResponse {
   repeated ToolSetInfo ToolSetList = 1;
@@ -7106,3 +7145,6 @@ message QueryMITMReplacerRulesRequest{
 message QueryMITMReplacerRulesResponse{
   MITMContentReplacers Rules = 1;
 }
+
+
+

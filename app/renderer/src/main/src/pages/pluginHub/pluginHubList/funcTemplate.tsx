@@ -201,6 +201,7 @@ interface HubOuterListProps {
     filters: PluginFilterParams
     setFilters: (filters: PluginFilterParams) => void
     children?: ReactNode
+    enableVectorSearch?: boolean
 }
 /** @name 插件外层列表UI */
 export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
@@ -217,7 +218,8 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
         onSearch,
         filters,
         setFilters,
-        children
+        children,
+        enableVectorSearch
     } = props
 
     /** 全选框是否为半选状态 */
@@ -265,7 +267,12 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
             <div className={styles["hub-outer-list-header"]}>
                 <div className={styles["title-style"]}>{title}</div>
                 <div className={styles["extra-wrapper"]}>
-                    <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
+                    <FuncSearch
+                        value={search}
+                        onChange={setSearch}
+                        onSearch={onSearch}
+                        includeSearchType={enableVectorSearch ? ["keyword", "userName", "fieldKeywords", "vector"] : ["keyword", "userName", "fieldKeywords"]}
+                    />
                     {!!headerExtra && (
                         <>
                             <div className={styles["divider-style"]} />

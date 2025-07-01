@@ -273,19 +273,7 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
         let newSearch: PluginSearchParams = {
             ...search
         }
-        switch (search.type) {
-            case "keyword":
-                newSearch.keyword = e.target.value
-                break
-            case "userName":
-                newSearch.userName = e.target.value
-                break
-            case "fieldKeywords":
-                newSearch.fieldKeywords = e.target.value
-                break
-            default:
-                break
-        }
+        newSearch[search.type] = e.target.value
         setSearch({
             ...newSearch
         })
@@ -297,20 +285,11 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
         {wait: 0}
     ).run
     const searchValue = useMemo(() => {
-        switch (search.type) {
-            case "keyword":
-                return search.keyword
-            case "userName":
-                return search.userName
-            case "fieldKeywords":
-                return search.fieldKeywords
-            default:
-                return ""
-        }
+        return search[search.type] ?? ""
     }, [search])
     const funcSearchTypeList = useCreation(() => {
         if (includeSearchType && includeSearchType?.length) {
-            return funcSearchType.filter((item) => includeSearchType.includes(item.value as PluginSearchParams["type"]))
+            return funcSearchType.filter((item) => includeSearchType.includes(item.value))
         }
         return funcSearchType
     }, [includeSearchType])

@@ -15,6 +15,7 @@ import {HybridScanDemo} from "@/components/playground/hybrid/HybridScanDemo"
 import {HybridScanTaskTable} from "@/components/playground/hybrid/HybridScanTaskTable"
 import {SpaceEngineOperator} from "@/components/playground/spaceengine/SpaceEngineOperator"
 import {JavaDecompilerOperator} from "@/components/playground/javadecompiler/JavaDecompilerOperator"
+import {VectorSearchDatabase} from "@/components/playground/vectorSearchDatabase/VectorSearchDatabase"
 export interface DebugMonacoEditorPageProp {}
 
 const TAG = "DEBUG_PLAYGROUND_DEFAULT_MODE"
@@ -61,6 +62,7 @@ a=1&b=2 Content-Length: a
                     <DemoItemSelectOne
                         label={"调试组件"}
                         data={[
+                            {value: "vector-search-database", label: "向量搜索数据库"},
                             {value: "space-engine-operator", label: "空间引擎操作台"},
                             {value: "java-decompiler", label: "Java反编译1"},
                             {value: "hybrid-scan-demo", label: "HybridScan 批量"},
@@ -94,6 +96,8 @@ a=1&b=2 Content-Length: a
                             return <YakURLTree />
                         case "space-engine-operator":
                             return <SpaceEngineOperator />
+                        case "vector-search-database":
+                            return <VectorSearchDatabase />
                         case "java-decompiler":
                             return <JavaDecompilerOperator />
                     }

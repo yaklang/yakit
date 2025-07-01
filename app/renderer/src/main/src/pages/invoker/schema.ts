@@ -147,6 +147,7 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
 
     // 关键词搜索
     FieldKeywords?: string
+    VectorSearchContent?: string
 }
 
 /*

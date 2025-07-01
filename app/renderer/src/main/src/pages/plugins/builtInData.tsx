@@ -121,8 +121,9 @@ export const defaultSearch: PluginSearchParams = {
     type: "fieldKeywords"
 }
 
-export const funcSearchType: {value: string; label: string}[] = [
+export const funcSearchType: {value: PluginSearchParams["type"]; label: string}[] = [
     {value: "fieldKeywords", label: "关键字"},
     {value: "userName", label: "按作者"},
-    {value: "keyword", label: "全文搜索"}
+    {value: "keyword", label: "全文搜索"},
+    {value: "vector", label: "向量搜索"}
 ]
