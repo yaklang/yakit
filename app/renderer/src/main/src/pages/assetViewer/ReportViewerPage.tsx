@@ -194,7 +194,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                 height: 32,
                 minHeight: 32,
                 boxSizing: "content-box",
-                borderBottom: "1px solid var(--yakit-border-color)",
+                borderBottom: "1px solid var(--Colors-Use-Neutral-Border)",
                 paddingLeft: 0
             }}
             bodyStyle={{padding: 12, paddingLeft: 0, width: "100%", height: "calc(100% - 32px)"}}
@@ -277,7 +277,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                                     extra={<YakitTag>{formatTimestamp(item.PublishedAt)}</YakitTag>}
                                     style={{
                                         backgroundColor:
-                                            selectReportId == item.Id ? "var(--yakit-primary-2)" : undefined
+                                            selectReportId == item.Id ? "var(--Colors-Use-Main-Focus)" : undefined
                                     }}
                                 >
                                     <Tooltip title='点击选中后，可删除'>
@@ -501,7 +501,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                             height: 32,
                             minHeight: 32,
                             boxSizing: "content-box",
-                            borderBottom: "1px solid var(--yakit-border-color)",
+                            borderBottom: "1px solid var(--Colors-Use-Neutral-Border)",
                             paddingLeft: 0,
                             paddingRight: 0
                         }}

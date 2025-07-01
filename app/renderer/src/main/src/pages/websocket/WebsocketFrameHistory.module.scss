@@ -15,11 +15,11 @@
         overflow: hidden;
     }
     .table-header {
-        background-color: #f8f8f8;
+        background-color: var(--Colors-Use-Neutral-Bg);
         display: flex;
         border-bottom: 1px solid #eaecf3;
         .header-cell {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
@@ -39,12 +39,12 @@
         display: flex;
         border-top: 1px solid #eaecf3;
         .tr-cell {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             line-height: 16px;
         }
         &:hover {
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
         }
     }
     .table-tr:first-child {
@@ -56,7 +56,7 @@
         overflow: hidden;
     }
     .cell-tag-style {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 
     .table-footer-empty {

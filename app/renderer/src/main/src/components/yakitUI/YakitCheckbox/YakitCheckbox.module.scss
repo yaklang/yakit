@@ -1,15 +1,15 @@
 // ========================== checkbox ==========================
 .yakit-checkbox-wrapper {
-    --checkbox-box-shadow-color: var(--yakit-primary-2);
-    --checkbox-hover-color: var(--yakit-primary-4);
-    --checkbox-active-color: var(--yakit-primary-6);
+    --checkbox-box-shadow-color: var(--Colors-Use-Main-Focus);
+    --checkbox-hover-color: var(--Colors-Use-Main-Hover);
+    --checkbox-active-color: var(--Colors-Use-Main-Pressed);
 
-    --checkbox-border-color: var(--yakit-border-color);
-    --checkbox-border-primary-color: var(--yakit-primary-5);
-    --checkbox-border-disabled-color: var(--yakit-disable-text-color);
+    --checkbox-border-color: var(--Colors-Use-Neutral-Border);
+    --checkbox-border-primary-color: var(--Colors-Use-Main-Primary);
+    --checkbox-border-disabled-color: var(--Colors-Use-Neutral-Disable);
 
-    --checkbox-background-color: var(--yakit-primary-5);
-    --checkbox-background-disabled-color: var(--yakit-disable-text-color);
+    --checkbox-background-color: var(--Colors-Use-Main-Primary);
+    --checkbox-background-disabled-color: var(--Colors-Use-Neutral-Disable);
 
     height: 16px;
     width: 16px;
@@ -152,7 +152,7 @@
     align-items: center;
     :global {
         .ant-checkbox-wrapper {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 }

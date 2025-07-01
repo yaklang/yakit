@@ -11,7 +11,7 @@
                 margin-right: 16px;
 
                 svg {
-                    color: var(--yakit-warning-5);
+                    color: var(--Colors-Use-Warning-Primary);
                     width: 22px;
                     height: 22px;
                 }
@@ -20,7 +20,7 @@
             .modal-title {
                 display: block;
                 overflow: hidden;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-weight: 500;
                 font-size: 16px;
                 line-height: 1.4;
@@ -41,4 +41,5 @@
     justify-content: flex-end;
     gap: 12px;
     padding-right: 24px;
+    background-color: var(--Colors-Use-Neutral-Bg);
 }

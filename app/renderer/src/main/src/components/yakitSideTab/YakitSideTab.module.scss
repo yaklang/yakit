@@ -4,7 +4,7 @@
     align-items: flex-start;
     border-right: 1px solid #eaecf3;
     border-left: 1px solid #eaecf3;
-    background: #f0f1f3;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
     height: 100%;
 }
 .yakit-side-tab-item {
@@ -18,7 +18,7 @@
     position: relative;
     user-select: none;
     .item-text {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 600;
         line-height: 16px;
@@ -29,15 +29,15 @@
     svg {
         width: 16px;
         height: 16px;
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 }
 .yakit-side-tab-item:hover {
     background-color: rgba(204, 210, 222, 0.5);
 }
 .yakit-side-tab-item-active {
-    background-color: var(--yakit-primary-5);
-    border-bottom-color: var(--yakit-primary-5);
+    background-color: var(--Colors-Use-Main-Primary);
+    border-bottom-color: var(--Colors-Use-Main-Primary);
     .item-text {
         color: #ffffff;
     }
@@ -51,7 +51,7 @@
         content: "";
         top: 0;
         left: -1px;
-        background-color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Primary);
     }
     &::after {
         position: absolute;
@@ -60,36 +60,36 @@
         content: "";
         top: 0;
         right: -1px;
-        background-color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Primary);
     }
 }
 .yakit-side-tab-item-active:hover {
-    background-color: var(--yakit-primary-4);
-    border-bottom-color: var(--yakit-primary-4);
+    background-color: var(--Colors-Use-Main-Hover);
+    border-bottom-color: var(--Colors-Use-Main-Hover);
     &::before {
-        background-color: var(--yakit-primary-4);
+        background-color: var(--Colors-Use-Main-Hover);
     }
     &::after {
-        background-color: var(--yakit-primary-4);
+        background-color: var(--Colors-Use-Main-Hover);
     }
 }
 .yakit-side-tab-item-show {
-    background-color: var(--yakit-primary-3);
-    border-bottom-color: var(--yakit-primary-3);
+    background-color: var(--Colors-Use-Main-Border);
+    border-bottom-color: var(--Colors-Use-Main-Border);
     &.yakit-side-tab-item-active::before {
-        background-color: var(--yakit-primary-3);
+        background-color: var(--Colors-Use-Main-Border);
     }
     &.yakit-side-tab-item-active::after {
-        background-color: var(--yakit-primary-3);
+        background-color: var(--Colors-Use-Main-Border);
     }
 }
 .yakit-side-tab-item-show:hover {
-    background-color: var(--yakit-primary-4);
-    border-bottom-color: var(--yakit-primary-4);
+    background-color: var(--Colors-Use-Main-Hover);
+    border-bottom-color: var(--Colors-Use-Main-Hover);
     &.yakit-side-tab-item-active::before {
-        background-color: var(--yakit-primary-4);
+        background-color: var(--Colors-Use-Main-Hover);
     }
     &.yakit-side-tab-item-active::after {
-        background-color: var(--yakit-primary-4);
+        background-color: var(--Colors-Use-Main-Hover);
     }
 }

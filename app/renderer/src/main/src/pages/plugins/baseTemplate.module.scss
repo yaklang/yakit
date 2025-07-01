@@ -35,7 +35,7 @@
         align-items: center;
         // gap: 16px;
         .title-style {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 16px;
             font-weight: 600;
             line-height: 24px;
@@ -109,7 +109,7 @@
                 margin-bottom: 16px;
                 gap: 64px; // 搜索框没有拉满的时候与左边文字的间距，目前需求最多只有两个元素
                 .title-style {
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 600;
                     line-height: 16px;
@@ -126,7 +126,7 @@
                         display: flex;
                         align-items: center;
                         gap: 4px;
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         line-height: 16px;
                     }
@@ -176,7 +176,7 @@
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-weight: 500;
                 line-height: 16px;
@@ -232,7 +232,7 @@
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 16px;
                 font-weight: 600;
                 line-height: 24px;
@@ -277,7 +277,7 @@
             margin-right: 16px;
         }
         .text-style {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             line-height: 16px;
         }
@@ -334,7 +334,7 @@
     display: flex;
     gap: 8px;
     border-radius: 8px;
-    background: #f8f8f8;
+    background: var(--Colors-Use-Neutral-Bg);
     .bug-icon {
         svg {
             width: 24px;
@@ -357,7 +357,7 @@
             .name-style {
                 flex: 1;
                 overflow: hidden;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 14px;
                 font-weight: 600;
                 line-height: 20px;
@@ -369,13 +369,13 @@
             flex-direction: column;
             gap: 4px;
             .header-style {
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 font-size: 14px;
                 font-weight: 600;
                 line-height: 20px;
             }
             .content-style {
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 font-size: 12px;
                 line-height: 16px;
             }
@@ -393,7 +393,7 @@
                 svg {
                     width: 16px;
                     height: 16px;
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
             }
         }
@@ -418,7 +418,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
     .modify-bug-type {
@@ -447,7 +447,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             line-height: 20px;
             .switch-text {
@@ -484,7 +484,7 @@
         justify-content: space-between;
         align-items: center;
         height: 20px;
-        color: var(--color-gray-text-04, #31343f);
+        color: var(--color-gray-text-04, var(--Colors-Use-Neutral-Text-1-Title));
         font-size: 14px;
         line-height: 20px;
     }
@@ -499,7 +499,7 @@
             align-items: center;
             gap: 8px;
             .body-title {
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-weight: 500;
             }
@@ -546,7 +546,7 @@
     }
 }
 .audit-status-tag-failed {
-    background: #f0f1f3;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
     color: #ccd2de;
 }
 .audit-status-tag-pending {
@@ -572,7 +572,7 @@
         width: 24px;
         height: 24px;
         border-radius: 20px;
-        border: 1px solid #f8f8f8;
+        border: 1px solid var(--Colors-Use-Neutral-Bg);
         margin-right: 4px;
     }
 }

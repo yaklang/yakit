@@ -241,7 +241,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                             setCascaderValue({Id: item.Id, DatabasePath: item.DatabasePath})
                         }
                     }}
-                    suffixIcon={<OutlineChevrondownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                    suffixIcon={<OutlineChevrondownIcon style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />}
                 />
             </Form.Item>
             {percent > 0 && (

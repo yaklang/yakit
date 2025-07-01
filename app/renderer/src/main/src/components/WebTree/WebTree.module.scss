@@ -12,7 +12,7 @@
 
     :global {
         .yakitTreeNode-icon {
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             margin-top: 4px;
             svg {
                 height: 16px;
@@ -24,7 +24,7 @@
         }
 
         .yakit-flolder-icon {
-            color: var(--yakit-primary-4);
+            color: var(--Colors-Use-Main-Hover);
         }
 
         .ant-spin-spinning {
@@ -41,10 +41,10 @@
             }
         }
         .ant-tree-show-line .ant-tree-indent-unit::before {
-            border-right: 1px solid var(--yakit-border-color);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .ant-tree-indent-unit-end {
-            border-right: 1px solid var(--yakit-border-color);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .ant-tree-switcher {
             width: 22px;
@@ -98,7 +98,7 @@
         .ant-tree-treenode.ant-tree-treenode-switcher-close.ant-tree-treenode-selected,
         .ant-tree-treenode.ant-tree-treenode-switcher-open.ant-tree-treenode-selected {
             .ant-tree-switcher {
-                background-color: var(--yakit-primary-6);
+                background-color: var(--Colors-Use-Main-Pressed);
                 border-radius: 4px 0 0 4px;
                 .ant-tree-switcher-icon {
                     color: #fff;
@@ -111,10 +111,10 @@
 
             &:hover {
                 .ant-tree-switcher {
-                    background-color: var(--yakit-primary-5);
+                    background-color: var(--Colors-Use-Main-Primary);
                 }
                 .ant-tree-node-content-wrapper.ant-tree-node-selected {
-                    background-color: var(--yakit-primary-4);
+                    background-color: var(--Colors-Use-Main-Hover);
                 }
             }
         }
@@ -122,14 +122,14 @@
         .ant-tree-treenode.ant-tree-treenode-selected {
             &:hover {
                 .ant-tree-switcher.ant-tree-switcher-noop {
-                    background-color: var(--yakit-primary-4);
+                    background-color: var(--Colors-Use-Main-Hover);
                 }
                 .ant-tree-node-content-wrapper.ant-tree-node-selected {
-                    background-color: var(--yakit-primary-4);
+                    background-color: var(--Colors-Use-Main-Hover);
                 }
             }
             .ant-tree-switcher.ant-tree-switcher-noop {
-                background-color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Main-Primary);
                 border-radius: 4px 0 0 4px;
             }
         }

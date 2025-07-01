@@ -49,9 +49,9 @@
             justify-content: space-between;
             align-items: center;
             border-radius: 0px 0px 0px 4px;
-            border-top: 1px solid var(--yakit-border-color);
-            border-right: 1px solid var(--yakit-border-color);
-            background: #f8f8f8;
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Neutral-Bg);
             .show {
                 display: flex;
                 flex-direction: row;
@@ -61,7 +61,7 @@
                     font-size: 12px;
                     font-weight: 400;
                     line-height: 16px;
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
             }
             .option {
@@ -113,13 +113,13 @@
                         align-items: center;
 
                         .total-item-text {
-                            color: var(--yakit-helper-text-color);
+                            color: var(--Colors-Use-Neutral-Disable);
                             font-size: 12px;
                             margin-right: 4px;
                         }
 
                         .total-item-number {
-                            color: var(--yakit-primary-5);
+                            color: var(--Colors-Use-Main-Primary);
                             font-size: 12px;
                         }
                     }
@@ -136,17 +136,17 @@
                     height: 24px;
                     width: 24px;
                     cursor: pointer;
-                    color: #85899e;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     border-radius: 4px;
                     &:hover {
-                        background-color: var(--yakit-background-color);
+                        background-color: var(--Colors-Use-Neutral-Bg);
                     }
                     svg {
-                        color: var(--yakit-body-text-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         height: 16px;
                         width: 16px;
                         &:hover {
-                            color: var(--yakit-primary-4);
+                            color: var(--Colors-Use-Main-Hover);
                         }
                     }
                 }
@@ -156,11 +156,11 @@
                     svg {
                         width: 20px;
                         height: 20px;
-                        color: #85899e;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     }
                     &:hover {
                         svg {
-                            color: var(--yakit-primary-4);
+                            color: var(--Colors-Use-Main-Hover);
                         }
                     }
                 }
@@ -191,8 +191,8 @@
 .new-payload-list {
     height: 100%;
     width: 100%;
-    border-right: 1px solid var(--yakit-border-color);
-    background: #f8f8f8;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Neutral-Bg);
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -201,7 +201,7 @@
         padding: 8px 12px;
         flex-direction: row;
         justify-content: space-between;
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         .title-box {
             display: flex;
             flex-direction: row;
@@ -212,16 +212,16 @@
                 font-size: 12px;
                 font-weight: 500;
                 line-height: 16px;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             .count {
                 border-radius: 8px;
-                background: var(--yakit-background-color);
+                background: var(--Colors-Use-Neutral-Bg);
                 padding: 0px 8px;
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
         }
     }
@@ -233,7 +233,7 @@
             height: 100%;
             .to-end {
                 text-align: center;
-                color: var(--yakit-disable-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 font-size: 11px;
                 line-height: 14px;
                 padding-top: 24px;
@@ -265,7 +265,7 @@
         gap: 16px;
         align-self: stretch;
         .title {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 600;
             line-height: 20px;
@@ -277,11 +277,11 @@
             svg {
                 width: 20px;
                 height: 20px;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
             &:hover {
                 svg {
-                    color: var(--yakit-primary-4);
+                    color: var(--Colors-Use-Main-Hover);
                 }
             }
         }
@@ -296,7 +296,7 @@
             border-radius: 8px;
             background: linear-gradient(90deg, rgba(136, 99, 247, 0.1) 0%, rgba(247, 170, 99, 0.1) 100%);
             .title {
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-style: normal;
                 font-weight: 400;
@@ -322,13 +322,13 @@
                         background: rgba(136, 99, 247, 0.2);
                         font-size: 10px;
                         text-align: center;
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-weight: 400;
                         line-height: 12px;
                     }
                     .text {
                         flex: 1;
-                        color: #85899e;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         font-size: 12px;
                         font-style: normal;
                         font-weight: 400;
@@ -374,7 +374,7 @@
                 height: 36px;
                 min-height: 36px;
                 box-sizing: content-box;
-                border-bottom: 1px solid var(--yakit-border-color);
+                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
                 display: flex;
                 align-items: center;
                 padding: 0 12px;
@@ -396,7 +396,7 @@
                         }
                         .content {
                             .title {
-                                color: #31343f;
+                                color: var(--Colors-Use-Neutral-Text-1-Title);
                                 font-size: 14px;
                                 font-weight: 600;
                                 line-height: 20px;
@@ -476,7 +476,7 @@
                 }
                 &:hover {
                     border-radius: 4px;
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
                     .close-icon {
                         opacity: 1;
                     }
@@ -548,9 +548,9 @@
 .folder-combine,
 .file-combine {
     border-radius: 4px;
-    border: 1px solid var(--yakit-primary-4);
+    border: 1px solid var(--Colors-Use-Main-Hover);
     background: rgba(242, 139, 68, 0.06);
-    color: var(--yakit-primary-4);
+    color: var(--Colors-Use-Main-Hover);
 }
 .file-no-active {
     .file-header {
@@ -564,7 +564,7 @@
             color: #56c991;
         }
         .file-name {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
     .extra {
@@ -572,11 +572,11 @@
             color: #b4bbca;
         }
         .extra-icon {
-            color: var(--ui-icon-color);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             border-radius: 4px;
             &:hover {
                 background-color: rgba(242, 139, 68, 0.06);
-                color: var(--yakit-primary-6);
+                color: var(--Colors-Use-Main-Pressed);
             }
         }
     }
@@ -587,7 +587,7 @@
     }
 
     &:hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
         border-radius: 4px;
         .extra-hover {
             .file-count {
@@ -600,7 +600,7 @@
     }
 }
 .file-menu {
-    background-color: var(--yakit-background-color);
+    background-color: var(--Colors-Use-Neutral-Bg);
     border-bottom: 1px solid #eaecf3;
     border-radius: 4px;
     .extra-dot {
@@ -609,7 +609,7 @@
         }
         .extra-icon {
             background-color: rgba(242, 139, 68, 0.06);
-            color: var(--yakit-primary-6);
+            color: var(--Colors-Use-Main-Pressed);
             display: block;
         }
     }
@@ -683,29 +683,29 @@
 }
 .folder-no-active {
     .is-fold-icon {
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
     .folder-icon {
         color: #ffb660;
     }
     .folder-name {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .extra {
         .file-count {
             color: var(--yakit-tag-color-grey);
         }
         .extra-icon {
-            color: var(--ui-icon-color);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             border-radius: 4px;
             &:hover {
                 background-color: rgba(242, 139, 68, 0.06);
-                color: var(--yakit-primary-6);
+                color: var(--Colors-Use-Main-Pressed);
             }
         }
     }
     &:hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
         border-radius: 4px;
         .extra-hover {
             .file-count {
@@ -718,7 +718,7 @@
     }
 }
 .folder-menu {
-    background-color: var(--yakit-background-color);
+    background-color: var(--Colors-Use-Neutral-Bg);
     border-radius: 4px;
     .extra-dot {
         .file-count {
@@ -726,7 +726,7 @@
         }
         .extra-icon {
             background-color: rgba(242, 139, 68, 0.06);
-            color: var(--yakit-primary-6);
+            color: var(--Colors-Use-Main-Pressed);
             display: block;
         }
     }
@@ -857,7 +857,7 @@
             font-weight: 600;
             font-size: 16px;
             line-height: 24px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             margin-bottom: 8px;
         }
 
@@ -865,7 +865,7 @@
             margin-top: 8px;
             font-size: 14px;
             line-height: 20px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .hint-right-download {
@@ -885,7 +885,7 @@
                 height: 16px;
                 font-size: 12px;
                 line-height: 16px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
 
                 .divider-wrapper {
                     margin: 0 8px;
@@ -897,14 +897,14 @@
                     .divider-style {
                         width: 100%;
                         height: 12px;
-                        border: 1px solid var(--yakit-border-color);
+                        border: 1px solid var(--Colors-Use-Neutral-Border);
                     }
                 }
             }
             .log-info {
                 margin-top: 16px;
                 .log-item {
-                    color: #85899e;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     font-size: 14px;
                     font-style: normal;
                     font-weight: 400;
@@ -939,11 +939,11 @@
         svg {
             width: 20px;
             height: 20px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
         &:hover {
             svg {
-                color: var(--yakit-primary-4);
+                color: var(--Colors-Use-Main-Hover);
             }
         }
     }
@@ -958,7 +958,7 @@
             }
         }
         .title {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 600;
             line-height: 20px;

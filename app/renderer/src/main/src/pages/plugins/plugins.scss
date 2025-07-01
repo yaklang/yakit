@@ -26,7 +26,7 @@
         display: flex;
         padding: 8px 12px;
         border-radius: 4px;
-        border: 1px solid #f8f8f8;
+        border: 1px solid var(--Colors-Use-Neutral-Bg);
         background: rgba(49, 52, 63, 0.9);
         border-bottom-width: 0px;
 
@@ -118,7 +118,7 @@
         background-color: #f28b44;
     }
     .ant-radio-input:focus + .ant-radio-inner {
-        box-shadow: 0 0 0 3px rgb(242 139 68 / 12%);
+        box-shadow: 0 0 0 3px var(--Colors-Use-Main-Focus);
     }
     .ant-radio.ant-radio-disabled .ant-radio-inner {
         background-color: #f0f1f3;
@@ -209,7 +209,7 @@
                 &-text-style {
                     flex: 1 0 0;
                     overflow: hidden;
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     line-height: 16px;
                 }
@@ -290,7 +290,7 @@
     .loading-icon {
         width: 26px;
         text-align: center;
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         svg {
             width: 16px;
             height: 16px;

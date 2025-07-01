@@ -12,7 +12,7 @@
         .plugin-tab {
             width: 24px;
             height: 100%;
-            background: #f0f1f3;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
             &-item {
                 padding: 12px 4px;
                 cursor: pointer;
@@ -29,13 +29,13 @@
                 }
                 &-active {
                     color: #ffffff;
-                    background-color: var(--yakit-primary-5);
+                    background-color: var(--Colors-Use-Main-Primary);
                     &:hover {
-                        background-color: var(--yakit-primary-4);
+                        background-color: var(--Colors-Use-Main-Hover);
                     }
                 }
                 &-unshowCont {
-                    background-color: var(--yakit-primary-3);
+                    background-color: var(--Colors-Use-Main-Border);
                 }
             }
         }

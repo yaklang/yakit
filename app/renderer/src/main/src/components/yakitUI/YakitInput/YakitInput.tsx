@@ -12,7 +12,8 @@ import {YakitButton} from "../YakitButton/YakitButton"
 import {useMemoizedFn} from "ahooks"
 import {ResizerIcon} from "@/assets/newIcon"
 import {TextAreaRef} from "antd/lib/input/TextArea"
-
+import {SolidCloseCircleIcon} from "@/assets/icon/solid"
+import {size} from "lodash"
 
 /**
  * @description: 输入
@@ -37,6 +38,7 @@ const InternalInput: React.FC<YakitInputProps & React.RefAttributes<InputRef>> =
                 <Input
                     spellCheck={false}
                     {...restProps}
+                    allowClear={props.allowClear ? {clearIcon: <SolidCloseCircleIcon />} : false}
                     ref={ref}
                     size='middle'
                     className={classNames(
@@ -59,14 +61,17 @@ const InternalSearch: React.FC<YakitInputSearchProps & React.RefAttributes<Input
     (props, ref: React.Ref<InputRef>) => {
         const {size, wrapperClassName, className, wrapperStyle, ...restProps} = props
         const [focus, setFocus] = useState<boolean>(false)
+
         const onFocus = useMemoizedFn((e) => {
             setFocus(true)
             if (props.onFocus) props.onFocus(e)
         })
+
         const onBlur = useMemoizedFn((e) => {
             setFocus(false)
             if (props.onBlur) props.onBlur(e)
         })
+
         return (
             <div
                 className={classNames(
@@ -83,10 +88,10 @@ const InternalSearch: React.FC<YakitInputSearchProps & React.RefAttributes<Input
                 style={{...(wrapperStyle || {})}}
             >
                 <Input.Search
-                    allowClear
                     enterButton
                     spellCheck={false}
                     {...restProps}
+                    allowClear={props.allowClear ? {clearIcon: <SolidCloseCircleIcon />} : false}
                     ref={ref}
                     onFocus={onFocus}
                     onBlur={onBlur}
@@ -105,7 +110,7 @@ const InternalSearch: React.FC<YakitInputSearchProps & React.RefAttributes<Input
 
 const InternalTextArea: React.FC<InternalTextAreaProps & React.RefAttributes<TextAreaRef>> = forwardRef(
     (props, ref: React.Ref<TextAreaRef>) => {
-        const {wrapperClassName, wrapperStyle, isShowResize = true,resizeClassName='', ...restProps} = props
+        const {wrapperClassName, wrapperStyle, isShowResize = true, resizeClassName = "", ...restProps} = props
         return (
             <div
                 className={classNames(
@@ -119,7 +124,7 @@ const InternalTextArea: React.FC<InternalTextAreaProps & React.RefAttributes<Tex
                 style={{...(wrapperStyle || {})}}
             >
                 <Input.TextArea spellCheck={false} {...restProps} ref={ref} />
-                {isShowResize && <ResizerIcon className={classNames("textArea-resizer-icon",resizeClassName)} />}
+                {isShowResize && <ResizerIcon className={classNames("textArea-resizer-icon", resizeClassName)} />}
             </div>
         )
     }
@@ -142,7 +147,12 @@ const InternalInputPassword: React.FC<InternalInputPasswordProps & React.RefAttr
                 )}
                 style={{...(wrapperStyle || {})}}
             >
-                <Input.Password spellCheck={false} {...restProps} ref={ref} />
+                <Input.Password
+                    spellCheck={false}
+                    {...restProps}
+                    allowClear={restProps.allowClear ? {clearIcon: <SolidCloseCircleIcon />} : false}
+                    ref={ref}
+                />
             </div>
         )
     }

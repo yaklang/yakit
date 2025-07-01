@@ -4,7 +4,7 @@
     }
     .crepe-placeholder::before {
         position: absolute;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         pointer-events: none;
         height: 0;
         content: attr(data-placeholder);

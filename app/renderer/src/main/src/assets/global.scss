@@ -56,7 +56,7 @@ $colors: (
         fontWeight: normal
     ),
     grey: (
-        backgroundColor: var(--yakit-helper-text-color),
+        backgroundColor: var(--Colors-Use-Neutral-Disable),
         opacityBackgroundColor: color-mix(in srgb, var(--yakit-tag-color-grey) 20%, transparent),
         textColor: var(--yakit-table-text-color),
         fontWeight: normal

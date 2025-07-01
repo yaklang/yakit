@@ -30,9 +30,9 @@
                     border-right: 1px solid #eaecf3;
                     border-left: 1px solid #eaecf3;
                     border-bottom: 0;
-                    background: #f0f1f3;
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                     .ant-tabs-tab-btn {
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 16px;
@@ -54,7 +54,7 @@
                 }
                 // 禁用
                 .ant-tabs-tab.ant-tabs-tab-disabled {
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
                     .ant-tabs-tab-btn {
                         color: #ccd2de;
                     }
@@ -82,9 +82,9 @@
                     border-right: 1px solid #eaecf3;
                     border-left: 1px solid #eaecf3;
                     border-top: 0;
-                    background: #f0f1f3;
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                     .ant-tabs-tab-btn {
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 16px;
@@ -106,7 +106,7 @@
                 }
                 // 禁用
                 .ant-tabs-tab.ant-tabs-tab-disabled {
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
                     .ant-tabs-tab-btn {
                         color: #ccd2de;
                     }
@@ -141,9 +141,9 @@
                     border-right: 1px solid #eaecf3;
                     border-bottom: 1px solid #eaecf3;
                     border-left: 0;
-                    background: #f0f1f3;
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                     .ant-tabs-tab-btn {
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 14px;
@@ -167,7 +167,7 @@
                 }
                 // 禁用
                 .ant-tabs-tab.ant-tabs-tab-disabled {
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
                     .ant-tabs-tab-btn {
                         color: #ccd2de;
                     }
@@ -209,9 +209,9 @@
                     border-left: 1px solid #eaecf3;
                     border-bottom: 1px solid #eaecf3;
                     border-right: 0;
-                    background: #f0f1f3;
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                     .ant-tabs-tab-btn {
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 14px;
@@ -235,7 +235,7 @@
                 }
                 // 禁用
                 .ant-tabs-tab.ant-tabs-tab-disabled {
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
                     .ant-tabs-tab-btn {
                         color: #ccd2de;
                     }
@@ -290,10 +290,10 @@
                     position: relative;
                     border-radius: 0;
                     &:hover {
-                        background-color: #f8f8f8;
+                        background-color: var(--Colors-Use-Neutral-Bg);
                     }
                     .ant-tabs-tab-btn {
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 600;
                         line-height: 16px;
@@ -303,7 +303,7 @@
                         svg {
                             width: 16px;
                             height: 16px;
-                            color: #85899e;
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         }
                     }
                 }
@@ -343,7 +343,7 @@
                 }
                 // 禁用
                 .ant-tabs-tab.ant-tabs-tab-disabled {
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
                     .ant-tabs-tab-btn {
                         color: #ccd2de;
                     }

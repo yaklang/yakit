@@ -12,9 +12,8 @@
             .tab {
                 width: 24px;
                 height: 100%;
-                border-right: 1px solid var(--yakit-border-color);
-                background: #F0F1F3;
-
+                border-right: 1px solid var(--Colors-Use-Neutral-Border);
+                background: var(--Colors-Use-Neutral-Bg-Hover);
                 &-item {
                     position: relative;
                     display: flex;
@@ -40,16 +39,15 @@
                     }
 
                     &-active {
-                        color: #FFFFFF;
-                        background-color: var(--yakit-primary-5);
-
+                        color: #ffffff;
+                        background-color: var(--Colors-Use-Main-Primary);
                         &:hover {
-                            background-color: var(--yakit-primary-4);
+                            background-color: var(--Colors-Use-Main-Hover);
                         }
                     }
 
                     &-unshowCont {
-                        background-color: var(--yakit-primary-3);
+                        background-color: var(--Colors-Use-Main-Border);
                     }
                 }
 
@@ -134,7 +132,7 @@
 
             &-active {
                 .process-item-label {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }

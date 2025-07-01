@@ -35,7 +35,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     &-item:hover {
@@ -43,7 +43,7 @@
     }
 
     &-item-active {
-        background-color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Primary);
         .item-text {
             color: #ffffff;
         }

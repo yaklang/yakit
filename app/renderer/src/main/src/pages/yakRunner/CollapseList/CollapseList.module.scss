@@ -11,7 +11,7 @@
 
 .to-end {
     text-align: center;
-    color: var(--yakit-disable-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     font-size: 11px;
     line-height: 14px;
     padding-top: 24px;
@@ -24,7 +24,7 @@
             padding: 3px 12px 3px 8px;
             align-items: center;
             &:hover{
-                background-color: #f8f8f8;
+                background-color: var(--Colors-Use-Neutral-Bg);
             }
         }
         .ant-collapse-item > .ant-collapse-header .ant-collapse-expand-icon {
@@ -35,7 +35,7 @@
             svg {
                 width: 16px;
                 height: 16px;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
         }
         .ant-collapse-item > .ant-collapse-header .collapse-expand-arrow {
@@ -105,13 +105,13 @@
         }
     }
     .title-render {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 600;
         line-height: 16px;
     }
     .content-render {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 400;
         line-height: 16px;
@@ -126,7 +126,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 400;
             line-height: 16px;

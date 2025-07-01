@@ -4,15 +4,15 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
             padding: 8px 16px;
             height: 40px;
-            border-bottom: 1px solid var(--yakit-border-color);
-            color: var(--yakit-header-color);
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             border-radius: 0;
         }
         .ant-drawer-title{
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-drawer-close {
             margin-right: 8px;
@@ -24,15 +24,15 @@
 .yakit-drawer-bottom {
     :global {
         .ant-drawer-header {
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
         }
     }
 }
 
 .yakit-drawer-icon {
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     &:hover {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .yakit-drawer-remove-icon {
         svg {

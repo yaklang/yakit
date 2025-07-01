@@ -479,7 +479,7 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
     })
     return (
         <YakitHint
-            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}

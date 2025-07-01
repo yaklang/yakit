@@ -194,7 +194,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             if (collectData && userInfo.isLogin) {
                 const token = userInfo.token
                 if (isLoginFirstRef.current) {
-                    visitorsStatisticsFun(token, 'login')
+                    visitorsStatisticsFun(token, "login")
                     isLoginFirstRef.current = false
                 } else {
                     visitorsStatisticsFun(token)
@@ -1859,7 +1859,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 setShowEngineLog={setShowEngineLog}
                             />
                         )}
-
                         {engineLink && (
                             <YakitSpin spinning={switchEngineLoading}>
                                 {isJudgeLicense ? (

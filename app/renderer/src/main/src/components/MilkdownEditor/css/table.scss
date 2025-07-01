@@ -23,7 +23,7 @@
         z-index: 50;
         cursor: grab;
         font-size: 14px;
-        border-color: var(--yakit-border-color);
+        border-color: var(--Colors-Use-Neutral-Border);
     }
 
     milkdown-table-block .cell-handle {
@@ -85,7 +85,7 @@
     }
 
     milkdown-table-block .line-handle {
-        background-color: var(--yakit-primary-3);
+        background-color: var(--Colors-Use-Main-Border);
         transition: opacity 0.2s ease-in-out;
     }
     milkdown-table-block .line-handle[data-role="x-line-drag-handle"] {
@@ -96,15 +96,15 @@
     }
 
     milkdown-table-block .line-handle .add-button {
-        color: var(--yakit-primary-5);
-        border: 1px solid var(--yakit-primary-3);
+        color: var(--Colors-Use-Main-Primary);
+        border: 1px solid var(--Colors-Use-Main-Border);
         padding: 0 4px;
         background: #fff;
         border-radius: 4px;
         width: 24px;
         cursor: pointer;
         &:hover {
-            background: var(--yakit-card-background-color);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
         }
     }
 
@@ -145,13 +145,13 @@
 
     th,
     td {
-        border: 1px solid  var(--yakit-border-color);
+        border: 1px solid  var(--Colors-Use-Neutral-Border);
         padding: 4px 16px;
         .ProseMirror-selectednode {
             background-color: transparent !important;
         }
         &:has(.ProseMirror-selectednode) {
-            outline: 1px solid var(--yakit-primary-3);
+            outline: 1px solid var(--Colors-Use-Main-Border);
             outline-offset: -1px;
         }
 
@@ -162,7 +162,7 @@
 
     .selectedCell {
         &::after {
-            background-color: var(--yakit-primary-1);
+            background-color: var(--Colors-Use-Main-Bg);
         }
 
         ::selection {

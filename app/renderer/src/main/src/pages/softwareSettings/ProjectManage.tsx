@@ -62,7 +62,7 @@ const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
 export const getEnvTypeByProjects = () => {
-    return isIRify() ? "ssa_project":"project"
+    return isIRify() ? "ssa_project" : "project"
 }
 
 export interface ProjectManageProp {
@@ -78,7 +78,7 @@ export interface ProjectParamsProps {
     Type: string
     FolderId?: number
     ChildFolderId?: number
-    Database?: string 
+    Database?: string
 }
 /** 项目列表查询条件 */
 export interface ProjectParamsProp extends QueryGeneralRequest {
@@ -88,7 +88,7 @@ export interface ProjectParamsProp extends QueryGeneralRequest {
     FolderId?: number
     ChildFolderId?: number
     FrontendType?: "project" | "ssa_project"
-    AfterUpdatedAt?:number
+    AfterUpdatedAt?: number
 }
 /** 单条项目数据 */
 export interface ProjectDescription {
@@ -369,7 +369,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 name: "大小",
                 width: "10%",
                 render: (data) => {
-                    return <>{!data.Type || data.Type === getEnvTypeByProjects()? data.FileSize : "-"}</>
+                    return <>{!data.Type || data.Type === getEnvTypeByProjects() ? data.FileSize : "-"}</>
                 }
             },
             {
@@ -536,7 +536,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const getProjectInfo = async () => {
         try {
             await delTemporaryProject()
-            const res2: ProjectDescription = await ipcRenderer.invoke("GetCurrentProjectEx",{
+            const res2: ProjectDescription = await ipcRenderer.invoke("GetCurrentProjectEx", {
                 Type: getEnvTypeByProjects()
             })
             setLatestProject(res2 || undefined)
@@ -607,7 +607,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
         setLoading(true)
         ipcRenderer
-            .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel,Type: getEnvTypeByProjects()})
+            .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel, Type: getEnvTypeByProjects()})
             .then((e) => {
                 setStopUpdate(true)
                 info("删除成功")
@@ -618,7 +618,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 }
                 setData(newData)
                 ipcRenderer
-                    .invoke("GetCurrentProject",{
+                    .invoke("GetCurrentProject", {
                         Type: getEnvTypeByProjects()
                     })
                     .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
@@ -688,7 +688,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 }
                 setLoading(true)
                 ipcRenderer
-                    .invoke("SetCurrentProject", {Id: data.Id,Type: getEnvTypeByProjects()})
+                    .invoke("SetCurrentProject", {Id: data.Id, Type: getEnvTypeByProjects()})
                     .then((e) => {
                         info("已切换数据库")
                         onFinish()
@@ -747,7 +747,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const getTemporaryProjectId = async () => {
         let id = ""
         try {
-            const res = await ipcRenderer.invoke("GetTemporaryProjectEx",{
+            const res = await ipcRenderer.invoke("GetTemporaryProjectEx", {
                 Type: getEnvTypeByProjects()
             })
             if (res) {
@@ -768,7 +768,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             })
             const newTemporaryId = res.Id + ""
             setTemporaryProjectId(newTemporaryId)
-            await ipcRenderer.invoke("SetCurrentProject", {Id: newTemporaryId,Type: getEnvTypeByProjects()})
+            await ipcRenderer.invoke("SetCurrentProject", {Id: newTemporaryId, Type: getEnvTypeByProjects()})
             info("切换临时项目成功")
             onFinish()
         } catch (error) {
@@ -790,7 +790,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         Description: projectInfo.Description || "",
                         FolderId: projectInfo.FolderId ? +projectInfo.FolderId : 0,
                         ChildFolderId: projectInfo.ChildFolderId ? +projectInfo.ChildFolderId : 0,
-                        Database:projectInfo.Database, 
+                        Database: projectInfo.Database,
                         Type: getEnvTypeByProjects()
                     }
                     if (projectInfo.Id) {
@@ -922,9 +922,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                     Pagination: {...params.Pagination, Page: 1}
                                                 })
                                             } else {
-                                                setFiles([
-                                                    {...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName}
-                                                ])
+                                                setFiles([{...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName}])
                                                 setParams({
                                                     Type: "all",
                                                     FolderId: +Id,
@@ -1401,7 +1399,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                                 operateShow >= 0 && operateShow === +i.data.Id
                                                         })}
                                                         onClick={(e) => {
-                                                            if (!i.data.Type || i.data.Type === getEnvTypeByProjects()) {
+                                                            if (
+                                                                !i.data.Type ||
+                                                                i.data.Type === getEnvTypeByProjects()
+                                                            ) {
                                                                 operateFunc("setCurrent", i.data)
                                                             }
                                                             if (i.data.Type === "file") {
@@ -1409,7 +1410,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                             }
                                                         }}
                                                         onContextMenu={() => {
-                                                            if (!i.data.Type || i.data.Type === getEnvTypeByProjects()) {
+                                                            if (
+                                                                !i.data.Type ||
+                                                                i.data.Type === getEnvTypeByProjects()
+                                                            ) {
                                                                 projectContextMenu(i.data)
                                                             }
                                                         }}
@@ -1505,7 +1509,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     setLoading(true)
                     setInquireIntoProjectVisible(false)
                     ipcRenderer
-                        .invoke("SetCurrentProject", {Id: newProjectInfo?.Id,Type: getEnvTypeByProjects()})
+                        .invoke("SetCurrentProject", {Id: newProjectInfo?.Id, Type: getEnvTypeByProjects()})
                         .then((e) => {
                             info("已切换数据库")
                             setNewProjectInfo({Id: "", ProjectName: ""})
@@ -1567,7 +1571,7 @@ interface ProjectFolderInfoProps {
     FolderId?: number
     ChildFolderId?: number
     parent?: ProjectDescription
-    Database?: string 
+    Database?: string
 }
 export interface ExportProjectProps {
     Id: number
@@ -2065,28 +2069,34 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                     dropdownClassName={styles["cascader-dropdown-body"]}
                                     open={dropShow}
                                     onDropdownVisibleChange={(open: boolean) => setDropShow(open)}
-                                    suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                                    suffixIcon={
+                                        <ChevronDownIcon style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />
+                                    }
                                 />
                             </Form.Item>
-                        )} 
+                        )}
                         {!isFolder && isIRify() && (
                             <Form.Item
                                 label={
-                                    <div style={{display:"flex",alignItems:"center",gap:2}}>
-                                        配置mysql地址<Tooltip title="配置地址以后，所有数据都将存在配置的mysql地址里。参考 mysql://user:password@tcp(ip:port)/database_name"><QuestionMarkCircleIcon className={styles["icon-question"]}/></Tooltip> :
+                                    <div style={{display: "flex", alignItems: "center", gap: 2}}>
+                                        配置mysql地址
+                                        <Tooltip title='配置地址以后，所有数据都将存在配置的mysql地址里。参考 mysql://user:password@tcp(ip:port)/database_name'>
+                                            <QuestionMarkCircleIcon className={styles["icon-question"]} />
+                                        </Tooltip>{" "}
+                                        :
                                     </div>
                                 }
                             >
                                 <YakitInput
                                     size='large'
-                                className={classNames({
-                                    [styles["required-form-item-wrapper"]]: isCheck && !info.Database
-                                })}
-                                placeholder="mysql://user:password@tcp(ip:port)/database_name"
-                                value={info.Database}
-                                onChange={(e) => setInfo({...info, Database: e.target.value})}
-                            />
-                        </Form.Item>
+                                    className={classNames({
+                                        [styles["required-form-item-wrapper"]]: isCheck && !info.Database
+                                    })}
+                                    placeholder='mysql://user:password@tcp(ip:port)/database_name'
+                                    value={info.Database}
+                                    onChange={(e) => setInfo({...info, Database: e.target.value})}
+                                />
+                            </Form.Item>
                         )}
                         <>
                             {isCommunityEdition() ? (
@@ -2244,7 +2254,9 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                         }
                                     }}
                                     dropdownClassName={styles["cascader-dropdown-body"]}
-                                    suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                                    suffixIcon={
+                                        <ChevronDownIcon style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />
+                                    }
                                 />
                             </Form.Item>
                         )}

@@ -117,6 +117,7 @@ import {ConfigMcpModal} from "@/utils/ConfigSystemMcp"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {openConsoleNewWindow} from "@/utils/openWebsite"
 import useEngineConsole from "./hooks/useEngineConsole/useEngineConsole"
+import {useTheme} from "@/hook/useTheme"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -988,6 +989,20 @@ const GetUIOpSettingMenu = () => {
                 {key: "ai-agent", label: "AI Agent"}
             ]
         },
+        {
+            key: "modeSwitching",
+            label: "模式切换",
+            children: [
+                {
+                    key: "light",
+                    label: "亮色"
+                },
+                {
+                    key: "dark",
+                    label: "暗色"
+                }
+            ]
+        },
         {type: "divider"},
         {
             key: "system-manager",
@@ -1057,6 +1072,8 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const {dynamicStatus} = yakitDynamicStatus()
     const {delTemporaryProject} = useTemporaryProjectStore()
     const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
+    /** 当前主题 */
+    const {setTheme} = useTheme()
 
     useEffect(() => {
         onIsCVEDatabaseReady()
@@ -1071,6 +1088,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 yakitFailed("IsCVEDatabaseReady失败：" + err)
             })
     })
+
     const menuSelect = useMemoizedFn((type: string) => {
         if (show) setShow(false)
         switch (type) {
@@ -1197,6 +1215,12 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "ai-agent":
                 emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
+                return
+            case "light":
+                setTheme("light")
+                return
+            case "dark":
+                setTheme("dark")
                 return
             default:
                 return

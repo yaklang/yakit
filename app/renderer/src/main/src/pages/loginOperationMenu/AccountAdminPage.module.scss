@@ -83,7 +83,7 @@
                 height: 20px;
                 color: #ffffff;
                 border-radius: 50%;
-                background-color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Main-Primary);
                 font-size: 14px;
             }
         }
@@ -102,14 +102,14 @@
             svg {
                 width: 16px;
                 &:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
         span {
             padding: 0 12px;
-            color: var(--yakit-body-text-color);
-            border-right: 1px solid var(--yakit-border-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
             &:first-child {
                 padding-left: 0;
             }

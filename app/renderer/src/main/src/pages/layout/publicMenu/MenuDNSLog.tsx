@@ -389,14 +389,15 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                             <>
                                 {loading ? (
                                     <>
-                                        加载中&nbsp;&nbsp;<LoadingOutlined style={{color: "var(--yakit-primary-5)"}} />
+                                        加载中&nbsp;&nbsp;
+                                        <LoadingOutlined style={{color: "var(--Colors-Use-Main-Primary)"}} />
                                     </>
                                 ) : (
                                     <>
-                                        <YakitButton
-                                            type='text2'
-                                            onClick={getQueryDNSLogByToken}
-                                        >手动刷新<RefreshIcon /></YakitButton>
+                                        <YakitButton type='text2' onClick={getQueryDNSLogByToken}>
+                                            手动刷新
+                                            <RefreshIcon />
+                                        </YakitButton>
                                     </>
                                 )}
                             </>

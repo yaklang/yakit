@@ -1,16 +1,16 @@
 .yakit-segmented-small-wrapper {
     .yakit-segmented {
         border-radius: 4px;
-        background: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
         font-size: 12px;
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         :global {
             .ant-segmented-item-selected {
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             .ant-segmented-item:hover,
             .ant-segmented-item:focus {
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
     }
