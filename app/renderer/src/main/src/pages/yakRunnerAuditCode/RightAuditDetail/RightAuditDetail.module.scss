@@ -13,7 +13,7 @@
                 left: -4px;
                 border-left: 1px solid #eaecf3;
                 border-bottom: 1px solid #eaecf3;
-                background: #f8f8f8;
+                background: var(--Colors-Use-Neutral-Bg);
                 display: flex;
                 flex-direction: row;
                 justify-content: space-between;
@@ -47,7 +47,7 @@
             gap: 8px;
             .message-box {
                 padding: 2px 10px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-style: normal;
                 font-weight: 600;
@@ -55,7 +55,7 @@
 
             }
             .title-render {
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-weight: 600;
                 line-height: 16px;
@@ -70,7 +70,7 @@
                     justify-content: space-between;
                     gap: 8px;
                     .title {
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 500;
                         line-height: 16px;
@@ -96,7 +96,7 @@
                 .ir-code-box {
                     padding: 8px;
                     border-radius: 4px;
-                    background: #f0f1f3;
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                     white-space: pre;
                     overflow: auto;
                 }
@@ -128,7 +128,7 @@
                 left: -4px;
                 border-left: 1px solid #eaecf3;
                 border-bottom: 1px solid #eaecf3;
-                background: #f8f8f8;
+                background: var(--Colors-Use-Neutral-Bg);
                 display: flex;
                 flex-direction: row;
                 justify-content: space-between;
@@ -159,13 +159,13 @@
                 .node text {
                     cursor: pointer;
                     &:hover {
-                        fill: var(--yakit-primary-5);
+                        fill: var(--Colors-Use-Main-Primary);
                     }
                 }
                 .node-main text {
                     // cursor: unset;
                     // &:hover {
-                    //     fill: #31343f;
+                    //     fill: var(--Colors-Use-Neutral-Text-1-Title);
                     // }
                 }
             }
@@ -204,7 +204,7 @@
                 overflow: auto;
                 padding: 8px;
                 border-radius: 4px;
-                background: #f0f1f3;
+                background: var(--Colors-Use-Neutral-Bg-Hover);
             }
         }
     }

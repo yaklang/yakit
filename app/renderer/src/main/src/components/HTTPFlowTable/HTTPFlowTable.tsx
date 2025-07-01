@@ -399,9 +399,9 @@ export const StatusCodeToColor = (code: number) => {
     if (code >= 400) {
         return "var( --yakit-danger-5)"
     } else if (code < 400 && code >= 300) {
-        return "var( --yakit-warning-5)"
+        return "var( --Colors-Use-Warning-Primary)"
     } else {
-        return "var( --yakit-success-5)"
+        return "var( --Colors-Use-Success-Primary)"
     }
 }
 
@@ -409,9 +409,9 @@ export const DurationMsToColor = (code: number) => {
     if (code >= 600) {
         return "var( --yakit-danger-5)"
     } else if (code < 600 && code >= 300) {
-        return "var( --yakit-warning-5)"
+        return "var( --Colors-Use-Warning-Primary)"
     } else {
-        return "var( --yakit-success-5)"
+        return "var( --Colors-Use-Success-Primary)"
     }
 }
 

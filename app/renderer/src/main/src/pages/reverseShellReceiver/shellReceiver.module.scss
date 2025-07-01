@@ -108,7 +108,7 @@
             .prefix {
                 display: flex;
                 align-items: center;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 svg {
                     width: 16px;
                     height: 16px;
@@ -125,7 +125,7 @@
             align-items: center;
             padding: 10px 8px;
             border-radius: 4px;
-            background: #f8f8f8;
+            background: var(--Colors-Use-Neutral-Bg);
             margin-bottom: 4px;
             cursor: pointer;
             .text {
@@ -139,20 +139,20 @@
                 -webkit-box-orient: vertical;
             }
             &:hover {
-                background-color: var(--yakit-background-color);
+                background-color: var(--Colors-Use-Neutral-Bg);
             }
         }
         .item-box-active {
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
             color: #fff;
             &:hover {
-                background-color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Main-Primary);
             }
         }
     }
     .no-more-text {
         font-size: 12px;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         height: 28px;
         display: flex;
         align-items: center;
@@ -162,7 +162,7 @@
     }
 }
 .fold-icon {
-    color: #85899e;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
     cursor: pointer;
     border-radius: 4px;
     width: 24px;
@@ -175,8 +175,8 @@
         height: 16px;
     }
     &:hover {
-        background-color: var(--yakit-background-color);
-        color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 
@@ -190,18 +190,18 @@
         font-weight: 600;
         font-size: 16px;
         line-height: 24px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         margin-bottom: 8px;
         text-align: center;
     }
     .heard-subTitle-text {
         padding: 8px 24px;
-        background-color: tools.fetch-color-transparen(var(--yakit-success-5), 10%);
+        background-color: tools.fetch-color-transparen(var(--Colors-Use-Success-Primary), 10%);
         height: 48px;
         font-weight: 400;
         font-size: 12px;
         line-height: 16px;
-        color: var(--yakit-success-5);
+        color: var(--Colors-Use-Success-Primary);
         border-radius: 4px;
     }
     .shellReceiver-form {
@@ -252,14 +252,14 @@
                 padding: 4px;
                 border-radius: 4px;
                 cursor: pointer;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 svg {
                     width: 16px;
                     height: 16px;
                 }
                 &:hover {
-                    background-color: var(--yakit-background-color);
-                    color: var(--yakit-primary-5);
+                    background-color: var(--Colors-Use-Neutral-Bg);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
@@ -269,7 +269,7 @@
         overflow: auto;
 
         .content-text {
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
             padding: 8px 12px;
             word-break: break-all;
             flex: 1;
@@ -292,7 +292,7 @@
     }
     .footer {
         border-top: 1px solid #eaecf3;
-        box-shadow: 0px -8px 16px 0px rgba(133, 137, 158, 0.1);
+        box-shadow: 0px -8px 16px 0px var(--Colors-Use-Basic-Shadow);
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -336,7 +336,7 @@
     line-height: 16px;
     .setting-terminal-tip {
         font-size: 12px;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
     }
     .setting-terminal-upgrade {
         display: flex;

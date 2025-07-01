@@ -1,7 +1,7 @@
 // ---------- DemoItemRadio ----------
 .demo-item-radio-wrapper {
     .ant-radio-wrapper {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .ant-radio:hover .ant-radio-inner {
         border-color: #f28b44;
@@ -16,7 +16,7 @@
         background-color: #f28b44;
     }
     .ant-radio-input:focus + .ant-radio-inner {
-        box-shadow: 0 0 0 3px rgb(242 139 68 / 12%);
+        box-shadow: 0 0 0 3px var(--Colors-Use-Main-Focus);
     }
     .ant-radio.ant-radio-disabled .ant-radio-inner {
         background-color: #f0f1f3;
@@ -72,7 +72,7 @@
             overflow: hidden;
             display: flex;
             align-items: center;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-weight: 600;
             font-size: 14px;
         }
@@ -96,7 +96,7 @@
                     overflow: hidden;
                     display: flex;
                     align-items: center;
-                    color: #85899e;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     font-size: 14px;
                     .content-body {
                         width: 100%;
@@ -121,7 +121,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             font-size: 12px;
         }
     }

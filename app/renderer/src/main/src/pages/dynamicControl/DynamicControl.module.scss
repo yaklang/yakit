@@ -81,7 +81,7 @@
         .main-title {
             font-weight: 600;
             font-size: 14px;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             margin-right: 8px;
             display: inline-block;
         }
@@ -111,7 +111,7 @@
                 font-weight: 600;
                 font-size: 14px;
                 line-height: 20px;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             .type-text {
                 font-weight: 400;
@@ -122,7 +122,7 @@
             }
         }
         &:hover {
-            background: #f8f8f8;
+            background: var(--Colors-Use-Neutral-Bg);
         }
     }
 }
@@ -160,14 +160,14 @@
             font-size: 24px;
             line-height: 24px;
             text-align: center;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .control-operation-seconend-title {
             font-weight: 400;
             font-size: 14px;
             line-height: 20px;
             text-align: center;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             margin-top: 16px;
         }
         .control-operation-img {

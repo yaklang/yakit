@@ -1,6 +1,6 @@
 // ========================== ant form ==========================
 .ant-form-item-label > label {
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 .ant-form-item-with-help {
     margin-bottom: 16px;
@@ -16,7 +16,7 @@
 }
 
 .ant-form-item-label > label .ant-form-item-tooltip {
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     svg {
         width: 16px;
         height: 16px;
@@ -29,7 +29,7 @@
 
 .ant-form-item-extra {
     font-size: 12px;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 
 // ----------------- textArea

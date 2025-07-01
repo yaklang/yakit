@@ -190,15 +190,17 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
     })
 
     const handleSendToServer = useMemoizedFn(() => {
-        ipcRenderer.invoke(
-            "CreateWebsocketFuzzer",
-            {
-                ToServer: StringToUint8Array(wsToServer)
-            },
-            token
-        ).then(() => {
-            setWsToServer("")
-        })
+        ipcRenderer
+            .invoke(
+                "CreateWebsocketFuzzer",
+                {
+                    ToServer: StringToUint8Array(wsToServer)
+                },
+                token
+            )
+            .then(() => {
+                setWsToServer("")
+            })
     })
 
     return (
@@ -213,7 +215,7 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                         height: 32,
                         minHeight: 32,
                         boxSizing: "content-box",
-                        borderBottom: "1px solid var(--yakit-border-color)",
+                        borderBottom: "1px solid var(--Colors-Use-Neutral-Border)",
                         paddingLeft: 0
                     }}
                     bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 32px)"}}
@@ -354,7 +356,7 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                         height: 32,
                         minHeight: 32,
                         boxSizing: "content-box",
-                        borderBottom: "1px solid var(--yakit-border-color)",
+                        borderBottom: "1px solid var(--Colors-Use-Neutral-Border)",
                         paddingLeft: 0
                     }}
                     bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 32px)"}}
@@ -505,7 +507,7 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
                         height: 32,
                         minHeight: 32,
                         boxSizing: "content-box",
-                        borderBottom: "1px solid var(--yakit-border-color)"
+                        borderBottom: "1px solid var(--Colors-Use-Neutral-Border)"
                     }}
                     bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 32px)"}}
                     title={
@@ -564,7 +566,7 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
                             height: 32,
                             minHeight: 32,
                             boxSizing: "content-box",
-                            borderBottom: "1px solid var(--yakit-border-color)"
+                            borderBottom: "1px solid var(--Colors-Use-Neutral-Border)"
                         }}
                         bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 32px)"}}
                         title={

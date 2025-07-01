@@ -8,7 +8,7 @@
     height: 100%;
 
     .status-code {
-        color: var(--yakit-success-5);
+        color: var(--Colors-Use-Success-Primary);
     }
 
     .filter-icon {
@@ -27,7 +27,7 @@
         align-items: center;
 
         .check-circle-icon {
-            color: var(--yakit-success-5);
+            color: var(--Colors-Use-Success-Primary);
         }
     }
 }
@@ -109,13 +109,13 @@
             align-items: center;
 
             .http-history-table-total-item-text {
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 font-size: 12px;
                 margin-right: 4px;
             }
 
             .http-history-table-total-item-number {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
                 font-size: 12px;
             }
         }
@@ -140,35 +140,35 @@
         }
 
         .http-history-table-color-swatch {
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
 
             .color-swatch-icon {
                 svg {
-                    color: var(--yakit-body-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
 
                     &:hover {
-                        color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Main-Primary);
                     }
                 }
 
                 &:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
 
             .color-swatch-icon-active {
                 svg {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
 
         .http-history-table-badge {
             .refresh-icon {
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 cursor: pointer;
                 &:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
@@ -181,10 +181,10 @@
     flex-direction: row;
     align-items: center;
     padding: 4px 8px;
-    background: var(--yakit-card-background-color);
-    border: 1px solid var(--yakit-border-color);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px;
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-weight: 400;
     font-size: 12px;
     height: 24px;
@@ -194,12 +194,12 @@
     .http-history-table-left-number {
         margin-left: 4px;
         margin-right: 8px;
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
 
     &:hover {
-        background: var(--yakit-primary-1);
-        border: 1px solid var(--yakit-primary-4);
+        background: var(--Colors-Use-Main-Bg);
+        border: 1px solid var(--Colors-Use-Main-Hover);
     }
 
     .http-history-table-left-shield-icon {
@@ -208,7 +208,7 @@
         svg {
             width: 12px;
             height: 12px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 }
@@ -239,8 +239,8 @@
             align-items: center;
             height: 20px;
             font-size: 12px;
-            border: 1px solid var(--yakit-border-color);
-            background: #f8f8f8;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Neutral-Bg);
             border-radius: 4px;
             width: fit-content;
             max-width: 100%;
@@ -252,7 +252,7 @@
             }
 
             .tag-name-style {
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
@@ -263,12 +263,12 @@
             .tag-del-style {
                 cursor: pointer;
                 margin-left: 8px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 &:hover {
-                    color: var(--yakit-primary-4);
+                    color: var(--Colors-Use-Main-Hover);
                 }
                 &:active {
-                    color: var(--yakit-primary-6);
+                    color: var(--Colors-Use-Main-Pressed);
                 }
             }
         }
@@ -318,12 +318,12 @@
         justify-content: space-between;
 
         &:hover {
-            background: var(--yakit-card-background-color);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
         }
 
         &:active {
-            background: var(--yakit-card-background-color);
-            color: var(--yakit-primary-5);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 
@@ -335,8 +335,8 @@
     }
 
     .select-item-active {
-        // background: var(--yakit-card-background-color);
-        color: var(--yakit-primary-5);
+        // background: var(--Colors-Use-Neutral-Bg-Hover);
+        color: var(--Colors-Use-Main-Primary);
     }
 
     .select-search-multiple {
@@ -367,7 +367,7 @@
                     overflow-x: overlay;
                 }
                 .search-icon {
-                    color: #85899e;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     svg {
                         height: 12px;
                         width: 12px;
@@ -464,11 +464,11 @@
             max-width: 30px;
             text-align: center;
             pointer-events: none;
-            background-color: var(--yakit-card-background-color);
-            color: var(--yakit-helper-text-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Disable);
             height: 24px;
-            border-top: 1px solid var(--yakit-border-color);
-            border-bottom: 1px solid var(--yakit-border-color);
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         }
 
         .input-right {
@@ -487,7 +487,7 @@
 
     .input-footer {
         position: relative;
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     }
 }
 
@@ -498,7 +498,7 @@
 .http-history-table-color-item {
     height: 28px;
     line-height: 28px;
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -507,14 +507,14 @@
     padding: 4px 8px 4px 6px;
 
     &:hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
     .http-history-table-color-item-render {
         width: 100%;
     }
 }
 .http-history-table-color-item-active {
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
 }
 
 .color-select-footer {
@@ -532,7 +532,7 @@
 }
 
 .duration-ms {
-    color: var(--yakit-success-5);
+    color: var(--Colors-Use-Success-Primary);
 }
 
 .action-btn-group {
@@ -544,19 +544,19 @@
 
     .divider-style {
         height: 100%;
-        border-left: 1px solid var(--yakit-border-color);
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
     }
 
     .icon-style {
-        color: var(--yakit-body-text-color) !important;
+        color: var(--Colors-Use-Neutral-Text-1-Title) !important;
     }
     .icon-hover:hover {
-        color: var(--yakit-primary-5) !important;
+        color: var(--Colors-Use-Main-Primary) !important;
     }
 }
 
 .check-icon {
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
     svg {
         height: 16px;
         width: 16px;
@@ -617,7 +617,7 @@
         height: 100%;
         display: flex;
         align-items: center;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         font-size: 12px;
     }
 }
@@ -640,7 +640,7 @@
             font-weight: 600;
             font-size: 14px;
             line-height: 20px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .advanced-configuration-drawer-title-btns {
             display: flex;
@@ -654,7 +654,7 @@
                 justify-content: space-between;
                 font-weight: 600;
                 font-size: 14px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             &-desc {
                 font-size: 12px;
@@ -670,7 +670,7 @@
                     .title-style {
                         font-size: 14px;
                         line-height: 22px;
-                        color: var(--yakit-header-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                     .hint-style {
                         cursor: pointer;
@@ -688,7 +688,7 @@
                         align-items: center;
                         padding: 10px 12px;
                         margin-bottom: 5px;
-                        border: 1px solid var(--yakit-border-color);
+                        border: 1px solid var(--Colors-Use-Neutral-Border);
                         border-radius: 4px;
                         cursor: grab;
                         .column-title {
@@ -697,24 +697,24 @@
                         svg {
                             width: 16px;
                             height: 16px;
-                            color: var(--yakit-body-text-color);
+                            color: var(--Colors-Use-Neutral-Text-1-Title);
                         }
                         &:hover {
                             svg {
-                                color: var(--yakit-primary-5);
+                                color: var(--Colors-Use-Main-Primary);
                             }
-                            border: 1px solid var(--yakit-primary-5);
+                            border: 1px solid var(--Colors-Use-Main-Primary);
                         }
                         &:active {
-                            border: 1px solid var(--yakit-primary-5);
+                            border: 1px solid var(--Colors-Use-Main-Primary);
                         }
                         .ban-icon {
                             cursor: pointer;
                         }
                     }
                     .column-item-not-allowed {
-                        background-color: var(--yakit-card-background-color);
-                        color: var(--yakit-disable-text-color);
+                        background-color: var(--Colors-Use-Neutral-Bg-Hover);
+                        color: var(--Colors-Use-Neutral-Disable);
                     }
                 }
             }

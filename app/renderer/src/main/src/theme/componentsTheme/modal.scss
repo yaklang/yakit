@@ -4,51 +4,51 @@
     svg {
         width: 16px;
         height: 16px;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
 
         &:hover {
-            color: var(--yakit-primary-4);
+            color: var(--Colors-Use-Main-Hover);
         }
     }
 }
 
 .modal-cancel-button {
     border-radius: 4px;
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     text-shadow: none;
     box-shadow: none;
 
     &:hover {
-        color: var(--yakit-primary-4);
-        border-color: var(--yakit-primary-4);
+        color: var(--Colors-Use-Main-Hover);
+        border-color: var(--Colors-Use-Main-Hover);
     }
 
     &:focus {
-        color: var(--yakit-primary-6);
-        border-color: var(--yakit-primary-6);
+        color: var(--Colors-Use-Main-Pressed);
+        border-color: var(--Colors-Use-Main-Pressed);
     }
 }
 
 .modal-ok-button {
     border-radius: 4px;
-    border-color: var(--yakit-primary-5);
-    background: var(--yakit-primary-5);
+    border-color: var(--Colors-Use-Main-Primary);
+    background: var(--Colors-Use-Main-Primary);
     text-shadow: none;
     box-shadow: none;
 
     &:hover {
-        border-color: var(--yakit-primary-4);
-        background: var(--yakit-primary-4);
+        border-color: var(--Colors-Use-Main-Hover);
+        background: var(--Colors-Use-Main-Hover);
     }
 
     &:focus {
-        border-color: var(--yakit-primary-5);
-        background: var(--yakit-primary-5);
+        border-color: var(--Colors-Use-Main-Primary);
+        background: var(--Colors-Use-Main-Primary);
     }
 
     &:active {
-        border-color: var(--yakit-primary-6);
-        background: var(--yakit-primary-6);
+        border-color: var(--Colors-Use-Main-Pressed);
+        background: var(--Colors-Use-Main-Pressed);
     }
 }
 // ========================== Modal.confirm end ==========================

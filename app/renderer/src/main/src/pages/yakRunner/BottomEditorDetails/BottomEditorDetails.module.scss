@@ -7,7 +7,7 @@
         height: 32px;
         border-top: 1px solid #eaecf3;
         border-bottom: 1px solid #eaecf3;
-        background: #f8f8f8;
+        background: var(--Colors-Use-Neutral-Bg);
         display: flex;
         flex-direction: row;
         justify-content: space-between;
@@ -24,7 +24,7 @@
                 cursor: pointer;
                 border-right: 1px solid #eaecf3;
                 .title {
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 600;
                     line-height: 16px;
@@ -41,7 +41,7 @@
                 }
             }
             .active-item {
-                background: var(--yakit-primary-5);
+                background: var(--Colors-Use-Main-Primary);
                 .title {
                     color: #fff;
                 }
@@ -85,7 +85,7 @@
         font-size: 12px;
         margin-bottom: 4px;
         .default-font {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
             cursor: pointer;
             &:hover {
                 text-decoration: underline;

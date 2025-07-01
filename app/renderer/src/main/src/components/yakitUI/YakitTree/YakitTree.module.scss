@@ -1,14 +1,14 @@
 .yakitTree {
-    --checkbox-active-color: var(--yakit-primary-6);
-    --checkbox-background-color: var(--yakit-primary-5);
-    --checkbox-background-disabled-color: var(--yakit-disable-text-color);
-    --checkbox-border-color: var(--yakit-border-color);
-    --checkbox-border-disabled-color: var(--yakit-disable-text-color);
-    --checkbox-border-primary-color: var(--yakit-primary-5);
-    --checkbox-box-shadow-color: var(--yakit-primary-2);
-    --checkbox-hover-color: var(--yakit-primary-4);
+    --checkbox-active-color: var(--Colors-Use-Main-Pressed);
+    --checkbox-background-color: var(--Colors-Use-Main-Primary);
+    --checkbox-background-disabled-color: var(--Colors-Use-Neutral-Disable);
+    --checkbox-border-color: var(--Colors-Use-Neutral-Border);
+    --checkbox-border-disabled-color: var(--Colors-Use-Neutral-Disable);
+    --checkbox-border-primary-color: var(--Colors-Use-Main-Primary);
+    --checkbox-box-shadow-color: var(--Colors-Use-Main-Focus);
+    --checkbox-hover-color: var(--Colors-Use-Main-Hover);
     .switcher-icon {
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         svg {
             height: 12px;
             width: 12px;
@@ -16,7 +16,7 @@
     }
     :global {
         .ant-tree-switcher-loading-icon {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
         .ant-tree-list-scrollbar-thumb {
             background: #c1c1c1 !important;
@@ -132,9 +132,9 @@
 
         .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
             color: #ffffff;
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
             &:hover {
-                background-color: var(--yakit-primary-4);
+                background-color: var(--Colors-Use-Main-Hover);
             }
         }
     }

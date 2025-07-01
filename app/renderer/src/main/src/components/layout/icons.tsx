@@ -332,7 +332,7 @@ const GooglePhotosLogoSvg = () => (
         />
         <path
             d='M10.3125 10.3125V1.875C11.2963 1.875 12.2552 2.18455 13.0533 2.7598C13.8514 3.33505 14.4483 4.14684 14.7595 5.08018C15.0706 6.01352 15.0801 7.02109 14.7868 7.96016C14.4934 8.89923 13.9121 9.72221 13.125 10.3125'
-            stroke='#31343F'
+            stroke='var(--Colors-Use-Neutral-Text-1-Title)'
             strokeWidth='1.5'
             strokeLinecap='round'
             strokeLinejoin='round'
@@ -343,21 +343,21 @@ const GooglePhotosLogoSvg = () => (
         />
         <path
             d='M9.6875 9.6875V18.125C8.70368 18.125 7.74479 17.8154 6.94667 17.2402C6.14855 16.6649 5.55166 15.8532 5.24055 14.9198C4.92943 13.9865 4.91987 12.9789 5.21322 12.0398C5.50656 11.1008 6.08794 10.2778 6.875 9.6875'
-            stroke='#31343F'
+            stroke='var(--Colors-Use-Neutral-Text-1-Title)'
             strokeWidth='1.5'
             strokeLinecap='round'
             strokeLinejoin='round'
         />
         <path
             d='M10.3125 9.6875H1.875C1.875 8.70368 2.18455 7.74479 2.7598 6.94667C3.33505 6.14855 4.14684 5.55166 5.08018 5.24055C6.01352 4.92943 7.02109 4.91987 7.96016 5.21322C8.89923 5.50656 9.72221 6.08794 10.3125 6.875'
-            stroke='#31343F'
+            stroke='var(--Colors-Use-Neutral-Text-1-Title)'
             strokeWidth='1.5'
             strokeLinecap='round'
             strokeLinejoin='round'
         />
         <path
             d='M9.6875 10.3125H18.125C18.125 11.2963 17.8154 12.2552 17.2402 13.0533C16.6649 13.8514 15.8532 14.4483 14.9198 14.7595C13.9865 15.0706 12.9789 15.0801 12.0398 14.7868C11.1008 14.4934 10.2778 13.9121 9.6875 13.125'
-            stroke='#31343F'
+            stroke='var(--Colors-Use-Neutral-Text-1-Title)'
             strokeWidth='1.5'
             strokeLinecap='round'
             strokeLinejoin='round'

@@ -4,7 +4,7 @@
 }
 
 .styledTrafficSessionTable th {
-    background-color: #f8f8f8;
+    background-color: var(--Colors-Use-Neutral-Bg);
     color: #333;
     padding: 10px;
     text-align: left;

@@ -1419,7 +1419,7 @@ export const PluginsUploadHint: React.FC<PluginsUploadHintProps> = React.memo((p
         <YakitHint
             visible={visible}
             title='一键上传'
-            heardIcon={<SolidClouduploadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<SolidClouduploadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             footer={null}
             isDrag={true}
             mask={false}

@@ -8,7 +8,7 @@
         justify-content: space-between;
         padding: 16px 24px 8px 24px;
         .title {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-family: PingFang HK;
             font-size: 14px;
             font-style: normal;
@@ -20,11 +20,11 @@
                 width: 20px;
                 height: 20px;
                 cursor: pointer;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
             &:hover {
                 svg {
-                    color: var(--yakit-primary-4);
+                    color: var(--Colors-Use-Main-Hover);
                 }
             }
         }
@@ -39,10 +39,10 @@
             display: flex;
             justify-content: space-between;
             border-radius: 4px 4px 0px 0px;
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             padding: 6px 12px;
 
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-style: normal;
             font-weight: 500;

@@ -38,7 +38,7 @@
                 gap: 4px;
                 .title-style {
                     white-space: nowrap;
-                    color: #85899e;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     font-size: 12px;
                     font-weight: 500;
                     line-height: 16px;
@@ -93,7 +93,7 @@
                 display: none;
                 width: 16px;
                 height: 16px;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
         }
         img {

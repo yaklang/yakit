@@ -353,8 +353,8 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     }, [previousBottomTab])
 
     const [initRenderTabCont, setInitRenderTabCont] = useState<TabRenderState>({
-        ["rule"]: false,
-        ["hot-patch"]: false
+        rule: false,
+        "hot-patch": false
     }) // 初次页面渲染的时候，非当前tab的内容是否不加载
     useEffect(() => {
         setFullScreenFirstNode(false)
@@ -740,7 +740,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                         {sourceType === "database" ? (
                                             <>
                                                 <span className={styles["exec-form-item-label"]}></span>
-                                                <span style={{color: "var(--yakit-primary-5)"}}>
+                                                <span style={{color: "var(--Colors-Use-Main-Primary)"}}>
                                                     筛选上面流量勾选后进行分析，未勾选默认跑所有流量
                                                 </span>
                                             </>

@@ -163,9 +163,9 @@ export const chartsColorList: logChartsColorProps[] = [
     },
     {
         name: "text",
-        color: "#31343f",
+        color: "var(--Colors-Use-Neutral-Text-1-Title)",
         rgbaColor: "",
-        colorVariable: "--ui-text-color"
+        colorVariable: "--Colors-Use-Neutral-Text-1-Title"
     }
 ]
 

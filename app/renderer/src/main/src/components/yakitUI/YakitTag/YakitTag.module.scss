@@ -2,9 +2,9 @@
     height: 20px;
     border-radius: 4px;
     padding: 2px 6px;
-    background: var(--yakit-card-background-color);
-    border: 1px solid var(--yakit-border-color);
-    color: var(--yakit-body-text-color);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     display: inline-flex;
     align-items: center;
     font-size: 12px;
@@ -18,7 +18,7 @@
             margin-left: 8px;
             display: inline-flex;
             align-items: center;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             width: 12px;
             height: 12px;
             svg {
@@ -29,7 +29,7 @@
                 height: 12px;
             }
             &:hover {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -157,11 +157,11 @@
 .yakit-tag-white {
     background: #ffffff;
     border: 1px solid #eaecf3;
-    color: #31343f;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 
 .yakit-tag-disable {
-    background: #f8f8f8;
+    background: var(--Colors-Use-Neutral-Bg);
     border: 1px solid #f0f1f3;
     color: #ccd2de;
     cursor: not-allowed;
@@ -196,15 +196,15 @@
         }
 
         .ant-tag-checkable {
-            background-color: var(--yakit-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
         }
 
         .ant-tag-checkable-checked {
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
         }
 
         .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }
@@ -214,11 +214,11 @@
 
     :global {
         .ant-tag-checkable {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
 
         .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }
@@ -229,7 +229,7 @@
     :global {
         .ant-tag-checkable-checked {
             color: #fff;
-            background-color: var(--yakit-disable-text-color);
+            background-color: var(--Colors-Use-Neutral-Disable);
         }
 
         .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {

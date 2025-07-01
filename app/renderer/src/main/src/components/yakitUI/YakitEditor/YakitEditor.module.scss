@@ -12,7 +12,7 @@
         height: 100%;
         top: 0px;
         left: 0px;
-        background: #F0F1F3; /* 半透明黑色背景 */
+        background: var(--Colors-Use-Neutral-Bg-Hover); /* 半透明黑色背景 */
         opacity: .6;
         z-index: 999; /* 确保蒙层位于最上层 */
         cursor: no-drop;
@@ -42,7 +42,7 @@
         height: 100%;
         display: flex;
         align-items: center;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         font-size: 12px;
     }
 }

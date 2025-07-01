@@ -28,22 +28,22 @@
     }
 
     .content-icon {
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         margin-right: 4px;
         cursor: pointer;
 
         &:hover {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 
     .content-icon-active {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
 
     .left {
         width: 300px;
-        border-right: 1px solid var(--yakit-border-color);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         position: relative;
         background-color: #fff;
 
@@ -53,10 +53,10 @@
             justify-content: space-between;
             align-items: center;
             padding: 0 12px;
-            border-bottom: 1px solid var(--yakit-border-color);
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 
             .left-title {
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-weight: 500;
                 font-size: 12px;
                 margin: 0 8px;
@@ -65,11 +65,11 @@
             .left-number {
                 padding: 0px 8px;
                 height: 16px;
-                background: var(--yakit-background-color);
+                background: var(--Colors-Use-Neutral-Bg);
                 border-radius: 8px;
                 display: flex;
                 align-items: center;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
             }
 
@@ -93,7 +93,7 @@
 
         .left-footer {
             height: 44px;
-            border-top: 1px solid var(--yakit-border-color);
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
             padding: 8px 12px;
             display: flex;
             align-items: center;
@@ -102,20 +102,20 @@
             .button-done {
                 padding: 0 12px;
                 height: 28px;
-                background: var(--yakit-primary-5);
+                background: var(--Colors-Use-Main-Primary);
                 border-radius: 4px;
                 color: #fff;
-                border: 1px solid var(--yakit-primary-5);
+                border: 1px solid var(--Colors-Use-Main-Primary);
                 cursor: pointer;
             }
 
             .button-export {
                 padding: 0 12px;
                 height: 28px;
-                background-color: var(--yakit-primary-1);
-                border: 1px solid var(--yakit-primary-3);
+                background-color: var(--Colors-Use-Main-Bg);
+                border: 1px solid var(--Colors-Use-Main-Border);
                 border-radius: 4px;
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
                 cursor: pointer;
             }
 
@@ -123,9 +123,9 @@
                 padding: 0 12px;
                 height: 28px;
                 background: #ffffff;
-                border: 1px solid var(--yakit-border-color);
+                border: 1px solid var(--Colors-Use-Neutral-Border);
                 border-radius: 4px;
-                border: 1px solid var(--yakit-border-color);
+                border: 1px solid var(--Colors-Use-Neutral-Border);
                 cursor: pointer;
             }
 
@@ -143,7 +143,7 @@
 
     .right {
         width: 430px;
-        border-left: 1px solid var(--yakit-border-color);
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
         background-color: #fff;
         padding: 12px;
 
@@ -157,13 +157,13 @@
                 align-items: center;
                 font-weight: 500;
                 font-size: 16;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
 
         .right-help {
             font-size: 12px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             margin-top: 16px;
             margin-bottom: 8px;
             height: 16px;
@@ -201,8 +201,8 @@
         justify-content: space-between;
         width: 100%;
         height: 40px;
-        border-bottom: 1px solid var(--yakit-border-color);
-        color: var(--yakit-header-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         padding: 12px 8px;
         user-select: none;
 
@@ -222,7 +222,7 @@
     }
 
     .first-menu-item-select {
-        background: var(--yakit-primary-5);
+        background: var(--Colors-Use-Main-Primary);
         color: #fff;
         border-radius: 4px;
 
@@ -235,7 +235,7 @@
         }
 
         &:hover {
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
         }
     }
 
@@ -254,7 +254,7 @@
     }
 
     .first-sub-menu-number {
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         font-weight: 400;
         font-size: 12px;
     }
@@ -283,7 +283,7 @@
         .second-menu-heard-input {
             padding: 0px 0px 8px;
             height: 32px;
-            border-bottom: 1px solid var(--yakit-border-color);
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 
             :global {
                 .ant-input-affix-wrapper {
@@ -300,7 +300,7 @@
                 align-items: center;
             }
             .trash-style:hover {
-                background: #f0f1f3;
+                background: var(--Colors-Use-Neutral-Bg-Hover);
             }
 
             svg {
@@ -313,7 +313,7 @@
             font-weight: 400;
             font-size: 12px;
             line-height: 16px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             margin-top: 16px;
         }
     }
@@ -330,8 +330,8 @@
             margin-top: 8px;
             width: 100%;
             height: 60px;
-            background: var(--yakit-primary-1);
-            border: 1px dashed var(--yakit-primary-3);
+            background: var(--Colors-Use-Main-Bg);
+            border: 1px dashed var(--Colors-Use-Main-Border);
             border-radius: 4px;
             display: flex;
             align-items: center;
@@ -339,11 +339,11 @@
 
         .second-menu-text {
             font-size: 12px;
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
 
         .second-menu-photograph-icon {
-            color: var(--yakit-primary-3);
+            color: var(--Colors-Use-Main-Border);
             margin-right: 8px;
         }
 
@@ -358,7 +358,7 @@
             min-height: 60px;
             padding: 12px;
             background: #ffffff;
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             border-radius: 4px;
             display: flex;
             align-items: center;
@@ -377,7 +377,7 @@
                         width: 28px;
                         height: 28px;
                         border-radius: 50%;
-                        border: 1px solid #f8f8f8;
+                        border: 1px solid var(--Colors-Use-Neutral-Bg);
                     }
                 }
                 svg {
@@ -388,7 +388,7 @@
 
             svg {
                 margin-right: 8px;
-                color: var(--yakit-disable-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
             }
 
             .second-menu-label-body {
@@ -396,7 +396,7 @@
             }
 
             .second-menu-label-content {
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 display: inline-flex;
                 align-items: center;
@@ -420,10 +420,10 @@
                         width: 16px;
                         height: 16px;
                         cursor: pointer;
-                        color: var(--yakit-body-text-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
 
                         &:hover {
-                            color: var(--yakit-primary-5);
+                            color: var(--Colors-Use-Main-Primary);
                         }
                     }
                 }
@@ -431,7 +431,7 @@
 
             .second-menu-describe {
                 font-size: 11px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 line-height: 16px;
             }
         }
@@ -439,7 +439,7 @@
         .close-icon{
             svg{
                 margin-right: 0;
-                color: var(--yakit-body-text-color)
+                color: var(--Colors-Use-Neutral-Text-1-Title)
             }
         }
     }
@@ -450,18 +450,18 @@
 }
 
 .menu-item-drag {
-    background: var(--yakit-primary-1) !important;
-    border: 1px solid var(--yakit-primary-3) !important;
-    // border-bottom: 1px solid var(--yakit-primary-3) !important;
+    background: var(--Colors-Use-Main-Bg) !important;
+    border: 1px solid var(--Colors-Use-Main-Border) !important;
+    // border-bottom: 1px solid var(--Colors-Use-Main-Border) !important;
     border-radius: 4px;
-    color: var(--yakit-header-color) !important;
+    color: var(--Colors-Use-Neutral-Text-1-Title) !important;
 
     .first-sub-menu-number {
-        color: var(--yakit-helper-text-color) !important;
+        color: var(--Colors-Use-Neutral-Disable) !important;
     }
 
     svg {
-        color: var(--yakit-primary-5) !important;
+        color: var(--Colors-Use-Main-Primary) !important;
     }
 
     .first-drag-state {
@@ -486,7 +486,7 @@
         align-items: center;
         justify-content: space-between;
         height: 44px;
-        border-top: 1px solid var(--yakit-border-color);
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
         padding: 10px 0px;
         position: relative;
 
@@ -508,12 +508,12 @@
 
         .menu-label {
             font-size: 12px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             margin-right: 8px;
         }
 
         .menu-question-icon {
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             margin-right: 8px;
             cursor: pointer;
 
@@ -522,14 +522,14 @@
                 height: 16px;
 
                 &:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
 
         .have-add {
             font-size: 12px;
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             padding: 4px 8px;
         }
 
@@ -550,8 +550,8 @@
     }
 
     .system-function-item-isDragging {
-        background-color: var(--yakit-primary-1);
-        border: 1px solid var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Bg);
+        border: 1px solid var(--Colors-Use-Main-Primary);
         border-radius: 4px;
         padding-left: 8px;
 
@@ -576,7 +576,7 @@
         align-items: center;
         justify-content: space-between;
         height: 44px;
-        border-top: 1px solid var(--yakit-border-color);
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
         padding: 8px 0px;
         width: 100%;
         position: relative;
@@ -588,7 +588,7 @@
 
         .have-add {
             font-size: 12px;
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             padding: 4px 8px;
         }
 
@@ -621,7 +621,7 @@
         }
         .plugin-local-scriptName {
             font-size: 12px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             white-space: nowrap;
             text-overflow: ellipsis;
             overflow: hidden;
@@ -631,8 +631,8 @@
         }
     }
     .plugin-local-item-isDragging {
-        background-color: var(--yakit-primary-1);
-        border: 1px solid var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Bg);
+        border: 1px solid var(--Colors-Use-Main-Primary);
         border-radius: 4px;
         padding-left: 8px;
 
@@ -697,18 +697,18 @@
         .subMenu-edit-modal-title {
             font-weight: 600;
             font-size: 14px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .close-icon {
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
 
             svg {
                 width: 16px;
                 height: 16px;
 
                 &:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
@@ -734,14 +734,14 @@
     align-items: center;
 
     .confirm-icon {
-        color: var(--yakit-warning-5);
+        color: var(--Colors-Use-Warning-Primary);
     }
 
     .confirm-text {
         font-weight: 600;
         font-size: 14px;
         line-height: 20px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         margin-top: 16px;
         margin-bottom: 8px;
     }
@@ -750,10 +750,10 @@
         font-weight: 400;
         font-size: 12px;
         line-height: 16px;
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
 
         span {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
             margin: 0 4px;
         }
     }
@@ -776,7 +776,7 @@
         align-items: flex-start;
 
         .json-export-icon {
-            color: var(--yakit-warning-5);
+            color: var(--Colors-Use-Warning-Primary);
             margin-right: 16px;
         }
 
@@ -784,7 +784,7 @@
             font-weight: 600;
             font-size: 16px;
             line-height: 24px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 }
@@ -794,7 +794,7 @@
 }
 
 .plugin-local-icon {
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     margin-right: 8px;
     cursor: pointer;
 
@@ -803,7 +803,7 @@
         height: 16px;
 
         &:hover {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }

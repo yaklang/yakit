@@ -97,7 +97,7 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
         <YakitHint
             visible={visible}
             title='笔记本导入中'
-            heardIcon={<OutlineImportIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<OutlineImportIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             onCancel={() => {
                 stopImport()
             }}
@@ -199,7 +199,7 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
         <YakitHint
             visible={visible}
             title='笔记本导出中'
-            heardIcon={<OutlineExportIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<OutlineExportIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             onCancel={() => {
                 stopExport()
             }}

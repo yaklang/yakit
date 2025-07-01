@@ -76,7 +76,6 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
         }
     }, [responseMap])
 
-
     return isShow ? (
         <div className={styles["all-sequence-response-list"]} style={{display: showAllResponse ? "" : "none"}}>
             <div className={styles["all-sequence-response-heard"]}>
@@ -141,7 +140,7 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
             <div
                 ref={secondNodeRef}
                 className={styles["all-sequence-response-table"]}
-                style={{border: "1px solid var(--yakit-border-color)"}}
+                style={{border: "1px solid var(--Colors-Use-Neutral-Border)"}}
             >
                 {showSuccess === "true" && (
                     <HTTPFuzzerPageTable

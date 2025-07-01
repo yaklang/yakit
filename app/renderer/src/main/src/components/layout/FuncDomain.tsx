@@ -119,6 +119,7 @@ import {ConfigMcpModal} from "@/utils/ConfigSystemMcp"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {openConsoleNewWindow} from "@/utils/openWebsite"
 import useEngineConsole from "./hooks/useEngineConsole/useEngineConsole"
+import {useTheme} from "@/hook/useTheme"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -991,6 +992,20 @@ const GetUIOpSettingMenu = () => {
                 {key: "ssa-result-diff", label: "ssa-result-diff"}
             ]
         },
+        {
+            key: "modeSwitching",
+            label: "模式切换",
+            children: [
+                {
+                    key: "light",
+                    label: "亮色"
+                },
+                {
+                    key: "dark",
+                    label: "暗色"
+                }
+            ]
+        },
         {type: "divider"},
         {
             key: "system-manager",
@@ -1060,6 +1075,8 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const {dynamicStatus} = yakitDynamicStatus()
     const {delTemporaryProject} = useTemporaryProjectStore()
     const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
+    /** 当前主题 */
+    const {setTheme} = useTheme()
 
     useEffect(() => {
         onIsCVEDatabaseReady()
@@ -1074,6 +1091,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 yakitFailed("IsCVEDatabaseReady失败：" + err)
             })
     })
+
     const menuSelect = useMemoizedFn((type: string) => {
         if (show) setShow(false)
         switch (type) {
@@ -1203,6 +1221,12 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "ssa-result-diff":
                 emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Ssa_Result_Diff}))
+                return
+            case "light":
+                setTheme("light")
+                return
+            case "dark":
+                setTheme("dark")
                 return
             default:
                 return
@@ -1849,8 +1873,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             grpcFetchIntranetYakitVersion().then((filePath: string) => {
                 const match = filePath.match(/EnpriTrace-([\d.-]+)/)
                 const version = match ? match[1] : ""
-                const data = `v${version.endsWith('-') ? version.slice(0, -1) : version}` // 去掉末尾的'-'符号
-                
+                const data = `v${version.endsWith("-") ? version.slice(0, -1) : version}` // 去掉末尾的'-'符号
+
                 // 企业版初次进入时 如若配置文件为强制更新则需弹出提示框
                 if (isUpdateEnpriTraceRef.current && data.length > 0) {
                     const isUpdateYakit = data !== "" && removePrefixV(data) !== removePrefixV(yakitVersion)

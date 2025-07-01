@@ -1295,7 +1295,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                                     type={"text"}
                                                     icon={<OutlinePluscircleIcon />}
                                                     style={{
-                                                        color: addGroupVisible ? "var(--yakit-primary-5)" : "#31343F"
+                                                        color: addGroupVisible
+                                                            ? "var(--Colors-Use-Main-Primary)"
+                                                            : "#31343F"
                                                     }}
                                                 >
                                                     添加分组
@@ -1470,7 +1472,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             <YakitHint
                 visible={percentShow}
                 title='上传插件库'
-                heardIcon={<SolidClouduploadIcon style={{color: "var(--yakit-warning-5)"}} />}
+                heardIcon={<SolidClouduploadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
                 onCancel={onUploadPluginLibraryCancel}
                 okButtonProps={{style: {display: "none"}}}
                 isDrag={true}
