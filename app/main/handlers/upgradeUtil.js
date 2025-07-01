@@ -409,13 +409,37 @@ module.exports = {
         })
 
         const asyncWriteEngineKeyToYakitProjects = async (version) => {
-            try {
-                if (process.platform === "darwin") {
-                    const key = await fetchSpecifiedYakVersionHash(version, {timeout: 2000})
-                    const yakKeyFile = path.join(YakitProjectPath, "engine-sha256.txt")
-                    fs.writeFileSync(yakKeyFile, key)
+            return new Promise(async (resolve, reject) => {
+                try {
+                    if (process.platform === "darwin") {
+                        const yakKeyFile = path.join(YakitProjectPath, "engine-sha256.txt")
+                        // 先行删除
+                        if (fs.existsSync(yakKeyFile)) {
+                            fs.unlinkSync(yakKeyFile)
+                        }
+                        // macOS下正常下载引擎时注入
+                        if (version) {
+                            const hashData = await fetchSpecifiedYakVersionHash(version, {timeout: 2000})
+                            fs.writeFileSync(yakKeyFile, hashData)
+                        }
+                        // macOS下解压内置引擎时注入
+                        else {
+                            const hashTxt = path.join("bins", "engine-sha256.txt")
+                            if (fs.existsSync(loadExtraFilePath(hashTxt))) {
+                                let hashData = fs.readFileSync(loadExtraFilePath(hashTxt)).toString("utf8")
+                                // 去除换行符
+                                hashData = (hashData || "").replace(/\r?\n/g, "")
+                                // 去除首尾空格
+                                hashData = hashData.trim()
+                                fs.writeFileSync(yakKeyFile, hashData)
+                            }
+                        }
+                    }
+                    resolve()
+                } catch (error) {
+                    reject(error)
                 }
-            } catch (error) {}
+            })
         }
 
         ipcMain.handle("write-engine-key-to-yakit-projects", async (e, version) => {
