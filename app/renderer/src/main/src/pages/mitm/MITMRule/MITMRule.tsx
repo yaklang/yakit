@@ -20,7 +20,7 @@ import {
     TrashIcon
 } from "@/assets/newIcon"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useMemoizedFn, useThrottleFn} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import classNames from "classnames"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
@@ -34,7 +34,7 @@ import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {MITMRuleFromModal} from "./MITMRuleFromModal"
 import {randomString} from "@/utils/randomUtil"
-import {failed, success, yakitNotify} from "@/utils/notification"
+import {failed, success, warn, yakitNotify} from "@/utils/notification"
 import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfigure"
 import update from "immutability-helper"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
@@ -196,6 +196,20 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             return menuBodyHeight.firstTabMenuBodyHeight - 58
         }, [menuBodyHeight.firstTabMenuBodyHeight])
 
+        const onSortRules = useMemoizedFn((newRule: MITMContentReplacerRule[]) => {
+            let showRules: MITMContentReplacerRule[] = []
+            let banRules: MITMContentReplacerRule[] = []
+            newRule.forEach((item: MITMContentReplacerRule) => {
+                if (item.Disabled) {
+                    banRules.push(item)
+                } else {
+                    showRules.push(item)
+                }
+            })
+            const newRules: MITMContentReplacerRule[] = [...showRules, ...banRules]
+            return newRules
+        })
+
         useEffect(() => {
             ipcRenderer.invoke("GetCurrentRules", {}).then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
@@ -212,7 +226,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         useEffect(() => {
             grpcClientMITMContentReplacerUpdate(mitmVersion).on((replacers) => {
                 const newRules = (replacers || []).map((ele) => ({...ele, Id: ele.Index}))
-                setRules(newRules)
+                setRules(onSortRules(newRules))
             })
             return () => {
                 grpcClientMITMContentReplacerUpdate(mitmVersion).remove()
@@ -224,7 +238,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 .invoke("GetCurrentRules", {})
                 .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                     const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
-                    setRules(newRules)
+                    setRules(onSortRules(newRules))
                     setIsRefresh(!isRefresh)
                 })
                 .finally(() => setTimeout(() => setLoading(false), 100))
@@ -285,7 +299,9 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             setCurrentItem(rowDate)
         })
         const onBan = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
-            const newRules: MITMContentReplacerRule[] = rules.map((item: MITMContentReplacerRule) => {
+            let showRules: MITMContentReplacerRule[] = []
+            let banRules: MITMContentReplacerRule[] = []
+            rules.forEach((item: MITMContentReplacerRule) => {
                 if (item.Id === rowDate.Id) {
                     if (!rowDate.Disabled && rowDate.Id === currentItem?.Id) {
                         setCurrentItem(undefined)
@@ -295,8 +311,13 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                         Disabled: !rowDate.Disabled
                     }
                 }
-                return item
+                if (item.Disabled) {
+                    banRules.push(item)
+                } else {
+                    showRules.push(item)
+                }
             })
+            const newRules: MITMContentReplacerRule[] = [...showRules, ...banRules]
             setRules(newRules)
         })
 
@@ -609,11 +630,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 const index = rules.findIndex((item) => item.Id === val.Id)
                 if (index === -1) return
                 rules[index] = obj
-                setRules([...rules])
+                setRules(onSortRules([...rules]))
             } else {
                 setAddRule((prev) => [obj, ...prev])
                 const newRules = [obj, ...rules].sort((a, b) => a.Index - b.Index)
-                setRules(newRules)
+                setRules(onSortRules(newRules))
                 setCurrentIndex(newRules.length - 1)
             }
             onOpenOrCloseModal(false)
@@ -747,7 +768,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 }
                 return item
             })
-            setRules([...newRules])
+            setRules(onSortRules([...newRules]))
             setSelectedRowKeys([])
             setIsAllSelect(false)
             setTimeout(() => {
@@ -802,17 +823,29 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 setLoading(false)
             }, 200)
         })
+
+        const isAlowMoveRef = useRef<boolean>(true)
         const onMoveRow = useMemoizedFn((dragIndex: number, hoverIndex: number) => {
-            setRules((prevRules: MITMContentReplacerRule[]) =>
-                update(prevRules, {
+            setRules((prevRules: MITMContentReplacerRule[]) =>{
+                // PS: 未屏蔽的规则仅能在未屏蔽的规则中进行拖拽 屏蔽的规则仅能在屏蔽的规则中进行拖拽
+                if (prevRules[dragIndex].Disabled !== prevRules[hoverIndex].Disabled || !isAlowMoveRef.current) {
+                    if (isAlowMoveRef.current) {
+                        warn("拖拽已失效，只能在同一状态下的规则中进行拖拽")
+                    }
+                    isAlowMoveRef.current = false
+                    return prevRules
+                }
+                
+                return update(prevRules, {
                     $splice: [
                         [dragIndex, 1],
                         [hoverIndex, 0, prevRules[dragIndex]]
                     ]
                 })
-            )
+            })
         })
         const onMoveRowEnd = useMemoizedFn(() => {
+            isAlowMoveRef.current = true
             setRules((prevRules: MITMContentReplacerRule[]) => {
                 const newRules = prevRules.map((item, index) => ({...item, Index: index + 1}))
                 return [...newRules]
