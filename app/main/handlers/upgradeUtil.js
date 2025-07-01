@@ -29,7 +29,7 @@ const {
     getDownloadUrl
 } = require("./utils/network")
 const {engineCancelRequestWithProgress, yakitCancelRequestWithProgress} = require("./utils/requestWithProgress")
-const {getCheckTextUrl} = require("../handlers/utils/network")
+const {getCheckTextUrl, fetchSpecifiedYakVersionHash} = require("../handlers/utils/network")
 const {engineLogOutputFileAndUI} = require("../logFile")
 
 const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile")
@@ -406,6 +406,20 @@ module.exports = {
         }
         ipcMain.handle("download-latest-yak", async (e, version) => {
             return await asyncDownloadLatestYak(version)
+        })
+
+        const asyncWriteEngineKeyToYakitProjects = async (version) => {
+            try {
+                if (process.platform === "darwin") {
+                    const key = await fetchSpecifiedYakVersionHash(version, {timeout: 2000})
+                    const yakKeyFile = path.join(YakitProjectPath, "engine-sha256.txt")
+                    fs.writeFileSync(yakKeyFile, key)
+                }
+            } catch (error) {}
+        }
+
+        ipcMain.handle("write-engine-key-to-yakit-projects", async (e, version) => {
+            return await asyncWriteEngineKeyToYakitProjects(version)
         })
 
         // 判断历史引擎版本是否存在以及正确性
