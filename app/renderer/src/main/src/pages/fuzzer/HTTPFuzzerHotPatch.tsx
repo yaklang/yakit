@@ -165,6 +165,10 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     const onUpdateTemplate = useMemoizedFn(() => {
         ipcRenderer
             .invoke("UpdateHotPatchTemplate", {
+                Condition: {
+                    Type: "fuzzer",
+                    Name: [tempNameRef.current]
+                },
                 Data: {
                     Type: "fuzzer",
                     Content: params.HotPatchCode,
