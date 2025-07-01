@@ -40,7 +40,7 @@
                 gap: 4px;
                 .title-style {
                     white-space: nowrap;
-                    color: #85899e;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     font-size: 12px;
                     font-weight: 500;
                     line-height: 16px;
@@ -68,7 +68,7 @@
 
 /* ---------- OpenedFile ---------- */
 .opened-file-header {
-    color: #31343f;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 12px;
     font-weight: 600;
     line-height: 16px;
@@ -98,7 +98,7 @@
                 display: none;
                 width: 16px;
                 height: 16px;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
         }
         img {
@@ -108,7 +108,7 @@
         .file-name {
             flex: 1;
             overflow: hidden;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
@@ -120,7 +120,7 @@
     }
     .file-item-no-active {
         &:hover {
-            background-color: #f8f8f8;
+            background-color: var(--Colors-Use-Neutral-Bg);
             .del-btn {
                 svg {
                     display: block;
@@ -161,7 +161,7 @@
         display: inline-flex;
         flex-direction: column;
         align-items: flex-start;
-        background: #f8f8f8;
+        background: var(--Colors-Use-Neutral-Bg);
         border-right: 1px solid #eaecf3;
     }
 
@@ -177,7 +177,7 @@
         user-select: none;
 
         .item-text {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 600;
             line-height: 16px;
@@ -188,7 +188,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     &-item:hover {
@@ -196,7 +196,7 @@
     }
 
     &-item-active {
-        background-color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Primary);
         .item-text {
             color: #ffffff;
         }
@@ -211,7 +211,7 @@
     }
 
     &-item-active:hover {
-        background-color: var(--yakit-primary-4);
+        background-color: var(--Colors-Use-Main-Hover);
     }
 
     &-content {

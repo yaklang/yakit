@@ -28,7 +28,7 @@
         gap: 4px;
         border-right: 1px solid #eaecf3;
 
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 600;
         line-height: 16px;
@@ -38,8 +38,8 @@
             display: flex;
             align-items: center;
             border-radius: 8px;
-            background: #f0f1f3;
-            color: #85899e;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-size: 12px;
             font-weight: 400;
             line-height: 16px;
@@ -59,7 +59,7 @@
     width: 100%;
     flex: 1;
     overflow: hidden;
-    background: #f8f8f8;
+    background: var(--Colors-Use-Neutral-Bg);
     .plugin-log-tab-pane {
         width: 100%;
         height: 100%;
@@ -148,12 +148,12 @@
         gap: 2px;
         .author-name {
             white-space: nowrap;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .log-time {
             white-space: nowrap;
             overflow: hidden;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     .content-wrapper {
@@ -165,7 +165,7 @@
             width: 100%;
             overflow: hidden;
 
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 400;
             line-height: 20px;
@@ -175,7 +175,7 @@
 
 // ---------- 插件日志各种类型对应样式 ----------
 .plugin-log-type-info {
-    --plugin-log-type-background: #f0f1f3;
+    --plugin-log-type-background: var(--Colors-Use-Neutral-Bg-Hover);
     --plugin-log-type-content: #85899e;
 }
 .plugin-log-type-success {
@@ -288,7 +288,7 @@
             }
             .author-name {
                 white-space: nowrap;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             .author-name + .log-content {
                 margin-left: 6px;
@@ -306,7 +306,7 @@
             .log-time {
                 white-space: nowrap;
                 overflow: hidden;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
         }
         .header-operate {
@@ -338,7 +338,7 @@
             overflow: hidden;
             --yakit-ellipsis-row: 3;
 
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 400;
             line-height: 20px;
@@ -364,7 +364,7 @@
                 overflow: hidden;
                 display: flex;
                 gap: 8px;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px;
@@ -413,7 +413,7 @@
             display: flex;
             align-items: center;
             .header-title {
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 font-size: 11px;
                 font-weight: 400;
                 line-height: 16px;
@@ -477,7 +477,7 @@
                 svg {
                     width: 16px;
                     height: 16px;
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
             }
         }
@@ -504,7 +504,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 
@@ -516,7 +516,7 @@
         gap: 2px;
         .item-setting-header {
             padding-bottom: 4px;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 400;
             line-height: 20px;
@@ -531,7 +531,7 @@
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 14px;
                 line-height: 20px;
             }

@@ -59,7 +59,6 @@ $color-names: Main, Error, Warning, Success;
 $color-tag-names: "Purple", "Magenta", "Blue", "Lake-blue", "Cyan", "Green", "Red", "Orange", "Yellow";
 
 html[data-theme="light"] {
-    --ui-neutral-100: #31343f;
     --ui-neutral-90: #454750;
     --ui-neutral-80: #545663;
     --ui-neutral-70: #85899e;
@@ -67,12 +66,9 @@ html[data-theme="light"] {
     --ui-neutral-50: #ccd2de;
     --ui-neutral-40: #eaecf3;
     --ui-neutral-30: #f0f1f3;
-    --ui-neutral-20: #f8f8f8;
     --ui-neutral-10: #ffffff;
 
-    --ui-text-color: #31343f;
     --ui-text-inverse-color: #fff;
-    --ui-icon-color: #85899e;
     --ui-background-color: #fff;
     --ui-hover-background-color: #f0f1f3;
 
@@ -97,32 +93,10 @@ html[data-theme="light"] {
     @each $color in $color-tag-names {
         @include components.generate-semantic-colors($color, light);
     }
+    --mitm-bg-image: url('../assets/mitm-bg-light.png');
+    --mitm-bg-color: linear-gradient(180deg, rgba(255, 255, 255, 0.00) 21.72%, rgba(255, 255, 255, 0.60) 37.87%, #FFF 102.46%);
 }
 html[data-theme="dark"] {
-    --ui-neutral-100: #ffffff;
-    --ui-neutral-90: #f8f8f8;
-    --ui-neutral-80: #f0f1f3;
-    --ui-neutral-70: #eaecf3;
-    --ui-neutral-60: #ccd2de;
-    --ui-neutral-50: #b4bbca;
-    --ui-neutral-40: #85899e;
-    --ui-neutral-30: #545663;
-    --ui-neutral-20: #454750;
-    --ui-neutral-10: #31343f;
-
-    --ui-text-color: #fff;
-    --ui-text-inverse-color: #31343f;
-    --ui-icon-color: #85899e;
-    --ui-background-color: #000;
-    --ui-hover-background-color: #f0f1f3;
-
-    // 主题色
-    --yakit-primary-1: rgba(242, 139, 68, 0.06);
-    --yakit-primary-2: #fbe7d9;
-    --yakit-primary-3: #fbc6a1;
-    --yakit-primary-4: #f69c5d;
-    --yakit-primary-5: #f28b44;
-    --yakit-primary-6: #e27122;
 
     @include generator.generate-all-theme-colors(dark);
     @include components.generate-neutral-semantic-colors(dark);
@@ -134,4 +108,16 @@ html[data-theme="dark"] {
     @each $color in $color-tag-names {
         @include components.generate-semantic-colors($color, dark);
     }
+    --mitm-bg-image: url('../assets/mitm-bg-dark.png');
+    --mitm-bg-color: linear-gradient(181deg, rgba(52, 33, 21, 0.00) 0.51%, rgba(23, 23, 23, 0.60) 20.79%, #171717 101.92%);
+
+    --ui-neutral-80: #f0f1f3;
+    --ui-neutral-70: #eaecf3;
+    --ui-neutral-60: #ccd2de;
+    --ui-neutral-50: #b4bbca;
+    --ui-neutral-40: #85899e;
+    --ui-neutral-30: #545663;
+
+    --ui-background-color: #000;
+    --ui-hover-background-color: #f0f1f3;
 }

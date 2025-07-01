@@ -13,12 +13,12 @@
     z-index: 12;
     &:hover {
         cursor: pointer;
-        background-color: var(--yakit-card-background-color);
-        border-bottom-color: var(--yakit-primary-3);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        border-bottom-color: var(--Colors-Use-Main-Border);
         .expand-and-retract-header-icon-body {
             width: 76px;
-            border: 1px solid var(--yakit-primary-3);
-            color: var(--yakit-primary-5);
+            border: 1px solid var(--Colors-Use-Main-Border);
+            color: var(--Colors-Use-Main-Primary);
             .expand-and-retract-header-icon-text {
                 width: 48px;
                 opacity: 1;
@@ -27,7 +27,7 @@
     }
     &:focus,
     &:active {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }
 
@@ -51,9 +51,9 @@
     top: 75%;
     background-color: #fff;
     padding: 4px;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     flex-shrink: 0;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     width: 24px;
     height: 24px;
     border-radius: 12px;

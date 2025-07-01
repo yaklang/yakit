@@ -391,10 +391,12 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                 <>
                     <YakitButton type='outline2' onClick={() => onSwitch(!started)}>
                         {(started && <ChromeSvgIcon />) || (
-                            <ChromeFrameSvgIcon style={{height: 16, color: "var(--yakit-body-text-color)"}} />
+                            <ChromeFrameSvgIcon style={{height: 16, color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />
                         )}
                         免配置启动
-                        {started && <CheckOutlined style={{color: "var(--yakit-success-5)", marginLeft: 8}} />}
+                        {started && (
+                            <CheckOutlined style={{color: "var(--Colors-Use-Success-Primary)", marginLeft: 8}} />
+                        )}
                     </YakitButton>
                     {started && (
                         <Tooltip title={"关闭所有免配置 Chrome"}>
@@ -404,14 +406,14 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                                     onCloseChrome()
                                 }}
                             >
-                                <CloseOutlined style={{color: "var(--yakit-success-5)"}} />
+                                <CloseOutlined style={{color: "var(--Colors-Use-Success-Primary)"}} />
                             </YakitButton>
                         </Tooltip>
                     )}
                 </>
             )) || (
                 <YakitButton type='outline2' size='large' onClick={clickChromeLauncher}>
-                    <ChromeFrameSvgIcon style={{height: 16, color: "var(--yakit-body-text-color)"}} />
+                    <ChromeFrameSvgIcon style={{height: 16, color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />
                     <span style={{marginLeft: 4}}>免配置启动</span>
                 </YakitButton>
             )}
@@ -676,7 +678,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                     return record.cellStyle && !record.default ? (
                         <YakitInput
                             defaultValue={text}
-                            style={{borderRadius: 0, borderColor: "var(--yakit-primary-5)"}}
+                            style={{borderRadius: 0, borderColor: "var(--Colors-Use-Main-Primary)"}}
                             autoFocus={!record.default}
                             onChange={(e) => {
                                 if (tempEditItem.current) {
@@ -692,7 +694,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                             className='content-ellipsis'
                             style={{
                                 paddingLeft: record.cellStyle ? 12 : undefined,
-                                color: record.disabled ? "var(--yakit-disable-text-color)" : undefined
+                                color: record.disabled ? "var(--Colors-Use-Neutral-Disable)" : undefined
                             }}
                         >
                             {text}
@@ -709,7 +711,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                         record.cellStyle ? (
                             <YakitInput
                                 defaultValue={text}
-                                style={{borderRadius: 0, borderColor: "var(--yakit-primary-5)"}}
+                                style={{borderRadius: 0, borderColor: "var(--Colors-Use-Main-Primary)"}}
                                 autoFocus={record.default}
                                 onChange={(e) => {
                                     if (tempEditItem.current) {
@@ -723,7 +725,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                         ) : (
                             <div
                                 className='content-ellipsis'
-                                style={{color: record.disabled ? "var(--yakit-disable-text-color)" : undefined}}
+                                style={{color: record.disabled ? "var(--Colors-Use-Neutral-Disable)" : undefined}}
                             >
                                 {text}
                             </div>

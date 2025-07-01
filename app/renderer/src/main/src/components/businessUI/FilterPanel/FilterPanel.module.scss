@@ -16,12 +16,12 @@
         align-items: center;
         // border-bottom: 1px solid #eaecf3;
         .header-title {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             line-height: 16px;
         }
         .panel-header-icon {
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             width: 16px;
             height: 16px;
             svg {
@@ -29,7 +29,7 @@
                 height: 16px;
             }
             &:hover {
-                color: var(--yakit-primary-4);
+                color: var(--Colors-Use-Main-Hover);
             }
             path {
                 stroke-width: 1.5;
@@ -79,7 +79,7 @@
                         .item-title {
                             max-width: 120px;
                             overflow: hidden;
-                            color: #31343f;
+                            color: var(--Colors-Use-Neutral-Text-1-Title);
                             font-size: 12px;
                             line-height: 16px;
                         }
@@ -92,20 +92,20 @@
                     }
                 }
                 .list-item-active {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                     .list-item-left {
                         .item-title {
-                            color: var(--yakit-primary-5);
+                            color: var(--Colors-Use-Main-Primary);
                         }
                     }
                     .list-item-extra {
-                        color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Main-Primary);
                     }
                 }
             }
             .to-end {
                 text-align: center;
-                color: var(--yakit-disable-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 font-size: 11px;
                 padding-top: 12px;
                 padding-bottom: 24px;

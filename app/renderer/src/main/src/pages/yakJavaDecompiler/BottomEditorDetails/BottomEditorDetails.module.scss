@@ -41,7 +41,7 @@
                 }
             }
             .active-item {
-                background: var(--yakit-primary-5);
+                background: var(--Colors-Use-Main-Primary);
                 .title {
                     color: #fff;
                 }
@@ -85,7 +85,7 @@
         font-size: 12px;
         margin-bottom: 4px;
         .default-font {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
             cursor: pointer;
             &:hover {
                 text-decoration: underline;

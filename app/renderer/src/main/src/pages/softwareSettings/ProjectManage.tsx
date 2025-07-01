@@ -1374,9 +1374,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                             return (
                                                 <div
                                                     key={item.key}
-                                                    style={
-                                                        {...item.style}
-                                                    }
+                                                    style={{...item.style}}
                                                     className={styles["title-opt"]}
                                                 >
                                                     <div>
@@ -1501,9 +1499,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                                     return (
                                                                         <div
                                                                             key={`${i.index}-${item.key}`}
-                                                                            style={
-                                                                                {...item.style}
-                                                                            }
+                                                                            style={{...item.style}}
                                                                             className={styles["content-opt"]}
                                                                         >
                                                                             {item.render ? (
@@ -2158,7 +2154,9 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                     dropdownClassName={styles["cascader-dropdown-body"]}
                                     open={dropShow}
                                     onDropdownVisibleChange={(open: boolean) => setDropShow(open)}
-                                    suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                                    suffixIcon={
+                                        <ChevronDownIcon style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />
+                                    }
                                 />
                             </Form.Item>
                         )}
@@ -2379,7 +2377,9 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                         }
                                     }}
                                     dropdownClassName={styles["cascader-dropdown-body"]}
-                                    suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                                    suffixIcon={
+                                        <ChevronDownIcon style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />
+                                    }
                                 />
                             </Form.Item>
                         )}

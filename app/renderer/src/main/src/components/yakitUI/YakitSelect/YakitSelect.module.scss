@@ -1,18 +1,18 @@
 // ========================== select ==========================
 .yakit-select {
-    --select-box-shadow-color: var(--yakit-primary-2);
-    --select-border-primary-color: var(--yakit-primary-4);
-    --select-border-color: var(--yakit-border-color);
+    --select-box-shadow-color: var(--Colors-Use-Main-Focus);
+    --select-border-primary-color: var(--Colors-Use-Main-Hover);
+    --select-border-color: var(--Colors-Use-Neutral-Border);
 
-    --select-primary-font-color: var(--yakit-primary-1);
-    --select-font-color: var(--yakit-header-color);
-    --select-font-disabled-color: var(--yakit-helper-text-color);
+    --select-primary-font-color: var(--Colors-Use-Main-Bg);
+    --select-font-color: var(--Colors-Use-Neutral-Text-1-Title);
+    --select-font-disabled-color: var(--Colors-Use-Neutral-Disable);
 
-    --select-background-color: var(--yakit-primary-2);
-    --select-background-disabled-color: var(--yakit-background-color);
+    --select-background-color: var(--Colors-Use-Main-Focus);
+    --select-background-disabled-color: var(--Colors-Use-Neutral-Bg);
     --select-background-white: var(--yakit-neutral10-color);
 
-    --select-primary-icon-color: var(--yakit-primary-5);
+    --select-primary-icon-color: var(--Colors-Use-Main-Primary);
 
     font-weight: 400;
     font-size: 12px;
@@ -68,9 +68,9 @@
             align-items: center;
             border-radius: 4px;
             border: 1px solid var(--select-border-color);
-            background: var(--yakit-card-background-color);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
             margin: 0;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         // ========================== disabled ==========================
@@ -84,7 +84,7 @@
 
 // ========================== popup ==========================
 .yakit-select-popup {
-    --select-background-color: var(--yakit-primary-1);
+    --select-background-color: var(--Colors-Use-Main-Bg);
 
     padding: 6px 4px;
     border-radius: 4px;
@@ -98,7 +98,7 @@
             border-radius: 4px;
 
             &:hover {
-                background-color: var(--yakit-background-color);
+                background-color: var(--Colors-Use-Neutral-Bg);
             }
         }
         .ant-select-item:not(.ant-select-item-option-grouped) {
@@ -108,7 +108,7 @@
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
             font-weight: 400;
             background-color: var(--select-background-color);
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
 
         // ------------ 滚动条 ----------
@@ -123,7 +123,7 @@
 }
 // ========================== mode tags ==========================
 .yakit-select-wrapper-tags {
-    --select-primary-icon-color: var(--yakit-primary-5);
+    --select-primary-icon-color: var(--Colors-Use-Main-Primary);
 
     :global {
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) .ant-select-item-option-state {
@@ -338,7 +338,7 @@
             width: 16px;
             height: 16px;
             margin-top: 4px;
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
             &:hover {
                 color: var(--yakit-danger-5);
             }
@@ -349,7 +349,7 @@
             width: 16px;
             height: 16px;
             margin-top: 4px;
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }

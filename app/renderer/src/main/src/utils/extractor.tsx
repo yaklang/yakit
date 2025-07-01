@@ -250,7 +250,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                     <YakitTag
                                         copyText={selected}
                                         enableCopy={true}
-                                        iconColor='var(--yakit-primary-5)'
+                                        iconColor='var(--Colors-Use-Main-Primary)'
                                     />
                                 ) : (
                                     <YakitTag>未选中提取规则</YakitTag>

@@ -9,7 +9,7 @@
 .func-filter-dropdown-menu {
     :global {
         .ant-dropdown-menu-item {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 }
@@ -34,7 +34,7 @@
         width: 24px;
         height: 24px;
         border-radius: 20px;
-        border: 1px solid #f8f8f8;
+        border: 1px solid var(--Colors-Use-Neutral-Bg);
         margin-right: 4px;
     }
 }
@@ -76,9 +76,9 @@
         align-items: center;
         gap: 8px;
         .operate-disabled-btn {
-            background: var(--yakit-disable-text-color) !important;
+            background: var(--Colors-Use-Neutral-Disable) !important;
             color: var(--ui-text-inverse-color) !important;
-            border-color: var(--yakit-disable-text-color) !important;
+            border-color: var(--Colors-Use-Neutral-Disable) !important;
         }
     }
     .plugin-info-wrapper {
@@ -123,13 +123,13 @@
                             gap: 4px;
                             .content-title {
                                 height: 20px;
-                                color: #31343f;
+                                color: var(--Colors-Use-Neutral-Text-1-Title);
                                 font-size: 14px;
                                 font-weight: 600;
                                 line-height: 20px;
                             }
                             .content-style {
-                                color: #85899e;
+                                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                                 font-size: 12px;
                                 line-height: 16px;
                             }
@@ -139,7 +139,7 @@
                             align-items: center;
                             gap: 4px;
 
-                            color: #31343f;
+                            color: var(--Colors-Use-Neutral-Text-1-Title);
                             font-size: 12px;
                             line-height: 16px;
                         }
@@ -151,7 +151,7 @@
                 display: flex;
                 flex-direction: column;
                 gap: 16px;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 .supplement-header {
                     height: 24px;
                     font-size: 16px;
@@ -250,7 +250,7 @@
                 margin-bottom: 24px;
                 .setting-header {
                     height: 24px;
-                    color: var(--color-gray-text-04, #31343f);
+                    color: var(--color-gray-text-04, var(--Colors-Use-Neutral-Text-1-Title));
                     font-size: 16px;
                     font-weight: 600;
                     line-height: 24px;
@@ -317,10 +317,10 @@
             gap: 8px;
             border-radius: 4px;
             border: 1px solid #eaecf3;
-            background: #f8f8f8;
+            background: var(--Colors-Use-Neutral-Bg);
             cursor: pointer;
 
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             line-height: 16px;
             height: 24px;
@@ -384,13 +384,13 @@
         align-items: center;
     }
     .op-btn-body-hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
     .icon-style {
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .icon-hover-style {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .plus-icon {
         svg {
@@ -401,15 +401,15 @@
 }
 .ui-op-btn-wrapper:hover {
     .icon-style {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .op-btn-body {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }
 .add-group-popover {
     padding-top: 0px;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px;
     overflow: hidden;
     :global {
@@ -436,7 +436,7 @@
             gap: 4px;
             .content {
                 .title {
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 14px;
                     font-weight: 600;
                     line-height: 20px;

@@ -4,7 +4,7 @@
     background-color: #fff;
     border-radius: 4px 4px 0px 0px;
     .main-focus {
-        border-bottom: 1.5px solid var(--yakit-primary-5);
+        border-bottom: 1.5px solid var(--Colors-Use-Main-Primary);
     }
     .main-left-focus {
         border-radius: 4px 0px 0px 4px;
@@ -51,7 +51,7 @@
             padding: 0px;
             height: 16px;
             border-radius: 0px;
-            border-color: var(--yakit-primary-6);
+            border-color: var(--Colors-Use-Main-Pressed);
         }
         .ant-input[disabled] {
             background-color: #ffffff;
@@ -112,7 +112,7 @@
         bottom: 0px;
         height: 1px;
         width: 100%;
-        background-color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Primary);
     }
     :global {
         .ant-input {
@@ -121,7 +121,7 @@
             padding: 0px;
             height: 16px;
             border-radius: 0px;
-            border-color: var(--yakit-primary-6);
+            border-color: var(--Colors-Use-Main-Pressed);
         }
         .ant-input[disabled] {
             background-color: #ffffff;
@@ -147,7 +147,7 @@
     display: inline-block;
     padding: 4px 0px;
     .text {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 400;
         line-height: 16px;
@@ -192,12 +192,12 @@
         }
         .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
             border: 1px solid #ffffff;
-            border-bottom: 1.5px solid var(--yakit-primary-5);
+            border-bottom: 1.5px solid var(--Colors-Use-Main-Primary);
             box-shadow: unset;
         }
         .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-arrow {
             transform: rotate(180deg);
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
         .ant-select-show-search:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input)
             .ant-select-arrow {
@@ -335,24 +335,24 @@
                 height: 20px;
                 width: 20px;
                 cursor: pointer;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 border-radius: 4px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 svg {
-                    color: var(--yakit-body-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     height: 16px;
                     width: 16px;
                 }
             }
             .expand-hover-box {
                 &:hover {
-                    background-color: var(--yakit-background-color);
+                    background-color: var(--Colors-Use-Neutral-Bg);
                 }
                 svg {
                     &:hover {
-                        color: var(--yakit-primary-4);
+                        color: var(--Colors-Use-Main-Hover);
                     }
                 }
             }
@@ -387,7 +387,7 @@
     .header {
         height: 20px;
         .title {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 600;
             line-height: 26px;
@@ -396,5 +396,5 @@
 }
 .new-codec-editor-focus {
     box-sizing: border-box;
-    border-bottom: 1.5px solid var(--yakit-primary-5);
+    border-bottom: 1.5px solid var(--Colors-Use-Main-Primary);
 }

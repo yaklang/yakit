@@ -2,7 +2,7 @@
     .text-wrapper {
         white-space: pre-wrap;
         word-break: break-all;
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 400;
         line-height: 16px;
@@ -11,7 +11,7 @@
     .expand-btn {
         margin-top: 8px;
         cursor: pointer;
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         font-size: 12px;
         font-weight: 400;
         line-height: 16px;

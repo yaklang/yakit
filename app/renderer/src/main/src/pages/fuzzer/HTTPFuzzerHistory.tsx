@@ -144,7 +144,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                     </YakitPopconfirm>
                 </Space>
             }
-            style={{color: "var(--yakit-header-color)"}}
+            style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}
         >
             {/* <Form
                 size={"small"}

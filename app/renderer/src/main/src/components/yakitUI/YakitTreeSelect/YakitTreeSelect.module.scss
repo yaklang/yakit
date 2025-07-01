@@ -9,30 +9,30 @@
         }
 
         .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .ant-select-multiple .ant-select-selection-item {
-            background-color: var(--yakit-card-background-color);
-            border: 1px solid var(--yakit-border-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             height: 20px;
             line-height: 18px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
         }
     }
 }
 
 .yakit-tree-select-dropdown {
-    --checkbox-active-color: var(--yakit-primary-6);
-    --checkbox-background-color: var(--yakit-primary-5);
-    --checkbox-background-disabled-color: var(--yakit-disable-text-color);
-    --checkbox-border-color: var(--yakit-border-color);
-    --checkbox-border-disabled-color: var(--yakit-disable-text-color);
-    --checkbox-border-primary-color: var(--yakit-primary-5);
-    --checkbox-box-shadow-color: var(--yakit-primary-2);
-    --checkbox-hover-color: var(--yakit-primary-4);
+    --checkbox-active-color: var(--Colors-Use-Main-Pressed);
+    --checkbox-background-color: var(--Colors-Use-Main-Primary);
+    --checkbox-background-disabled-color: var(--Colors-Use-Neutral-Disable);
+    --checkbox-border-color: var(--Colors-Use-Neutral-Border);
+    --checkbox-border-disabled-color: var(--Colors-Use-Neutral-Disable);
+    --checkbox-border-primary-color: var(--Colors-Use-Main-Primary);
+    --checkbox-box-shadow-color: var(--Colors-Use-Main-Focus);
+    --checkbox-hover-color: var(--Colors-Use-Main-Hover);
     .yakit-tree-select-switcher-icon {
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         svg {
             height: 12px;
             width: 12px;
@@ -149,12 +149,12 @@
 
         .ant-select-tree-node-content-wrapper {
             &:hover {
-                background-color: var(--yakit-card-background-color);
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
             }
         }
 
         .ant-select-tree-switcher-loading-icon {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
 
         .ant-select-tree-list-scrollbar-thumb {

@@ -88,7 +88,7 @@ export const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
                     height: 32,
                     minHeight: 32,
                     boxSizing: "content-box",
-                    borderBottom: "1px solid var(--yakit-border-color)",
+                    borderBottom: "1px solid var(--Colors-Use-Neutral-Border)",
                     paddingLeft: 0,
                     paddingRight: 0
                 }}
@@ -515,7 +515,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                 height: 32,
                 minHeight: 32,
                 boxSizing: "content-box",
-                borderBottom: "1px solid var(--yakit-border-color)",
+                borderBottom: "1px solid var(--Colors-Use-Neutral-Border)",
                 paddingLeft: 0
             }}
             bodyStyle={{padding: 12, paddingLeft: 0, width: "100%", height: "calc(100% - 32px)"}}
@@ -844,7 +844,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
             title: "用户名",
             dataKey: "user_name",
             render: (text, record) => (
-                <div className={styles['userNameWrapper']}>
+                <div className={styles["userNameWrapper"]}>
                     {judgeAvatar(record)}
                     <span style={{marginLeft: 10}}>{text}</span>
                 </div>

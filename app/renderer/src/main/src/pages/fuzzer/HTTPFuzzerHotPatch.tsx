@@ -210,7 +210,11 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                     <AutoCard
                                         size={"small"}
                                         bordered={false}
-                                        title={<span style={{color: "var(--yakit-header-color)"}}>结果展示</span>}
+                                        title={
+                                            <span style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
+                                                结果展示
+                                            </span>
+                                        }
                                         extra={
                                             <Space>
                                                 <YakitButton

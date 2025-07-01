@@ -65,7 +65,7 @@
     border-radius: 4px 0 0 4px;
     .empty-box-fold-box {
         height: 33px;
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         padding: 0 12px;
         .empty-box-icon-box {
             height: 100%;
@@ -73,7 +73,7 @@
             align-items: center;
             justify-content: flex-end;
             .fold-icon {
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 cursor: pointer;
                 border-radius: 4px;
                 width: 24px;
@@ -87,9 +87,9 @@
                 }
             }
         }
-        .fold-icon:hover {
-            background-color: var(--yakit-background-color);
-            color: var(--yakit-primary-5);
+        .fold-icon:hover{
+            background-color: var(--Colors-Use-Neutral-Bg);
+            color: var(--Colors-Use-Main-Primary);;
         }
     }
 }
@@ -104,7 +104,7 @@
         align-items: center;
         justify-content: center;
         .fold-icon {
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             cursor: pointer;
             border-radius: 4px;
             width: 24px;
@@ -118,9 +118,9 @@
             }
         }
     }
-    .fold-icon:hover {
-        background-color: var(--yakit-background-color);
-        color: var(--yakit-primary-5);
+    .fold-icon:hover{
+        background-color: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Main-Primary);;
     }
 }
 .http-history-fold-border-box {
@@ -150,9 +150,9 @@
             padding: 0 12px;
         }
         .ant-spin {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
             .ant-spin-dot-item {
-                background-color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -163,22 +163,22 @@
         }
     }
     .filter-icon-color {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
 
     .position-icon {
         cursor: pointer;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         svg {
             width: 16px;
             height: 16px;
         }
         &:hover {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
     .position-icon-active {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 .render-html-box {
@@ -202,7 +202,7 @@
 
 .jump-web-tree {
     cursor: pointer;
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
     svg {
         width: 18px;
         height: 18px;
@@ -221,22 +221,22 @@
             line-height: 20px;
             width: 130px;
             &.active {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
             &:hover {
-                background-color: var(--yakit-primary-1);
+                background-color: var(--Colors-Use-Main-Bg);
             }
             .check-icon {
                 svg {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
     }
     :global {
         .ant-popover-inner {
-            border: 1px solid var(--yakit-border-color);
-            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
             border-radius: 4px;
             .ant-popover-inner-content {
                 padding: 6px 4px 4px 4px;

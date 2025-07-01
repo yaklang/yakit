@@ -38,7 +38,7 @@ import {formatDate, formatTimestamp} from "@/utils/timeUtil"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {CacheDropDownGV} from "@/yakitGV"
-import { YakitAutoCompleteRefProps } from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 
 export interface CVETableProp {
     available: boolean
@@ -594,7 +594,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                     如果更新失败，可点击该地址下载：
                     <a
                         href={url}
-                        style={{color: "var(--yakit-primary-5)"}}
+                        style={{color: "var(--Colors-Use-Main-Primary)"}}
                         onClick={() => {
                             openExternalWebsite(url)
                         }}
@@ -663,12 +663,12 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     })
     const heardIconRender = useMemoizedFn(() => {
         if (status === "done") {
-            return <CheckCircleIcon style={{color: "var(--yakit-success-5)"}} />
+            return <CheckCircleIcon style={{color: "var(--Colors-Use-Success-Primary)"}} />
         }
         if (available) {
-            return <SolidRefreshIcon style={{color: "var(--yakit-warning-5)"}} />
+            return <SolidRefreshIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />
         } else {
-            return <ShieldExclamationIcon style={{color: "var(--yakit-warning-5)"}} />
+            return <ShieldExclamationIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />
         }
     })
     const titleRender = useMemoizedFn(() => {

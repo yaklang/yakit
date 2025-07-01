@@ -25,17 +25,17 @@
 
     .share-disabled-btn {
         background-color: transparent !important;
-        color: var(--yakit-disable-text-color) !important;
+        color: var(--Colors-Use-Neutral-Disable) !important;
         border-color: transparent !important;
         cursor: not-allowed;
         svg {
-            color: var(--yakit-disable-text-color) !important;
+            color: var(--Colors-Use-Neutral-Disable) !important;
         }
     }
     .download-disabled-btn {
-        background: var(--yakit-disable-text-color) !important;
+        background: var(--Colors-Use-Neutral-Disable) !important;
         color: var(--ui-text-inverse-color) !important;
-        border-color: var(--yakit-disable-text-color) !important;
+        border-color: var(--Colors-Use-Neutral-Disable) !important;
         cursor: not-allowed;
     }
 }
@@ -71,7 +71,7 @@
         color: #f28b44;
     }
     .content-style {
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 }
 
@@ -120,7 +120,7 @@
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 16px;
                 font-weight: 600;
                 line-height: 24px;
@@ -165,7 +165,7 @@
             margin-right: 16px;
         }
         .text-style {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             line-height: 16px;
         }

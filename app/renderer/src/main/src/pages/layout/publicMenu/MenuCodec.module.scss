@@ -32,7 +32,7 @@
             svg {
                 width: 16px;
                 height: 16px;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
         }
         .exchange-btn:hover {
@@ -49,10 +49,10 @@
         .input-textarea-body {
             height: 77px;
             padding-right: 22px;
-            background: #f0f1f3;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
             font-size: 12px;
             line-height: 16px;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             resize: none;
         }
         .input-textarea-copy {
@@ -83,9 +83,8 @@
         .ant-popover-inner {
             max-height: 300px;
             overflow: auto;
-            background: #fff;
-            border: 1px solid var(--yakit-border-color);
-            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
             border-radius: 4px;
             .ant-popover-inner-content {
                 padding: 6px 4px 4px 4px;

@@ -18,7 +18,7 @@
         z-index: 9;
         height: 50px;
         .simple-detect-heard-tabName {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 16px;
             font-weight: 600;
             line-height: 24px; /* 150% */
@@ -64,7 +64,7 @@
     grid-gap: 12px;
     padding: 12px;
     border-radius: 4px;
-    background: var(--yakit-card-background-color);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
     margin-top: 8px;
 }
 .form-extra {

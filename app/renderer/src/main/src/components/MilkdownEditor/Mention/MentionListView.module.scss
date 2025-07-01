@@ -11,7 +11,7 @@
         0 3px 6px -4px rgba(0, 0, 0, 0.12),
         0 6px 16px 0 rgba(0, 0, 0, 0.08),
         0 9px 28px 8px rgba(0, 0, 0, 0.05);
-    background-color: #fff;
+    background-color: var(--Colors-Use-Neutral-Bg);
     .mention-user-list {
         margin-bottom: 41px;
         overflow-y: auto;
@@ -31,7 +31,7 @@
                 border-top-color: transparent;
             }
             &:hover {
-                background: var(--yakit-card-background-color);
+                background: var(--Colors-Use-Neutral-Bg);
                 border-radius: 8px;
                 border-top-color: transparent;
             }

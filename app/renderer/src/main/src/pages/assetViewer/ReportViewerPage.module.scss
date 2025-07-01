@@ -5,16 +5,16 @@
         margin-bottom: 8px;
         cursor: pointer;
         &-header {
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
         }
         &-body {
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             border-top: none;
         }
     }
     .list-item-hoverable {
         &:hover {
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
         }
     }
     .icon-select {
@@ -29,7 +29,7 @@
         }
     }
     .icon-select-active {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .card {
         border: none;
@@ -52,7 +52,7 @@
                 svg {
                     width: 18px;
                     height: 18px;
-                    color: var(--yakit-body-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
             }
         }

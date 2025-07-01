@@ -392,7 +392,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
         <YakitHint
             visible={visible}
             title={`${getReleaseEditionName()} 云端插件下载中...`}
-            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             onCancel={() => {
                 StopAllPlugin()
                 setVisible(false)
@@ -424,7 +424,7 @@ export interface IRifyApplySyntaxFlowRuleUpdateProps {
  * IRify一键更新规则
  */
 export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUpdateProps> = React.memo((props) => {
-    const {visible,setVisible} = props
+    const {visible, setVisible} = props
     const taskToken = useMemo(() => randomString(40), [])
     const [percent, setPercent] = useState<number>(0)
     useEffect(() => {
@@ -476,7 +476,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
         <YakitHint
             visible={visible}
             title={`${getReleaseEditionName()} 规则更新中...`}
-            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             onCancel={() => {
                 StopAllRule()
                 setVisible(false)
