@@ -1285,7 +1285,7 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         hoverIcon: <PrivateSolidSpaceEngineIcon />,
         ...YakitRouteToPageInfo[YakitRoute.Space_Engine]
     },
-    [YakitRoute.Yak_Java_Decompiler]:{
+    [YakitRoute.Yak_Java_Decompiler]: {
         page: YakitRoute.Yak_Java_Decompiler,
         icon: <PrivateOutlineAuditHoleIcon />,
         hoverIcon: <PrivateSolidAuditHoleIcon />,

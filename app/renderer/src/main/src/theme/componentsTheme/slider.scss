@@ -1,48 +1,59 @@
 .ant-slider {
     &:hover {
         .ant-slider-track {
-            background-color: var(--yakit-primary-4);
+            background-color: var(--Colors-Use-Main-Hover);
         }
         .ant-slider-handle:not(.ant-tooltip-open) {
-            border-color: var(--yakit-primary-4);
+            border-color: var(--Colors-Use-Main-Hover);
         }
     }
 }
 .ant-slider-track {
-    background-color: var(--yakit-primary-3);
+    background-color: var(--Colors-Use-Main-Border);
+}
+.ant-slider:hover .ant-slider-rail{
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+}
+.ant-slider-rail{
+    background-color: var(--Colors-Use-Neutral-Bg);
+}
+.ant-slider-dot{
+    background-color: var(--Colors-Use-Neutral-Bg);
+    border-color: var(--Colors-Use-Neutral-Border);
 }
 .ant-slider-dot-active {
-    border-color: var(--yakit-primary-3);
+    border-color: var(--Colors-Use-Main-Border);
 }
 .ant-slider-handle {
-    border: solid 2px var(--yakit-primary-3);
+    border: solid 2px var(--Colors-Use-Main-Border);
+    background-color: var(--Colors-Use-Neutral-Bg);
     &:focus {
-        border-color: var(--yakit-primary-5);
+        border-color: var(--Colors-Use-Main-Primary);
     }
 }
 .ant-slider-handle.ant-tooltip-open {
-    border-color: var(--yakit-primary-5);
+    border-color: var(--Colors-Use-Main-Primary);
 }
 .ant-slider-mark {
     font-size: 12px;
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 .ant-slider-mark-text-active {
     font-size: 12px;
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 .ant-slider-handle:focus {
-    box-shadow: 0 0 0 5px var(--yakit-primary-1);
+    box-shadow: 0 0 0 5px var(--Colors-Use-Main-Bg);
 }
 .ant-slider-disabled .ant-slider-track {
-    background-color: var(--yakit-background-color) !important;
+    background-color: var(--Colors-Use-Neutral-Bg) !important;
 }
 .ant-slider-disabled .ant-slider-handle,
 .ant-slider-disabled .ant-slider-dot {
-    background-color: var(--yakit-background-color);
-    border-color: var(--yakit-disable-text-color) !important;
+    background-color: var(--Colors-Use-Neutral-Bg);
+    border-color: var(--Colors-Use-Neutral-Disable) !important;
 }
 .ant-slider-disabled .ant-slider-mark-text,
 .ant-slider-disabled .ant-slider-dot {
-    color: var(--yakit-disable-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
 }

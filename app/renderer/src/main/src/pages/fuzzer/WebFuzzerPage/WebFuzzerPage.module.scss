@@ -5,40 +5,39 @@
     flex: 1;
     overflow: hidden;
     .web-fuzzer-tab {
-        border-right: 1px solid var(--yakit-border-color);
-        background: #f0f1f3;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
         width: 24px;
         height: 100%;
         svg {
             width: 16px;
             height: 16px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         &-item {
             @extend .display-column-center;
             padding: 12px 4px;
             align-items: flex-start;
             gap: 4px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             cursor: pointer;
-            background-color: #f0f1f3;
-            border-bottom: 1px solid #fff;
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             &:hover {
-                background-color: rgba(204, 210, 222, 0.5);
+                background-color: var(--Colors-Use-Neutral-Border);
             }
         }
         &-item-active {
-            color: #fff;
-            background-color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-On-Primary);
+            background-color: var(--Colors-Use-Main-Primary);
             &:hover {
-                background-color: var(--yakit-primary-4);
+                background-color: var(--Colors-Use-Main-Hover);
             }
             svg {
-                color: #fff;
+                color: var(--Colors-Use-Main-On-Primary);
             }
         }
         &-item-advanced-config-unShow {
-            background-color: var(--yakit-primary-3);
+            background-color: var(--Colors-Use-Main-Primary);
         }
         &-label {
             font-weight: 600;
@@ -74,16 +73,16 @@
                 font-style: normal;
                 font-weight: 600;
                 line-height: 20px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             &-subTitle {
                 font-size: 12px;
                 font-style: normal;
                 font-weight: 400;
                 line-height: 16px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 &-tip {
-                    color: var(--yakit-helper-text-color);
+                    color: var(--Colors-Use-Neutral-Disable);
                 }
             }
         }
@@ -92,7 +91,7 @@
         display: flex;
         flex: 1;
         border-radius: 8px;
-        border: 1px solid var(--yakit-border-color);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         video {
             object-fit: cover;
             border-radius: 8px;
@@ -107,6 +106,6 @@
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 }

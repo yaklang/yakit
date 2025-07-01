@@ -11,8 +11,11 @@
     }
 
     :global {
+        .ant-tree-list-holder-inner{
+            background-color: var(--Colors-Use-Basic-Background);
+        }
         .yakitTreeNode-icon {
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             margin-top: 4px;
             svg {
                 height: 16px;
@@ -24,7 +27,7 @@
         }
 
         .yakit-flolder-icon {
-            color: var(--yakit-primary-4);
+            color: var(--Colors-Use-Main-Primary);
         }
 
         .ant-spin-spinning {
@@ -36,18 +39,21 @@
 
         .ant-tree-indent-unit {
             width: 10px;
+            background: var(--Colors-Use-Basic-Background);
             &::before {
-                right: 0px
+                right: 0px;
+                background: var(--Colors-Use-Basic-Background);
             }
         }
         .ant-tree-show-line .ant-tree-indent-unit::before {
-            border-right: 1px solid var(--yakit-border-color);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .ant-tree-indent-unit-end {
-            border-right: 1px solid var(--yakit-border-color);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .ant-tree-switcher {
             width: 22px;
+            background: var(--Colors-Use-Basic-Background);
         }
         .ant-tree-switcher-leaf-line {
             display: none;
@@ -55,6 +61,7 @@
 
         .ant-tree .ant-tree-treenode {
             padding: 0;
+            background: var(--Colors-Use-Basic-Background);
         }
 
         .ant-tree-treenode.ant-tree-treenode-switcher-open:not(.ant-tree-treenode-selected),
@@ -62,9 +69,10 @@
             align-items: center;
             width: 100%;
             padding: 0;
+            background-color: var(--Colors-Use-Basic-Background);
             &:hover {
                 .ant-tree-switcher {
-                    background-color: #eaecf3;
+                    background-color: var(--Colors-Use-Neutral-Bg);
                     border-radius: 4px 0 0 4px;
                 }
                 
@@ -74,11 +82,11 @@
         .ant-tree-treenode:not(.ant-tree-treenode-selected) {
             &:hover {
                 .ant-tree-switcher.ant-tree-switcher-noop {
-                    background-color: #f5f5f5;
+                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
                     border-radius: 4px 0 0 4px;
                 }
                 .ant-tree-node-content-wrapper {
-                    background-color: #f5f5f5;
+                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
                     border-radius: 0 4px 4px 0;
                 }
             }
@@ -91,17 +99,22 @@
 
         .ant-tree-node-content-wrapper.ant-tree-node-selected {
             .ant-tree-iconEle .anticon {
-                color: #fff;
+                color: var(--Colors-Use-Main-On-Primary);
+            }
+            .ant-tree-title {
+                white-space: nowrap;
+                width: calc(100% - 24px);
+                color: var(--Colors-Use-Main-On-Primary);
             }
         }
 
         .ant-tree-treenode.ant-tree-treenode-switcher-close.ant-tree-treenode-selected,
         .ant-tree-treenode.ant-tree-treenode-switcher-open.ant-tree-treenode-selected {
             .ant-tree-switcher {
-                background-color: var(--yakit-primary-6);
+                background-color: var(--Colors-Use-Main-Pressed);
                 border-radius: 4px 0 0 4px;
                 .ant-tree-switcher-icon {
-                    color: #fff;
+                    color: var(--Colors-Use-Main-On-Primary);
                 }
             }
 
@@ -111,10 +124,11 @@
 
             &:hover {
                 .ant-tree-switcher {
-                    background-color: var(--yakit-primary-5);
+                    background-color: var(--Colors-Use-Main-Primary);
+                    color: var(--Colors-Use-Main-On-Primary);
                 }
                 .ant-tree-node-content-wrapper.ant-tree-node-selected {
-                    background-color: var(--yakit-primary-4);
+                    background-color: var(--Colors-Use-Main-Hover);
                 }
             }
         }
@@ -122,14 +136,15 @@
         .ant-tree-treenode.ant-tree-treenode-selected {
             &:hover {
                 .ant-tree-switcher.ant-tree-switcher-noop {
-                    background-color: var(--yakit-primary-4);
+                    background-color: var(--Colors-Use-Main-Hover);
                 }
                 .ant-tree-node-content-wrapper.ant-tree-node-selected {
-                    background-color: var(--yakit-primary-4);
+                    background-color: var(--Colors-Use-Main-Hover);
                 }
             }
             .ant-tree-switcher.ant-tree-switcher-noop {
-                background-color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Main-Primary);
+                color: var(--Colors-Use-Main-On-Primary);
                 border-radius: 4px 0 0 4px;
             }
         }
@@ -147,6 +162,7 @@
         .ant-tree-title {
             white-space: nowrap;
             width: calc(100% - 24px);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 }

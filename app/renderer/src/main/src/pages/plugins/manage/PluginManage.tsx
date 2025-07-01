@@ -1295,7 +1295,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                                     type={"text"}
                                                     icon={<OutlinePluscircleIcon />}
                                                     style={{
-                                                        color: addGroupVisible ? "var(--yakit-primary-5)" : "#31343F"
+                                                        color: addGroupVisible
+                                                            ? "var(--Colors-Use-Main-Primary)"
+                                                            : "var(--Colors-Use-Neutral-Disable)"
                                                     }}
                                                 >
                                                     添加分组
@@ -1470,15 +1472,15 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             <YakitHint
                 visible={percentShow}
                 title='上传插件库'
-                heardIcon={<SolidClouduploadIcon style={{color: "var(--yakit-warning-5)"}} />}
+                heardIcon={<SolidClouduploadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
                 onCancel={onUploadPluginLibraryCancel}
                 okButtonProps={{style: {display: "none"}}}
                 isDrag={true}
                 mask={false}
             >
                 <Progress
-                    strokeColor='#F28B44'
-                    trailColor='#F0F2F5'
+                    strokeColor='var(--Colors-Use-Main-Primary)'
+                    trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={percent}
                     format={(percent) => `已上传 ${percent}%`}
                 />
@@ -1599,8 +1601,8 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
                         showArrow={false}
                         showSearch={true}
                         filterOption={false}
-                        notFoundContent={loading ? <YakitSpin spinning={true} size='small' /> : ""}
                         allowClear={true}
+                        notFoundContent={loading ? <YakitSpin spinning={true} size='small' /> : ""}
                         value={value}
                         onSearch={onsearch}
                         onChange={(value, option: any) => {

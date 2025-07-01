@@ -198,8 +198,8 @@
     align-items: center;
     gap: 16px;
     .code-header-radio {
-        border: 1px solid var(--yakit-primary-5);
-        background: var(--yakit-primary-5);
+        border: 1px solid var(--Colors-Use-Main-Border);
+        background: var(--Colors-Use-Main-Border);
         border-radius: 4px;
         cursor: pointer;
         color: var(--Colors-Use-Main-On-Primary);
@@ -338,7 +338,7 @@
 
         .to-end {
             text-align: center;
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             font-size: 11px;
             padding-top: 12px;
             padding-bottom: 24px;

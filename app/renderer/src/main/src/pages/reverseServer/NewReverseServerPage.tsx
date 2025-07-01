@@ -215,7 +215,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                         name='IsRemote'
                         help={
                             params.IsRemote && (
-                                <div>
+                                <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
                                     在自己的服务器安装 yak 核心引擎，执行{" "}
                                     <YakitTag
                                         enableCopy={true}
@@ -223,7 +223,9 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                                         copyText={`yak bridge --secret [your-pass]`}
                                     ></YakitTag>{" "}
                                     启动 Yak Bridge 公网服务 <Divider type={"vertical"} />
-                                    <Text style={{color: "#999"}}>yak version {`>=`} v1.0.11-sp9</Text>
+                                    <Text style={{color: "var(--Colors-Use-Neutral-Text-4-Help-text)"}}>
+                                        yak version {`>=`} v1.0.11-sp9
+                                    </Text>
                                 </div>
                             )
                         }
@@ -242,7 +244,6 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                                 rules={[{required: true, message: ""}]}
                             >
                                 <YakitInput
-                                    allowClear={true}
                                     value={params.BridgeParam.Addr}
                                     onChange={(e) => {
                                         params.BridgeParam.Addr = e.target.value
@@ -252,7 +253,6 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                             </Form.Item>
                             <Form.Item label='密码' name={["BridgeParam", "Secret"]}>
                                 <YakitInput
-                                    allowClear={true}
                                     value={params.BridgeParam.Secret}
                                     onChange={(e) => {
                                         params.BridgeParam.Secret = e.target.value
@@ -265,7 +265,6 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                     {!params.IsRemote && (
                         <Form.Item label='反连地址' name='ReverseHost' rules={[{required: true, message: ""}]}>
                             <YakitInput
-                                allowClear={true}
                                 value={params.ReverseHost}
                                 onChange={(e) => setValue({...params, ReverseHost: e.target.value})}
                             />
@@ -437,7 +436,13 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                         subTitle='使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连'
                         extra={
                             <div className='pagehead-extra-body'>
-                                <div style={{display: "flex", alignItems: "center"}}>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                                    }}
+                                >
                                     Payload 配置:{" "}
                                     <YakitSwitch checked={isExtra} onChange={(checked) => setIsExtra(checked)} />
                                 </div>

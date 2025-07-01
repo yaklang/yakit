@@ -78,7 +78,6 @@ import {apiQueryYakScriptTotal} from "../plugins/utils"
 import {YakitGetOnlinePlugin} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import {apiQueryPortsBase} from "../assetViewer/PortTable/utils"
 import {QueryPortsRequest} from "../assetViewer/PortAssetPage"
-import mitmBg from "../../assets/mitm-bg.png"
 import {getReleaseEditionName, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -823,21 +822,27 @@ const Home: React.FC<HomeProp> = (props) => {
                                 )}
                                 <div
                                     className={styles["mitm-cont-wrapper"]}
-                                    style={{backgroundImage: `url(${mitmBg})`}}
+                                    // style={{backgroundImage: `url(${mitmBg})`}}
                                 >
                                     <div className={styles["mitm-glass-effect"]}>
                                         <div className={styles["mitm-operation"]}>
                                             <div
                                                 className={styles["mitm-operation-border"]}
-                                                style={{border: "1px solid var(--yakit-primary-1)", padding: 8}}
+                                                style={{border: "1px solid var(--Colors-Use-Main-Bg)", padding: 8}}
                                             >
                                                 <div
                                                     className={styles["mitm-operation-border"]}
-                                                    style={{border: "1px solid var(--yakit-primary-2)", padding: 6}}
+                                                    style={{
+                                                        border: "1px solid var(--Colors-Use-Main-Focus)",
+                                                        padding: 6
+                                                    }}
                                                 >
                                                     <div
                                                         className={styles["mitm-operation-border"]}
-                                                        style={{border: "1px solid var(--yakit-primary-3)", padding: 4}}
+                                                        style={{
+                                                            border: "1px solid var(--Colors-Use-Main-Border)",
+                                                            padding: 4
+                                                        }}
                                                     >
                                                         <div
                                                             className={styles["operation-btn-wrapper"]}
@@ -1222,10 +1227,11 @@ const Home: React.FC<HomeProp> = (props) => {
                             <div className={styles["tools-title-wrapper"]}>
                                 <PublicPublicToolLightbulbIcon className={styles["tools-title-icon"]} />
                                 <span className={styles["tools-title-text"]}>工具箱</span>
-                                <span className={styles["tools-title-desc"]}>可通过搜索快速查找软件功能</span>
+                                <span className={styles["tools-title-desc"]}></span>
                             </div>
+                            可通过搜索快速查找软件功能
                             <div className={styles["tools-search-wrapper"]}>
-                                <YakitInput.Search allowClear={true} onSearch={(value) => setSearchToolVal(value)} />
+                                <YakitInput.Search onSearch={(value) => setSearchToolVal(value)} />
                             </div>
                             <div className={styles["tools-list-wrapper"]}>
                                 {renderToolsList.length ? (
@@ -1262,13 +1268,13 @@ const Home: React.FC<HomeProp> = (props) => {
                                 <span className={styles["data-preview-item-text"]}>项目数据库</span>
                                 <div className={styles["data-preview-item-cont"]}>
                                     {!judgeMoreTenGB ? (
-                                        <span className={styles["data-preview-item-number"]}>
+                                        <span className={styles["data-preview-item-size"]}>
                                             {curProjectInfo?.FileSize}
                                         </span>
                                     ) : (
                                         <>
                                             <span
-                                                className={styles["data-preview-item-number"]}
+                                                className={styles["data-preview-item-size"]}
                                                 style={{color: "#f6544a"}}
                                             >
                                                 {curProjectInfo?.FileSize}

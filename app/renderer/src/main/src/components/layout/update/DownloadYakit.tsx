@@ -61,75 +61,74 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                 if (intranetYakit) {
                     // 处理内网版本
                     grpcFetchIntranetYakitVersion()
-                    .then((filePath: string) => {
-                        ipcRenderer
-                            .invoke("download-latest-intranet-yakit", filePath)
-                            .then(() => {
-                                if (!isBreakRef.current) return
-                                success("下载完毕")
-                                if (!getDownloadProgress()?.size) return
-                                setDownloadProgress({
-                                    time: {
-                                        elapsed: downloadProgress?.time.elapsed || 0,
-                                        remaining: 0
-                                    },
-                                    speed: 0,
-                                    percent: 100,
-                                    // @ts-ignore
-                                    size: getDownloadProgress().size
+                        .then((filePath: string) => {
+                            ipcRenderer
+                                .invoke("download-latest-intranet-yakit", filePath)
+                                .then(() => {
+                                    if (!isBreakRef.current) return
+                                    success("下载完毕")
+                                    if (!getDownloadProgress()?.size) return
+                                    setDownloadProgress({
+                                        time: {
+                                            elapsed: downloadProgress?.time.elapsed || 0,
+                                            remaining: 0
+                                        },
+                                        speed: 0,
+                                        percent: 100,
+                                        // @ts-ignore
+                                        size: getDownloadProgress().size
+                                    })
+                                    ipcRenderer.invoke("open-yakit-path")
+                                    emiter.emit("downloadedYakitIntranetFlag")
                                 })
-                                ipcRenderer.invoke("open-yakit-path")
-                                emiter.emit("downloadedYakitIntranetFlag")
-                            })
-                            .catch((e: any) => {
-                                if (!isBreakRef.current) return
-                                failed(`下载失败: ${e}`)
-                            })
-                            .finally(() => setVisible(false))
-                    })
-                    .catch((e: any) => {
-                        if (!isBreakRef.current) return
-                        setVisible(false)
-                    })
-                }
-                else{
+                                .catch((e: any) => {
+                                    if (!isBreakRef.current) return
+                                    failed(`下载失败: ${e}`)
+                                })
+                                .finally(() => setVisible(false))
+                        })
+                        .catch((e: any) => {
+                            if (!isBreakRef.current) return
+                            setVisible(false)
+                        })
+                } else {
                     grpcFetchLatestYakitVersion()
-                    .then((data: string) => {
-                        let version = data
-                        if (version.startsWith("v")) version = version.slice(1)
+                        .then((data: string) => {
+                            let version = data
+                            if (version.startsWith("v")) version = version.slice(1)
 
-                        ipcRenderer
-                            .invoke("download-latest-yakit", version, {
-                                isEnterprise: isEnterpriseEdition(),
-                                isIRify: isIRify()
-                            })
-                            .then(() => {
-                                if (!isBreakRef.current) return
-                                success("下载完毕")
-                                if (!getDownloadProgress()?.size) return
-                                setDownloadProgress({
-                                    time: {
-                                        elapsed: downloadProgress?.time.elapsed || 0,
-                                        remaining: 0
-                                    },
-                                    speed: 0,
-                                    percent: 100,
-                                    // @ts-ignore
-                                    size: getDownloadProgress().size
+                            ipcRenderer
+                                .invoke("download-latest-yakit", version, {
+                                    isEnterprise: isEnterpriseEdition(),
+                                    isIRify: isIRify()
                                 })
-                                ipcRenderer.invoke("open-yakit-path")
-                                emiter.emit("downloadedYakitFlag")
-                            })
-                            .catch((e: any) => {
-                                if (!isBreakRef.current) return
-                                failed(`下载失败: ${e}`)
-                            })
-                            .finally(() => setVisible(false))
-                    })
-                    .catch((e: any) => {
-                        if (!isBreakRef.current) return
-                        setVisible(false)
-                    })
+                                .then(() => {
+                                    if (!isBreakRef.current) return
+                                    success("下载完毕")
+                                    if (!getDownloadProgress()?.size) return
+                                    setDownloadProgress({
+                                        time: {
+                                            elapsed: downloadProgress?.time.elapsed || 0,
+                                            remaining: 0
+                                        },
+                                        speed: 0,
+                                        percent: 100,
+                                        // @ts-ignore
+                                        size: getDownloadProgress().size
+                                    })
+                                    ipcRenderer.invoke("open-yakit-path")
+                                    emiter.emit("downloadedYakitFlag")
+                                })
+                                .catch((e: any) => {
+                                    if (!isBreakRef.current) return
+                                    failed(`下载失败: ${e}`)
+                                })
+                                .finally(() => setVisible(false))
+                        })
+                        .catch((e: any) => {
+                            if (!isBreakRef.current) return
+                            setVisible(false)
+                        })
                 }
             }
             // 如需编写 Yakit-EE 下载功能，可在此处添加
@@ -214,8 +213,8 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                                         {getReleaseEditionName()} 软件下载中...
                                     </div>
                                     <Progress
-                                        strokeColor='#F28B44'
-                                        trailColor='#F0F2F5'
+                                        strokeColor='var(--Colors-Use-Main-Primary)'
+                                        trailColor='var(--Colors-Use-Neutral-Bg)'
                                         percent={Math.floor((downloadProgress?.percent || 0) * 100)}
                                     />
                                     <div className={styles["download-info-wrapper"]}>

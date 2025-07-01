@@ -20,7 +20,7 @@
     :global {
         .ant-form-item-with-help .ant-form-item-explain {
             font-size: 12px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
             line-height: 16px;
             min-height: 16px;
             margin-top: 2px;
@@ -38,41 +38,42 @@
         .form-rule {
             height: 28px;
             width: 100%;
-            background: #ffffff;
-            border: 1px solid var(--yakit-border-color);
+            background: var(--Colors-Use-Neutral-Bg);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             border-radius: 4px;
             display: flex;
             align-items: center;
             cursor: pointer;
             &:hover {
-                border-color: var(--yakit-primary-5);
+                border-color: var(--Colors-Use-Main-Primary);
             }
             &:focus,
             &:active {
-                box-shadow: 0 0 0 2px var(--yakit-primary-2);
+                box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
             }
             .form-rule-text {
                 padding: 6px 12px;
                 flex: 1;
                 font-size: 14px;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             .form-rule-icon {
                 width: 33px;
                 height: 26px;
-                background: var(--yakit-card-background-color);
+                background: var(--Colors-Use-Neutral-Bg-Hover);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                border-left: 1px solid var(--yakit-border-color);
+                border-left: 1px solid var(--Colors-Use-Neutral-Border);
                 border-radius: 0px 4px 4px 0px;
                 cursor: pointer;
                 &:hover {
                     svg {
-                        color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Main-Primary);
                     }
                 }
                 svg {
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
             }
         }
@@ -85,7 +86,7 @@
     .form-rule-help {
         .form-rule-help-setting {
             margin-left: 8px;
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
             display: inline-flex;
             cursor: pointer;
             svg {
@@ -107,7 +108,7 @@
     :global {
         .ant-form-item-with-help .ant-form-item-explain {
             font-size: 12px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
             line-height: 16px;
             min-height: 16px;
             margin-top: 2px;
@@ -124,7 +125,7 @@
             font-weight: 600;
             font-size: 14px;
             line-height: 20px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .advanced-configuration-drawer-title-btns {
             display: flex;
@@ -147,7 +148,7 @@
             font-weight: 400;
             font-size: 12px;
             line-height: 16px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
         .drawer-TLS-certs {
             padding: 4px 8px 4px 12px;
@@ -158,7 +159,7 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                border-bottom: 1px solid var(--yakit-border-color);
+                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
                 &:last-child {
                     border-bottom: 0;
                 }
@@ -166,7 +167,7 @@
                     font-weight: 400;
                     font-size: 12px;
                     line-height: 16px;
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     flex: 1;
                 }
                 .drawer-TLS-certs-item-operate {
@@ -177,10 +178,10 @@
                         cursor: pointer;
                     }
                     .trash-icon {
-                        color: var(--yakit-danger-5);
+                        color: var(--Colors-Use-Error-Primary);
                     }
                     .export-icon {
-                        color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Main-Primary);
                     }
                 }
             }
@@ -201,7 +202,7 @@
     :global {
         .ant-form-item-with-help .ant-form-item-explain {
             font-size: 12px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
             line-height: 16px;
             min-height: 16px;
             margin-top: 2px;
@@ -238,7 +239,7 @@
 }
 
 .import-text {
-    color: #B4BBCA;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
     font-size: 14px;
     font-weight: normal;
     margin-left: 16px;
@@ -256,7 +257,7 @@
         font-weight: 400;
         font-size: 12px;
         line-height: 16px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .certificate-download-modal-body {
         height: 466px;
@@ -286,10 +287,10 @@
         }
     }
     .list-item-border {
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     }
     .list-item-border-top {
-        border-top: 1px solid var(--yakit-border-color);
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
     }
     .list {
         max-height: 280px;
@@ -303,7 +304,7 @@
             border-radius: 4px;
             cursor: pointer;
             &:hover {
-                background-color: rgb(248, 248, 248);
+                background-color: var(--Colors-Use-Neutral-Bg);
                 border-bottom: 1px solid transparent;
             }
             &:hover::after {
@@ -313,7 +314,7 @@
                 left: 0px;
                 width: 100%;
                 height: 1px;
-                background-color: #ffffff;
+                background-color: var(--Colors-Use-Neutral-Bg);
             }
             .name {
                 font-size: 13px;
@@ -328,7 +329,7 @@
                 svg {
                     height: 16px;
                     width: 16px;
-                    color: #b4bbca;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 }
                 margin-left: 8px;
             }
@@ -342,7 +343,7 @@
             .opt-del {
                 &:hover {
                     svg {
-                        color: #f6544a;
+                        color: var(--Colors-Use-Error-Bg);
                     }
                 }
             }
@@ -355,15 +356,15 @@
         font-size: 12px;
         line-height: 16px;
         text-align: center;
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         margin-top: 8px;
     }
 }
 
 .infoBox {
     width: 100%;
-    background: rgba(86, 201, 145, 0.1);
-    color: rgba(133, 137, 158, 1);
+    background: var(--Colors-Use-Green-Bg);
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
     padding: 8px 16px;
 }
 
@@ -378,32 +379,32 @@
             border-top: 0;
         }
         .ant-collapse > .ant-collapse-item > .ant-collapse-header {
-            background: var(--yakit-card-background-color);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
             border-radius: 4px 4px 0px 0px;
             border-bottom: 1px solid transparent;
         }
         .ant-collapse-item-active .ant-collapse-header {
-            border-bottom-color: var(--yakit-border-color) !important;
+            border-bottom-color: var(--Colors-Use-Neutral-Border) !important;
         }
         .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
             padding: 0;
         }
         .ant-collapse-item {
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             border-radius: 4px !important;
         }
         .ant-collapse-item + .ant-collapse-item {
             margin-top: 8px;
         }
         .ant-collapse-ghost > .ant-collapse-item:last-child {
-            border-bottom: 1px solid var(--yakit-border-color);
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         }
     }
 
     .filter-condition {
         @extend .flex-space-between-and-center;
         padding: 12px 12px 8px;
-        background-color: #fff;
+        background-color: var(--Colors-Use-Neutral-Bg);
         border-radius: 8px;
         flex-wrap: wrap;
         gap: 8px 0;
@@ -414,7 +415,7 @@
             @extend .flex-center;
             gap: 4px;
             .header-id {
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 @extend .flex-center;
                 gap: 4px;
                 margin-right: 8px;
@@ -425,7 +426,7 @@
             }
         }
         .trash-icon {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
             @include HTTPFuzzerPageShare.base-icon-card;
         }
     }
@@ -443,22 +444,27 @@
 }
 
 .collapse-panel-condition {
-    background-color: var(--yakit-card-background-color);
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
     padding: 12px 8px;
 }
 
 .mitm-alert-msg {
     line-height: 25px;
     margin-bottom: 12px;
-    background-color: #fffbe6;
-    border: 1px solid #ffe58f;
+    background-color: var(--Colors-Use-Yellow-Bg);
+    border: 1px solid var(--Colors-Use-Yellow-Border);
     padding: 8px 15px;
     border-radius: 2px;
     margin-right: 8px;
+    button{
+        &:hover{
+            background-color: var(--Colors-Use-Yellow-Bg-Hover);
+        }
+    }
     .circle-icon {
         position: relative;
         top: 1px;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         svg {
             width: 16px;
             height: 16px;

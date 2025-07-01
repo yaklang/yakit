@@ -1,4 +1,4 @@
-import React, {CSSProperties, useEffect, useRef, useState} from "react";
+import React, {CSSProperties, useEffect, useRef, useState} from "react"
 import {
     Button,
     Checkbox,
@@ -12,41 +12,42 @@ import {
     Select,
     Spin,
     Switch,
-    Tag, Tooltip,
+    Tag,
+    Tooltip,
     Typography,
-    Upload,
-} from 'antd';
-import '@ant-design/compatible/assets/index.css';
+    Upload
+} from "antd"
+import "@ant-design/compatible/assets/index.css"
 import {DeleteOutlined, PlusOutlined} from "@ant-design/icons"
-import TimeRange, {TimePoint} from "./timeRange";
-import {CheckboxOptionType} from "antd/lib/checkbox";
-import {CheckboxValueType} from "antd/es/checkbox/Group";
+import TimeRange, {TimePoint} from "./timeRange"
+import {CheckboxOptionType} from "antd/lib/checkbox"
+import {CheckboxValueType} from "antd/es/checkbox/Group"
 import "./editableTagsGroup.css"
-import {randomColor} from "./randomUtil";
-import {LiteralUnion} from "antd/lib/_util/type";
-import {FormItemProps} from "@ant-design/compatible/lib/form";
-import "./inputUtil.scss";
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons";
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput";
-import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber";
-import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect";
-import { YakitAutoComplete } from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete";
+import {randomColor} from "./randomUtil"
+import {LiteralUnion} from "antd/lib/_util/type"
+import {FormItemProps} from "@ant-design/compatible/lib/form"
+import "./inputUtil.scss"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 
 type TooltipPlacement =
-    'top'
-    | 'left'
-    | 'right'
-    | 'bottom'
-    | 'topLeft'
-    | 'topRight'
-    | 'bottomLeft'
-    | 'bottomRight'
-    | 'leftTop'
-    | 'leftBottom'
-    | 'rightTop'
-    | 'rightBottom';
+    | "top"
+    | "left"
+    | "right"
+    | "bottom"
+    | "topLeft"
+    | "topRight"
+    | "bottomLeft"
+    | "bottomRight"
+    | "leftTop"
+    | "leftBottom"
+    | "rightTop"
+    | "rightBottom"
 
 export interface OneLineProp {
     width?: string | number
@@ -58,21 +59,28 @@ export interface OneLineProp {
 }
 
 export const OneLine: React.FC<OneLineProp> = (props) => {
-    return <div
-        style={{
-            whiteSpace: "nowrap",
-            width: props.width,
-            overflow: props.overflow || "auto",
-            maxWidth: props.maxWidth,
-            textOverflow: "ellipsis"// props.overflow === "hidden" ? "ellipsis" : undefined
-        }}>
-        {props?.title ? <Tooltip title={props.title} placement={props.placement}>
-            {props.children}
-        </Tooltip> : props.children}
-    </div>
-};
+    return (
+        <div
+            style={{
+                whiteSpace: "nowrap",
+                width: props.width,
+                overflow: props.overflow || "auto",
+                maxWidth: props.maxWidth,
+                textOverflow: "ellipsis" // props.overflow === "hidden" ? "ellipsis" : undefined
+            }}
+        >
+            {props?.title ? (
+                <Tooltip title={props.title} placement={props.placement}>
+                    {props.children}
+                </Tooltip>
+            ) : (
+                props.children
+            )}
+        </div>
+    )
+}
 
-const {Item} = Form;
+const {Item} = Form
 
 export interface InputItemProps {
     label: string | any
@@ -85,7 +93,31 @@ export interface InputItemProps {
     setValue?(s: string): any
 
     autoComplete?: string[]
-    type?: LiteralUnion<'button' | 'checkbox' | 'color' | 'date' | 'datetime-local' | 'email' | 'file' | 'hidden' | 'image' | 'month' | 'number' | 'password' | 'radio' | 'range' | 'reset' | 'search' | 'submit' | 'tel' | 'text' | 'time' | 'url' | 'week', string>
+    type?: LiteralUnion<
+        | "button"
+        | "checkbox"
+        | "color"
+        | "date"
+        | "datetime-local"
+        | "email"
+        | "file"
+        | "hidden"
+        | "image"
+        | "month"
+        | "number"
+        | "password"
+        | "radio"
+        | "range"
+        | "reset"
+        | "search"
+        | "submit"
+        | "tel"
+        | "text"
+        | "time"
+        | "url"
+        | "week",
+        string
+    >
     width?: string | number
     style?: React.CSSProperties
     extraFormItemProps?: FormItemProps
@@ -106,98 +138,109 @@ export interface InputItemProps {
     isBubbing?: boolean
 }
 
-
 export const InputItem: React.FC<InputItemProps> = (props) => {
-    return <Item
-        label={props.label}
-        required={!!props.required} style={props.style} {...props.extraFormItemProps}
-        help={props.help}
-    >
-        {props.prefixNode}
-        {props.autoComplete ? <YakitAutoComplete
-            style={{width: props.width || "100%"}}
-            dropdownMatchSelectWidth={400}
-            disabled={!!props.disable}
-            placeholder={props.placeholder}
-            allowClear={true}
-            value={props.value} onChange={e => props.setValue && props.setValue(e)}
-            options={(props.autoComplete || []).map(i => {
-                return {value: i, label: i}
-            })}
-            onFocus={(e) => {
-                if (props.isBubbing) e.stopPropagation()
-            }}
-            onClick={(e) => {
-                if (props.isBubbing) e.stopPropagation()
-            }}
-        /> : props.textarea ? <>
-            <YakitInput.TextArea
-                style={{width: props.width}}
-                // type={props.type}
-                rows={props.textareaRow}
-                autoSize={props.autoSize}
-                cols={props.textareaCol}
-                required={!!props.required}
-                disabled={!!props.disable}
-                placeholder={props.placeholder}
-                allowClear={props.allowClear}
-                value={props.value} onChange={e => {
-                props.setValue && props.setValue(e.target.value);
-                if (props.isBubbing) e.stopPropagation()
-            }}
-                onPressEnter={(e) => {
-                    if (props.isBubbing) e.stopPropagation()
-                }}
-                onFocus={(e) => {
-                    if (props.isBubbing) e.stopPropagation()
-                }}
-                onClick={(e) => {
-                    if (props.isBubbing) e.stopPropagation()
-                }}
-            />
-        </> : <YakitInput
-            style={{width: props.width}}
-            type={props.type}
+    return (
+        <Item
+            label={props.label}
             required={!!props.required}
-            disabled={!!props.disable}
-            spellCheck={false}
-            placeholder={props.placeholder}
-            allowClear={props.allowClear}
-            value={props.value} onChange={e => {
-            props.setValue && props.setValue(e.target.value);
-            if (props.isBubbing) e.stopPropagation()
-        }}
-            prefix={props.prefix}
-            suffix={props.suffix}
-            onPressEnter={(e) => {
-                if (props.isBubbing) e.stopPropagation()
-            }}
-            onFocus={(e) => {
-                if (props.isBubbing) e.stopPropagation()
-            }}
-            onClick={(e) => {
-                if (props.isBubbing) e.stopPropagation()
-            }}
-        />}
-        {props.suffixNode}
-    </Item>
-};
+            style={props.style}
+            {...props.extraFormItemProps}
+            help={props.help}
+        >
+            {props.prefixNode}
+            {props.autoComplete ? (
+                <YakitAutoComplete
+                    style={{width: props.width || "100%"}}
+                    dropdownMatchSelectWidth={400}
+                    disabled={!!props.disable}
+                    placeholder={props.placeholder}
+                    value={props.value}
+                    onChange={(e) => props.setValue && props.setValue(e)}
+                    options={(props.autoComplete || []).map((i) => {
+                        return {value: i, label: i}
+                    })}
+                    onFocus={(e) => {
+                        if (props.isBubbing) e.stopPropagation()
+                    }}
+                    onClick={(e) => {
+                        if (props.isBubbing) e.stopPropagation()
+                    }}
+                />
+            ) : props.textarea ? (
+                <>
+                    <YakitInput.TextArea
+                        style={{width: props.width}}
+                        // type={props.type}
+                        rows={props.textareaRow}
+                        autoSize={props.autoSize}
+                        cols={props.textareaCol}
+                        required={!!props.required}
+                        disabled={!!props.disable}
+                        placeholder={props.placeholder}
+                        allowClear={props.allowClear}
+                        value={props.value}
+                        onChange={(e) => {
+                            props.setValue && props.setValue(e.target.value)
+                            if (props.isBubbing) e.stopPropagation()
+                        }}
+                        onPressEnter={(e) => {
+                            if (props.isBubbing) e.stopPropagation()
+                        }}
+                        onFocus={(e) => {
+                            if (props.isBubbing) e.stopPropagation()
+                        }}
+                        onClick={(e) => {
+                            if (props.isBubbing) e.stopPropagation()
+                        }}
+                    />
+                </>
+            ) : (
+                <YakitInput
+                    style={{width: props.width}}
+                    type={props.type}
+                    required={!!props.required}
+                    disabled={!!props.disable}
+                    spellCheck={false}
+                    placeholder={props.placeholder}
+                    allowClear={props.allowClear}
+                    value={props.value}
+                    onChange={(e) => {
+                        props.setValue && props.setValue(e.target.value)
+                        if (props.isBubbing) e.stopPropagation()
+                    }}
+                    prefix={props.prefix}
+                    suffix={props.suffix}
+                    onPressEnter={(e) => {
+                        if (props.isBubbing) e.stopPropagation()
+                    }}
+                    onFocus={(e) => {
+                        if (props.isBubbing) e.stopPropagation()
+                    }}
+                    onClick={(e) => {
+                        if (props.isBubbing) e.stopPropagation()
+                    }}
+                />
+            )}
+            {props.suffixNode}
+        </Item>
+    )
+}
 
 export interface InputStringOrJsonItemProps extends InputItemProps {
-    defaultItems?: { key: string, value: string }[]
+    defaultItems?: {key: string; value: string}[]
     valueIsStringArray?: boolean
 }
 
 export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (props) => {
-    const [mode, setMode] = useState<"string" | "json">("json");
-    const [items, setItems] = useState<{ key: string, value?: string }[]>([{key: "", value: undefined}]);
-    const [initValue, setInitValue] = useState(props.value || "");
+    const [mode, setMode] = useState<"string" | "json">("json")
+    const [items, setItems] = useState<{key: string; value?: string}[]>([{key: "", value: undefined}])
+    const [initValue, setInitValue] = useState(props.value || "")
 
     useEffect(() => setInitValue(props.value || ""), [props.value])
 
     useEffect(() => {
         if (initValue.trimStart().startsWith("{")) {
-            const ret: { key: string, value?: string }[] = [];
+            const ret: {key: string; value?: string}[] = []
             try {
                 JSON.parse(initValue, (key: string, value?: string) => {
                     if (!!key) {
@@ -226,8 +269,8 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
 
     useEffect(() => {
         if (!!items) {
-            const data: any = {};
-            items.map(value => {
+            const data: any = {}
+            items.map((value) => {
                 if (!!value.key) {
                     data[value.key] = value.value || ""
                 }
@@ -235,107 +278,134 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
 
             props.setValue && props.setValue(JSON.stringify(data))
         }
-    }, [items]);
+    }, [items])
 
-    return <div>
-        <SelectOne label={props.label + "[Type]"} data={[
-            {text: "RawString", value: "string"},
-            {text: "KeyValue", value: "json"},
-        ]} value={mode} setValue={mode => setMode(mode)} help={props.help}/>
-        {mode === "string" ? <Item label={props.label} required={!!props.required}>
-            <Input
-                required={!!props.required}
-                disabled={!!props.disable}
-                placeholder={props.placeholder}
-                size={"middle"}
-                allowClear={true}
-                value={props.value} onChange={e => props.setValue && props.setValue(e.target.value)}
+    return (
+        <div>
+            <SelectOne
+                label={props.label + "[Type]"}
+                data={[
+                    {text: "RawString", value: "string"},
+                    {text: "KeyValue", value: "json"}
+                ]}
+                value={mode}
+                setValue={(mode) => setMode(mode)}
+                help={props.help}
             />
-        </Item> : <>{items.map((item, index) => {
-            return <Form.Item label={`参数[${index}]`}>
-                <Input.Group>
-                    <Row gutter={10}>
-                        <Col span={6}>
-                            <Input placeholder={"Key"} allowClear={true}
-                                   value={items[index].key}
-                                   onChange={e => {
-                                       const key = e.target.value
-                                       items[index].key = key
-                                       setItems([...items])
-                                   }}/>
-                        </Col>
-                        <Col span={10}>
-                            {props.valueIsStringArray ? <div style={{width: "100%"}}>
-                                <OneLine>
-                                    <YakitSelect
-                                        style={{width: "100%"}}
-                                        allowClear={true}
-                                        autoClearSearchValue={true}
-                                        placeholder={"参数使用 | 分割数组"}
-                                        dropdownMatchSelectWidth={200}
-                                        mode={"tags"}
-                                        value={items[index].value?.split("|") || []} maxTagTextLength={20}
-                                        onChange={(value, _) => {
-                                            if (!value) {
-                                                items[index].value = undefined
-                                                setItems([...items])
-                                                return
-                                            }
-                                            value = value.filter(i => {
-                                                return !!i
-                                            })
-                                            items[index].value = value.join("|")
-                                            setItems([...items])
-                                        }}
-
-                                    />
-
-                                </OneLine>
-                            </div> : <>
-                                <Input placeholder={"Value"} allowClear={true}
-                                       value={items[index].value}
-                                       onChange={e => {
-                                           const value = e.target.value;
-                                           items[index].value = value.trim();
-                                           setItems([...items])
-                                       }}
-                                    // addonAfter={<>
-                                    //     <DeleteOutlined
-                                    //         style={{color: "red"}}
-                                    //         onClick={() => {
-                                    //             if (index > 0) {
-                                    //                 items.splice(index, 1)
-                                    //                 setItems([...items])
-                                    //             }
-                                    //         }}/>
-                                    // </>}
-                                />
-                            </>}
-                        </Col>
-                        <Col span={8}>
-                            <Button type={"dashed"} onClick={() => {
-                                if (index > 0) {
-                                    items.splice(index, 1)
-                                    setItems([...items])
-                                }
-                            }} danger={true}>
-                                <DeleteOutlined/>
-                            </Button>
-                        </Col>
-                    </Row>
-                </Input.Group>
-            </Form.Item>
-        })}
-            <Item label={" "} colon={false}>
-                <Button type={"dashed"}
-                        onClick={e => {
-                            setItems([...items, {key: "", value: undefined}])
-                        }}
-                >添加 Key-Value Pair</Button></Item>
-        </>}
-    </div>
+            {mode === "string" ? (
+                <Item label={props.label} required={!!props.required}>
+                    <Input
+                        required={!!props.required}
+                        disabled={!!props.disable}
+                        placeholder={props.placeholder}
+                        size={"middle"}
+                        value={props.value}
+                        onChange={(e) => props.setValue && props.setValue(e.target.value)}
+                    />
+                </Item>
+            ) : (
+                <>
+                    {items.map((item, index) => {
+                        return (
+                            <Form.Item label={`参数[${index}]`}>
+                                <Input.Group>
+                                    <Row gutter={10}>
+                                        <Col span={6}>
+                                            <Input
+                                                placeholder={"Key"}
+                                                value={items[index].key}
+                                                onChange={(e) => {
+                                                    const key = e.target.value
+                                                    items[index].key = key
+                                                    setItems([...items])
+                                                }}
+                                            />
+                                        </Col>
+                                        <Col span={10}>
+                                            {props.valueIsStringArray ? (
+                                                <div style={{width: "100%"}}>
+                                                    <OneLine>
+                                                        <YakitSelect
+                                                            style={{width: "100%"}}
+                                                            autoClearSearchValue={true}
+                                                            placeholder={"参数使用 | 分割数组"}
+                                                            dropdownMatchSelectWidth={200}
+                                                            mode={"tags"}
+                                                            value={items[index].value?.split("|") || []}
+                                                            maxTagTextLength={20}
+                                                            onChange={(value, _) => {
+                                                                if (!value) {
+                                                                    items[index].value = undefined
+                                                                    setItems([...items])
+                                                                    return
+                                                                }
+                                                                value = value.filter((i) => {
+                                                                    return !!i
+                                                                })
+                                                                items[index].value = value.join("|")
+                                                                setItems([...items])
+                                                            }}
+                                                        />
+                                                    </OneLine>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <Input
+                                                        placeholder={"Value"}
+                                                        value={items[index].value}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value
+                                                            items[index].value = value.trim()
+                                                            setItems([...items])
+                                                        }}
+                                                        // addonAfter={<>
+                                                        //     <DeleteOutlined
+                                                        //         style={{color: "red"}}
+                                                        //         onClick={() => {
+                                                        //             if (index > 0) {
+                                                        //                 items.splice(index, 1)
+                                                        //                 setItems([...items])
+                                                        //             }
+                                                        //         }}/>
+                                                        // </>}
+                                                    />
+                                                </>
+                                            )}
+                                        </Col>
+                                        <Col span={8}>
+                                            <Button
+                                                type={"dashed"}
+                                                onClick={() => {
+                                                    if (index > 0) {
+                                                        items.splice(index, 1)
+                                                        setItems([...items])
+                                                    }
+                                                }}
+                                                danger={true}
+                                            >
+                                                <DeleteOutlined />
+                                            </Button>
+                                        </Col>
+                                    </Row>
+                                </Input.Group>
+                            </Form.Item>
+                        )
+                    })}
+                    <Item label={" "} colon={false}>
+                        <Button
+                            type={"dashed"}
+                            onClick={(e) => {
+                                setItems([...items, {key: "", value: undefined}])
+                            }}
+                        >
+                            添加 Key-Value Pair
+                        </Button>
+                    </Item>
+                </>
+            )}
+        </div>
+    )
 }
-
 
 export interface SelectOneItemProps {
     value: any
@@ -368,30 +438,30 @@ export interface SelectOneProps extends InputBase {
 * */
 export const SelectOne: React.FC<SelectOneProps> = (p) => {
     // const [current, setCurrent] = useState<any>();
-    return <Item label={p.label} help={p.help} colon={p.colon} style={{...p.formItemStyle}}>
-        <YakitRadioButtons
-            className={
-                (p.oldTheme || p.oldTheme === undefined) ? "old-theme-html select-one" : "select-one"
-            }
-            disabled={p.disabled}
-            size={p.size}
-            value={p.value}
-            onChange={(e) => {
-                // setCurrent(e.target.value)
-                p.setValue && p.setValue(e.target.value)
-            }}
-            buttonStyle='solid'
-            options={p.data.map(item => {
-                const info = {
-                    value: item.value,
-                    label: item.text,
-                    disabled: item.disabled
-                }
-                return info
-            })}
-        />
-    </Item>
-};
+    return (
+        <Item label={p.label} help={p.help} colon={p.colon} style={{...p.formItemStyle}}>
+            <YakitRadioButtons
+                className={p.oldTheme || p.oldTheme === undefined ? "old-theme-html select-one" : "select-one"}
+                disabled={p.disabled}
+                size={p.size}
+                value={p.value}
+                onChange={(e) => {
+                    // setCurrent(e.target.value)
+                    p.setValue && p.setValue(e.target.value)
+                }}
+                buttonStyle='solid'
+                options={p.data.map((item) => {
+                    const info = {
+                        value: item.value,
+                        label: item.text,
+                        disabled: item.disabled
+                    }
+                    return info
+                })}
+            />
+        </Item>
+    )
+}
 
 export interface InputBase {
     label?: string | any
@@ -408,9 +478,11 @@ export interface InputTimePointProps extends InputBase {
 }
 
 export const InputTimePoint: React.FC<InputTimePointProps> = (p) => {
-    return <Item label={p.label} style={p.formItemStyle}>
-        <TimePoint value={p.value} setValue={p.setValue} placeholder={p.placeholder}/>
-    </Item>
+    return (
+        <Item label={p.label} style={p.formItemStyle}>
+            <TimePoint value={p.value} setValue={p.setValue} placeholder={p.placeholder} />
+        </Item>
+    )
 }
 
 export interface InputNumberProps extends InputBase {
@@ -428,28 +500,47 @@ export interface InputNumberProps extends InputBase {
 }
 
 export const InputFloat: React.FC<InputNumberProps> = (p) => {
-    return <Item label={p.label} style={{...p.formItemStyle}} help={p.help}>
-        <InputNumber size={p.size} min={p.min} max={p.max} step={0.01} defaultValue={p.defaultValue} value={p.value}
-                     onChange={value => {
-                         switch (typeof value) {
-                             case "number":
-                                 value && p.setValue(value)
-                                 return
-                             default:
-                                 p.setValue(0);
-                         }
-                     }} width={"100%"}
-        />
-    </Item>
-};
-
+    return (
+        <Item label={p.label} style={{...p.formItemStyle}} help={p.help}>
+            <InputNumber
+                size={p.size}
+                min={p.min}
+                max={p.max}
+                step={0.01}
+                defaultValue={p.defaultValue}
+                value={p.value}
+                onChange={(value) => {
+                    switch (typeof value) {
+                        case "number":
+                            value && p.setValue(value)
+                            return
+                        default:
+                            p.setValue(0)
+                    }
+                }}
+                width={"100%"}
+            />
+        </Item>
+    )
+}
 
 export const InputInteger: React.FC<InputNumberProps> = (p) => {
-    return <Item label={p.label} style={{...p.formItemStyle}} help={p.help}>
-        <YakitInputNumber width={p.width && "100%"} disabled={p.disable} style={{width: p.width}}
-                     defaultValue={p.defaultValue} size={p.size}
-                     min={p.min} max={p.max} step={1} value={p.value} onChange={e => p.setValue(e as number)}/>
-    </Item>
+    return (
+        <Item label={p.label} style={{...p.formItemStyle}} help={p.help}>
+            <YakitInputNumber
+                width={p.width && "100%"}
+                disabled={p.disable}
+                style={{width: p.width}}
+                defaultValue={p.defaultValue}
+                size={p.size}
+                min={p.min}
+                max={p.max}
+                step={1}
+                value={p.value}
+                onChange={(e) => p.setValue(e as number)}
+            />
+        </Item>
+    )
 }
 
 export interface MultiSelectForStringProps extends InputBase {
@@ -469,43 +560,53 @@ export interface MultiSelectForStringProps extends InputBase {
 }
 
 export const MultiSelectForString: React.FC<MultiSelectForStringProps> = (p) => {
-    let sep = p.defaultSep || ",";
-    return <MultiSelect disabled={p.disabled} label={p.label} value={p.value ? p.value.split(sep) : []} data={p.data}
-                        setValue={(items) => {
-                            items && p.setValue(items.join(sep))
-                        }}/>
-};
+    let sep = p.defaultSep || ","
+    return (
+        <MultiSelect
+            disabled={p.disabled}
+            label={p.label}
+            value={p.value ? p.value.split(sep) : []}
+            data={p.data}
+            setValue={(items) => {
+                items && p.setValue(items.join(sep))
+            }}
+        />
+    )
+}
 
 export const ManyMultiSelectForString: React.FC<MultiSelectForStringProps> = (p) => {
     let sep = p.defaultSep || ","
-    let value: string[];
+    let value: string[]
     if (!p.value) {
         value = []
     } else {
         value = p.value?.split(sep) || []
     }
-    return <Item label={p.label} help={p.help} style={p.formItemStyle}>
-        <YakitSelect
-            disabled={p.disabled}
-            style={{width: "200"}}
-            allowClear={true}
-            autoClearSearchValue={true}
-            dropdownMatchSelectWidth={200}
-            mode={p.mode || "multiple"}
-            value={value} maxTagTextLength={30}
-            onChange={(value, _) => {
-                p.setValue(value.join(sep) || "")
-            }}
-            placeholder={p.placeholder}
-        >
-            {p.data.map(i => {
-                return <YakitSelect.Option
-                    key={`${i.value}`}
-                    value={i.value.toString()}
-                >{i?.label?.toString()}</YakitSelect.Option>
-            })}
-        </YakitSelect>
-    </Item>
+    return (
+        <Item label={p.label} help={p.help} style={p.formItemStyle}>
+            <YakitSelect
+                disabled={p.disabled}
+                style={{width: "200"}}
+                autoClearSearchValue={true}
+                dropdownMatchSelectWidth={200}
+                mode={p.mode || "multiple"}
+                value={value}
+                maxTagTextLength={30}
+                onChange={(value, _) => {
+                    p.setValue(value.join(sep) || "")
+                }}
+                placeholder={p.placeholder}
+            >
+                {p.data.map((i) => {
+                    return (
+                        <YakitSelect.Option key={`${i.value}`} value={i.value.toString()}>
+                            {i?.label?.toString()}
+                        </YakitSelect.Option>
+                    )
+                })}
+            </YakitSelect>
+        </Item>
+    )
 }
 
 export interface MultiSelectProps extends InputBase {
@@ -518,14 +619,20 @@ export interface MultiSelectProps extends InputBase {
 }
 
 export const MultiSelect: React.FC<MultiSelectProps> = (p) => {
-    return <Item label={p.label}>
-        <Checkbox.Group disabled={p.disabled} options={p.data} value={p.value}
-                        onChange={(values: CheckboxValueType[]) => {
-                            let a = values as string[];
-                            p.setValue(a)
-                        }}/>
-    </Item>
-};
+    return (
+        <Item label={p.label}>
+            <Checkbox.Group
+                disabled={p.disabled}
+                options={p.data}
+                value={p.value}
+                onChange={(values: CheckboxValueType[]) => {
+                    let a = values as string[]
+                    p.setValue(a)
+                }}
+            />
+        </Item>
+    )
+}
 
 export interface SwitchItemProps extends InputBase {
     size?: "small" | "default"
@@ -553,64 +660,95 @@ export interface InputFileNameItemProps {
     hint?: React.ReactNode
 }
 
-const {ipcRenderer} = window.require("electron");
-export const InputFileNameItem: React.FC<InputFileNameItemProps> = p => {
-    const [uploadLoading, setUploadLoading] = useState(false);
-    return <Item label={p.label} required={p.required}>
-        <Upload.Dragger
-            disabled={p.disabled}
-            className='targets-upload-dragger'
-            accept={(p.accept || [])?.join(",")}
-            multiple={false}
-            maxCount={1}
-            showUploadList={false}
-            beforeUpload={(f: any) => {
-                // 设置名字
-                p.setFileName && p.setFileName(f?.path)
-                if (!p.loadContent) {
+const {ipcRenderer} = window.require("electron")
+export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
+    const [uploadLoading, setUploadLoading] = useState(false)
+    return (
+        <Item label={p.label} required={p.required}>
+            <Upload.Dragger
+                disabled={p.disabled}
+                className='targets-upload-dragger'
+                accept={(p.accept || [])?.join(",")}
+                multiple={false}
+                maxCount={1}
+                showUploadList={false}
+                beforeUpload={(f: any) => {
+                    // 设置名字
+                    p.setFileName && p.setFileName(f?.path)
+                    if (!p.loadContent) {
+                        return false
+                    }
+
+                    setUploadLoading(true)
+                    ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
+                        p.setContent && p.setContent(res)
+                        setTimeout(() => {
+                            setUploadLoading(false)
+                        }, 100)
+                    })
                     return false
-                }
-
-                setUploadLoading(true)
-                ipcRenderer.invoke("fetch-file-content", (f as any).path).then((res) => {
-                    p.setContent && p.setContent(res)
-                    setTimeout(() => {
-                        setUploadLoading(false)
-                    }, 100);
-                })
-                return false
-            }}>
-            <Spin spinning={uploadLoading}>
-                {p.loadContent ? <InputItem
-                    // label={p.label}
-                    label={""}
-                    setValue={Targets => p.setContent && p.setContent(Targets)}
-                    value={p.content} textarea={true} textareaRow={6}
-                    placeholder="请输入绝对路径"
-                    isBubbing={true}
-                    help={p.hint ? p.hint : (<div>
-                        可将文件拖入框内或<span style={{color: 'var(--yakit-primary-5'}}>点击此处</span>上传
-                    </div>)}
-                /> : <InputItem
-                    autoComplete={p.autoComplete}
-                    label={""}
-                    value={p.filename} setValue={f => p.setFileName && p.setFileName(f)}
-                    placeholder="请输入绝对路径"
-                    isBubbing={true} allowClear={false} help={p.hint ? p.hint : (<div>
-                    可将文件拖入框内或<span style={{color: 'var(--yakit-primary-5'}}>点击此处</span>上传
-                </div>)}
-                />
-                }
-
-            </Spin>
-        </Upload.Dragger>
-    </Item>
+                }}
+            >
+                <Spin spinning={uploadLoading}>
+                    {p.loadContent ? (
+                        <InputItem
+                            // label={p.label}
+                            label={""}
+                            setValue={(Targets) => p.setContent && p.setContent(Targets)}
+                            value={p.content}
+                            textarea={true}
+                            textareaRow={6}
+                            placeholder='请输入绝对路径'
+                            isBubbing={true}
+                            help={
+                                p.hint ? (
+                                    p.hint
+                                ) : (
+                                    <div>
+                                        可将文件拖入框内或
+                                        <span style={{color: "var(--Colors-Use-Main-Primary"}}>点击此处</span>上传
+                                    </div>
+                                )
+                            }
+                        />
+                    ) : (
+                        <InputItem
+                            autoComplete={p.autoComplete}
+                            label={""}
+                            value={p.filename}
+                            setValue={(f) => p.setFileName && p.setFileName(f)}
+                            placeholder='请输入绝对路径'
+                            isBubbing={true}
+                            allowClear={false}
+                            help={
+                                p.hint ? (
+                                    p.hint
+                                ) : (
+                                    <div>
+                                        可将文件拖入框内或
+                                        <span style={{color: "var(--Colors-Use-Main-Primary"}}>点击此处</span>上传
+                                    </div>
+                                )
+                            }
+                        />
+                    )}
+                </Spin>
+            </Upload.Dragger>
+        </Item>
+    )
 }
 
-export const SwitchItem: React.FC<SwitchItemProps> = p => {
-    return <Item className={(p.oldTheme === undefined || p.oldTheme) ? "old-theme-html" : undefined} label={p.label} help={p.help} style={p.formItemStyle}>
-        <YakitSwitch checked={p.value} onChange={e => p.setValue(e)} disabled={p.disabled}/>
-    </Item>
+export const SwitchItem: React.FC<SwitchItemProps> = (p) => {
+    return (
+        <Item
+            className={p.oldTheme === undefined || p.oldTheme ? "old-theme-html" : undefined}
+            label={p.label}
+            help={p.help}
+            style={p.formItemStyle}
+        >
+            <YakitSwitch checked={p.value} onChange={(e) => p.setValue(e)} disabled={p.disabled} />
+        </Item>
+    )
 }
 
 export interface InputTimeRangeProps extends InputBase {
@@ -621,17 +759,19 @@ export interface InputTimeRangeProps extends InputBase {
     setEnd: (start: number) => any
 }
 
-export const InputTimeRange: React.FC<InputTimeRangeProps> = p => {
-    return <Item label={p.label}>
-        <div style={{marginRight: 8}}>
-            <TimeRange onStart={p.setStart} onEnd={p.setEnd} start={p.start} end={p.end}/>
-        </div>
-    </Item>
-};
+export const InputTimeRange: React.FC<InputTimeRangeProps> = (p) => {
+    return (
+        <Item label={p.label}>
+            <div style={{marginRight: 8}}>
+                <TimeRange onStart={p.setStart} onEnd={p.setEnd} start={p.start} end={p.end} />
+            </div>
+        </Item>
+    )
+}
 
 export interface EditableTagsGroupProps {
     tags: string[]
-    onTags?: (r: string[]) => any,
+    onTags?: (r: string[]) => any
     onTagCreated?: (r: string) => any
     onTagClicked?: (value: string) => any
     randomColor?: boolean
@@ -643,122 +783,155 @@ export interface EditableTagsProps {
 }
 
 const EditableTags: React.FC<EditableTagsProps> = (p) => {
-    const [inputVisible, setInputVisible] = useState(false);
-    const [value, setValue] = useState("");
+    const [inputVisible, setInputVisible] = useState(false)
+    const [value, setValue] = useState("")
     const confirmInput = () => {
-        setInputVisible(false);
-        setValue("");
+        setInputVisible(false)
+        setValue("")
         p.onCreated && p.onCreated(value)
-    };
-    const inputRef = useRef<any>(null);
+    }
+    const inputRef = useRef<any>(null)
 
     useEffect(() => {
         if (inputVisible) {
             inputRef.current?.focus()
         }
-    }, [inputVisible]);
+    }, [inputVisible])
 
-    return <>
-        <Input
-            hidden={!inputVisible}
-            ref={inputRef}
-            className={"tag-input"}
-            size={"small"}
-            value={value}
-            onChange={e => setValue(e.target.value)}
-            onBlur={e => confirmInput()}
-            onPressEnter={e => confirmInput()}
-        /> {!inputVisible ? <Tag
-        className={"site-tag-plus"}
-        onClick={e => {
-            setInputVisible(!inputVisible)
-        }}
-    ><span><PlusOutlined/> Add Tag</span></Tag> : ""}
-    </>
-};
+    return (
+        <>
+            <Input
+                hidden={!inputVisible}
+                ref={inputRef}
+                className={"tag-input"}
+                size={"small"}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                onBlur={(e) => confirmInput()}
+                onPressEnter={(e) => confirmInput()}
+            />{" "}
+            {!inputVisible ? (
+                <Tag
+                    className={"site-tag-plus"}
+                    onClick={(e) => {
+                        setInputVisible(!inputVisible)
+                    }}
+                >
+                    <span>
+                        <PlusOutlined /> Add Tag
+                    </span>
+                </Tag>
+            ) : (
+                ""
+            )}
+        </>
+    )
+}
 
 export const EditableTagsGroup: React.FC<EditableTagsGroupProps> = (p) => {
-    const [createdTag, setCreatedTag] = useState("");
-    const [tags, setTags] = useState<string[]>(p.tags || []);
+    const [createdTag, setCreatedTag] = useState("")
+    const [tags, setTags] = useState<string[]>(p.tags || [])
 
     useEffect(() => {
         if (tags.includes(createdTag)) {
             return
         }
 
-        p.onTagCreated && createdTag && p.onTagCreated(createdTag);
-        createdTag && setTags([...tags, createdTag]);
-    }, [createdTag]);
+        p.onTagCreated && createdTag && p.onTagCreated(createdTag)
+        createdTag && setTags([...tags, createdTag])
+    }, [createdTag])
 
     useEffect(() => {
         if ((p.tags || []).sort().join(",") === tags.sort().join(",")) {
             return
         }
         p.onTags && p.onTags(tags)
-    }, [tags]);
+    }, [tags])
 
-    return <div>
-        {tags.map((tag, tagIndex) => {
-            return <Popover
-                title={"Operations"} visible={p.noOperations ? false : undefined}
-                content={[
-                    <Button
-                        danger={true} type={"dashed"} size={"small"}
-                        onClick={e => {
-                            const index = tags.indexOf(tag)
-                            if (index > -1) {
-                                tags.splice(index, 1);
-                                setTags([...tags]);
-                                p.onTags && p.onTags(tags)
-                            }
-                        }}
-                    >删除 Tag</Button>,
-                ]}
-            ><Tag
-                color={p.randomColor ? randomColor() : "geekblue"}
-                onClick={e => p.onTagClicked && p.onTagClicked(tag)}
-            >{tag}</Tag></Popover>
-        })}
-        <EditableTags onCreated={(s) => {
-            setCreatedTag(s)
-        }}/>
-    </div>
+    return (
+        <div>
+            {tags.map((tag, tagIndex) => {
+                return (
+                    <Popover
+                        title={"Operations"}
+                        visible={p.noOperations ? false : undefined}
+                        content={[
+                            <Button
+                                danger={true}
+                                type={"dashed"}
+                                size={"small"}
+                                onClick={(e) => {
+                                    const index = tags.indexOf(tag)
+                                    if (index > -1) {
+                                        tags.splice(index, 1)
+                                        setTags([...tags])
+                                        p.onTags && p.onTags(tags)
+                                    }
+                                }}
+                            >
+                                删除 Tag
+                            </Button>
+                        ]}
+                    >
+                        <Tag
+                            color={p.randomColor ? randomColor() : "geekblue"}
+                            onClick={(e) => p.onTagClicked && p.onTagClicked(tag)}
+                        >
+                            {tag}
+                        </Tag>
+                    </Popover>
+                )
+            })}
+            <EditableTags
+                onCreated={(s) => {
+                    setCreatedTag(s)
+                }}
+            />
+        </div>
+    )
 }
 
-
 export const ManySelectOne: React.FC<SelectOneProps> = (p) => {
-    return <Item label={p.label} help={p.help} style={{...p.formItemStyle}}>
-        <YakitSelect
-            value={p.value} onChange={e => p.setValue && p.setValue(e)}
-            disabled={p.disabled} size={p.size}
-            placeholder={p.placeholder}
-        >
-            {p.data.map(e => <YakitSelect.Option key={e.value} value={e.value}>
-                {e.text}
-            </YakitSelect.Option>)}
-        </YakitSelect>
-    </Item>
+    return (
+        <Item label={p.label} help={p.help} style={{...p.formItemStyle}}>
+            <YakitSelect
+                value={p.value}
+                onChange={(e) => p.setValue && p.setValue(e)}
+                disabled={p.disabled}
+                size={p.size}
+                placeholder={p.placeholder}
+            >
+                {p.data.map((e) => (
+                    <YakitSelect.Option key={e.value} value={e.value}>
+                        {e.text}
+                    </YakitSelect.Option>
+                ))}
+            </YakitSelect>
+        </Item>
+    )
 }
 
 export interface CopyableFieldProp {
     text?: string
     width?: any
     maxWidth?: any
-    style?: React.CSSProperties;
+    style?: React.CSSProperties
     noCopy?: boolean
     mark?: boolean
     tooltip?: boolean
 }
 
 export const CopyableField: React.FC<CopyableFieldProp> = (props) => {
-    return <div style={{width: props.width, maxWidth: props.maxWidth}}>
-        <Typography.Paragraph
-            copyable={!props.noCopy}
-            style={{marginBottom: 0, ...props.style}}
-            ellipsis={{rows: 1, tooltip: props.tooltip === undefined ? true : props.tooltip}}
-            mark={props.mark}
-        >
-            {props.text}
-        </Typography.Paragraph>
-    </div>
-};
+    return (
+        <div style={{width: props.width, maxWidth: props.maxWidth}}>
+            <Typography.Paragraph
+                copyable={!props.noCopy}
+                style={{marginBottom: 0, ...props.style}}
+                ellipsis={{rows: 1, tooltip: props.tooltip === undefined ? true : props.tooltip}}
+                mark={props.mark}
+            >
+                {props.text}
+            </Typography.Paragraph>
+        </div>
+    )
+}

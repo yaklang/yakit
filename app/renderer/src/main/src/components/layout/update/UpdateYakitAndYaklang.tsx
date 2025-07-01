@@ -241,8 +241,8 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
                 {status === "install" && (
                     <div className={styles["content"]}>
                         <Progress
-                            strokeColor='#F28B44'
-                            trailColor='#F0F2F5'
+                            strokeColor='var(--Colors-Use-Main-Primary)'
+                            trailColor='var(--Colors-Use-Neutral-Bg)'
                             percent={Math.floor((yakitProgress?.percent || 0) * 100)}
                         />
                         <div className={styles["download-info-wrapper"]}>

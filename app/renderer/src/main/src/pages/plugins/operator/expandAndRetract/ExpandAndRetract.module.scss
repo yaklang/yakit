@@ -3,22 +3,22 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px;
-    border-bottom: 1px solid #eaecf3;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     // position: relative;
     transition: background-color 0.3s ease;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
 
     position: sticky;
     top: 0;
     z-index: 12;
     &:hover {
         cursor: pointer;
-        background-color: var(--yakit-card-background-color);
-        border-bottom-color: var(--yakit-primary-3);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        border-bottom-color: var(--Colors-Use-Main-Border);
         .expand-and-retract-header-icon-body {
             width: 76px;
-            border: 1px solid var(--yakit-primary-3);
-            color: var(--yakit-primary-5);
+            border: 1px solid var(--Colors-Use-Main-Border);
+            color: var(--Colors-Use-Main-Primary);
             .expand-and-retract-header-icon-text {
                 width: 48px;
                 opacity: 1;
@@ -27,19 +27,19 @@
     }
     &:focus,
     &:active {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }
 
 .expand-and-retract-header-process {
-    background-color: #fff9f2;
+    background-color: var(--Colors-Use-Neutral-Bg);
 }
 .expand-and-retract-header-finished {
-    background-color: #f1fbf6;
+    background-color: var(--Colors-Use-Neutral-Bg);
 }
 
 .expand-and-retract-header-error {
-    background-color: #fef1f1;
+    background-color: var(--Colors-Use-Neutral-Bg);
 }
 
 .expand-and-retract-header-icon-body {
@@ -49,11 +49,11 @@
     right: 50%;
     left: 50%;
     top: 75%;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
     padding: 4px;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     flex-shrink: 0;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     width: 24px;
     height: 24px;
     border-radius: 12px;

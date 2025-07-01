@@ -312,8 +312,8 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                                             <div className={styles["percent-loading"]}>
                                                 <span>{percent}%</span>
                                                 <Progress
-                                                    strokeColor='#F28B44'
-                                                    trailColor='#F0F2F5'
+                                                    strokeColor='var(--Colors-Use-Main-Primary)'
+                                                    trailColor='var(--Colors-Use-Neutral-Bg)'
                                                     type='circle'
                                                     percent={percent}
                                                     width={20}
@@ -479,7 +479,7 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
     })
     return (
         <YakitHint
-            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}
@@ -489,8 +489,8 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
             visible={visible}
         >
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={percent}
                 format={(percent) => `已下载 ${percent}%`}
             />

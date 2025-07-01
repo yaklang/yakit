@@ -12,7 +12,7 @@
     @extend %divider-style;
 }
 .header-icon {
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     width: 16px;
     height: 16px;
     svg {
@@ -20,7 +20,7 @@
         height: 16px;
     }
     &:hover {
-        color: var(--yakit-primary-4);
+        color: var(--Colors-Use-Main-Hover);
     }
     path {
         stroke-width: 1.5;
@@ -31,12 +31,13 @@
     flex: 1;
     height: 100%;
     overflow: hidden;
+    background-color: var(--Colors-Use-Basic-Background);
     .yakpoc-tab-wrap {
         height: 100%;
         .yakpoc-tab {
             width: 24px;
             height: 100%;
-            background: #f0f1f3;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
             &-item {
                 padding: 12px 4px;
                 cursor: pointer;
@@ -47,19 +48,19 @@
 
                 text-orientation: sideways-right;
                 writing-mode: vertical-rl;
-                border-top: 1px solid #fff;
+                border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 &:hover {
-                    background: rgba(204, 210, 222, 0.5);
+                    background: var(--Colors-Use-Basic-Background);
                 }
                 &-active {
-                    color: #ffffff;
-                    background-color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-On-Primary);
+                    background-color: var(--Colors-Use-Main-Primary);
                     &:hover {
-                        background-color: var(--yakit-primary-4);
+                        background-color: var(--Colors-Use-Main-Hover);
                     }
                 }
                 &-unshowCont {
-                    background-color: var(--yakit-primary-3);
+                    background-color: var(--Colors-Use-Main-Border);
                 }
             }
         }
@@ -70,7 +71,7 @@
         gap: 16px;
         height: 100%;
         overflow: hidden;
-        border-right: 1px solid #eaecf3;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         padding: 12px 8px;
         width: 33.33333%;
         max-width: 432px;
@@ -84,7 +85,7 @@
                 align-items: center;
                 gap: 8px;
                 .header-text {
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 600;
                     line-height: 16px; /* 133.333% */
@@ -101,7 +102,7 @@
         height: 100%;
         overflow: hidden;
         width: 300px;
-        border-right: 1px solid var(--yakit-border-color);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         padding: 12px 8px;
         gap: 8px;
         flex-shrink: 0;
@@ -114,14 +115,14 @@
                 justify-content: space-between;
                 flex: 1;
                 .heard-tip {
-                    color: var(--yakit-helper-text-color);
+                    color: var(--Colors-Use-Neutral-Disable);
                     font-size: 12px;
                     font-style: normal;
                     font-weight: 400;
                     line-height: 16px; /* 133.333% */
                 }
                 .heard-number {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                     margin-left: 4px;
                 }
             }
@@ -152,7 +153,7 @@
             @extend %display-column-center;
             gap: 4px;
             margin-bottom: 8px;
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
             border-radius: 4px;
             padding: 8px 12px;
             height: 100px;
@@ -164,10 +165,10 @@
                 -webkit-box-orient: vertical;
             }
             .time {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
             .time-danger {
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
             }
         }
     }
@@ -195,11 +196,11 @@
             .filter-body-left {
                 @extend %display-flex-center;
                 .count-num {
-                    color: var(--color-gray-text-02, #b4bbca);
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     font-size: 12px;
                     line-height: 16px;
                     .num-style {
-                        color: #f28b44;
+                        color: var(--Colors-Use-Main-Primary);
                         margin-left: 4px;
                     }
                 }
@@ -221,11 +222,11 @@
             max-width: 130px;
             padding: 12px;
             border-radius: 4px;
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
             margin: 4px;
             cursor: pointer;
             &:hover {
-                background-color: var(--yakit-background-color);
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
             }
             .item-tip {
                 @extend %display-column-center;
@@ -233,7 +234,7 @@
                 gap: 4px;
                 .item-tip-name {
                     text-align: center;
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-style: normal;
                     font-weight: 600;
@@ -245,7 +246,7 @@
                     -webkit-box-orient: vertical;
                 }
                 .item-tip-number {
-                    color: var(--yakit-body-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 10px;
                     font-style: normal;
                     font-weight: 400;
@@ -257,16 +258,16 @@
             height: 62px;
         }
         .group-item-wrapper-checked {
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
             &:hover {
-                background-color: var(--yakit-primary-4);
+                background-color: var(--Colors-Use-Main-Hover);
             }
             .item-tip {
                 .item-tip-name {
-                    color: #fff;
+                    color: var(--Colors-Use-Main-On-Primary);
                 }
                 .item-tip-number {
-                    color: #fff;
+                    color: var(--Colors-Use-Main-On-Primary);
                 }
             }
         }

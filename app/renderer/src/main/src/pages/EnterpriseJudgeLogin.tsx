@@ -8,8 +8,8 @@ import {useGetState} from "ahooks"
 import {aboutLoginUpload, loginHTTPFlowsToOnline} from "@/utils/login"
 import {isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {useEeSystemConfig} from "@/store"
-import { NetWorkApi } from "@/services/fetch"
-import { API } from "@/services/swagger/resposeType"
+import {NetWorkApi} from "@/services/fetch"
+import {API} from "@/services/swagger/resposeType"
 const {ipcRenderer} = window.require("electron")
 export interface EnterpriseJudgeLoginProps {
     setJudgeLicense: (v: boolean) => void
@@ -19,7 +19,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
     const {setJudgeLicense, setJudgeLogin} = props
     // License
     // const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
-    const [activateLicense, setActivateLicense] = useState<boolean>(false)
+    const [activateLicense, setActivateLicense] = useState<boolean>(true)
     const [loading, setLoading] = useState<boolean>(true)
     const [licensePageLoading, setLicensePageLoading] = useState<boolean>(false)
     useEffect(() => {
@@ -37,23 +37,25 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
                         NetWorkApi<any, API.SystemConfigResponse>({
                             method: "get",
                             url: "system/config"
-                        }).then((config) => {
-                            const data = config.data || []
-                            setEeSystemConfig([...data])
-                            let syncData = false
-                            data.forEach((item) => {
-                                if (item.configName === "syncData") {
-                                    syncData = item.isOpen
+                        })
+                            .then((config) => {
+                                const data = config.data || []
+                                setEeSystemConfig([...data])
+                                let syncData = false
+                                data.forEach((item) => {
+                                    if (item.configName === "syncData") {
+                                        syncData = item.isOpen
+                                    }
+                                })
+
+                                if (syncData) {
+                                    aboutLoginUpload(e.token)
+                                    loginHTTPFlowsToOnline(e.token)
                                 }
                             })
-
-                            if (syncData) {
-                                aboutLoginUpload(e.token)
-                                loginHTTPFlowsToOnline(e.token)
-                            }
-                        }).catch(() => {
-                            setEeSystemConfig([])
-                        })
+                            .catch(() => {
+                                setEeSystemConfig([])
+                            })
                     } else {
                         aboutLoginUpload(e?.token)
                         loginHTTPFlowsToOnline(e?.token)

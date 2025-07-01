@@ -104,6 +104,13 @@ $yakit-theme-colors: (
         #{$prefix}110: #{$white-background-color};
         }
     }
+    @if $name == Main {
+        @if $mode == light {
+            #{$prefix}0: #{unquote("#F28C4514")};
+        } @else if $mode == dark {
+            #{$prefix}0: #{unquote("#F2853A14")};
+        }
+    }
 }
 
 // 一次性生成所有主题基础色变量

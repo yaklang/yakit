@@ -174,7 +174,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                                                         mode='multiple'
                                                         style={{width: 170}}
                                                         value={!types ? [] : types.split(",")}
-                                                        allowClear={true}
+                                                        
                                                         options={DefaultType}
                                                         onChange={(newValue: string[]) => {
                                                             setTypes(newValue.length === 0 ? "" : newValue.join(","))
@@ -267,7 +267,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                 secondNode={
                     <YakitEditor
                         readOnly={true}
-                        type="http"
+                        type='http'
                         value={Uint8ArrayToString(selectRow?.raw || new Uint8Array())}
                     />
                 }
@@ -276,7 +276,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                 mode='multiple'
                 style={{width: 200}}
                 value={!types ? [] : types.split(",")}
-                allowClear={true}
+                
                 options={DefaultType}
                 onChange={(newValue: string[]) => setTypes(newValue.length === 0 ? "" : newValue.join(","))}
                 maxTagCount='responsive'

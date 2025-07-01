@@ -5,12 +5,12 @@
     flex-direction: column;
     .tip {
         padding: 8px 24px;
-        background: tools.fetch-color-transparen(var(--yakit-color-green), 10%);
+        background: tools.fetch-color-transparen(var(--Colors-Use-Green-Primary), 10%);
         min-height: 32px;
         font-weight: 400;
         font-size: 12px;
         line-height: 16px;
-        color: var(--yakit-success-5);
+        color: var(--Colors-Use-Success-Primary);
         border-radius: 4px;
     }
     .wf-syn-setting-content {

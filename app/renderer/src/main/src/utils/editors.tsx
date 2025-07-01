@@ -2,6 +2,7 @@ import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import HexEditor from "react-hex-editor"
+import oneDarkPro from "react-hex-editor/themes/oneDarkPro"
 // yak register
 import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTPMonacoSpec"
@@ -46,6 +47,8 @@ import {Selection} from "@/pages/yakRunner/RunnerTabs/RunnerTabsType"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useCampare} from "@/hook/useCompare/useCompare"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {useTheme} from "@/hook/useTheme"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -589,6 +592,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const [showValue, setShowValue] = useState<string>(originValue)
     const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
     const [typeLoading, setTypeLoading] = useState<boolean>(false)
+    const {theme} = useTheme()
 
     // 对比loading
     const [compareLoading, setCompareLoading] = useState<boolean>(false)
@@ -609,6 +613,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             }
         } catch (error) {}
     })
+
+    const targetHexTheme = useMemo(() => {
+        return theme === "dark" ? {hexEditor: oneDarkPro} : undefined
+    }, [theme])
 
     useEffect(() => {
         if (editorOperationRecord) {
@@ -922,7 +930,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             renderCode()
         } else if (originValue && type === "hex") {
             setRenderHTML(undefined)
-            setHexValue(originalPackage ? originalPackage :StringToUint8Array(originValue))
+            setHexValue(originalPackage ? originalPackage : StringToUint8Array(originValue))
         }
     }, [type])
 
@@ -937,7 +945,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                 size={"small"}
                 loading={props.loading || typeLoading}
                 bordered={props.bordered}
-                style={{height: "100%", width: "100%", backgroundColor: "#f0f2f5"}}
+                style={{height: "100%", width: "100%", backgroundColor: "var(--Colors-Use-Basic-Background)"}}
                 title={
                     !props.noHeader && (
                         <div style={{display: "flex", gap: 2, ...(props.titleStyle || {})}}>
@@ -1020,7 +1028,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                         />
                                     </Tooltip>
                                     {!props.noSetIngEditor && (
-                                        <Popover
+                                        <YakitPopover
                                             title={"配置编辑器"}
                                             content={
                                                 <>
@@ -1105,7 +1113,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                             visible={popoverVisible}
                                         >
                                             <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
-                                        </Popover>
+                                        </YakitPopover>
                                     )}
                                 </>
                             )}
@@ -1173,6 +1181,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             showColumnLabels={false}
                             showRowLabels={true}
                             highlightColumn={true}
+                            theme={targetHexTheme}
                         />
                     )}
                 </div>

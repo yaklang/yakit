@@ -102,7 +102,7 @@ export const ServerInfoModal: React.FC<ServerInfoModalProps> = (props) => {
                             [styles["hidden-content"]]: active !== "tools"
                         })}
                     >
-                        <YakitInput.Search placeholder='请输入工具名' allowClear={true} onSearch={handleToolSearch} />
+                        <YakitInput.Search placeholder='请输入工具名' onSearch={handleToolSearch} />
                         <div className={styles["tools-body"]}>
                             {showTools?.map((item) => {
                                 const {params} = item

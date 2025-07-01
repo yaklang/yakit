@@ -8,7 +8,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #b4bbca;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     .btn-group {
@@ -20,22 +20,22 @@
     .divider-style {
         width: 1px;
         height: 12px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     .share-disabled-btn {
         background-color: transparent !important;
-        color: var(--yakit-disable-text-color) !important;
+        color: var(--Colors-Use-Neutral-Disable) !important;
         border-color: transparent !important;
         cursor: not-allowed;
         svg {
-            color: var(--yakit-disable-text-color) !important;
+            color: var(--Colors-Use-Neutral-Disable) !important;
         }
     }
     .download-disabled-btn {
-        background: var(--yakit-disable-text-color) !important;
-        color: var(--ui-text-inverse-color) !important;
-        border-color: var(--yakit-disable-text-color) !important;
+        background: var(--Colors-Use-Neutral-Disable) !important;
+        color: var(--Colors-Use-Basic-White) !important;
+        border-color: var(--Colors-Use-Neutral-Disable) !important;
         cursor: not-allowed;
     }
 }
@@ -68,10 +68,10 @@
 /* ---------- HubOperateHint ----------*/
 .hub-operate-hint {
     .operate-style {
-        color: #f28b44;
+        color: var(--Colors-Use-Main-Primary);
     }
     .content-style {
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 }
 
@@ -120,7 +120,7 @@
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 16px;
                 font-weight: 600;
                 line-height: 24px;
@@ -137,7 +137,7 @@
                         svg {
                             width: 16px;
                             height: 16px;
-                            color: #b4bbca;
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         }
                     }
                 }
@@ -160,12 +160,12 @@
         .divider-style {
             width: 1px;
             height: 12px;
-            background-color: #eaecf3;
+            background-color: var(--Colors-Use-Neutral-Bg);
             margin-left: 16px;
             margin-right: 16px;
         }
         .text-style {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             line-height: 16px;
         }
@@ -215,8 +215,8 @@
 
 .infoBox {
     width: 100%;
-    background: rgba(86, 201, 145, 0.1);
-    color: rgba(133, 137, 158, 1);
+    background: var(--Colors-Use-Green-Bg);
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
     padding: 8px 16px;
     margin-bottom: 15px;
 }

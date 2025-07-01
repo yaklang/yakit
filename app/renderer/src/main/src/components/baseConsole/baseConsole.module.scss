@@ -1,10 +1,10 @@
 .yaklang-console-modal {
     overflow: hidden;
     z-index: 1001;
-    border: 0.5px solid #b4bbca;
+    border: 0.5px solid var(--Colors-Use-Neutral-Bg-Hover);
     /* 投影-大 */
 
-    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
     border-radius: 4px;
 }
 .engine-console-modal-wrapper {
@@ -19,9 +19,9 @@
     box-sizing: border-box;
     width: 100%;
     height: 100%;
-    background: rgb(232, 233, 232);
-    border: 1px solid var(--yakit-border-color);
-    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    background: var(--Colors-Use-Neutral-Bg);
+    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+    box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
     border-radius: 4px;
 
     .yaklang-engine-console-wrapper {
@@ -37,7 +37,7 @@
             left: 0;
             width: 100%;
             height: 32px;
-            background: #ffffff;
+            background: var(--Colors-Use-Neutral-Bg);
             .header-box {
                 display: flex;
                 .header-left {
@@ -82,15 +82,12 @@
 }
 .base-console-title {
     height: 32px;
-    border-bottom: 1px solid #eaecf3;
-    border-top: 1px solid #b4bbca;
-    border-left: 1px solid #b4bbca;
-    border-right: 1px solid #b4bbca;
+    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
     padding: 4px 12px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    background: #ffffff;
+    background: var(--Colors-Use-Neutral-Bg);
     .title {
         font-weight: 600;
         font-size: 14px;
@@ -105,7 +102,7 @@
 }
 .console-content {
     flex: 1;
-    background: #f0f1f3;
+    background: var(--Colors-Use-Neutral-Bg);
 }
 .base-console-box {
     height: 100%;
@@ -117,6 +114,7 @@
     height: 100%;
     overflow: hidden;
     background: rgb(232, 233, 232);
+    // background: var(--Colors-Use-Basic-Background);
     padding: 12px 0 0 12px;
 }
 .engine-console-noMini {

@@ -13,7 +13,7 @@
     overflow: hidden;
     :global {
         .resize-box .resize-split-line:hover {
-            border: 1px solid var(--yakit-primary-5);
+            border: 1px solid var(--Colors-Use-Main-Primary);
         }
     }
 }
@@ -32,7 +32,7 @@
         .mitm-idle-tab {
             width: 24px;
             height: 100%;
-            background: #f0f1f3;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
             &-item {
                 padding: 12px 4px;
                 cursor: pointer;
@@ -43,19 +43,19 @@
 
                 text-orientation: sideways-right;
                 writing-mode: vertical-rl;
-                border-top: 1px solid #fff;
+                border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 &:hover {
-                    background: rgba(204, 210, 222, 0.5);
+                    background: var(--Colors-Use-Basic-Background);
                 }
                 &-active {
-                    color: #ffffff;
-                    background-color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-On-Primary);
+                    background-color: var(--Colors-Use-Main-Primary);
                     &:hover {
-                        background-color: var(--yakit-primary-4);
+                        background-color: var(--Colors-Use-Main-Hover);
                     }
                 }
                 &-unshowCont {
-                    background-color: var(--yakit-primary-3);
+                    background-color: var(--Colors-Use-Main-Border);
                 }
             }
         }
@@ -106,15 +106,15 @@
                 height: 100%;
             }
             .ant-spin {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
 
             .ant-spin-text {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
 
             .ant-spin-dot-item {
-                background-color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -134,7 +134,7 @@
         .mitm-plugin-list-check-text {
             margin-left: 4px;
             font-size: 12px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
     .mitm-plugin-list-tip {
@@ -143,9 +143,9 @@
         font-weight: 400;
         font-size: 12px;
         line-height: 16px;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         span {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }
@@ -169,18 +169,18 @@
         .plugin-group-title {
             font-weight: 600;
             font-size: 14px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .close-icon {
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             cursor: pointer;
             svg {
                 width: 16px;
                 height: 16px;
 
                 &:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
@@ -194,12 +194,12 @@
     .plugin-group-tip {
         font-size: 14px;
         line-height: 20px;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         padding-bottom: 16px;
 
         span {
             margin: 0 2px;
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 
@@ -211,8 +211,8 @@
 }
 
 .infoBox {
-    background: #fff2f0;
-    color: rgba(133, 137, 158, 1);
+    background: var(--Colors-Use-Error-Bg);
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
     padding: 8px 16px;
     margin-bottom: 16px;
 }
@@ -228,7 +228,7 @@
             .ant-form-item-explain,
             .ant-form-item-extra {
                 font-size: 12px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
             }
         }
     }
@@ -243,7 +243,7 @@
         display: flex;
         gap: 4px;
         align-items: center;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
 
         .chevron-down {
@@ -254,30 +254,30 @@
         }
 
         svg {
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
 
         .mitm-plugin-group-number {
             padding: 0px 8px;
             height: 16px;
             line-height: 16px;
-            background: var(--yakit-background-color);
+            background: var(--Colors-Use-Neutral-Bg);
             border-radius: 8px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
         }
     }
 
     .mitm-plugin-group-left-open {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
 
         svg {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
 
         .mitm-plugin-group-number {
-            background: var(--yakit-primary-1);
-            color: var(--yakit-primary-5);
+            background: var(--Colors-Use-Main-Bg);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 
@@ -313,19 +313,19 @@
             .plugin-group-item-name {
                 width: calc(100% - 10px);
                 font-size: 12px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-weight: 400;
             }
             .plugin-group-item-length {
                 font-size: 12px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
             }
             .extra-opt-btns {
                 display: none;
                 width: 71px;
             }
             &:hover {
-                background-color: var(--yakit-background-color);
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
                 .plugin-number-unshow {
                     display: none;
                 }
@@ -337,7 +337,7 @@
     }
     .plugin-group-item-select {
         .plugin-group-item-name {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }
@@ -409,7 +409,6 @@
 
 .add-group-popover {
     padding-top: 0px;
-    border: 1px solid var(--yakit-border-color);
     border-radius: 4px;
     overflow: hidden;
     :global {
@@ -433,7 +432,7 @@
         font-size: 12px;
 
         svg {
-            color: #fff;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             margin-right: 4px;
             stroke-width: 1.5px;
         }
@@ -449,38 +448,38 @@
                 width: 16px;
                 height: 16px;
                 &:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
 
         .action-icon-save {
             svg {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
 
         .action-icon-edit-disabled {
             svg {
-                color: var(--yakit-disable-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 cursor: not-allowed;
 
                 &:hover {
-                    color: var(--yakit-disable-text-color);
+                    color: var(--Colors-Use-Neutral-Disable);
                 }
             }
         }
 
         .action-icon-ban-disabled {
             svg {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
 
         span {
             padding: 0 12px;
-            border-right: 1px solid var(--yakit-border-color);
-            color: var(--yakit-body-text-color);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
 
             &:first-child {
                 padding-left: 0;
@@ -488,27 +487,27 @@
         }
 
         .icon-trash {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
         }
 
         .action-icon-trash-disabled {
             svg {
-                color: var(--yakit-disable-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 cursor: not-allowed;
 
                 &:hover {
-                    color: var(--yakit-disable-text-color);
+                    color: var(--Colors-Use-Neutral-Disable);
                 }
             }
         }
 
         .action-icon-ban-disabled2 {
             svg {
-                color: var(--yakit-disable-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 cursor: not-allowed;
 
                 &:hover {
-                    color: var(--yakit-disable-text-color);
+                    color: var(--Colors-Use-Neutral-Disable);
                 }
             }
         }
@@ -518,7 +517,7 @@
 .chrome-operation-btn-wrapper {
     position: relative;
     display: flex;
-    color: #ffffff;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     border-radius: 40px;
     .operation-btn-left {
         display: flex;
@@ -526,8 +525,9 @@
         align-items: center;
         padding: 6px 10px;
         cursor: pointer;
-        border-right: 1px solid #ffffff;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         background-color: var(--Colors-Use-Main-Primary);
+        color: var(--Colors-Use-Main-On-Primary);
         font-size: 14px;
         font-weight: 600;
         .open-icon {
@@ -552,6 +552,7 @@
         cursor: pointer;
         transition: transform 0.5s;
         background-color: var(--Colors-Use-Main-Pressed);
+        color: var(--Colors-Use-Main-On-Primary);
         .title-icon {
             transition: transform 0.5s;
             &.rotate-180 {
@@ -574,14 +575,14 @@
     transition: all 0.5 ease;
     border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px;
-    background-color: #ffffff;
+    background-color: var(--Colors-Use-Basic-Background);
     width: 180px;
     .operation-dropdown-list-item {
         display: flex;
         justify-content: space-between;
         padding: 6px 8px;
         cursor: pointer;
-        color: #000000;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 14px;
         line-height: 20px;
         &:hover {

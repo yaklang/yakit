@@ -4,7 +4,7 @@
     height: 100%;
     overflow: hidden auto;
     padding: 56px 16.7% 0;
-    background: var(--yakit-card-background-color);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
 
     .remote-yaklang-engine-body {
         .remote-title {
@@ -29,7 +29,7 @@
                 font-weight: 600;
                 font-size: 16px;
                 line-height: 24px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
 
             .remote-history {
@@ -43,22 +43,22 @@
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    background: var(--yakit-card-background-color);
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                     border-width: 1px 0px 1px 1px;
                     border-style: solid;
-                    border-color: var(--yakit-border-color);
+                    border-color: var(--Colors-Use-Neutral-Border);
                     border-radius: 4px 0px 0px 4px;
 
                     font-size: 14px;
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
 
                 .select-style {
                     width: 320px;
                     height: 32px;
                     box-sizing: border-box;
-                    background: #ffffff;
-                    border: 1px solid var(--yakit-border-color);
+                    background: var(--Colors-Use-Basic-Background);
+                    border: 1px solid var(--Colors-Use-Neutral-Border);
                     border-radius: 0px 4px 4px 0px;
 
                     :global {
@@ -74,7 +74,7 @@
                     .ant-select-focused {
                         .ant-select-selector {
                             height: 30px;
-                            box-shadow: 0 0 0 2px var(--yakit-primary-2);
+                            box-shadow: 0 0 0 2px var(--Colors-Use-Basic-Shadow);
                         }
                     }
                 }
@@ -84,12 +84,12 @@
         .rmeote-divider {
             width: 100%;
             margin: 24px 0;
-            border-top: 1px solid var(--yakit-background-color);
+            border-top: 1px solid var(--Colors-Use-Neutral-Bg);
         }
 
         .remote-info {
             .error-border {
-                border: 1px solid var(--yakit-danger-5) !important;
+                border: 1px solid var(--Colors-Use-Error-Primary) !important;
             }
 
             .input-style {
@@ -102,7 +102,7 @@
 
                 .icon-style {
                     margin: 0 4px;
-                    color: var(--yakit-body-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     svg {
                         width: 16px;
                         height: 16px;
@@ -111,7 +111,7 @@
 
                 .icon-show-style {
                     margin: 0 4px;
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
 
@@ -127,7 +127,7 @@
 .pem-example-popover {
     :global {
         .ant-popover-inner {
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
             border-radius: 4px;
         }
@@ -142,8 +142,8 @@
         .content-code {
             display: inline-block;
             padding: 0 4px;
-            border: 1px solid var(--yakit-border-color);
-            background-color: var(--yakit-card-background-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
             border-radius: 4px;
         }
         .code-pem {
@@ -168,11 +168,11 @@
                 align-items: center;
                 padding: 2px 6px;
                 gap: 8px;
-                background: var(--yakit-card-background-color);
-                border: 1px solid var(--yakit-border-color);
+                background: var(--Colors-Use-Neutral-Bg-Hover);
+                border: 1px solid var(--Colors-Use-Neutral-Border);
                 border-radius: 4px;
                 font-size: 11px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 .copt-text {
                     flex: 1;
                     overflow: hidden;
@@ -189,7 +189,7 @@
 
             .link-open {
                 line-height: 20px;
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
                 cursor: pointer;
                 white-space: nowrap;
             }
@@ -199,6 +199,6 @@
     .pem-wrapper {
         line-height: 20px;
         font-size: 11px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 }

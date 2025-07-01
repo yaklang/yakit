@@ -1,18 +1,18 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
 import {Form, Input, Button} from "antd"
-import {warn,failed, success} from "@/utils/notification"
+import {warn, failed, success} from "@/utils/notification"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {loginOut, refreshToken} from "@/utils/login"
 import {UserInfoProps, yakitDynamicStatus} from "@/store"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 const {ipcRenderer} = window.require("electron")
 
 export interface SetPasswordProps {
-    userInfo:UserInfoProps,
-    onCancel:()=>any
+    userInfo: UserInfoProps
+    onCancel: () => any
 }
 
 const layout = {
@@ -20,19 +20,17 @@ const layout = {
     wrapperCol: {span: 19}
 }
 
-
 const SetPassword: React.FC<SetPasswordProps> = (props) => {
     const [form] = Form.useForm()
-    const {userInfo,onCancel} = props
-    const {getFieldValue} = form;
+    const {userInfo, onCancel} = props
+    const {getFieldValue} = form
     const [loading, setLoading] = useState<boolean>(false)
     const {dynamicStatus} = yakitDynamicStatus()
-    const onFinish = useMemoizedFn((values:API.UpUserInfoRequest) => {
-        const {old_pwd,pwd,confirm_pwd} = values
-        if(getFieldValue("confirm_pwd")!==getFieldValue("pwd")){
+    const onFinish = useMemoizedFn((values: API.UpUserInfoRequest) => {
+        const {old_pwd, pwd, confirm_pwd} = values
+        if (getFieldValue("confirm_pwd") !== getFieldValue("pwd")) {
             warn("新密码两次输入内容不匹配，请检查重试")
-        }
-        else{
+        } else {
             NetWorkApi<API.UpUserInfoRequest, API.ActionSucceeded>({
                 method: "post",
                 url: "urm/up/userinfo",
@@ -41,15 +39,14 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
                     pwd,
                     confirm_pwd
                 }
-                })
+            })
                 .then((result) => {
-                    if(result.ok){
+                    if (result.ok) {
                         success("密码修改成功,请重新登录")
                         onCancel()
-                        if(dynamicStatus.isDynamicStatus){
-                            ipcRenderer.invoke("lougin-out-dynamic-control",{loginOut:true})
-                        }
-                        else{
+                        if (dynamicStatus.isDynamicStatus) {
+                            ipcRenderer.invoke("lougin-out-dynamic-control", {loginOut: true})
+                        } else {
                             loginOut(userInfo)
                             ipcRenderer.invoke("ipc-sign-out")
                         }
@@ -59,15 +56,15 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
                     setLoading(false)
                     failed("密码修改失败：" + err)
                 })
-                .finally(() => {
-                })
+                .finally(() => {})
         }
     })
     // 判断输入内容是否通过
     const judgePass = () => [
         {
             validator: (_, value) => {
-                let re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.<>?;:\[\]{}~!@#$%^&*()_+-="])[A-Za-z\d.<>?;:\[\]{}~!@#$%^&*()_+-="]{8,20}/
+                let re =
+                    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.<>?;:\[\]{}~!@#$%^&*()_+-="])[A-Za-z\d.<>?;:\[\]{}~!@#$%^&*()_+-="]{8,20}/
                 if (re.test(value)) {
                     return Promise.resolve()
                 } else {
@@ -76,26 +73,22 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
             }
         }
     ]
-    
+
     return (
         <div>
             <Form {...layout} form={form} onFinish={onFinish}>
                 <Form.Item name='old_pwd' label='旧密码' rules={[{required: true, message: "该项为必填"}]}>
                     <YakitInput.Password placeholder='请输入你的旧密码' allowClear />
                 </Form.Item>
-                <Form.Item
-                    name='pwd'
-                    label='新密码'
-                    rules={[{required: true, message: "该项为必填"}, ...judgePass()]}
-                >
-                    <YakitInput.Password placeholder='请输入你的新密码' allowClear />
+                <Form.Item name='pwd' label='新密码' rules={[{required: true, message: "该项为必填"}, ...judgePass()]}>
+                    <YakitInput.Password placeholder='请输入你的新密码' />
                 </Form.Item>
                 <Form.Item
                     name='confirm_pwd'
                     label='确认密码'
                     rules={[{required: true, message: "该项为必填"}, ...judgePass()]}
                 >
-                    <YakitInput.Password placeholder='请确认你的密码' allowClear />
+                    <YakitInput.Password placeholder='请确认你的密码' />
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
                     <YakitButton type='primary' htmlType='submit' loading={loading}>

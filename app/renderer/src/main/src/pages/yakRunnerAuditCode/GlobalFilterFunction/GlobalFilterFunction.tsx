@@ -244,8 +244,8 @@ const GlobalFilterFunction: React.FC<GlobalFilterFunctionProps> = React.memo((pr
                 <div className={styles["progress-opt"]}>
                     <Progress
                         size='small'
-                        strokeColor='#F28B44'
-                        trailColor='#F0F2F5'
+                        strokeColor='var(--Colors-Use-Main-Primary)'
+                        trailColor='var(--Colors-Use-Neutral-Bg)'
                         percent={Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100)}
                     />
 

@@ -14,7 +14,7 @@
     margin-top: 12px;
     height: 24px;
     line-height: 24px;
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 
     .label-text {
         margin-right: 6px;
@@ -30,7 +30,7 @@
 
 .importYamlPopTitle {
     .importText {
-        color: #B4BBCA;
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
         font-size: 14px;
         font-weight: normal;
         margin-left: 16px;
@@ -39,5 +39,4 @@
 
 .multimodeImportYaml {
     height: 500px;
-    margin-bottom: 15px;
 }

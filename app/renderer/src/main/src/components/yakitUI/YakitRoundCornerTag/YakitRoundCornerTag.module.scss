@@ -15,11 +15,11 @@
 
 $color-type: (
     blue: (
-        color: var(--yakit-color-blue),
+        color: var(--Colors-Use-Blue-Primary),
         alph: 10%
     ),
     green: (
-        color: var(--yakit-color-green),
+        color: var(--Colors-Use-Green-Primary),
         alph: 10%
     )
 );
@@ -41,17 +41,17 @@ $color-type: (
 @include generateColors();
 
 .yakit-round-corner-tag-primary {
-    color: var(--ui-neutral-70);
-    background-color: var(--ui-neutral-30);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    background-color: var(--Colors-Use-Neutral-Bg);
     svg {
-        color: var(--ui-neutral-70);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 }
 
 .yakit-round-corner-tag-info {
-    color: var(--ui-neutral-70);
-    background-color: tools.fetch-color-transparen(var(--ui-neutral-60), 10%);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    background-color: tools.fetch-color-transparen(var(--Colors-Use-Neutral-Text-3-Secondary), 10%);
     svg {
-        color: var(--ui-neutral-70);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 }

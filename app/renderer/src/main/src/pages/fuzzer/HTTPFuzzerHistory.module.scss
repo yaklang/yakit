@@ -1,17 +1,38 @@
-.history-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: var(--yakit-header-color);
+.history-card-container{
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    :global{
+        .ant-list{
+            .ant-list-items{
+                .ant-list-item{
+                    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+                    &:last-child{
+                        border-bottom: 1px solid var(--Colors-Use-Neutral-Border) !important;
+                    }
+                    .ant-card {
+                        background-color: var(--Colors-Use-Basic-Background);
+                        &:hover{
+                            box-shadow: 0px 2px 16px 0px var(--Colors-Use-Basic-Shadow);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .history-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
 
-    .check-icon {
-        color: var(--yakit-primary-5);
-        position: absolute;
-        right: -12px;
-        top: 4px;
-        svg {
-            width: 16px;
-            height: 16px;
+        .check-icon {
+            color: var(--Colors-Use-Main-Primary);
+            position: absolute;
+            right: -12px;
+            top: 4px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
         }
     }
 }

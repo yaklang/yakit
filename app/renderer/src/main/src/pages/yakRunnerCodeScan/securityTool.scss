@@ -27,7 +27,7 @@
         .#{$text}-executor-title-text {
             font-size: 16px;
             font-weight: 600;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             line-height: 16px;
             white-space: nowrap;
             text-overflow: ellipsis;

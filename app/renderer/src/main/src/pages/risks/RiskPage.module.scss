@@ -23,7 +23,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 4px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-style: normal;
             font-weight: 500;
@@ -42,7 +42,7 @@
     width: 300px;
     flex-shrink: 0;
     max-width: 300px;
-    border-right: 1px solid var(--yakit-border-color);
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
     overflow: hidden;
     height: 100%;
     opacity: 1;
@@ -61,11 +61,11 @@
         @extend %flex-row-center;
         justify-content: space-between;
         padding: 16px 12px 12px;
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         height: 44px;
         font-size: 12px;
         line-height: 16px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .risk-query-body {
         @extend %flex-column;
@@ -99,16 +99,16 @@
             border-radius: 4px;
             cursor: pointer;
             &:hover {
-                background-color: var(--yakit-background-color);
+                background-color: var(--Colors-Use-Neutral-Bg);
             }
             .ip-list-item-label {
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px; /* 133.333% */
             }
             .ip-list-item-value {
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px; /* 133.333% */
@@ -117,7 +117,7 @@
         .ip-list-item-active {
             .ip-list-item-label,
             .ip-list-item-value {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -136,7 +136,7 @@
     padding: 8px 12px;
     @include heard("vulnerability-type");
     .info-icon {
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         svg {
             width: 16px;
             height: 16px;
@@ -150,7 +150,7 @@
 
 .to-end {
     text-align: center;
-    color: var(--yakit-disable-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     font-size: 11px;
     padding-top: 24px;
     padding-bottom: 12px;

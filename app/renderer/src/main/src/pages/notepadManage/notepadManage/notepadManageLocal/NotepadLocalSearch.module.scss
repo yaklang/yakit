@@ -29,7 +29,7 @@
                 width: 100%;
                 padding: 0;
                 &:hover {
-                    background-color: var(--yakit-card-background-color);
+                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
                     border-radius: 4px;
                 }
             }
@@ -38,13 +38,13 @@
 }
 
 .note-search-row {
-    border-top: 1px solid var(--yakit-border-color);
+    border-top: 1px solid var(--Colors-Use-Neutral-Border);
     &:first-child {
         border-color: transparent;
     }
     &:hover {
         border-radius: 4px;
-        background: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
         border-color: transparent;
     }
 }
@@ -53,7 +53,7 @@
 }
 
 .note-search-item-content-highlight {
-    color: var(--yakit-primary-5);
-    background-color: var(--yakit-primary-1);
+    color: var(--Colors-Use-Main-Primary);
+    background-color: var(--Colors-Use-Main-Bg);
     padding: 0 2px;
 }

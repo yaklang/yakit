@@ -1,9 +1,25 @@
 .yakit-cascader-popup {
+    background-color: var(--Colors-Use-Neutral-Bg);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
+    border-color: var(--Colors-Use-Neutral-Border);
     :global {
+        .ant-cascader-menu{
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        }
+        .ant-cascader-menu-item:hover{
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            .ant-cascader-menu-item-expand-icon{
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
+        }
         .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled),
         .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled):hover {
-            background-color: var(--yakit-primary-1);
-            color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Bg);
+            color: var(--Colors-Use-Main-Primary);
+        }
+        .ant-cascader-menu-item-expand .ant-cascader-menu-item-expand-icon, .ant-cascader-menu-item-loading-icon{
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
         }
     }
 }
@@ -32,7 +48,8 @@
         }
         .ant-select:not(.ant-select-customize-input) .ant-select-selector {
             border-radius: 4px;
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            background-color: var(--Colors-Use-Basic-Background);
         }
         .ant-select-selection-item {
             font-size: 12px;

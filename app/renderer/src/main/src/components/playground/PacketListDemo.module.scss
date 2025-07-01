@@ -6,18 +6,18 @@
         .hNamKE.notFocused .byteValue.selection > .nybbleHighValue,
         .hNamKE.editAscii .byteValue.selection > .nybbleLowValue,
         .hNamKE.notFocused .byteValue.selection > .nybbleLowValue {
-            background-color: var(--yakit-primary-5) !important;
-            color: #ffffff !important;
+            background-color: var(--Colors-Use-Main-Primary) !important;
+            color: var(--Colors-Use-Main-On-Primary) !important;
         }
         .hNamKE.editHex .asciiValue.selectionCursor,
         .hNamKE.notFocused .asciiValue.selectionCursor {
-            background-color: var(--yakit-primary-5) !important;
-            color: #ffffff !important;
+            background-color: var(--Colors-Use-Main-Primary) !important;
+            color: var(--Colors-Use-Main-On-Primary) !important;
         }
         .hNamKE.editHex .asciiValue.selection,
         .hNamKE.notFocused .asciiValue.selection {
-            background-color: var(--yakit-primary-5) !important;
-            color: #ffffff !important;
+            background-color: var(--Colors-Use-Main-Primary) !important;
+            color: var(--Colors-Use-Main-On-Primary) !important;
         }
     }
 }

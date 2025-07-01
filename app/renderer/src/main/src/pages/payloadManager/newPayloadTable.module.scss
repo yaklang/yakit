@@ -6,16 +6,26 @@
             padding: 8px 16px;
         }
         .ant-table-thead > tr > th {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-style: normal;
             font-weight: 500;
             line-height: 16px;
             background: var(--Colors-Use-Neutral-Bg);
         }
+        .ant-table.ant-table-bordered > .ant-table-container{
+            border-color: var(--Colors-Use-Neutral-Border);
+        }
+        .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table, .ant-table.ant-table-bordered > .ant-table-container > .ant-table-header > table{
+            border-color: var(--Colors-Use-Neutral-Border);
+        }
+        .ant-table-tbody{
+            background-color: var(--Colors-Use-Basic-Background);
+        }
         .ant-table-thead > tr > th,
         .ant-table-tbody > tr > td {
             border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > thead > tr > th,
         .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > tbody > tr > td {
@@ -23,7 +33,7 @@
         }
         .ant-table-tbody > tr.ant-table-row:hover > td,
         .ant-table-tbody > tr > td.ant-table-cell-row-hover {
-            background: var(--yakit-card-background-color);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
         }
         .ant-table-filter-trigger:hover {
             color: transparent;
@@ -113,14 +123,14 @@
             height: 16px;
         }
         &:hover {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
     .active-selector-icon {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .selected-row {
-        border: 2px solid var(--Colors-Use-Blue-Border); /* 选择你希望的边框样式 */
+        border: 2px solid var(--Colors-Use-Blue-Bg); /* 选择你希望的边框样式 */
     }
 }
 .filter-box {
@@ -195,6 +205,6 @@
     }
 }
 .td-active-border {
-    border: 1px solid var(--yakit-primary-5) !important;
+    border: 1px solid var(--Colors-Use-Main-Primary) !important;
     padding: 7px 15px !important;
 }

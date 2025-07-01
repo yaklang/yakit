@@ -17,18 +17,19 @@
             width: 5px;
             height: 5px;
             border-radius: 50%;
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
+            color: var(--Colors-Use-Main-On-Primary);
         }
     }
 
     .label-dot-wrapper {
         @extend %dot-wrapper;
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
 
     .checked-dot-wrapper {
         @extend %dot-wrapper;
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         padding-bottom: 2px;
     }
 
@@ -40,13 +41,13 @@
 
     .list-item-checked {
         text-decoration: line-through;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
     }
 }
 
 .list-item-checked-wrapper {
     border-radius: 4px;
     &:hover {
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
 }

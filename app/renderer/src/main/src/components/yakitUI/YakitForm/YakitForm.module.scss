@@ -40,7 +40,7 @@
 // ========================== dragger-help-middle ==========================
 .dragger-help-middle {
     font-size: 12px;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     line-height: 16px;
     font-weight: 400;
     display: flex;
@@ -48,7 +48,7 @@
     margin-top: 2px;
 
     .dragger-help-active {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         cursor: pointer;
         margin: 0 4px;
         .upload-icon {
@@ -62,12 +62,12 @@
     }
 
     .dragger-help-active-disabled {
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         cursor: not-allowed;
     }
 
     .dragger-help-number {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         cursor: pointer;
         margin: 0 4px;
         font-style: normal;
@@ -92,16 +92,16 @@
 .form-item-help {
     width: 100%;
     font-size: 14px;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
     .divider-line {
         display: inline-block;
         width: 1px;
         height: 12px;
-        background-color: var(--yakit-border-color);
+        background-color: var(--Colors-Use-Neutral-Border);
         margin: 0 5px;
     }
     .form-item-setting {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         font-size: 14px;
         &-icon {
             svg {
@@ -122,6 +122,7 @@
             font-size: 14px;
             display: flex;
             align-items: center;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             svg {
                 width: 12px;
             }
@@ -129,8 +130,8 @@
     }
     :global {
         .ant-popover-inner {
-            border: 1px solid var(--yakit-border-color);
-            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
             border-radius: 4px;
             .ant-popover-inner-content {
                 height: 30px;

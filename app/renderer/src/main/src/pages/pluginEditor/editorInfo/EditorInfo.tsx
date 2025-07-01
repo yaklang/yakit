@@ -62,7 +62,7 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
             () => ({
                 onSubmit: handleSubmit,
                 setNameForm: updateName,
-                setHelpForm: updateHelp,
+                setHelpForm: updateHelp
             }),
             []
         )
@@ -136,7 +136,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
             () => ({
                 onSubmit: handleFormSubmit,
                 setNameForm: (name: string) => form.setFieldsValue({ScriptName: name}),
-                setHelpForm: (help: string) => form.setFieldsValue({Help: help}),
+                setHelpForm: (help: string) => form.setFieldsValue({Help: help})
             }),
             [form]
         )
@@ -530,10 +530,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                     {documentType === 1 ? (
                         <>
                             <div className={styles["temp-example-search-wrapper"]}>
-                                <YakitInput.Search
-                                    allowClear={true}
-                                    onSearch={(value) => setSearchTempExampleVal(value)}
-                                />
+                                <YakitInput.Search onSearch={(value) => setSearchTempExampleVal(value)} />
                             </div>
                             <div className={styles["temp-example-list-wrapper"]}>
                                 {renderTempExampleList.length ? (
@@ -564,10 +561,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                     ) : (
                         <>
                             <div className={styles["temp-example-search-wrapper"]}>
-                                <YakitInput.Search
-                                    allowClear={true}
-                                    onSearch={(value) => setSearchQaDocumentVal(value)}
-                                />
+                                <YakitInput.Search onSearch={(value) => setSearchQaDocumentVal(value)} />
                             </div>
                             <div className={styles["document-list-wrapper"]}>
                                 {renderQaDocumentList.length ? (

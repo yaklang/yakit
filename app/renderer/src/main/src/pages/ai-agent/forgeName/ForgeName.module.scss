@@ -4,7 +4,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    background-color: #ffffff;
+    background-color: var(--Colors-Use-Basic-Background);
 
     .header-wrapper {
         padding: 8px 12px 0 12px;
@@ -20,7 +20,7 @@
                 align-items: center;
                 gap: 4px;
 
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-weight: 500;
             }
@@ -31,7 +31,7 @@
                 svg {
                     width: 16px;
                     height: 16px;
-                    color: #868c97;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 }
             }
         }
@@ -87,7 +87,7 @@
         gap: 4px;
         .del-icon {
             svg {
-                color: #eb493f;
+                color: var(--Colors-Use-Status-High);
             }
         }
     }
@@ -170,7 +170,7 @@
 .forge-list-no-more {
     padding: 12px 0;
     .no-more-title {
-        color: var(--color-gray-Text-01, #ccd2de);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         text-align: center;
         font-size: 11px;
         font-weight: 400;

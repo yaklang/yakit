@@ -13,6 +13,7 @@
     align-items: flex-start;
     gap: 4px;
     cursor: pointer;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     position: relative;
     user-select: none;
 
@@ -36,7 +37,6 @@
 
 @mixin tab-item-active() {
     background-color: var(--Colors-Use-Main-Primary);
-    border-bottom-color: var(--Colors-Use-Main-Primary);
     color: var(--Colors-Use-Main-On-Primary);
     svg {
         color: var(--Colors-Use-Main-On-Primary);

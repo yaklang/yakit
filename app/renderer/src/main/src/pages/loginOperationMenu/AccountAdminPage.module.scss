@@ -45,7 +45,7 @@
                 .del-icon,
                 .plus-icon {
                     svg {
-                        color: #ffffff;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                 }
             }
@@ -58,14 +58,14 @@
             align-items: center;
             margin: 8px 0;
             .first-title {
-                color: rgba(0, 0, 0, 0.5);
+                color: var(--Colors-Use-Neutral-Text-1-Title)
             }
             .second-title {
-                color: rgba(0, 0, 0, 0.5);
+                color: var(--Colors-Use-Neutral-Text-1-Title)
             }
             .right-outlined {
                 padding: 0 8px;
-                color: rgba(0, 0, 0, 0.5);
+                color: var(--Colors-Use-Neutral-Text-1-Title)
                 svg {
                     width: 12px;
                     height: 12px;
@@ -81,9 +81,9 @@
                 align-items: center;
                 width: 20px;
                 height: 20px;
-                color: #ffffff;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 border-radius: 50%;
-                background-color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Main-Primary);
                 font-size: 14px;
             }
         }
@@ -102,14 +102,14 @@
             svg {
                 width: 16px;
                 &:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
         span {
             padding: 0 12px;
-            color: var(--yakit-body-text-color);
-            border-right: 1px solid var(--yakit-border-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
             &:first-child {
                 padding-left: 0;
             }
@@ -120,7 +120,7 @@
         .del-icon {
             svg {
                 width: 16px;
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
             }
         }
     }

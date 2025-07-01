@@ -16,14 +16,14 @@
             padding: 4px;
             border-radius: 4px;
             cursor: pointer;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             svg {
                 width: 16px;
                 height: 16px;
             }
             &:hover {
-                background-color: var(--yakit-background-color);
-                color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Neutral-Bg);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -49,12 +49,12 @@
 
 .grey-link {
     @extend .fake-content;
-    border-color: var(--yakit-border-color);
+    border-color: var(--Colors-Use-Neutral-Border);
 }
 
 .primary-link {
     @extend .fake-content;
-    border-color: var(--yakit-primary-5) !important;
+    border-color: var(--Colors-Use-Main-Primary) !important;
 }
 
 .dragging {
@@ -71,7 +71,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     cursor: pointer;
     border-radius: 4px;
 }
@@ -80,7 +80,7 @@
     @extend .base-show-icon;
 
     &:hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }
 
@@ -96,13 +96,13 @@
         display: flex;
         overflow: hidden;
         width: 100%;
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
         position: relative;
 
         &::after {
             @extend .fake-content;
             bottom: 0;
-            border-color: var(--yakit-border-color);
+            border-color: var(--Colors-Use-Neutral-Border);
         }
     }
 
@@ -122,7 +122,7 @@
 
     .outline-chevron-double-left {
         @extend .base-operate-icon;
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
         width: 20px;
         height: 32px;
         flex-shrink: 0;
@@ -147,7 +147,7 @@
 
     .outline-chevron-double-right {
         @extend .base-operate-icon;
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
         width: 20px;
         height: 32px;
         flex-shrink: 0;
@@ -215,7 +215,7 @@
     max-width: 200px;
     min-width: 32px;
     justify-content: space-between;
-    background-color: var(--yakit-card-background-color);
+    background-color: var(--Colors-Use-Neutral-Bg);
     font-size: 12px;
     transition:
         min-width 0.1s linear,
@@ -464,7 +464,7 @@
                         svg {
                             width: 20px;
                             height: 20px;
-                            color: #85899e;
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         }
                     }
                 }

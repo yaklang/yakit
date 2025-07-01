@@ -35,7 +35,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     &-item:hover {
@@ -43,7 +43,7 @@
     }
 
     &-item-active {
-        background-color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Primary);
         .item-text {
             color: #ffffff;
         }
@@ -53,7 +53,7 @@
     }
 
     &-item-advanced-config-unShow {
-        background-color: var(--yakit-primary-3);
+        background-color: var(--Colors-Use-Blue-Bg);
     }
 
     &-item-disable {
@@ -62,7 +62,7 @@
     }
 
     &-item-active:hover {
-        background-color: var(--yakit-primary-4);
+        background-color: var(--Colors-Use-Blue-Hover);
     }
 
     &-content {
@@ -91,5 +91,5 @@
 }
 
 .hidden {
-    border-right: 1px solid var(--yakit-background-color);
+    border-right: 1px solid var(--Colors-Use-Neutral-Bg);
 }

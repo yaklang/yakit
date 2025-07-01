@@ -126,7 +126,6 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
                     value={searchVal}
                     size='middle'
                     prefix={<OutlineSearchIcon className='search-icon' />}
-                    allowClear={true}
                     onChange={(e) => onSearch(e.target.value.trim())}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {

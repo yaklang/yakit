@@ -30,7 +30,7 @@
     flex-direction: column;
     .title {
         padding: 0px 16px;
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         font-size: 12px;
         font-weight: 500;
         line-height: 24px;
@@ -51,7 +51,7 @@
             .checked-box {
                 :global {
                     .ant-checkbox + span {
-                        color: #85899e;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         font-size: 12px;
                         font-weight: 500;
                         line-height: 16px;

@@ -10,7 +10,7 @@
 %divider-style {
     width: 1px;
     height: 12px;
-    background-color: #eaecf3;
+    background-color: var(--Colors-Use-Neutral-Border);
 }
 @mixin execute-title($text) {
     display: flex;
@@ -27,7 +27,7 @@
         .#{$text}-executor-title-text {
             font-size: 16px;
             font-weight: 600;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             line-height: 16px;
             white-space: nowrap;
             text-overflow: ellipsis;

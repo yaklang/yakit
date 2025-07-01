@@ -577,7 +577,6 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
                                                     {activeEdit ? (
                                                         <YakitInput
                                                             ref={editInputRef}
-                                                            allowClear={true}
                                                             showCount
                                                             maxLength={50}
                                                             value={editName}
@@ -1023,7 +1022,6 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
 
                     <div className={styles["header-extra"]}>
                         <YakitInput.Search
-                            allowClear={true}
                             placeholder='请输入关键词搜索'
                             onSearch={(val) => {
                                 onSetFilter((prev) => {
@@ -1140,7 +1138,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                             onClick={() => {
                                 let m = showYakitModal({
                                     title: "指纹规则",
-                                    width: '75%',
+                                    width: "75%",
                                     closable: true,
                                     maskClosable: false,
                                     content: <FingerprintRuleDom />,
@@ -1336,7 +1334,6 @@ const FingerprintFormModal: React.FC<FingerprintFormModalProps> = (props) => {
                     <YakitSelect
                         mode='tags'
                         placeholder='请选择分组'
-                        allowClear={true}
                         options={groups}
                         searchValue={groupSearch}
                         onSearch={handleGroupSearchChange}
@@ -1748,7 +1745,6 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
                                 maxLength={50}
                                 prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                                 value={search}
-                                allowClear={true}
                                 onChange={(e) => {
                                     const val = e.target.value.trim()
                                     setSearch(val)

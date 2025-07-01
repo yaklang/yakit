@@ -15,11 +15,11 @@
         overflow: hidden;
     }
     .table-header {
-        background-color: #f8f8f8;
+        background-color: var(--Colors-Use-Neutral-Bg);
         display: flex;
-        border-bottom: 1px solid #eaecf3;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         .header-cell {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
@@ -37,14 +37,14 @@
 
     .table-tr {
         display: flex;
-        border-top: 1px solid #eaecf3;
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
         .tr-cell {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             line-height: 16px;
         }
         &:hover {
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
         }
     }
     .table-tr:first-child {
@@ -56,7 +56,7 @@
         overflow: hidden;
     }
     .cell-tag-style {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 
     .table-footer-empty {
@@ -64,7 +64,7 @@
         justify-content: center;
         align-items: center;
         min-height: 40px;
-        color: #b4bbca;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         font-size: 12px;
     }
     .table-footer-loading {
@@ -85,18 +85,18 @@
                     @if $type == red {
                         // 单色-红色单独处理
                         .table-tr.table-row-red {
-                            background: var(--yakit-table-select-row-bg-color-red);
-                            color: #fff;
+                            background: var(--Colors-Use-Error-Primary);
+                            color: var(--Colors-Use-Neutral-Text-1-Title);
                             font-weight: bold;
                             &:hover {
-                                background: var(--yakit-table-hover-row-bg-color-red);
+                                background: var(--Colors-Use-Error-Pressed);
                             }
                         }
                     } @else {
                         // 单色-其他颜色处理
                         .table-tr.table-row-#{$type} {
                             background: tools.generate-transparen(#{tools.fetch-color($type, "backgroundColor")}, 20%);
-                            color: var(--yakit-table-text-color);
+                            color: var(--Colors-Use-Neutral-Text-1-Title);
                             &:hover {
                                 background: tools.generate-transparen(
                                     #{tools.fetch-color($type, "backgroundColor")},
@@ -110,7 +110,7 @@
                     $gbColors: tools.generate-colors($pre);
                     .table-tr.table-row-#{tools.generate-class-name($pre)} {
                         background: tools.generate-gradient($gbColors, 20%);
-                        color: var(--yakit-table-text-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         &:hover {
                             background: tools.generate-gradient($gbColors, 30%);
                         }

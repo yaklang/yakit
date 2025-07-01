@@ -13,7 +13,7 @@
         justify-content: space-between;
         gap: 8px;
         .title {
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
@@ -38,7 +38,7 @@
         font-size: 12px;
         line-height: 16px;
         text-align: center;
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         margin-top: 8px;
     }
     .audit-tree {
@@ -105,7 +105,7 @@
             width: 6px !important;
         }
         .ant-tree-list-scrollbar-thumb {
-            background: #c1c1c1 !important;
+            background: var(--Colors-Use-Basic-Background) !important;
         }
     }
 
@@ -125,7 +125,7 @@
     position: relative;
     height: 22px;
     text-align: center;
-    color: var(--yakit-disable-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     font-size: 11px;
     line-height: 22px;
 }
@@ -134,7 +134,7 @@
     position: relative;
     height: 22px;
     text-align: center;
-    color: #31343f;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 11px;
     line-height: 22px;
     &:hover {
@@ -159,7 +159,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             transition: transform 0.3s;
         }
         &.expanded {
@@ -200,7 +200,7 @@
             justify-content: space-between;
             gap: 4px;
             .detail {
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-weight: 500;
                 line-height: 16px;
@@ -221,11 +221,11 @@
                 flex-shrink: 1; /* 允许这个元素被压缩 */
             }
             .name-active{
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
         .bug {
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             display: flex;
             align-items: center;
             svg {
@@ -234,7 +234,7 @@
             }
         }
         .active-bug {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
         .count {
             color: #b4bbca;
@@ -246,7 +246,7 @@
 
     &:hover {
         border-radius: 4px;
-        background-color: #f8f8f8;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     &.node-selected {
@@ -292,7 +292,7 @@
         flex-direction: row;
         justify-content: space-between;
         border-bottom: 1px solid #eaecf3;
-        background: #f8f8f8;
+        background: var(--Colors-Use-Neutral-Bg);
         .main {
             display: flex;
             flex-direction: row;
@@ -327,7 +327,7 @@
             align-items: center;
             gap: 8px;
             .search-icon {
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 svg {
                     height: 12px;
                     width: 12px;
@@ -396,14 +396,14 @@
     padding: 4px;
     border-radius: 4px;
     cursor: pointer;
-    color: #85899e;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
     svg {
         width: 16px;
         height: 16px;
     }
     &:hover {
-        background-color: var(--yakit-background-color);
-        color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 
@@ -452,7 +452,7 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 .title {
                     display: flex;
                     gap: 6px;
@@ -490,7 +490,7 @@
 }
 
 .agent-down-stream-proxy {
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
     display: inline-flex;
     cursor: pointer;
 }

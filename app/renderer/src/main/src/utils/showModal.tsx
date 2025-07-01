@@ -1,11 +1,12 @@
 import React, {useEffect, useState} from "react"
 import {ModalProps} from "antd/lib/modal"
-import {Drawer, DrawerProps, Modal} from "antd"
+import {DrawerProps, Modal} from "antd"
 import {ErrorBoundary} from "react-error-boundary"
 import {createRoot} from "react-dom/client"
 import emiter from "./eventBus/eventBus"
 import {HTML5Backend} from "react-dnd-html5-backend"
 import {DndProvider} from "react-dnd"
+import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 const {ipcRenderer} = window.require("electron")
 
 export interface BaseModalProp extends ModalProps, React.ComponentProps<any> {
@@ -110,7 +111,7 @@ export interface BaseDrawerProp extends DrawerProps, React.ComponentProps<any> {
 }
 
 export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
-    const {afterVisible,afterInvisible,afterClose,...restProps}=props;
+    const {afterVisible, afterInvisible, afterClose, ...restProps} = props
     const [visible, setVisible] = useState(false)
 
     useEffect(() => {
@@ -135,7 +136,7 @@ export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
     }
 
     return (
-        <Drawer
+        <YakitDrawer
             visible={visible}
             destroyOnClose={true}
             onClose={close}
@@ -143,7 +144,7 @@ export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
             width={"50%"}
             maskClosable={true}
             {...restProps}
-        ></Drawer>
+        ></YakitDrawer>
     )
 }
 

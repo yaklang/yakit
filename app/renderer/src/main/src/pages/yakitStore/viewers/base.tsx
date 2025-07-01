@@ -195,7 +195,12 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             id: v.id,
             node: (
                 <Card size={"small"} hoverable={false} bordered={true} title={`任务进度ID：${v.id}`}>
-                    <Progress percent={parseInt((v.progress * 100).toFixed(0))} status='active' />
+                    <Progress
+                        strokeColor='var(--Colors-Use-Main-Primary)'
+                        trailColor='var(--Colors-Use-Neutral-Bg)'
+                        percent={parseInt((v.progress * 100).toFixed(0))}
+                        status='active'
+                    />
                 </Card>
             )
         })

@@ -22,7 +22,7 @@
         margin-right: 16px;
         .icon-style {
             svg {
-                color: var(--yakit-warning-5);
+                color: var(--Colors-Use-Warning-Primary);
                 width: 22px;
                 height: 22px;
             }
@@ -31,11 +31,11 @@
     .content {
         flex: 1;
         overflow: hidden;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         .title-style {
             display: block;
             overflow: hidden;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-weight: 500;
             font-size: 16px;
             line-height: 1.4;

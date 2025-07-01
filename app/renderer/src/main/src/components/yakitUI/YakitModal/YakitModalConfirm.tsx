@@ -125,7 +125,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
 
     return (
         <YakitModal
-            footerStyle={{backgroundColor: "#fff", borderTop: 0, padding: 0}}
+            footerStyle={{borderTop: 0, padding: 0}}
             footer={
                 <div className={style["modal-confirm-btns"]}>
                     <YakitButton

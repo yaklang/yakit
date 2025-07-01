@@ -134,7 +134,6 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
                 onSearch={onSearch}
                 onPressEnter={onPressEnter}
                 wrapperStyle={{margin: "0 12px"}}
-                allowClear={true}
             />
             <YakitSpin spinning={spinning}>
                 <RollingLoadList<AITool>

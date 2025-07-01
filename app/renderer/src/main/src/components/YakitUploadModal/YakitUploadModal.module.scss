@@ -7,7 +7,7 @@
         gap: 16px;
         align-self: stretch;
         .title {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 600;
             line-height: 20px;
@@ -19,11 +19,11 @@
             svg {
                 width: 20px;
                 height: 20px;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
             &:hover {
                 svg {
-                    color: var(--yakit-primary-4);
+                    color: var(--Colors-Use-Main-Hover);
                 }
             }
         }
@@ -38,7 +38,7 @@
             border-radius: 8px;
             background: linear-gradient(90deg, rgba(136, 99, 247, 0.1) 0%, rgba(247, 170, 99, 0.1) 100%);
             .title {
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-style: normal;
                 font-weight: 400;
@@ -64,13 +64,13 @@
                         background: rgba(136, 99, 247, 0.2);
                         font-size: 10px;
                         text-align: center;
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-weight: 400;
                         line-height: 12px;
                     }
                     .text {
                         flex: 1;
-                        color: #85899e;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         font-size: 12px;
                         font-style: normal;
                         font-weight: 400;
@@ -116,7 +116,7 @@
                 height: 36px;
                 min-height: 36px;
                 box-sizing: content-box;
-                border-bottom: 1px solid var(--yakit-border-color);
+                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
                 display: flex;
                 align-items: center;
                 padding: 0 12px;
@@ -138,7 +138,7 @@
                         }
                         .content {
                             .title {
-                                color: #31343f;
+                                color: var(--Colors-Use-Neutral-Text-1-Title);
                                 font-size: 14px;
                                 font-weight: 600;
                                 line-height: 20px;
@@ -215,7 +215,7 @@
                 }
                 &:hover {
                     border-radius: 4px;
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
                     .close-icon {
                         opacity: 1;
                     }
@@ -262,7 +262,7 @@
             font-weight: 600;
             font-size: 16px;
             line-height: 24px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             margin-bottom: 8px;
         }
 
@@ -270,7 +270,7 @@
             margin-top: 8px;
             font-size: 14px;
             line-height: 20px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .hint-right-download {
@@ -290,7 +290,7 @@
                 height: 16px;
                 font-size: 12px;
                 line-height: 16px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
 
                 .divider-wrapper {
                     margin: 0 8px;
@@ -302,7 +302,7 @@
                     .divider-style {
                         width: 100%;
                         height: 12px;
-                        border: 1px solid var(--yakit-border-color);
+                        border: 1px solid var(--Colors-Use-Neutral-Border);
                     }
                 }
             }

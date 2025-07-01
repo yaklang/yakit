@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
@@ -16,6 +16,8 @@ import {Tooltip} from "antd"
 
 import classNames from "classnames"
 import styles from "./WebsocketFrameHistory.module.scss"
+import oneDarkPro from "react-hex-editor/themes/oneDarkPro"
+import {useTheme} from "@/hook/useTheme"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -65,8 +67,8 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
     })
 
     const deduplicateData = useMemoizedFn((existingData: WebsocketFlow[], newData: WebsocketFlow[]) => {
-        const existingFrameIndexes = new Set(existingData.map(item => item.FrameIndex))
-        return newData.filter(item => !existingFrameIndexes.has(item.FrameIndex))
+        const existingFrameIndexes = new Set(existingData.map((item) => item.FrameIndex))
+        return newData.filter((item) => !existingFrameIndexes.has(item.FrameIndex))
     })
 
     const fetchList = useMemoizedFn((isInit?: boolean) => {
@@ -79,9 +81,9 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
 
         setLoading(true)
         const pageNum = isInit ? 1 : Number(response.Pagination.Page) + 1
-        
+
         const currentSequence = ++requestSequence.current
-        
+
         ipcRenderer
             .invoke("QueryWebsocketFlowByHTTPFlowWebsocketHash", {
                 WebsocketRequestHash: websocketHash,
@@ -107,9 +109,9 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                     const combinedData = response.Data.concat(deduplicatedNewData)
                     const length = combinedData.length
                     hasMore.current = length < Number(r.Total)
-                    
+
                     setResponse((old) => ({
-                        ...r, 
+                        ...r,
                         Data: combinedData
                     }))
                 }
@@ -151,6 +153,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
     const infoDetail = useRef<{content: string; hex: Uint8Array}>()
     const [showDetail, setShowDetail] = useState(false)
     const [activeTab, setActiveTab] = useState<"utf8" | "hex">("utf8")
+    const {theme} = useTheme()
 
     const handleOpenInfoDetail = useMemoizedFn((info: WebsocketFlow) => {
         if (showDetail) return
@@ -164,6 +167,10 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
         setShowDetail(false)
     })
     /** ---------- 数据帧详情 End ---------- */
+
+    const targetHexTheme = useMemo(() => {
+        return theme === "dark" ? {hexEditor: oneDarkPro} : undefined
+    }, [theme])
 
     return (
         <YakitCard
@@ -219,7 +226,10 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                             })}
                                         >
                                             <div
-                                                style={{width: 50, color: onlyRed ? "#fff" : undefined}}
+                                                style={{
+                                                    width: 50,
+                                                    color: onlyRed ? "var(--Colors-Use-Basic-Background)" : undefined
+                                                }}
                                                 className={classNames(styles["tr-cell"], styles["base-cell"])}
                                             >
                                                 {FrameIndex}
@@ -253,7 +263,11 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                                 )}
                                             >
                                                 <span
-                                                    style={{color: onlyRed ? "#fff" : undefined}}
+                                                    style={{
+                                                        color: onlyRed
+                                                            ? "var(--Colors-Use-Basic-Background)"
+                                                            : undefined
+                                                    }}
                                                     className={classNames(
                                                         styles["cell-data-verbose"],
                                                         "yakit-content-single-ellipsis"
@@ -329,6 +343,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                 showColumnLabels={true}
                                 showRowLabels={true}
                                 highlightColumn={true}
+                                theme={targetHexTheme}
                             />
                         )}
                     </div>

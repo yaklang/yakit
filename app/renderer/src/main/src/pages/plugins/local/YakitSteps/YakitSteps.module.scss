@@ -5,7 +5,7 @@
             font-size: 12px;
         }
         .ant-steps-item-process > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-steps-item-wait > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title {
             color: #b4bbca;
@@ -13,40 +13,40 @@
 
         //完成之前
         .ant-steps-item-process > .ant-steps-item-container > .ant-steps-item-icon {
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
         }
         .ant-steps-item-process .ant-steps-item-icon {
-            border-color: var(--yakit-primary-5);
+            border-color: var(--Colors-Use-Main-Primary);
         }
         .ant-steps-item:not(.ant-steps-item-active):not(.ant-steps-item-process)
             > .ant-steps-item-container[role="button"]:hover
             .ant-steps-item-icon {
-            border-color: var(--yakit-primary-5);
+            border-color: var(--Colors-Use-Main-Primary);
         }
 
         .ant-steps-item:not(.ant-steps-item-active)
             > .ant-steps-item-container[role="button"]:hover
             .ant-steps-item-title {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
         .ant-steps-item:not(.ant-steps-item-active):not(.ant-steps-item-process)
             > .ant-steps-item-container[role="button"]:hover
             .ant-steps-item-icon
             .ant-steps-icon {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
         //完成状态
         .ant-steps-item-finish .ant-steps-item-icon {
-            border-color: var(--yakit-primary-5);
+            border-color: var(--Colors-Use-Main-Primary);
         }
         .ant-steps-item-finish .ant-steps-item-icon > .ant-steps-icon {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
         .ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title::after {
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
         }
         .ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-tail::after {
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
         }
     }
 }

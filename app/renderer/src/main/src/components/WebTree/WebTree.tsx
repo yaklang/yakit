@@ -83,9 +83,9 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
 
     const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
         const iconsEle = {
-            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
-            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
-            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
+            file: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
+            query: <OutlineVariableIcon className='yakitTreeNode-icon' />,
+            path: <OutlineLink2Icon className='yakitTreeNode-icon' />
         }
         return iconsEle[treeNodeType] || <></>
     }
@@ -249,33 +249,30 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         searchVal && onSearchTree(searchVal)
     }, [searchVal])
 
-    useEffect(
-        () => {
-            if (treeExtraQueryparams) {
-                if (selectedKeys.length) {
-                    if (refreshTreeFlag) {
-                        if (searchTreeFlag.current) {
-                            setSelectedKeys([])
-                            setSelectedNodes([])
-                            setExpandedKeys([])
-                            getTreeData("website://" + searchValue)
-                        } else {
-                            refreshTree()
-                        }
-                    }
-                } else {
+    useEffect(() => {
+        if (treeExtraQueryparams) {
+            if (selectedKeys.length) {
+                if (refreshTreeFlag) {
                     if (searchTreeFlag.current) {
-                        setExpandedKeys([])
+                        setSelectedKeys([])
                         setSelectedNodes([])
+                        setExpandedKeys([])
                         getTreeData("website://" + searchValue)
                     } else {
                         refreshTree()
                     }
                 }
+            } else {
+                if (searchTreeFlag.current) {
+                    setExpandedKeys([])
+                    setSelectedNodes([])
+                    getTreeData("website://" + searchValue)
+                } else {
+                    refreshTree()
+                }
             }
-        },
-        [treeExtraQueryparams, refreshTreeFlag, inViewport],
-    )
+        }
+    }, [treeExtraQueryparams, refreshTreeFlag, inViewport])
 
     // 刷新网站树
     const refreshTree = useMemoizedFn(() => {
@@ -370,7 +367,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 <YakitInput.Search
                     wrapperStyle={{width: "calc(100% - 40px)", marginBottom: 15}}
                     placeholder={searchPlaceholder}
-                    allowClear
                     onChange={onSearchChange}
                     onSearch={onSearchTree}
                     value={searchValue}

@@ -8,16 +8,16 @@
     height: 52px;
 
     border-radius: 8px;
-    border: 1px solid var(--yakit-border-color);
-    background: #fff;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Basic-Background);
 
     /* 投影-大 */
-    box-shadow: 0px 6px 20px 0px rgba(204, 210, 222, 0.3);
+    box-shadow: 0px 6px 20px 0px var(--Colors-Use-Basic-Shadow);
 
     svg {
         width: 20px;
         height: 20px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .tooltip-t-wrapper {
         padding: 12px 0 12px 12px;
@@ -34,7 +34,7 @@
         border-radius: 4px;
         height: 28px;
         &:hover {
-            background-color: var(--yakit-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
         }
 
         .t-icon {
@@ -62,13 +62,13 @@
 .tooltip-divider {
     width: 1px;
     height: 28px;
-    background-color: var(--yakit-border-color);
+    background-color: var(--Colors-Use-Neutral-Border);
 }
 .tooltip-divider-horizontal {
     width: 100%;
     height: 1px;
     margin: 8px 0px;
-    background-color: var(--yakit-border-color);
+    background-color: var(--Colors-Use-Neutral-Border);
 }
 .tooltip-popover {
     padding-top: 0;
@@ -78,8 +78,8 @@
         }
         .ant-popover-inner {
             /* 投影-大 */
-            box-shadow: 0px 6px 20px 0px rgba(204, 210, 222, 0.3);
-            border: 1px solid var(--yakit-border-color);
+            box-shadow: 0px 6px 20px 0px var(--Colors-Use-Basic-Shadow);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             border-radius: 8px;
         }
     }
@@ -93,14 +93,14 @@
             padding: 6px 8px;
             align-items: center;
             gap: 12px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-weight: 400;
             font-size: 14px;
             border-radius: 4px;
             width: 100%;
             cursor: pointer;
             &:hover {
-                background-color: var(--yakit-background-color);
+                background-color: var(--Colors-Use-Neutral-Bg);
             }
             .icon {
                 width: 20px;
@@ -125,20 +125,20 @@
         .item-remove {
             background-color: #fff;
             background: linear-gradient(45deg, transparent 48.5%, #f00 56.5%, #f00 36.5%, transparent 51.5%);
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .item-note {
-            background-color: var(--yakit-border-color);
+            background-color: var(--Colors-Use-Neutral-Border);
         }
 
         .item-success {
-            background-color: var(--yakit-success-5);
+            background-color: var(--Colors-Use-Success-Primary);
         }
         .item-danger {
-            background-color: var(--yakit-danger-5);
+            background-color: var(--Colors-Use-Error-Primary);
         }
         .item-warning {
-            background-color: var(--yakit-warning-5);
+            background-color: var(--Colors-Use-Warning-Primary);
         }
     }
 }
@@ -156,9 +156,9 @@
     svg {
         width: 20px;
         height: 20px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     &:hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }

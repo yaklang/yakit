@@ -16,7 +16,6 @@ export interface YakitButtonProp extends Omit<ButtonProps, "size" | "type" | "gh
 /** @name Yakit 主题按钮组件 */
 export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
     const {size, type, colors, isHover, isActive, children, className, danger, ...resePopover} = props
-
     const typeClass = useMemo(() => {
         if (type === "secondary2") return "yakit-button-secondary2"
         if (type === "outline1") return "yakit-button-outline1"

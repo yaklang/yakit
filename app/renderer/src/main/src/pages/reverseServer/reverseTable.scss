@@ -25,9 +25,9 @@
                 flex-direction: row;
                 align-items: center;
                 font-size: 12px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 &-number {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                     margin-left: 5px;
                 }
             }
@@ -78,7 +78,7 @@
         border: 1px solid #ffd591;
     }
     .tag-primary {
-        color: #1890ff;
+        color: var(--Colors-Use-Blue-Bg);
         background: #e6f7ff;
         border: 1px solid #91d5ff;
     }

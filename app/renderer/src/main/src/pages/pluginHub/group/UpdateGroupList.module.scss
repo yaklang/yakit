@@ -1,7 +1,7 @@
 .add-group-list-wrap {
     width: 320px;
     .search-heard-text {
-        color: #85899E;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         margin-bottom: 10px;
         padding: 0 12px;
@@ -17,7 +17,7 @@
             }
 
             .search-icon {
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 svg {
                     height: 16px;
                     width: 16px;
@@ -34,12 +34,12 @@
             display: flex;
             align-items: center;
             font-size: 12px;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             border-radius: 4px;
             overflow: hidden;
             padding-left: 8px;
             &:hover {
-                background-color: #F0F1F3;
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
             }
             .group-name-wrap {
                 width: 100%;
@@ -60,8 +60,8 @@
         display: flex;
         justify-content: flex-end;
         padding: 8px 16px;
-        background-color: #F8F8F8;
-        border-top: 1px solid var(--yakit-border-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
         &-btns {
             display: flex;
             align-items: center;

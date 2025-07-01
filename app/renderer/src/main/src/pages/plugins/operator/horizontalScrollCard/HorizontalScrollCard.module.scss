@@ -13,16 +13,16 @@
     width: 24px;
     height: 24px;
     flex-shrink: 0;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
     border-radius: 50%;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     @extend %display-flex-center;
     justify-content: center;
     cursor: pointer;
     svg {
         width: 12px;
         height: 12px;
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 }
 
@@ -76,10 +76,10 @@ $keyColor: map-keys($CardStatusColor);
     }
 }
 .text-error {
-    color: var(--yakit-danger-5) !important;
+    color: var(--Colors-Use-Error-Primary) !important;
 }
 .text-success {
-    color: var(--yakit-success-5) !important;
+    color: var(--Colors-Use-Success-Primary) !important;
 }
 .horizontal-scroll-card {
     @extend %display-column-center;
@@ -93,7 +93,7 @@ $keyColor: map-keys($CardStatusColor);
         @extend %display-flex-center;
         gap: 4px;
         &-title {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 500;
             line-height: 16px; /* 133.333% */
@@ -104,8 +104,8 @@ $keyColor: map-keys($CardStatusColor);
             align-items: flex-start;
             gap: 10px;
             border-radius: 8px;
-            background: var(--yakit-background-color);
-            color: var(--yakit-body-text-color);
+            background: var(--Colors-Use-Neutral-Bg);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 10px;
             line-height: 12px; /* 120% */
         }
@@ -144,14 +144,14 @@ $keyColor: map-keys($CardStatusColor);
             &-tag {
                 @extend %display-flex-center;
                 gap: 2px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 14px;
                 font-weight: 600;
                 line-height: 20px; /* 142.857% */
                 svg {
                     width: 16px;
                     height: 16px;
-                    color: var(--yakit-helper-text-color);
+                    color: var(--Colors-Use-Neutral-Disable);
                 }
             }
             &-infos {
@@ -164,13 +164,13 @@ $keyColor: map-keys($CardStatusColor);
                     gap: 4px;
                     flex-shrink: 0;
                     &-data {
-                        color: var(--yakit-header-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 16px;
                         font-weight: 600;
                         line-height: 24px; /* 150% */
                     }
                     &-id {
-                        color: var(--yakit-body-text-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 16px; /* 133.333% */
@@ -187,13 +187,13 @@ $keyColor: map-keys($CardStatusColor);
             min-height: 68px;
             padding: 12px 16px;
             &-data {
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 16px;
                 font-weight: 600;
                 line-height: 24px; /* 150% */
             }
             &-id {
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px; /* 133.333% */

@@ -12,7 +12,7 @@
     }
 
     .header-title {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 14px;
         font-weight: 600;
         line-height: 20px;
@@ -31,7 +31,7 @@
     overflow: hidden;
     .left-wrapper {
         height: 100%;
-        background-color: #f8f8f8;
+        background-color: var(--Colors-Use-Neutral-Bg);
         .left-header-wrapper {
             height: 49px;
             padding: 12px;
@@ -43,7 +43,7 @@
                     margin-right: 8px;
                     width: 1px;
                     height: 12px;
-                    background-color: #eaecf3;
+                    background-color: var(--Colors-Use-Neutral-Border);
                 }
             }
         }
@@ -73,7 +73,7 @@
                     align-items: center;
                     gap: 4px;
                     .text-style {
-                        color: #b4bbca;
+                        color: var(--Colors-Use-Neutral-Text-4-Help-text);
                         font-size: 12px;
                         font-weight: 600;
                         line-height: 16px;
@@ -82,13 +82,13 @@
                         flex: 1;
                         overflow: hidden;
                         height: 1px;
-                        border-top: 1px dashed #eaecf3;
+                        border-top: 1px dashed var(--Colors-Use-Neutral-Border);
                     }
                 }
 
                 .to-end {
                     text-align: center;
-                    color: var(--yakit-disable-text-color);
+                    color: var(--Colors-Use-Neutral-Disable);
                     font-size: 11px;
                     padding-top: 12px;
                     padding-bottom: 24px;
@@ -120,7 +120,7 @@
                 .info-name {
                     flex: 1;
                     overflow: hidden;
-                    color: #85899e;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     font-size: 11px;
                     font-weight: 400;
                     line-height: 16px;

@@ -34,6 +34,7 @@ $keyColor: map-keys($colors);
 
     .tab-menu-sub-group-name-#{"" + $name} {
         background-color: map-get($currentColor, "backgroundColor");
+
     }
 
     .tab-menu-sub-group-number-#{"" + $name} {
@@ -65,26 +66,29 @@ $keyColor: map-keys($colors);
 
 .white-link {
     @extend .fake-content;
-    border-color: #fff;
+    border-color: var(--Colors-Use-Basic-Background);
 }
 
 .grey-link {
     @extend .fake-content;
-    border-color: var(--yakit-border-color);
+    border-color: var(--Colors-Use-Neutral-Border);
 }
 
 .primary-link {
     @extend .fake-content;
-    border-color: var(--yakit-primary-5) !important;
+    border-color: var(--Colors-Use-Main-Primary) !important;
 }
 
 .dragging {
-    background-color: #fff;
-
+    background-color: var(--Colors-Use-Neutral-Border);
+    border-color: var(--Colors-Use-Neutral-Border);
     &::before {
         @extend .white-link;
         bottom: -1px;
         border-width: 2px;
+    }
+    &::after{
+        border-color: var(--Colors-Use-Neutral-Border)
     }
 }
 
@@ -92,7 +96,7 @@ $keyColor: map-keys($colors);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
     cursor: pointer;
     border-radius: 4px;
 }
@@ -101,12 +105,12 @@ $keyColor: map-keys($colors);
     @extend .base-show-icon;
 
     &:hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
 }
 
 .icon-active {
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
 }
 
 @mixin item-color($size) {
@@ -122,13 +126,14 @@ $keyColor: map-keys($colors);
     font-size: 12px;
     overflow: hidden;
     height: 100%;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 
     .tab-menu-first {
         display: flex;
         flex-wrap: nowrap;
         align-items: center;
         position: relative;
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
 
         overflow-x: auto;
         overflow-y: hidden;
@@ -157,11 +162,12 @@ $keyColor: map-keys($colors);
             align-items: center;
             grid-gap: 16px;
             gap: 16px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            background: var(--Colors-Use-Neutral-Bg);
             cursor: pointer;
             // flex: 1 1;
             word-break: keep-all;
-            border-right: 1px solid var(--yakit-border-color);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
             overflow: hidden;
             max-width: 200px;
             min-width: 24px;
@@ -213,8 +219,8 @@ $keyColor: map-keys($colors);
         }
 
         .tab-menu-first-item-active {
-            background-color: #fff;
-            color: var(--yakit-header-color);
+            background: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             position: relative;
             border-top-width: 0;
             border-bottom-width: 0;
@@ -244,6 +250,7 @@ $keyColor: map-keys($colors);
             padding-left: 6px;
             max-width: 80px;
             min-width: 30px;
+            border-top: var(--Colors-Use-Neutral-Border) 1px solid;
         }
     }
 
@@ -257,13 +264,13 @@ $keyColor: map-keys($colors);
             display: flex;
             overflow: hidden;
             width: 100%;
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
             position: relative;
 
             &::after {
                 @extend .fake-content;
                 bottom: 0;
-                border-color: var(--yakit-border-color);
+                border-color: var(--Colors-Use-Neutral-Border);
             }
         }
 
@@ -272,7 +279,7 @@ $keyColor: map-keys($colors);
             align-items: center;
             position: relative;
             height: 32px;
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
 
             max-width: calc(100% - 32px);
             overflow-y: hidden;
@@ -297,7 +304,7 @@ $keyColor: map-keys($colors);
                     padding: 4px 6px;
                     border-radius: 4px 0 0 4px;
                     min-width: 16px;
-                    color: #fff;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     line-height: 16px;
                     font-weight: 600;
                     cursor: pointer;
@@ -309,12 +316,13 @@ $keyColor: map-keys($colors);
                     .tab-menu-sub-group-number {
                         border-radius: 8px;
                         padding: 2px 6px;
-                        background-color: #fff;
+                        background-color: var(--Colors-Use-Basic-Background);
                         height: 16px;
                         display: flex;
                         align-items: center;
                         width: 18px;
                         justify-content: center;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                 }
 
@@ -411,7 +419,7 @@ $keyColor: map-keys($colors);
     }
     .outline-chevron-double-left {
         @extend .base-operate-icon;
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
         width: 20px;
         height: 32px;
         flex-shrink: 0;
@@ -436,7 +444,7 @@ $keyColor: map-keys($colors);
 
     .outline-chevron-double-right {
         @extend .base-operate-icon;
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
         width: 20px;
         height: 32px;
         flex-shrink: 0;
@@ -485,7 +493,7 @@ $keyColor: map-keys($colors);
     min-width: 38px;
     // width: fit-content;
     justify-content: space-between;
-    background-color: var(--yakit-card-background-color);
+    background-color: var(--Colors-Use-Neutral-Bg);
     font-size: 12px;
     transition:
         min-width 0.1s linear,
@@ -507,7 +515,7 @@ $keyColor: map-keys($colors);
         width: 1px;
         display: flex;
         align-items: center;
-        background-color: var(--yakit-border-color);
+        background-color: var(--Colors-Use-Neutral-Border);
         position: absolute;
         right: 0;
     }
@@ -549,18 +557,18 @@ $keyColor: map-keys($colors);
         position: absolute;
         bottom: -1px;
         left: 0;
-        background-color: #fff;
+        background-color: var(--Colors-Use-Neutral-Border);
         z-index: 2;
     }
 }
 
 .tab-menu-sub-item-active {
-    background-color: #fff;
-    color: var(--yakit-primary-5);
+    background-color: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Main-Primary);
     flex-shrink: 0;
 
     .document-text-icon {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
 
     &::before {
@@ -570,7 +578,7 @@ $keyColor: map-keys($colors);
         position: absolute;
         bottom: -1px;
         left: 0;
-        background-color: #fff;
+        background-color: var(--Colors-Use-Neutral-Bg);
         z-index: 1;
     }
 }
@@ -582,22 +590,22 @@ $keyColor: map-keys($colors);
 .tab-menu-sub-item-dragging {
     @extend .dragging;
     max-width: 150px;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Neutral-Bg);
 }
 .tab-menu-sub-item-process {
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
     font-weight: bold;
 }
 .tab-menu-sub-item-error {
-    color: var(--yakit-danger-5);
+    color: var(--Colors-Use-Error-Primary);
     font-weight: bold;
 }
 .tab-menu-sub-item-finished {
-    color: var(--yakit-success-5);
+    color: var(--Colors-Use-Success-Primary);
     font-weight: bold;
 }
 .page-body {
-    background-color: #fff;
+    background: var(--Colors-Use-Basic-Background);
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -653,7 +661,7 @@ $keyColor: map-keys($colors);
             .check-icon {
                 @extend .flex-align-center;
                 justify-content: center;
-                color: #fff;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
 
                 svg {
                     width: 16px;
@@ -679,10 +687,10 @@ $keyColor: map-keys($colors);
 
 .bug-test-help {
     font-size: 12px;
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     line-height: 16px;
     &-active {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         cursor: pointer;
         margin-left: 4px;
     }

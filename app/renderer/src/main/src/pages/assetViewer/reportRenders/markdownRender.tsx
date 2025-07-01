@@ -10,5 +10,11 @@ export interface ReportMarkdownBlockProp {
 }
 
 export const ReportMarkdownBlock: React.FC<ReportMarkdownBlockProp> = (props) => {
-    return <Markdown source={props.item.content} className={styles["markdown-block"]} />
+    return (
+        <Markdown
+            source={props.item.content}
+            className={styles["markdown-block"]}
+            warpperElement={{"data-color-mode": "light"}}
+        />
+    )
 }

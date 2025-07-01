@@ -21,9 +21,9 @@ import {RiskTree} from "@/pages/yakRunnerAuditCode/RunnerFileTree/RunnerFileTree
 
 const renderTreeNodeIcon = (treeNodeType: HoleResourceType) => {
     const iconsEle = {
-        ["function"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
-        ["program"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
-        ["source"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
+        function: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
+        program: <OutlineVariableIcon className='yakitTreeNode-icon' />,
+        source: <OutlineLink2Icon className='yakitTreeNode-icon' />
     }
     return iconsEle[treeNodeType] || <></>
 }
@@ -32,9 +32,9 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
     const {query, setQuery} = props
     const [searchValue, setSearchValue] = useState<string>("")
     // 真实搜索请求
-    const [realSearch,setRealSearch] = useState<string>("")
+    const [realSearch, setRealSearch] = useState<string>("")
     // 重置
-    const [init,setInit] = useState<boolean>(false)
+    const [init, setInit] = useState<boolean>(false)
 
     const refreshChildrenByParent = useMemoizedFn(
         (origin: HoleTreeNode[], parentKey: string, nodes: HoleTreeNode[]) => {
@@ -93,7 +93,6 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
                 <YakitInput.Search
                     wrapperStyle={{width: "calc(100% - 40px)", marginBottom: 15}}
                     placeholder={"请输入文件名或函数进行搜索"}
-                    allowClear
                     onChange={onSearchChange}
                     onSearch={onSearchTree}
                     value={searchValue}

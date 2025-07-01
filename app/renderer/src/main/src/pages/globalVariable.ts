@@ -103,69 +103,69 @@ const parseRGB = (color) => {
 export const chartsColorList: logChartsColorProps[] = [
     {
         name: "purple",
-        color: "#8863f7",
+        color: "--Colors-Use-Purple-Bg",
         rgbaColor: "",
-        colorVariable: "--yakit-color-purple"
+        colorVariable: "--Colors-Use-Purple-Bg"
     },
     {
         name: "bluePurple",
-        color: "#da5fdd",
+        color: "--Colors-Use-Magenta-Bg",
         rgbaColor: "",
-        colorVariable: "--yakit-color-blue-purple"
+        colorVariable: "--Colors-Use-Magenta-Bg"
     },
     {
         name: "blue",
-        color: "#4a94f8",
+        color: "--Colors-Use-Blue-Bg",
         rgbaColor: "",
-        colorVariable: "--yakit-color-blue"
+        colorVariable: "--Colors-Use-Blue-Bg"
     },
     {
         name: "lakeBlue",
-        color: "#29bcd0",
+        color: "--Colors-Use-Lake-blue-Bg",
         rgbaColor: "",
-        colorVariable: "--yakit-color-lake-blue"
+        colorVariable: "--Colors-Use-Lake-blue-Bg"
     },
     {
         name: "cyan",
-        color: "#35d8ee",
+        color: "--Colors-Use-Cyan-Bg",
         rgbaColor: "",
-        colorVariable: "--yakit-color-cyan"
+        colorVariable: "--Colors-Use-Cyan-Bg"
     },
     {
         name: "green",
-        color: "#56c991",
+        color: "--Colors-Use-Green-Bg",
         rgbaColor: "",
-        colorVariable: "--yakit-color-green"
+        colorVariable: "--Colors-Use-Green-Bg"
     },
     {
         name: "red",
-        color: "#f4736b",
+        color: "--Colors-Use-Red-Bg",
         rgbaColor: "",
-        colorVariable: "--yakit-color-red"
+        colorVariable: "--Colors-Use-Red-Bg"
     },
     {
         name: "orange",
-        color: "#ffb660",
+        color: "--Colors-Use-Orange-Bg",
         rgbaColor: "",
-        colorVariable: "--yakit-color-orange"
+        colorVariable: "--Colors-Use-Orange-Bg"
     },
     {
         name: "yellow",
-        color: "#ffd583",
+        color: "--Colors-Use-Yellow-Bg",
         rgbaColor: "",
-        colorVariable: "--yakit-color-yellow"
+        colorVariable: "--Colors-Use-Yellow-Bg"
     },
     {
         name: "grey",
-        color: "#b4bbca",
+        color: "--Colors-Use-Neutral-Disable",
         rgbaColor: "",
-        colorVariable: "--yakit-color-grey"
+        colorVariable: "--Colors-Use-Neutral-Disable"
     },
     {
         name: "text",
-        color: "#31343f",
+        color: "--Colors-Use-Neutral-Text-1-Title",
         rgbaColor: "",
-        colorVariable: "--ui-text-color"
+        colorVariable: "--Colors-Use-Neutral-Text-1-Title"
     }
 ]
 

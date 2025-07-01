@@ -58,6 +58,7 @@ import {pluginTypeToName} from "../plugins/builtInData"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import HexEditor from "react-hex-editor"
+import oneDarkPro from "react-hex-editor/themes/oneDarkPro"
 import {HexEditorHandle} from "react-hex-editor/dist/types"
 import {setClipboardText} from "@/utils/clipboard"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -65,6 +66,7 @@ import {useSubscribeClose} from "@/store/tabSubscribe"
 import emiter from "@/utils/eventBus/eventBus"
 import {MultipleNodeInfo} from "../layout/mainOperatorContent/MainOperatorContentType"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {useTheme} from "@/hook/useTheme"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
@@ -101,6 +103,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
     const uploadRef = useRef<HTMLDivElement>(null)
     const HexEditorRef = useRef<HexEditorHandle>(null)
     const size = useSize(editorBoxRef)
+    const {theme} = useTheme()
 
     const handleSetValue = React.useCallback(
         (offset, value) => {
@@ -116,6 +119,10 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
             setShowData(outputResponse?.RawResult)
         }
     }, [outputResponse?.RawResult])
+
+    const targetHexTheme = useMemo(() => {
+        return theme === "dark" ? {hexEditor: oneDarkPro} : undefined
+    }, [theme])
 
     const Expand = () => (
         <div
@@ -298,7 +305,10 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                 isVer={true}
                 isShowDefaultLineStyle={false}
                 lineDirection='bottom'
-                lineStyle={{backgroundColor: "#f0f1f3", height: 4}}
+                lineStyle={{
+                    // backgroundColor: "var(--Colors-Use-Neutral-Bg)",
+                    height: 4
+                }}
                 firstNodeStyle={{padding: 0}}
                 secondNodeStyle={{padding: 0}}
                 firstNode={
@@ -547,6 +557,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                             showColumnLabels={true}
                                             showRowLabels={true}
                                             highlightColumn={true}
+                                            theme={targetHexTheme}
                                         />
                                     </div>
                                 )}
@@ -804,7 +815,7 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                                     {/* 左 */}
                                     {onShowUI(item.input, index, "left")}
                                 </div>
-                                <div style={{flex: 2, borderLeft: "1px solid #EAECF3"}}>
+                                <div style={{flex: 2, borderLeft: "1px solid var(--Colors-Use-Neutral-Border)"}}>
                                     {/* 右 */}
                                     {onShowUI(item.select, index, "right")}
                                 </div>
@@ -1847,7 +1858,7 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                                                     <OutlineStarIcon/>
                                                 </div> */}
                                                         <div
-                                                            style={{color: "#FFD583"}}
+                                                            style={{color: "var(--Colors-Use-Yellow-Primary)"}}
                                                             className={classNames(
                                                                 styles["star-icon"],
                                                                 styles["star-icon-active"]

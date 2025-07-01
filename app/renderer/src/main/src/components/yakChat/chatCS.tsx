@@ -116,9 +116,16 @@ import {defPluginBatchExecuteExtraFormValue} from "@/defaultConstants/PluginBatc
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitResizeBox} from "../yakitUI/YakitResizeBox/YakitResizeBox"
 import {getRemoteHttpSettingGV} from "@/utils/envfile"
-import { convertKeyboardToUIKey, registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
-import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
-import { getChatCSShortcutKeyEvents, getStorageChatCSShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/chatCS"
+import {
+    convertKeyboardToUIKey,
+    registerShortcutKeyHandle,
+    unregisterShortcutKeyHandle
+} from "@/utils/globalShortcutKey/utils"
+import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
+import {
+    getChatCSShortcutKeyEvents,
+    getStorageChatCSShortcutKeyEvents
+} from "@/utils/globalShortcutKey/events/page/chatCS"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 const {ipcRenderer} = window.require("electron")
 
@@ -1076,13 +1083,13 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     const isSubmitFocusRef = useRef<boolean>(false)
     useShortcutKeyTrigger("nextLine*chatCS", () => {
-        if(isSubmitFocusRef.current){
+        if (isSubmitFocusRef.current) {
             setQuestion(`${question}\n`)
         }
     })
 
     useShortcutKeyTrigger("submit*chatCS", () => {
-        if(isSubmitFocusRef.current){
+        if (isSubmitFocusRef.current) {
             onBtnSubmit()
         }
     })
@@ -1112,11 +1119,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 setWidth(elementRef.clientWidth)
             }}
         >
-            <div
-                ref={divRef}
-                className={styles["yak-chat-layout"]}
-                tabIndex={0}
-            >
+            <div ref={divRef} className={styles["yak-chat-layout"]} tabIndex={0}>
                 <div className={styles["layout-header"]}>
                     <div className={styles["header-title"]}>
                         {/* <YakitChatCSIcon />
@@ -1323,7 +1326,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                     <Input.TextArea
                                         className={styles["text-area-wrapper"]}
                                         bordered={false}
-                                        placeholder={`问我任何问题...(${convertKeyboardToUIKey(getChatCSShortcutKeyEvents()["nextLine*chatCS"].keys)} 换行)`}
+                                        placeholder={`问我任何问题...(${convertKeyboardToUIKey(
+                                            getChatCSShortcutKeyEvents()["nextLine*chatCS"].keys
+                                        )} 换行)`}
                                         value={question}
                                         autoSize={true}
                                         onChange={(e) => setQuestion(e.target.value)}
@@ -1333,10 +1338,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                 e.preventDefault()
                                             }
                                         }}
-                                        onFocus={()=>{
+                                        onFocus={() => {
                                             isSubmitFocusRef.current = true
                                         }}
-                                        onBlur={()=>{
+                                        onBlur={() => {
                                             isSubmitFocusRef.current = false
                                         }}
                                     />
@@ -1658,8 +1663,8 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                     {progressList && progressList.length === 1 && (
                         <Progress
                             style={{lineHeight: 0}}
-                            strokeColor='#F28B44'
-                            trailColor='#F0F2F5'
+                            strokeColor='var(--Colors-Use-Main-Primary)'
+                            trailColor='var(--Colors-Use-Neutral-Bg)'
                             showInfo={false}
                             percent={Math.trunc(progressList[0].progress * 100)}
                         />

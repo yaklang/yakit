@@ -1265,7 +1265,9 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                                 type={"text"}
                                                 icon={<OutlinePluscircleIcon />}
                                                 style={{
-                                                    color: addGroupVisible ? "var(--yakit-primary-5)" : "#31343F"
+                                                    color: addGroupVisible
+                                                        ? "var(--Colors-Use-Main-Primary)"
+                                                        : "var(--Colors-Use-Neutral-Disable)"
                                                 }}
                                             >
                                                 添加分组

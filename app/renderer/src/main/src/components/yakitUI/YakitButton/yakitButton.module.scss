@@ -4,55 +4,55 @@
     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: fetch-color($type, "color-5");
-    color: var(--ui-text-inverse-color);
+    color: fetch-color($type, "color-7");
     border-color: fetch-color($type, "color-5");
 
     &.yakit-hover-button {
         background: fetch-color($type, "color-4");
-        color: var(--ui-text-inverse-color);
+        color: fetch-color($type, "color-7");
         border-color: fetch-color($type, "color-4");
     }
     &.yakit-active-button {
         background: fetch-color($type, "color-6");
-        color: var(--ui-text-inverse-color);
+        color: fetch-color($type, "color-7");
         border-color: fetch-color($type, "color-6");
     }
 
     &:focus {
         background: fetch-color($type, "color-5");
-        color: var(--ui-text-inverse-color);
+        color: fetch-color($type, "color-7");
         border-color: fetch-color($type, "color-5");
     }
     &:hover {
         background: fetch-color($type, "color-4");
-        color: var(--ui-text-inverse-color);
+        color: fetch-color($type, "color-7");
         border-color: fetch-color($type, "color-4");
     }
     &:active {
         background: fetch-color($type, "color-6");
-        color: var(--ui-text-inverse-color);
+        color: fetch-color($type, "color-7");
         border-color: fetch-color($type, "color-6");
     }
     &[disabled] {
-        background: var(--yakit-disable-text-color);
-        color: var(--ui-text-inverse-color);
-        border-color: var(--yakit-disable-text-color);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+        color: var(--Colors-Use-Neutral-Disable);
     }
     &[disabled]:hover {
-        background: var(--yakit-disable-text-color);
-        color: var(--ui-text-inverse-color);
-        border-color: var(--yakit-disable-text-color);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+        color: var(--Colors-Use-Neutral-Disable);
     }
 }
 
 @mixin generateSecondary2($type) {
     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
-    background: var(--yakit-background-color);
-    color: var(---ui-text-color);
-    border-color: var(--yakit-background-color);
+    background: var(--Colors-Use-Neutral-Bg);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    border-color: var(--Colors-Use-Neutral-Border);
     svg {
-        color: var(--ui-icon-color);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 
     &.yakit-hover-button {
@@ -60,7 +60,7 @@
         color: fetch-color($type, "color-4");
         border-color: fetch-color($type, "color-1");
         svg {
-            color: fetch-color($type, "color-4");
+            color: fetch-color($type, "color-5");
         }
     }
     &.yakit-active-button {
@@ -73,49 +73,49 @@
     }
 
     &:focus {
-        background: var(--yakit-background-color);
-        color: var(--ui-text-color);
-        border-color: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        border-color: var(--Colors-Use-Neutral-Border);
         svg {
-            color: var(--ui-icon-color);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     &:hover {
         background: fetch-color($type, "color-1");
         color: fetch-color($type, "color-4");
-        border-color: fetch-color($type, "color-1");
+        border-color: fetch-color($type, "color-3");
         svg {
-            color: fetch-color($type, "color-4");
+            color: fetch-color($type, "color-5");
         }
     }
     &:active {
         background: fetch-color($type, "color-1");
         color: fetch-color($type, "color-6");
-        border-color: fetch-color($type, "color-1");
+        border-color: fetch-color($type, "color-3");
         svg {
             color: fetch-color($type, "color-6");
         }
     }
     &[disabled] {
-        background: var(--yakit-background-color);
-        color: var(--yakit-disable-text-color);
-        border-color: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Neutral-Disable);
+        border-color: var(--Colors-Use-Neutral-Border);
         svg {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
     &[disabled]:hover {
-        background: var(--yakit-background-color);
-        color: var(--yakit-disable-text-color);
-        border-color: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Neutral-Disable);
+        border-color: var(--Colors-Use-Neutral-Border);
         svg {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }
 
 @mixin generateOutline1($type) {
-    --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
+     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: transparent;
     color: fetch-color($type, "color-5");
@@ -148,25 +148,25 @@
         border-color: fetch-color($type, "color-6");
     }
     &[disabled] {
-        background: var(--yakit-background-color);
-        color: var(--yakit-disable-text-color);
-        border-color: var(--yakit-border-color);
+        background: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Neutral-Disable);
+        border-color: var(--Colors-Use-Neutral-Border);
     }
     &[disabled]:hover {
-        background: var(--yakit-background-color);
-        color: var(--yakit-disable-text-color);
-        border-color: var(--yakit-border-color);
+        background: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Neutral-Disable);
+        border-color: var(--Colors-Use-Neutral-Border);
     }
 }
 
 @mixin generateOutline2($type) {
-    --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
+     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
-    background: var(--ui-background-color);
-    color: var(--ui-text-color);
-    border-color: var(--yakit-border-color);
+    background: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    border-color: var(--Colors-Use-Neutral-Border);
     svg {
-        color: var(--ui-icon-color);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 
     path {
@@ -174,15 +174,15 @@
     }
 
     &.yakit-hover-button {
-        background: var(--ui-background-color);
-        color: fetch-color($type, "color-4");
-        border-color: fetch-color($type, "color-4");
+        background: var(--Colors-Use-Basic-Background);
+        color: fetch-color($type, "color-5");
+        border-color: fetch-color($type, "color-5");
         svg {
-            color: fetch-color($type, "color-4");
+            color: fetch-color($type, "color-5");
         }
     }
     &.yakit-active-button {
-        background: var(--ui-background-color);
+        background: var(--Colors-Use-Basic-Background);
         color: fetch-color($type, "color-6");
         border-color: fetch-color($type, "color-6");
         svg {
@@ -191,23 +191,23 @@
     }
 
     &:focus {
-        background: var(--ui-background-color);
-        color: var(--ui-text-color);
-        border-color: var(--yakit-border-color);
+        background: var(--Colors-Use-Basic-Background);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        border-color: var(--Colors-Use-Neutral-Border);
         svg {
-            color: var(--ui-icon-color);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     &:hover {
-        background: var(--ui-background-color);
-        color: fetch-color($type, "color-4");
-        border-color: fetch-color($type, "color-4");
+        background: var(--Colors-Use-Basic-Background);
+        color: fetch-color($type, "color-5");
+        border-color: fetch-color($type, "color-5");
         svg {
-            color: fetch-color($type, "color-4");
+            color: fetch-color($type, "color-5");
         }
     }
     &:active {
-        background: var(--ui-background-color);
+        background: var(--Colors-Use-Basic-Background);
         color: fetch-color($type, "color-6");
         border-color: fetch-color($type, "color-6");
         svg {
@@ -215,25 +215,25 @@
         }
     }
     &[disabled] {
-        background: var(--ui-background-color);
-        color: var(--yakit-disable-text-color);
-        border-color: var(--yakit-border-color);
+        background: var(--Colors-Use-Basic-Background);
+        color: var(--Colors-Use-Neutral-Disable);
+        border-color: var(--Colors-Use-Neutral-Border);
         svg {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
     &[disabled]:hover {
-        background: var(--ui-background-color);
-        color: var(--yakit-disable-text-color);
-        border-color: var(--yakit-border-color);
+        background: var(--Colors-Use-Basic-Background);
+        color: var(--Colors-Use-Neutral-Disable);
+        border-color: var(--Colors-Use-Neutral-Border);
         svg {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }
 
 @mixin generateText($type) {
-    --antd-wave-shadow-color: transparent;
+     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: transparent;
     color: fetch-color($type, "color-5");
@@ -267,38 +267,38 @@
     }
     &[disabled] {
         background: transparent;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         border-color: transparent;
     }
     &[disabled]:hover {
         background: transparent;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         border-color: transparent;
     }
 }
 
 @mixin generateText2($type) {
-    --antd-wave-shadow-color: transparent;
+     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: transparent;
-    color: var(--ui-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     border-color: transparent;
     svg {
-        color: var(--ui-icon-color);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 
     &.yakit-hover-button {
-        background: var(--yakit-background-color);
-        color: var(--ui-text-color);
-        border-color: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        border-color: var(--Colors-Use-Neutral-Border);
         svg {
-            color: var(--ui-icon-color);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     &.yakit-active-button {
-        background: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
         color: fetch-color($type, "color-5");
-        border-color: var(--yakit-background-color);
+        border-color: var(--Colors-Use-Neutral-Border);
         svg {
             color: fetch-color($type, "color-5");
         }
@@ -306,42 +306,42 @@
 
     &:focus {
         background: transparent;
-        color: var(--ui-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         border-color: transparent;
         svg {
-            color: var(--ui-icon-color);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     &:hover {
-        background: var(--yakit-background-color);
-        color: var(--ui-text-color);
-        border-color: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        border-color: var(--Colors-Use-Neutral-Bg-Hover);
         svg {
-            color: var(--ui-icon-color);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     &:active {
-        background: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
         color: fetch-color($type, "color-5");
-        border-color: var(--yakit-background-color);
+        border-color: var(--Colors-Use-Neutral-Border);
         svg {
             color: fetch-color($type, "color-5");
         }
     }
     &[disabled] {
         background: transparent;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         border-color: transparent;
         svg {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
     &[disabled]:hover {
         background: transparent;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         border-color: transparent;
         svg {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }
@@ -439,6 +439,9 @@
     border: 1px solid transparent;
     &:global(.ant-btn-icon-only) {
         width: unset;
+    }
+    &:global(.ant-btn.ant-btn-loading::before){
+        background-color: var(--Colors-Use-Main-Hover);
     }
     &:global(.ant-btn .anticon) {
         display: flex;

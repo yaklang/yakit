@@ -62,7 +62,7 @@ import {shallow} from "zustand/shallow"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {API} from "@/services/swagger/resposeType"
 import {isCommunityIRify, isEnpriTraceIRify} from "@/utils/envfile"
-import ImportExportModal, { ImportExportModalExtra } from "../fingerprintManage/ImportExportModal/ImportExportModal"
+import ImportExportModal, {ImportExportModalExtra} from "../fingerprintManage/ImportExportModal/ImportExportModal"
 const DefaultPaging: Paging = {Page: 1, Limit: 20, OrderBy: "updated_at", Order: "desc"}
 const DefaultOnlinePaging: API.Pagination = {page: 1, limit: 20, order_by: "updated_at", order: "desc"}
 
@@ -947,7 +947,6 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                             <div className={styles["header-extra"]}>
                                                 <YakitInput.Search
                                                     size='large'
-                                                    allowClear={true}
                                                     placeholder='请输入关键词搜索'
                                                     onSearch={handleSearch}
                                                 />
@@ -1099,7 +1098,6 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                             <div className={styles["header-extra"]}>
                                                 <YakitInput.Search
                                                     size='large'
-                                                    allowClear={true}
                                                     placeholder='请输入关键词搜索'
                                                     onSearch={handleOnlineSearch}
                                                 />

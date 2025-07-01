@@ -16,7 +16,7 @@
     position: relative;
     height: 22px;
     text-align: center;
-    color: var(--yakit-disable-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     font-size: 11px;
     line-height: 22px;
 }
@@ -27,7 +27,7 @@
         svg {
             height: 16px;
             width: 16px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
     .progress-opt {
@@ -46,7 +46,7 @@
     border-radius: 2px;
     user-select: none;
     &:hover {
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
     .search-icon {
         cursor: pointer;
@@ -55,7 +55,7 @@
             width: 16px;
             height: 16px;
             &:hover {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }

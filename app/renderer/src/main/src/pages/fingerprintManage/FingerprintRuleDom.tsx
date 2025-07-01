@@ -244,12 +244,12 @@ body = "ThinkPHP"
             <div
                 style={{
                     width: 200,
-                    borderRight: "1px solid #eee",
+                    borderRight: "1px solid var(--Colors-Use-Neutral-Border)",
                     padding: "8px",
-                    background: "#fafbfc"
+                    background: "var(--Colors-Use-Basic-Background)"
                 }}
             >
-                <div className={styles['toc-list']}>
+                <div className={styles["toc-list"]}>
                     <ChatMarkdown content={toc} />
                 </div>
             </div>

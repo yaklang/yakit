@@ -7,7 +7,7 @@ $fileDivHeight: 64px;
     align-items: center;
     gap: 8px;
     border-radius: 8px;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     cursor: default;
     user-select: none;
     position: relative;
@@ -31,7 +31,7 @@ $fileDivHeight: 64px;
             flex: 1;
             overflow: hidden;
             .info-name {
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 16px;
                 font-weight: 500;
                 line-height: 24px;
@@ -44,7 +44,7 @@ $fileDivHeight: 64px;
             }
         }
         .info-size {
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 400;
             line-height: 16px;
@@ -60,7 +60,7 @@ $fileDivHeight: 64px;
             display: flex;
             align-items: center;
             gap: 4px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 400;
             line-height: 16px;
@@ -88,10 +88,10 @@ $fileDivHeight: 64px;
     }
 }
 .file-custom-selected {
-    border-color: var(--yakit-primary-5);
+    border-color: var(--Colors-Use-Main-Primary);
     &:hover {
-        border-color: var(--yakit-primary-2);
-        box-shadow: 0 0 0 1px var(--yakit-primary-2);
+        border-color: var(--Colors-Use-Main-Focus);
+        box-shadow: 0 0 0 1px var(--Colors-Use-Basic-Shadow);
     }
 }
 
@@ -101,9 +101,9 @@ $fileDivHeight: 64px;
     display: flex;
     align-items: center;
     border-radius: 8px;
-    border: 1px solid var(--yakit-border-color);
-    background: #fff;
-    box-shadow: 0px 6px 20px 0px rgba(204, 210, 222, 0.3);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Basic-Background);
+    box-shadow: 0px 6px 20px 0px var(--Colors-Use-Basic-Shadow);
     height: 52px;
     padding: 12px;
     gap: 8px;
@@ -131,13 +131,13 @@ $fileDivHeight: 64px;
     cursor: pointer;
     border-radius: 4px;
     &:hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
     .x-circle-icon {
         svg {
             width: 20px;
             height: 20px;
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
         }
     }
 }

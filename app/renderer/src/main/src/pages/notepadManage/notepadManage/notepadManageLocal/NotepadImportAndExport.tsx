@@ -97,7 +97,7 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
         <YakitHint
             visible={visible}
             title='笔记本导入中'
-            heardIcon={<OutlineImportIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<OutlineImportIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             onCancel={() => {
                 stopImport()
             }}
@@ -106,8 +106,8 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
             mask={false}
         >
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={percent}
                 format={(percent) => `已导入 ${percent}%`}
             />
@@ -165,7 +165,7 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
                 const selectedPath = filePaths[0]
                 const fileName = `笔记本-${moment().valueOf()}.zip`
                 // 回退方案：根据平台使用适当的路径分隔符
-                const separator = process.platform === 'win32' ? '\\' : '/'
+                const separator = process.platform === "win32" ? "\\" : "/"
                 targetPathRef.current = selectedPath + separator + fileName
 
                 const exportParams: ExportNoteRequest = {
@@ -203,7 +203,7 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
         <YakitHint
             visible={visible}
             title='笔记本导出中'
-            heardIcon={<OutlineExportIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<OutlineExportIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             onCancel={() => {
                 stopExport()
             }}
@@ -212,8 +212,8 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
             mask={false}
         >
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={percent}
                 format={(percent) => `已导出 ${percent}%`}
             />

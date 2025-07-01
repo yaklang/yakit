@@ -147,7 +147,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
 
     const onFinish = useMemoizedFn((v: OnlineProfileProps) => {
         setLoading(true)
-        const BaseUrl = v.BaseUrl.endsWith('/') ? v.BaseUrl.slice(0, -1) : v.BaseUrl
+        const BaseUrl = v.BaseUrl.endsWith("/") ? v.BaseUrl.slice(0, -1) : v.BaseUrl
         const values = {
             ...formValue,
             ...v,
@@ -174,10 +174,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     ipcRenderer
                         .invoke("Codec", {Type: "base64", Text: v.pwd, Params: [], ScriptName: ""})
                         .then((res) => {
-                            setRemoteValue(
-                                getRemoteHttpSettingGV(),
-                                JSON.stringify({...values, pwd: res.Result})
-                            )
+                            setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({...values, pwd: res.Result}))
                         })
                         .catch(() => {})
                 } else {
@@ -324,7 +321,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 )}
                 {enterpriseLogin && (
                     <Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
-                        <YakitInput placeholder='请输入你的用户名' allowClear />
+                        <YakitInput placeholder='请输入你的用户名' />
                     </Form.Item>
                 )}
                 {enterpriseLogin && (
@@ -333,7 +330,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         label='密码'
                         rules={[{required: true, message: "该项为必填"}, ...judgePass()]}
                     >
-                        <YakitInput.Password placeholder='请输入你的密码' allowClear />
+                        <YakitInput.Password placeholder='请输入你的密码' />
                     </Form.Item>
                 )}
                 {enterpriseLogin ? (

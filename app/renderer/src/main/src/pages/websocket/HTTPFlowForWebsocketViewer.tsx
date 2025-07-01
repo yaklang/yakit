@@ -71,11 +71,9 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
             size={"small"}
             className={styles["hTTPFlow-websocket-viewer"]}
             headStyle={{
-                background: "#fff",
                 height: 32,
                 minHeight: 32,
-                boxSizing: "content-box",
-                borderBottom: "1px solid var(--yakit-border-color)"
+                boxSizing: "content-box"
             }}
             bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 32px)"}}
             title={

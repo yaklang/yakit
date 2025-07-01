@@ -110,12 +110,12 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                         CodecType: "Fuzz",
                         Params: [
                             {
-                                "Key": "timeout",
-                                "Value": "10"
+                                Key: "timeout",
+                                Value: "10"
                             },
                             {
-                                "Key": "limit",
-                                "Value": "10000"
+                                Key: "limit",
+                                Value: "10000"
                             }
                         ]
                     }
@@ -225,7 +225,11 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     <CopyComponents
                         className={classNames(styles["copy-icon-style"], {[styles["copy-icon-ban"]]: !question})}
                         copyText={question}
-                        iconColor={!!question ? "#85899e" : "#ccd2de"}
+                        iconColor={
+                            !!question
+                                ? "var(--Colors-Use-Neutral-Text-3-Secondary)"
+                                : "var(--Colors-Use-Neutral-Disable)"
+                        }
                     />
                 </div>
             </div>
@@ -247,7 +251,11 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     <CopyComponents
                         className={classNames(styles["copy-icon-style"], {[styles["copy-icon-ban"]]: !answer})}
                         copyText={answer}
-                        iconColor={!!answer ? "#85899e" : "#ccd2de"}
+                        iconColor={
+                            !!answer
+                                ? "var(--Colors-Use-Neutral-Text-3-Secondary)"
+                                : "var(--Colors-Use-Neutral-Disable)"
+                        }
                     />
                 </div>
             </div>

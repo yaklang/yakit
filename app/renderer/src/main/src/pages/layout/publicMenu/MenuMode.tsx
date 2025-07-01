@@ -405,7 +405,10 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                         <div className={styles["title-style"]}>审计漏洞</div>
                     </div>
                     <div className={styles["divider-style"]}></div>
-                    <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.Yak_Java_Decompiler)}>
+                    <div
+                        className={styles["vertical-menu-wrapper"]}
+                        onClick={() => onMenu(YakitRoute.Yak_Java_Decompiler)}
+                    >
                         <div className={styles["menu-icon-wrapper"]}>
                             <div className={styles["icon-wrapper"]}>
                                 <PublicAuditHoleIcon />
