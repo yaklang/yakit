@@ -345,6 +345,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                         </Tooltip>
                         <AddHotCodeTemplate
                             type='fuzzer'
+                            title="另存为"
                             hotPatchTempLocal={hotPatchTempLocal}
                             hotPatchCode={params.HotPatchCode}
                             visible={addHotCodeTemplateVisible}
@@ -873,6 +874,7 @@ interface HotPatchTemplate {
     Type: string
 }
 interface AddHotCodeTemplateProps {
+    title?: string
     type: HotCodeType
     hotPatchTempLocal: HotPatchTempItem[]
     hotPatchCode: string
@@ -881,7 +883,7 @@ interface AddHotCodeTemplateProps {
     onSaveHotCodeOk?: (tempName?: string) => void
 }
 export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo((props) => {
-    const {type, hotPatchTempLocal, hotPatchCode, visible, onSetAddHotCodeTemplateVisible, onSaveHotCodeOk} = props
+    const {title = "保存热加载模板", type, hotPatchTempLocal, hotPatchCode, visible, onSetAddHotCodeTemplateVisible, onSaveHotCodeOk} = props
     const addHotPatchTempNameRef = useRef<string>("")
 
     const onCancel = useMemoizedFn(() => {
@@ -922,7 +924,7 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
     return (
         <YakitModal
             visible={visible}
-            title='保存热加载模板'
+            title={title}
             width={400}
             onCancel={onCancel}
             okText='保存'
