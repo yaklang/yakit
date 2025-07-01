@@ -540,7 +540,7 @@ export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) 
 
 /** @name 审阅内容 */
 export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) => {
-    const {delayLoading, review, onSend, onSendAIRequire} = props
+    const {delayLoading, review, onSend, onSendAIRequire, planReviewTreeKeywordsMap} = props
 
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
@@ -550,6 +550,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
 
     const [isReviewMode, setIsReviewMode] = useState<boolean>(false)
     const [reviewTrees, setReviewTrees] = useState<AIChatMessage.PlanTask[]>([])
+    const [currentPlansId, setCurrentPlansId] = useState<string>("")
     const initReviewTreesRef = useRef<AIChatMessage.PlanTask[]>([])
 
     useEffect(() => {
@@ -559,6 +560,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
             handleFlatAITree(list, data.plans.root_task)
             initReviewTreesRef.current = [...list]
             setReviewTrees(list)
+            setCurrentPlansId(data.plans_id)
         }
     }, [review])
 
@@ -629,11 +631,13 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
                     list={list}
                     setList={setReviewTrees}
                     editable={isReviewMode}
+                    planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
+                    currentPlansId={currentPlansId}
                 />
             )
         }
         return null
-    }, [reviewTrees, isReviewMode])
+    }, [reviewTrees, isReviewMode, planReviewTreeKeywordsMap, currentPlansId])
 
     const taskReview = useMemo(() => {
         if (review.type === "task_review_require") {

@@ -1,7 +1,15 @@
 import {useEffect, useRef, useState} from "react"
 import {yakitNotify} from "@/utils/notification"
 import {useMemoizedFn} from "ahooks"
-import {AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIOutputEvent, AIStartParams} from "./type/aiChat"
+import {
+    AIChatMessage,
+    AIChatReview,
+    AIChatReviewExtra,
+    AIChatStreams,
+    AIInputEvent,
+    AIOutputEvent,
+    AIStartParams
+} from "./type/aiChat"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
@@ -10,6 +18,7 @@ const {ipcRenderer} = window.require("electron")
 
 export interface UseChatDataParams {
     onReview?: (data: AIChatReview) => void
+    onReviewExtra?: (data: AIChatReviewExtra) => void
     onReviewRelease?: (id: string) => void
     onRedirectForge?: (old: AIStartParams, request: AIStartParams) => void
     onEnd?: () => void
@@ -24,7 +33,7 @@ export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMess
         goal: task.goal || "",
         state: "wait",
         isRemove: false,
-        tools:[]
+        tools: []
     })
     if (task.subtasks && task.subtasks.length > 0) {
         for (let subtask of task.subtasks) {
@@ -34,7 +43,7 @@ export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMess
 }
 
 function useChatData(params?: UseChatDataParams) {
-    const {onReview, onReviewRelease, onRedirectForge, onEnd} = params || {}
+    const {onReview, onReviewExtra, onReviewRelease, onRedirectForge, onEnd} = params || {}
 
     const chatID = useRef<string>("")
     const fetchToken = useMemoizedFn(() => {
@@ -58,6 +67,7 @@ function useChatData(params?: UseChatDataParams) {
     const [plan, setPlan] = useState<AIChatMessage.PlanTask[]>([])
 
     const review = useRef<AIChatReview>()
+    const currentPlansId = useRef<string>()
 
     const [logs, setLogs] = useState<AIChatMessage.Log[]>([])
 
@@ -162,6 +172,17 @@ function useChatData(params?: UseChatDataParams) {
             onReview && onReview(data)
         }
     })
+    /** 触发review事件 补充数据 */
+    const handleTriggerReviewExtra = useMemoizedFn((item: AIChatReviewExtra) => {
+        if (!currentPlansId.current) {
+            currentPlansId.current = item.data.plans_id
+        }
+        if (currentPlansId.current !== item.data.plans_id) return
+        const isTrigger = handleIsTriggerReview() || noSkipReviewReleaseTypes.current.includes(item.type)
+        if (isTrigger) {
+            onReviewExtra && onReviewExtra(item)
+        }
+    })
 
     /** 自动处理 review 里的信息数据 */
     const handleAutoRviewData = useMemoizedFn((data: AIChatReview) => {
@@ -185,7 +206,7 @@ function useChatData(params?: UseChatDataParams) {
 
         handleAutoRviewData(review.current)
         review.current = undefined
-
+        currentPlansId.current = undefined
         if (isTrigger) {
             onReviewRelease && onReviewRelease(id)
         }
@@ -214,6 +235,7 @@ function useChatData(params?: UseChatDataParams) {
         console.log("send-ai---\n", token, params)
 
         review.current = undefined
+        currentPlansId.current = undefined
         ipcRenderer.invoke("send-ai-task", token, params)
     })
     // #endregion
@@ -227,6 +249,7 @@ function useChatData(params?: UseChatDataParams) {
         planTree.current = undefined
         setPlan([])
         review.current = undefined
+        currentPlansId.current = undefined
         setLogs([])
         setStreams({})
         setActiveStream("")
@@ -351,6 +374,21 @@ function useChatData(params?: UseChatDataParams) {
                 } catch (error) {}
                 return
             }
+            if (res.Type === "plan_task_analysis") {
+                try {
+                    if (!res.IsJson) return
+                    const data = JSON.parse(ipcContent) as AIChatMessage.PlanReviewRequireExtra
+                    if (!data?.plans_id) return
+                    if (!data?.index) return
+                    if (!data?.keywords?.length) return
+                    handleTriggerReviewExtra({
+                        type: "plan_task_analysis",
+                        data
+                    })
+                } catch (error) {}
+
+                return
+            }
             if (res.Type === "tool_use_review_require") {
                 try {
                     if (!res.IsJson) return
@@ -381,7 +419,6 @@ function useChatData(params?: UseChatDataParams) {
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIReviewRequire
 
                     if (!data?.id) return
-
                     handleTriggerReview({type: "require_user_interactive", data: data})
                 } catch (error) {}
                 return

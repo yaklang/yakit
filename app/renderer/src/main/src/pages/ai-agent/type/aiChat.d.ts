@@ -133,6 +133,12 @@ export interface AIChatReview {
         | AIChatMessage.TaskReviewRequire
         | AIChatMessage.AIReviewRequire
 }
+
+export interface AIChatReviewExtra {
+    type: "plan_task_analysis"
+    data: AIChatMessage.PlanReviewRequireExtra
+}
+
 /** 非 AI 交互型的review 选项 */
 export type NoAIChatReviewSelector = Exclude<AIChatReview["data"], AIChatMessage.AIReviewRequire>
 /** UI 渲染, 信息流相关信息 */
@@ -227,6 +233,15 @@ export declare namespace AIChatMessage {
         id: string
         plans: {root_task: PlanTask}
         selectors: ReviewSelector[]
+        plans_id: string
+    }
+
+    /** 计划审阅请求 root_task中得补充解释和工具数据 */
+    export interface PlanReviewRequireExtra {
+        description: string
+        index: string
+        keywords: string[]
+        plans_id: string
     }
 
     /** 改变计划 */

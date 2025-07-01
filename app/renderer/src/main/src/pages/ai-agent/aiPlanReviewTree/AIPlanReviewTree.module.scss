@@ -200,8 +200,13 @@
                 border-radius: 4px;
                 background: var(--Colors-Use-Neutral-Bg);
                 :global {
-                    .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
-                        cursor: default;
+                    .ant-select-disabled.ant-select:not(.ant-select-customize-input) {
+                        .ant-select-selector {
+                            cursor: default;
+                            input {
+                                cursor: default;
+                            }
+                        }
                     }
                 }
                 .related-tools-heard {
@@ -209,6 +214,24 @@
                     gap: 4px;
 
                     color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+            }
+            .description {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                .description-heard {
+                    @extend %display-flex;
+                    gap: 4px;
+
                     font-size: 12px;
                     font-weight: 400;
                     line-height: 16px;

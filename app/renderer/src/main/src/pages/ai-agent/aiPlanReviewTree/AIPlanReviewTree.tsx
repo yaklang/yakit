@@ -18,10 +18,10 @@ import {AIChatMessage} from "../type/aiChat"
 import {yakitNotify} from "@/utils/notification"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {SolidToolIcon} from "@/assets/icon/solid"
+import {SolidAnnotationIcon, SolidToolIcon} from "@/assets/icon/solid"
 
 const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => {
-    const {editable} = props
+    const {editable, planReviewTreeKeywordsMap, currentPlansId} = props
     const [list, setList] = useControllableValue<AIChatMessage.PlanTask[]>(props, {
         defaultValue: [],
         valuePropName: "list",
@@ -242,6 +242,8 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
                                     onAddBrotherNode={onAddBrotherNode}
                                     onRemoveNode={onRemoveNode}
                                     setItem={setItem}
+                                    planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
+                                    currentPlansId={currentPlansId}
                                 />
                             </React.Fragment>
                         )
@@ -268,7 +270,19 @@ const treeItemMenuData = [
     }
 ]
 const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((props) => {
-    const {order, item, preIndex, nextIndex, editable, onAddSubNode, onAddBrotherNode, onRemoveNode, setItem} = props
+    const {
+        order,
+        item,
+        preIndex,
+        nextIndex,
+        editable,
+        onAddSubNode,
+        onAddBrotherNode,
+        onRemoveNode,
+        setItem,
+        planReviewTreeKeywordsMap,
+        currentPlansId
+    } = props
     const [expand, setExpand] = useState<boolean>(true)
     const [visible, setVisible] = useState<boolean>(false)
 
@@ -279,6 +293,12 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
     const level = useCreation(() => {
         return indexList.length
     }, [indexList])
+    const extraInfo: AIChatMessage.PlanReviewRequireExtra | undefined = useCreation(() => {
+        const info = planReviewTreeKeywordsMap.get(item.index)
+        if (info?.plans_id === currentPlansId) {
+            return info
+        }
+    }, [item.index, planReviewTreeKeywordsMap, currentPlansId])
 
     const onSetExpand = useMemoizedFn(() => {
         if (item.isRemove) {
@@ -319,6 +339,10 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
     const onSetTool = useMemoizedFn((value: string[]) => {
         setItem(item, {label: "tools", value})
     })
+    const selectValue = useCreation(() => {
+        if (item.tools && item.tools.length > 0) return item.tools
+        return extraInfo?.keywords || []
+    }, [item.tools, extraInfo?.keywords])
     return (
         <div
             className={styles["ai-plan-review-tree-item"]}
@@ -374,21 +398,32 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                 {expand && !item?.isRemove && (
                     <div className={styles["body"]}>
                         <ContentEditableDiv value={item.goal} editable={editable} setValue={onSetGoal} />
-                        <div className={styles["related-tools"]}>
-                            <div className={styles["related-tools-heard"]}>
-                                <SolidToolIcon />
-                                <span>关联工具</span>
+                        {selectValue.length > 0 && (
+                            <div className={styles["related-tools"]}>
+                                <div className={styles["related-tools-heard"]}>
+                                    <SolidToolIcon />
+                                    <span>关联工具</span>
+                                </div>
+                                <YakitSelect
+                                    size='middle'
+                                    value={selectValue}
+                                    onChange={onSetTool}
+                                    bordered={false}
+                                    mode='tags'
+                                    options={[]}
+                                    disabled={!editable || !!item?.isRemove}
+                                />
                             </div>
-                            <YakitSelect
-                                size='middle'
-                                value={item.tools}
-                                onChange={onSetTool}
-                                bordered={false}
-                                mode='tags'
-                                options={[]}
-                                disabled={!editable || !!item?.isRemove}
-                            />
-                        </div>
+                        )}
+                        {extraInfo?.description && (
+                            <div className={styles["description"]}>
+                                <div className={styles["description-heard"]}>
+                                    <SolidAnnotationIcon />
+                                    <span>解释</span>
+                                </div>
+                                <div>{extraInfo?.description}</div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -408,12 +443,15 @@ const ContentEditableDiv: React.FC<ContentEditableDivProps> = React.memo((props)
         valuePropName: "value",
         trigger: "setValue"
     })
+    const onRowClick = useMemoizedFn((e) => {
+        if (editable) e.stopPropagation()
+    })
     return (
         <div
             className={classNames(className || "", {
                 [styles["content-editable"]]: editable
             })}
-            onClick={(e) => e.stopPropagation()}
+            onClick={onRowClick}
             contentEditable={editable}
             onBlur={(e) => {
                 setValue(e.target.innerText || "")

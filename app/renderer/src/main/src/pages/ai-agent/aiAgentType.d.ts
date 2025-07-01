@@ -144,6 +144,7 @@ export interface AIAgentChatReviewProps {
     setExpand: Dispatch<SetStateAction<boolean>>
     delayLoading: boolean
     review: AIChatReview
+    planReviewTreeKeywordsMap:Map<string, AIChatMessage.PlanReviewRequireExtra>
     onSend: (info: AIChatMessage.ReviewSelector, qs?: string) => void
     onSendAIRequire: (value: string) => void
 }
