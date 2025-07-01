@@ -751,6 +751,18 @@ module.exports = (win, getClient) => {
     ipcMain.handle("CalcEngineSha265", async (e, params) => {
         const hashs = []
 
+        // 此处留存于10月1号后可删除----start
+        const hashTxt = path.join("bins", "engine-sha256.txt")
+        if (fs.existsSync(loadExtraFilePath(hashTxt))) {
+            let hashData = fs.readFileSync(loadExtraFilePath(hashTxt)).toString("utf8")
+            // 去除换行符
+            hashData = (hashData || "").replace(/\r?\n/g, "")
+            // 去除首尾空格
+            hashData = hashData.trim()
+            hashs.push(hashData)
+        }
+        // 此处留存于10月1号后可删除----end
+
         if (process.platform === "darwin") {
             const yakKeyFile = path.join(YakitProjectPath, "engine-sha256.txt")
             if (fs.existsSync(yakKeyFile)) {
