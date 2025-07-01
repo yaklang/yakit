@@ -745,7 +745,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     </YakitButton>
                                 </Form.Item>
                                 <Form.Item
-                                    label='使用Chunk发送'
+                                    label='随机分块传输'
                                     name='enableRandomChunked'
                                     valuePropName='checked'
                                     style={{marginBottom: enableRandomChunked ? 12 : 0}}
@@ -754,7 +754,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 </Form.Item>
                                 {enableRandomChunked && (
                                     <>
-                                        <Form.Item label='分片长度'>
+                                        <Form.Item label='分块长度'>
                                             <div className={styles["advanced-config-random-chunked-length"]}>
                                                 <Form.Item
                                                     name='randomChunkedMinLength'

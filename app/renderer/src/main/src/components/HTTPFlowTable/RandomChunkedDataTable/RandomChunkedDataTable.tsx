@@ -5,7 +5,6 @@ import {useCreation} from "ahooks"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {RandomChunkedResponse} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 
 const RandomChunkedDataTable: React.FC<RandomChunkedDataTableProps> = React.memo((props) => {
     const {data} = props
@@ -17,7 +16,7 @@ const RandomChunkedDataTable: React.FC<RandomChunkedDataTableProps> = React.memo
                 width: 100
             },
             {
-                title: "分片内容",
+                title: "内容",
                 dataKey: "Data",
                 render: (text) => {
                     const originValueStr = text ? Buffer.from(text).toString() : ""
@@ -34,7 +33,7 @@ const RandomChunkedDataTable: React.FC<RandomChunkedDataTableProps> = React.memo
                 }
             },
             {
-                title: "分片长度",
+                title: "分块长度",
                 dataKey: "ChunkedLength",
                 width: 100
             },
@@ -52,7 +51,7 @@ const RandomChunkedDataTable: React.FC<RandomChunkedDataTableProps> = React.memo
     }, [])
     return (
         <div className={styles["chunked-table-container-wrapper"]}>
-            <div className={styles["chunked-table-container-title"]}>分片详情</div>
+            <div className={styles["chunked-table-container-title"]}>分块详情</div>
             <TableVirtualResize<RandomChunkedResponse>
                 isRefresh={false}
                 titleHeight={0.01}

@@ -2390,7 +2390,7 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
             )}
             {advancedConfigValue.enableRandomChunked && (
                 <YakitTag closable onClose={onCloseRandomChunked}>
-                    开启Chunk
+                    开启分块传输
                 </YakitTag>
             )}
         </div>
