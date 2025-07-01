@@ -184,6 +184,14 @@ export interface PluginSearchParams {
     /**时间类型搜索 默认 为所有时间, 当天 day, 本周 week, 本月 month, 年 year */
     time_search?: "day" | "week" | "month" | "year"
 }
+
+/** 插件来源 */
+export type PluginSource = "all" | "official"
+export interface PluginListTabs {
+    tab: string
+    key: string
+}
+
 /** 插件列表页码条件 */
 export interface PluginListPageMeta {
     page: number
