@@ -6,6 +6,8 @@ export interface AIPlanReviewTreeProps {
     setList: (v: AIChatMessage.PlanTask[]) => void
     /**是否可以编辑 */
     editable?: boolean
+    planReviewTreeKeywordsMap: Map<string, AIChatMessage.PlanReviewRequireExtra>
+    currentPlansId:string
 }
 
 export type PlanTaskType = keyof AIChatMessage.PlanTask
@@ -24,6 +26,9 @@ export interface AIPlanReviewTreeItemProps {
     onRemoveNode: (item: AIChatMessage.PlanTask) => void
     /**修改当前编辑的值 */
     setItem: (item: AIChatMessage.PlanTask, option: SetItemOption) => void
+    /**通过index获取关键词和解释 */
+    planReviewTreeKeywordsMap: Map<string, AIChatMessage.PlanReviewRequireExtra>
+    currentPlansId:string
 }
 
 export interface SetItemOption {
