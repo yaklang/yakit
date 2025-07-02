@@ -12,31 +12,34 @@ const {ipcRenderer} = window.require("electron")
 interface MITMCertificateDownloadModalProps {
     visible: boolean
     setVisible: (b: boolean) => void
+    isGM?: boolean // 是否为国密证书
 }
 export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModalProps> = React.memo((props) => {
-    const {visible, setVisible} = props
+    const {visible, setVisible, isGM = false} = props
     const [caCerts, setCaCerts] = useState<CaCertData>({
-        CaCerts: new Buffer(""),
+        CaCerts: new Uint8Array(),
         LocalFile: ""
     })
     useEffect(() => {
-        ipcRenderer.invoke("DownloadMITMCert", {}).then((data: CaCertData) => {
+        const apiName = isGM ? "DownloadMITMGMCert" : "DownloadMITMCert"
+        ipcRenderer.invoke(apiName, {}).then((data: CaCertData) => {
             setCaCerts(data)
         })
-    }, [])
+    }, [isGM])
     /**
      * @description 下载证书
      */
     const onDown = useMemoizedFn(() => {
         if (!caCerts.CaCerts) return
-        saveABSFileToOpen("yakit证书.crt.pem", caCerts.CaCerts)
+        const fileName = isGM ? "yakit国密证书.crt.pem" : "yakit证书.crt.pem"
+        saveABSFileToOpen(fileName, caCerts.CaCerts)
     })
     return (
         <YakitModal
             visible={visible}
             onCancel={() => setVisible(false)}
             closable={true}
-            title='下载 SSL/TLS 证书以劫持 HTTPS'
+            title={isGM ? '下载国密 SSL/TLS 证书以劫持 HTTPS' : '下载 SSL/TLS 证书以劫持 HTTPS'}
             width={720}
             className={styles["mitm-certificate-download-modal"]}
             okText='下载到本地并打开'
