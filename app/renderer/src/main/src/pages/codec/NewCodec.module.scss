@@ -530,7 +530,7 @@
                 }
             }
             .extra-icon-active {
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
             }
             .close-icon {
                 width: 16px;
@@ -544,7 +544,7 @@
                     height: 16px;
                 }
                 &:hover {
-                    color: var(--yakit-danger-5);
+                    color: var(--Colors-Use-Error-Primary);
                 }
             }
         }

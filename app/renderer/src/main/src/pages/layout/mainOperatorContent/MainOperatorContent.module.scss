@@ -92,7 +92,7 @@ $keyColor: map-keys($colors);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--Colors-Use-Neutral-Text-1-Title);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
     cursor: pointer;
     border-radius: 4px;
 }
@@ -592,7 +592,7 @@ $keyColor: map-keys($colors);
     font-weight: bold;
 }
 .tab-menu-sub-item-error {
-    color: var(--yakit-danger-5);
+    color: var(--Colors-Use-Error-Primary);
     font-weight: bold;
 }
 .tab-menu-sub-item-finished {

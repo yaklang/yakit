@@ -80,7 +80,7 @@
                 svg {
                     width: 16px;
                     height: 16px;
-                    color: var(--yakit-danger-5);
+                    color: var(--Colors-Use-Error-Primary);
                 }
             }
         }
@@ -208,7 +208,7 @@
 
         .trash-icon {
             margin-left: 8px;
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
             display: none;
         }
 
@@ -265,7 +265,7 @@
         left: 0;
 
         svg {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
             width: 16px;
             height: 16px;
         }
@@ -304,7 +304,7 @@
             }
 
             svg {
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
             }
         }
 
@@ -466,7 +466,7 @@
 
     .first-drag-state {
         svg {
-            color: var(--yakit-danger-5) !important;
+            color: var(--Colors-Use-Error-Primary) !important;
         }
     }
 }
@@ -536,7 +536,7 @@
         .menu-cancel {
             font-size: 12px;
             padding: 4px 8px;
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
             cursor: pointer;
 
             &:hover {
@@ -561,7 +561,7 @@
             left: 0;
 
             svg {
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
             }
         }
     }
@@ -595,7 +595,7 @@
         .menu-cancel {
             font-size: 12px;
             padding: 4px 8px;
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
             cursor: pointer;
 
             &:hover {
@@ -642,7 +642,7 @@
             left: 0;
 
             svg {
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
             }
         }
     }

@@ -4,7 +4,7 @@
 }
 
 .ant-progress-status-exception .ant-progress-bg {
-    background-color: var(--yakit-danger-5);
+    background-color: var(--Colors-Use-Error-Primary);
 }
 .ant-progress-status-success .ant-progress-bg {
     background-color: var(--Colors-Use-Success-Primary);
@@ -24,7 +24,7 @@
 }
 
 .ant-progress-status-exception .ant-progress-text {
-    color: var(--yakit-danger-5);
+    color: var(--Colors-Use-Error-Primary);
 }
 
 .ant-progress-status-success .ant-progress-text {
@@ -39,10 +39,10 @@
     color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 .ant-progress-status-exception .ant-progress-inner:not(.ant-progress-circle-gradient) .ant-progress-circle-path {
-    stroke: var(--yakit-danger-5);
+    stroke: var(--Colors-Use-Error-Primary);
 }
 .ant-progress-circle.ant-progress-status-exception .ant-progress-text {
-    color: var(--yakit-danger-5);
+    color: var(--Colors-Use-Error-Primary);
 }
 .ant-progress-status-success .ant-progress-inner:not(.ant-progress-circle-gradient) .ant-progress-circle-path {
     stroke: var(--Colors-Use-Success-Primary);
@@ -58,7 +58,7 @@
 }
 .ant-progress-status-exception {
     .ant-progress-steps-item-active {
-        background: var(--yakit-danger-5);
+        background: var(--Colors-Use-Error-Primary);
     }
 }
 

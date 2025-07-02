@@ -101,7 +101,7 @@
                     box-sizing: border-box;
                     padding: 8px 12px;
                     border-left: 1px solid var(--Colors-Use-Neutral-Border);
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     svg {
                         width: 20px;
                         height: 20px;
@@ -292,11 +292,11 @@
         }
 
         .sampling-exit {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
             border-right: 1px solid var(--Colors-Use-Neutral-Border);
             svg {
                 width: 16px;
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
                 margin-right: 2px;
             }
         }

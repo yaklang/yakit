@@ -169,7 +169,7 @@
     }
     .icon-danger {
         @extend %svg;
-        color: var(--yakit-danger-5);
+        color: var(--Colors-Use-Error-Primary);
     }
     .icon-question {
         @extend %svg;

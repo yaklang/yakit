@@ -89,7 +89,7 @@
                 align-items: center;
                 padding: 8px 12px;
                 cursor: pointer;
-                border-right: 1px solid #ffffff;
+                border-right: 1px solid var(--Colors-Use-Basic-Background);
                 background-color: var(--Colors-Use-Main-Primary);
                 font-size: 18px;
                 font-weight: 600;
@@ -114,7 +114,7 @@
                 padding: 8px;
                 cursor: pointer;
                 transition: transform 0.5s;
-                background-color: var(--Colors-Use-Main-Pressed);
+                background-color: var(--Colors-Use-Main-Primary);
                 .title-icon {
                     transition: transform 0.5s;
                     &.rotate-180 {
@@ -122,7 +122,7 @@
                     }
                 }
                 &:hover {
-                    background-color: var(--Colors-Use-Main-Primary);
+                    background-color: var(--Colors-Use-Main-Hover);
                 }
             }
         }
@@ -191,7 +191,6 @@
         &:hover {
             border: 1px solid var(--Colors-Use-Success-Primary);
             background: var(--Colors-Use-Success-Bg-Hover);
-            
         }
         .example-blasting-wrapper {
             display: flex;
@@ -338,8 +337,12 @@
         width: 50%;
         padding: 22px;
         padding-bottom: 14px;
-        border: 1px solid var(--Colors-Use-Blue-Primary);
-        background: var(--Colors-Use-Blue-Bg-Hover);
+        border: 1px solid var(--Colors-Use-Blue-Border);
+        background: var(--Colors-Use-Blue-Bg);
+        &:hover{
+            border: 1px solid var(--Colors-Use-Blue-Primary);
+            background: var(--Colors-Use-Blue-Bg-Hover);
+        }
         .operation-dropdown-wrapper {
             position: absolute;
             right: 0;
@@ -347,9 +350,10 @@
             left: 0;
             padding: 8px;
             transition: all 0.5 ease;
-            border: 1px solid var(--Colors-Use-Neutral-Border);
             border-radius: 4px;
-            background-color: var(--Colors-Use-Neutral-Bg);
+            border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+            background: var(--Colors-Use-Basic-Background);
+            box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
             .operation-dropdown-list-item {
                 display: flex;
                 justify-content: space-between;
@@ -571,7 +575,7 @@
                 svg {
                     width: 22px;
                     height: 22px;
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     path {
                         stroke-width: 1.5;
                     }
@@ -637,39 +641,39 @@
                     }
                     .risk-num {
                         padding: 2px 6px;
-                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                 }
                 .seriousRisk-tag {
-                    border: 1px solid #e99a95;
+                    border: 1px solid var(--Colors-Use-Error-Border);
                     .risk-text {
-                        color: #cb2318;
-                        border-right: 1px solid #e99a95;
-                        background-color: rgba(203, 35, 24, 0.2);
+                        color: var(--Colors-Use-Status-Serious);
+                        border-right: 1px solid var(--Colors-Use-Error-Border);
+                        background-color: var(--Colors-Use-Error-Bg-Hover);
                     }
                 }
                 .highRisk-tag {
-                    border: 1px solid #f3c2bf;
+                    border: 1px solid var(--Colors-Use-Error-Border);
                     .risk-text {
-                        color: #f6544a;
-                        border-right: 1px solid #f3c2bf;
-                        background-color: rgba(246, 84, 74, 0.2);
+                        color: var(--Colors-Use-Error-Primary);
+                        border-right: 1px solid var(--Colors-Use-Error-Border);
+                        background-color: var(--Colors-Use-Error-Bg-Hover);
                     }
                 }
                 .mediumRisk-tag {
-                    border: 1px solid #fbc6a1;
+                    border: 1px solid var(--Colors-Use-Warning-Border);
                     .risk-text {
-                        color: #f28b44;
-                        border-right: 1px solid #fbc6a1;
-                        background-color: #fbe7d9;
+                        color: var(--Colors-Use-Warning-Primay);
+                        border-right: 1px solid var(--Colors-Use-Warning-Border);
+                        background-color: var(--Colors-Use-Warning-Bg-Hover);
                     }
                 }
                 .lowRisk-tag {
-                    border: 1px solid #ffe5c6;
+                    border: 1px solid var(--Colors-Use-Yellow-Border);
                     .risk-text {
-                        color: #ffb660;
-                        border-right: 1px solid #ffe5c6;
-                        background-color: rgba(255, 213, 131, 0.1);
+                        color: var(--Colors-Use-Yellow-Primary);
+                        border-right: 1px solid var(--Colors-Use-Yellow-Border);
+                        background-color: var(--Colors-Use-Yellow-Bg);
                     }
                 }
             }
@@ -975,6 +979,7 @@
                     width: 200px;
                     .risk-tag {
                         font-size: 10px;
+                        overflow: hidden;
                     }
                 }
             }
@@ -1241,8 +1246,11 @@
                     .download-btn {
                         font-size: 14px;
                     }
-                    .data-preview-item-number {
+                    .data-preview-item-size{
                         font-size: 16px;
+                    }
+                    .data-preview-item-number {
+                        font-size: 14px;
                     }
                     .database-warning-icon {
                         svg {
