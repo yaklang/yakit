@@ -1268,13 +1268,13 @@ const Home: React.FC<HomeProp> = (props) => {
                                 <span className={styles["data-preview-item-text"]}>项目数据库</span>
                                 <div className={styles["data-preview-item-cont"]}>
                                     {!judgeMoreTenGB ? (
-                                        <span className={styles["data-preview-item-number"]}>
+                                        <span className={styles["data-preview-item-size"]}>
                                             {curProjectInfo?.FileSize}
                                         </span>
                                     ) : (
                                         <>
                                             <span
-                                                className={styles["data-preview-item-number"]}
+                                                className={styles["data-preview-item-size"]}
                                                 style={{color: "#f6544a"}}
                                             >
                                                 {curProjectInfo?.FileSize}

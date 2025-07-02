@@ -209,9 +209,9 @@
         }
     }
     .menu-item-danger {
-        color: var(--yakit-danger-5);
+        color: var(--Colors-Use-Error-Primary);
         &:hover {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
             background-color: var(--yakit-danger-1);
         }
     }

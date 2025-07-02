@@ -241,7 +241,7 @@
                 .agreement-danger-checkbox {
                     :global {
                         .ant-checkbox-inner {
-                            border: 1px solid var(--yakit-danger-5);
+                            border: 1px solid var(--Colors-Use-Error-Primary);
                             border-radius: 4px;
                         }
                         .ant-checkbox-checked::after {
@@ -315,7 +315,7 @@
                     width: 12px;
                     height: 12px;
                     border-radius: 50%;
-                    background-color: var(--yakit-danger-5);
+                    background-color: var(--Colors-Use-Error-Primary);
                 }
             }
         }
@@ -357,14 +357,14 @@
                 text-align: justify;
                 color: var(--Colors-Use-Neutral-Text-1-Title);
                 .sign-content {
-                    color: var(--yakit-danger-5);
+                    color: var(--Colors-Use-Error-Primary);
                 }
                 .underline-content {
-                    color: var(--yakit-danger-5);
+                    color: var(--Colors-Use-Error-Primary);
                     text-decoration: underline;
                 }
                 .sign-bold-content {
-                    color: var(--yakit-danger-5);
+                    color: var(--Colors-Use-Error-Primary);
                     font-weight: 500;
                 }
             }
@@ -380,7 +380,7 @@
                 text-align: justify;
                 color: var(--Colors-Use-Neutral-Text-1-Title);
                 .hint-sign {
-                    color: var(--yakit-danger-5);
+                    color: var(--Colors-Use-Error-Primary);
                 }
             }
             .body-link {

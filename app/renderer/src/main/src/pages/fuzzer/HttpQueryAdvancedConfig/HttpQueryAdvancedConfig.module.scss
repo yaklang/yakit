@@ -209,7 +209,7 @@
         }
 
         .trash-icon {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
             @include HTTPFuzzerPageShare.base-icon-card;
 
             &:hover {

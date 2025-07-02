@@ -24,7 +24,7 @@
 }
 
 .ant-form-item-explain-error {
-    color: var(--yakit-danger-5);
+    color: var(--Colors-Use-Error-Primary);
 }
 
 .ant-form-item-extra {
@@ -41,48 +41,48 @@
 
 // --------------input
 .ant-input-status-error:not(.ant-input-disabled):not(.ant-input-borderless).ant-input {
-    border-color: var(--yakit-danger-5);
+    border-color: var(--Colors-Use-Error-Primary);
     &:hover {
         border-color: var(--yakit-danger-4);
     }
     &:focus {
-        border-color: var(--yakit-danger-5);
+        border-color: var(--Colors-Use-Error-Primary);
         box-shadow: 0 0 0 2px var(--yakit-danger-1);
     }
 }
 
 .ant-input-status-error:not(.ant-input-disabled):not(.ant-input-borderless).ant-input-focused {
-    border-color: var(--yakit-danger-5);
+    border-color: var(--Colors-Use-Error-Primary);
     box-shadow: 0 0 0 2px var(--yakit-danger-1);
 }
 
 // ----------inputNumber
 .ant-input-number-status-error:not(.ant-input-number-disabled):not(.ant-input-number-borderless).ant-input-number {
-    border-color: var(--yakit-danger-5);
+    border-color: var(--Colors-Use-Error-Primary);
     &:hover {
         border-color: var(--yakit-danger-4);
     }
     &:focus {
-        border-color: var(--yakit-danger-5);
+        border-color: var(--Colors-Use-Error-Primary);
         box-shadow: 0 0 0 2px var(--yakit-danger-1);
     }
 }
 .ant-input-number-status-error:not(.ant-input-number-disabled):not(
         .ant-input-number-borderless
     ).ant-input-number-focused {
-    border-color: var(--yakit-danger-5);
+    border-color: var(--Colors-Use-Error-Primary);
     box-shadow: 0 0 0 2px var(--yakit-danger-1);
 }
 
 // ----------select
 .ant-select-status-error.ant-select:not(.ant-select-disabled):not(.ant-select-customize-input) .ant-select-selector {
-    border-color: var(--yakit-danger-5) !important;
+    border-color: var(--Colors-Use-Error-Primary) !important;
 }
 
 .ant-select-status-error.ant-select:not(.ant-select-disabled):not(.ant-select-customize-input).ant-select-open
     .ant-select-selector,
 .ant-select-status-error.ant-select:not(.ant-select-disabled):not(.ant-select-customize-input).ant-select-focused
     .ant-select-selector {
-    border-color: var(--yakit-danger-5);
+    border-color: var(--Colors-Use-Error-Primary);
     box-shadow: 0 0 0 2px var(--yakit-danger-1);
 }
