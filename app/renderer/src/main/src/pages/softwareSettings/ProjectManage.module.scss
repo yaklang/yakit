@@ -466,7 +466,7 @@
         }
     }
     .del-style {
-        color: var(--yakit-danger-5);
+        color: var(--Colors-Use-Error-Primary);
         svg {
             stroke-width: 1.5;
             width: 16px;
@@ -690,7 +690,7 @@
                 color: var(--Colors-Use-Neutral-Text-1-Title);
                 overflow: hidden auto;
                 .error-style {
-                    color: var(--yakit-danger-5);
+                    color: var(--Colors-Use-Error-Primary);
                 }
             }
 
@@ -723,7 +723,7 @@
             .variable-list-remove {
                 display: none;
                 @include HTTPFuzzerPageShare.base-icon-card;
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
             }
     
             .variable-fuzzer-tag {

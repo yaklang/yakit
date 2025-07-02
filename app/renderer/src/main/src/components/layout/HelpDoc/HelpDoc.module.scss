@@ -35,7 +35,7 @@
     }
 
     .icon-style {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         svg {
             width: 20px;
             height: 20px;
@@ -48,6 +48,6 @@
         color: var(--Colors-Use-Main-Primary);
     }
     .op-btn-body {
-        background-color: var(--Colors-Use-Neutral-Bg);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
 }

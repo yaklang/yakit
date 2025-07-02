@@ -315,7 +315,7 @@
     &:hover {
         background: var(--Colors-Use-Neutral-Bg-Hover);
         color: var(--Colors-Use-Neutral-Text-1-Title);
-        border-color: var(--Colors-Use-Neutral-Border);
+        border-color: var(--Colors-Use-Neutral-Bg-Hover);
         svg {
             color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }

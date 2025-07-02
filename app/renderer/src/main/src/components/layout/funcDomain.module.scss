@@ -101,7 +101,7 @@
         }
     }
     .icon-style {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
     .icon-hover-style {
         color: var(--Colors-Use-Main-Primary);
@@ -131,7 +131,7 @@
         color: var(--Colors-Use-Main-Primary);
     }
     .op-btn-body {
-        background-color: var(--Colors-Use-Neutral-Bg);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
 }
 
@@ -346,7 +346,7 @@
                     }
                     .opt-high-icon {
                         background: rgba(246, 84, 74, 0.08);
-                        color: var(--yakit-danger-5);
+                        color: var(--Colors-Use-Error-Primary);
                     }
                     .opt-middle-icon {
                         background: rgba(255, 213, 131, 0.08);
@@ -537,7 +537,7 @@
         }
 
         .empty-content {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
         }
 
         .current-version {
@@ -702,7 +702,7 @@
 }
 
 .stop-screen-menu-item {
-    color: var(--yakit-danger-5);
+    color: var(--Colors-Use-Error-Primary);
     &:hover {
         color: var(--Colors-Use-Main-Primary);
     }

@@ -217,7 +217,7 @@
         }
 
         &-item-errorIndex {
-            border-color: var(--yakit-danger-5) !important;
+            border-color: var(--Colors-Use-Error-Primary) !important;
             box-shadow: 0 0 2px 2px var(--yakit-danger-2) !important;
         }
 
@@ -492,6 +492,7 @@
         border-radius: 10px;
         border: 1px solid var(--Colors-Use-Neutral-Border);
         overflow: hidden;
+        background-color: var(--Colors-Use-Basic-Background);
         video {
             width: 100%;
             height: 410px;

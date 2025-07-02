@@ -13,8 +13,8 @@
 }
 
 .alter-custom-danger {
-    background-color: tools.fetch-color-transparen(var(--yakit-danger-5), 10%);
-    border-left: 3px solid var(--yakit-danger-5);
+    background-color: tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 10%);
+    border-left: 3px solid var(--Colors-Use-Error-Primary);
 }
 
 .alter-custom-success,
