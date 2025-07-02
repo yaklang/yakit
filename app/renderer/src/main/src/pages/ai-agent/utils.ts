@@ -2,6 +2,7 @@ import {yakitNotify} from "@/utils/notification"
 import {AIAgentSetting, RenderResourcesTemplates, RenderTools, RenderToolsParam} from "./aiAgentType"
 import cloneDeep from "lodash/cloneDeep"
 import isNil from "lodash/isNil"
+import {AIChatMessage} from "./type/aiChat"
 
 /** 处理默认值不同数据类型 */
 const handleDefaultValue = (value: any): string => {
@@ -167,6 +168,56 @@ export const convertMCPTools = (key: string, data: RenderToolsParam[], newData: 
         newData.push(node)
         if (child && child.length > 0 && !key) convertMCPTools(node.key, child, newData)
     }
+}
+/**
+ * @name 将一维tree转换成树结构
+ */
+/**
+ * 将扁平数组转换为树形结构
+ * @param {AIChatMessage.PlanTask[]} items 扁平数据数组
+ * @returns {AIChatMessage.PlanTask[]} 树形结构数组
+ */
+export const reviewListToTrees = (items: AIChatMessage.PlanTask[]): AIChatMessage.PlanTask[] => {
+    // 创建映射表，以id为键存储所有节点
+    const map = {}
+    const tree: AIChatMessage.PlanTask[] = []
+
+    // 首先构建所有节点的映射
+    items.forEach((item) => {
+        // 创建节点副本并初始化children数组
+        if (!item.isRemove) {
+            map[item.index] = {...item, subtasks: []}
+        }
+    })
+
+    // 构建树结构
+    items.forEach((item) => {
+        const node: AIChatMessage.PlanTask = map[item.index]
+        if (node.isRemove) return
+        const parentId = getParentId(item.index)
+
+        // 如果有父节点，则添加到父节点的children中
+        if (parentId && map[parentId]) {
+            map[parentId].subtasks.push(node)
+        }
+        // 否则作为根节点
+        else {
+            tree.push(node)
+        }
+    })
+
+    return tree
+}
+
+/**
+ * 从节点ID提取父节点ID
+ * @param {String} id 当前节点ID
+ * @returns {String|null} 父节点ID或null(如果是根节点)
+ */
+const getParentId = (id) => {
+    const parts = id.split("-")
+    if (parts.length <= 1) return null
+    return parts.slice(0, -1).join("-")
 }
 
 /** 将 resourceTemplates 里的信息格式化成前端结构 */

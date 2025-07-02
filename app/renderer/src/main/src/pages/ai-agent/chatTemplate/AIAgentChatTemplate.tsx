@@ -27,7 +27,7 @@ import {
     OutlineWarpIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {formatNumberUnits} from "../utils"
+import {formatNumberUnits, reviewListToTrees} from "../utils"
 import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import {Input, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -786,6 +786,13 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     const handleSubmit = useMemoizedFn(() => {
         if (isReviewMode) {
             /**TODO 接口对接:如果数据结构变化不大,则不需要修改，下方代码根据后端提供的结构直接传出去*/
+
+            // const tree = reviewListToTrees(reviewTrees)
+            // console.log("reviewTrees", reviewTrees, tree)
+            // const jsonInput: Record<string, string> = {
+            //     suggestion: "xxx",
+            //     xxx: "xxx"
+            // }
             // const jsonInput: Record<string, string> = {}
             // onSendAIRequire(JSON.stringify(jsonInput))
         }
