@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {
     AIPlanReviewTreeArrowLineProps,
     AIPlanReviewTreeItemProps,
@@ -8,17 +8,20 @@ import {
     SetItemOption
 } from "./AIPlanReviewTreeType"
 import styles from "./AIPlanReviewTree.module.scss"
-import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
 import {ExpandIcon, RetractIcon} from "./icon"
 import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePlussmIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {AIChatMessage} from "../type/aiChat"
+import {AIChatMessage, AITool, GetAIToolListRequest, GetAIToolListResponse} from "../type/aiChat"
 import {yakitNotify} from "@/utils/notification"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {SolidAnnotationIcon, SolidToolIcon} from "@/assets/icon/solid"
+import {genDefaultPagination} from "@/pages/invoker/schema"
+import {grpcGetAIToolList} from "../aiToolList/utils"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => {
     const {editable, planReviewTreeKeywordsMap, currentPlansId} = props
@@ -285,7 +288,57 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
     } = props
     const [expand, setExpand] = useState<boolean>(true)
     const [visible, setVisible] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(false)
+    const [open, setOpen] = useState<boolean>(false)
+    const [response, setResponse] = useState<GetAIToolListResponse>({
+        Tools: [],
+        Pagination: genDefaultPagination(100),
+        Total: 0
+    }) // 只展示前100条数据+选中得数据
+    const [isRef, setIsRef] = useState<boolean>(false)
 
+    useEffect(() => {
+        if (open) getToolList()
+    }, [open])
+    /**
+     * 目前工具没有做新增功能，所以暂时显示得前100条，搜索功能使用得select默认搜索，没有调用接口；接口ToolName字段查询不是模糊搜索
+     * TODO 工具新增功能后，需要修改此处搜索查询功能
+     */
+    const getToolList = useDebounceFn(
+        useMemoizedFn(async (page?: number) => {
+            setLoading(true)
+            const newQuery: GetAIToolListRequest = {
+                Query: "",
+                ToolName: "",
+                Pagination: {
+                    ...genDefaultPagination(100),
+                    OrderBy: "created_at",
+                    Page: page || 1
+                },
+                OnlyFavorites: false
+            }
+            try {
+                const res = await grpcGetAIToolList(newQuery)
+                if (!res.Tools) res.Tools = []
+                const newPage = +res.Pagination.Page
+                const newRes: GetAIToolListResponse = {
+                    Tools: newPage === 1 ? res?.Tools : [...response.Tools, ...(res?.Tools || [])],
+                    Pagination: res?.Pagination || {
+                        ...genDefaultPagination(20)
+                    },
+                    Total: res.Total
+                }
+                setResponse(newRes)
+                if (newPage === 1) {
+                    setIsRef(!isRef)
+                }
+            } catch (error) {}
+            setTimeout(() => {
+                setLoading(false)
+            }, 300)
+        }),
+        {wait: 500}
+    ).run
     const indexList = useCreation(() => {
         return item.index.trim().split("-")
     }, [item.index])
@@ -343,6 +396,9 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
         if (item.tools && item.tools.length > 0) return item.tools
         return extraInfo?.keywords || []
     }, [item.tools, extraInfo?.keywords])
+    const showTool = useCreation(() => {
+        return selectValue.length > 0 || (editable && !item?.isRemove)
+    }, [editable, item?.isRemove, selectValue.length])
     return (
         <div
             className={styles["ai-plan-review-tree-item"]}
@@ -398,7 +454,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                 {expand && !item?.isRemove && (
                     <div className={styles["body"]}>
                         <ContentEditableDiv value={item.goal} editable={editable} setValue={onSetGoal} />
-                        {selectValue.length > 0 && (
+                        {showTool && (
                             <div className={styles["related-tools"]}>
                                 <div className={styles["related-tools-heard"]}>
                                     <SolidToolIcon />
@@ -410,9 +466,19 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                                     onChange={onSetTool}
                                     bordered={false}
                                     mode='tags'
-                                    options={[]}
                                     disabled={!editable || !!item?.isRemove}
-                                />
+                                    open={open}
+                                    onDropdownVisibleChange={setOpen}
+                                    notFoundContent={loading ? <YakitSpin size='small' /> : null}
+                                >
+                                    {response.Tools.map((item) => {
+                                        return (
+                                            <YakitSelect.Option value={item.Name} key={item.Name}>
+                                                {item.Name}
+                                            </YakitSelect.Option>
+                                        )
+                                    })}
+                                </YakitSelect>
                             </div>
                         )}
                         {extraInfo?.description && (
