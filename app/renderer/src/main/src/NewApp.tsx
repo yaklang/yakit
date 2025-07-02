@@ -138,6 +138,8 @@ function NewApp() {
         }
     })
 
+    /** 定时器 */
+    const timeRef = useRef<NodeJS.Timeout>()
     const testYak = () => {
         getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
             if (!setting) {
@@ -147,8 +149,9 @@ function NewApp() {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: data.BaseUrl}) // 同步
                         setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({BaseUrl: data.BaseUrl}))
                         refreshLogin()
-                        setTimeout(() => {
+                        timeRef.current = setTimeout(() => {
                             initSystemConfig()
+                            if (timeRef.current) clearTimeout(timeRef.current)
                         }, 200)
                     })
                     .catch((e) => {
@@ -165,8 +168,9 @@ function NewApp() {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: values.BaseUrl}) // 同步
                         setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
                         refreshLogin()
-                        setTimeout(() => {
+                        timeRef.current = setTimeout(() => {
                             initSystemConfig()
+                            if (timeRef.current) clearTimeout(timeRef.current)
                         }, 200)
                     })
                     .catch((e: any) => failed("设置私有域失败:" + e))
