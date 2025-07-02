@@ -4,6 +4,8 @@ import {Drawer, DrawerProps, Modal} from "antd"
 import {ErrorBoundary} from "react-error-boundary"
 import {createRoot} from "react-dom/client"
 import emiter from "./eventBus/eventBus"
+import {HTML5Backend} from "react-dnd-html5-backend"
+import {DndProvider} from "react-dnd"
 const {ipcRenderer} = window.require("electron")
 
 export interface BaseModalProp extends ModalProps, React.ComponentProps<any> {
@@ -161,7 +163,7 @@ export const showDrawer = (props: ShowDrawerProps) => {
                 drawerRootDiv = createRoot(div)
             }
             drawerRootDiv.render(
-                <>
+                <DndProvider backend={HTML5Backend}>
                     <BaseDrawer
                         {...(targetConfig as BaseDrawerProp)}
                         afterVisible={(setter) => {
@@ -177,7 +179,7 @@ export const showDrawer = (props: ShowDrawerProps) => {
                     >
                         {targetConfig.content}
                     </BaseDrawer>
-                </>
+                </DndProvider>
             )
         })
     }

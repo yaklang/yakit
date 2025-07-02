@@ -252,3 +252,10 @@
         }
     }
 }
+
+.fuzzable-param-list-container {
+    max-height: 50vh;
+    .fuzzable-param-list-tag {
+        max-width: 100%;
+    }
+}

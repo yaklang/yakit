@@ -1043,8 +1043,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             }
         }
     )
-    /**保存代理数据*/
-    const onSaveProxy = useMemoizedFn(() => {
+    /**保存页面数据*/
+    const onSavePageAdvancedConfigValue = useMemoizedFn((configValue: AdvancedConfigValueProps) => {
         if (!currentSelectRequest?.pageId) return
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
             YakitRoute.HTTPFuzzer,
@@ -1062,7 +1062,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                         ...currentItem.pageParamsInfo.webFuzzerPageInfo,
                         advancedConfigValue: {
                             ...currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue,
-                            proxy: []
+                            ...configValue
                         }
                     }
                 }
@@ -1299,7 +1299,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                         ...currentSelectRequest,
                                         advancedConfigValue: configValue
                                     } as WebFuzzerPageInfoProps)
-                                    onSaveProxy()
+                                    onSavePageAdvancedConfigValue(configValue)
                                 }}
                                 droppedCount={getDroppedCount(currentSequenceItem.id) || 0}
                                 onShowAll={() => {

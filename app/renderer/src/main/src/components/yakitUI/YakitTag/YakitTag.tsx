@@ -67,7 +67,13 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
                 if (props.onClose) props.onClose(e)
             }}
         >
-            {(enableCopy && copyText) || props.children}
+            {enableCopy && copyText ? (
+                <span className='content-ellipsis' title={copyText}>
+                    {copyText}
+                </span>
+            ) : (
+                props.children
+            )}
         </Tag>
     )
 }

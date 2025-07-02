@@ -55,7 +55,7 @@ import {
     filterModeOptions,
     matchersConditionOptions
 } from "../MatcherAndExtractionCard/constants"
-import {DefFuzzerConcurrent} from "@/defaultConstants/HTTPFuzzerPage"
+import {defaultAdvancedConfigValue, DefFuzzerConcurrent} from "@/defaultConstants/HTTPFuzzerPage"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 
 const {ipcRenderer} = window.require("electron")
@@ -140,6 +140,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const isGmTLS = Form.useWatch("isGmTLS", form)
     const randomJA3 = Form.useWatch("randomJA3", form)
     const overwriteSNI = Form.useWatch("overwriteSNI", form)
+    const enableRandomChunked = Form.useWatch("enableRandomChunked", form)
     const queryRef = useRef(null)
     const [inViewport = true] = useInViewport(queryRef)
 
@@ -170,9 +171,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         emiter.on("openMatcherAndExtraction", openDrawer)
         getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
             try {
-                // setTimeout(() => {
-                //     setActiveKey(data ? JSON.parse(data) : "请求包配置")
-                // }, 100)
                 setActiveKey(data ? JSON.parse(data) : "请求包配置")
             } catch (error) {
                 yakitFailed("获取折叠面板的激活key失败:" + error)
@@ -619,7 +617,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 dialTimeoutSeconds: 10,
                                                 timeout: 30,
                                                 batchTarget: new Uint8Array(),
-                                                disableHotPatch: false
+                                                disableHotPatch: false,
+                                                enableRandomChunked: false,
+                                                randomChunkedMinLength:
+                                                    defaultAdvancedConfigValue.randomChunkedMinLength,
+                                                randomChunkedMaxLength:
+                                                    defaultAdvancedConfigValue.randomChunkedMaxLength,
+                                                randomChunkedMinDelay: defaultAdvancedConfigValue.randomChunkedMinDelay,
+                                                randomChunkedMaxDelay: defaultAdvancedConfigValue.randomChunkedMaxDelay
                                             }
                                             onReset(restValue)
                                         }}
@@ -676,7 +681,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     <YakitSwitch />
                                 </Form.Item>
 
-                                <Form.Item label='超时时长' style={{marginBottom: 12}}>
+                                <Form.Item label='超时时长'>
                                     <div className={styles["advanced-config-timeout"]}>
                                         <Form.Item
                                             name='dialTimeoutSeconds'
@@ -708,7 +713,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         </Form.Item>
                                     </div>
                                 </Form.Item>
-                                <Form.Item label='批量目标' name='batchTarget' style={{marginBottom: 0}}>
+                                <Form.Item label='批量目标' name='batchTarget'>
                                     <YakitButton
                                         style={{marginTop: 3}}
                                         size='small'
@@ -739,6 +744,82 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         )}
                                     </YakitButton>
                                 </Form.Item>
+                                <Form.Item
+                                    label='随机分块传输'
+                                    name='enableRandomChunked'
+                                    valuePropName='checked'
+                                    style={{marginBottom: enableRandomChunked ? 12 : 0}}
+                                >
+                                    <YakitSwitch />
+                                </Form.Item>
+                                {enableRandomChunked && (
+                                    <>
+                                        <Form.Item label='分块长度'>
+                                            <div className={styles["advanced-config-random-chunked-length"]}>
+                                                <Form.Item
+                                                    name='randomChunkedMinLength'
+                                                    noStyle
+                                                    normalize={(value) => {
+                                                        return value.replace(/\D/g, "")
+                                                    }}
+                                                >
+                                                    <YakitInput
+                                                        prefix='Min'
+                                                        suffix='B'
+                                                        size='small'
+                                                        className={styles["input-left"]}
+                                                    />
+                                                </Form.Item>
+                                                <Form.Item
+                                                    name='randomChunkedMaxLength'
+                                                    noStyle
+                                                    normalize={(value) => {
+                                                        return value.replace(/\D/g, "")
+                                                    }}
+                                                >
+                                                    <YakitInput
+                                                        prefix='Max'
+                                                        suffix='B'
+                                                        size='small'
+                                                        className={styles["input-right"]}
+                                                    />
+                                                </Form.Item>
+                                            </div>
+                                        </Form.Item>
+                                        <Form.Item label='随机延迟' style={{marginBottom: 0}}>
+                                            <div className={styles["advanced-config-random-chunked-delay"]}>
+                                                <Form.Item
+                                                    name='randomChunkedMinDelay'
+                                                    noStyle
+                                                    normalize={(value) => {
+                                                        return value.replace(/\D/g, "")
+                                                    }}
+                                                >
+                                                    <YakitInput
+                                                        prefix='Min'
+                                                        suffix='ms'
+                                                        size='small'
+                                                        className={styles["input-left"]}
+                                                    />
+                                                </Form.Item>
+                                                <Form.Item
+                                                    name='randomChunkedMaxDelay'
+                                                    noStyle
+                                                    normalize={(value) => {
+                                                        return value.replace(/\D/g, "")
+                                                    }}
+                                                >
+                                                    <YakitInput
+                                                        prefix='Max'
+                                                        suffix='ms'
+                                                        size='small'
+                                                        className={styles["input-right"]}
+                                                    />
+                                                </Form.Item>
+                                            </div>
+                                        </Form.Item>
+                                    </>
+                                )}
                             </YakitPanel>
                             <YakitPanel
                                 header='并发配置'

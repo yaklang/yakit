@@ -25,12 +25,20 @@ export interface AdvancedConfigValueProps {
     timeout: number
     dialTimeoutSeconds: nnumber
     batchTarget?: Uint8Array
+    // Random Chunked
+    enableRandomChunked: boolean
+    randomChunkedMinLength: number
+    randomChunkedMaxLength: number
+    randomChunkedMinDelay: number
+    randomChunkedMaxDelay: number
+
     // 发包配置
     concurrent: number
     proxy: string[]
     minDelaySeconds: number
     maxDelaySeconds: number
     repeatTimes: number
+
     // 重试配置
     maxRetryTimes: number
     /**@name 重试条件的checked */
@@ -47,6 +55,7 @@ export interface AdvancedConfigValueProps {
     }
     retryWaitSeconds: number
     retryMaxWaitSeconds: number
+
     // 重定向配置
     redirectCount: number
     noFollowRedirect: boolean
@@ -64,12 +73,14 @@ export interface AdvancedConfigValueProps {
     // dns config
     dnsServers: string[]
     etcHosts: KVPair[]
+
     // 设置变量
     params: FuzzerParamItem[]
     methodGet: KVPair[]
     methodPost: KVPair[]
     headers: KVPair[]
     cookie: KVPair[]
+
     // 匹配器
     matchers: HTTPResponseMatcher[]
     //提取器

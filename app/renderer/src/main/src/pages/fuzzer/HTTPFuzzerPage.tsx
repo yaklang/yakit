@@ -190,6 +190,7 @@ export const analyzeFuzzerResponse = (
                     }}
                     index={index}
                     data={data}
+                    randomChunkedData={i.RandomChunkedData}
                 />
             </>
         ),
@@ -266,8 +267,20 @@ export interface FuzzerResponse {
     OriginalContentType: string
     FixContentType: string
     IsSetContentTypeOptions: boolean
+    RandomChunkedData: RandomChunkedResponse[]
 }
-
+export interface RandomChunkedResponse {
+    /**@name 当前的 chunked index */
+    Index: number
+    /**@name 当前的 chunked 数据 */
+    Data: Uint8Array
+    /**@name 当前的 chunked 长度 */
+    ChunkedLength: number
+    /**@name 当前的 chunked 延迟时间 */
+    CurrentChunkedDelayTime: number
+    /**@name 总的发送耗时 */
+    TotalDelayTime: number
+}
 export interface HistoryHTTPFuzzerTask {
     Request: string
     RequestRaw: Uint8Array
@@ -340,6 +353,12 @@ export interface FuzzerRequestProps {
 
     /** 是否由引擎进行丢弃包逻辑 */
     EngineDropPacket?: boolean
+    // Random Chunked
+    EnableRandomChunked?: boolean
+    RandomChunkedMinLength?: number
+    RandomChunkedMaxLength?: number
+    RandomChunkedMinDelay?: number
+    RandomChunkedMaxDelay?: number
 }
 
 export const showDictsAndSelect = (fun: (i: string) => any) => {
@@ -430,6 +449,11 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         DelayMinSeconds: value.minDelaySeconds,
         DelayMaxSeconds: value.maxDelaySeconds,
         RepeatTimes: value.repeatTimes,
+        EnableRandomChunked: !!value.enableRandomChunked,
+        RandomChunkedMinLength: value.randomChunkedMinLength,
+        RandomChunkedMaxLength: value.randomChunkedMaxLength,
+        RandomChunkedMinDelay: value.randomChunkedMinDelay,
+        RandomChunkedMaxDelay: value.randomChunkedMaxDelay,
 
         // retry config
         MaxRetryTimes: value.maxRetryTimes,
@@ -1457,7 +1481,19 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             maxDelaySeconds: val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0,
             timeout: val.timeout ? Number(val.timeout) : 0,
             dialTimeoutSeconds: val.dialTimeoutSeconds ? Number(val.dialTimeoutSeconds) : 0,
-            repeatTimes: val.repeatTimes ? Number(val.repeatTimes) : 0
+            repeatTimes: val.repeatTimes ? Number(val.repeatTimes) : 0,
+            randomChunkedMinLength: val.randomChunkedMinLength
+                ? Number(val.randomChunkedMinLength)
+                : defaultAdvancedConfigValue.randomChunkedMinLength,
+            randomChunkedMaxLength: val.randomChunkedMaxLength
+                ? Number(val.randomChunkedMaxLength)
+                : defaultAdvancedConfigValue.randomChunkedMaxLength,
+            randomChunkedMinDelay: val.randomChunkedMinDelay
+                ? Number(val.randomChunkedMinDelay)
+                : defaultAdvancedConfigValue.randomChunkedMinDelay,
+            randomChunkedMaxDelay: val.randomChunkedMaxDelay
+                ? Number(val.randomChunkedMaxDelay)
+                : defaultAdvancedConfigValue.randomChunkedMaxDelay
         }
         setAdvancedConfigValue(newValue)
     })
@@ -2304,6 +2340,12 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
     const isShowSystemProxy = useCreation(() => {
         return systemProxy?.Enable && !advancedConfigValue.noSystemProxy && !advancedConfigValue.proxy.length
     }, [systemProxy, advancedConfigValue.noSystemProxy, advancedConfigValue.proxy])
+    const onCloseRandomChunked = useMemoizedFn(() => {
+        setAdvancedConfigValue({
+            ...advancedConfigValue,
+            enableRandomChunked: false
+        })
+    })
     return (
         <div className={styles["display-flex"]} ref={divRef}>
             {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
@@ -2345,6 +2387,11 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
                         <YakitTag color='danger'>匹配失败</YakitTag>
                     )}
                 </>
+            )}
+            {advancedConfigValue.enableRandomChunked && (
+                <YakitTag closable onClose={onCloseRandomChunked}>
+                    开启分块传输
+                </YakitTag>
             )}
         </div>
     )

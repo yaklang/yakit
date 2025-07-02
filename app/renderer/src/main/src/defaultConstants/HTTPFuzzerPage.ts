@@ -43,6 +43,12 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     actualHost: "",
     dialTimeoutSeconds: 10,
     timeout: 30,
+    // Random Chunked
+    enableRandomChunked: false,
+    randomChunkedMinLength: 10,
+    randomChunkedMaxLength: 25,
+    randomChunkedMinDelay: 50,
+    randomChunkedMaxDelay: 100,
     // 批量目标
     batchTarget: new Uint8Array(),
     // 发包配置
@@ -152,7 +158,8 @@ export const emptyFuzzer: FuzzerResponse = {
     IsAutoFixContentType: false,
     OriginalContentType: "",
     FixContentType: "",
-    IsSetContentTypeOptions: false
+    IsSetContentTypeOptions: false,
+    RandomChunkedData: []
 }
 
 export const HotPatchDefaultContent = `// 使用标签 {{yak(handle|param)}} 可以触发热加载调用

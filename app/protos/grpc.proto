@@ -4894,7 +4894,7 @@ message FuzzerRequests {
   int64 Concurrent = 2;
 }
 
-message FuzzerRequest {// last index 63
+message FuzzerRequest {// last index 68
   string Request = 1;
   bytes RequestRaw = 16;  // 这里是因为麻将块儿的问题，还是需要处理一下类型
   repeated FuzzerParamItem Params = 2;
@@ -5022,6 +5022,13 @@ message FuzzerRequest {// last index 63
 
   // engine drop packet
   bool EngineDropPacket = 60;
+
+  // Random Chunked
+  bool EnableRandomChunked = 64;
+  int64 RandomChunkedMinLength = 65;
+  int64 RandomChunkedMaxLength = 66;
+  int64 RandomChunkedMinDelay = 67;
+  int64 RandomChunkedMaxDelay = 68;
 }
 
 message MutateMethod {
@@ -5145,6 +5152,15 @@ message FuzzerResponse {
   string OriginalContentType = 59;
   string FixContentType = 60;
   bool IsSetContentTypeOptions = 61;
+  repeated RandomChunkedResponse RandomChunkedData = 62;
+}
+
+message RandomChunkedResponse{
+  int64 Index = 1; // 当前的 chunked index
+  bytes Data = 2; // 当前的 chunked 数据
+  int64 ChunkedLength = 3; // 当前的 chunked 长度
+  int64 CurrentChunkedDelayTime = 4; // 当前的 chunked 延迟时间
+  int64 TotalDelayTime = 5; // 总的发送耗时
 }
 
 message RedirectHTTPFlow {
