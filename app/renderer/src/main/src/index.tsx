@@ -13,6 +13,12 @@ import "./assets/global.scss"
 import {useEffect, useState} from "react"
 import ChildNewApp from "./ChildNewApp"
 
+window.MonacoEnvironment = {
+    getWorkerUrl: function (moduleId, label) {
+        return `./static/js/${label}.worker.js`
+    }
+}
+
 const getQueryParam = (param) => {
     return new URLSearchParams(window.location.search).get(param)
 }
