@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useDebounceFn, useMemoizedFn, useSize, useThrottleFn} from "ahooks"
+import {useDebounceFn, useMap, useMemoizedFn, useSize, useThrottleFn} from "ahooks"
 import {AIAgentTriggerEventInfo, ServerChatProps} from "./aiAgentType"
 import {OutlineNewspaperIcon, OutlineOpenIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -11,17 +11,17 @@ import {
     AIAgentChatBody,
     AIAgentChatFooter,
     AIAgentChatReview,
-    AIAgentEmpty,
     AIChatLeftSide,
     AIChatLogs
 } from "./chatTemplate/AIAgentChatTemplate"
-import {AIChatInfo, AIChatMessage, AIChatReview, AIInputEvent, AIStartParams} from "./type/aiChat"
+import {AIChatInfo, AIChatMessage, AIChatReview, AIChatReviewExtra, AIInputEvent, AIStartParams} from "./type/aiChat"
 import {randomString} from "@/utils/randomUtil"
 import emiter from "@/utils/eventBus/eventBus"
 import {yakitNotify} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {formatAIAgentSetting} from "./utils"
+import {AIAgentWelcome} from "./AIAgentWelcome/AIAgentWelcome"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
@@ -50,6 +50,11 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
 
     // review数据
     const [reviewInfo, setReviewInfo, getReviewInfo] = useGetSetState<AIChatReview>()
+    // review数据中树的数据中需要的解释和关键词工具
+    const [planReviewTreeKeywordsMap, {set: setPlanReviewTreeKeywords, reset: resetPlanReviewTreeKeywords}] = useMap<
+        string,
+        AIChatMessage.PlanReviewRequireExtra
+    >(new Map())
     // 接受到 review 后的1秒 loading 状态
     const [delayLoading, setDelayLoading] = useGetSetState(false)
     const delayLoadingTime = useRef<any>(null)
@@ -73,6 +78,11 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
             setDelayLoading(false)
         }, 1000)
     })
+    const handleShowReviewExtra = useMemoizedFn((info: AIChatReviewExtra) => {
+        if (info.type === "plan_task_analysis") {
+            setPlanReviewTreeKeywords(info.data.index, info.data)
+        }
+    })
     // 释放review
     const handleReleaseReview = useMemoizedFn((id: string) => {
         const info = getReviewInfo()
@@ -80,6 +90,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
         if (info.data.id === id) {
             if (!delayLoading) yakitNotify("warning", "审阅自动执行，弹框将自动关闭")
             setReviewInfo(undefined)
+            resetPlanReviewTreeKeywords()
             setReviewExpand(true)
             handleResetDelayLoadingTime()
             setDelayLoading(false)
@@ -106,6 +117,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
         setTimeout(() => {
             events.onSend(activeID, reviewData, info)
             setReviewInfo(undefined)
+            resetPlanReviewTreeKeywords()
             sendLoading.current = false
         }, 50)
     })
@@ -126,6 +138,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
         setTimeout(() => {
             events.onSend(activeID, reviewData, info)
             setReviewInfo(undefined)
+            resetPlanReviewTreeKeywords()
             sendLoading.current = false
         }, 50)
     })
@@ -204,6 +217,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     const [{execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream}, events] =
         useChatData({
             onReview: handleShowReview,
+            onReviewExtra: handleShowReviewExtra,
             onReviewRelease: handleReleaseReview,
             onRedirectForge: handleOpenHintShow,
             onEnd: handleChatingEnd
@@ -216,10 +230,13 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
 
     // 开始提问
     const handleStartChat = useThrottleFn(
-        () => {
-            if (!question || !question.trim() || execute) return
+        (request: AIStartParams) => {
+            if (execute) return
             if (requestLoading.current) return
-            handleRequestParams(question.trim())
+            if (!request.UserQuery) {
+                request.UserQuery = question.trim()
+            }
+            handleRequestParams(request)
         },
         {wait: 500, trailing: false}
     ).run
@@ -261,12 +278,12 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     })
 
     // 构建提问参数并执行
-    const handleRequestParams = useMemoizedFn((qs: string) => {
+    const handleRequestParams = useMemoizedFn((request: AIStartParams) => {
         requestLoading.current = true
         const info: AIChatInfo = {
             id: randomString(10),
-            name: question,
-            question: question,
+            name: request.UserQuery,
+            question: request.UserQuery,
             time: Date.now()
         }
         setQuestion("")
@@ -276,7 +293,9 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
             IsStart: true,
             Params: {
                 ...formatAIAgentSetting(setting),
-                UserQuery: question
+                UserQuery: request.UserQuery,
+                ForgeName: request.ForgeName || undefined,
+                ForgeParams: request.ForgeParams || undefined
             }
         })
         handleSubmitAfterChangState()
@@ -376,6 +395,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     const handleStopAfterChangeState = useMemoizedFn(() => {
         // 清空review信息
         setReviewInfo(undefined)
+        resetPlanReviewTreeKeywords()
         setReviewExpand(true)
     })
     // #endregion
@@ -506,6 +526,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                                                         setExpand={setReviewExpand}
                                                         delayLoading={delayLoading}
                                                         review={reviewInfo}
+                                                        planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
                                                         onSend={handleSend}
                                                         onSendAIRequire={handleSendAIRequire}
                                                     />
@@ -530,7 +551,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                         </div>
                     </div>
                 ) : (
-                    <AIAgentEmpty question={question} setQuestion={setQuestion} onSearch={handleStartChat} />
+                    <AIAgentWelcome question={question} setQuestion={setQuestion} onSearch={handleStartChat} />
                 )}
             </div>
 
