@@ -35,7 +35,7 @@ module.exports = {
         addWebpackPlugin(new ProgressBarPlugin()),
         addWebpackPlugin(
             new MonacoWebpackPlugin({
-                languages: ["json", "javascript", "markdown", "html", "css"],
+                languages: ["json", "javascript", "go", "markdown", "html", "yaml", "java"],
                 filename: "static/js/[name].worker.js"
             })
         ),
