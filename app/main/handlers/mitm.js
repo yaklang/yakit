@@ -381,6 +381,22 @@ module.exports = (win, getClient) => {
         return await asyncDownloadMITMCert(params)
     })
 
+    // asyncDownloadMITMGMCert wrapper
+    const asyncDownloadMITMGMCert = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadMITMGMCert(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DownloadMITMGMCert", async (e, params) => {
+        return await asyncDownloadMITMGMCert(params)
+    })
+
     // asyncExportMITMReplacerRules wrapper
     const asyncExportMITMReplacerRules = (params) => {
         return new Promise((resolve, reject) => {
