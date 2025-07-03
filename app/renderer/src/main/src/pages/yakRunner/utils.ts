@@ -18,8 +18,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import {setMapFileDetail} from "./FileTreeMap/FileMap"
 import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {randomString} from "@/utils/randomUtil"
-import { YaklangMonacoSpec } from "@/utils/monacoSpec/yakEditor"
-import { SyntaxFlowMonacoSpec } from "@/utils/monacoSpec/syntaxflowEditor"
+import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
+import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -392,7 +392,7 @@ export const updateFileTree: (
 /**
  * @name 语法检查
  */
-export const onSyntaxCheck = (code: string, type :string) => {
+export const onSyntaxCheck = (code: string, type: string) => {
     return new Promise(async (resolve, reject) => {
         // StaticAnalyzeError
         ipcRenderer
@@ -417,7 +417,7 @@ export const onSyntaxCheck = (code: string, type :string) => {
  */
 export const judgeAreaExistFileUnSave = (areaInfo: AreaInfoProps[]): Promise<string[]> => {
     return new Promise(async (resolve, reject) => {
-        let unSaveArr:string[] = []
+        let unSaveArr: string[] = []
         const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
         newAreaInfo.forEach((item, index) => {
             item.elements.forEach((itemIn, indexIn) => {
@@ -946,11 +946,42 @@ export const loadFolderDetail = (path) => {
  * @name 编辑器代码类型判断
  */
 export const monacaLanguageType = (suffix?: string) => {
-    switch (suffix) {
+    switch ((suffix || "").toLowerCase()) {
         case "yak":
             return YaklangMonacoSpec
-        case "sf": 
+        case "sf":
             return SyntaxFlowMonacoSpec
+        case "json":
+            return "json"
+        case "html":
+        case "htm":
+            return "html"
+        case "css":
+            return "css"
+        case "scss":
+            return "scss"
+        case "less":
+            return "less"
+        case "md":
+        case "markdown":
+            return "markdown"
+        case "xml":
+            return "xml"
+        case "yml":
+        case "yaml":
+            return "yaml"
+        case "sh":
+        case "shell":
+        case "bash":
+            return "shell"
+        case "bat":
+            return "bat"
+        case "ini":
+            return "ini"
+        case "sql":
+            return "sql"
+        case "dockerfile":
+            return "dockerfile"
         default:
             return undefined
     }

@@ -109,6 +109,8 @@ import {filterColorTag} from "@/components/TableVirtualResize/utils"
 import {FuzzerConcurrentLoad, FuzzerResChartData} from "../FuzzerConcurrentLoad/FuzzerConcurrentLoad"
 import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import {isEqual} from "lodash"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 const FuzzerPageSetting = React.lazy(() => import("./FuzzerPageSetting"))
@@ -198,9 +200,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [isShowSetting, setIsShowSetting] = useState<boolean>(false)
 
     // Response
-    const [currentSequenceItem, setCurrentSequenceItem] = useState<SequenceProps>()
+    const [currentSequenceItem, setCurrentSequenceItem, getCurrentSequenceItem] = useGetSetState<SequenceProps>()
 
-    const [currentSelectResponse, setCurrentSelectResponse] = useState<ResponseProps>()
+    const [currentSelectResponse, setCurrentSelectResponse, getCurrentSelectResponse] = useGetSetState<ResponseProps>()
     const [responseMap, {set: setResponse, get: getResponse, reset: resetResponse}] = useMap<string, ResponseProps>()
     const [droppedCountMap, {set: setDroppedCount, get: getDroppedCount, reset: resetDroppedCount}] = useMap<
         string,
@@ -347,14 +349,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     }, [currentSequenceItem])
     useThrottleEffect(
         () => {
-            if (currentSequenceItem) {
-                const currentResponse = responseMap.get(currentSequenceItem.id)
-                if (currentResponse) setCurrentSelectResponse({...currentResponse})
+            const curSequenceItem = getCurrentSequenceItem()
+            if (!curSequenceItem) return
+            const currentResponse = responseMap.get(curSequenceItem.id)
+            if (currentResponse && !isEqual(currentResponse, getCurrentSelectResponse())) {
+                setCurrentSelectResponse({...currentResponse})
             }
         },
         [responseMap],
         {
-            wait: 200
+            wait: 300
         }
     )
     const fuzzerIndexArr = useRef<string[]>([])
@@ -513,7 +517,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     droppedSequenceIndexMapRef.current.get(data.fuzzer_index) || new Map()
                 current.set(data.fuzzer_sequence_index, data.discard_count)
                 const sum = [...current.values()].reduce((sum, value) => sum + value, 0)
-                setDroppedCount(data.fuzzer_index, sum)
+                if (getDroppedCount(data.fuzzer_index) !== sum) {
+                    setDroppedCount(data.fuzzer_index, sum)
+                }
                 droppedSequenceIndexMapRef.current.set(data.fuzzer_index, current)
             }
         } catch (error) {}
@@ -580,7 +586,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     return item
                 }
             })
-            setSequenceList([...newSequenceList])
+
+            if (!isEqual(newSequenceList, sequenceList)) {
+                setSequenceList(newSequenceList)
+            }
 
             let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
             let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
@@ -601,11 +610,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 })
                 return
             }
-            const currentResponse = getResponse(fuzzerIndex)
+
+            const prevResponse = getResponse(fuzzerIndex)
             const newResponse: ResponseProps = {
                 id: fuzzerIndex,
                 onlyOneResponse: emptyFuzzer,
-                ...currentResponse,
+                ...prevResponse,
                 successCount: currentSuccessCount,
                 failedCount: currentFailedCount,
                 successFuzzer: [...successBuffer],
@@ -617,9 +627,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             if (inViewportRef.current) {
                 newResponse.fuzzerResChartData = fuzzerResChartDataBuffer
             }
-            setResponse(fuzzerIndex, newResponse)
+            if (!isEqual(prevResponse, newResponse)) {
+                setResponse(fuzzerIndex, newResponse)
+            }
         },
-        {wait: 200}
+        {wait: 350}
     ).run
     const onClearRef = useMemoizedFn(() => {
         fuzzerIndexArr.current = []
@@ -1118,6 +1130,67 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         setVisiblePluginDrawer(true)
         setPluginDebugCode(yamlContent)
     })
+
+    const onSetAdvancedConfigValue = useMemoizedFn((configValue) => {
+        setCurrentSelectRequest({
+            ...currentSelectRequest,
+            advancedConfigValue: configValue
+        } as WebFuzzerPageInfoProps)
+        onSavePageAdvancedConfigValue(configValue)
+    })
+
+    const onShowAllHeader = useMemoizedFn(() => {
+        if (judgeMoreFuzzerTableMaxData()) {
+            let currentItem: PageNodeItemProps | undefined = undefined
+            if (currentSelectRequest?.pageId) {
+                currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, currentSelectRequest?.pageId)
+            }
+            emiter.emit(
+                "openPage",
+                JSON.stringify({
+                    route: YakitRoute.DB_HTTPHistoryAnalysis,
+                    params: {
+                        webFuzzer: true,
+                        runtimeId: allRuntimeIds(),
+                        sourceType: "scan",
+                        verbose: currentItem?.pageName ? `${currentItem?.pageName}-全部流量` : ""
+                    }
+                })
+            )
+        } else {
+            setShowAllResponse(true)
+        }
+    })
+
+    const onShowAll = useMemoizedFn(() => {
+        if (!currentSequenceItem) return
+        let currentItem: PageNodeItemProps | undefined = undefined
+        if (currentSelectRequest?.pageId) {
+            currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, currentSelectRequest?.pageId)
+        }
+
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.DB_HTTPHistoryAnalysis,
+                params: {
+                    webFuzzer: true,
+                    runtimeId: currentSelectResponse?.runtimeIdFuzzer || [],
+                    sourceType: "scan",
+                    verbose: currentItem?.pageName
+                        ? `${currentItem?.pageName}-${currentSequenceItem.name}-全部流量`
+                        : ""
+                }
+            })
+        )
+    })
+
+    const onDebugSequenceResponse = useMemoizedFn((response) => {
+        onDebug({httpResponse: response, type: "matchers", activeKey: "ID:0", order: 0})
+    })
+
+    const emptyMap = useMemo(() => new Map(), [])
+
     return (
         <>
             <div
@@ -1294,41 +1367,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 disabled={responseMap.size === 0 || loading}
                                 responseInfo={currentSelectResponse}
                                 advancedConfigValue={currentSelectRequest?.advancedConfigValue}
-                                setAdvancedConfigValue={(configValue) => {
-                                    setCurrentSelectRequest({
-                                        ...currentSelectRequest,
-                                        advancedConfigValue: configValue
-                                    } as WebFuzzerPageInfoProps)
-                                    onSavePageAdvancedConfigValue(configValue)
-                                }}
+                                setAdvancedConfigValue={onSetAdvancedConfigValue}
                                 droppedCount={getDroppedCount(currentSequenceItem.id) || 0}
-                                onShowAll={() => {
-                                    if (judgeMoreFuzzerTableMaxData()) {
-                                        let currentItem: PageNodeItemProps | undefined = undefined
-                                        if (currentSelectRequest?.pageId) {
-                                            currentItem = queryPagesDataById(
-                                                YakitRoute.HTTPFuzzer,
-                                                currentSelectRequest?.pageId
-                                            )
-                                        }
-                                        emiter.emit(
-                                            "openPage",
-                                            JSON.stringify({
-                                                route: YakitRoute.DB_HTTPHistoryAnalysis,
-                                                params: {
-                                                    webFuzzer: true,
-                                                    runtimeId: allRuntimeIds(),
-                                                    sourceType: "scan",
-                                                    verbose: currentItem?.pageName
-                                                        ? `${currentItem?.pageName}-全部流量`
-                                                        : ""
-                                                }
-                                            })
-                                        )
-                                    } else {
-                                        setShowAllResponse(true)
-                                    }
-                                }}
+                                onShowAll={onShowAllHeader}
                                 getHttpParams={getHttpParams}
                                 onPluginDebugger={onPluginDebugger}
                             />
@@ -1337,38 +1378,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 requestInfo={currentSelectRequest}
                                 responseInfo={currentSelectResponse}
                                 loading={loading}
-                                extractedMap={extractedMap.get(currentSequenceItem.id) || new Map()}
+                                extractedMap={extractedMap.get(currentSequenceItem.id) || emptyMap}
                                 hotPatchCode={hotPatchCodeRef.current}
                                 hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                                 setHotPatchCode={setHotPatchCode}
                                 setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
-                                onShowAll={() => {
-                                    let currentItem: PageNodeItemProps | undefined = undefined
-                                    if (currentSelectRequest?.pageId) {
-                                        currentItem = queryPagesDataById(
-                                            YakitRoute.HTTPFuzzer,
-                                            currentSelectRequest?.pageId
-                                        )
-                                    }
-
-                                    emiter.emit(
-                                        "openPage",
-                                        JSON.stringify({
-                                            route: YakitRoute.DB_HTTPHistoryAnalysis,
-                                            params: {
-                                                webFuzzer: true,
-                                                runtimeId: currentSelectResponse?.runtimeIdFuzzer || [],
-                                                sourceType: "scan",
-                                                verbose: currentItem?.pageName
-                                                    ? `${currentItem?.pageName}-${currentSequenceItem.name}-全部流量`
-                                                    : ""
-                                            }
-                                        })
-                                    )
-                                }}
-                                onDebug={(response) => {
-                                    onDebug({httpResponse: response, type: "matchers", activeKey: "ID:0", order: 0})
-                                }}
+                                onShowAll={onShowAll}
+                                onDebug={onDebugSequenceResponse}
                                 matcherValue={matcherAndExtractionValue.matcher}
                                 extractorValue={matcherAndExtractionValue.extractor}
                                 showMatcherAndExtraction={showMatcherAndExtraction}
@@ -1461,6 +1477,15 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
     const isActive = useCreation(() => {
         return isShowSetting && isSelect
     }, [isShowSetting, isSelect])
+
+    const selectValue = useMemo(
+        () => ({
+            value: item.pageId,
+            label: item.pageName
+        }),
+        [item.pageId, item.pageName]
+    )
+
     return (
         <>
             {index > 0 && (
@@ -1677,10 +1702,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                         }}
                     >
                         <YakitSelect
-                            value={{
-                                value: item.pageId,
-                                label: item.pageName
-                            }}
+                            value={selectValue}
                             labelInValue
                             options={options}
                             onChange={(v) => {
@@ -2130,6 +2152,21 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                 )
             })
         })
+
+        const moreLimtAlertMsg = useMemo(
+            () => (
+                <div style={{fontSize: 12}}>
+                    响应数量超过{fuzzerTableMaxData}
+                    ，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
+                    <YakitButton type='text' onClick={onShowAll} style={{padding: 0}}>
+                        查看全部
+                    </YakitButton>
+                    查看所有数据
+                </div>
+            ),
+            [fuzzerTableMaxData]
+        )
+
         return (
             <>
                 <YakitResizeBox
@@ -2214,22 +2251,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                         extractedMap={extractedMap}
                                                         isEnd={loading}
                                                         onDebug={onDebug}
-                                                        moreLimtAlertMsg={
-                                                            <div style={{fontSize: 12}}>
-                                                                响应数量超过{fuzzerTableMaxData}
-                                                                ，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
-                                                                <YakitButton
-                                                                    type='text'
-                                                                    onClick={() => {
-                                                                        onShowAll()
-                                                                    }}
-                                                                    style={{padding: 0}}
-                                                                >
-                                                                    查看全部
-                                                                </YakitButton>
-                                                                查看所有数据
-                                                            </div>
-                                                        }
+                                                        moreLimtAlertMsg={moreLimtAlertMsg}
                                                         fuzzerTableMaxData={fuzzerTableMaxData}
                                                     />
                                                 )}

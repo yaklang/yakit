@@ -15,7 +15,18 @@ import ChildNewApp from "./ChildNewApp"
 
 window.MonacoEnvironment = {
     getWorkerUrl: function (moduleId, label) {
-        return `./static/js/${label}.worker.js`
+        switch (label) {
+            case "json":
+                return "static/js/json.worker.js"
+            case "html":
+            case "markdown":
+                return "static/js/html.worker.js"
+            case "css":
+            case "scss":
+                return "static/js/css.worker.js"
+            default:
+                return "static/js/editor.worker.js"
+        }
     }
 }
 
