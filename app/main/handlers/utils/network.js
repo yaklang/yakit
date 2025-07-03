@@ -159,25 +159,26 @@ const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
             if (url === "") {
                 throw new Error(`No Find ${version} Hash Url`)
             }
+
+            axios
+                .get(url, {...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(url)})
+                .then((response) => {
+                    const versionData = Buffer.from(response.data).toString("utf8")
+                    if (versionData.length > 0) {
+                        let onlineHash = Buffer.from(response.data).toString("utf8")
+                        // 去除换行符
+                        onlineHash = (onlineHash || "").replace(/\r?\n/g, "")
+                        // 去除首尾空格
+                        onlineHash = onlineHash.trim()
+                        resolve(onlineHash)
+                    } else {
+                        throw new Error("校验值不存在")
+                    }
+                })
+                .catch(reject)
         } catch (error) {
             reject(error)
         }
-        axios
-            .get(url, {...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(url)})
-            .then((response) => {
-                const versionData = Buffer.from(response.data).toString("utf8")
-                if (versionData.length > 0) {
-                    let onlineHash = Buffer.from(response.data).toString("utf8")
-                    // 去除换行符
-                    onlineHash = (onlineHash || "").replace(/\r?\n/g, "")
-                    // 去除首尾空格
-                    onlineHash = onlineHash.trim()
-                    resolve(onlineHash)
-                } else {
-                    throw new Error("校验值不存在")
-                }
-            })
-            .catch(reject)
     })
 }
 /** 获取最新 yak 版本号 */
@@ -405,7 +406,7 @@ const downloadYakitEE = async (version, isIRify, destination, progressHandler, o
 
 /** 下载 Yakit 内网版 进度 */
 const downloadIntranetYakit = async (filePath, destination, progressHandler, onFinished, onError) => {
-    const match = filePath.match(/yakit-projects(\/[^]+)$/);
+    const match = filePath.match(/yakit-projects(\/[^]+)$/)
     // 私有域地址
     const downloadUrl = `${HttpSetting.httpBaseURL}/install_package${match[1]}`
     requestWithProgress(

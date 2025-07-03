@@ -300,7 +300,9 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
             .invoke("RestoreEngineAndPlugin", {})
             .then(() => {
                 info(`解压内置引擎成功`)
-                onCallback(true)
+                ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
+                    onCallback(true)
+                })
             })
             .catch((e) => {
                 failed(`初始化内置引擎失败：${e}`)
