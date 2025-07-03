@@ -548,7 +548,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
         trigger: "setExpand"
     })
 
-    const [isReviewMode, setIsReviewMode] = useState<boolean>(false)
+    const [reviewTreeOption, setReviewTreeOption] = useState<AIChatMessage.ReviewSelector>()
     const [reviewTrees, setReviewTrees] = useState<AIChatMessage.PlanTask[]>([])
     const [currentPlansId, setCurrentPlansId] = useState<string>("")
     const initReviewTreesRef = useRef<AIChatMessage.PlanTask[]>([])
@@ -624,20 +624,20 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
 
     const planReview = useMemo(() => {
         if (reviewTrees.length > 0) {
-            const list = isReviewMode ? reviewTrees : initReviewTreesRef.current
+            const list = !!reviewTreeOption ? reviewTrees : initReviewTreesRef.current
             return (
                 <AIPlanReviewTree
                     defaultList={initReviewTreesRef.current}
                     list={list}
                     setList={setReviewTrees}
-                    editable={isReviewMode}
+                    editable={!!reviewTreeOption}
                     planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
                     currentPlansId={currentPlansId}
                 />
             )
         }
         return null
-    }, [reviewTrees, isReviewMode, planReviewTreeKeywordsMap, currentPlansId])
+    }, [reviewTrees, reviewTreeOption, planReviewTreeKeywordsMap, currentPlansId])
 
     const taskReview = useMemo(() => {
         if (review.type === "task_review_require") {
@@ -720,13 +720,20 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     const [reviewQS, setReviewQS] = useState("")
 
     const handleShowEdit = useMemoizedFn((info: AIChatMessage.ReviewSelector) => {
-        if (editShow) return
-        if (!info.allow_extra_prompt) {
-            onSend(info)
-            return
+        switch (info.value) {
+            case "freedom-review":
+                setReviewTreeOption(info)
+                break
+            default:
+                if (editShow) return
+                if (!info.allow_extra_prompt) {
+                    onSend(info)
+                    return
+                }
+                editInfo.current = cloneDeep(info)
+                setEditShow(true)
+                break
         }
-        editInfo.current = cloneDeep(info)
-        setEditShow(true)
     })
     const handleCallbackEdit = useMemoizedFn((cb: boolean) => {
         if (cb && editInfo.current) {
@@ -761,9 +768,6 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
 
         return (
             <div className={styles["review-selectors-wrapper"]}>
-                <YakitButton disabled={true} type='outline2' onClick={() => setIsReviewMode(true)}>
-                    进入修改批阅模式
-                </YakitButton>
                 {showList.map((el) => {
                     return (
                         <YakitButton key={el.value} type='outline2' onClick={() => handleShowEdit(el)}>
@@ -784,17 +788,13 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     }, [requireQS])
 
     const handleSubmit = useMemoizedFn(() => {
-        if (isReviewMode) {
-            /**TODO 接口对接:如果数据结构变化不大,则不需要修改，下方代码根据后端提供的结构直接传出去*/
-
-            // const tree = reviewListToTrees(reviewTrees)
-            // console.log("reviewTrees", reviewTrees, tree)
-            // const jsonInput: Record<string, string> = {
-            //     suggestion: "xxx",
-            //     xxx: "xxx"
-            // }
-            // const jsonInput: Record<string, string> = {}
-            // onSendAIRequire(JSON.stringify(jsonInput))
+        if (!!reviewTreeOption) {
+            const tree = reviewListToTrees(reviewTrees)
+            const jsonInput = {
+                suggestion: reviewTreeOption.value,
+                "reviewed-task-tree": tree[0]
+            }
+            onSendAIRequire(JSON.stringify(jsonInput))
         }
     })
 
@@ -883,7 +883,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
                                 {toolReview}
                                 {aiRequireReview}
                             </div>
-                            {!isReviewMode && (
+                            {!reviewTreeOption && (
                                 <div className={styles["reivew-options"]}>
                                     {aiOptions}
                                     {!!noAIOptions &&
@@ -938,9 +938,9 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
                 <div className={styles["btn-group"]}>
                     {isContinue && (
                         <>
-                            {isReviewMode ? (
+                            {!!reviewTreeOption ? (
                                 <>
-                                    <YakitButton type='outline2' onClick={() => setIsReviewMode(false)}>
+                                    <YakitButton type='outline2' onClick={() => setReviewTreeOption(undefined)}>
                                         取消
                                     </YakitButton>
                                     <YakitButton type='primary' onClick={handleSubmit}>

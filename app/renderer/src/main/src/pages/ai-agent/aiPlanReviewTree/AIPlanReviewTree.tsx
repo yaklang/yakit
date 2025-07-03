@@ -59,25 +59,15 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
             goal: `goal-我是添加的子节点`,
             state: "wait",
             isRemove: false,
-            tools: []
+            tools: [],
+            description: ""
         }
 
         // 找到父任务的位置
         const parentPos = list.findIndex((task) => task.index === parentIndex)
         if (parentPos === -1) return
 
-        // 找到该父任务的最后一个子任务的位置
-        const childPrefix = `${parentIndex}-`
-        let lastChildPos = -1
-        for (let i = parentPos + 1; i < list.length; i++) {
-            if (!list[i].index.startsWith(childPrefix)) {
-                break // 遇到非子任务，停止查找
-            }
-            lastChildPos = i
-        }
-
-        // 插入位置：如果存在子任务，则在最后一个子任务之后；否则在父任务之后
-        const insertPos = lastChildPos !== -1 ? lastChildPos + 1 : parentPos + 1
+        const insertPos = parentPos + 1
         list.splice(insertPos, 0, newChildTask)
         setList([...list])
         onFocusAfterAddNode(newChildTask)
@@ -111,31 +101,15 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
 
         return lastSibling.index
     }
+
     /**
-     * 获取某个任务的最后一个子任务的 index
-     * @param defList 任务列表
-     * @param parentIndex 父任务的 index（如 "1-1"）
-     * @returns 最后一个子任务的 index（如 "1-1-2"），如果没有子任务则返回 null
-     */
-    const getLastChildIndex = (defList: AIChatMessage.PlanTask[], parentIndex: string): string | null => {
-        const childPrefix = `${parentIndex}-`
-        const children = defList.filter((task) => task.index.startsWith(childPrefix))
-
-        if (children.length === 0) return null
-
-        // 找到层级最深的最后一个子任务
-        const lastChild = children.reduce((prev, current) => {
-            return prev.index > current.index ? prev : current // 按字符串排序
-        })
-
-        return lastChild.index
-    }
-    /**添加兄弟节点 */
+     * 添加兄弟节点
+     * @description 目前根节点不允许添加兄弟元素，前端逻辑已做，不删
+     * */
     const onAddBrotherNode = useMemoizedFn((item: AIChatMessage.PlanTask) => {
         const siblingOfIndex = item.index
-        const lastSiblingIndex = getLastSiblingIndex(list, siblingOfIndex)
-        const lastChildIndex = getLastChildIndex(list, siblingOfIndex)
 
+        const lastSiblingIndex = getLastSiblingIndex(list, siblingOfIndex)
         // 计算新兄弟的 index（如 "1-1" → "1-2"）
         const parts = siblingOfIndex.split("-")
         const parentIndex = parts.slice(0, -1).join("-")
@@ -150,26 +124,28 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
             goal: `这是 ${newSiblingIndex} 的目标`,
             state: "wait",
             isRemove: false,
-            tools: []
+            tools: [],
+            description: ""
         }
 
-        // 确定插入位置
-        let insertPos = 0
-        if (lastChildIndex && lastSiblingIndex) {
-            // 取子元素和兄弟元素中更靠后的位置
-            const lastChildPos = list.findIndex((task) => task.index === lastChildIndex)
-            const lastSiblingPos = list.findIndex((task) => task.index === lastSiblingIndex)
-            insertPos = Math.max(lastChildPos, lastSiblingPos) + 1
-        } else if (lastChildIndex) {
-            // 如果有子任务，插入到最后一个子任务之后
-            insertPos = list.findIndex((task) => task.index === lastChildIndex) + 1
-        } else if (lastSiblingIndex) {
-            // 如果没有子任务但有兄弟，插入到最后一个兄弟之后
-            insertPos = list.findIndex((task) => task.index === lastSiblingIndex) + 1
-        } else {
-            // 如果既没有子任务也没有兄弟，插入到父任务之后
-            const parentPos = list.findIndex((task) => task.index === parentIndex)
-            insertPos = parentPos !== -1 ? parentPos + 1 : list.length
+        const startIndex = list.findIndex((ele) => ele.index === siblingOfIndex)
+        if (startIndex === -1) return
+        const length = list.length
+        let insertPos = startIndex
+        for (let index = startIndex + 1; index < length; index++) {
+            const current = list[index]
+            if (parentIndex) {
+                if (current.index.startsWith(siblingOfIndex)) continue
+                insertPos = index
+                break
+            } else {
+                // 当前添加的兄弟元素为根节点
+                if (current.index.length === 1) {
+                    insertPos = index
+                    break
+                }
+            }
+            insertPos = index + 1
         }
 
         list.splice(insertPos, 0, newSiblingTask)
@@ -262,16 +238,6 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
 
 export default AIPlanReviewTree
 
-const treeItemMenuData = [
-    {
-        key: "sub",
-        label: "添加子任务"
-    },
-    {
-        key: "brother",
-        label: "添加兄弟任务"
-    }
-]
 const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((props) => {
     const {
         order,
@@ -346,12 +312,6 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
     const level = useCreation(() => {
         return indexList.length
     }, [indexList])
-    const extraInfo: AIChatMessage.PlanReviewRequireExtra | undefined = useCreation(() => {
-        const info = planReviewTreeKeywordsMap.get(item.index)
-        if (info?.plans_id === currentPlansId) {
-            return info
-        }
-    }, [item.index, planReviewTreeKeywordsMap, currentPlansId])
 
     const onSetExpand = useMemoizedFn(() => {
         if (item.isRemove) {
@@ -372,6 +332,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                 onAddSubNode(item)
                 break
             case "brother":
+                if (item.index.length === 1) return
                 onAddBrotherNode(item)
                 break
             default:
@@ -389,6 +350,21 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
     const onSetGoal = useMemoizedFn((value: string) => {
         setItem(item, {label: "goal", value})
     })
+    //#region 关联工具及其解释说明
+    const extraInfo: AIChatMessage.PlanReviewRequireExtra | undefined = useCreation(() => {
+        const info = planReviewTreeKeywordsMap.get(item.index)
+        if (info?.plans_id === currentPlansId) {
+            return info
+        }
+    }, [item.index, planReviewTreeKeywordsMap, currentPlansId])
+    useEffect(() => {
+        setItem(item, {label: "description", value: extraInfo?.description || ""})
+    }, [extraInfo?.description])
+    useEffect(() => {
+        if (!item.tools.length) {
+            onSetTool(extraInfo?.keywords || [])
+        }
+    }, [extraInfo?.keywords])
     const onSetTool = useMemoizedFn((value: string[]) => {
         setItem(item, {label: "tools", value})
     })
@@ -396,9 +372,32 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
         if (item.tools && item.tools.length > 0) return item.tools
         return extraInfo?.keywords || []
     }, [item.tools, extraInfo?.keywords])
+
+    const description = useCreation(() => {
+        if (item?.description && item?.description?.length > 0) return item.description
+        return extraInfo?.description || ""
+    }, [item.description, extraInfo?.description])
+
     const showTool = useCreation(() => {
         return selectValue.length > 0 || (editable && !item?.isRemove)
     }, [editable, item?.isRemove, selectValue.length])
+    //#endregion
+
+    const treeItemMenuData = useCreation(() => {
+        const menu = [
+            {
+                key: "sub",
+                label: "添加子任务"
+            }
+        ]
+        if (item.index.length > 1) {
+            menu.push({
+                key: "brother",
+                label: "添加兄弟任务"
+            })
+        }
+        return menu
+    }, [item.index])
     return (
         <div
             className={styles["ai-plan-review-tree-item"]}
@@ -430,7 +429,9 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                         setValue={onSetName}
                     />
                     <div className={styles["icon-body"]}>
-                        <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onRemove} />
+                        {item.index.length > 1 && (
+                            <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onRemove} />
+                        )}
                         <YakitDropdownMenu
                             menu={{
                                 data: treeItemMenuData,
@@ -481,13 +482,13 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                                 </YakitSelect>
                             </div>
                         )}
-                        {extraInfo?.description && (
+                        {description && (
                             <div className={styles["description"]}>
                                 <div className={styles["description-heard"]}>
                                     <SolidAnnotationIcon />
                                     <span>解释</span>
                                 </div>
-                                <div>{extraInfo?.description}</div>
+                                <div>{description}</div>
                             </div>
                         )}
                     </div>

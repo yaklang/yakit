@@ -185,17 +185,13 @@ export const reviewListToTrees = (items: AIChatMessage.PlanTask[]): AIChatMessag
     // 首先构建所有节点的映射
     items.forEach((item) => {
         // 创建节点副本并初始化children数组
-        if (!item.isRemove) {
-            map[item.index] = {...item, subtasks: []}
-        }
+        map[item.index] = {...item, subtasks: []}
     })
 
     // 构建树结构
     items.forEach((item) => {
         const node: AIChatMessage.PlanTask = map[item.index]
-        if (node.isRemove) return
         const parentId = getParentId(item.index)
-
         // 如果有父节点，则添加到父节点的children中
         if (parentId && map[parentId]) {
             map[parentId].subtasks.push(node)
