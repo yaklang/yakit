@@ -217,6 +217,8 @@ export declare namespace AIChatMessage {
         isRemove: boolean
         /**关联工具 */
         tools: string[]
+        /**工具解释描述 */
+        description: string
     }
     /** 计划审阅选项 */
     export interface ReviewSelector {
