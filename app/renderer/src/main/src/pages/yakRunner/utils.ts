@@ -982,6 +982,8 @@ export const monacaLanguageType = (suffix?: string) => {
             return "sql"
         case "dockerfile":
             return "dockerfile"
+        case "js":
+            return "javascript"
         default:
             return undefined
     }
