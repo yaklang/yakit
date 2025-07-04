@@ -15,7 +15,7 @@ import {AIAgentSettingDefault} from "../defaultConstant"
 // import classNames from "classnames"
 import styles from "./AIChatSetting.module.scss"
 
-export const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
+const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
     const [form] = Form.useForm()
 
     const {setting} = useStore()
@@ -210,6 +210,8 @@ export const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
         </div>
     )
 })
+
+export default AIChatSetting
 
 const FormItemSlider: React.FC<FormItemSliderProps> = React.memo((props) => {
     const {init, onChange, defaultValue, ...rest} = props

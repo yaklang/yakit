@@ -25,6 +25,8 @@ import {AIAgentWelcome} from "./AIAgentWelcome/AIAgentWelcome"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
+import {AITriageChat} from "./aiTriageChat/AITriageChat"
+import {AITriageChatRef} from "./aiTriageChat/type"
 
 export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     const {} = props
@@ -435,9 +437,29 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     })
     // #endregion
 
+    const [mode, setMode] = useState<"welcome" | "triage" | "task">("welcome")
+
+    const triageChatRef = useRef<AITriageChatRef>(null)
+
+    const qqqq = useMemoizedFn((qs: string) => {
+        setMode("triage")
+        setTimeout(() => {
+            if (triageChatRef.current) {
+                triageChatRef.current.onStart(qs)
+            }
+        }, 300)
+    })
+
     return (
         <div ref={wrapper} className={styles["server-chat"]}>
-            <div className={styles["server-chat-body"]}>
+            <div style={{width: "100%", height: "100%", display: `${mode === "welcome" ? "block" : "none"}`}}>
+                <AIAgentWelcome onTriageSubmit={qqqq} onTaskSubmit={() => {}} />
+            </div>
+
+            <div style={{width: "100%", height: "100%", display: `${mode === "triage" ? "block" : "none"}`}}>
+                <AITriageChat ref={triageChatRef} />
+            </div>
+            {/* <div className={styles["server-chat-body"]}>
                 {activeChat && activeID ? (
                     <div className={styles["server-chat-executing"]}>
                         <div className={styles["chat-executing-header"]}>
@@ -535,7 +557,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                         </div>
                     </div>
                 ) : (
-                    <AIAgentWelcome question={question} setQuestion={setQuestion} onSearch={handleStartChat} />
+                    <AIAgentWelcome onTaskSubmit={() => {}} onTriageSubmit={() => {}} />
                 )}
             </div>
 
@@ -555,7 +577,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                 cancelButtonText='忽略'
                 cancelButtonProps={{loading: loading}}
                 onCancel={() => handleHintShowCallback(false)}
-            />
+            /> */}
         </div>
     )
 })

@@ -103,7 +103,13 @@ module.exports = (win, getClient) => {
         let stream = getClient().StartAITriage()
         handlerHelper.registerHandler(win, stream, aiChatTriagePool, token)
         try {
+            const request = JSON.parse(JSON.stringify(params))
+            const qs = request?.Params?.UserQuery
+            if (request && request.Params && request.Params.UserQuery) {
+                request.Params.UserQuery = ""
+            }
             stream.write({...params})
+            stream.write({IsFreeInput: true, FreeInput: qs})
         } catch (error) {
             throw new Error(error)
         }

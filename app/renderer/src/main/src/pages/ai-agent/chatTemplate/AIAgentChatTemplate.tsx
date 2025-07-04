@@ -5,7 +5,6 @@ import {
     AIAgentChatFooterProps,
     AIAgentChatReviewProps,
     AIAgentChatStreamProps,
-    AIAgentChatTextareaProps,
     AIChatLeftSideProps,
     AIChatLogsProps,
     ChatStreamCollapseProps
@@ -52,10 +51,11 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "./AIEcharts"
 import AIPlanReviewTree from "../aiPlanReviewTree/AIPlanReviewTree"
 import {yakitNotify} from "@/utils/notification"
+import {formatTime, formatTimestamp, formatTimeYMD} from "@/utils/timeUtil"
+import {QSInputTextarea} from "../template/template"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
-import {formatTime, formatTimestamp, formatTimeYMD} from "@/utils/timeUtil"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -828,7 +828,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
         if (!options || options.length === 0)
             return (
                 <div className={styles["ai-require-input"]}>
-                    <AIAgentChatTextarea
+                    <QSInputTextarea
                         className={styles["textarea-style"]}
                         placeholder='请告诉我更多信息...'
                         value={requireQS}
@@ -998,18 +998,5 @@ export const AIChatLogs: React.FC<AIChatLogsProps> = memo((props) => {
                 })}
             </div>
         </div>
-    )
-})
-
-export const AIAgentChatTextarea: React.FC<AIAgentChatTextareaProps> = memo((props) => {
-    const {className, bordered, autoSize, ...rest} = props
-
-    return (
-        <Input.TextArea
-            {...rest}
-            className={classNames(styles["ai-agent-chat-textarea"], className)}
-            bordered={false}
-            autoSize={true}
-        />
     )
 })

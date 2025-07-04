@@ -2,7 +2,6 @@ import {CSSProperties, Dispatch, ReactNode, SetStateAction} from "react"
 import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
 import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIStartParams} from "./type/aiChat"
 import {AITreeNodeProps} from "./aiTree/type"
-import {TextAreaProps} from "antd/lib/input"
 
 export interface AIAgentProps {}
 
@@ -60,7 +59,7 @@ export interface RenderMCPClientInfo extends MCPClientInfo {
 // #region UI左侧组件定义
 export interface AIAgentSideListProps {}
 // 侧边栏 tab 类型
-export type AIAgentTab = "history" | "setting" | "forgeName"| "tool"  //  | "mcp"
+export type AIAgentTab = "history" | "setting" | "forgeName" | "tool" //  | "mcp"
 
 // 编辑对话名字
 export interface EditChatNameModalProps {
@@ -153,7 +152,4 @@ export interface AIChatLogsProps {
     logs: AIChatMessage.Log[]
     onClose: () => void
 }
-
-// 文本域输入组件
-export interface AIAgentChatTextareaProps extends TextAreaProps {}
 // #endregion

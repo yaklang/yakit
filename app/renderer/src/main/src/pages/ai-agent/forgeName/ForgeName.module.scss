@@ -58,8 +58,10 @@
     align-items: center;
     border-top: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
     background: var(--Colors-Use-Basic-Background, #fff);
-    // 这个伪类有问题,后面调一下
-    &:nth-last-child(2) {
+
+    &:last-child,
+    &:has(+ .forge-list-no-more),
+    &:has(+ .forge-list-loading) {
         height: 42px;
         border-bottom: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
     }
@@ -72,17 +74,6 @@
         font-size: 12px;
         font-weight: 400;
         line-height: 16px;
-    }
-}
-
-.forge-list-no-more {
-    padding: 12px 0;
-    .no-more-title {
-        color: var(--color-gray-Text-01, #ccd2de);
-        text-align: center;
-        font-size: 11px;
-        font-weight: 400;
-        line-height: 14px;
     }
 }
 
@@ -148,5 +139,23 @@
                 }
             }
         }
+    }
+}
+
+.forge-list-no-more {
+    padding: 12px 0;
+    .no-more-title {
+        color: var(--color-gray-Text-01, #ccd2de);
+        text-align: center;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 14px;
+    }
+}
+
+.forge-list-loading {
+    padding: 10px 0;
+    .loading-style {
+        align-items: center;
     }
 }

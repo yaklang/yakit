@@ -53,6 +53,8 @@ function useChatTriage(params?: UseChatTriageParams) {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIReviewRequire
                     const ops = data?.options || []
+                    console.log("ops", ops)
+
                     if (ops.length > 0) {
                         setAITriageForges(ops.map((item) => item?.prompt_title || "").filter(Boolean))
                     } else {
@@ -81,7 +83,6 @@ function useChatTriage(params?: UseChatTriageParams) {
     /** review 界面选项触发事件 */
     const onSend = useMemoizedFn((token: string, content: string) => {
         if (!execute) {
-            yakitNotify("warning", "AI 未执行任务，无法发送选项")
             return
         }
         if (!chatID || chatID.current !== token) {

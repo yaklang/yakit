@@ -1,3 +1,1 @@
-export interface ForgeNameProps{
-    
-}
+export interface ForgeNameProps {}
