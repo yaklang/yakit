@@ -51,7 +51,7 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
 
     const getSyntaxFlowScanTaskList = useMemoizedFn(() => {
         ipcRenderer
-            .invoke("QuerySyntaxFlowScanTask")
+            .invoke("QuerySyntaxFlowScanTask", {Filter: {}})
             .then((res: QuerySyntaxFlowScanTaskResponse) => {
                 if (!res || !Array.isArray(res.Data)) {
                     return
