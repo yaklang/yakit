@@ -58,7 +58,7 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
                 }
                 setSyntaxFlowScanTask(
                     res.Data.map((item) => {
-                        return {label: item.TaskId, value: item.TaskId}
+                        return {label: formatTimestamp(item.UpdatedAt), value: item.TaskId}
                     })
                 )
             })
