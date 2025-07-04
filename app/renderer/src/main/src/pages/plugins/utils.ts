@@ -728,7 +728,7 @@ export const convertLocalPluginsRequestParams = (query: {
         Keyword: search.type === "keyword" ? search.keyword : "",
         UserName: search.type === "userName" ? search.userName : "",
         FieldKeywords: search.type === "fieldKeywords" ? search.fieldKeywords : "",
-
+        VectorSearchContent: search.type === "vector" ? search.vector : "",
         // filter
         Type: (type.map((ele) => ele.value) || []).join(","),
         Tag: tag.map((ele) => ele.value) || [],
