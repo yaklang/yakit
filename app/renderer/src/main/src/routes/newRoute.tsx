@@ -21,7 +21,7 @@ import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
 import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker"
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage"
 import {CVEViewer} from "@/pages/cve/CVEViewer"
-import { YakJavaDecompiler } from "@/pages/yakJavaDecompiler/YakJavaDecompiler";
+import {YakJavaDecompiler} from "@/pages/yakJavaDecompiler/YakJavaDecompiler"
 import {PageLoading} from "./PageLoading"
 import {
     PrivateOutlineAIAgentIcon,
@@ -172,6 +172,7 @@ const PluginHub = React.lazy(() => import("@/pages/pluginHub/pluginHub/PluginHub
 const ModifyNotepad = React.lazy(() => import("@/pages/notepadManage/modifyNotepad/ModifyNotepad"))
 const NotepadManage = React.lazy(() => import("@/pages/notepadManage/notepadManage/NotepadManage"))
 const FingerprintManage = React.lazy(() => import("@/pages/fingerprintManage/FingerprintManage"))
+const SsaResDiff = React.lazy(() => import("@/pages/ssaResDiff/SsaResDiff"))
 
 /**
  * @description 页面路由对应的页面信息
@@ -268,6 +269,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "shortcut-key": {label: "快捷键设置"},
     "fingerprint-manage": {label: "指纹库"},
     "ai-agent": {label: "AIAgent"},
+    "ssa-result-diff": {label: "ssa-result-diff"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -313,6 +315,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.ShortcutKey,
     YakitRoute.FingerprintManage,
     YakitRoute.AI_Agent,
+    YakitRoute.Ssa_Result_Diff
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -358,6 +361,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.ShortcutKey,
     YakitRoute.FingerprintManage,
     YakitRoute.AI_Agent,
+    YakitRoute.Ssa_Result_Diff
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -645,6 +649,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <ShortcutKeyList />
         case YakitRoute.FingerprintManage:
             return <FingerprintManage />
+        case YakitRoute.Ssa_Result_Diff:
+            return <SsaResDiff />
         default:
             return <div />
     }
@@ -796,12 +802,12 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
               page: undefined,
               label: "数据库",
               children: [{page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report]}]
-          },
-        //   {
-        //       page: undefined,
-        //       label: "AI",
-        //       children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
-        //   }
+          }
+          //   {
+          //       page: undefined,
+          //       label: "AI",
+          //       children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
+          //   }
       ]
     : [
           {
@@ -943,12 +949,12 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                   {page: YakitRoute.FingerprintManage, ...YakitRouteToPageInfo[YakitRoute.FingerprintManage]},
                   {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]}
               ]
-          },
-        //   {
-        //       page: undefined,
-        //       label: "AI",
-        //       children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
-        //   }
+          }
+          //   {
+          //       page: undefined,
+          //       label: "AI",
+          //       children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
+          //   }
       ]
 /**
  * @name public版常用插件列表
@@ -1208,7 +1214,7 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         icon: <PrivateOutlineSpaceEngineIcon />,
         hoverIcon: <PrivateSolidSpaceEngineIcon />,
         ...YakitRouteToPageInfo[YakitRoute.Space_Engine]
-    },
+    }
     // [YakitRoute.AI_Agent]: {
     //     page: YakitRoute.AI_Agent,
     //     icon: <PrivateOutlineAIAgentIcon />,
