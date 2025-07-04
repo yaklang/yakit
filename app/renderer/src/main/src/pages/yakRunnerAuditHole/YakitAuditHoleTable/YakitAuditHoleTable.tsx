@@ -13,7 +13,7 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {Badge, Divider, Form, Tooltip} from "antd"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useCreation, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useControllableValue, useCreation, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
     OutlineChevrondownIcon,
@@ -33,13 +33,17 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {
     GroupTableColumnRequest,
     SSARiskFeedbackToOnlineRequest,
-    UpdateSSARiskTagsRequest,
+    CreateSSARiskDisposalsRequest,
     apiDeleteSSARisks,
     apiGroupTableColumn,
     apiNewRiskRead,
     apiQuerySSARisks,
     apiSSARiskFeedbackToOnline,
-    apiUpdateSSARiskTags
+    apiCreateSSARiskDisposals,
+    apiGetSSARiskDisposal,
+    GetSSARiskDisposalResponse,
+    SSARiskDisposalData,
+    apiDeleteSSARiskDisposals
 } from "./utils"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
@@ -70,6 +74,8 @@ import {yakitNotify} from "@/utils/notification"
 import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
 import {RemoteAuditHoleGV} from "@/enums/auditHole"
 import {useStore} from "@/store"
+import {PopoverArrowIcon} from "@/pages/pluginHub/pluginLog/PluginLogOpt"
+import {LogNodeStatusModifyIcon} from "@/assets/icon/colors"
 
 export const defQuerySSARisksRequest: QuerySSARisksRequest = {
     Pagination: {Page: 1, Limit: 20, OrderBy: "id", Order: "desc"},
@@ -142,6 +148,8 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             onFirst
         })
 
+    const [showType, setShowType] = useState<"detail" | "code" | "history">("detail")
+
     useUpdateEffect(() => {
         setAllTotal && setAllTotal(tableTotal)
     }, [tableTotal])
@@ -154,10 +162,10 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             },
             Filter: {
                 ...tableParams.Filter,
-                ...query,
+                ...query
             }
         }
-        if(query.Severity){
+        if (query.Severity) {
             newParams.Filter.Severity = query.Severity
         }
         debugVirtualTableEvent.setP(newParams)
@@ -218,7 +226,13 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             }
         } catch (error) {}
     })
+    const getLabelByValue = (value) => {
+        // 使用 find 方法查找匹配的 value
+        const option = defaultTags.find((option) => option.value === value)
 
+        // 如果找到匹配的 value，返回对应的 label，否则返回 null
+        return option ? option.label : value.replaceAll("|", ",")
+    }
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
         const riskTypeVerboseTable = riskTypeVerbose.map((item) => ({
             value: item,
@@ -315,9 +329,9 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             },
             {
                 title: "处置状态",
-                dataKey: "Tags",
+                dataKey: "LatestDisposalStatus",
                 filterProps: {
-                    filterKey: "Tags",
+                    filterKey: "LatestDisposalStatus",
                     filtersType: "select",
                     filterMultiple: true,
                     filters: defaultTags
@@ -328,10 +342,11 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                         <div
                             className={styles["table-tag"]}
                             onClick={(e) => {
+                                e.stopPropagation()
                                 onOpenSelect(record)
                             }}
                         >
-                            <span>{!!text ? text.replaceAll("|", ",") : "-"}</span>
+                            <span>{!!text ? getLabelByValue(text) : "-"}</span>
                             <OutlineChevrondownIcon className={styles["table-tag-icon"]} />
                         </div>
                     </>
@@ -468,31 +483,35 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     })
 
     const onOpenSelect = useMemoizedFn((record: SSARisk) => {
+        console.log("tableData---", tableData)
+
         const m = showYakitModal({
             title: (
                 <div className='content-ellipsis'>
                     序号【{record.Id}】- {record.TitleVerbose || record.Title}
                 </div>
             ),
-            content: <YakitRiskSelectTag info={record} onClose={() => m.destroy()} onSave={onSaveTags} />,
+            content: <YakitRiskSelectTag ids={[record.Id]} onClose={() => m.destroy()} onCreate={onCreateTags} />,
             footer: null,
             onCancel: () => {
                 m.destroy()
             }
         })
     })
-    const onSaveTags = useMemoizedFn((info: SSARisk) => {
-        const params: UpdateSSARiskTagsRequest = {
-            ID: info.Id,
-            Tags: !!info.Tags ? info.Tags?.split("|") : []
-        }
-        apiUpdateSSARiskTags(params).then(() => {
-            const index = tableData.findIndex((item) => item.Id === info.Id)
-            if (index === -1) return
-            tableData[index] = {
-                ...info
-            }
-            debugVirtualTableEvent.setTData(tableData)
+    const onCreateTags = useMemoizedFn((params: CreateSSARiskDisposalsRequest) => {
+        console.log("params",params);
+        
+        apiCreateSSARiskDisposals(params).then(() => {
+            const newTableData = tableData.map((item) => {
+                if (params.RiskIds.includes(item.Id)) {
+                    return {
+                        ...item,
+                        LatestDisposalStatus: !!params.Status ? params.Status : ""
+                    }
+                }
+                return item
+            })
+            debugVirtualTableEvent.setTData(newTableData)
         })
     })
     const onRemoveSingle = useMemoizedFn((id) => {
@@ -561,7 +580,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             filter.AfterCreatedAt = time[0]
             filter.BeforeCreatedAt = time[1]
         }
-        
+
         if (setQuery) {
             const newPagination = {
                 ...tableParams.Pagination,
@@ -763,6 +782,30 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                             onPressEnter={onPressEnter}
                                         />
                                         <Divider type='vertical' style={{margin: 0}} />
+                                        <YakitButton
+                                            type='outline2'
+                                            disabled={selectedRowKeys.length === 0}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                const m = showYakitModal({
+                                                    title: <div className='content-ellipsis'>批量处置</div>,
+                                                    content: (
+                                                        <YakitRiskSelectTag
+                                                            ids={selectedRowKeys}
+                                                            onClose={() => m.destroy()}
+                                                            onCreate={onCreateTags}
+                                                        />
+                                                    ),
+                                                    footer: null,
+                                                    onCancel: () => {
+                                                        m.destroy()
+                                                    }
+                                                })
+                                            }}
+                                        >
+                                            批量处置
+                                        </YakitButton>
+
                                         <FuncBtn
                                             maxWidth={1200}
                                             type='outline2'
@@ -837,6 +880,8 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                 onClickIP={onClickIP}
                                 className={styles["yakit-code-scan-SSARisk-details"]}
                                 isShowExtra={true}
+                                showType={showType}
+                                setShowType={setShowType}
                             />
                         </>
                     )
@@ -856,54 +901,38 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
 })
 const defaultTags = [
     {
-        label: "误报",
-        value: "误报"
+        label: "有问题",
+        value: "is_issue"
     },
     {
-        label: "忽略",
-        value: "忽略"
+        label: "不是问题",
+        value: "no_issue"
     },
     {
-        label: "已处理",
-        value: "已处理"
+        label: "存疑",
+        value: "suspicious"
     },
     {
-        label: "待处理",
-        value: "待处理"
+        label: "未处置",
+        value: "not_set"
     }
 ]
 const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props) => {
-    const {info, onClose, onSave} = props
-    const initSelectTags = useCreation(() => {
-        let tagList: {label: string; value: string}[] = []
-        if (!!info?.Tags) {
-            tagList =
-                (info?.Tags || "").split("|").map((item) => ({
-                    label: item,
-                    value: item
-                })) || []
-        }
-        return tagList
-    }, [info.Tags])
-    const tags = useCreation(() => {
-        const list = initSelectTags.filter((item) => {
-            return !defaultTags.find((i) => i.value === item.value)
-        })
-        return defaultTags.concat(list)
-    }, [info.Tags, initSelectTags])
+    const {ids, onClose, onCreate} = props
+
     const onFinish = useMemoizedFn((value) => {
-        onSave({
-            ...info,
-            Tags: !!value.TagList ? value.TagList.join("|") : ""
-        })
+        console.log("onFinish", {RiskIds: ids, Status: value.Tag, Comment: value.Description})
+
+        onCreate({RiskIds: ids, Status: value.Tag, Comment: value.Description})
         if (onClose) onClose()
     })
+
     return (
         <div className={styles["yakit-ssa-risk-select-tag"]}>
-            <Form onFinish={onFinish}>
-                <Form.Item label='处置状态' name='TagList' initialValue={initSelectTags}>
-                    <YakitSelect mode='tags' allowClear>
-                        {tags.map((item) => {
+            <Form onFinish={onFinish} labelCol={{span: 4}} wrapperCol={{span: 20}}>
+                <Form.Item label='处置状态' name='Tag'>
+                    <YakitSelect allowClear>
+                        {defaultTags.map((item) => {
                             return (
                                 <YakitSelect.Option key={item.value} value={item.value}>
                                     {item.label}
@@ -911,6 +940,9 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
                             )
                         })}
                     </YakitSelect>
+                </Form.Item>
+                <Form.Item label='说明' name='Description'>
+                    <YakitInput.TextArea spellCheck={false} autoSize={{minRows: 3, maxRows: 10}} />
                 </Form.Item>
                 <div className={styles["yakit-ssa-risk-select-tag-btns"]}>
                     <YakitButton
@@ -931,10 +963,48 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React.memo((props) => {
     const {info, className, border, isShowExtra, isExtraClick} = props
     const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
-
+    const [showType, setShowType] = useControllableValue<"detail" | "code" | "history">(props, {
+        defaultValue: "detail",
+        valuePropName: "showType",
+        trigger: "setShowType"
+    })
     useEffect(() => {
         initData()
+        getSSARiskDisposal(info)
     }, [info])
+
+    const [disposalData, setDisposalData] = useState<SSARiskDisposalData[]>([])
+    const getSSARiskDisposal = useMemoizedFn((newInfo) => {
+        console.log("获取处置历史数据params", {RiskId: newInfo.Id});
+        
+        apiGetSSARiskDisposal({RiskId: newInfo.Id}).then((data) => {
+            console.log("获取处置历史数据res", data)
+            if ((data.Data || []).length === 0 && showType === "history") {
+                setShowType("detail")
+            }
+            setDisposalData(data.Data || [])
+        })
+    })
+
+    const getOptions = useMemo(() => {
+        let options = [
+            {
+                label: "漏洞详情",
+                value: "detail"
+            },
+            {
+                label: "代码片段",
+                value: "code"
+            }
+        ]
+        if (disposalData.length > 0) {
+            options.push({
+                label: "处置历史",
+                value: "history"
+            })
+        }
+        return options
+    }, [disposalData])
 
     const [isShowCollapse, setIsShowCollapse] = useState<boolean>(false)
     const initData = useMemoizedFn(async () => {
@@ -958,25 +1028,6 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
             setIsShowCollapse(false)
         }
     })
-
-    const extraResizeBoxProps = useCreation(() => {
-        let p: YakitResizeBoxProps = {
-            firstNode: <></>,
-            secondNode: <></>,
-            firstRatio: "50%",
-            secondRatio: "50%",
-            lineStyle: {height: "auto"},
-            firstNodeStyle: {height: "auto"}
-        }
-        if (!isShowCollapse) {
-            p.firstRatio = "0%"
-            p.secondRatio = "100%"
-            p.lineStyle = {display: "none"}
-            p.firstNodeStyle = {display: "none"}
-            p.secondNodeStyle = {padding: 0}
-        }
-        return p
-    }, [isShowCollapse])
 
     const onClickIP = useMemoizedFn(() => {
         if (props.onClickIP) props.onClickIP(info)
@@ -1103,25 +1154,132 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                     </div>
                 )}
             </div>
-            <YakitResizeBox
-                {...extraResizeBoxProps}
-                firstNode={
-                    <div className={styles["content-resize-collapse"]}>
-                        <div className={styles["main-title"]}>相关代码段</div>
-                        <AuditResultCollapse
-                            data={yakURLData}
-                            jumpCodeScanPage={jumpCodeScanPage}
-                            isShowExtra={false}
-                            collapseProps={{
-                                defaultActiveKey: ["collapse-list-0"]
-                            }}
-                        />
-                    </div>
-                }
-                secondNode={<AuditResultDescribe info={info} />}
-                firstMinSize={200}
-                secondMinSize={400}
+            <YakitRadioButtons
+                style={{marginTop: 6, marginBottom: 6}}
+                value={showType}
+                onChange={(e) => {
+                    const value = e.target.value
+                    setShowType(value)
+                }}
+                buttonStyle='solid'
+                options={getOptions}
             />
+            {showType === "detail" && (
+                <div className={styles["content-resize-collapse"]}>
+                    <div className={styles["main-title"]}>相关代码段</div>
+                    <AuditResultCollapse
+                        data={yakURLData}
+                        jumpCodeScanPage={jumpCodeScanPage}
+                        isShowExtra={false}
+                        collapseProps={{
+                            defaultActiveKey: ["collapse-list-0"]
+                        }}
+                    />
+                </div>
+            )}
+
+            {showType === "code" && <AuditResultDescribe info={info} />}
+            {showType === "history" && (
+                <AuditResultHistory disposalData={disposalData} setDisposalData={setDisposalData} />
+            )}
+        </div>
+    )
+})
+
+interface AuditResultHistoryProps {
+    disposalData: SSARiskDisposalData[]
+    setDisposalData: (data: SSARiskDisposalData[]) => void
+}
+const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props) => {
+    const [disposalData, setDisposalData] = useControllableValue<SSARiskDisposalData[]>(props, {
+        defaultValue: [],
+        valuePropName: "disposalData",
+        trigger: "setDisposalData"
+    })
+    const onDeleteSSARiskDisposals = useMemoizedFn((id: number) => {
+        apiDeleteSSARiskDisposals({Filter: {ID: [id]}})
+            .then(() => {
+                setDisposalData((prev) => prev.filter((item) => item.Id !== id))
+                yakitNotify("success", "删除成功")
+            })
+            .catch((e) => {
+                yakitNotify("error", `删除失败: ${e}`)
+            })
+    })
+
+    const AuditResultHistoryItem = useMemoizedFn((info: SSARiskDisposalData, index: number) => {
+        const getLabelByValue = (value) => {
+            // 使用 find 方法查找匹配的 value
+            const option = defaultTags.find((option) => option.value === value)
+
+            // 如果找到匹配的 value，返回对应的 label，否则返回 null
+            return option ? option.label : "未识别状态"
+        }
+        return (
+            <div className={classNames(styles["audit-result-history"])}>
+                <div className={styles["audit-result-history-opt"]}>
+                    <PopoverArrowIcon className={styles["arrow-icon"]} />
+                    <div className={styles["icon-wrapper"]}>
+                        <LogNodeStatusModifyIcon />
+                    </div>
+                    <div
+                        className={classNames(styles["line-tail"], {
+                            [styles["hidden-line-tail"]]: index + 1 === disposalData.length
+                        })}
+                    >
+                        <div className={styles["line-wrapper"]}>
+                            <div className={styles["line-top-dot"]}></div>
+                            <div className={styles["line-style"]}></div>
+                            <div className={styles["line-bottom-dot"]}></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles["audit-result-history-info"]}>
+                    <div className={styles["info-body"]}>
+                        {/* 头部信息 */}
+                        <div
+                            className={classNames(styles["info-header"], {
+                                [styles["info-header-line-additional"]]: true
+                            })}
+                        >
+                            <div className={styles["header-content"]}>
+                                {/* <AuthorImg src={info.headImg || UnLogin} wrapperClassName={styles["img-style"]} /> */}
+                                <div className={styles["author-name"]}>处置状态：{getLabelByValue(info.Status)}</div>
+                                {/* <div className={styles["log-content"]}>content</div> */}
+                                <div className={styles["log-time"]}>{formatTimestamp(info.UpdatedAt)}</div>
+                                <div className={styles["option"]}>
+                                    <YakitPopconfirm
+                                        title={"确认删除此处置记录吗？"}
+                                        onConfirm={(e) => {
+                                            e?.stopPropagation()
+                                            onDeleteSSARiskDisposals(info.Id)
+                                        }}
+                                        placement='left'
+                                    >
+                                        <YakitButton danger type='text' size='small'>
+                                            删除
+                                        </YakitButton>
+                                    </YakitPopconfirm>
+                                </div>
+                            </div>
+                        </div>
+                        {/* 附加信息 */}
+                        <div className={styles["info-additional"]}>
+                            <div
+                                className={classNames(styles["description-style"], "yakit-content-multiLine-ellipsis")}
+                            >
+                                {info.Comment || "暂无处置说明"}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    })
+    return (
+        <div style={{overflow: "auto"}}>
+            {(disposalData || []).map((item, index) => AuditResultHistoryItem(item, index))}
         </div>
     )
 })

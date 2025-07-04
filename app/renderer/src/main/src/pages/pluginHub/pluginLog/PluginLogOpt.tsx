@@ -507,6 +507,6 @@ const PopoverArrow = () => (
         <path d='M7.74713 23.5L1.74713 17.5L7.74713 11.5L7.74713 17.5L7.74713 23.5Z' fill='currentColor' />
     </svg>
 )
-const PopoverArrowIcon = (props: Partial<IconProps>) => {
+export const PopoverArrowIcon = (props: Partial<IconProps>) => {
     return <Icon component={PopoverArrow} {...props} />
 }
