@@ -370,10 +370,10 @@ module.exports = (win, getClient) => {
     })
 
     // 结果对比
-    const streamNewSSADiffMap = new Map()
-    ipcMain.handle("cancel-NewSSADiff", handlerHelper.cancelHandler(streamNewSSADiffMap))
-    ipcMain.handle("NewSSADiff", (e, params, token) => {
-        let stream = getClient().NewSSADiff(params)
-        handlerHelper.registerHandler(win, stream, streamNewSSADiffMap, token)
+    const streamSSARiskDiffMap = new Map()
+    ipcMain.handle("cancel-SSARiskDiff", handlerHelper.cancelHandler(streamSSARiskDiffMap))
+    ipcMain.handle("SSARiskDiff", (e, params, token) => {
+        let stream = getClient().SSARiskDiff(params)
+        handlerHelper.registerHandler(win, stream, streamSSARiskDiffMap, token)
     })
 }

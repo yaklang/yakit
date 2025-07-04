@@ -2,7 +2,6 @@ import React, {useEffect, useRef, useState} from "react"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
-import {SSAProgramResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
 import {SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
@@ -16,32 +15,28 @@ import {randomString} from "@/utils/randomUtil"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitAuditRiskDetails} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 import {isCellRedSingleColor} from "@/components/TableVirtualResize/utils"
-import styles from "./SsaResDiff.module.scss"
 import {QuerySyntaxFlowScanTaskResponse} from "../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer"
+import styles from "./SsaResDiff.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
-interface SSADiffItem {
-    Program: string
-    ruleName?: string
+interface SSARiskDiffItem {
+    ProgramName: string
+    RuleName?: string
     Variable?: string
-    RiskRuntimeId?: string
+    RiskRuntimeId: string
 }
-interface SSADiffRequest {
-    Base: SSADiffItem
-    Compare: SSADiffItem
+interface SSARiskDiffRequest {
+    Base: SSARiskDiffItem
+    Compare: SSARiskDiffItem
     DefaultCompare?: boolean
 }
-interface ResRisk extends SSARisk {
-    // 仅仅是前端 表格单元格样式
-    cellClassName?: string
-}
-type SSaComStatus = "Equal" | "Add" | "Del"
-interface SSADiffResponse {
-    BaseRisk: ResRisk
-    CompareRisk: ResRisk
+type SSARiskDiffStatus = "Equal" | "Add" | "Del"
+interface SSARiskDiffResponse {
+    BaseRisk: SSARisk
+    CompareRisk: SSARisk
     RuleName: string
-    Status: SSaComStatus
+    Status: SSARiskDiffStatus
 }
 
 interface SsaResDiffProps {}
@@ -56,14 +51,14 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
 
     const getSyntaxFlowScanTaskList = useMemoizedFn(() => {
         ipcRenderer
-            .invoke("QuerySyntaxFlowScanTask")
+            .invoke("QuerySyntaxFlowScanTask", {Filter: {}})
             .then((res: QuerySyntaxFlowScanTaskResponse) => {
                 if (!res || !Array.isArray(res.Data)) {
                     return
                 }
                 setSyntaxFlowScanTask(
                     res.Data.map((item) => {
-                        return {label: item.TaskId, value: item.TaskId}
+                        return {label: formatTimestamp(item.UpdatedAt), value: item.TaskId}
                     })
                 )
             })
@@ -72,8 +67,8 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
 
     const [token, setToken] = useState<string>("")
     const timeRef = useRef<ReturnType<typeof setTimeout>>()
-    const [ssaDiffRes, setSsaDiffRes] = useState<SSADiffResponse[]>()
-    const ssaDiffResRef = useRef<SSADiffResponse[]>([])
+    const [ssaDiffRes, setSsaDiffRes] = useState<SSARiskDiffResponse[]>()
+    const ssaDiffResRef = useRef<SSARiskDiffResponse[]>([])
     const [isRefreshBaseTable, setIsRefreshBaseTable] = useState<boolean>(false)
     const [isRefreshCompareTable, setIsRefreshCompareTable] = useState<boolean>(false)
     const onStartDiff = useMemoizedFn(() => {
@@ -85,16 +80,18 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
         const t = randomString(40)
         setToken(t)
 
-        const params: SSADiffRequest = {
+        const params: SSARiskDiffRequest = {
             Base: {
-                Program: baseTaskID
+                ProgramName: "",
+                RiskRuntimeId: baseTaskID
             },
             Compare: {
-                Program: compareTaskID
+                ProgramName: "",
+                RiskRuntimeId: compareTaskID
             }
         }
         ipcRenderer
-            .invoke("NewSSADiff", params, t)
+            .invoke("SSARiskDiff", params, t)
             .then(() => {})
             .catch((err) => {
                 yakitNotify("error", "对比失败：" + err)
@@ -107,7 +104,8 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
             setSsaDiffRes(ssaDiffResRef.current.slice())
         }
         timeRef.current = setInterval(updateNewSSADiffStream, 200)
-        ipcRenderer.on(`${token}-data`, async (e, data: SSADiffResponse) => {
+        ipcRenderer.on(`${token}-data`, async (e, data: SSARiskDiffResponse) => {
+            console.log(data)
             ssaDiffResRef.current.push(data)
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
@@ -116,7 +114,7 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
         ipcRenderer.on(`${token}-end`, (e, data) => {})
         return () => {
             if (token) {
-                ipcRenderer.invoke(`cancel-NewSSADiff`, token)
+                ipcRenderer.invoke(`cancel-SSARiskDiff`, token)
                 ipcRenderer.removeAllListeners(`${token}-data`)
                 ipcRenderer.removeAllListeners(`${token}-error`)
                 ipcRenderer.removeAllListeners(`${token}-end`)
@@ -207,12 +205,12 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
 export default SsaResDiff
 
 interface SsaResTableAndDetailProps {
-    tableData: ResRisk[]
+    tableData: SSARisk[]
     isRefreshTable: boolean
 }
 const SsaResTableAndDetail: React.FC<SsaResTableAndDetailProps> = React.memo((props) => {
     const {tableData, isRefreshTable} = props
-    const [currentSelectItem, setCurrentSelectItem] = useState<ResRisk>()
+    const [currentSelectItem, setCurrentSelectItem] = useState<SSARisk>()
 
     const ResizeBoxProps = useCreation(() => {
         let p = {
@@ -264,17 +262,17 @@ const SsaResTableAndDetail: React.FC<SsaResTableAndDetailProps> = React.memo((pr
 })
 
 interface SsaResTableProps {
-    tableData: ResRisk[]
+    tableData: SSARisk[]
     isRefreshTable: boolean
-    currentSelectItem?: ResRisk
-    onSetCurrentSelectItem: React.Dispatch<React.SetStateAction<ResRisk | undefined>>
+    currentSelectItem?: SSARisk
+    onSetCurrentSelectItem: React.Dispatch<React.SetStateAction<SSARisk | undefined>>
 }
 const SsaResTable: React.FC<SsaResTableProps> = React.memo((props) => {
     const {tableData, isRefreshTable, currentSelectItem, onSetCurrentSelectItem} = props
     const tableRef = useRef<any>(null)
     const [loading, setLoading] = useState<boolean>(false)
     const [tableQuery, setTableQuery] = useState({})
-    const [showList, setShowList] = useState<ResRisk[]>([])
+    const [showList, setShowList] = useState<SSARisk[]>([])
     const [scrollToIndex, setScrollToIndex] = useState<string>()
 
     const scrollUpdate = useMemoizedFn((dataLength) => {
@@ -339,7 +337,7 @@ const SsaResTable: React.FC<SsaResTableProps> = React.memo((props) => {
         setTableQuery(newTableQuery)
     })
 
-    const onSetCurrentRow = useMemoizedFn((val?: ResRisk) => {
+    const onSetCurrentRow = useMemoizedFn((val?: SSARisk) => {
         if (!val) {
             onSetCurrentSelectItem(undefined)
             return
@@ -409,7 +407,7 @@ const SsaResTable: React.FC<SsaResTableProps> = React.memo((props) => {
 
     return (
         <div className={styles["ssaResTable"]}>
-            <TableVirtualResize<ResRisk>
+            <TableVirtualResize<SSARisk>
                 ref={tableRef}
                 renderKey='Id'
                 isShowTitle={false}
