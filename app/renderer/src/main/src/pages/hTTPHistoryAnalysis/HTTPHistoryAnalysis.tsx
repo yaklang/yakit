@@ -88,7 +88,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
         return {...defaultHTTPHistoryAnalysisPageInfo}
     })
     const [pageInfo, setPageInfo] = useState<HTTPHistoryAnalysisPageInfo>(initPageInfo())
-    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
 
     const [isAllHttpFlow, setIsAllHttpFlow] = useState<boolean>(false)
     const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
@@ -178,7 +177,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                             toWebFuzzer={pageInfo.webFuzzer}
                             runtimeId={pageInfo.runtimeId}
                             sourceType={pageInfo.sourceType}
-                            executeStatus={executeStatus}
                         />
                     </div>
                 )}
@@ -193,7 +191,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                                 hTTPFlowFilter={hTTPFlowFilter}
                                 httpFlowIds={isAllHttpFlow ? [] : selectedHttpFlowIds.map((id) => Number(id))}
                                 downstreamProxy={downstreamProxy}
-                                setExecuteStatus={setExecuteStatus}
                             />
                         )}
                     </div>
@@ -268,7 +265,6 @@ interface AnalysisMainProps {
     hTTPFlowFilter?: YakQueryHTTPFlowRequest
     httpFlowIds: number[]
     downstreamProxy: string
-    setExecuteStatus: (s: ExpandAndRetractExcessiveState) => void
 }
 const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const {curBottomTab, onSetCurBottomTab, onSetOpenBottomTabsFlag, hTTPFlowFilter, httpFlowIds, downstreamProxy} =
@@ -454,11 +450,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const execParamsRef = useRef<AnalyzeHTTPFlowRequest>()
     const tokenRef = useRef<string>(randomString(40))
     const [isExit, setIsExit] = useState<boolean>(false)
-    const [executeStatus, setExecuteStatus] = useControllableValue<ExpandAndRetractExcessiveState>(props, {
-        defaultValue: "default",
-        valuePropName: "executeStatus",
-        trigger: "setExecuteStatus"
-    })
+    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [currentSelectItem, setCurrentSelectItem] = useState<HTTPFlowRuleData>()
     const [isRefreshTable, setIsRefreshTable] = useState<boolean>(true)
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({

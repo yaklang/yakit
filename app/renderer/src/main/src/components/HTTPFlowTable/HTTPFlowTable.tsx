@@ -945,9 +945,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                 }
                 setParams(newParams)
-                setTimeout(() => {
-                    updateData()
-                }, 10)
             }
         },
         [filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords],
@@ -982,7 +979,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     idArr = [...idArr, item]
                 }
             })
-            setParams({...params, ExcludeId: idArr, ExcludeInUrl: urlArr})
+            setParams((prev) => ({
+                ...prev,
+                ExcludeId: idArr,
+                ExcludeInUrl: urlArr
+            }))
         }
     }, [shieldData])
     useEffect(() => {
@@ -1044,48 +1045,33 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (filter["ContentType"]) {
                 filter["SearchContentType"] = filter["ContentType"].join(",")
             }
-            setParams({
-                ...params,
+            setParams((prev) => ({
+                ...prev,
                 ...filter,
                 Tags: [...tagsFilter],
                 bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
-            })
+            }))
             if (sort.orderBy === "DurationMs") {
                 sort.orderBy = "duration"
             }
             sortRef.current = sort
-            setTimeout(() => {
-                updateData()
-            }, 10)
         },
         {wait: 500}
     ).run
 
-    /**
-     * @name 外面触发搜索条件的改变状态
-     * @description 因为直接进行触发搜索时，可能当前已存在搜索过程，导致触发搜索失败
-     */
-    const triggerFilterValue = useRef<boolean>(false)
     const campareProcessName = useCampare(props.ProcessName)
     useUpdateEffect(() => {
         if (pageType === "History") {
-            setParams({
-                ...params,
+            setParams((prev) => ({
+                ...prev,
                 ProcessName: props.ProcessName || []
-            })
+            }))
             setScrollToIndex(0)
             setCurrentIndex(undefined)
             setSelected(undefined)
             setSelectedRowKeys([])
             setSelectedRows([])
             setIsAllSelect(false)
-            if (isGrpcRef.current) {
-                triggerFilterValue.current = true
-            } else {
-                setTimeout(() => {
-                    updateData()
-                }, 50)
-            }
         }
     }, [campareProcessName, pageType])
 
@@ -1094,41 +1080,43 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
      */
     useUpdateEffect(() => {
         if (["History", "Plugin"].includes(pageType || "")) {
-            setParams({
-                ...params,
+            setParams((prev) => ({
+                ...prev,
                 SearchURL: props.searchURL,
                 IncludeInUrl: props.includeInUrl
                     ? Array.isArray(props.includeInUrl)
                         ? props.includeInUrl
                         : [props.includeInUrl]
                     : [""]
-            })
+            }))
             setScrollToIndex(0)
             setCurrentIndex(undefined)
             setSelected(undefined)
             setSelectedRowKeys([])
             setSelectedRows([])
             setIsAllSelect(false)
-            if (isGrpcRef.current) {
-                triggerFilterValue.current = true
-            } else {
-                setTimeout(() => {
-                    updateData()
-                }, 50)
-            }
         }
     }, [props.searchURL, props.includeInUrl, pageType])
-    const [queryParams, setQueryParams] = useState<string>("")
-    useEffect(() => {
-        if (queryParams !== "" && inViewport) {
-            let refreshFlag = false
-            if (refreshTabsContRef.current) {
-                refreshTabsContRef.current = false
-                refreshFlag = true
-            }
-            props.onQueryParams && props.onQueryParams(queryParams, refreshFlag)
+    useUpdateEffect(() => {
+        if (params.SearchURL === "") {
+            refreshTabsContRef.current = true
         }
-    }, [queryParams, inViewport])
+    }, [params.SearchURL])
+    const [queryParams, setQueryParams] = useState<string>("")
+    useDebounceEffect(
+        () => {
+            if (queryParams !== "" && inViewport) {
+                let refreshFlag = false
+                if (refreshTabsContRef.current) {
+                    refreshTabsContRef.current = false
+                    refreshFlag = true
+                }
+                props.onQueryParams && props.onQueryParams(queryParams, refreshFlag)
+            }
+        },
+        [queryParams, inViewport],
+        {wait: 200}
+    )
     const updateQueryParams = (query) => {
         const copyQuery = structuredClone(query)
         copyQuery.Color = copyQuery.Color ? copyQuery.Color : []
@@ -1376,6 +1364,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         getDataByGrpc(query, "bottom")
     })
 
+    const queyChangeUpdateData = useDebounceFn(
+        () => {
+            updateData()
+        },
+        {wait: 500}
+    ).run
+    useUpdateEffect(() => {
+        queyChangeUpdateData()
+    }, [params])
     // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
     const updateData = useMemoizedFn(() => {
         if (boxHeightRef.current) {
@@ -1389,6 +1386,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 Order: sortRef.current.order,
                 OrderBy: sortRef.current.orderBy || "id"
             }
+            isGrpcRef.current = false
             const query = {
                 ...params,
                 Pagination: {...paginationProps}
@@ -1438,22 +1436,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     })
 
-    // 第一次启动的时候等待缓存条件加载
-    // OnlyWebsocket 变的时候加载一下
-    useEffect(() => {
-        if (!isOneceLoading.current) {
-            updateData()
-        }
-    }, [params.OnlyWebsocket])
-
-    const excludeIdCom = useCampare(params.ExcludeId)
-    const excludeInUrlCom = useCampare(params.ExcludeInUrl)
-    useEffect(() => {
-        if (!isOneceLoading.current) {
-            updateData()
-        }
-    }, [excludeIdCom, excludeInUrlCom])
-
     // 获取tags等分组
     const getHTTPFlowsFieldGroup = useMemoizedFn(
         (RefreshRequest: boolean, callBack?: (tags: FiltersItemProps[]) => void) => {
@@ -1489,11 +1471,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         // 记录的滚动条位置信息为了，在后台刷新时使用，因为在后台时，该页面已被 display:none
         if (inViewport) {
             scrollSize.current = {scrollTop, scrollBottomPercent: scrollBottomPercent || 0}
-        }
-
-        if (triggerFilterValue.current) {
-            updateData()
-            triggerFilterValue.current = false
         }
 
         // 滚动条接近触顶
@@ -1634,24 +1611,25 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (version !== mitmVersion) return
         setOnlyShowFirstNode && setOnlyShowFirstNode(true)
         setData([])
-        setParams({...params, AfterUpdatedAt: undefined, BeforeUpdatedAt: undefined})
-        setTimeout(() => {
-            updateData()
-        }, 100)
+        setParams((prev) => ({
+            ...prev,
+            AfterUpdatedAt: undefined,
+            BeforeUpdatedAt: undefined
+        }))
     })
 
-    const onColorSure = useMemoizedFn(() => {
-        if (isShowColor) {
-            setIsShowColor(false)
-        }
-        setParams({
-            ...params,
-            Color: color
-        })
-        setTimeout(() => {
-            updateData()
-        }, 100)
-    })
+    const onColorSure = useDebounceFn(
+        useMemoizedFn(() => {
+            if (isShowColor) {
+                setIsShowColor(false)
+            }
+            setParams((prev) => ({
+                ...prev,
+                Color: color
+            }))
+        }),
+        {wait: 300}
+    ).run
 
     useEffect(() => {
         if (!selectedRowKeys.length) {
@@ -1703,13 +1681,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onCheckThan0 = useDebounceFn(
         (check: boolean) => {
             setCheckBodyLength(check)
-            if (!getAfterBodyLength()) {
-                params.AfterBodyLength = check ? 1 : undefined
-            }
-            setParams(params)
-            setTimeout(() => {
-                updateData()
-            }, 100)
+            setParams((prev) => {
+                if (!getAfterBodyLength()) {
+                    prev.AfterBodyLength = check ? 1 : undefined
+                }
+                return {
+                    ...prev
+                }
+            })
         },
         {wait: 200}
     ).run
@@ -1852,12 +1831,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             {
                 title: "Host",
                 dataKey: "Host",
-                width: 200,
+                width: 200
             },
             {
                 title: "Path",
                 dataKey: "Path",
-                width: 400,
+                width: 400
             },
             {
                 title: "相关插件",
@@ -1923,13 +1902,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 }}
                                 onQuery={() => {
                                     // 这里重置过后的 tagsFilter 不一定是最新的
-                                    setParams({
-                                        ...getParams(),
-                                        Tags: []
-                                    })
-                                    setTimeout(() => {
-                                        updateData()
-                                    }, 100)
+                                    setParams((prev) => ({...prev, Tags: []}))
                                 }}
                                 selectContainerStyle={{
                                     maxHeight: "40vh"
@@ -1964,11 +1937,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             maxNumber={getBeforeBodyLength()}
                             setMaxNumber={setBeforeBodyLength}
                             onReset={() => {
-                                setParams({
-                                    ...getParams(),
+                                setParams((prev) => ({
+                                    ...prev,
                                     AfterBodyLength: checkBodyLength ? 1 : undefined,
                                     BeforeBodyLength: undefined
-                                })
+                                }))
                                 setBeforeBodyLength(undefined)
                                 setAfterBodyLength(undefined)
                                 setBodyLengthUnit("B")
@@ -1976,9 +1949,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             onSure={() => {
                                 const afterBodyLen = getAfterBodyLength()
                                 const beforeBodyLen = getBeforeBodyLength()
-
-                                setParams({
-                                    ...getParams(),
+                                setParams((prev) => ({
+                                    ...prev,
                                     AfterBodyLength:
                                         checkBodyLength && !afterBodyLen
                                             ? 1
@@ -1988,10 +1960,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     BeforeBodyLength: beforeBodyLen
                                         ? onConvertBodySizeByUnit(beforeBodyLen, getBodyLengthUnit())
                                         : undefined
-                                })
-                                setTimeout(() => {
-                                    updateData()
-                                }, 100)
+                                }))
                             }}
                             extra={
                                 <YakitSelect
@@ -2326,6 +2295,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             .then(() => {
                 yakitNotify("info", "删除成功")
+                refreshTabsContRef.current = true
                 updateData()
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
@@ -2359,8 +2329,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .invoke("DeleteHTTPFlows", {DeleteAll: true})
             .then(() => {
                 setOnlyShowFirstNode && setOnlyShowFirstNode(true)
-                refreshTabsContRef.current = true
-                updateData()
+                onResetRefresh()
             })
             .catch((e: any) => {
                 yakitNotify("error", `历史记录删除失败: ${e}`)
@@ -2390,10 +2359,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .invoke("DeleteHTTPFlows", newParams)
             .then((i: HTTPFlow) => {
                 setOnlyShowFirstNode && setOnlyShowFirstNode(true)
-                const newParams: YakQueryHTTPFlowRequest = resetParams
-                setParams({...newParams})
-                refreshTabsContRef.current = true
-                updateData()
+                onResetRefresh()
             })
             .catch((e: any) => {
                 yakitNotify("error", `历史记录删除失败: ${e}`)
@@ -3511,31 +3477,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [props.params, pageType, runTimeId, params])
     const onResetRefresh = useMemoizedFn(() => {
         sortRef.current = defSort
-        const newParams: YakQueryHTTPFlowRequest = resetParams
-        setParams(newParams)
+        setParams({...resetParams})
         setIsReset(!isReset)
         setColor([])
         setCheckBodyLength(false)
         refreshTabsContRef.current = true
-        setTimeout(() => {
-            updateData()
-        }, 100)
     })
     /**@description 导入重置查询条件并刷新 */
     const onImportResetRefresh = useMemoizedFn(() => {
         sortRef.current = defSort
-        const newParams: YakQueryHTTPFlowRequest = {
+        setParams({
             ...resetParams,
             SourceType: ""
-        }
-        setParams(newParams)
+        })
         setIsReset(!isReset)
         setColor([])
         setCheckBodyLength(false)
         refreshTabsContRef.current = true
-        setTimeout(() => {
-            updateData()
-        }, 100)
     })
     useUpdateEffect(() => {
         onImportResetRefresh()
@@ -3571,10 +3529,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const handleSearch = useMemoizedFn((searchValue, searchType) => {
-        setParams({...params, Keyword: searchValue, KeywordType: searchType})
-        setTimeout(() => {
-            updateData()
-        }, 20)
+        setParams((prev) => ({...prev, Keyword: searchValue, KeywordType: searchType}))
     })
 
     const getBatchContextMenu = useMemoizedFn(() => {
@@ -3743,11 +3698,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     useEffect(() => {
         if (props.params?.SourceType !== undefined) {
             let selectTypeList = props.params?.SourceType.split(",") || [""]
-            const newParams = {...params, SourceType: selectTypeList.join(",")}
-            setParams(newParams)
-            setTimeout(() => {
-                updateData()
-            }, 20)
+            setParams((prev) => ({...prev, SourceType: selectTypeList.join(",")}))
         }
     }, [props.params?.SourceType])
 
@@ -3767,25 +3718,31 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     selectTypeList = ["mitm"]
                 }
             }
-            const newParams = {...params, SourceType: selectTypeList.join(","), FromPlugin: mitmHasParamsNames}
-            setParams(newParams)
-            setTimeout(() => {
-                updateData()
+
+            setParams((prev) => {
+                const sourceType = selectTypeList.join(",")
                 emiter.emit(
                     "onHistorySourceTypeToMitm",
                     JSON.stringify({
-                        sourceType: newParams.SourceType,
+                        sourceType: sourceType,
                         version
                     })
                 )
-            }, 20)
+                return {
+                    ...prev,
+                    SourceType: sourceType,
+                    FromPlugin: mitmHasParamsNames
+                }
+            })
         } catch (error) {}
     })
 
     const onMitmClearFromPlugin = useMemoizedFn((version) => {
         if (version !== mitmVersion) return
-        const newParams = {...params, FromPlugin: ""}
-        setParams(newParams)
+        setParams((prev) => ({
+            ...prev,
+            FromPlugin: ""
+        }))
     })
 
     const onMitmSearchInputVal = useMemoizedFn((searchJson: string) => {
@@ -3793,13 +3750,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             const value = JSON.parse(searchJson) || {}
             const {version, ...searchObj} = value
             if (version !== mitmVersion) return
-            setParams({
-                ...params,
+            setParams((prev) => ({
+                ...prev,
                 ...searchObj
-            })
-            setTimeout(() => {
-                updateData()
-            }, 20)
+            }))
         } catch (error) {}
     })
 
@@ -3808,13 +3762,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             const value = JSON.parse(data) || {}
             const {curProcess, version} = value
             if (version !== mitmVersion) return
-            setParams({
-                ...params,
+            setParams((prev) => ({
+                ...prev,
                 ProcessName: curProcess
-            })
-            setTimeout(() => {
-                updateData()
-            }, 20)
+            }))
         } catch (error) {}
     })
 
@@ -3925,26 +3876,27 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     checked={!!params.SourceType?.split(",").includes(tag.value)}
                                                     onChange={(checked) => {
                                                         if (checked) {
-                                                            const selectTypeList = [
-                                                                ...(params.SourceType?.split(",") || []),
-                                                                tag.value
-                                                            ]
-                                                            setParams({
-                                                                ...params,
-                                                                SourceType: selectTypeList.join(",")
+                                                            setParams((prev) => {
+                                                                const selectTypeList = [
+                                                                    ...(params.SourceType?.split(",") || []),
+                                                                    tag.value
+                                                                ]
+                                                                return {
+                                                                    ...prev,
+                                                                    SourceType: selectTypeList.join(",")
+                                                                }
                                                             })
                                                         } else {
-                                                            const selectTypeList = (
-                                                                params.SourceType?.split(",") || []
-                                                            ).filter((ele) => ele !== tag.value)
-                                                            setParams({
-                                                                ...params,
-                                                                SourceType: selectTypeList.join(",")
+                                                            setParams((prev) => {
+                                                                const selectTypeList = (
+                                                                    params.SourceType?.split(",") || []
+                                                                ).filter((ele) => ele !== tag.value)
+                                                                return {
+                                                                    ...prev,
+                                                                    SourceType: selectTypeList.join(",")
+                                                                }
                                                             })
                                                         }
-                                                        setTimeout(() => {
-                                                            updateData()
-                                                        }, 10)
                                                     }}
                                                 >
                                                     {tag.text}
@@ -4013,10 +3965,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     value={params.IsWebsocket || ""}
                                                     wrapperStyle={{width: 150}}
                                                     onSelect={(val) => {
-                                                        setParams({...params, IsWebsocket: val})
-                                                        setTimeout(() => {
-                                                            updateData()
-                                                        }, 50)
+                                                        setParams((prev) => ({
+                                                            ...prev,
+                                                            IsWebsocket: val
+                                                        }))
                                                     }}
                                                 >
                                                     <YakitSelect.Option value=''>全部</YakitSelect.Option>

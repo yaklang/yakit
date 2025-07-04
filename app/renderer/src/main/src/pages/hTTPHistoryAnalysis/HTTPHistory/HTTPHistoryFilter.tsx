@@ -110,7 +110,6 @@ interface HTTPHistoryFilterProps {
     toWebFuzzer?: boolean
     runtimeId?: string[]
     sourceType?: string
-    executeStatus: ExpandAndRetractExcessiveState
 }
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((props) => {
     const {
@@ -120,8 +119,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         downstreamProxy,
         toWebFuzzer,
         runtimeId,
-        sourceType,
-        executeStatus
+        sourceType
     } = props
 
     // #region 左侧tab
@@ -334,7 +332,6 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             toWebFuzzer={toWebFuzzer}
                             runtimeId={runtimeId}
                             sourceType={sourceType}
-                            executeStatus={executeStatus}
                         />
                     </div>
                 }
@@ -376,7 +373,6 @@ interface HTTPFlowTableProps {
     toWebFuzzer?: boolean
     runtimeId?: string[]
     sourceType?: string
-    executeStatus?: ExpandAndRetractExcessiveState
 }
 const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
     const {
@@ -390,8 +386,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         inMouseEnterTable = false,
         toWebFuzzer = false,
         runtimeId = [],
-        sourceType = "mitm",
-        executeStatus
+        sourceType = "mitm"
     } = props
     const {currentPageTabRouteKey} = usePageInfo(
         (s) => ({

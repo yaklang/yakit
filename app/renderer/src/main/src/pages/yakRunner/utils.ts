@@ -958,13 +958,10 @@ export const monacaLanguageType = (suffix?: string) => {
             return "html"
         case "css":
             return "css"
-        case "scss":
-            return "scss"
-        case "less":
-            return "less"
         case "md":
         case "markdown":
             return "markdown"
+        case "svg":
         case "xml":
             return "xml"
         case "yml":
@@ -974,6 +971,7 @@ export const monacaLanguageType = (suffix?: string) => {
         case "shell":
         case "bash":
             return "shell"
+        case "cmd":
         case "bat":
             return "bat"
         case "ini":
@@ -982,6 +980,23 @@ export const monacaLanguageType = (suffix?: string) => {
             return "sql"
         case "dockerfile":
             return "dockerfile"
+        case "js":
+            return "javascript"
+        case "java":
+            return "java"
+        case "go":
+            return "go"
+        case "php":
+            return "php"
+        case "c":
+            return "c"
+        case "cpp":
+        case "cc":
+        case "cxx":
+        case "c++":
+            return "cpp"
+        case "txt":
+            return "plaintext"
         default:
             return undefined
     }

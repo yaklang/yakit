@@ -18,13 +18,20 @@ window.MonacoEnvironment = {
         switch (label) {
             case "json":
                 return "static/js/json.worker.js"
+            case "yaml":
+                return "static/js/yaml.worker.js"
+            case "java":
+                return "static/js/java.worker.js"
+            case "go":
+                return "static/js/go.worker.js"
             case "html":
             case "markdown":
                 return "static/js/html.worker.js"
             case "css":
-            case "scss":
                 return "static/js/css.worker.js"
             default:
+                // 有代码高亮、查找、代码折叠等基础功能
+                // 但是它不包含各个语言的智能分析、补全、校验等高级功能
                 return "static/js/editor.worker.js"
         }
     }
