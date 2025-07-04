@@ -1849,8 +1849,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             grpcFetchIntranetYakitVersion().then((filePath: string) => {
                 const match = filePath.match(/EnpriTrace-([\d.-]+)/)
                 const version = match ? match[1] : ""
-                const data = `v${version.endsWith('-') ? version.slice(0, -1) : version}` // 去掉末尾的'-'符号
-                
+                const data = `v${version.endsWith("-") ? version.slice(0, -1) : version}` // 去掉末尾的'-'符号
+
                 // 企业版初次进入时 如若配置文件为强制更新则需弹出提示框
                 if (isUpdateEnpriTraceRef.current && data.length > 0) {
                     const isUpdateYakit = data !== "" && removePrefixV(data) !== removePrefixV(yakitVersion)
@@ -2759,6 +2759,8 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         } catch (error) {}
     })
 
+
+
     /** 单条点击阅读 */
     const singleRead = useMemoizedFn((info: SSARisk) => {
         apiNewRiskRead({ID: [info.Id]}).then(() => {
@@ -2787,7 +2789,11 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                 title: "详情",
                 content: (
                     <div style={{overflow: "auto", maxHeight: "70vh"}}>
-                        <YakitAuditRiskDetails info={res.Data[0]} isShowExtra={true} isExtraClick={() => m.destroy()} />
+                        <YakitAuditRiskDetails
+                            info={res.Data[0]}
+                            isShowExtra={true}
+                            isExtraClick={() => m.destroy()}
+                        />
                     </div>
                 )
             })

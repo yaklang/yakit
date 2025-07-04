@@ -73,9 +73,9 @@ export interface YakitRiskDetailsProps {
 }
 
 export interface YakitRiskSelectTagProps {
-    info: SSARisk
+    ids: number[]
     onClose?: () => void
-    onSave: (info: SSARisk) => void
+    onCreate: (params: CreateSSARiskDisposalsRequest) => void
 }
 
 export interface YakitCodeScanRiskDetailsProps {
@@ -133,6 +133,8 @@ export interface YakitAuditRiskDetailsProps {
     border?: boolean
     isShowExtra?: boolean
     isExtraClick?: () => void
+    showType?: "detail" | "code" | "history"
+    setShowType?: (type: "detail" | "code" | "history") => void
 }
 
 export interface QueryNewSSARisksRequest {

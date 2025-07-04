@@ -32,9 +32,9 @@ module.exports = (win, getClient) => {
         return await asyncDeleteSSARisks(params)
     })
 
-    const asyncUpdateSSARiskTags = (params) => {
+    const asyncCreateSSARiskDisposals = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().UpdateSSARiskTags(params, (err, data) => {
+            getClient().CreateSSARiskDisposals(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -43,9 +43,42 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    // 审计漏洞状态更新
-    ipcMain.handle("UpdateSSARiskTags", async (e, params) => {
-        return await asyncUpdateSSARiskTags(params)
+    // 新建审计漏洞处置状态
+    ipcMain.handle("CreateSSARiskDisposals", async (e, params) => {
+        return await asyncCreateSSARiskDisposals(params)
+    })
+
+    const asyncGetSSARiskDisposal = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetSSARiskDisposal(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
+    ipcMain.handle("GetSSARiskDisposal", async (e, params) => {
+        return await asyncGetSSARiskDisposal(params)
+    })
+
+    const asyncDeleteSSARiskDisposals = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteSSARiskDisposals(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
+    // 删除审计漏洞处置
+    ipcMain.handle("DeleteSSARiskDisposals", async (e, params) => {
+        return await asyncDeleteSSARiskDisposals(params)
     })
 
     const asyncGetSSARiskFieldGroup = (params) => {
