@@ -2,7 +2,6 @@ import {CSSProperties, Dispatch, ReactNode, SetStateAction} from "react"
 import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
 import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIStartParams} from "./type/aiChat"
 import {AITreeNodeProps} from "./aiTree/type"
-import {TextAreaProps} from "antd/lib/input"
 
 export interface AIAgentProps {}
 
@@ -154,7 +153,4 @@ export interface AIChatLogsProps {
     logs: AIChatMessage.Log[]
     onClose: () => void
 }
-
-// 文本域输入组件
-export interface AIAgentChatTextareaProps extends TextAreaProps {}
 // #endregion

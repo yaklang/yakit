@@ -1,30 +1,29 @@
-import React, {useState} from "react"
+import React, {useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {AIAgentTabList} from "./defaultConstant"
 import {AIAgentSideListProps, AIAgentTab, AIAgentTriggerEventInfo} from "./aiAgentType"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-// import {MCPServer} from "./MCPServer"
 import {HistoryChat} from "./historyChat/HistoryChat"
-import {AIChatSetting} from "./AIChatSetting/AIChatSetting"
-import {ForgeName} from "./forgeName/ForgeName"
 import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
 
+const AIChatSetting = React.lazy(() => import("./AIChatSetting/AIChatSetting"))
+const ForgeName = React.lazy(() => import("./forgeName/ForgeName"))
 const AIToolList = React.lazy(() => import("./aiToolList/AIToolList"))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
 
     // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
-    // const rendered = useRef<Set<AIAgentTab>>(new Set(["history"]))
+    const rendered = useRef<Set<AIAgentTab>>(new Set(["history"]))
     const [active, setActive, getActive] = useGetSetState<AIAgentTab>("history")
     const [hiddenActive, setHiddenActive] = useState(false)
     const handleSetActive = useMemoizedFn((value: AIAgentTab) => {
-        // if (!rendered.current.has(value)) {
-        //     rendered.current.add(value)
-        // }
+        if (!rendered.current.has(value)) {
+            rendered.current.add(value)
+        }
         if (getActive() === value) {
             setHiddenActive((old) => !old)
         } else {
@@ -69,55 +68,53 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
             </div>
 
             <div className={classNames(styles["side-list-body"], {[styles["side-list-body-hidden"]]: hiddenActive})}>
-                {/* mcp 服务器功能 */}
-                {/* <div
-                    className={classNames(styles["active-content"], {
-                        [styles["hidden-content"]]: active !== "mcp"
-                    })}
-                    tabIndex={active !== "mcp" ? -1 : 1}
-                >
-                    <MCPServer />
-                </div> */}
+                {rendered.current.has("history") && (
+                    <div
+                        className={classNames(styles["active-content"], {
+                            [styles["hidden-content"]]: active !== "history"
+                        })}
+                        tabIndex={active !== "history" ? -1 : 1}
+                    >
+                        <HistoryChat
+                            onNewChat={() => {
+                                onEmiter("new-chat")
+                            }}
+                        />
+                    </div>
+                )}
 
-                <div
-                    className={classNames(styles["active-content"], {
-                        [styles["hidden-content"]]: active !== "history"
-                    })}
-                    tabIndex={active !== "history" ? -1 : 1}
-                >
-                    <HistoryChat
-                        onNewChat={() => {
-                            onEmiter("new-chat")
-                        }}
-                    />
-                </div>
+                {rendered.current.has("setting") && (
+                    <div
+                        className={classNames(styles["active-content"], {
+                            [styles["hidden-content"]]: active !== "setting"
+                        })}
+                        tabIndex={active !== "setting" ? -1 : 1}
+                    >
+                        <AIChatSetting />
+                    </div>
+                )}
 
-                <div
-                    className={classNames(styles["active-content"], {
-                        [styles["hidden-content"]]: active !== "setting"
-                    })}
-                    tabIndex={active !== "setting" ? -1 : 1}
-                >
-                    <AIChatSetting />
-                </div>
+                {rendered.current.has("forgeName") && (
+                    <div
+                        className={classNames(styles["active-content"], {
+                            [styles["hidden-content"]]: active !== "forgeName"
+                        })}
+                        tabIndex={active !== "forgeName" ? -1 : 1}
+                    >
+                        <ForgeName />
+                    </div>
+                )}
 
-                <div
-                    className={classNames(styles["active-content"], {
-                        [styles["hidden-content"]]: active !== "forgeName"
-                    })}
-                    tabIndex={active !== "forgeName" ? -1 : 1}
-                >
-                    <ForgeName />
-                </div>
-
-                <div
-                    className={classNames(styles["active-content"], {
-                        [styles["hidden-content"]]: active !== "tool"
-                    })}
-                    tabIndex={active !== "tool" ? -1 : 1}
-                >
-                    <AIToolList />
-                </div>
+                {rendered.current.has("tool") && (
+                    <div
+                        className={classNames(styles["active-content"], {
+                            [styles["hidden-content"]]: active !== "tool"
+                        })}
+                        tabIndex={active !== "tool" ? -1 : 1}
+                    >
+                        <AIToolList />
+                    </div>
+                )}
             </div>
         </div>
     )

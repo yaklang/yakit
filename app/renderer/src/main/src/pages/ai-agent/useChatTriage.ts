@@ -1,17 +1,24 @@
 import {useEffect, useRef} from "react"
 import {yakitNotify} from "@/utils/notification"
 import {useMemoizedFn} from "ahooks"
-import {AIChatMessage, AIOutputEvent, AIStartParams, AITriageInputEvent} from "./type/aiChat"
+import {AIOutputEvent, AIStartParams, AITriageInputEvent} from "./type/aiChat"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 
 const {ipcRenderer} = window.require("electron")
 
-export interface UseChatTriageParams {}
+export interface AITriageChatContentInfo {
+    type: "answer" | "forges" | "finish"
+    content: string
+}
+
+export interface UseChatTriageParams {
+    onChatContent?: (res: AITriageChatContentInfo) => void
+}
 
 function useChatTriage(params?: UseChatTriageParams) {
-    const {} = params || {}
+    const {onChatContent} = params || {}
 
     const chatID = useRef<string>("")
     const fetchToken = useMemoizedFn(() => {
@@ -20,14 +27,10 @@ function useChatTriage(params?: UseChatTriageParams) {
     const chatRequest = useRef<AIStartParams>()
     const [execute, setExecute, getExecute] = useGetSetState(false)
 
-    // ai-triage 建议的 froge 列表
-    const [aiTriageForges, setAITriageForges] = useGetSetState<string[]>([])
-
     /** 重置所有数据 */
     const handleReset = useMemoizedFn(() => {
         chatID.current = ""
         chatRequest.current = undefined
-        setAITriageForges([])
         setExecute(false)
     })
 
@@ -36,6 +39,7 @@ function useChatTriage(params?: UseChatTriageParams) {
             yakitNotify("warning", "AI-Triage正在监听中...")
             return
         }
+
         handleReset()
         setExecute(true)
         chatID.current = token
@@ -48,22 +52,31 @@ function useChatTriage(params?: UseChatTriageParams) {
                 ipcStreamDelta = Uint8ArrayToString(res.StreamDelta) || ""
             } catch (error) {}
 
-            if (res.Type === "require_user_interactive") {
-                try {
-                    if (!res.IsJson) return
-                    const data = JSON.parse(ipcContent) as AIChatMessage.AIReviewRequire
-                    const ops = data?.options || []
-                    if (ops.length > 0) {
-                        setAITriageForges(ops.map((item) => item?.prompt_title || "").filter(Boolean))
-                    } else {
-                        setAITriageForges([])
-                    }
-                    return
-                } catch (error) {}
+            if (res.Type === "stream") {
+                console.log("stream---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
+
+                const nodeID = res.NodeId
+                const timestamp = res.Timestamp
+
+                if (nodeID === "triage_log") {
+                    console.log("triage_log---\n", {nodeID, timestamp}, ipcContent)
+                    onChatContent && onChatContent({type: "answer", content: ipcContent})
+                }
+
+                if (nodeID === "triage_forge_list") {
+                    console.log("triage_forge_list---\n", {nodeID, timestamp}, ipcContent)
+                    onChatContent && onChatContent({type: "forges", content: ipcContent})
+                }
+
+                if (nodeID === "triage_finish") {
+                    console.log("triage_finish---\n", {nodeID}, ipcContent)
+                    onChatContent && onChatContent({type: "finish", content: ipcContent})
+                }
+
                 return
             }
 
-            console.log("ai-triage---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
+            // console.log("ai-triage---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
         })
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
             console.log("end", res)
@@ -81,20 +94,18 @@ function useChatTriage(params?: UseChatTriageParams) {
     /** review 界面选项触发事件 */
     const onSend = useMemoizedFn((token: string, content: string) => {
         if (!execute) {
-            yakitNotify("warning", "AI 未执行任务，无法发送选项")
             return
         }
         if (!chatID || chatID.current !== token) {
-            yakitNotify("warning", "该选项非本次 AI 执行的回答选项")
+            yakitNotify("warning", "此问题不属于本次triage对话")
             return
         }
-
-        console.log("send-ai---\n", token, content)
 
         const sendRequest: AITriageInputEvent = {
             IsFreeInput: true,
             FreeInput: content
         }
+        console.log("ai-triage-chat-send---\n", token, sendRequest)
 
         ipcRenderer.invoke("send-ai-triage", token, sendRequest)
     })
@@ -118,10 +129,7 @@ function useChatTriage(params?: UseChatTriageParams) {
         }
     }, [])
 
-    return [
-        {execute, aiTriageForges},
-        {onStart, onSend, onClose, handleReset, fetchToken}
-    ] as const
+    return [{execute}, {onStart, onSend, onClose, handleReset, fetchToken}] as const
 }
 
 export default useChatTriage

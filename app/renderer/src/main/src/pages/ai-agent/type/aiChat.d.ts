@@ -157,6 +157,8 @@ export interface AIChatInfo {
     question: string
     /** 时间 */
     time: number
+    /** 请求参数 */
+    request: AIStartParams
     /** 回答 */
     answer?: {
         pressure: AIChatMessage.Pressure[]

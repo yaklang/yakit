@@ -20,7 +20,6 @@ export interface UseChatDataParams {
     onReview?: (data: AIChatReview) => void
     onReviewExtra?: (data: AIChatReviewExtra) => void
     onReviewRelease?: (id: string) => void
-    onRedirectForge?: (old: AIStartParams, request: AIStartParams) => void
     onEnd?: () => void
 }
 
@@ -44,7 +43,7 @@ export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMess
 }
 
 function useChatData(params?: UseChatDataParams) {
-    const {onReview, onReviewExtra, onReviewRelease, onRedirectForge, onEnd} = params || {}
+    const {onReview, onReviewExtra, onReviewRelease, onEnd} = params || {}
 
     const chatID = useRef<string>("")
     const fetchToken = useMemoizedFn(() => {
@@ -434,17 +433,6 @@ function useChatData(params?: UseChatDataParams) {
 
                 handleUpdateStream({type, nodeID, timestamp, taskIndex, ipcContent, ipcStreamDelta})
                 setActiveStream(`${taskIndex || "system"}|${nodeID}-${timestamp}`)
-                return
-            }
-
-            if (res.Type === "redirect_forge") {
-                try {
-                    if (!res.IsJson) return
-                    const data = JSON.parse(ipcContent) as AIStartParams
-                    if (!chatRequest.current) return
-                    onRedirectForge && onRedirectForge(cloneDeep(chatRequest.current), data)
-                } catch (error) {}
-                console.log("redirect_forge---\n", ipcContent)
                 return
             }
 

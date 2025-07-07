@@ -30,6 +30,7 @@
     height: 100%;
     display: flex;
     border-right: 1px solid #eaecf3;
+    z-index: 9;
 
     .side-list-bar {
         display: inline-flex;
@@ -423,7 +424,7 @@
     flex: 1;
     height: 100%;
     overflow: hidden;
-    background-color: #f8f8f8;
+    background: var(--Colors-Use-Neutral-Bg);
 }
 .server-chat-executing {
     width: 100%;

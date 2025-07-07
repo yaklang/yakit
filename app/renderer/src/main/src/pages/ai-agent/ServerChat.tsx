@@ -178,7 +178,8 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                         id: randomString(10),
                         name: oldRequest.current?.UserQuery,
                         question: oldRequest.current.UserQuery,
-                        time: Date.now()
+                        time: Date.now(),
+                        request: {} as any
                     }
                     setQuestion("")
                     setChats && setChats((old) => old.concat([info]))
@@ -219,7 +220,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
             onReview: handleShowReview,
             onReviewExtra: handleShowReviewExtra,
             onReviewRelease: handleReleaseReview,
-            onRedirectForge: handleOpenHintShow,
+            // onRedirectForge: handleOpenHintShow,
             onEnd: handleChatingEnd
         })
     // #endregion
@@ -284,6 +285,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
             id: randomString(10),
             name: request.UserQuery,
             question: request.UserQuery,
+            request: {} as any,
             time: Date.now()
         }
         setQuestion("")
@@ -453,106 +455,107 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     return (
         <div ref={wrapper} className={styles["server-chat"]}>
             <div className={styles["server-chat-body"]}>
-                {activeChat && activeID ? (
-                    <div className={styles["server-chat-executing"]}>
-                        <div className={styles["chat-executing-header"]}>
-                            <div className={styles["header-title"]}>AI-Agent</div>
+                {
+                    activeChat && activeID ? (
+                        <div className={styles["server-chat-executing"]}>
+                            <div className={styles["chat-executing-header"]}>
+                                <div className={styles["header-title"]}>AI-Agent</div>
 
-                            <div className={styles["header-extra"]}>
-                                <YakitButton
-                                    size='large'
-                                    type='secondary2'
-                                    isHover={logExpand}
-                                    icon={<OutlineNewspaperIcon />}
-                                    onClick={hadnleLogShow}
-                                >
-                                    日志
-                                </YakitButton>
-                            </div>
-                        </div>
-
-                        <div className={styles["chat-executing-content"]}>
-                            <div
-                                className={classNames(styles["content-left-side"], {
-                                    [styles["content-left-side-hidden"]]: !leftExpand
-                                })}
-                            >
-                                <AIChatLeftSide
-                                    expand={leftExpand}
-                                    setExpand={setLeftExpand}
-                                    tasks={uiPlan}
-                                    onLeafNodeClick={handleSetScrollTo}
-                                    pressure={uiPressure}
-                                    cost={uiFirstCost}
-                                />
-                                <div className={styles["open-wrapper"]}>
+                                <div className={styles["header-extra"]}>
                                     <YakitButton
-                                        type='text2'
-                                        icon={<OutlineOpenIcon />}
-                                        onClick={() => setLeftExpand(true)}
-                                    />
+                                        size='large'
+                                        type='secondary2'
+                                        isHover={logExpand}
+                                        icon={<OutlineNewspaperIcon />}
+                                        onClick={hadnleLogShow}
+                                    >
+                                        日志
+                                    </YakitButton>
                                 </div>
                             </div>
 
-                            <div className={styles["content-list"]}>
-                                <div ref={chatBody} className={styles["chat-wrapper"]}>
-                                    {activeChat && (
-                                        <AIAgentChatBody
-                                            info={activeChat}
-                                            consumption={uiConsumption}
-                                            scrollToTask={scrollTo}
-                                            setScrollToTask={setScrollTo}
-                                            tasks={uiPlan}
-                                            activeStream={activeStream}
-                                            streams={uiStreams}
+                            <div className={styles["chat-executing-content"]}>
+                                <div
+                                    className={classNames(styles["content-left-side"], {
+                                        [styles["content-left-side-hidden"]]: !leftExpand
+                                    })}
+                                >
+                                    <AIChatLeftSide
+                                        expand={leftExpand}
+                                        setExpand={setLeftExpand}
+                                        tasks={uiPlan}
+                                        onLeafNodeClick={handleSetScrollTo}
+                                        pressure={uiPressure}
+                                        cost={uiFirstCost}
+                                    />
+                                    <div className={styles["open-wrapper"]}>
+                                        <YakitButton
+                                            type='text2'
+                                            icon={<OutlineOpenIcon />}
+                                            onClick={() => setLeftExpand(true)}
                                         />
-                                    )}
+                                    </div>
                                 </div>
 
-                                <div className={styles["content-review"]}>
-                                    {!!reviewInfo && (
-                                        <div
-                                            className={styles["review-box"]}
-                                            style={{maxHeight: (chatBodyHeight?.height || 0) - 60}}
-                                        >
+                                <div className={styles["content-list"]}>
+                                    <div ref={chatBody} className={styles["chat-wrapper"]}>
+                                        {activeChat && (
+                                            <AIAgentChatBody
+                                                info={activeChat}
+                                                consumption={uiConsumption}
+                                                scrollToTask={scrollTo}
+                                                setScrollToTask={setScrollTo}
+                                                tasks={uiPlan}
+                                                activeStream={activeStream}
+                                                streams={uiStreams}
+                                            />
+                                        )}
+                                    </div>
+
+                                    <div className={styles["content-review"]}>
+                                        {!!reviewInfo && (
                                             <div
-                                                className={classNames(styles["review-border-shadow"], {
-                                                    [styles["review-mini"]]: !reviewExpand
-                                                })}
+                                                className={styles["review-box"]}
+                                                style={{maxHeight: (chatBodyHeight?.height || 0) - 60}}
                                             >
-                                                <div className={styles["review-wrapper"]}>
-                                                    <AIAgentChatReview
-                                                        expand={reviewExpand}
-                                                        setExpand={setReviewExpand}
-                                                        delayLoading={delayLoading}
-                                                        review={reviewInfo}
-                                                        planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
-                                                        onSend={handleSend}
-                                                        onSendAIRequire={handleSendAIRequire}
-                                                    />
+                                                <div
+                                                    className={classNames(styles["review-border-shadow"], {
+                                                        [styles["review-mini"]]: !reviewExpand
+                                                    })}
+                                                >
+                                                    <div className={styles["review-wrapper"]}>
+                                                        <AIAgentChatReview
+                                                            expand={reviewExpand}
+                                                            setExpand={setReviewExpand}
+                                                            delayLoading={delayLoading}
+                                                            review={reviewInfo}
+                                                            planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
+                                                            onSend={handleSend}
+                                                            onSendAIRequire={handleSendAIRequire}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
+                                        )}
+                                    </div>
 
-                                <div className={styles["chat-footer"]}>
-                                    <AIAgentChatFooter
-                                        execute={execute}
-                                        review={false}
-                                        positon={!!scrollTo}
-                                        onStop={handleStopChat}
-                                        onPositon={() => setScrollTo(undefined)}
-                                        onReExe={handleReExecute}
-                                        onNewChat={handleNewChat}
-                                    />
+                                    <div className={styles["chat-footer"]}>
+                                        <AIAgentChatFooter
+                                            execute={execute}
+                                            review={false}
+                                            positon={!!scrollTo}
+                                            onStop={handleStopChat}
+                                            onPositon={() => setScrollTo(undefined)}
+                                            onReExe={handleReExecute}
+                                            onNewChat={handleNewChat}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                ) : (
-                    <AIAgentWelcome question={question} setQuestion={setQuestion} onSearch={handleStartChat} />
-                )}
+                    ) : null
+                    // <AIAgentWelcome question={question} setQuestion={setQuestion} onSearch={handleStartChat} />
+                }
             </div>
 
             <div className={classNames(styles["server-chat-log"], {[styles["server-chat-log-hidden"]]: !logExpand})}>
