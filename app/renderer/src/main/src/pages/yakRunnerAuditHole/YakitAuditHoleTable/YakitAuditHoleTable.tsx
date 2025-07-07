@@ -6,7 +6,8 @@ import {
     SSARisk,
     DeleteSSARisksRequest,
     QuerySSARisksRequest,
-    YakitAuditRiskDetailsProps
+    YakitAuditRiskDetailsProps,
+    AuditResultHistoryProps
 } from "./YakitAuditHoleTableType"
 import styles from "./YakitAuditHoleTable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
@@ -483,8 +484,6 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     })
 
     const onOpenSelect = useMemoizedFn((record: SSARisk) => {
-        console.log("tableData---", tableData)
-
         const m = showYakitModal({
             title: (
                 <div className='content-ellipsis'>
@@ -498,20 +497,32 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             }
         })
     })
+
+    const [disposalData, setDisposalData] = useState<SSARiskDisposalData[]>([])
+    const getSSARiskDisposal = useMemoizedFn((newInfo) => {
+        apiGetSSARiskDisposal({RiskId: newInfo.Id}).then((data) => {
+            if ((data.Data || []).length === 0 && showType === "history") {
+                setShowType("detail")
+            }
+            setDisposalData(data.Data || [])
+        })
+    })
+
     const onCreateTags = useMemoizedFn((params: CreateSSARiskDisposalsRequest) => {
-        console.log("params",params);
-        
         apiCreateSSARiskDisposals(params).then(() => {
             const newTableData = tableData.map((item) => {
                 if (params.RiskIds.includes(item.Id)) {
                     return {
                         ...item,
-                        LatestDisposalStatus: !!params.Status ? params.Status : ""
+                        LatestDisposalStatus: !!params.Status ? params.Status : "not_set"
                     }
                 }
                 return item
             })
             debugVirtualTableEvent.setTData(newTableData)
+            if (currentSelectItem) {
+                getSSARiskDisposal(currentSelectItem)
+            }
         })
     })
     const onRemoveSingle = useMemoizedFn((id) => {
@@ -704,6 +715,19 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         }
     })
 
+    const setLatestDisposalStatus = useMemoizedFn((info: SSARisk, status: string) => {
+        const newTableData = tableData.map((item) => {
+            if (item.Id === info.Id) {
+                return {
+                    ...item,
+                    LatestDisposalStatus: !!status ? status : "not_set"
+                }
+            }
+            return item
+        })
+        debugVirtualTableEvent.setTData(newTableData)
+    })
+
     return (
         <div className={classNames(styles["yakit-audit-hole-table"], riskWrapperClassName)} ref={tableBoxRef}>
             <ReactResizeDetector
@@ -882,6 +906,10 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                 isShowExtra={true}
                                 showType={showType}
                                 setShowType={setShowType}
+                                setLatestDisposalStatus={setLatestDisposalStatus}
+                                disposalData={disposalData}
+                                setDisposalData={setDisposalData}
+                                getSSARiskDisposal={getSSARiskDisposal}
                             />
                         </>
                     )
@@ -906,7 +934,7 @@ const defaultTags = [
     },
     {
         label: "不是问题",
-        value: "no_issue"
+        value: "not_issue"
     },
     {
         label: "存疑",
@@ -921,8 +949,6 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
     const {ids, onClose, onCreate} = props
 
     const onFinish = useMemoizedFn((value) => {
-        console.log("onFinish", {RiskIds: ids, Status: value.Tag, Comment: value.Description})
-
         onCreate({RiskIds: ids, Status: value.Tag, Comment: value.Description})
         if (onClose) onClose()
     })
@@ -961,8 +987,13 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 })
 
 export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React.memo((props) => {
-    const {info, className, border, isShowExtra, isExtraClick} = props
+    const {info, className, border, isShowExtra, isExtraClick, setLatestDisposalStatus, getSSARiskDisposal} = props
     const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
+    const [disposalData, setDisposalData] = useControllableValue<SSARiskDisposalData[]>(props, {
+        defaultValue: [],
+        valuePropName: "disposalData",
+        trigger: "setDisposalData"
+    })
     const [showType, setShowType] = useControllableValue<"detail" | "code" | "history">(props, {
         defaultValue: "detail",
         valuePropName: "showType",
@@ -970,21 +1001,8 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
     })
     useEffect(() => {
         initData()
-        getSSARiskDisposal(info)
+        getSSARiskDisposal && getSSARiskDisposal(info)
     }, [info])
-
-    const [disposalData, setDisposalData] = useState<SSARiskDisposalData[]>([])
-    const getSSARiskDisposal = useMemoizedFn((newInfo) => {
-        console.log("获取处置历史数据params", {RiskId: newInfo.Id});
-        
-        apiGetSSARiskDisposal({RiskId: newInfo.Id}).then((data) => {
-            console.log("获取处置历史数据res", data)
-            if ((data.Data || []).length === 0 && showType === "history") {
-                setShowType("detail")
-            }
-            setDisposalData(data.Data || [])
-        })
-    })
 
     const getOptions = useMemo(() => {
         let options = [
@@ -1180,17 +1198,20 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
 
             {showType === "code" && <AuditResultDescribe info={info} />}
             {showType === "history" && (
-                <AuditResultHistory disposalData={disposalData} setDisposalData={setDisposalData} />
+                <AuditResultHistory
+                    info={info}
+                    disposalData={disposalData}
+                    setDisposalData={setDisposalData}
+                    setShowType={setShowType}
+                    setLatestDisposalStatus={setLatestDisposalStatus}
+                />
             )}
         </div>
     )
 })
 
-interface AuditResultHistoryProps {
-    disposalData: SSARiskDisposalData[]
-    setDisposalData: (data: SSARiskDisposalData[]) => void
-}
 const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props) => {
+    const {info, setShowType, setLatestDisposalStatus} = props
     const [disposalData, setDisposalData] = useControllableValue<SSARiskDisposalData[]>(props, {
         defaultValue: [],
         valuePropName: "disposalData",
@@ -1199,7 +1220,14 @@ const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props)
     const onDeleteSSARiskDisposals = useMemoizedFn((id: number) => {
         apiDeleteSSARiskDisposals({Filter: {ID: [id]}})
             .then(() => {
-                setDisposalData((prev) => prev.filter((item) => item.Id !== id))
+                const newDisposalData = disposalData.filter((item) => item.Id !== id)
+                // 删除完毕后跳转至漏洞详情
+                if (newDisposalData.length === 0) {
+                    setShowType("detail")
+                }
+                setLatestDisposalStatus &&
+                    setLatestDisposalStatus(info, newDisposalData.length > 0 ? newDisposalData[0].Status : "not_set")
+                setDisposalData(newDisposalData)
                 yakitNotify("success", "删除成功")
             })
             .catch((e) => {

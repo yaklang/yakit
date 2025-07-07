@@ -1618,25 +1618,28 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     const responseString = useMemoizedFn((info) => {
         return Uint8ArrayToString(info?.Response || new Uint8Array())
     })
-    const extraResizeBoxProps = useCreation(() => {
-        let p: YakitResizeBoxProps = {
-            firstNode: <></>,
-            secondNode: <></>,
-            firstRatio: "50%",
-            secondRatio: "50%",
-            lineStyle: {height: "auto"},
-            firstNodeStyle: {height: "auto"}
-        }
-        if (!isShowCode) {
-            p.firstRatio = "0%"
-            p.secondRatio = "100%"
-            p.lineStyle = {display: "none"}
-            p.firstNodeStyle = {display: "none"}
-            p.secondNodeStyle = {padding: 0}
-        }
-        return p
-    }, [isShowCode])
 
+    const [showType, setShowType] = useControllableValue<"detail" | "code" | "history">(props, {
+        defaultValue: "detail",
+        valuePropName: "showType",
+        trigger: "setShowType"
+    })
+
+    const getOptions = useMemo(() => {
+        let options = [
+            {
+                label: "漏洞详情",
+                value: "detail"
+            }
+        ]
+        if (isShowCode) {
+            options.push({
+                label: "数据包",
+                value: "code"
+            })
+        }
+        return options
+    }, [isShowCode])
     return (
         <>
             <div
@@ -1714,61 +1717,69 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                         </div>
                     )}
                 </div>
-                <YakitResizeBox
-                    {...extraResizeBoxProps}
-                    firstNode={<div className={styles["content-resize-first"]}>{codeNode()}</div>}
-                    secondNode={
-                        <div className={styles["content-resize-second"]} ref={descriptionsRef}>
-                            <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
-                                <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
-                                <Descriptions.Item label='类型'>
-                                    {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
-                                </Descriptions.Item>
-                                <Descriptions.Item label='来源'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
-                                <Descriptions.Item label='反连Token' contentStyle={{minWidth: 120}}>
-                                    {info?.ReverseToken || "-"}
-                                </Descriptions.Item>
-                                <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                                <Descriptions.Item label='验证状态'>
-                                    <YakitTag color={`${!info.WaitingVerified ? "success" : "info"}`}>
-                                        {!info.WaitingVerified ? "已验证" : "未验证"}
-                                    </YakitTag>
-                                </Descriptions.Item>
-
-                                <>
-                                    <Descriptions.Item
-                                        label='漏洞描述'
-                                        span={column}
-                                        contentStyle={{whiteSpace: "pre-wrap"}}
-                                    >
-                                        {info.Description || "-"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item
-                                        label='解决方案'
-                                        span={column}
-                                        contentStyle={{whiteSpace: "pre-wrap"}}
-                                    >
-                                        {info.Solution || "-"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label='Parameter' span={column}>
-                                        {info.Parameter || "-"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label='Payload' span={column}>
-                                        <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Payload}` || "-"}</div>
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label='详情' span={column}>
-                                        <div style={{height: 180}}>
-                                            <YakitEditor type='yak' value={`${info.Details || ""}`} readOnly={true} />
-                                        </div>
-                                    </Descriptions.Item>
-                                </>
-                            </Descriptions>
-                            <div className={styles["no-more"]}>暂无更多</div>
-                        </div>
-                    }
-                    firstMinSize={200}
-                    secondMinSize={400}
+                <YakitRadioButtons
+                    style={{margin: 6}}
+                    value={showType}
+                    onChange={(e) => {
+                        const value = e.target.value
+                        setShowType(value)
+                    }}
+                    buttonStyle='solid'
+                    options={getOptions}
                 />
+                {showType === "detail" && (
+                    <div className={styles["content-resize-second"]} ref={descriptionsRef}>
+                        <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
+                            <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
+                            <Descriptions.Item label='类型'>
+                                {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
+                            </Descriptions.Item>
+                            <Descriptions.Item label='来源'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
+                            <Descriptions.Item label='反连Token' contentStyle={{minWidth: 120}}>
+                                {info?.ReverseToken || "-"}
+                            </Descriptions.Item>
+                            <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
+                            <Descriptions.Item label='验证状态'>
+                                <YakitTag color={`${!info.WaitingVerified ? "success" : "info"}`}>
+                                    {!info.WaitingVerified ? "已验证" : "未验证"}
+                                </YakitTag>
+                            </Descriptions.Item>
+
+                            <>
+                                <Descriptions.Item
+                                    label='漏洞描述'
+                                    span={column}
+                                    contentStyle={{whiteSpace: "pre-wrap"}}
+                                >
+                                    {info.Description || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item
+                                    label='解决方案'
+                                    span={column}
+                                    contentStyle={{whiteSpace: "pre-wrap"}}
+                                >
+                                    {info.Solution || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item label='Parameter' span={column}>
+                                    {info.Parameter || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item label='Payload' span={column}>
+                                    <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Payload}` || "-"}</div>
+                                </Descriptions.Item>
+                                <Descriptions.Item label='详情' span={column}>
+                                    <div style={{height: 180}}>
+                                        <YakitEditor type='yak' value={`${info.Details || ""}`} readOnly={true} />
+                                    </div>
+                                </Descriptions.Item>
+                            </>
+                        </Descriptions>
+                        <div className={styles["no-more"]}>暂无更多</div>
+                    </div>
+                )}
+
+                {showType === "code" && isShowCode && (
+                    <div className={styles["content-resize-first"]}>{codeNode()}</div>
+                )}
             </div>
         </>
     )
@@ -2041,10 +2052,18 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                 <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                 <>
                     <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                        {info.Description?<MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Description} /> : "-"}
+                        {info.Description ? (
+                            <MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Description} />
+                        ) : (
+                            "-"
+                        )}
                     </Descriptions.Item>
                     <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                        {info.Solution?<MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Solution} /> : "-"}
+                        {info.Solution ? (
+                            <MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Solution} />
+                        ) : (
+                            "-"
+                        )}
                     </Descriptions.Item>
                 </>
             </Descriptions>
@@ -2178,10 +2197,24 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
                     <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                     <>
                         <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                            {info.Description?<MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Description} /> : "-"}
+                            {info.Description ? (
+                                <MDEditor.Markdown
+                                    className={classNames(styles["md-content"])}
+                                    source={info.Description}
+                                />
+                            ) : (
+                                "-"
+                            )}
                         </Descriptions.Item>
                         <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                            {info.Solution?<MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Solution} /> : "-"}
+                            {info.Solution ? (
+                                <MDEditor.Markdown
+                                    className={classNames(styles["md-content"])}
+                                    source={info.Solution}
+                                />
+                            ) : (
+                                "-"
+                            )}
                         </Descriptions.Item>
                     </>
                 </Descriptions>

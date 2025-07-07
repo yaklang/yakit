@@ -97,8 +97,8 @@ $keyColor: map-keys($tagColor);
     .content-heard {
         @extend %display-flex-center;
         align-items: flex-start;
-        padding: 12px;
-        border-bottom: 1px solid var(--yakit-border-color);
+        padding: 4px 12px;
+        // border-bottom: 1px solid var(--yakit-border-color);
         .content-heard-left {
             @extend %display-flex-center;
             overflow: hidden;
