@@ -1358,7 +1358,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     /** ---------- @name 全局功能快捷键 Start ---------- */
     const isModalVisibleRef = useRef<boolean>(false)
-    useShortcutKeyTrigger("removePage", () => {
+    useShortcutKeyTrigger("removePage", (focus) => {
+        // 此处如若在webfuuzer monaco中执行关闭时不会走 onKeyDown关闭 逻辑 而是走此处关闭逻辑
         if (!isModalVisibleRef.current) {
             if (pageCache.length === 0 || defaultFixedTabs.includes(currentTabKey as YakitRoute)) return
             const data = KeyConvertRoute(currentTabKey)
@@ -5331,20 +5332,25 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?
         zIndex: 1010,
         ...(props || {}),
         onOk: () => {
+            if (visibleRef) {
+                visibleRef.current = false
+            }
             if (props?.onOk) {
                 props.onOk(m)
             } else {
                 m.destroy()
             }
-            if (visibleRef) visibleRef.current = false
         },
         onCancel: () => {
+            if (visibleRef) {
+                visibleRef.current = false
+            }
             if (props?.onCancel) {
                 props?.onCancel(m)
             } else {
                 m.destroy()
             }
-            if (visibleRef) visibleRef.current = false
+            
         },
         content: props?.content
     })
