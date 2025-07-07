@@ -171,16 +171,17 @@ export interface PluginFilterParams {
     /** 插件状态(公开 0 /私密 1) */
     plugin_private?: API.PluginsSearchData[]
 }
+interface SearchFields {
+    keyword: string;
+    userName: string;
+    fieldKeywords?: string;
+    vector?: string;
+}
+
 /** 插件搜索条件 */
-export interface PluginSearchParams {
-    /** 全文搜索 */
-    keyword: string
-    /** 按作者 */
-    userName: string
-    /** 关键字 */
-    fieldKeywords?: string
+export interface PluginSearchParams extends SearchFields {
     /** 搜索类型 */
-    type: "keyword" | "userName" | "fieldKeywords"
+    type: keyof SearchFields
     /**时间类型搜索 默认 为所有时间, 当天 day, 本周 week, 本月 month, 年 year */
     time_search?: "day" | "week" | "month" | "year"
 }

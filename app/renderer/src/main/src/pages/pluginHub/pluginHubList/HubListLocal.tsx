@@ -79,6 +79,9 @@ import {getRemoteHttpSettingGV} from "@/utils/envfile"
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
+
+const {ipcRenderer} = window.require("electron")
+
 interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
     openGroupDrawer: boolean
@@ -139,7 +142,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     // 搜索条件
     const [search, setSearch, getSearch] = useGetSetState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [filters, setFilters, getFilters] = useGetSetState<PluginFilterParams>(cloneDeep(defaultFilter))
-
+    const [enableVectorSearch, setEnableVectorSearch] = useState<boolean>(false)
     const showIndex = useRef<number>(0)
     const setShowIndex = useMemoizedFn((index: number) => {
         showIndex.current = index
@@ -159,6 +162,16 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     useEffect(() => {
         fetchPrivateDomain(() => {
             handleRefreshList(true)
+        })
+    }, [])
+
+    useEffect(() => {
+        const collectionName = "yaklang_plugins_default"
+        ipcRenderer.invoke("IsSearchVectorDatabaseReady", {CollectionNames: [collectionName]}).then((res) => {
+            setEnableVectorSearch(res.IsReady)
+        }).catch((e) => {
+            console.error(`检查集合 ${collectionName} 状态失败:`, e)
+            return false
         })
     }, [])
 
@@ -1099,6 +1112,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                     <div className={styles["list-body"]}>
                         <HubOuterList
                             title='本地插件'
+                            enableVectorSearch={enableVectorSearch}
                             headerExtra={
                                 <div className={styles["hub-list-header-extra"]}>
                                     <FuncFilterPopover
