@@ -27,7 +27,7 @@ interface SSARiskDiffItem {
     RiskRuntimeId: string
 }
 interface SSARiskDiffRequest {
-    Base: SSARiskDiffItem
+    BaseLine: SSARiskDiffItem
     Compare: SSARiskDiffItem
     DefaultCompare?: boolean
 }
@@ -81,7 +81,7 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
         setToken(t)
 
         const params: SSARiskDiffRequest = {
-            Base: {
+            BaseLine: {
                 ProgramName: "",
                 RiskRuntimeId: baseTaskID
             },
@@ -127,7 +127,7 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
         return (ssaDiffRes || [])
             .map((item) => {
                 const baseRisk = {...item.BaseRisk}
-                if (item.Status === "Add") {
+                if (item.Status === "Del") {
                     baseRisk.cellClassName = "table-cell-bg-red"
                 }
                 return baseRisk
@@ -139,7 +139,7 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
         return (ssaDiffRes || [])
             .map((item) => {
                 const compareRisk = {...item.CompareRisk}
-                if (item.Status === "Del") {
+                if (item.Status === "Add") {
                     compareRisk.cellClassName = "table-cell-bg-green"
                 }
                 return compareRisk
