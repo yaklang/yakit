@@ -864,7 +864,46 @@ service Yak {
   rpc SaveAITool(SaveAIToolRequest) returns(DbOperateMessage);
   rpc ToggleAIToolFavorite(ToggleAIToolFavoriteRequest) returns(ToggleAIToolFavoriteResponse);
   rpc AIToolGenerateMetadata(AIToolGenerateMetadataRequest) returns(AIToolGenerateMetadataResponse);
+
+  // Local Model Management
+  rpc IsLlamaServerReady(Empty) returns (IsLlamaServerReadyResponse);
+  rpc IsLocalModelReady(IsLocalModelReadyRequest) returns (IsLocalModelReadyResponse);
+  rpc InstallLlamaServer(InstallLlamaServerRequest) returns (stream ExecResult);
+  rpc StartLocalModel(StartLocalModelRequest) returns (stream ExecResult);
+  rpc DownloadLocalModel(DownloadLocalModelRequest) returns (stream ExecResult);
+  rpc GetSupportedLocalModels(Empty) returns (GetSupportedLocalModelsResponse);
+
+  rpc IsSearchVectorDatabaseReady(IsSearchVectorDatabaseReadyRequest) returns (IsSearchVectorDatabaseReadyResponse);
+  rpc InitSearchVectorDatabase(InitSearchVectorDatabaseRequest) returns (stream ExecResult);
+  rpc GetAllVectorStoreCollections(Empty) returns (GetAllVectorStoreCollectionsResponse);
+  rpc DeleteSearchVectorDatabase(DeleteSearchVectorDatabaseRequest) returns (GeneralResponse);
 }
+
+message DeleteSearchVectorDatabaseRequest {
+  repeated string CollectionNames = 1;
+}
+
+message VectorStoreCollection{
+  string Name = 1;
+  string Description = 2;
+}
+message GetAllVectorStoreCollectionsResponse {
+  repeated VectorStoreCollection Collections = 1;
+}
+message IsSearchVectorDatabaseReadyRequest{
+  repeated string CollectionNames = 1;
+}
+message IsSearchVectorDatabaseReadyResponse {
+  bool IsReady = 1;
+  repeated string NotReadyCollectionNames = 2;
+  string Message = 3;
+}
+
+message InitSearchVectorDatabaseRequest {
+  string Proxy = 1;
+  repeated string CollectionNames = 2;
+}
+
 
 message GetToolSetListResponse {
   repeated ToolSetInfo ToolSetList = 1;
@@ -2688,6 +2727,7 @@ message DownloadOnlinePluginsRequest {
   repeated string ScriptName = 13;
   repeated string ExcludeTypes = 14;
   string FieldKeywords = 15;
+  repeated bool Official = 16;
 }
 
 message QueryPluginGroup {
@@ -6949,6 +6989,49 @@ message ListAiModelRequest{
 
 message ListAiModelResponse{
   repeated string ModelName = 1;
+}
+
+// Local Model Messages
+message IsLlamaServerReadyResponse {
+  bool Ok = 1;
+  string Reason = 2;
+}
+
+message IsLocalModelReadyRequest {
+  string ModelName = 1;
+}
+
+message IsLocalModelReadyResponse {
+  bool Ok = 1;
+  string Reason = 2;
+}
+
+message InstallLlamaServerRequest {
+  string Proxy = 1;
+}
+
+message StartLocalModelRequest {
+  string ModelName = 1;
+  string Host = 2;
+  int32 Port = 3;
+}
+
+message DownloadLocalModelRequest {
+  string ModelName = 1;
+  string Proxy = 2;
+}
+
+message LocalModelConfig {
+  string Name = 1;
+  string Type = 2;
+  string FileName = 3;
+  string DownloadURL = 4;
+  string Description = 5;
+  int32 DefaultPort = 6;
+}
+
+message GetSupportedLocalModelsResponse {
+  repeated LocalModelConfig Models = 1;
 }
 
 
