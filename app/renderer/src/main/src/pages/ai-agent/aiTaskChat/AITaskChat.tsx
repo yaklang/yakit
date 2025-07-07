@@ -2,9 +2,9 @@ import React, {forwardRef, memo, useImperativeHandle, useMemo, useRef, useState}
 import {AITaskChatProps} from "./type"
 import useStore from "../useContext/useStore"
 import useDispatcher from "../useContext/useDispatcher"
-import {useDebounceFn, useMemoizedFn, useSize, useThrottleFn} from "ahooks"
+import {useDebounceFn, useMap, useMemoizedFn, useSize, useThrottleFn} from "ahooks"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
-import {AIChatInfo, AIChatMessage, AIChatReview, AIInputEvent, AIStartParams} from "../type/aiChat"
+import {AIChatInfo, AIChatMessage, AIChatReview, AIChatReviewExtra, AIInputEvent, AIStartParams} from "../type/aiChat"
 import cloneDeep from "lodash/cloneDeep"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
@@ -66,6 +66,9 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
 
         // review数据
         const [reviewInfo, setReviewInfo, getReviewInfo] = useGetSetState<AIChatReview>()
+        // review数据中树的数据中需要的解释和关键词工具
+        const [planReviewTreeKeywordsMap, {set: setPlanReviewTreeKeywords, reset: resetPlanReviewTreeKeywords}] =
+            useMap<string, AIChatMessage.PlanReviewRequireExtra>(new Map())
 
         // 接受到 review 后的1秒 loading 状态
         const [delayLoading, setDelayLoading] = useGetSetState(false)
@@ -90,14 +93,18 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                 setDelayLoading(false)
             }, 1000)
         })
+        const handleShowReviewExtra = useMemoizedFn((info: AIChatReviewExtra) => {
+            if (info.type === "plan_task_analysis") {
+                setPlanReviewTreeKeywords(info.data.index, info.data)
+            }
+        })
         // 释放review
         const handleReleaseReview = useMemoizedFn((id: string) => {
             const info = getReviewInfo()
             if (!info) return
             if (info.data.id === id) {
                 if (!delayLoading) yakitNotify("warning", "审阅自动执行，弹框将自动关闭")
-                setReviewInfo(undefined)
-                setReviewExpand(true)
+                handleStopAfterChangeState()
                 handleResetDelayLoadingTime()
                 setDelayLoading(false)
             }
@@ -123,6 +130,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             setTimeout(() => {
                 events.onSend(activeID, reviewData, info)
                 setReviewInfo(undefined)
+                resetPlanReviewTreeKeywords()
                 sendLoading.current = false
             }, 50)
         })
@@ -143,6 +151,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             setTimeout(() => {
                 events.onSend(activeID, reviewData, info)
                 setReviewInfo(undefined)
+                resetPlanReviewTreeKeywords()
                 sendLoading.current = false
             }, 50)
         })
@@ -157,6 +166,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
         const [{execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream}, events] =
             useChatData({
                 onReview: handleShowReview,
+                onReviewExtra: handleShowReviewExtra,
                 onReviewRelease: handleReleaseReview,
                 onEnd: handleChatingEnd
             })
@@ -307,6 +317,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
         const handleStopAfterChangeState = useMemoizedFn(() => {
             // 清空review信息
             setReviewInfo(undefined)
+            resetPlanReviewTreeKeywords()
             setReviewExpand(true)
         })
         // #endregion
@@ -436,6 +447,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                                         setExpand={setReviewExpand}
                                                         delayLoading={delayLoading}
                                                         review={reviewInfo}
+                                                        planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
                                                         onSend={handleSend}
                                                         onSendAIRequire={handleSendAIRequire}
                                                     />
