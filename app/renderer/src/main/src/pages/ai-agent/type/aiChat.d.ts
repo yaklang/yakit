@@ -92,6 +92,7 @@ export interface AIInputEvent {
 
     IsSyncMessage?: boolean
     SyncType?: string
+    SyncJsonInput?: string
 }
 
 export interface AITriageInputEvent {
@@ -122,6 +123,10 @@ export interface AIOutputEvent {
     Timestamp: number
     // 任务索引
     TaskIndex: string
+    /** 是否是同步消息 */
+    IsSync: boolean
+    /**用于同步消息的 ID */
+    SyncID: string
 }
 
 /** UI 渲染, Review相关信息 */
