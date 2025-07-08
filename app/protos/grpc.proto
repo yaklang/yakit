@@ -946,6 +946,8 @@ message AIOutputEvent {
   int64 Timestamp = 10;
   string TaskIndex = 11;
   bool DisableMarkdown = 13;
+  bool IsSync = 12; // 是否是同步消息
+  string SyncID = 14; // 用于同步消息的 ID
 }
 
 message AIInputEvent {
@@ -962,6 +964,7 @@ message AIInputEvent {
 
   bool IsSyncMessage = 6;
   string SyncType = 7;
+  string SyncJsonInput = 10;
 }
 
 
