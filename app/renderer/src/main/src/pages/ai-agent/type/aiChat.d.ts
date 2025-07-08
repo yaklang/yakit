@@ -143,9 +143,15 @@ export interface AIChatReviewExtra {
 export type NoAIChatReviewSelector = Exclude<AIChatReview["data"], AIChatMessage.AIReviewRequire>
 /** UI 渲染, 信息流相关信息 */
 export interface AIChatStreams {
-    type: string
+    nodeId: string
     timestamp: number
-    data: {system: string; reason: string; stream: string}
+    data: {
+        system: string
+        reason: string
+        stream: string
+    }
+    /**工具相关输出数据聚合 */
+    toolAggregation?: AIChatMessage.AIToolData
 }
 /** UI-chat 信息 */
 export interface AIChatInfo {
@@ -305,6 +311,20 @@ export declare namespace AIChatMessage {
         id: string
         prompt: string
         options: AIRequireOption[]
+    }
+
+    export interface AIToolData {
+        /**工具名称 */
+        toolName: string
+        execute?: AIChatStreams
+        callTools?: AIChatStreams
+        toolUrlContentSummaryStdout?: AIChatStreams
+        /**工具执行完成的状态 default是后端没有发送状态type时前端默认值 */
+        status: "default" | "success" | "failed" | "user_cancelled"
+        /**执行完后的总结 */
+        summary: string
+        /**总结的时间 */
+        time: number
     }
 }
 // #endregion

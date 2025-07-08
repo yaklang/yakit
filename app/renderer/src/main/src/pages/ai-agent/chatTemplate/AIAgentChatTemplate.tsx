@@ -328,7 +328,6 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         }
         return active.concat(clickSecondPanel.filter((item) => !active.includes(item)))
     }, [activeStream, clickSecondPanel])
-
     return (
         <div ref={wrapper} className={styles["ai-agent-chat-stream"]}>
             {lists.map((taskName) => {
@@ -346,8 +345,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                         })}
                     >
                         {(streams[taskName] || []).map((info, index) => {
-                            const {type, timestamp, data} = info
-                            const key = `${taskName}-${type}-${timestamp}`
+                            const {nodeId, timestamp, data} = info
+                            const key = `${taskName}-${nodeId}-${timestamp}`
                             const secondExpand = activeSecondPanel.includes(key)
                             return (
                                 <ChatStreamCollapse
@@ -357,8 +356,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                                     onChange={(value) => handleChangeSecondPanel(value, key)}
                                     title={
                                         <div className={styles["task-type-header"]}>
-                                            {taskAnswerToIconMap[type] || <SolidLightningboltIcon />}
-                                            <div className={styles["task-type-header-title"]}>{type}</div>
+                                            {taskAnswerToIconMap[nodeId] || <SolidLightningboltIcon />}
+                                            <div className={styles["task-type-header-title"]}>{nodeId}</div>
                                             <div className={styles["task-type-header-time"]}>
                                                 {formatTimestamp(timestamp)}
                                             </div>

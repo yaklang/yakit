@@ -41,7 +41,7 @@ export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMess
         }
     }
 }
-
+const aggregationToolNodeIds = ["execute", "call-tools", "tool-url_content_summary-stdout"]
 function useChatData(params?: UseChatDataParams) {
     const {onReview, onReviewExtra, onReviewRelease, onEnd} = params || {}
 
@@ -74,6 +74,16 @@ function useChatData(params?: UseChatDataParams) {
     const [streams, setStreams] = useState<Record<string, AIChatStreams[]>>({})
     const [activeStream, setActiveStream] = useState("")
 
+    let currentToolDataRef = useRef<AIChatMessage.AIToolData>({
+        toolName: "",
+        execute: undefined,
+        callTools: undefined,
+        toolUrlContentSummaryStdout: undefined,
+        status: "default",
+        summary: "",
+        time: 0
+    })
+
     // #region 改变任务状态相关方法
     /** 更新任务状态 */
     const handleUpdateTaskState = useMemoizedFn((index: string, state: AIChatMessage.PlanTask["state"]) => {
@@ -102,6 +112,7 @@ function useChatData(params?: UseChatDataParams) {
     // #endregion
 
     // #region 更新回答信息数据流
+    const preRefNodeId = useRef<string>()
     const handleUpdateStream = useMemoizedFn(
         (params: {
             type: string
@@ -116,16 +127,15 @@ function useChatData(params?: UseChatDataParams) {
             setStreams((old) => {
                 const streams = cloneDeep(old)
                 const valueInfo = streams[taskIndex || "system"]
-
                 if (valueInfo) {
-                    const streamInfo = valueInfo.find((item) => item.type === nodeID && item.timestamp === timestamp)
+                    const streamInfo = valueInfo.find((item) => item.nodeId === nodeID && item.timestamp === timestamp)
                     if (streamInfo) {
                         if (type === "systemStream") streamInfo.data.system += ipcContent + ipcStreamDelta
                         if (type === "reasonStream") streamInfo.data.reason += ipcContent + ipcStreamDelta
                         if (type === "stream") streamInfo.data.stream += ipcContent + ipcStreamDelta
                     } else {
-                        const info = {
-                            type: nodeID,
+                        const info: AIChatStreams = {
+                            nodeId: nodeID,
                             timestamp: timestamp,
                             data: {system: "", reason: "", stream: ""}
                         }
@@ -137,7 +147,7 @@ function useChatData(params?: UseChatDataParams) {
                 } else {
                     const list: AIChatStreams[] = [
                         {
-                            type: nodeID,
+                            nodeId: nodeID,
                             timestamp: timestamp,
                             data: {system: "", reason: "", stream: ""}
                         }
@@ -147,7 +157,23 @@ function useChatData(params?: UseChatDataParams) {
                     if (type === "stream") list[0].data.stream += ipcContent + ipcStreamDelta
                     streams[taskIndex || "system"] = list
                 }
-
+                if (valueInfo && preRefNodeId.current === "execute" && nodeID === "call-tools") {
+                    currentToolDataRef.current.execute = valueInfo.find((item) => item.nodeId === "execute")
+                    streams[taskIndex || "system"] = valueInfo.filter((item) => item.nodeId === "call-tools")
+                }
+                if (
+                    valueInfo &&
+                    preRefNodeId.current === "call-tools" &&
+                    nodeID === "tool-url_content_summary-stdout"
+                ) {
+                    currentToolDataRef.current.callTools = valueInfo.find((item) => item.nodeId === "call-tools")
+                    streams[taskIndex || "system"] = valueInfo.filter(
+                        (item) => item.nodeId === "tool-url_content_summary-stdout"
+                    )
+                }
+                if (aggregationToolNodeIds.includes(nodeID)) {
+                    preRefNodeId.current = nodeID
+                }
                 return streams
             })
         }
@@ -274,7 +300,6 @@ function useChatData(params?: UseChatDataParams) {
                 ipcContent = Uint8ArrayToString(res.Content) || ""
                 ipcStreamDelta = Uint8ArrayToString(res.StreamDelta) || ""
             } catch (error) {}
-
             if (res.Type === "pressure") {
                 // 上下文压力
                 try {
@@ -444,6 +469,40 @@ function useChatData(params?: UseChatDataParams) {
                 return
             }
 
+            if (res.Type === "tool_call_prepare") {
+                // 工具准备开始调用
+                return
+            }
+            if (res.Type === "tool_call_start") {
+                // 工具调用开始
+                try {
+                    if (!res.IsJson) return
+                    const data = JSON.parse(ipcContent)
+                    const tool = JSON.parse(data.tool)
+                    currentToolDataRef.current.toolName = tool.name
+                } catch (error) {}
+                return
+            }
+            if (res.Type === "tool_call_user_cancel") {
+                currentToolDataRef.current.status = "user_cancelled"
+                currentToolDataRef.current.summary = "当前工具调用已被取消，可点击查看详情查看具体信息"
+                aggregationToolData(res)
+                return
+            }
+
+            if (res.Type === "tool_call_done") {
+                currentToolDataRef.current.status = "success"
+                aggregationToolData(res)
+                return
+            }
+
+            if (res.Type === "tool_call_error") {
+                currentToolDataRef.current.status = "failed"
+                currentToolDataRef.current.summary = ipcContent
+                aggregationToolData(res)
+                return
+            }
+
             console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
         })
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
@@ -465,6 +524,32 @@ function useChatData(params?: UseChatDataParams) {
         })
         console.log("start-ai-task", token, params)
         ipcRenderer.invoke("start-ai-task", token, params)
+    })
+
+    const aggregationToolData = useMemoizedFn((res: AIOutputEvent) => {
+        const nodeID = res.NodeId
+        const timestamp = res.Timestamp
+        const taskIndex = res.TaskIndex
+        setStreams((old) => {
+            const streams = cloneDeep(old)
+            const valueInfo = streams[taskIndex || "system"]
+            currentToolDataRef.current.toolUrlContentSummaryStdout = valueInfo.find(
+                (item) => item.nodeId === "tool-url_content_summary-stdout"
+            )
+            streams[taskIndex || "system"] = [
+                {
+                    nodeId: nodeID,
+                    timestamp: timestamp,
+                    data: {
+                        system: "",
+                        reason: "",
+                        stream: ""
+                    },
+                    toolAggregation: currentToolDataRef.current
+                }
+            ]
+            return streams
+        })
     })
 
     const onClose = useMemoizedFn((token: string) => {
