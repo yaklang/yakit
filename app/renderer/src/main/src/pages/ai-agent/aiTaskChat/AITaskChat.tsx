@@ -129,8 +129,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             }
             setTimeout(() => {
                 events.onSend(activeID, reviewData, info)
-                setReviewInfo(undefined)
-                resetPlanReviewTreeKeywords()
+                handleStopAfterChangeState()
                 sendLoading.current = false
             }, 50)
         })
@@ -150,8 +149,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             }
             setTimeout(() => {
                 events.onSend(activeID, reviewData, info)
-                setReviewInfo(undefined)
-                resetPlanReviewTreeKeywords()
+                handleStopAfterChangeState()
                 sendLoading.current = false
             }, 50)
         })
@@ -314,7 +312,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             setLeftExpand(true)
         })
 
-        /** 停止回答后的状态调整 */
+        /** 停止回答后的状态调整||清空Review状态 */
         const handleStopAfterChangeState = useMemoizedFn(() => {
             // 清空review信息
             setReviewInfo(undefined)
