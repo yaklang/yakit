@@ -812,7 +812,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     })
 
     const handleAIRequireOpSend = useMemoizedFn((info: AIChatMessage.AIRequireOption) => {
-        const jsonInput: Record<string, string> = {suggestion: info.prompt}
+        const jsonInput: Record<string, string> = {suggestion: info.prompt || info.prompt_title}
         onSendAIRequire(JSON.stringify(jsonInput))
     })
 
@@ -851,9 +851,10 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
         return (
             <>
                 {(options || []).map((el) => {
+                    if (!el.prompt && !el.prompt_title) return null
                     return (
                         <YakitButton key={el.prompt} type='outline2' onClick={() => handleAIRequireOpSend(el)}>
-                            {el.prompt}
+                            {el.prompt || el.prompt_title}
                         </YakitButton>
                     )
                 })}

@@ -203,7 +203,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
 
             setTimeout(() => {
                 requestLoading.current = false
-            }, 300)
+            }, 200)
         })
         // 开始提问
         const handleStartChat = useThrottleFn(
@@ -215,34 +215,35 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             {wait: 500, trailing: false}
         ).run
 
-        const reExeLoading = useRef(false)
         // 重新执行
         const handleReExecute = useMemoizedFn(() => {
             if (execute) return
-            if (reExeLoading.current) return
+            if (requestLoading.current) return
 
-            reExeLoading.current = true
             if (activeID && taskChat) {
-                let request = taskChat.request
+                requestLoading.current = true
+                let request: AIStartParams = {
+                    ...formatAIAgentSetting(setting),
+                    UserQuery: taskChat.request.UserQuery,
+                    ForgeName: taskChat.request.ForgeName || undefined,
+                    ForgeParams: taskChat.request.ForgeParams || undefined
+                }
                 setTaskChat((old) => {
+                    if (!old) return old
                     const newChat = cloneDeep(old)
+                    newChat.request = request
                     newChat && delete newChat.answer
                     return newChat
                 })
 
-                requestLoading.current = true
                 events.onStart(activeID, {
                     IsStart: true,
                     Params: request
                 })
-
                 setTimeout(() => {
                     requestLoading.current = false
-                }, 300)
+                }, 200)
             }
-            setTimeout(() => {
-                reExeLoading.current = false
-            }, 300)
         })
 
         // 停止提问

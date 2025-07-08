@@ -89,9 +89,6 @@ export interface ServerInfoModalProps {
 // #endregion
 
 // #region UI右侧组件定义
-// 对话框
-export interface ServerChatProps {}
-
 // 对话框左侧侧边栏
 export interface AIChatLeftSideProps {
     expand: boolean
@@ -143,7 +140,7 @@ export interface AIAgentChatReviewProps {
     setExpand: Dispatch<SetStateAction<boolean>>
     delayLoading: boolean
     review: AIChatReview
-    planReviewTreeKeywordsMap:Map<string, AIChatMessage.PlanReviewRequireExtra>
+    planReviewTreeKeywordsMap: Map<string, AIChatMessage.PlanReviewRequireExtra>
     onSend: (info: AIChatMessage.ReviewSelector, qs?: string) => void
     onSendAIRequire: (value: string) => void
 }

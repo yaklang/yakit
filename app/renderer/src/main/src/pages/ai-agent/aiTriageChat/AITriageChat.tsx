@@ -365,7 +365,7 @@ const AITriageChatContentForges: React.FC<AITriageChatContentForgesProps> = memo
     return (
         <div className={styles["triage-chat-forges"]}>
             <div className={styles["forges-header"]}>
-                <div className={styles["header-title"]}>{`${keyword}相关模板推荐: `}</div>
+                <div className={styles["header-title"]}>{`${keyword} 相关模板推荐: `}</div>
                 {showExpandBtn && (
                     <YakitButton type='text2' onClick={handleChangeExpand}>
                         {expanded ? "收起" : "展开更多"}
