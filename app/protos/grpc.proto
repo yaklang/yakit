@@ -794,6 +794,8 @@ service Yak {
   rpc UpdateSSARiskTags(UpdateSSARiskTagsRequest)returns(DbOperateMessage);
   rpc GetSSARiskFieldGroup(Empty) returns (SSARiskFieldGroupResponse);
   rpc NewSSARiskRead(NewSSARiskReadRequest) returns (NewSSARiskReadResponse);
+  // SSA risk diff
+  rpc SSARiskDiff(SSARiskDiffRequest) returns (stream SSARiskDiffResponse);
 
   rpc SSARiskFeedbackToOnline(SSARiskFeedbackToOnlineRequest) returns (Empty);
 
@@ -6280,6 +6282,26 @@ message SSAProgram{
   int64 WarnRiskNumber = 11;   
   int64 LowRiskNumber = 12;    
   int64 InfoRiskNumber = 14; 
+}
+
+message SSARiskDiffItem {
+  string ProgramName = 1;
+  string RuleName = 2;
+  string Variable = 3;
+  string RiskRuntimeId = 4;
+}
+
+message SSARiskDiffRequest {
+  SSARiskDiffItem BaseLine = 1; // 原项目
+  SSARiskDiffItem Compare = 2; // 被对比的项目
+  bool DefaultCompare = 3;
+}
+
+message SSARiskDiffResponse {
+  SSARisk BaseRisk = 1;
+  SSARisk CompareRisk = 2;
+  string RuleName = 3;
+  string Status = 4;
 }
 
 message SSAProgramInput {

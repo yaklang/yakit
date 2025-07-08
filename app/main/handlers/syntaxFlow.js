@@ -368,4 +368,12 @@ module.exports = (win, getClient) => {
         let stream = getClient().DownloadSyntaxFlowRule(params)
         handlerHelper.registerHandler(win, stream, streamDownloadSyntaxFlowRuleMap, token)
     })
+
+    // 结果对比
+    const streamSSARiskDiffMap = new Map()
+    ipcMain.handle("cancel-SSARiskDiff", handlerHelper.cancelHandler(streamSSARiskDiffMap))
+    ipcMain.handle("SSARiskDiff", (e, params, token) => {
+        let stream = getClient().SSARiskDiff(params)
+        handlerHelper.registerHandler(win, stream, streamSSARiskDiffMap, token)
+    })
 }
