@@ -1,0 +1,166 @@
+.think-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    color: var(--Colors-Use-Neutral-Text-1-Tittle, #353639);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+}
+.anwser-wrapper {
+    padding: 8px;
+    line-height: 18px;
+    color: #b4bbca;
+    border-radius: 4px;
+    border: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
+    background: var(--Colors-Use-Neutral-Bg, #f8f9fa);
+    pre {
+        background: inherit;
+    }
+    code {
+        background: inherit;
+    }
+}
+
+.ai-chat-tool-card {
+    width: 100%;
+    display: flex;
+    padding: 8px;
+    flex-direction: column;
+    gap: 8px;
+    align-self: stretch;
+
+    border-radius: 8px;
+    background: var(--Colors-Use-Purple-Bg-Hover);
+    height: fit-content;
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 4px;
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            letter-spacing: 0.1px;
+            line-height: 20px;
+            font-weight: 400;
+            background: linear-gradient(
+                108deg,
+                var(--Colors-Use-Magenta-Primary) 0%,
+                var(--Colors-Use-Purple-Primary) 63.94%,
+                var(--Colors-Use-Blue-Primary) 100%
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    }
+    .card-content {
+        border-left: 1px solid var(--Colors-Use-Magenta-Primary);
+        padding-left: 10px;
+        margin-left: 8px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        letter-spacing: 0.1px;
+    }
+}
+
+.ai-chat-tool-item {
+    display: flex;
+    flex-direction: column;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+    .item-heard {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 8px;
+        border-radius: 8px 8px 0 0;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Neutral-Text-2-Primary);
+        }
+        .item-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .item-time {
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+        }
+    }
+    .item-content {
+        display: flex;
+        border-radius: 0 0 8px 8px;
+        padding: 8px;
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+        letter-spacing: 0.5px;
+        overflow: hidden;
+    }
+}
+
+@mixin too-item-by-type($type) {
+    border: 1px solid var(--Colors-Use-#{$type}-Focus);
+    background: var(--Colors-Use-#{$type}-Bg);
+    &:hover {
+        border: 1px solid var(--Colors-Use-#{$type}-Primary);
+    }
+    .item-heard {
+        background: var(--Colors-Use-#{$type}-Focus);
+    }
+    .tag-#{$type} {
+        margin-right: 0;
+        border-radius: 20px;
+        border: 1px solid var(--Colors-Use-#{$type}-Border);
+        background: var(--Colors-Use-#{$type}-Bg-Hover);
+        @if $type == "Neutral" {
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        }
+    }
+    .item-content {
+        background: var(--Colors-Use-#{$type}-Bg);
+        color: var(--Colors-Use-#{$type}-Primary);
+    }
+    @content;
+}
+
+.ai-chat-tool-item-success {
+    @include too-item-by-type("Success");
+}
+
+.ai-chat-tool-item-failed {
+    @include too-item-by-type("Error");
+}
+
+.ai-chat-tool-item-user-cancelled {
+    @include too-item-by-type("Neutral") {
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        &:hover {
+            border: 1px solid var(--Colors-Use-Neutral-Disable);
+        }
+        .item-heard {
+            background: var(--Colors-Use-Neutral-Border);
+        }
+        .item-content {
+            background: var(--Colors-Use-Neutral-Bg);
+        }
+    }
+}
