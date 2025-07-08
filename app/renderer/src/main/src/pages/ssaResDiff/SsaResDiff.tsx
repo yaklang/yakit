@@ -105,7 +105,6 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
         }
         timeRef.current = setInterval(updateNewSSADiffStream, 200)
         ipcRenderer.on(`${token}-data`, async (e, data: SSARiskDiffResponse) => {
-            console.log(data)
             ssaDiffResRef.current.push(data)
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
