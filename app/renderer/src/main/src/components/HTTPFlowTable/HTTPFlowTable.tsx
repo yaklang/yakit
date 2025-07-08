@@ -2673,7 +2673,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     downstreamProxyStr: downstreamProxyStr,
                     pageType: pageType,
                     showEditTag: false,
-                    showJumpTree: false
+                    showJumpTree: false,
+                    showFlod: !['Plugin'].includes(pageType || "")
                 } as HTTPFlowDetailProp
             }
         }

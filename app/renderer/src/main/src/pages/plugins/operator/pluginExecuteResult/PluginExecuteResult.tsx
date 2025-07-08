@@ -28,7 +28,7 @@ import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {CurrentHttpFlow, formatJson} from "@/pages/yakitStore/viewers/base"
+import {formatJson} from "@/pages/yakitStore/viewers/base"
 import {EngineConsole} from "@/components/baseConsole/BaseConsole"
 import {WebTree} from "@/components/WebTree/WebTree"
 import classNames from "classnames"
@@ -54,6 +54,7 @@ import {OutlineChartpieIcon, OutlineLogIcon, OutlineTerminalIcon} from "@/assets
 import {LocalList, LocalPluginLog, LocalText} from "./LocalPluginLog"
 import {CodeScanResult} from "@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable"
 import {YakitAuditHoleTable} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
+import {HTTPFlowRealTimeTableAndEditor} from "@/components/HTTPHistory"
 
 const {TabPane} = PluginTabs
 
@@ -306,16 +307,31 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
                     </div>
                 }
                 secondNode={
-                    <CurrentHttpFlow
-                        runtimeId={runtimeId}
+                    <HTTPFlowRealTimeTableAndEditor
+                        wrapperStyle={{padding: 0}}
+                        containerClassName={styles["current-http-table-container"]}
                         searchURL={searchURL}
                         includeInUrl={includeInUrl}
-                        isOnlyTable={onlyShowFirstNode}
-                        onIsOnlyTable={setOnlyShowFirstNode}
-                        showDetail={secondNodeVisible}
-                        pageType='Plugin'
-                        containerClassName={styles["current-http-table-container"]}
                         onQueryParams={onQueryParams}
+                        setOnlyShowFirstNode={setOnlyShowFirstNode}
+                        setSecondNodeVisible={setSecondNodeVisible}
+                        pageType='Plugin'
+                        runtimeId={runtimeId}
+                        params={{SourceType: "scan"}}
+                        httpHistoryTableTitleStyle={{
+                            paddingTop: 12,
+                            paddingLeft: 8,
+                            paddingRight: 8
+                        }}
+                        showSourceType={false}
+                        showAdvancedSearch={false}
+                        showProtocolType={false}
+                        showColorSwatch={false}
+                        showDelAll={false}
+                        showSetting={false}
+                        showBatchActions={false}
+                        showFlod={false}
+                        titleHeight={47}
                     />
                 }
             ></YakitResizeBox>
