@@ -184,6 +184,8 @@ export const reviewListToTrees = (items: AIChatMessage.PlanTask[]): AIChatMessag
 
     // 首先构建所有节点的映射
     items.forEach((item) => {
+        // 如果是用户添加的节点且没有名称、目标和工具，则跳过
+        if (item.isUserAdd && !item.name && !item.goal && !item.tools.length) return
         // 创建节点副本并初始化children数组
         map[item.index] = {...item, subtasks: []}
     })
@@ -191,6 +193,7 @@ export const reviewListToTrees = (items: AIChatMessage.PlanTask[]): AIChatMessag
     // 构建树结构
     items.forEach((item) => {
         const node: AIChatMessage.PlanTask = map[item.index]
+        if (!node) return // 如果节点不存在，跳过
         const parentId = getParentId(item.index)
         // 如果有父节点，则添加到父节点的children中
         if (parentId && map[parentId]) {

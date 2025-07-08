@@ -55,12 +55,13 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
 
         const newChildTask: AIChatMessage.PlanTask = {
             index: newChildIndex,
-            name: `name-我是添加的子节点`,
-            goal: `goal-我是添加的子节点`,
+            name: ``,
+            goal: ``,
             state: "wait",
             isRemove: false,
             tools: [],
-            description: ""
+            description: "",
+            isUserAdd: true
         }
 
         // 找到父任务的位置
@@ -120,12 +121,13 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
 
         const newSiblingTask: AIChatMessage.PlanTask = {
             index: newSiblingIndex,
-            name: `新增任务 ${newSiblingIndex}`,
-            goal: `这是 ${newSiblingIndex} 的目标`,
+            name: ``,
+            goal: ``,
             state: "wait",
             isRemove: false,
             tools: [],
-            description: ""
+            description: "",
+            isUserAdd: true
         }
 
         const startIndex = list.findIndex((ele) => ele.index === siblingOfIndex)
@@ -398,6 +400,10 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
         }
         return menu
     }, [item.index])
+    const name = useCreation(() => {
+        if (item?.isRemove && !item.name) return "该节点被删除"
+        return item.name
+    }, [item.name, item?.isRemove])
     return (
         <div
             className={styles["ai-plan-review-tree-item"]}
@@ -424,13 +430,18 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                 >
                     <ContentEditableDiv
                         className={styles["title-name"]}
-                        value={item.name}
+                        value={name}
                         editable={editable && !item?.isRemove}
                         setValue={onSetName}
                     />
                     <div className={styles["icon-body"]}>
                         {item.index.length > 1 && (
-                            <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onRemove} />
+                            <YakitButton
+                                type='text2'
+                                className={styles["trash-icon"]}
+                                icon={<OutlineTrashIcon />}
+                                onClick={onRemove}
+                            />
                         )}
                         <YakitDropdownMenu
                             menu={{
@@ -448,6 +459,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                                 onClick={(e) => e.stopPropagation()}
                                 type='text2'
                                 icon={<OutlinePlussmIcon />}
+                                className={styles["plus-sm-icon"]}
                             />
                         </YakitDropdownMenu>
                     </div>
@@ -502,9 +514,10 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
  * TODO 编辑情况待优化
  * @param editable 是否可编辑
  * @param className 样式类名
+ * @param placeholder
  * */
 const ContentEditableDiv: React.FC<ContentEditableDivProps> = React.memo((props) => {
-    const {editable, className} = props
+    const {editable, className, placeholder = "请输入内容..."} = props
     const [value, setValue] = useControllableValue<string>(props, {
         defaultValue: "",
         valuePropName: "value",
@@ -518,6 +531,7 @@ const ContentEditableDiv: React.FC<ContentEditableDivProps> = React.memo((props)
             className={classNames(className || "", {
                 [styles["content-editable"]]: editable
             })}
+            style={{width: value ? "" : "100%"}}
             onClick={onRowClick}
             contentEditable={editable}
             onBlur={(e) => {
@@ -526,6 +540,7 @@ const ContentEditableDiv: React.FC<ContentEditableDivProps> = React.memo((props)
             dangerouslySetInnerHTML={{__html: value}}
             suppressContentEditableWarning={true}
             spellCheck={false}
+            data-placeholder={placeholder}
         ></div>
     )
 })

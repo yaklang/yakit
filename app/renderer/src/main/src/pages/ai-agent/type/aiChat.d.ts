@@ -221,6 +221,8 @@ export declare namespace AIChatMessage {
         tools: string[]
         /**工具解释描述 */
         description: string
+        /**是否为用户添加的节点 */
+        isUserAdd?:boolean
     }
     /** 计划审阅选项 */
     export interface ReviewSelector {

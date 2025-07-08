@@ -153,6 +153,20 @@
                 }
                 .icon-body {
                     display: none;
+                    .trash-icon {
+                        &:hover {
+                            svg {
+                                color: var(--Colors-Use-Error-Primary);
+                            }
+                        }
+                    }
+                    .plus-sm-icon {
+                        &:hover {
+                            svg {
+                                color: var(--Colors-Use-Main-Primary);
+                            }
+                        }
+                    }
                 }
                 .title-name {
                 }
@@ -374,6 +388,11 @@
     white-space: pre-wrap;
     &:focus-visible {
         outline: none;
+    }
+    &:empty::before {
+        content: attr(data-placeholder); /* 显示 data-placeholder 的值 */
+        color: var(--Colors-Use-Neutral-Disable);
+        pointer-events: none; /* 防止点击 placeholder 时无法聚焦 */
     }
 }
 

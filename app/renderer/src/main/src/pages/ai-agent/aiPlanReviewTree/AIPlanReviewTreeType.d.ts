@@ -42,6 +42,7 @@ export interface ContentEditableDivProps {
     setValue: (s: string) => void
     /**是否可以编辑 */
     editable?: boolean
+    placeholder?:string
 }
 
 export interface AIPlanReviewTreeArrowLineProps {}
