@@ -15,6 +15,7 @@ import {AdvancedConfigShowProps} from "../HTTPFuzzerPage"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultWebFuzzerPageInfo} from "@/defaultConstants/HTTPFuzzerPage"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
+import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
 const {ipcRenderer} = window.require("electron")
 
 export const webFuzzerTabs = [
@@ -167,8 +168,9 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                 return false
         }
     }, [type, advancedConfigShow, advancedConfigShow])
+
     return (
-        <div className={styles["web-fuzzer"]} ref={webFuzzerRef}>
+        <ShortcutKeyFocusHook className={styles["web-fuzzer"]} ref={webFuzzerRef} focusId={props.id?[props.id]:undefined} isUpdateFocus={false}>
             <div className={styles["web-fuzzer-tab"]}>
                 {webFuzzerTabs.map((item) => (
                     <div
@@ -188,7 +190,8 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                 ))}
             </div>
             <div className={classNames(styles["web-fuzzer-tab-content"])}>{props.children}</div>
-        </div>
+    
+        </ShortcutKeyFocusHook>
     )
 })
 

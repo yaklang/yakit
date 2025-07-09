@@ -796,7 +796,12 @@ service Yak {
   rpc NewSSARiskRead(NewSSARiskReadRequest) returns (NewSSARiskReadResponse);
   // SSA risk diff
   rpc SSARiskDiff(SSARiskDiffRequest) returns (stream SSARiskDiffResponse);
-
+  // SSA Risk Disposal CURD
+  rpc CreateSSARiskDisposals(CreateSSARiskDisposalsRequest) returns (CreateSSARiskDisposalsResponse);
+  rpc QuerySSARiskDisposals(QuerySSARiskDisposalsRequest) returns (QuerySSARiskDisposalsResponse);
+  rpc UpdateSSARiskDisposals(UpdateSSARiskDisposalsRequest) returns (UpdateSSARiskDisposalsResponse);
+  rpc DeleteSSARiskDisposals(DeleteSSARiskDisposalsRequest) returns (DeleteSSARiskDisposalsResponse);
+  rpc GetSSARiskDisposal(GetSSARiskDisposalRequest) returns (GetSSARiskDisposalResponse);
   rpc SSARiskFeedbackToOnline(SSARiskFeedbackToOnlineRequest) returns (Empty);
 
   rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
@@ -6700,6 +6705,7 @@ message SSARisk {
   // other mesg
   string Solution = 28;
   string Description = 29 ;
+  string LatestDisposalStatus = 30; // 最新处置状态 no_set | is_issue | no_issue | suspicious
 }
 
 message SSARisksFilter {
@@ -6720,6 +6726,7 @@ message SSARisksFilter {
   repeated string FunctionName = 14;
   int64 BeforeCreatedAt = 15;
   int64 AfterCreatedAt = 16;
+  repeated string LatestDisposalStatus = 17;  // no_set | is_issue | no_issue | suspicious
 }
 
 message QuerySSARisksRequest {
@@ -6779,6 +6786,74 @@ message ImportSyntaxFlowsRequest {
   string InputPath = 1;
   string Password = 2;
 }
+message SSARiskDisposalData{
+  int64 Id =1 ;
+  int64 CreatedAt = 2;
+  int64 UpdatedAt = 3;
+
+  string Status =4;
+  string Comment = 5;
+
+  int64 RiskId = 6;
+}
+
+message SSARiskDisposalsFilter {
+  repeated int64 ID = 1;
+  repeated string Status = 2;
+  repeated int64 RiskId = 3;
+
+  // for fuzz search
+  string Search = 4;
+}
+
+message CreateSSARiskDisposalsRequest {
+  repeated int64 RiskIds = 1;
+  string Status = 2;
+  string Comment = 3;
+}
+
+message CreateSSARiskDisposalsResponse {
+  repeated SSARiskDisposalData Data = 1;
+}
+
+message QuerySSARiskDisposalsRequest {
+  Paging  Pagination=1;
+  SSARiskDisposalsFilter Filter = 2;
+}
+
+message QuerySSARiskDisposalsResponse {
+  Paging Pagination = 1;
+  repeated SSARiskDisposalData Data = 2;
+  int64 Total =3;
+}
+
+message UpdateSSARiskDisposalsRequest {
+  SSARiskDisposalsFilter Filter = 1;
+  string User = 2;
+  string Status = 3;
+  string Comment = 4;
+}
+
+message UpdateSSARiskDisposalsResponse {
+  repeated SSARiskDisposalData Data = 1;
+}
+
+message DeleteSSARiskDisposalsRequest {
+  SSARiskDisposalsFilter Filter = 1;
+}
+
+message DeleteSSARiskDisposalsResponse {
+  DbOperateMessage Message = 1;
+}
+
+message GetSSARiskDisposalRequest{
+  int64 RiskId = 1;
+}
+
+message GetSSARiskDisposalResponse{
+  repeated SSARiskDisposalData Data = 1;
+}
+
 
 message SyntaxflowsProgress {
   // 进度  0-1.0

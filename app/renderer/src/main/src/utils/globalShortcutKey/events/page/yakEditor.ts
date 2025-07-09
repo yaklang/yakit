@@ -8,7 +8,7 @@ import {
     sortKeysCombination
 } from "../../utils"
 import {System, SystemInfo} from "@/constants/hardware"
-import { addScopeShow } from "../global"
+import {addScopeShow} from "../global"
 
 interface MonacoShortcutKeyEventInfo extends ShortcutKeyEventInfo {
     type?: System
@@ -240,7 +240,7 @@ export const getStorageYakEditorShortcutKeyEvents = () => {
             if (!res) return
             try {
                 const data: EventsType = JSON.parse(res)
-                currentKeyEvents = addScopeShow(data,YakEditorDefaultShortcut)
+                currentKeyEvents = addScopeShow(data, YakEditorDefaultShortcut)
             } catch (error) {}
         })
         .catch(() => {})
@@ -300,11 +300,11 @@ export const isYakEditorShortcut = (ev: KeyboardEvent): boolean => {
 }
 
 /** 判断当前输入是否激活页面级或全局快捷键 */
-export const isPageOrGlobalShortcut = (ev: KeyboardEvent): boolean => {
+export const isPageOrGlobalShortcut = (ev: KeyboardEvent): string | null => {
     const keys = convertKeyEventToKeyCombination(ev)
-    if (!keys) return false
+    if (!keys) return null
     const eventName = parseShortcutKeyEvent(keys)
-    if (!eventName) return false
+    if (!eventName) return null
     handleShortcutKey(ev)
-    return true
+    return eventName
 }

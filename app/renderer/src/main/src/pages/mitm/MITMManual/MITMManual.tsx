@@ -73,7 +73,7 @@ import {OutlineArrowleftIcon, OutlineArrowrightIcon, OutlineLoadingIcon} from "@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
-import {getGlobalShortcutKeyEvents, GlobalShortcutKey} from "@/utils/globalShortcutKey/events/global"
+import {getGlobalShortcutKeyEvents, GlobalShortcutKey, ShortcutKeyFocusType} from "@/utils/globalShortcutKey/events/global"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "@/utils/prettifyPacket"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
@@ -391,13 +391,15 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         const mitmV2ManualTableRef = useRef<HTMLDivElement>(null)
         const [inViewport] = useInViewport(mitmV2ManualTableRef)
         useShortcutKeyTrigger("sendAndJump*common", (focus) => {
-            if (inViewport && focus) {
+            let item = (focus||[]).find((item)=>item.startsWith(ShortcutKeyFocusType.Monaco))
+            if (inViewport && !item) {
                 onSendToTab(getCurrentSelectItem(), true, downstreamProxyStr)
             }
         })
 
         useShortcutKeyTrigger("send*common", (focus) => {
-            if (inViewport && focus) {
+            let item = (focus||[]).find((item)=>item.startsWith(ShortcutKeyFocusType.Monaco))
+            if (inViewport && !item) {
                 onSendToTab(getCurrentSelectItem(), false, downstreamProxyStr)
             }
         })

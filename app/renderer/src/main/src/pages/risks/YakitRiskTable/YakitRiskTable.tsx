@@ -1502,7 +1502,8 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 
 export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((props) => {
     const {info, isShowTime = true, className = "", border = true, isShowExtra, onRetest} = props
-    const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response">("request")
+    // 目前可展示的请求和响应类型
+    const [currentShowType, setCurrentShowType] = useState<("request" | "response")[]>([])
     const [isShowCode, setIsShowCode] = useState<boolean>(true)
     const descriptionsRef = useRef<HTMLDivElement>(null)
     const descriptionsDivWidth = useListenWidth(descriptionsRef)
@@ -1510,11 +1511,13 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     useEffect(() => {
         const isRequestString = !!requestString(info)
         const isResponseString = !!responseString(info)
+        let showType: ("request" | "response")[] = []
         if (isRequestString) {
-            setCurrentSelectShowType("request")
+            showType.push("request")
         } else if (isResponseString) {
-            setCurrentSelectShowType("response")
+            showType.push("response")
         }
+        setCurrentShowType(showType)
         if (isRequestString || isResponseString) {
             setIsShowCode(true)
         } else {
@@ -1558,12 +1561,12 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         if (descriptionsDivWidth > 600) return 3
         return 1
     }, [descriptionsDivWidth])
-    const codeNode = useMemoizedFn(() => {
+    const codeNode = useMemoizedFn((isRequest: boolean) => {
         const isHttps = !!info.Url && info.Url?.length > 0 && info.Url.includes("https")
         const extraParams = {
-            originValue: currentSelectShowType === "request" ? requestString(info) : responseString(info),
-            originalPackage: currentSelectShowType === "request" ? info.Request : info.Response,
-            webFuzzerValue: currentSelectShowType === "request" ? "" : requestString(info)
+            originValue: isRequest ? requestString(info) : responseString(info),
+            originalPackage: isRequest ? info.Request : info.Response,
+            webFuzzerValue: isRequest ? "" : requestString(info)
         }
         return (
             <NewHTTPPacketEditor
@@ -1571,31 +1574,9 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                 url={info.Url || ""}
                 readOnly={true}
                 isShowBeautifyRender={true}
-                bordered={false}
-                isResponse={currentSelectShowType === "response"}
-                title={
-                    <div className={styles["content-resize-first-heard"]}>
-                        <YakitRadioButtons
-                            size='small'
-                            value={currentSelectShowType}
-                            onChange={(e) => {
-                                setCurrentSelectShowType(e.target.value)
-                            }}
-                            buttonStyle='solid'
-                            options={[
-                                {
-                                    value: "request",
-                                    label: "请求"
-                                },
-                                {
-                                    value: "response",
-                                    label: "响应"
-                                }
-                            ]}
-                        />
-                    </div>
-                }
-                downbodyParams={{IsRisk: true, Id: info.Id, IsRequest: currentSelectShowType === "request"}}
+                bordered={true}
+                isResponse={!isRequest}
+                downbodyParams={{IsRisk: true, Id: info.Id, IsRequest: isRequest}}
                 onClickOpenPacketNewWindowMenu={() => {
                     openPacketNewWindow({
                         request: {
@@ -1618,6 +1599,29 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     const responseString = useMemoizedFn((info) => {
         return Uint8ArrayToString(info?.Response || new Uint8Array())
     })
+
+    const [showType, setShowType] = useControllableValue<"detail" | "code" | "history">(props, {
+        defaultValue: "detail",
+        valuePropName: "showType",
+        trigger: "setShowType"
+    })
+
+    const getOptions = useMemo(() => {
+        let options = [
+            {
+                label: "漏洞详情",
+                value: "detail"
+            }
+        ]
+        if (isShowCode) {
+            options.push({
+                label: "数据包",
+                value: "code"
+            })
+        }
+        return options
+    }, [isShowCode])
+
     const extraResizeBoxProps = useCreation(() => {
         let p: YakitResizeBoxProps = {
             firstNode: <></>,
@@ -1627,7 +1631,14 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             lineStyle: {height: "auto"},
             firstNodeStyle: {height: "auto"}
         }
-        if (!isShowCode) {
+        if (currentShowType.length === 0 && currentShowType.includes("request")) {
+            p.firstRatio = "100%"
+            p.secondRatio = "0%"
+            p.lineStyle = {display: "none"}
+            p.firstNodeStyle = {padding: 0}
+            p.secondNodeStyle = {display: "none"}
+        }
+        if (currentShowType.length === 0 && currentShowType.includes("response")) {
             p.firstRatio = "0%"
             p.secondRatio = "100%"
             p.lineStyle = {display: "none"}
@@ -1635,8 +1646,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             p.secondNodeStyle = {padding: 0}
         }
         return p
-    }, [isShowCode])
-
+    }, [currentShowType])
     return (
         <>
             <div
@@ -1714,61 +1724,76 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                         </div>
                     )}
                 </div>
-                <YakitResizeBox
-                    {...extraResizeBoxProps}
-                    firstNode={<div className={styles["content-resize-first"]}>{codeNode()}</div>}
-                    secondNode={
-                        <div className={styles["content-resize-second"]} ref={descriptionsRef}>
-                            <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
-                                <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
-                                <Descriptions.Item label='类型'>
-                                    {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
-                                </Descriptions.Item>
-                                <Descriptions.Item label='来源'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
-                                <Descriptions.Item label='反连Token' contentStyle={{minWidth: 120}}>
-                                    {info?.ReverseToken || "-"}
-                                </Descriptions.Item>
-                                <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                                <Descriptions.Item label='验证状态'>
-                                    <YakitTag color={`${!info.WaitingVerified ? "success" : "info"}`}>
-                                        {!info.WaitingVerified ? "已验证" : "未验证"}
-                                    </YakitTag>
-                                </Descriptions.Item>
-
-                                <>
-                                    <Descriptions.Item
-                                        label='漏洞描述'
-                                        span={column}
-                                        contentStyle={{whiteSpace: "pre-wrap"}}
-                                    >
-                                        {info.Description || "-"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item
-                                        label='解决方案'
-                                        span={column}
-                                        contentStyle={{whiteSpace: "pre-wrap"}}
-                                    >
-                                        {info.Solution || "-"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label='Parameter' span={column}>
-                                        {info.Parameter || "-"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label='Payload' span={column}>
-                                        <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Payload}` || "-"}</div>
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label='详情' span={column}>
-                                        <div style={{height: 180}}>
-                                            <YakitEditor type='yak' value={`${info.Details || ""}`} readOnly={true} />
-                                        </div>
-                                    </Descriptions.Item>
-                                </>
-                            </Descriptions>
-                            <div className={styles["no-more"]}>暂无更多</div>
-                        </div>
-                    }
-                    firstMinSize={200}
-                    secondMinSize={400}
+                <YakitRadioButtons
+                    style={{margin: 6}}
+                    value={showType}
+                    onChange={(e) => {
+                        const value = e.target.value
+                        setShowType(value)
+                    }}
+                    buttonStyle='solid'
+                    options={getOptions}
                 />
+                {showType === "detail" && (
+                    <div className={styles["content-resize-second"]} ref={descriptionsRef}>
+                        <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
+                            <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
+                            <Descriptions.Item label='类型'>
+                                {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
+                            </Descriptions.Item>
+                            <Descriptions.Item label='来源'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
+                            <Descriptions.Item label='反连Token' contentStyle={{minWidth: 120}}>
+                                {info?.ReverseToken || "-"}
+                            </Descriptions.Item>
+                            <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
+                            <Descriptions.Item label='验证状态'>
+                                <YakitTag color={`${!info.WaitingVerified ? "success" : "info"}`}>
+                                    {!info.WaitingVerified ? "已验证" : "未验证"}
+                                </YakitTag>
+                            </Descriptions.Item>
+
+                            <>
+                                <Descriptions.Item
+                                    label='漏洞描述'
+                                    span={column}
+                                    contentStyle={{whiteSpace: "pre-wrap"}}
+                                >
+                                    {info.Description || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item
+                                    label='解决方案'
+                                    span={column}
+                                    contentStyle={{whiteSpace: "pre-wrap"}}
+                                >
+                                    {info.Solution || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item label='Parameter' span={column}>
+                                    {info.Parameter || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item label='Payload' span={column}>
+                                    <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Payload}` || "-"}</div>
+                                </Descriptions.Item>
+                                <Descriptions.Item label='详情' span={column}>
+                                    <div style={{height: 180}}>
+                                        <YakitEditor type='yak' value={`${info.Details || ""}`} readOnly={true} />
+                                    </div>
+                                </Descriptions.Item>
+                            </>
+                        </Descriptions>
+                        <div className={styles["no-more"]}>暂无更多</div>
+                    </div>
+                )}
+
+                {showType === "code" && isShowCode && (
+                    <YakitResizeBox
+                        style={{padding: 6}}
+                        {...extraResizeBoxProps}
+                        firstNode={<div className={styles["content-resize-first"]}>{codeNode(true)}</div>}
+                        secondNode={<div className={styles["content-resize-first"]}>{codeNode(false)}</div>}
+                        firstMinSize={300}
+                        secondMinSize={300}
+                    />
+                )}
             </div>
         </>
     )
@@ -2041,10 +2066,18 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                 <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                 <>
                     <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                        {info.Description?<MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Description} /> : "-"}
+                        {info.Description ? (
+                            <MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Description} />
+                        ) : (
+                            "-"
+                        )}
                     </Descriptions.Item>
                     <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                        {info.Solution?<MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Solution} /> : "-"}
+                        {info.Solution ? (
+                            <MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Solution} />
+                        ) : (
+                            "-"
+                        )}
                     </Descriptions.Item>
                 </>
             </Descriptions>
@@ -2178,10 +2211,24 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
                     <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                     <>
                         <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                            {info.Description?<MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Description} /> : "-"}
+                            {info.Description ? (
+                                <MDEditor.Markdown
+                                    className={classNames(styles["md-content"])}
+                                    source={info.Description}
+                                />
+                            ) : (
+                                "-"
+                            )}
                         </Descriptions.Item>
                         <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                            {info.Solution?<MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Solution} /> : "-"}
+                            {info.Solution ? (
+                                <MDEditor.Markdown
+                                    className={classNames(styles["md-content"])}
+                                    source={info.Solution}
+                                />
+                            ) : (
+                                "-"
+                            )}
                         </Descriptions.Item>
                     </>
                 </Descriptions>
