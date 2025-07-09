@@ -121,6 +121,18 @@ const configOption = {
         "!app/renderer/src/**/*"
     ],
     asar: true,
+    asarUnpack: [
+    "node_modules/chrome-launcher/**",
+    "node_modules/@types/node/**",
+    "node_modules/undici-types/**",
+    "node_modules/escape-string-regexp/**",
+    "node_modules/is-wsl/**",
+    "node_modules/is-docker/**",
+    "node_modules/lighthouse-logger/**",
+    "node_modules/debug/**",
+    "node_modules/ms/**",
+    "node_modules/marky/**"
+],
     publish: [
         {
             provider: "generic",

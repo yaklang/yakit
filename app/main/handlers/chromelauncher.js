@@ -1,11 +1,11 @@
-const { ipcMain } = require("electron")
+const {app, ipcMain} = require("electron")
 const fs = require("fs")
 const path = require("path")
-const { YakitProjectPath } = require("../filePath")
+const {YakitProjectPath} = require("../filePath")
 const myUserDataDir = path.join(YakitProjectPath, "chrome-profile")
 
 // 仅声明变量，不立即加载
-let launch, killAll, getChromePath;
+let launch, killAll, getChromePath
 
 const disableExtensionsExceptStr = (host, port, username, password) => `
 var config = {
@@ -123,15 +123,27 @@ module.exports = (win, getClient) => {
     // 启动的状态
     let started = false
     let chromeLoaded = false
-    
+
     // 添加一个函数确保chrome-launcher已加载
     async function ensureChromeLoaded() {
         if (!chromeLoaded) {
-            const chromeLauncher = await import("chrome-launcher");
-            launch = chromeLauncher.launch;
-            killAll = chromeLauncher.killAll;
-            getChromePath = chromeLauncher.getChromePath;
-            chromeLoaded = true;
+            const appPath = app.getAppPath()
+            let chromeLauncherPath
+            if (appPath.includes("app.asar")) {
+                const base = appPath.replace("app.asar", "app.asar.unpacked")
+                chromeLauncherPath = path.join(base, "node_modules", "chrome-launcher", "dist", "index.js")
+                const importPath = "file://" + chromeLauncherPath.replace(/\\/g, "/")
+                const chromeLauncher = await import(importPath)
+                launch = chromeLauncher.launch
+                killAll = chromeLauncher.killAll
+                getChromePath = chromeLauncher.getChromePath
+            } else {
+                const chromeLauncher = await import("chrome-launcher")
+                launch = chromeLauncher.launch
+                killAll = chromeLauncher.killAll
+                getChromePath = chromeLauncher.getChromePath
+            }
+            chromeLoaded = true
         }
     }
 
@@ -144,9 +156,9 @@ module.exports = (win, getClient) => {
     })
 
     ipcMain.handle("LaunchChromeWithParams", async (e, params) => {
-        await ensureChromeLoaded();
-        
-        const { port, host, chromePath, userDataDir, username, password, disableCACertPage, chromeFlags } = params
+        await ensureChromeLoaded()
+
+        const {port, host, chromePath, userDataDir, username, password, disableCACertPage, chromeFlags} = params
         const portInt = parseInt(`${port}`)
         const hostRaw = `${host}`
         if (hostRaw === "undefined" || hostRaw.includes("/") || hostRaw.split(":").length > 1) {
@@ -163,13 +175,15 @@ module.exports = (win, getClient) => {
             chromeFlags: [
                 "--remote-debugging-pipe",
                 `--proxy-server=http://${hostRaw}:${portInt}`, // 设置具体的代理服务器地址和端口。
-                ...chromeFlags.filter(item => !item.disabled).map(item => {
-                    if (item.variableValues) {
-                        return item.parameterName + "=" + item.variableValues
-                    } else {
-                        return item.parameterName
-                    }
-                })
+                ...chromeFlags
+                    .filter((item) => !item.disabled)
+                    .map((item) => {
+                        if (item.variableValues) {
+                            return item.parameterName + "=" + item.variableValues
+                        } else {
+                            return item.parameterName
+                        }
+                    })
             ]
         }
         console.log(launchOpt.chromeFlags)
@@ -188,7 +202,7 @@ module.exports = (win, getClient) => {
 
                 // 创建文件夹 { recursive: true } 选项确保如果文件夹的上级目录也不存在时，一同创建。
                 if (!fs.existsSync(commonFilePath)) {
-                    fs.mkdirSync(commonFilePath, { recursive: true })
+                    fs.mkdirSync(commonFilePath, {recursive: true})
                 }
 
                 // 使用 fs.writeFileSync创建文件 写入内容到临时文件
@@ -258,7 +272,7 @@ module.exports = (win, getClient) => {
     }
 
     ipcMain.handle("GetChromePath", async () => {
-        await ensureChromeLoaded();
+        await ensureChromeLoaded()
         try {
             return judgePath()
         } catch (e) {
@@ -267,7 +281,7 @@ module.exports = (win, getClient) => {
     })
 
     ipcMain.handle("StopAllChrome", async (e) => {
-        await ensureChromeLoaded();
+        await ensureChromeLoaded()
         deleteCreateFile()
         startNum = 0
         started = false
