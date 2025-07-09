@@ -60,9 +60,9 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
         }
         openDialog(data).then((data: OpenDialogResponse) => {
             if (data.filePaths.length > 0) {
-                const path = data.filePaths[0].replace(/\\/g, "\\")
+                const filePath = data.filePaths[0].replace(/\\/g, "\\")
                 const importParams: ImportNoteRequest = {
-                    TargetPath: path
+                    TargetPath: filePath
                 }
                 setVisible(true)
                 ipcRenderer
@@ -162,8 +162,12 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
         openDialog(data).then((data: OpenDialogResponse) => {
             const {filePaths} = data
             if (filePaths.length > 0) {
-                const path = filePaths[0].replace(/\\/g, "\\")
-                targetPathRef.current = `${path}\\笔记本-${moment().valueOf()}.zip`
+                const selectedPath = filePaths[0]
+                const fileName = `笔记本-${moment().valueOf()}.zip`
+                // 回退方案：根据平台使用适当的路径分隔符
+                const separator = process.platform === 'win32' ? '\\' : '/'
+                targetPathRef.current = selectedPath + separator + fileName
+
                 const exportParams: ExportNoteRequest = {
                     TargetPath: targetPathRef.current,
                     Filter: filter
