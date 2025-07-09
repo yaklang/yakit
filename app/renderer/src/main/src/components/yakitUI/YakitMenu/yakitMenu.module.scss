@@ -277,7 +277,7 @@
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-open.ant-#{$kind}menu-submenu-active.ant-#{$kind}menu-submenu-selected {
         background-color: var(--menu-active-background);
         span.anticon {
-            color: var(--menu-active-icon-color);
+            color: var(--Colors-Use-Basic-White);
         }
         .keys-style {
             color: var(--menu-active-icon-color);

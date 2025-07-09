@@ -505,8 +505,7 @@ export const availableColors = [
         searchWord: TableCellToColorTag["BLUE"],
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "color-bg-blue")}></div>
-                蓝色
+                <div className={classNames(style["tag-color-display"], "color-bg-blue")}></div>蓝
             </div>
         )
     },

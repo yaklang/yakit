@@ -96,7 +96,7 @@
                         // 单色-其他颜色处理
                         .table-tr.table-row-#{$type} {
                             background: tools.generate-transparen(#{tools.fetch-color($type, "backgroundColor")}, 20%);
-                            color: var(--yakit-table-text-color);
+                            color: var(--Colors-Use-Neutral-Text-1-Title);
                             &:hover {
                                 background: tools.generate-transparen(
                                     #{tools.fetch-color($type, "backgroundColor")},
@@ -110,7 +110,7 @@
                     $gbColors: tools.generate-colors($pre);
                     .table-tr.table-row-#{tools.generate-class-name($pre)} {
                         background: tools.generate-gradient($gbColors, 20%);
-                        color: var(--yakit-table-text-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         &:hover {
                             background: tools.generate-gradient($gbColors, 30%);
                         }

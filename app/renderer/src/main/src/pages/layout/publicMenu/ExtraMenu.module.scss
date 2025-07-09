@@ -2,6 +2,11 @@
     display: flex;
     gap: 8px;
     justify-content: right;
+    button {
+        &:not(:first-child) {
+            background-color: var(--Colors-Use-Neutral-Bg-Hover); // 你想设置的背景色
+        }
+    }
 }
 
 .import-resource-popover {
