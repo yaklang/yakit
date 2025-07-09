@@ -1,11 +1,11 @@
 import {Dispatch, SetStateAction, createContext} from "react"
 
 export interface ShortcutKeyFocusContextStore {
-    shortcutId: string | undefined
+    shortcutIds: string[] | undefined
 }
 
 export interface ShortcutKeyFocusContextDispatcher {
-    setShortcutId?: Dispatch<SetStateAction<string | undefined>>
+    setShortcutIds?: Dispatch<SetStateAction<string[] | undefined>>
 }
 
 export interface ShortcutKeyFocusContextValue {
@@ -15,9 +15,9 @@ export interface ShortcutKeyFocusContextValue {
 
 export default createContext<ShortcutKeyFocusContextValue>({
     store: {
-        shortcutId: undefined
+        shortcutIds: undefined
     },
     dispatcher: {
-        setShortcutId: undefined,
+        setShortcutIds: undefined,
     }
 })

@@ -2,7 +2,7 @@ import {useEffect} from "react"
 import {useMemoizedFn} from "ahooks"
 import emiter from "@/utils/eventBus/eventBus"
 
-function useShortcutKeyTrigger(keyName: string, cb: (focus: string | null) => void): void {
+function useShortcutKeyTrigger(keyName: string, cb: (focus: string[] | null) => void): void {
     const handleShortcutKey = useMemoizedFn((obj: string) => {
         try {
             const {eventName, currentFocus} = JSON.parse(obj)

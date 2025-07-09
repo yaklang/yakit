@@ -54,6 +54,7 @@ import {parseColorTag} from "./utils"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
 import {v4 as uuidv4} from "uuid"
+import { ShortcutKeyFocusType } from "@/utils/globalShortcutKey/events/global"
 const {RangePicker} = YakitDatePicker
 
 /**
@@ -258,9 +259,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const [inViewport] = useInViewport(containerRef)
     const [mouseEnter, setMouseEnter] = useState<boolean>(false)
 
-    const focusIdRef = useRef<string>(uuidv4())
+    const focusIdRef = useRef<string>(`${ShortcutKeyFocusType.TableVirtual}-${uuidv4()}`)
     useShortcutKeyTrigger("tableVirtualUP*common", (focus) => {
-        if(focus === focusIdRef.current && useUpAndDown){
+        if(focus?.includes(focusIdRef.current) && useUpAndDown){
             if (!mouseEnter && inMouseEnterTable) return
             if (!setCurrentRow) return
             const dataLength = data.length
@@ -298,7 +299,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     })
 
     useShortcutKeyTrigger("tableVirtualDown*common", (focus) => {
-        if(focus === focusIdRef.current && useUpAndDown){
+        if(focus?.includes(focusIdRef.current) && useUpAndDown){
             if (!mouseEnter && inMouseEnterTable) return
             if (!setCurrentRow) return
             const dataLength = data.length
@@ -975,7 +976,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     })
 
     return (
-        <ShortcutKeyFocusHook style={{height:"100%"}} focusId={focusIdRef.current}>
+        <ShortcutKeyFocusHook style={{height:"100%"}} focusId={focusIdRef.current?[focusIdRef.current]:undefined}>
         <div
             className={classNames(styles["virtual-table"])}
             ref={tableRef}

@@ -1182,7 +1182,9 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                 buttonStyle='solid'
                 options={getOptions}
             />
-            {showType === "detail" && (
+            {showType === "detail" && <AuditResultDescribe info={info} />}
+
+            {showType === "code" && (
                 <div className={styles["content-resize-collapse"]}>
                     <div className={styles["main-title"]}>相关代码段</div>
                     <AuditResultCollapse
@@ -1195,8 +1197,6 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                     />
                 </div>
             )}
-
-            {showType === "code" && <AuditResultDescribe info={info} />}
             {showType === "history" && (
                 <AuditResultHistory
                     info={info}

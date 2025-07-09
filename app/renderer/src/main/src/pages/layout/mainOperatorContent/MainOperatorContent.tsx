@@ -162,7 +162,7 @@ import {BatchAddNewGroupFormItem} from "./BatchAddNewGroup"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
 import {getGlobalShortcutKeyEvents} from "@/utils/globalShortcutKey/events/global"
-import {convertKeyEventToKeyCombination, sortKeysCombination} from "@/utils/globalShortcutKey/utils"
+import {convertKeyEventToKeyCombination, sortKeysCombination, unregisterShortcutFocusHandle} from "@/utils/globalShortcutKey/utils"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
@@ -1359,6 +1359,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- @name 全局功能快捷键 Start ---------- */
     const isModalVisibleRef = useRef<boolean>(false)
     useShortcutKeyTrigger("removePage", (focus) => {
+        if(focus) {
+            let item = focus.find((i) => i.startsWith(currentTabKey))
+            if(item){
+                // 在此处进行关闭二级页面
+                emiter.emit("onRemoveSecondPage",item)   
+                return
+            }
+        }
         // 此处如若在webfuuzer monaco中执行关闭时不会走 onKeyDown关闭 逻辑 而是走此处关闭逻辑
         if (!isModalVisibleRef.current) {
             if (pageCache.length === 0 || defaultFixedTabs.includes(currentTabKey as YakitRoute)) return
@@ -3021,7 +3029,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const event = getGlobalShortcutKeyEvents()
         const closeEvent = sortKeysCombination(event.removePage.keys).join("")
         const openEvent = sortKeysCombination(event.addSubPage.keys).join("")
-
         // 快捷键关闭
         if (triggerKeys === closeEvent) {
             e.preventDefault()
@@ -3038,6 +3045,23 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             return
         }
     })
+
+    const onRemoveSecondPageFun = useMemoizedFn((focus: string) => {
+        if(focus === selectSubMenu.id){
+            if (pageCache.length === 0) return
+            unregisterShortcutFocusHandle(focus)
+            subTabsRef.current?.onRemove(selectSubMenu)
+        }   
+    })
+    // 序列导入更新菜单
+    useEffect(() => {
+        emiter.on("onRemoveSecondPage", onRemoveSecondPageFun)
+        return () => {
+            emiter.off("onRemoveSecondPage", onRemoveSecondPageFun)
+        }
+    }, [])
+
+
     const flatSubPage = useMemo(() => {
         const newData: MultipleNodeInfo[] = []
         subPage.forEach((ele) => {

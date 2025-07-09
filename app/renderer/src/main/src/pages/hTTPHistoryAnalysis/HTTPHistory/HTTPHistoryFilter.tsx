@@ -90,7 +90,7 @@ import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAnd
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
-import {getGlobalShortcutKeyEvents, GlobalShortcutKey} from "@/utils/globalShortcutKey/events/global"
+import {getGlobalShortcutKeyEvents, GlobalShortcutKey, ShortcutKeyFocusType} from "@/utils/globalShortcutKey/events/global"
 
 import styles from "./HTTPHistoryFilter.module.scss"
 const {ipcRenderer} = window.require("electron")
@@ -1650,7 +1650,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     })
 
     useShortcutKeyTrigger("sendAndJump*common", (focus) => {
-        if(inViewport && focus){
+        let item = (focus||[]).find((item)=>item.startsWith(ShortcutKeyFocusType.Monaco))
+        if(inViewport && !item){
             if (clickRow) {
                 clickRow.IsWebsocket
                     ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request)
@@ -1660,7 +1661,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     })
 
     useShortcutKeyTrigger("send*common", (focus) => {
-        if(inViewport && focus){
+        let item = (focus||[]).find((item)=>item.startsWith(ShortcutKeyFocusType.Monaco))
+        if(inViewport && !item){
             if (clickRow) {
                 clickRow.IsWebsocket
                     ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request, false)

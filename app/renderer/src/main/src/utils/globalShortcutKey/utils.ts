@@ -106,15 +106,15 @@ export const registerShortcutKeyHandle = (page: ShortcutKeyPageName) => {
 export const unregisterShortcutKeyHandle = (page: ShortcutKeyPageName) => {
     if (currentPageHandler === page) currentPageHandler = null
 }
-/** 当前聚焦的页面 */
-let currentFocus: string | null = null
+/** 当前聚焦的页面或组件 */
+let currentFocus: string[] | null = null
 /** 注册聚焦监听事件 */
-export const registerShortcutFocusHandle = (page: string) => {
+export const registerShortcutFocusHandle = (page: string[]) => {
     currentFocus = page
 }
 /** 注销聚焦监听事件 */
 export const unregisterShortcutFocusHandle = (page: string) => {
-    if (currentFocus === page) currentFocus = null
+    if (currentFocus && currentFocus.includes(page)) currentFocus = currentFocus.filter((item) => item !== page)
 }
 
 /** 是否激活了快捷键设置页面 */

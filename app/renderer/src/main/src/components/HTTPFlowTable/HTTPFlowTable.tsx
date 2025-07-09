@@ -99,7 +99,7 @@ import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 import {showYakitDrawer, YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import MITMContext from "@/pages/mitm/Context/MITMContext"
-import {getGlobalShortcutKeyEvents, GlobalShortcutKey} from "@/utils/globalShortcutKey/events/global"
+import {getGlobalShortcutKeyEvents, GlobalShortcutKey, ShortcutKeyFocusType} from "@/utils/globalShortcutKey/events/global"
 import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
@@ -808,9 +808,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const refreshTabsContRef = useRef<boolean>(false)
 
     useShortcutKeyTrigger("sendAndJump*common", (focus) => {
+        let item = (focus||[]).find((item)=>item.startsWith(ShortcutKeyFocusType.Monaco))
         // 为约束monaco与history同时存在相同快捷键所导致的2次触发(在monaco中执行)
-        // 此时focus用于标记是否history表格还存在焦点
-        if (inViewport && focus) {
+        // 此时focus用于标记manaco中是否有焦点 有则不执行
+        if (inViewport && !item) {
             const selected = getSelected()
             if (selected) {
                 selected.IsWebsocket
@@ -821,7 +822,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     useShortcutKeyTrigger("send*common", (focus) => {
-        if (inViewport && focus) {
+        let item = (focus||[]).find((item)=>item.startsWith(ShortcutKeyFocusType.Monaco))
+        if (inViewport && !item) {
             const selected = getSelected()
             if (selected) {
                 selected.IsWebsocket

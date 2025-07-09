@@ -3,6 +3,12 @@ import {YakitKeyBoard, YakitKeyMod} from "../keyboard"
 import {ShortcutKeyEventInfo} from "./pageMaps"
 import {PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
 
+/** 控件级焦点(子页面焦点暂不用做标记)  */
+export enum ShortcutKeyFocusType {
+    TableVirtual = "TableVirtual",
+    Monaco = "Monaco",
+}
+
 export const addScopeShow = (newEvent, oldEvent) => {
     // 每次获取快捷键需更新其作用域
     Object.keys(newEvent).forEach((key) => {
