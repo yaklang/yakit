@@ -1,7 +1,7 @@
 import React, {memo, useMemo, useRef, useState} from "react"
 import {HistoryChatProps} from "./type"
-import useStore from "../useContext/useStore"
-import useDispatcher from "../useContext/useDispatcher"
+import useAIAgentStore from "../useContext/useStore"
+import useAIAgentDispatcher from "../useContext/useDispatcher"
 import {useDebounce, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {AIChatInfo} from "../type/aiChat"
@@ -20,8 +20,8 @@ import styles from "./HistoryChat.module.scss"
 export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
     const {onNewChat} = props
 
-    const {chats, activeChat} = useStore()
-    const {setChats, setActiveChat} = useDispatcher()
+    const {chats, activeChat} = useAIAgentStore()
+    const {setChats, setActiveChat} = useAIAgentDispatcher()
     const activeID = useMemo(() => {
         return activeChat?.id || ""
     }, [activeChat])

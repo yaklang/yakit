@@ -8,7 +8,7 @@ import {AITaskChatRef} from "../aiTaskChat/type"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
-import useStore from "../useContext/useStore"
+import useAIAgentStore from "../useContext/useStore"
 
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
@@ -19,7 +19,7 @@ const AITaskChat = React.lazy(() => import("../aiTaskChat/AITaskChat"))
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {} = props
 
-    const {activeChat} = useStore()
+    const {activeChat} = useAIAgentStore()
 
     const [mode, setMode, getMode] = useGetSetState<"welcome" | "triage" | "task">("welcome")
 

@@ -15,8 +15,6 @@ import cloneDeep from "lodash/cloneDeep"
 import {setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import useMCPData from "./useMCPData"
-import useStore from "./useContext/useStore"
-import useDispatcher from "./useContext/useDispatcher"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"

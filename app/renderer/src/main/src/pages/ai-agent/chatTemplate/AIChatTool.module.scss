@@ -3,18 +3,18 @@
     flex-direction: column;
     gap: 8px;
 
-    color: var(--Colors-Use-Neutral-Text-1-Tittle, #353639);
+    color: var(--Colors-Use-Neutral-Text-1-Tittle);
     font-size: 14px;
     font-weight: 400;
     line-height: 20px;
 }
 .anwser-wrapper {
     padding: 8px;
-    line-height: 18px;
-    color: #b4bbca;
-    border-radius: 4px;
-    border: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
-    background: var(--Colors-Use-Neutral-Bg, #f8f9fa);
+    color: var(--Colors-Use-Neutral-Text-1-Tittle);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    letter-spacing: 0.1px;
     pre {
         background: inherit;
     }
@@ -61,6 +61,32 @@
             -webkit-text-fill-color: transparent;
         }
     }
+    .card-extra {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .extra-btn {
+            display: flex;
+            padding: 3px 6px;
+            align-items: center;
+            gap: 2px;
+
+            border-radius: 4px;
+            background: var(--Colors-Use-Error-Bg);
+
+            color: var(--Colors-Use-Error-Primary);
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 14px;
+            letter-spacing: 0.5px;
+
+            svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
+    }
+
     .card-content {
         border-left: 1px solid var(--Colors-Use-Magenta-Primary);
         padding-left: 10px;

@@ -233,7 +233,7 @@ export declare namespace AIChatMessage {
         /**工具解释描述 */
         description: string
         /**是否为用户添加的节点 */
-        isUserAdd?:boolean
+        isUserAdd?: boolean
     }
     /** 计划审阅选项 */
     export interface ReviewSelector {
@@ -319,17 +319,23 @@ export declare namespace AIChatMessage {
     }
 
     export interface AIToolData {
+        callToolId: string
         /**工具名称 */
         toolName: string
-        execute?: AIChatStreams
-        callTools?: AIChatStreams
-        toolUrlContentSummaryStdout?: AIChatStreams
         /**工具执行完成的状态 default是后端没有发送状态type时前端默认值 */
         status: "default" | "success" | "failed" | "user_cancelled"
         /**执行完后的总结 */
         summary: string
         /**总结的时间 */
         time: number
+    }
+
+    export interface AIToolCall {
+        call_tool_id: string
+        tool_name?: string
+        status?: string
+        summary?: string
+        tool?: {name?: string; description?: string}
     }
 }
 // #endregion

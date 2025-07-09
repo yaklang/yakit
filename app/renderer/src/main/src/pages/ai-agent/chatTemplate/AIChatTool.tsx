@@ -9,6 +9,10 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import {v4 as uuidv4} from "uuid"
+import {isToolStdout} from "../utils"
+import {OutlineArrownarrowrightIcon} from "@/assets/icon/outline"
+import useAIAgentStore from "../useContext/useStore"
 
 interface AIChatToolProps {
     item: AIChatMessage.AIToolData
@@ -17,45 +21,62 @@ export const AIChatTool: React.FC<AIChatToolProps> = React.memo((props) => {
     return <div>总结</div>
 })
 
-interface AIChatToolCardProps {
-    extra?: ReactNode
+interface AIChatToolColorCardProps {
     toolCall: AIChatStreams
 }
-const OutlineSparklesColorsIcon = () => (
-    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
-        <path
-            d='M3.33333 2V4.66667M2 3.33333H4.66667M4 11.3333V14M2.66667 12.6667H5.33333M8.66667 2L10.1905 6.57143L14 8L10.1905 9.42857L8.66667 14L7.14286 9.42857L3.33333 8L7.14286 6.57143L8.66667 2Z'
-            stroke='url(#paint0_linear_42599_934)'
-            strokeLinecap='round'
-            strokeLinejoin='round'
-        />
-        <defs>
-            <linearGradient
-                id='paint0_linear_42599_934'
-                x1='2'
-                y1='2'
-                x2='16.3935'
-                y2='6.75561'
-                gradientUnits='userSpaceOnUse'
-            >
-                <stop stopColor='#DC5CDF' />
-                <stop offset='0.639423' stopColor='#8862F8' />
-                <stop offset='1' stopColor='#4493FF' />
-            </linearGradient>
-        </defs>
-    </svg>
-)
-export const AIChatToolCard: React.FC<AIChatToolCardProps> = React.memo((props) => {
-    const {toolCall, extra} = props
+const OutlineSparklesColorsIcon = () => {
+    const id = uuidv4()
+    return (
+        <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+            <path
+                d='M3.33333 2V4.66667M2 3.33333H4.66667M4 11.3333V14M2.66667 12.6667H5.33333M8.66667 2L10.1905 6.57143L14 8L10.1905 9.42857L8.66667 14L7.14286 9.42857L3.33333 8L7.14286 6.57143L8.66667 2Z'
+                stroke={`url(#${id})`}
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <defs>
+                <linearGradient id={id} x1='2' y1='2' x2='16.3935' y2='6.75561' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#DC5CDF' />
+                    <stop offset='0.639423' stopColor='#8862F8' />
+                    <stop offset='1' stopColor='#4493FF' />
+                </linearGradient>
+            </defs>
+        </svg>
+    )
+}
+export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.memo((props) => {
+    const {activeChat} = useAIAgentStore()
+    const {toolCall} = props
     const {nodeId, data} = toolCall
+    const extra = useCreation(() => {
+        if (isToolStdout(nodeId)) {
+            return (
+                <div className={styles["card-extra"]}>
+                    <div className={styles["extra-btn"]} onClick={onSkip}>
+                        <span>跳过</span>
+                        <OutlineArrownarrowrightIcon />
+                    </div>
+                </div>
+            )
+        }
+        return null
+    }, [nodeId])
+    const title = useCreation(() => {
+        if (nodeId === "call-tools") return "Call-tools：参数生成中..."
+        if (isToolStdout(nodeId)) return `${nodeId}：调用工具中...`
+    }, [nodeId])
+    const onSkip = useMemoizedFn((e) => {
+        e.stopPropagation()
+        // console.log("activeChat", activeChat)
+    })
     return (
         <div className={styles["ai-chat-tool-card"]}>
             <div className={styles["card-header"]}>
                 <div className={styles["card-title"]}>
                     <OutlineSparklesColorsIcon />
-                    <div>{nodeId}</div>
+                    <div>{title}</div>
                 </div>
-                {extra && <div className={styles["card-extra"]}>{extra}</div>}
+                {extra}
             </div>
             <div className={styles["card-content"]}>
                 {
@@ -136,7 +157,7 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
                     <SolidToolIcon />
                     <div>{item.toolName}</div>
                     {tag}
-                    <div className={styles["item-time"]}>{formatTimestamp(item.time)}</div>
+                    <div className={styles["item-time"]}>{formatTimestamp(+item.time)}</div>
                 </div>
                 <YakitButton type='text'>查看详情</YakitButton>
             </div>
@@ -147,7 +168,7 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
                     }}
                     className='content-ellipsis'
                 >
-                    {item.summary}
+                    {item.summary || "暂无内容"}
                 </div>
             </div>
         </div>

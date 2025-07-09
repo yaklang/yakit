@@ -1,7 +1,7 @@
 import React, {forwardRef, memo, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {AITaskChatProps} from "./type"
-import useStore from "../useContext/useStore"
-import useDispatcher from "../useContext/useDispatcher"
+import useAIAgentStore from "../useContext/useStore"
+import useAIAgentDispatcher from "../useContext/useDispatcher"
 import {useDebounceFn, useMap, useMemoizedFn, useSize, useThrottleFn} from "ahooks"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {AIChatInfo, AIChatMessage, AIChatReview, AIChatReviewExtra, AIInputEvent, AIStartParams} from "../type/aiChat"
@@ -36,8 +36,8 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             []
         )
 
-        const {setting} = useStore()
-        const {setChats, setActiveChat} = useDispatcher()
+        const {setting} = useAIAgentStore()
+        const {setChats, setActiveChat} = useAIAgentDispatcher()
 
         const [taskChat, setTaskChat, getTaskChat] = useGetSetState<AIChatInfo>()
         /** 当前对话唯一ID */

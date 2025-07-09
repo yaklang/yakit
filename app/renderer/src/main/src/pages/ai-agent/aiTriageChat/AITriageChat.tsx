@@ -12,8 +12,8 @@ import {useMemoizedFn} from "ahooks"
 import {AIForge, AIStartParams, QueryAIForgeRequest} from "../type/aiChat"
 import {AIForgeForm, AIForgeInfoOpt} from "../aiTriageChatTemplate/AITriageChatTemplate"
 import useChatTriage, {AITriageChatContentInfo} from "../useChatTriage"
-import useStore from "../useContext/useStore"
-// import useDispatcher from "../useContext/useDispatcher"
+import useAIAgentStore from "../useContext/useStore"
+// import useAIAgentDispatcher from "../useContext/useDispatcher"
 import {randomString} from "@/utils/randomUtil"
 import {formatAIAgentSetting} from "../utils"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -38,7 +38,7 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
             []
         )
 
-        const {setting} = useStore()
+        const {setting} = useAIAgentStore()
 
         const wrapperRef = useRef<HTMLDivElement>(null)
 

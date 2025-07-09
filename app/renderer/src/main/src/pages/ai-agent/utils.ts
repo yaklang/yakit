@@ -237,6 +237,27 @@ export const formatMCPResourceTemplates = (templates: any[]): RenderResourcesTem
     }
     return data
 }
+/**是否为 tool stdout 节点 */
+export const isToolStdout = (nodeID: string) => {
+    return nodeID.startsWith("tool-") && nodeID.endsWith("-stdout")
+}
+/**是否显示有总结的tool card */
+export const isToolSummaryCard = (nodeID: string) => {
+    switch (nodeID) {
+        case "tool_call_user_cancel":
+        case "tool_call_done":
+        case "tool_call_error":
+        case "tool_call_summary":
+            return true
+        default:
+            return false
+    }
+}
+/**是否显示紫色主题的彩色卡片 */
+export const isShowToolColorCard = (nodeID: string) => {
+    if (nodeID === "call-tools") return true
+    if (isToolStdout(nodeID)) return true
+}
 
 // #region chat相关工具
 /** @name 将Token转换为K/M等带单位字符 */

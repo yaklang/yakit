@@ -26,7 +26,7 @@ import {
     OutlineWarpIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {formatNumberUnits, reviewListToTrees} from "../utils"
+import {formatNumberUnits, isShowToolColorCard, isToolSummaryCard, reviewListToTrees} from "../utils"
 import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import {Input, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -43,7 +43,7 @@ import {
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {AITree} from "../aiTree/AITree"
 import cloneDeep from "lodash/cloneDeep"
-import {AIChatMessage, NoAIChatReviewSelector} from "../type/aiChat"
+import {AIChatMessage, AIChatStreams, NoAIChatReviewSelector} from "../type/aiChat"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {handleFlatAITree} from "../useChatData"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -56,6 +56,7 @@ import {QSInputTextarea} from "../template/template"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
+import {AIChatToolColorCard, AIChatToolItem} from "./AIChatTool"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -344,10 +345,17 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                             [styles["chat-stream-collapse-expand-first"]]: firstExpand
                         })}
                     >
-                        {(streams[taskName] || []).map((info, index) => {
-                            const {nodeId, timestamp, data} = info
+                        {(streams[taskName] || []).map((info: AIChatStreams, index) => {
+                            const {nodeId, timestamp, data, toolAggregation} = info
                             const key = `${taskName}-${nodeId}-${timestamp}`
                             const secondExpand = activeSecondPanel.includes(key)
+                            if (isShowToolColorCard(nodeId)) {
+                                return <AIChatToolColorCard toolCall={info} />
+                            }
+                            if (isToolSummaryCard(nodeId) && toolAggregation) {
+                                console.log("toolAggregation", toolAggregation, info)
+                                return <AIChatToolItem item={toolAggregation} />
+                            }
                             return (
                                 <ChatStreamCollapse
                                     key={key}
