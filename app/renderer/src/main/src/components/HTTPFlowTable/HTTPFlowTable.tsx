@@ -499,8 +499,7 @@ export const availableColors = [
         searchWord: TableCellToColorTag["BLUE"],
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "color-bg-blue")}></div>
-                蓝色
+                <div className={classNames(style["tag-color-display"], "color-bg-blue")}></div>蓝
             </div>
         )
     },
@@ -1850,12 +1849,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             {
                 title: "Host",
                 dataKey: "Host",
-                width: 200,
+                width: 200
             },
             {
                 title: "Path",
                 dataKey: "Path",
-                width: 400,
+                width: 400
             },
             {
                 title: "相关插件",

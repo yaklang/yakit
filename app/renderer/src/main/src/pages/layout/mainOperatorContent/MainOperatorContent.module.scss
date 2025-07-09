@@ -122,6 +122,7 @@ $keyColor: map-keys($colors);
     font-size: 12px;
     overflow: hidden;
     height: 100%;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 
     .tab-menu-first {
         display: flex;

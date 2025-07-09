@@ -49,7 +49,7 @@
     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: var(--Colors-Use-Neutral-Bg);
-    color: var(---Colors-Use-Neutral-Text-1-Title);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     border-color: var(--Colors-Use-Neutral-Border);
     svg {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);

@@ -492,7 +492,8 @@
         border-radius: 10px;
         border: 1px solid var(--Colors-Use-Neutral-Border);
         overflow: hidden;
-        background-color: var(--Colors-Use-Basic-Background);
+        // background-color: var(--Colors-Use-Basic-Background);
+        background-color: var(--Colors-Use-Basic-White);
         video {
             width: 100%;
             height: 410px;

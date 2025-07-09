@@ -44,7 +44,7 @@
                 }
             }
             &-desc {
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
                 font-size: 16px;
             }
         }
@@ -81,7 +81,7 @@
         .operation-btn-wrapper {
             position: relative;
             display: flex;
-            color: #ffffff;
+            color: var(--Colors-Use-Main-On-Primary);
             border-radius: 40px;
             .operation-btn-left {
                 display: flex;
@@ -363,7 +363,8 @@
                 font-size: 14px;
                 line-height: 20px;
                 &:hover {
-                    background: var(--Colors-Use-Neutral-Bg-Hover)
+                    border-radius: 4px;
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                 }
                 &.active {
                     color: var(--Colors-Use-Main-Primary);
@@ -647,6 +648,7 @@
                 .seriousRisk-tag {
                     border: 1px solid var(--Colors-Use-Error-Border);
                     .risk-text {
+                        border-radius: 4px 0 0 4px;
                         color: var(--Colors-Use-Status-Serious);
                         border-right: 1px solid var(--Colors-Use-Error-Border);
                         background-color: var(--Colors-Use-Error-Bg-Hover);
@@ -656,6 +658,7 @@
                     border: 1px solid var(--Colors-Use-Error-Border);
                     .risk-text {
                         color: var(--Colors-Use-Error-Primary);
+                        border-radius: 4px 0 0 4px;
                         border-right: 1px solid var(--Colors-Use-Error-Border);
                         background-color: var(--Colors-Use-Error-Bg-Hover);
                     }
@@ -663,6 +666,7 @@
                 .mediumRisk-tag {
                     border: 1px solid var(--Colors-Use-Warning-Border);
                     .risk-text {
+                        border-radius: 4px 0 0 4px;
                         color: var(--Colors-Use-Warning-Primay);
                         border-right: 1px solid var(--Colors-Use-Warning-Border);
                         background-color: var(--Colors-Use-Warning-Bg-Hover);
@@ -671,6 +675,7 @@
                 .lowRisk-tag {
                     border: 1px solid var(--Colors-Use-Yellow-Border);
                     .risk-text {
+                        border-radius: 4px 0 0 4px;
                         color: var(--Colors-Use-Yellow-Primary);
                         border-right: 1px solid var(--Colors-Use-Yellow-Border);
                         background-color: var(--Colors-Use-Yellow-Bg);
@@ -752,6 +757,7 @@
             .operation-btn-wrapper {
                 .operation-btn-left {
                     font-size: 14px;
+                    color: var(--Colors-Use-Main-On-Primary);
                     .open-icon {
                         svg {
                             width: 20px;
@@ -965,6 +971,9 @@
                     .download-btn {
                         font-size: 12px;
                     }
+                    .data-preview-item-size{
+                        font-size: 16px;
+                    }
                     .data-preview-item-number {
                         font-size: 14px;
                     }
@@ -1033,6 +1042,7 @@
             .operation-btn-wrapper {
                 .operation-btn-left {
                     font-size: 16px;
+                    color: var(--Colors-Use-Main-On-Primary);
                     .open-icon {
                         svg {
                             width: 24px;
@@ -1316,6 +1326,7 @@
             .operation-btn-wrapper {
                 .operation-btn-left {
                     font-size: 18px;
+                    color: var(--Colors-Use-Main-On-Primary);
                     .open-icon {
                         svg {
                             width: 28px;
@@ -1528,6 +1539,9 @@
                     }
                     .download-btn {
                         font-size: 16px;
+                    }
+                    .data-preview-item-size{
+                        font-size: 20px;
                     }
                     .data-preview-item-number {
                         font-size: 18px;

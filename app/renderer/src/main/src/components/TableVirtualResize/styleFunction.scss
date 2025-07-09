@@ -1,13 +1,13 @@
 // 颜色键值对——键一定是有序添加
 $allColors: (
-    blue: var(--yakit-tag-color-blue),
-    cyan: var(--yakit-tag-color-cyan),
-    green: var(--yakit-tag-color-green),
+    blue: var(--Colors-Use-Blue-Bg),
+    cyan: var(--Colors-Use-Cyan-Bg),
+    green: var(--Colors-Use-Green-Bg),
     grey: var(--Colors-Use-Neutral-Disable),
-    orange: var(--yakit-tag-color-orange),
-    purple: var(--yakit-tag-color-purple),
-    red: var(--yakit-tag-color-red),
-    yellow: var(--yakit-tag-color-yellow)
+    orange: var(--Colors-Use-Orange-Bg),
+    purple: var(--Colors-Use-Purple-Bg),
+    red: var(--Colors-Use-Red-Bg),
+    yellow: var(--Colors-Use-Yellow-Bg)
 );
 
 // 获取全部颜色集合里的颜色
@@ -77,58 +77,58 @@ $allColors: (
                     // 单色-红色单独处理
                     .virtual-table-cell-red {
                         background: var(--yakit-table-select-row-bg-color-red);
-                        color: #fff;
+                        color: var(--Colors-Use-Basic-White);
                         font-weight: bold;
                     }
 
                     .virtual-table-hover-cell-red {
                         background: var(--yakit-table-hover-row-bg-color-red);
-                        color: #fff;
+                        color: var(--Colors-Use-Basic-White);
                     }
                     .virtual-table-hover-cell-red.virtual-table-cell-red {
                         background: var(--yakit-table-hover-row-bg-color-red);
-                        color: #fff;
+                        color: var(--Colors-Use-Basic-White);
                     }
 
                     .virtual-table-active-cell-red {
                         background: var(--yakit-table-active-row-bg-color-red);
-                        color: #fff;
+                        color: var(--Colors-Use-Basic-White);
                     }
                     .virtual-table-active-cell-red.virtual-table-cell-red {
                         background: var(--yakit-table-active-row-bg-color-red);
-                        color: #fff;
+                        color: var(--Colors-Use-Basic-White);
                     }
                     .virtual-table-active-cell-red.virtual-table-hover-cell-red.virtual-table-cell-red {
                         background: var(--yakit-table-active-row-bg-color-red);
-                        color: #fff;
+                        color: var(--Colors-Use-Basic-White);
                     }
                 } @else {
                     // 单色-其他颜色处理
                     .virtual-table-cell-#{$type} {
-                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 20%);
-                        color: var(--yakit-table-text-color);
+                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 100%);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
 
                     .virtual-table-hover-cell-#{$type} {
-                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 30%);
-                        color: var(--yakit-table-text-color);
+                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 100%);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                     .virtual-table-hover-cell-#{$type}.virtual-table-cell-#{$type} {
-                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 30%);
-                        color: var(--yakit-table-text-color);
+                        background:  generate-transparen(#{fetch-color($type, "backgroundColor")}, 100%);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
 
                     .virtual-table-active-cell-#{$type} {
-                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 40%);
-                        color: var(--yakit-table-text-color);
+                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 100%);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                     .virtual-table-active-cell-#{$type}.virtual-table-cell-#{$type} {
-                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 40%);
-                        color: var(--yakit-table-text-color);
+                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 100%);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                     .virtual-table-active-cell-#{$type}.virtual-table-hover-cell-#{$type}.virtual-table-cell-#{$type} {
-                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 40%);
-                        color: var(--yakit-table-text-color);
+                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 100%);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                 }
             } @else {
@@ -136,29 +136,29 @@ $allColors: (
                 $gbColors: generate-colors($pre);
                 .virtual-table-cell-#{generate-class-name($pre)} {
                     background: generate-gradient($gbColors, 20%);
-                    color: var(--yakit-table-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
 
                 .virtual-table-hover-cell-#{generate-class-name($pre)} {
                     background: generate-gradient($gbColors, 30%);
-                    color: var(--yakit-table-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
                 .virtual-table-hover-cell-#{generate-class-name($pre)}.virtual-table-cell-#{generate-class-name($pre)} {
                     background: generate-gradient($gbColors, 30%);
-                    color: var(--yakit-table-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
 
                 .virtual-table-active-cell-#{generate-class-name($pre)} {
                     background: generate-gradient($gbColors, 40%);
-                    color: var(--yakit-table-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
                 .virtual-table-active-cell-#{generate-class-name($pre)}.virtual-table-cell-#{generate-class-name($pre)} {
                     background: generate-gradient($gbColors, 40%);
-                    color: var(--yakit-table-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
                 .virtual-table-active-cell-#{generate-class-name($pre)}.virtual-table-hover-cell-#{generate-class-name($pre)}.virtual-table-cell-#{generate-class-name($pre)} {
                     background: generate-gradient($gbColors, 40%);
-                    color: var(--yakit-table-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
             }
 
@@ -167,7 +167,7 @@ $allColors: (
                 (),
                 get-range($allTypes, index($allTypes, $type) + 1)
             );
-            @if length($pre) <3 {
+            @if length($pre) < 3 {
                 @include generate-permutations-class-name($remaining, $pre);
             } @else {
             }

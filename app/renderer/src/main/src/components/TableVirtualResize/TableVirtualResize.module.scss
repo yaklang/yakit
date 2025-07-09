@@ -222,7 +222,7 @@
                     width: 100%;
                     word-break: break-all;
                     height: 28px;
-                    background-color: #ffffff;
+                    background: var(--Colors-Use-Basic-Background);
                     border: 1px solid var(--Colors-Use-Neutral-Border);
                     color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-weight: 400;
@@ -247,6 +247,7 @@
                     border-top: 1px solid var(--Colors-Use-Neutral-Border);
                     display: flex;
                     align-items: center;
+                    background: var(--Colors-Use-Basic-Background);
 
                     &:first-child {
                         border-top-width: 0;
@@ -257,7 +258,8 @@
                     }
 
                     &:hover {
-                        background: var(--Colors-Use-Neutral-Bg-Hover);
+                        background: var(--Colors-Use-Neutral-Bg);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
 
                     .drag-sort-icon {
@@ -370,19 +372,19 @@
                 }
 
                 .virtual-table-hover-row {
-                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
-                    color: var(--yakit-table-text-color);
+                    background: var(--Colors-Use-Neutral-Bg);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
 
                 .virtual-table-active-row {
-                    border-bottom: 1px solid var(--Colors-Use-Main-Border) !important;
-                    border-top: 1px solid var(--Colors-Use-Main-Border) !important;
+                    border-bottom: 1px solid var(--Colors-Use-Main-Primary) !important;
+                    border-top: 1px solid var(--Colors-Use-Main-Primary) !important;
                     background-color: var(--Colors-Use-Main-Bg);
-                    color: var(--yakit-table-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
                 .virtual-table-active-row.virtual-table-hover-row {
                     background-color: var(--Colors-Use-Main-Bg);
-                    color: var(--yakit-table-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
 
                 .virtual-table-batch-active-row {
