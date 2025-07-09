@@ -394,6 +394,7 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     downstreamProxyStr?: string
     onSetTableTotal?: (t: number) => void
     onSetTableSelectNum?: (s: number) => void
+    onSetHasNewData?: (f: boolean) => void
     setOnlyShowFirstNode?: (only: boolean) => void
     setSecondNodeVisible?: (show: boolean) => void
 }
@@ -416,6 +417,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         downstreamProxyStr,
         onSetTableTotal,
         onSetTableSelectNum,
+        onSetHasNewData,
         noTableTitle = false,
         showSourceType = true,
         showAdvancedSearch = true,
@@ -567,6 +569,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                             ProcessName={curProcess}
                             onSetTableTotal={onSetTableTotal}
                             onSetTableSelectNum={onSetTableSelectNum}
+                            onSetHasNewData={onSetHasNewData}
                             httpHistoryTableTitleStyle={httpHistoryTableTitleStyle}
                             titleHeight={titleHeight}
                         />

@@ -10,13 +10,15 @@ import {setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "../MITMConsts"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {OutlineSearchIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {OutlineRefreshIcon, OutlineSearchIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {iconProcessMap, ProcessItem} from "@/components/HTTPHistory"
 import classNames from "classnames"
 import {SolidCheckIcon} from "@/assets/icon/solid"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 import MITMContext from "../Context/MITMContext"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {Badge} from "antd"
 
 const {ipcRenderer} = window.require("electron")
 interface MITMLogHeardExtraProps {
@@ -26,6 +28,7 @@ interface MITMLogHeardExtraProps {
     setTempShowPluginHistory?: (s: string) => void
     tableTotal: number
     tableSelectNum: number
+    hasNewData: boolean
 }
 export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((props) => {
     const {
@@ -34,7 +37,8 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
         setShowPluginHistoryList,
         setTempShowPluginHistory,
         tableTotal,
-        tableSelectNum
+        tableSelectNum,
+        hasNewData
     } = props
     // 屏蔽数据
     const [shieldData, setShieldData] = useState<ShieldData>({
@@ -191,7 +195,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                             key={tag.value}
                             checked={!!sourceType.split(",").includes(tag.value)}
                             onChange={(checked) => {
-                                emiter.emit("onMitmClearFromPlugin",mitmVersion)
+                                emiter.emit("onMitmClearFromPlugin", mitmVersion)
                                 setShowPluginHistoryList([])
                                 setTempShowPluginHistory && setTempShowPluginHistory("")
 
@@ -284,7 +288,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                     )}
                 </YakitPopover>
                 <HistorySearch
-                    showPopoverSearch={headerSize?.width ? headerSize?.width <= 700 : true}
+                    showPopoverSearch={headerSize?.width ? headerSize?.width <= 800 : true}
                     handleSearch={handleSearch}
                 />
                 <YakitButton
@@ -299,6 +303,40 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                 >
                     重置
                 </YakitButton>
+                <YakitDropdownMenu
+                    menu={{
+                        data: [
+                            {
+                                key: "noResetRefresh",
+                                label: "仅刷新"
+                            },
+                            {
+                                key: "resetRefresh",
+                                label: "重置查询条件刷新"
+                            }
+                        ],
+                        onClick: ({key}) => {
+                            switch (key) {
+                                case "noResetRefresh":
+                                    emiter.emit("onMitmNoResetRefreshEvent", mitmVersion)
+                                    break
+                                case "resetRefresh":
+                                    emiter.emit("onMitmResetRefreshEvent", mitmVersion)
+                                    break
+                                default:
+                                    break
+                            }
+                        }
+                    }}
+                    dropdown={{
+                        trigger: ["hover"],
+                        placement: "bottom"
+                    }}
+                >
+                    <Badge dot={hasNewData} offset={[-5, 4]}>
+                        <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={(e) => e.stopPropagation()} />
+                    </Badge>
+                </YakitDropdownMenu>
                 <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} cancleAllFilter={cancleAllFilter} />
             </div>
         </div>

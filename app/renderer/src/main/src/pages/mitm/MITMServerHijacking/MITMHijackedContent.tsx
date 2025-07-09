@@ -148,6 +148,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     const [calloutColor, setCalloutColor] = useState<string>("")
 
+    // 是否有新数据
+    const [hasNewData, setHasNewData] = useState<boolean>(false)
     const [sourceType, setSourceType] = useState<string>("mitm")
     const [tableTotal, setTableTotal] = useState<number>(0)
     const [tableSelectNum, setTableSelectNum] = useState<number>(0)
@@ -808,6 +810,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         setTempShowPluginHistory={setTempShowPluginHistory}
                         tableTotal={tableTotal}
                         tableSelectNum={tableSelectNum}
+                        hasNewData={hasNewData}
                     />
                 </div>
             </>
@@ -880,6 +883,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         params={{SourceType: sourceType}}
                         onSetTableTotal={setTableTotal}
                         onSetTableSelectNum={setTableSelectNum}
+                        onSetHasNewData={setHasNewData}
                         wrapperStyle={{padding: 0}}
                         onQueryParams={(queryParams) => {
                             const processQuery = JSON.parse(queryParams) || {}

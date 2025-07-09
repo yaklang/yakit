@@ -393,6 +393,7 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
     ProcessName?: string[]
     onSetTableTotal?: (t: number) => void
     onSetTableSelectNum?: (s: number) => void
+    onSetHasNewData?: (f: boolean) => void
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -717,7 +718,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         runTimeId,
         downstreamProxyStr = "",
         onSetTableTotal,
-        onSetTableSelectNum
+        onSetTableSelectNum,
+        onSetHasNewData
     } = props
     const {currentPageTabRouteKey} = usePageInfo(
         (s) => ({
@@ -3770,6 +3772,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         } catch (error) {}
     })
 
+    const onMitmNoResetRefresh = useMemoizedFn((version: string) => {
+        if (version !== mitmVersion) return
+        updateData()
+    })
+
+    const onMitmResetRefresh = useMemoizedFn((version: string) => {
+        if (version !== mitmVersion) return
+        onResetRefresh()
+    })
+
     // mitm页面发送事件跳转过来
     useEffect(() => {
         if (pageType === "MITM") {
@@ -3780,6 +3792,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
             emiter.on("cancleMitmAllFilterEvent", cancleAllFilter)
             emiter.on("cleanMitmLogEvent", cleanLogTableData)
+            emiter.on("onMitmNoResetRefreshEvent", onMitmNoResetRefresh)
+            emiter.on("onMitmResetRefreshEvent", onMitmResetRefresh)
         }
         return () => {
             if (pageType === "MITM") {
@@ -3790,9 +3804,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 emiter.off("cancleMitmFilterEvent", cancleMitmFilter)
                 emiter.off("cancleMitmAllFilterEvent", cancleAllFilter)
                 emiter.off("cleanMitmLogEvent", cleanLogTableData)
+                emiter.on("onMitmNoResetRefreshEvent", onMitmNoResetRefresh)
+                emiter.on("onMitmResetRefreshEvent", onMitmResetRefresh)
             }
         }
     }, [pageType])
+
+    useEffect(() => {
+        onSetHasNewData && onSetHasNewData(offsetData.length > 0)
+    }, [offsetData])
 
     useEffect(() => {
         onSetTableTotal && onSetTableTotal(total)

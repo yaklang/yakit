@@ -4,6 +4,8 @@ export type MitmEventProps = {
     cancleMitmFilterEvent: string
     cancleMitmAllFilterEvent?: string
     onGetMITMShieldDataEvent: string
+    onMitmNoResetRefreshEvent: string
+    onMitmResetRefreshEvent: string
     /** 重新刷新获过检测过滤器白名单文案 */
     onRefFilterWhiteListEvent?: string
     /** 重新刷新获取规则检测是否开启替换规则 */
