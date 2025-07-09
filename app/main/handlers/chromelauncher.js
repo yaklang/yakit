@@ -1,9 +1,11 @@
 const { ipcMain } = require("electron")
-const { launch, killAll, getChromePath } = require("chrome-launcher")
 const fs = require("fs")
 const path = require("path")
 const { YakitProjectPath } = require("../filePath")
 const myUserDataDir = path.join(YakitProjectPath, "chrome-profile")
+
+// 仅声明变量，不立即加载
+let launch, killAll, getChromePath;
 
 const disableExtensionsExceptStr = (host, port, username, password) => `
 var config = {
@@ -120,6 +122,19 @@ module.exports = (win, getClient) => {
     let startNum = 0
     // 启动的状态
     let started = false
+    let chromeLoaded = false
+    
+    // 添加一个函数确保chrome-launcher已加载
+    async function ensureChromeLoaded() {
+        if (!chromeLoaded) {
+            const chromeLauncher = await import("chrome-launcher");
+            launch = chromeLauncher.launch;
+            killAll = chromeLauncher.killAll;
+            getChromePath = chromeLauncher.getChromePath;
+            chromeLoaded = true;
+        }
+    }
+
     ipcMain.handle("IsChromeLaunched", async () => {
         return started
     })
@@ -129,6 +144,8 @@ module.exports = (win, getClient) => {
     })
 
     ipcMain.handle("LaunchChromeWithParams", async (e, params) => {
+        await ensureChromeLoaded();
+        
         const { port, host, chromePath, userDataDir, username, password, disableCACertPage, chromeFlags } = params
         const portInt = parseInt(`${port}`)
         const hostRaw = `${host}`
@@ -142,7 +159,9 @@ module.exports = (win, getClient) => {
         //   --no-proxy-server ⊗	Don't use a proxy server, always make direct connections. Overrides any other proxy server flags that are passed. ↪
         let launchOpt = {
             startingUrl: disableCACertPage === false ? "http://mitm" : "chrome://newtab", // 确保在启动时打开 chrome://newtab 页面。
+            logLevel: "verbose",
             chromeFlags: [
+                "--remote-debugging-pipe",
                 `--proxy-server=http://${hostRaw}:${portInt}`, // 设置具体的代理服务器地址和端口。
                 ...chromeFlags.filter(item => !item.disabled).map(item => {
                     if (item.variableValues) {
@@ -153,6 +172,7 @@ module.exports = (win, getClient) => {
                 })
             ]
         }
+        console.log(launchOpt.chromeFlags)
         if (userDataDir) {
             launchOpt["userDataDir"] = userDataDir
         }
@@ -238,6 +258,7 @@ module.exports = (win, getClient) => {
     }
 
     ipcMain.handle("GetChromePath", async () => {
+        await ensureChromeLoaded();
         try {
             return judgePath()
         } catch (e) {
@@ -246,6 +267,7 @@ module.exports = (win, getClient) => {
     })
 
     ipcMain.handle("StopAllChrome", async (e) => {
+        await ensureChromeLoaded();
         deleteCreateFile()
         startNum = 0
         started = false

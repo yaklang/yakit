@@ -91,7 +91,7 @@
         "@grpc/proto-loader": "^0.6.4",
         "@modelcontextprotocol/sdk": "^1.6.1",
         "axios": "^0.26.1",
-        "chrome-launcher": "^0.15.0",
+        "chrome-launcher": "1.2.0",
         "compressing": "^1.8.0",
         "cross-spawn": "^7.0.6",
         "dompurify": "^3.0.5",

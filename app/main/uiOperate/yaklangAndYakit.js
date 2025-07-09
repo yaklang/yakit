@@ -102,7 +102,7 @@ module.exports = (win, getClient) => {
 
     /** 校验Yaklang来源是否正确 */
     ipcMain.handle("fetch-check-yaklang-source", async (e, version, requestConfig) => {
-        return await fetchSpecifiedYakVersionHash(version, requestConfig)
+        // return await fetchSpecifiedYakVersionHash(version, requestConfig)
     })
 
     // 获取有效的引擎启动端口
