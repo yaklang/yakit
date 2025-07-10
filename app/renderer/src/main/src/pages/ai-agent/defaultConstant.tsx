@@ -27,6 +27,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     AITransactionRetry: 5,
     EnableAISearchTool: true,
     EnableAISearchInternet: true,
+    EnableQwenNoThinkMode: true,
     AllowPlanUserInteract: true,
     PlanUserInteractMaxCount: 3
 }

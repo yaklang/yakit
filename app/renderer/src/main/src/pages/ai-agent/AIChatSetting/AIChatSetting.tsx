@@ -39,19 +39,6 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
     // AI主动问用户问题相关逻辑
     const AllowPlanUserInteractValue = Form.useWatch("AllowPlanUserInteract", form)
 
-    // const forgeList = useMemo(() => {
-    //     return [
-    //         {label: "fragment_summarizer", value: "fragment_summarizer"},
-    //         {label: "long_text_summarizer", value: "long_text_summarizer"},
-    //         {label: "xss", value: "xss"},
-    //         {label: "sqlinject", value: "sqlinject"},
-    //         {label: "travelmaster", value: "travelmaster"},
-    //         {label: "pimatrix", value: "pimatrix"},
-    //         {label: "netscan", value: "netscan"},
-    //         {label: "recon", value: "recon"}
-    //     ]
-    // }, [])
-
     return (
         <div className={styles["ai-chat-setting"]}>
             <div className={styles["setting-header"]}>
@@ -99,15 +86,6 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <Form.Item label='使用默认系统配置AI' name='UseDefaultAIConfig' valuePropName='checked'>
                     <YakitSwitch />
                 </Form.Item>
-                {/* <Form.Item label='任务模板' name='ForgeName'>
-                    <YakitAutoComplete
-                        size={"small"}
-                        showSearch
-                        options={forgeList}
-                        placeholder='请输入任务模板'
-                        filterOption={true}
-                    />
-                </Form.Item> */}
                 <Form.Item
                     label={
                         <>
@@ -183,6 +161,23 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     <YakitSwitch />
                 </Form.Item>
                 <Form.Item label='搜索互联网搜索引擎' name='EnableAISearchInternet' valuePropName='checked'>
+                    <YakitSwitch />
+                </Form.Item>
+                <Form.Item
+                    label={
+                        <>
+                            关闭思考模式
+                            <Tooltip
+                                overlayClassName={styles["form-info-icon-tooltip"]}
+                                title={"打开这个选项可以通过追加 /no_think 标签来关闭 qwen3 的思考模式"}
+                            >
+                                <OutlineInformationcircleIcon className={styles["info-icon"]} />
+                            </Tooltip>
+                        </>
+                    }
+                    name='EnableQwenNoThinkMode'
+                    valuePropName='checked'
+                >
                     <YakitSwitch />
                 </Form.Item>
                 <Form.Item label='允许任务规划阶段人机交互' name='AllowPlanUserInteract' valuePropName='checked'>
