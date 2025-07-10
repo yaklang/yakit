@@ -3,7 +3,12 @@ import {useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport} from "ahoo
 import {OutlineRefreshIcon, OutlineClouddownloadIcon, OutlineClouduploadIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {PluginSearchParams, PluginListPageMeta, PluginFilterParams} from "@/pages/plugins/baseTemplateType"
+import {
+    PluginSearchParams,
+    PluginListPageMeta,
+    PluginFilterParams,
+    PluginSource
+} from "@/pages/plugins/baseTemplateType"
 import {defaultSearch} from "@/pages/plugins/builtInData"
 import {YakitPluginOnlineDetail} from "@/pages/plugins/online/PluginsOnlineType"
 import {pluginOnlineReducer, initialOnlineState} from "@/pages/plugins/pluginReducer"
@@ -98,6 +103,8 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     const [search, setSearch, getSearch] = useGetSetState<PluginSearchParams>(cloneDeep({...defaultSearch}))
     const [filters, setFilters, getFilters] = useGetSetState<PluginFilterParams>({plugin_type: [], tags: []})
 
+    const [pluginSource, setPluginSource, getPluginSource] = useGetSetState<PluginSource>("all")
+
     const showIndex = useRef<number>(0)
     const setShowIndex = useMemoizedFn((index: number) => {
         showIndex.current = index
@@ -181,6 +188,8 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
 
             const queryFilter = getFilters()
             const queryFearch = getSearch()
+            const queryIsOfficial = getPluginSource()
+            
             const query: PluginsQueryProps = convertPluginsRequestParams(queryFilter, queryFearch, params)
             try {
                 const res = await apiFetchOnlineList(query)
@@ -244,6 +253,15 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         }),
         {wait: 300, leading: true}
     ).run
+
+    /** 插件来源切换 */
+    const onPluginSourceChange = useMemoizedFn((key: string) => {
+        if (loading) return
+        setPluginSource(key as PluginSource)
+    })
+    useUpdateEffect(() => {
+        fetchList(true)
+    }, [pluginSource])
     /** ---------- 列表相关方法 End ---------- */
 
     /** ---------- 通信监听 Start ---------- */
@@ -375,6 +393,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         if (batchDownloadLoading) return
         let request: DownloadOnlinePluginsRequest = {}
 
+        const queryIsOfficial = getPluginSource()
         if (allChecked) {
             request = {
                 ...request,
@@ -464,6 +483,9 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         }
         setUploadModal(true)
     })
+    const showUpload = useMemo(() => {
+        return userinfo.role !== "admin" && pluginSource === "all"
+    }, [userinfo, pluginSource])
     /** ---------- 一键上传本地插件 End ---------- */
 
     // 新建插件
@@ -600,6 +622,12 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                 onSearch={onSearch}
                                 filters={filters as Record<string, API.PluginsSearchData[]>}
                                 setFilters={setFilters}
+                                listTabs={[
+                                    {tab: "全部插件", key: "all"},
+                                    {tab: "官方插件", key: "official"}
+                                ]}
+                                listTabActive={pluginSource}
+                                onListTabActiveChange={onPluginSourceChange}
                             >
                                 {listLength > 0 ? (
                                     <HubGridList
@@ -642,10 +670,12 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                     <div className={styles["hub-list-empty"]}>
                                         <YakitEmpty
                                             title='暂无数据'
-                                            description={isCommunityEdition() ? "" : "可将本地所有插件一键上传"}
+                                            description={
+                                                isCommunityEdition() || !showUpload ? "" : "可将本地所有插件一键上传"
+                                            }
                                         />
                                         <div className={styles["refresh-buttons"]}>
-                                            {userinfo.role !== "admin" && (
+                                            {showUpload && (
                                                 <YakitButton
                                                     type='outline1'
                                                     icon={<OutlineClouduploadIcon />}

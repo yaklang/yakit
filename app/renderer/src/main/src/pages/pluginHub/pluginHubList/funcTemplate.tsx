@@ -6,7 +6,7 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {PluginFilterParams, PluginSearchParams} from "@/pages/plugins/baseTemplateType"
+import {PluginFilterParams, PluginListTabs, PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {AuthorIcon, AuthorImg, CodeScoreModule, FuncFilterPopover, FuncSearch} from "@/pages/plugins/funcTemplate"
 import {TagShowOpt} from "@/pages/plugins/funcTemplateType"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -61,9 +61,11 @@ import UnLogin from "@/assets/unLogin.png"
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./PluginHubList.module.scss"
+import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
+const {TabPane} = PluginTabs
 
 interface HubListFilterProps {
     wrapperClassName?: string
@@ -201,6 +203,9 @@ interface HubOuterListProps {
     filters: PluginFilterParams
     setFilters: (filters: PluginFilterParams) => void
     children?: ReactNode
+    listTabs?: PluginListTabs[]
+    listTabActive?: string
+    onListTabActiveChange?: (key: string) => void
 }
 /** @name 插件外层列表UI */
 export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
@@ -217,7 +222,10 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
         onSearch,
         filters,
         setFilters,
-        children
+        children,
+        listTabs = [],
+        listTabActive = "",
+        onListTabActiveChange = () => {}
     } = props
 
     /** 全选框是否为半选状态 */
@@ -260,22 +268,13 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
         setFilters(newFilters)
     })
 
-    return (
-        <div className={styles["hub-outer-list"]}>
-            <div className={styles["hub-outer-list-header"]}>
-                <div className={styles["title-style"]}>{title}</div>
-                <div className={styles["extra-wrapper"]}>
-                    <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
-                    {!!headerExtra && (
-                        <>
-                            <div className={styles["divider-style"]} />
-                            {headerExtra}
-                        </>
-                    )}
-                </div>
-            </div>
-
-            <div className={styles["hub-outer-list-body"]}>
+    const listBody = useMemoizedFn((key) => {
+        return (
+            <div
+                key={key}
+                className={styles["hub-outer-list-body"]}
+                style={{height: listTabs.length ? "100%" : undefined, paddingLeft: listTabs.length ? 0 : undefined}}
+            >
                 <div className={styles["hub-outer-list-body-header"]}>
                     <div className={styles["hub-outer-list-body-header-left"]}>
                         <div className={styles["header-check"]}>
@@ -357,6 +356,38 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
 
                 <div className={styles["hub-outer-list-body-container"]}>{children || null}</div>
             </div>
+        )
+    })
+
+    return (
+        <div className={styles["hub-outer-list"]}>
+            <div className={styles["hub-outer-list-header"]}>
+                <div className={styles["title-style"]}>{title}</div>
+                <div className={styles["extra-wrapper"]}>
+                    <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
+                    {!!headerExtra && (
+                        <>
+                            <div className={styles["divider-style"]} />
+                            {headerExtra}
+                        </>
+                    )}
+                </div>
+            </div>
+            {listTabs.length > 0 ? (
+                <PluginTabs
+                    wrapperClassName={styles["hub-outer-list-tab"]}
+                    activeKey={listTabActive}
+                    onChange={onListTabActiveChange}
+                >
+                    {listTabs.map((item) => (
+                        <TabPane key={item.key} tab={item.tab}>
+                            {listBody(item.key)}
+                        </TabPane>
+                    ))}
+                </PluginTabs>
+            ) : (
+                <>{listBody("")}</>
+            )}
         </div>
     )
 })
