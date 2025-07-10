@@ -415,9 +415,9 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                 executeParams["Targets"] = ""
             }
             executeParams.FingerprintGroup =
-                executeParams.FingerprintGroup.length === 1 && executeParams.FingerprintGroup[0] === ""
+                executeParams.FingerprintGroup?.length === 1 && executeParams.FingerprintGroup[0] === ""
                     ? []
-                    : executeParams.FingerprintGroup
+                    : executeParams.FingerprintGroup || []
             delete executeParams.UserFingerprintFilesStr
             portScanStreamEvent.reset()
             setRuntimeId("")
