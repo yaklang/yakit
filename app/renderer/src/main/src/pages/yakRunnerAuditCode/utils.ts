@@ -12,8 +12,6 @@ import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {FileDetailInfo, OptionalFileDetailInfo, Selection} from "./RunnerTabs/RunnerTabsType"
 import {v4 as uuidv4} from "uuid"
 import {FileNodeMapProps, FileNodeProps} from "./FileTree/FileTreeType"
-import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
-import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
 import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
 import {CodeRangeProps} from "./RightAuditDetail/RightAuditDetail"
@@ -870,19 +868,6 @@ export const grpcFetchCreateFile: (
     })
 }
 
-/**
- * @name 编辑器代码类型判断
- */
-export const monacaLanguageType = (suffix?: string) => {
-    switch (suffix) {
-        case "yak":
-            return YaklangMonacoSpec
-        case "sf":
-            return SyntaxFlowMonacoSpec
-        default:
-            return undefined
-    }
-}
 /**Extra找到code_range，根据其进行跳转到文件对应的位置 */
 export const onJumpByCodeRange: APIFunc<AuditDetailItemProps, null> = (data) => {
     return new Promise(async (resolve, reject) => {

@@ -30,7 +30,6 @@ import {
     getNameByPath,
     grpcFetchFileTree,
     judgeAreaExistFilePath,
-    monacaLanguageType,
     setAreaFileActive,
     setYakRunnerHistory,
     updateAreaFileInfo
@@ -38,6 +37,7 @@ import {
 import {FileDefault, FileSuffix, FolderDefault} from "./FileTree/icon"
 import moment from "moment"
 import {YakURLResource} from "../yakURLTree/data"
+import { monacaLanguageType } from "../yakRunner/utils"
 const {ipcRenderer} = window.require("electron")
 export interface YakJavaDecompilerProps {}
 export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {

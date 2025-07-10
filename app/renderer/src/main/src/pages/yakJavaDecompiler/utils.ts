@@ -15,10 +15,6 @@ import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsTyp
 import {v4 as uuidv4} from "uuid"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
-import {setMapFileDetail} from "./FileTreeMap/FileMap"
-import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
-import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
-import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -714,18 +710,4 @@ export const getRelativePath = (basePath: string, filePath: string): Promise<str
                 resolve("")
             })
     })
-}
-
-/**
- * @name 编辑器代码类型判断
- */
-export const monacaLanguageType = (suffix?: string) => {
-    switch (suffix) {
-        case "yak":
-            return YaklangMonacoSpec
-        case "sf":
-            return SyntaxFlowMonacoSpec
-        default:
-            return undefined
-    }
 }

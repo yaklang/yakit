@@ -6,13 +6,9 @@ import {
     FuzzTagSuggestionRequest,
     getCompletionItemKindByName,
     getSortTextByKindAndLabel,
-    getWordWithPointAtPosition,
-    newYaklangCompletionHandlerProvider,
-    Range,
-    YaklangLanguageSuggestionRequest,
     YaklangLanguageSuggestionResponse
 } from "@/utils/monacoSpec/yakCompletionSchema";
-import {getModelContext, setEditorContext, YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor";
+import {getModelContext} from "@/utils/monacoSpec/yakEditor";
 import IWordAtPosition = editor.IWordAtPosition;
 const { ipcRenderer } = window.require("electron");
 
