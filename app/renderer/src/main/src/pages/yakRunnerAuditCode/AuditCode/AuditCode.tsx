@@ -2434,7 +2434,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             setParams({...params, Keyword: e.target.value})
                         }}
                         onSearch={() => {
-                            update(true)
+                            setTimeout(()=>{
+                                update(true)
+                            },100)
                         }}
                     />
                     <YakitPopconfirm
