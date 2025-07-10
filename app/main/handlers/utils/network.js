@@ -435,5 +435,6 @@ module.exports = {
     downloadIntranetYakit,
     getYakEngineDownloadUrl,
     getAvailableOSSDomain,
-    getDownloadUrl
+    getDownloadUrl,
+    getSuffix
 }

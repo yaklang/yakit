@@ -27,7 +27,7 @@ export const grpcFetchLatestYakitVersion: APIOptionalFunc<GrpcToHTTPRequestProps
 }
 
 /** @name 获取Yakit内网最新版本号 */
-export const grpcFetchIntranetYakitVersion: APIOptionalFunc<GrpcToHTTPRequestProps, string> = (config, hiddenError) => {
+export const grpcFetchIntranetYakitVersion: APIOptionalFunc<boolean, string> = (hiddenError = false) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer.invoke("update-enpritrace-info").then(({version}) => {
             NetWorkApi<unknown, API.UploadDataResponse>({
@@ -43,10 +43,12 @@ export const grpcFetchIntranetYakitVersion: APIOptionalFunc<GrpcToHTTPRequestPro
             })
                 .then((res) => {
                     let filePath: string = ""
-                    if (res.data.length > 0) {
+                    if ((res?.data || []).length > 0) {
                         filePath = res.data[0].filePath
+                        resolve(filePath)
+                    } else {
+                        reject()
                     }
-                    resolve(filePath)
                 })
                 .catch((e) => {
                     if (!hiddenError) yakitNotify("error", "获取内网最新软件版本失败:" + e)

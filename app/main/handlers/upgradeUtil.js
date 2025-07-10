@@ -26,7 +26,8 @@ const {
     downloadYakitCommunity,
     downloadIntranetYakit,
     downloadYakEngine,
-    getDownloadUrl
+    getDownloadUrl,
+    getSuffix
 } = require("./utils/network")
 const {engineCancelRequestWithProgress, yakitCancelRequestWithProgress} = require("./utils/requestWithProgress")
 const {getCheckTextUrl, fetchSpecifiedYakVersionHash} = require("../handlers/utils/network")
@@ -135,17 +136,18 @@ const getLatestYakLocalEngine = () => {
 
 // 获取Yakit所处平台
 const getYakitPlatform = () => {
+    const suffix = getSuffix()
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
-                return `darwin-arm64`
+                return `darwin${suffix}-arm64`
             } else {
-                return `darwin-x64`
+                return `darwin${suffix}-x64`
             }
         case "win32":
-            return `windows-amd64`
+            return `windows${suffix}-amd64`
         case "linux":
-            return `linux-amd64`
+            return `linux${suffix}-amd64`
     }
 }
 

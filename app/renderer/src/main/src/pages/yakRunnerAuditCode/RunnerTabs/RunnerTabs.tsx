@@ -79,7 +79,6 @@ import {
     grpcFetchSaveFile,
     isResetActiveFile,
     judgeAreaExistFilePath,
-    monacaLanguageType,
     removeAreaFileInfo,
     setYakRunnerHistory,
     updateAreaFileInfo
@@ -95,6 +94,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CountDirectionProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 import {onSetSelectedSearchVal} from "../AuditSearchModal/AuditSearch"
 import {ConvertAuditStaticAnalyzeErrorToMarker, IMonacoEditorMarker} from "@/utils/editorMarkers"
+import { monacaLanguageType } from "@/pages/yakRunner/utils"
 
 const {ipcRenderer} = window.require("electron")
 

@@ -19,7 +19,6 @@ import {
     grpcFetchAuditTree,
     judgeAreaExistAuditPath,
     judgeAreaExistFilePath,
-    monacaLanguageType,
     removeAreaFilesInfo,
     setAreaFileActive,
     setYakRunnerHistory,
@@ -59,6 +58,7 @@ import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/
 import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
 import { getStorageAuditCodeShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/yakRunnerAuditCode"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import { monacaLanguageType } from "../yakRunner/utils"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props

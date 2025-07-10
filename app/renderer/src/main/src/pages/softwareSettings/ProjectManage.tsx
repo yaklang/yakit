@@ -348,7 +348,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             },
             {
                 key: "ExternalModule",
-                name: "系统模块",
+                name: "系统模块编号",
                 style: {flex: 1, display: "none"},
                 render: (data) => {
                     return (
@@ -1767,15 +1767,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             Description: firstDescribe
                         })
                     } else {
-                        onReset({
-                            Description: [{Key: "系统", Value: ""}]
-                        })
                     }
-                } catch (error) {
-                    onReset({
-                        Description: [{Key: "系统", Value: ""}]
-                    })
-                }
+                } catch (error) {}
             }
             setInfo({
                 Id: +project.Id,
@@ -1885,6 +1878,15 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 setTimeout(() => setLoading(false), 300)
                 return
             }
+            if (isShowExternalProjectCode && !info.ExternalProjectCode){
+                setTimeout(() => setLoading(false), 300)
+                return
+            }
+            if (isShowExternalModule && !info.ExternalModule){
+                setTimeout(() => setLoading(false), 300)
+                return
+            }
+
             if (info.ProjectName.length > 100) {
                 failed("名称长度应小于100!")
                 setTimeout(() => setLoading(false), 300)
@@ -2183,13 +2185,13 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             <Form.Item
                                 label={
                                     <div style={{display: "flex", alignItems: "center", gap: 2}}>
-                                        系统模块 :<span className={styles["required-style"]}>*</span>
+                                        系统模块编号 :<span className={styles["required-style"]}>*</span>
                                     </div>
                                 }
                             >
                                 <YakitInput
                                     size='large'
-                                    placeholder='请输入系统模块'
+                                    placeholder='请输入系统模块编号'
                                     className={classNames({
                                         [styles["required-form-item-wrapper"]]: isCheck && !info.ExternalModule
                                     })}
