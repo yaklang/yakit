@@ -125,8 +125,12 @@ export interface ChatStreamCollapseProps {
 }
 
 export interface AIAgentChatFooterProps {
+    /** 正在执行中 */
     execute: boolean
+    /** 是否在 review 步骤中 */
     review: boolean
+    /** 是否能显示重新执行按钮 */
+    showReExe?: boolean
     onStop: () => void
     positon: boolean
     onPositon: () => void

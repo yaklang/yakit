@@ -332,62 +332,6 @@
     }
 }
 
-.continue-ask-input {
-    width: 100%;
-    padding: 8px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    border-radius: var(--Radius-System-Large-8, 8px);
-    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover, #eef0f3);
-    background: var(--Colors-Use-Basic-Background, #fff);
-
-    .input-body {
-        display: flex;
-        gap: 4px;
-    }
-
-    .input-icon {
-        display: flex;
-        .icon-wrapper {
-            width: 20px;
-            height: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-        }
-    }
-    .input-btn-style {
-        border-radius: 50%;
-    }
-
-    .input-textArea {
-        min-height: 20px;
-        max-height: 80px !important;
-        height: 20px;
-        line-height: 20px;
-        padding: 0;
-    }
-    .input-blur-btn {
-        display: flex;
-        align-items: flex-end;
-    }
-
-    .input-footer-btn {
-        display: flex;
-        justify-content: flex-end;
-    }
-}
-.continue-ask-input-focus {
-    /* 投影 16px */
-    box-shadow: 0px 8px 16px 0px rgba(133, 137, 158, 0.1);
-}
-
 .stop-icon {
     animation: icon-breath 1s linear infinite;
 }

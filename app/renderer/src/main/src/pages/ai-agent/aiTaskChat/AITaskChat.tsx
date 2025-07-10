@@ -179,8 +179,8 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             requestLoading.current = true
             const info: AIChatInfo = {
                 id: randomString(10),
-                name: request.UserQuery,
-                question: request.UserQuery,
+                name: request.UserQuery || request.ForgeName || "",
+                question: request.UserQuery || request.ForgeName || "",
                 time: Date.now(),
                 request: {
                     ...formatAIAgentSetting(setting),
@@ -459,8 +459,9 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                 <div className={styles["chat-footer"]}>
                                     <AIAgentChatFooter
                                         execute={execute}
-                                        review={false}
+                                        review={!!reviewInfo}
                                         positon={!!scrollTo}
+                                        showReExe={!!taskChat && !!taskChat.request}
                                         onStop={handleStopChat}
                                         onPositon={() => setScrollTo(undefined)}
                                         onReExe={handleReExecute}

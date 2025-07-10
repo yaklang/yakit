@@ -418,68 +418,13 @@ const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props) => {
 
 /** @name 对话框内容 */
 export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) => {
-    const {execute, review, positon, onStop, onPositon, onReExe, onNewChat} = props
-
-    // const [question, setQuestion] = useState("")
-    // const isQuestion = useMemo(() => {
-    //     return !!(question && question.trim())
-    // }, [question])
-    // const [inputFocus, setInputFocus] = useState(false)
+    const {execute, review, positon, showReExe, onStop, onPositon, onReExe, onNewChat} = props
 
     return (
         <div className={styles["ai-agent-chat-footer"]}>
-            {/* <div className={styles["input-textarea-wrapper"]}>
-                <div
-                    className={classNames(styles["continue-ask-input"], {
-                        [styles["continue-ask-input-focus"]]: inputFocus
-                    })}
-                >
-                    <div className={styles["input-body"]}>
-                        <div className={styles["input-icon"]}>
-                            <div className={styles["icon-wrapper"]}>
-                                <ColorsSparklesIcon />
-                            </div>
-                        </div>
-
-                        <Input.TextArea
-                            className={styles["input-textArea"]}
-                            bordered={false}
-                            placeholder='告诉我你的需求...'
-                            value={question}
-                            autoSize={true}
-                            onChange={(e) => setQuestion(e.target.value)}
-                            onFocus={() => setInputFocus(true)}
-                            onBlur={() => setInputFocus(false)}
-                        />
-
-                        {!inputFocus && (
-                            <div className={styles["input-blur-btn"]}>
-                                <YakitButton
-                                    className={styles["input-btn-style"]}
-                                    size='small'
-                                    disabled={!isQuestion}
-                                    icon={<OutlineArrowrightIcon />}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    {inputFocus && (
-                        <div className={styles["input-footer-btn"]}>
-                            <YakitButton
-                                className={styles["input-btn-style"]}
-                                size='small'
-                                disabled={!isQuestion}
-                                icon={<OutlineArrowrightIcon />}
-                            />
-                        </div>
-                    )}
-                </div>
-            </div> */}
-
             <div className={styles["footer-btns"]}>
                 <div className={styles["btns-group"]}>
-                    {execute && !review && (
+                    {execute && (
                         <>
                             <Tooltip title='中止' overlayStyle={{paddingBottom: 3}}>
                                 <YakitButton
@@ -489,7 +434,7 @@ export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) 
                                     onClick={onStop}
                                 />
                             </Tooltip>
-                            {positon && (
+                            {positon && !review && (
                                 <Tooltip title='快速定位' overlayStyle={{paddingBottom: 3}}>
                                     <YakitButton
                                         className={styles["rounded-icon-btn"]}
@@ -502,27 +447,18 @@ export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) 
                         </>
                     )}
 
-                    {execute && review && (
-                        <YakitButton
-                            className={styles["rounded-text-icon-btn"]}
-                            colors='danger'
-                            icon={<SolidStopIcon className={styles["stop-icon"]} />}
-                            onClick={onStop}
-                        >
-                            中止
-                        </YakitButton>
-                    )}
-
                     {!execute && (
                         <>
-                            <YakitButton
-                                className={styles["rounded-text-icon-btn"]}
-                                icon={<OutlineRefreshIcon />}
-                                type='secondary2'
-                                onClick={onReExe}
-                            >
-                                重新执行
-                            </YakitButton>
+                            {!!showReExe && (
+                                <YakitButton
+                                    className={styles["rounded-text-icon-btn"]}
+                                    icon={<OutlineRefreshIcon />}
+                                    type='secondary2'
+                                    onClick={onReExe}
+                                >
+                                    重新执行
+                                </YakitButton>
+                            )}
                             <YakitButton
                                 className={styles["rounded-text-icon-btn"]}
                                 icon={<OutlinePlusIcon />}
@@ -958,7 +894,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
                             )}
                         </>
                     )}
-                    {review.type === "require_user_interactive" && !!aiOptionsLength && (
+                    {review.type === "require_user_interactive" && !aiOptionsLength && (
                         <YakitButton disabled={!isRequireQS} loading={requireLoading} onClick={handleAIRequireQSSend}>
                             提交
                         </YakitButton>

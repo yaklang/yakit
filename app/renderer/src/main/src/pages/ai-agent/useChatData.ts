@@ -310,7 +310,15 @@ function useChatData(params?: UseChatDataParams) {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.Consumption
-                    setConsumption(cloneDeep(data))
+                    setConsumption((old) => {
+                        if (
+                            data.input_consumption === old.input_consumption &&
+                            data.output_consumption === old.output_consumption
+                        ) {
+                            return old
+                        }
+                        return cloneDeep(data)
+                    })
                 } catch (error) {}
                 return
             }
@@ -442,7 +450,11 @@ function useChatData(params?: UseChatDataParams) {
             console.log("end", res)
             setExecute(false)
             onEnd && onEnd()
-            onClose(token)
+
+            ipcRenderer.invoke("cancel-ai-task", token).catch(() => {})
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
         })
         ipcRenderer.on(`${token}-error`, (e, err: any) => {
             console.log("error", err)
@@ -458,11 +470,6 @@ function useChatData(params?: UseChatDataParams) {
     const onClose = useMemoizedFn((token: string) => {
         ipcRenderer.invoke("cancel-ai-task", token).catch(() => {})
         yakitNotify("info", "AI 任务已取消")
-        setTimeout(() => {
-            ipcRenderer.removeAllListeners(`${token}-data`)
-            ipcRenderer.removeAllListeners(`${token}-end`)
-            ipcRenderer.removeAllListeners(`${token}-error`)
-        }, 1000)
     })
 
     useEffect(() => {

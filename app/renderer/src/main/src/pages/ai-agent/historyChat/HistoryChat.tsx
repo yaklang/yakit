@@ -35,6 +35,11 @@ export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
     }, [chats, searchDebounce])
 
     const handleSetActiveChat = useMemoizedFn((info: AIChatInfo) => {
+        // 暂时性逻辑，因为老版本的对话信息里没有请求参数，导致在新版本无法使用对话里的重新执行功能
+        // 所以会提示警告，由用户决定是否删除历史对话
+        if (!info.request) {
+            yakitNotify("warning", "当前对话无请求参数信息，无法使用重新执行功能")
+        }
         setActiveChat && setActiveChat(info)
     })
 
