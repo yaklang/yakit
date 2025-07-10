@@ -671,9 +671,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     )
     useEffect(() => {
         if (!noShowHex) {
-            setHexValue(new Uint8Array(StringToUint8Array(originValue)))
+            setHexValue(originalPackage ? originalPackage : StringToUint8Array(originValue))
         }
-    }, [noShowHex, originValue])
+    }, [noShowHex, originValue, originalPackage])
 
     const openCompareModal = useMemoizedFn((dataCompare: DataCompareProps) => {
         setCompareLoading(true)
@@ -780,7 +780,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             const mb = bytes.length / 1024 / 1024
             // 0.5mb 及以下内容才可美化
             if (isResponse) {
-                formatPacketRender(originalPackage || new Uint8Array(StringToUint8Array(originValue)), (packet) => {
+                formatPacketRender(originalPackage || StringToUint8Array(originValue), (packet) => {
                     if (packet) {
                         if (mb > 0.5) {
                             setTypeOptions([
@@ -875,7 +875,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         } else if (typeOptionVal === "hex") {
             if (originValue) {
                 setRenderHTML(undefined)
-                setHexValue(originalPackage ? new Uint8Array(originalPackage) : StringToUint8Array(originValue))
+                setHexValue(originalPackage ? originalPackage : StringToUint8Array(originValue))
             }
         }
     }, [typeOptionVal, originValue])
@@ -922,7 +922,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             renderCode()
         } else if (originValue && type === "hex") {
             setRenderHTML(undefined)
-            setHexValue(StringToUint8Array(originValue))
+            setHexValue(originalPackage ? originalPackage :StringToUint8Array(originValue))
         }
     }, [type])
 
