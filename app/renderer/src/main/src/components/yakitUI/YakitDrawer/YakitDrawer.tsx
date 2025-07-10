@@ -8,8 +8,8 @@ import {ShowDrawerProps} from "@/utils/showModal"
 import {ErrorBoundary} from "react-error-boundary"
 import {createRoot} from "react-dom/client"
 import emiter from "@/utils/eventBus/eventBus"
-
-const {ipcRenderer} = window.require("electron")
+import {DndProvider} from "react-dnd"
+import {HTML5Backend} from "react-dnd-html5-backend"
 
 /**
  * @description:YakitDrawer  抽屉 placement === "bottom" heard有背景色
@@ -76,7 +76,7 @@ export const showYakitDrawer = (props: ShowDrawerProps) => {
                 yakitDrawerRootDiv = createRoot(div)
             }
             yakitDrawerRootDiv.render(
-                <>
+                <DndProvider backend={HTML5Backend}>
                     <YakitBaseDrawer
                         {...(targetConfig as YakitDrawerProps)}
                         onVisibleSetter={(r) => {
@@ -99,7 +99,7 @@ export const showYakitDrawer = (props: ShowDrawerProps) => {
                             {targetConfig.content}
                         </ErrorBoundary>
                     </YakitBaseDrawer>
-                </>
+                </DndProvider>
             )
         })
     }
