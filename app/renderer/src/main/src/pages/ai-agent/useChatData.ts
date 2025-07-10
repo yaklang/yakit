@@ -15,6 +15,7 @@ import cloneDeep from "lodash/cloneDeep"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {isToolStdout, isToolSyncNode} from "./utils"
 import moment from "moment"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -299,18 +300,25 @@ function useChatData(params?: UseChatDataParams) {
                 ipcStreamDelta = Uint8ArrayToString(res.StreamDelta) || ""
             } catch (error) {}
             if (res.IsSync) {
-                // AI 工具点击查询详情需要展示的数据
-                console.log("sync---\n", res, ipcContent)
+                // AI 工具点击查询详情需要展示的数据,临时数据
                 if (!isToolSyncNode(res.NodeId)) return
-                console.log("sync---isToolSyncNode", res, ipcContent)
                 try {
                     const info: AIChatStreams = {
                         nodeId: res.NodeId,
                         timestamp: res.Timestamp,
                         data: {system: "", reason: "", stream: ""}
                     }
-
-                    // emiter.emit("onTooCardDetails")
+                    // 目前AI只有IsStream为true的展示数据
+                    if (res.IsStream) {
+                        info.data.stream = ipcContent + ipcStreamDelta
+                    }
+                    emiter.emit(
+                        "onTooCardDetails",
+                        JSON.stringify({
+                            syncId: res.SyncID,
+                            info
+                        })
+                    )
                 } catch (error) {}
                 return
             }

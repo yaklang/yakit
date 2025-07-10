@@ -131,7 +131,6 @@ interface AIChatToolItemProps {
 export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) => {
     const {item} = props
     const {activeChat} = useAIAgentStore()
-    const [toolList, setToolList] = useState<AIChatStreams[]>([])
     const syncProcessEventIdRef = useRef<string>()
     const handleDetails = useMemoizedFn(() => {
         if (!activeChat) return
@@ -151,7 +150,8 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
         const m = showYakitDrawer({
             title: "详情",
             width: "40%",
-            content: <AIChatToolDrawerContent toolList={toolList} syncId={syncProcessEventIdRef.current || ""} />,
+            bodyStyle: {padding: 0},
+            content: <AIChatToolDrawerContent syncId={syncProcessEventIdRef.current || ""} />,
             onClose: () => m.destroy()
         })
     })

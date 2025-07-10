@@ -673,3 +673,19 @@
         }
     }
 }
+
+.ai-chat-tool-drawer-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    .ai-tool-collapse-expand {
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+
+    .collapse-header {
+        &:hover {
+            background: inherit;
+        }
+    }
+}

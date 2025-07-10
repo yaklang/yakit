@@ -239,6 +239,7 @@ export const formatMCPResourceTemplates = (templates: any[]): RenderResourcesTem
 }
 /**是否为 tool stdout 节点 */
 export const isToolStdout = (nodeID: string) => {
+    if (!nodeID) return false
     return nodeID.startsWith("tool-") && nodeID.endsWith("-stdout")
 }
 /**是否显示有总结的tool card */
@@ -257,6 +258,15 @@ export const isToolSummaryCard = (nodeID: string) => {
 export const isShowToolColorCard = (nodeID: string) => {
     if (nodeID === "call-tools") return true
     if (isToolStdout(nodeID)) return true
+    return false
+}
+
+/**是否为AI tool 需要展示在页面上的节点 */
+export const isToolSyncNode = (nodeID: string) => {
+    if (nodeID === "execute") return true
+    if (nodeID === "call-tools") return true
+    if (isToolStdout(nodeID)) return true
+    return false
 }
 
 // #region chat相关工具

@@ -112,7 +112,13 @@ export interface AIAgentChatStreamProps {
     activeStream: string
     streams: Record<string, AIChatStreams[]>
 }
-
+export interface ChatStreamCollapseItemProps {
+    expandKey: string
+    info: AIChatStreams
+    secondExpand: boolean
+    handleChangeSecondPanel: (expand: boolean, order: string) => void
+    className?: string
+}
 export interface ChatStreamCollapseProps {
     id?: string
     className?: string
@@ -123,7 +129,10 @@ export interface ChatStreamCollapseProps {
     expand?: boolean
     onChange?: (value: boolean) => void
 }
-
+export interface AIChatToolSync {
+    syncId: string
+    info: AIChatStreams
+}
 export interface AIAgentChatFooterProps {
     /** 正在执行中 */
     execute: boolean
@@ -153,5 +162,11 @@ export interface AIAgentChatReviewProps {
 export interface AIChatLogsProps {
     logs: AIChatMessage.Log[]
     onClose: () => void
+}
+// #endregion
+
+//#region AI工具查看详情
+export interface AIChatToolDrawerContentProps {
+    syncId: string
 }
 // #endregion
