@@ -8,6 +8,7 @@ import {info, yakitNotify, yakitFailed} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {
+    useControllableValue,
     useCreation,
     useDebounceEffect,
     useDebounceFn,
@@ -99,7 +100,11 @@ import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 import {showYakitDrawer, YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import MITMContext from "@/pages/mitm/Context/MITMContext"
-import {getGlobalShortcutKeyEvents, GlobalShortcutKey, ShortcutKeyFocusType} from "@/utils/globalShortcutKey/events/global"
+import {
+    getGlobalShortcutKeyEvents,
+    GlobalShortcutKey,
+    ShortcutKeyFocusType
+} from "@/utils/globalShortcutKey/events/global"
 import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
@@ -810,7 +815,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const refreshTabsContRef = useRef<boolean>(false)
 
     useShortcutKeyTrigger("sendAndJump*common", (focus) => {
-        let item = (focus||[]).find((item)=>item.startsWith(ShortcutKeyFocusType.Monaco))
+        let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
         // 为约束monaco与history同时存在相同快捷键所导致的2次触发(在monaco中执行)
         // 此时focus用于标记manaco中是否有焦点 有则不执行
         if (inViewport && !item) {
@@ -824,7 +829,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     useShortcutKeyTrigger("send*common", (focus) => {
-        let item = (focus||[]).find((item)=>item.startsWith(ShortcutKeyFocusType.Monaco))
+        let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
         if (inViewport && !item) {
             const selected = getSelected()
             if (selected) {
@@ -2676,7 +2681,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     pageType: pageType,
                     showEditTag: false,
                     showJumpTree: false,
-                    showFlod: !['Plugin'].includes(pageType || "")
+                    showFlod: !["Plugin"].includes(pageType || "")
                 } as HTTPFlowDetailProp
             }
         }
@@ -3478,25 +3483,25 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         return obj
     }, [props.params, pageType, runTimeId, params])
-    const onResetRefresh = useMemoizedFn(() => {
+    const resetAllFun = useMemoizedFn(() => {
         sortRef.current = defSort
-        setParams({...resetParams})
         setIsReset(!isReset)
         setColor([])
         setCheckBodyLength(false)
+        setSearchVal("")
         refreshTabsContRef.current = true
+    })
+    const onResetRefresh = useMemoizedFn(() => {
+        setParams({...resetParams})
+        resetAllFun()
     })
     /**@description 导入重置查询条件并刷新 */
     const onImportResetRefresh = useMemoizedFn(() => {
-        sortRef.current = defSort
         setParams({
             ...resetParams,
             SourceType: ""
         })
-        setIsReset(!isReset)
-        setColor([])
-        setCheckBodyLength(false)
-        refreshTabsContRef.current = true
+        resetAllFun()
     })
     useUpdateEffect(() => {
         onImportResetRefresh()
@@ -3531,6 +3536,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     })
 
+    const [searchVal, setSearchVal] = useState<string>("")
     const handleSearch = useMemoizedFn((searchValue, searchType) => {
         setParams((prev) => ({...prev, Keyword: searchValue, KeywordType: searchType}))
     })
@@ -4002,6 +4008,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         )}
                                         {showHistorySearch && (
                                             <HistorySearch
+                                                searchVal={searchVal}
+                                                setSearchVal={setSearchVal}
                                                 showPopoverSearch={size?.width ? size?.width <= 1200 : true}
                                                 handleSearch={handleSearch}
                                             />
@@ -4763,6 +4771,8 @@ const onBatchExecPacketScan = (params: {
 }
 
 interface HistorySearchProps {
+    searchVal?: string
+    setSearchVal?: (s: string) => void
     showPopoverSearch: boolean
     handleSearch: (searchValue: string, searchType: HistoryPluginSearchType) => void
 }
@@ -4770,7 +4780,11 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
     const {showPopoverSearch, handleSearch} = props
     const [isHoverSearch, setIsHoverSearch] = useState<boolean>(false)
     const [searchType, setSearchType, getSearchType] = useGetSetState<HistoryPluginSearchType>("all")
-    const [searchVal, setSearchVal, getSearchVal] = useGetSetState<string>("")
+    const [searchVal, setSearchVal] = useControllableValue<string>(props, {
+        defaultValue: "",
+        valuePropName: "searchVal",
+        trigger: "setSearchVal"
+    })
     const onSelectBeforeOption = useMemoizedFn((o: string) => {
         setSearchType(o as HistoryPluginSearchType)
     })
@@ -4782,7 +4796,7 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
     })
     const onSearch = useDebounceFn(
         useMemoizedFn(() => {
-            handleSearch(getSearchVal(), getSearchType())
+            handleSearch(searchVal, getSearchType())
         }),
         {wait: 300}
     ).run

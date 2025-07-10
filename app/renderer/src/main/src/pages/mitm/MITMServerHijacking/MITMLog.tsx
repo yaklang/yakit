@@ -179,6 +179,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     const headerRef = useRef<HTMLDivElement>(null)
     const headerSize = useSize(headerRef)
 
+    const [searchVal, setSearchVal] = useState<string>("")
     const handleSearch = useMemoizedFn((searchValue, searchType) => {
         emiter.emit(
             "onMitmSearchInputVal",
@@ -288,6 +289,8 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                     )}
                 </YakitPopover>
                 <HistorySearch
+                    searchVal={searchVal}
+                    setSearchVal={setSearchVal}
                     showPopoverSearch={headerSize?.width ? headerSize?.width <= 800 : true}
                     handleSearch={handleSearch}
                 />
@@ -322,6 +325,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                                     break
                                 case "resetRefresh":
                                     emiter.emit("onMitmResetRefreshEvent", mitmVersion)
+                                    setSearchVal("")
                                     break
                                 default:
                                     break
