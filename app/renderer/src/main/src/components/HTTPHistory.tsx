@@ -1,4 +1,4 @@
-import React, {ReactElement, useContext, useEffect, useMemo, useRef, useState} from "react"
+import React, {CSSProperties, ReactElement, useContext, useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
 import {HistoryTableTitleShow, HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
@@ -110,7 +110,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             key: "web-tree",
             label: (
                 <>
-                    <span className={styles['tab-item-text']}>网站树</span> <OutlineLog2Icon />
+                    <span className={styles["tab-item-text"]}>网站树</span> <OutlineLog2Icon />
                 </>
             ),
             contShow: true // 初始为true
@@ -119,7 +119,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             key: "process",
             label: (
                 <>
-                    <span className={styles['tab-item-text']}>进程</span>
+                    <span className={styles["tab-item-text"]}>进程</span>
                     <OutlineTerminalIcon />
                 </>
             ),
@@ -380,7 +380,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
 interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     pageType: HTTPHistorySourcePageType
-    wrapperStyle?: any
+    runtimeId?: string
+    httpHistoryTableTitleStyle?: CSSProperties
+    containerClassName?: string
+    titleHeight?: number
+    wrapperStyle?: CSSProperties
+    showFlod?: boolean
     params?: YakQueryHTTPFlowRequest
     searchURL?: string
     includeInUrl?: string | string[]
@@ -389,6 +394,7 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     downstreamProxyStr?: string
     onSetTableTotal?: (t: number) => void
     onSetTableSelectNum?: (s: number) => void
+    onSetHasNewData?: (f: boolean) => void
     setOnlyShowFirstNode?: (only: boolean) => void
     setSecondNodeVisible?: (show: boolean) => void
 }
@@ -398,7 +404,11 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
 export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEditorProps> = React.memo((props) => {
     const {
         pageType,
+        runtimeId,
         wrapperStyle,
+        httpHistoryTableTitleStyle,
+        titleHeight,
+        containerClassName,
         params,
         searchURL,
         includeInUrl,
@@ -407,6 +417,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         downstreamProxyStr,
         onSetTableTotal,
         onSetTableSelectNum,
+        onSetHasNewData,
         noTableTitle = false,
         showSourceType = true,
         showAdvancedSearch = true,
@@ -416,7 +427,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         showBatchActions = true,
         showDelAll = true,
         showSetting = true,
-        showRefresh = true
+        showRefresh = true,
+        showFlod = true
     } = props
 
     const hTTPFlowRealTimeTableAndEditorRef = useRef<HTMLDivElement>(null)
@@ -442,16 +454,13 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
     useDebounceEffect(
         () => {
             if (inViewport) {
+                setDownstreamProxy(downstreamProxyStr || "")
                 getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
                     if (!(pageType === "MITM") && res) {
                         try {
                             const obj = JSON.parse(res) || {}
                             setDownstreamProxy(obj.defaultValue || "")
-                        } catch (error) {
-                            setDownstreamProxy(downstreamProxyStr || "")
-                        }
-                    } else {
-                        setDownstreamProxy(downstreamProxyStr || "")
+                        } catch (error) {}
                     }
                 })
             }
@@ -529,6 +538,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                 firstNode={() => (
                     <div style={{width: "100%", height: "100%"}}>
                         <HTTPFlowTable
+                            containerClassName={containerClassName}
+                            runTimeId={runtimeId}
                             noTableTitle={noTableTitle}
                             showSourceType={showSourceType}
                             showAdvancedSearch={showAdvancedSearch}
@@ -558,6 +569,9 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                             ProcessName={curProcess}
                             onSetTableTotal={onSetTableTotal}
                             onSetTableSelectNum={onSetTableSelectNum}
+                            onSetHasNewData={onSetHasNewData}
+                            httpHistoryTableTitleStyle={httpHistoryTableTitleStyle}
+                            titleHeight={titleHeight}
                         />
                     </div>
                 )}
@@ -574,6 +588,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                                 historyId={historyId}
                                 downstreamProxyStr={downstreamProxy}
                                 pageType={pageType}
+                                showFlod={showFlod}
                             />
                         )}
                     </div>
