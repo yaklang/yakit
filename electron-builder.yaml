@@ -1,7 +1,6 @@
 appId: "io.yaklang.yakit"
 productName: "Yakit"
 copyright: Copyright © 2024 yaklang.io
-
 extraFiles:
     - from: "bins/scripts/auto-install-cert.zip"
       to: "bins/scripts/auto-install-cert.zip"
