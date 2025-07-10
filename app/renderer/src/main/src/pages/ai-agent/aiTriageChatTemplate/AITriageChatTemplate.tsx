@@ -1,4 +1,4 @@
-import React, {memo, useMemo, useRef, useState} from "react"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {AIForgeFormProps, AIForgeInfoOptProps} from "./type"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {SolidToolIcon} from "@/assets/icon/solid"
@@ -9,11 +9,12 @@ import {useMemoizedFn, useSize} from "ahooks"
 import {Form} from "antd"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
-import {getYakExecutorParam} from "@/pages/plugins/editDetails/utils"
+import {getValueByType, getYakExecutorParam} from "@/pages/plugins/editDetails/utils"
 import {QSInputTextarea} from "../template/template"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {AIStartParams} from "../type/aiChat"
 import {yakitNotify} from "@/utils/notification"
+import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 
 import classNames from "classnames"
 import styles from "./AITriageChatTemplate.module.scss"
@@ -182,6 +183,26 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
 
     const [question, setQuestion] = useState("")
     const [form] = Form.useForm()
+
+    useEffect(() => {
+        if (!params) return
+        initRequiredFormValue()
+    }, [params])
+
+    const initRequiredFormValue = useMemoizedFn(() => {
+        if (!params) return
+        // 必填参数
+        let initRequiredFormValue: CustomPluginExecuteFormValue = {}
+        params.forEach((ele) => {
+            const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
+            initRequiredFormValue = {
+                ...initRequiredFormValue,
+                [ele.Field]: value
+            }
+        })
+        if (!form) return
+        form.setFieldsValue({...initRequiredFormValue})
+    })
 
     const [loading, setLoading] = useState(false)
     const handleParamsSubmit = useMemoizedFn(() => {

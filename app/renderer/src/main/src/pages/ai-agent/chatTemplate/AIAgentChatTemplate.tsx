@@ -1,4 +1,4 @@
-import React, {memo, ReactNode, useEffect, useMemo, useRef, useState} from "react"
+import React, {memo, ReactNode, UIEventHandler, useEffect, useMemo, useRef, useState} from "react"
 import {useControllableValue, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {
     AIAgentChatBodyProps,
@@ -177,16 +177,30 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
     }, [info])
     // AI的Token消耗
     const token = useMemo(() => {
-        if (info?.answer) {
-            return [
-                formatNumberUnits(info.answer.consumption?.input_consumption || 0),
-                formatNumberUnits(info.answer.consumption?.output_consumption || 0)
-            ]
+        if (info.answer?.consumption?.input_consumption || info.answer?.consumption?.output_consumption) {
+            return [0, 0]
         }
-        return [
-            formatNumberUnits(consumption?.input_consumption || 0),
-            formatNumberUnits(consumption?.output_consumption || 0)
-        ]
+
+        if (info?.answer) {
+            let input = 0
+            let output = 0
+            const keys = Object.keys(info.answer.consumption || {})
+            for (let name of keys) {
+                input += info.answer.consumption[name]?.input_consumption || 0
+                output += info.answer.consumption[name]?.output_consumption || 0
+            }
+
+            return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
+        }
+
+        let input = 0
+        let output = 0
+        const keys = Object.keys(consumption || {})
+        for (let name of keys) {
+            input += consumption[name]?.input_consumption || 0
+            output += consumption[name]?.output_consumption || 0
+        }
+        return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
     }, [info, consumption])
 
     return (
@@ -231,13 +245,39 @@ const taskAnswerToIconMap: Record<string, ReactNode> = {
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
     const {scrollToTask, setScrollToTask, tasks, activeStream, streams} = props
 
+    const activeFirstTabKey = useMemo(() => {
+        if (!activeStream || activeStream.length === 0) return []
+        return [
+            ...new Set(
+                activeStream.map((item) => {
+                    return (item || "").split("|")[0]
+                })
+            )
+        ]
+    }, [activeStream])
+    const activeSecondTabKey = useMemo(() => {
+        if (!activeStream || activeStream.length === 0) return []
+        return activeStream.map((item) => {
+            const first = (item || "").split("|")[0] || ""
+            const second = (item || "").split("|")[1] || ""
+            return `${first}-${second}`
+        })
+    }, [activeStream])
+
     // 任务集合
     const lists = useMemo(() => {
         return Object.keys(streams)
     }, [streams])
 
+    const [isStopScroll, setIsStopScroll] = useControllableValue<boolean>(props, {
+        defaultValue: false,
+        valuePropName: "isStopScroll",
+        trigger: "setIsStopScroll"
+    })
+
     const wrapper = useRef<HTMLDivElement>(null)
     useEffect(() => {
+        if (isStopScroll) return
         if (wrapper.current) {
             const {scrollHeight} = wrapper.current
             const {height} = wrapper.current.getBoundingClientRect()
@@ -246,7 +286,15 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 wrapper.current.scrollTop = scrollHeight
             }
         }
-    }, [streams])
+    }, [streams, isStopScroll])
+    const handleWrapperScroll: UIEventHandler<HTMLDivElement> = useMemoizedFn((e) => {
+        if (wrapper.current) {
+            const {scrollHeight, scrollTop} = wrapper.current
+            const {height} = wrapper.current.getBoundingClientRect()
+            const offset = scrollHeight - scrollTop - height
+            if (offset > 20) setIsStopScroll(true)
+        }
+    })
 
     // 生成任务展示名称
     const handleGenerateTaskName = useMemoizedFn((order: string) => {
@@ -291,32 +339,47 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         }
     })
     const activeFirstPanel = useMemo(() => {
-        const active: string[] = []
+        let active: string[] = []
         if (scrollToTask) {
             active.push(scrollToTask.index)
             setTimeout(() => {
                 document.getElementById(scrollToTask.index)?.scrollIntoView()
             }, 100)
         }
-        if (activeStream) {
-            const first = (activeStream || "").split("|")[0]
-            active.push(first)
+        if (activeFirstTabKey.length > 0) {
+            active = active.concat(activeFirstTabKey)
         }
         return active.concat(clickFirstPanel.filter((item) => !active.includes(item)))
-    }, [scrollToTask, activeStream, clickFirstPanel])
+    }, [scrollToTask, activeFirstTabKey, clickFirstPanel])
 
     const [clickSecondPanel, setClickSecondPanel] = useState<string[]>([])
     const handleChangeSecondPanel = useMemoizedFn((expand: boolean, order: string) => {
+        setClickFirstPanel((old) => {
+            const first = order.split("-")[0]
+            if (expand) {
+                if (old.includes(first)) {
+                    return old
+                } else {
+                    return old.concat([first])
+                }
+            } else {
+                if (!old.includes(first)) {
+                    return old
+                } else {
+                    return old.filter((item) => item !== first)
+                }
+            }
+        })
         setClickSecondPanel((old) => {
             if (expand) {
                 if (old.includes(order)) {
-                    return cloneDeep(old)
+                    return old
                 } else {
                     return old.concat([order])
                 }
             } else {
                 if (!old.includes(order)) {
-                    return cloneDeep(old)
+                    return old
                 } else {
                     return old.filter((item) => item !== order)
                 }
@@ -324,17 +387,16 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         })
     })
     const activeSecondPanel = useMemo(() => {
-        const active: string[] = []
+        let active: string[] = []
         scrollToTask && active.push(scrollToTask.index)
-        if (activeStream) {
-            const first = (activeStream || "").split("|")[0] || ""
-            const second = (activeStream || "").split("|")[1] || ""
-            active.push(`${first}-${second}`)
+        if (activeSecondTabKey.length > 0) {
+            active = active.concat(activeSecondTabKey)
         }
         return active.concat(clickSecondPanel.filter((item) => !active.includes(item)))
-    }, [activeStream, clickSecondPanel])
+    }, [activeSecondTabKey, clickSecondPanel])
+
     return (
-        <div ref={wrapper} className={styles["ai-agent-chat-stream"]}>
+        <div ref={wrapper} className={styles["ai-agent-chat-stream"]} onScroll={handleWrapperScroll}>
             {lists.map((taskName) => {
                 const headerTitle = handleGenerateTaskName(taskName)
                 const firstExpand = activeFirstPanel.includes(taskName)

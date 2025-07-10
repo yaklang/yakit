@@ -102,14 +102,16 @@ export interface AIChatLeftSideProps {
 // 对话框回答
 export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
     info: AIChatInfo
-    consumption: AIChatMessage.Consumption
+    consumption: Record<string, AIChatMessage.Consumption>
 }
 
 export interface AIAgentChatStreamProps {
     scrollToTask?: AIChatMessage.PlanTask
     setScrollToTask?: Dispatch<SetStateAction<AIChatMessage.PlanTask | undefined>>
+    isStopScroll?: boolean
+    setIsStopScroll?: Dispatch<SetStateAction<boolean>>
     tasks: AIChatMessage.PlanTask[]
-    activeStream: string
+    activeStream: string[]
     streams: Record<string, AIChatStreams[]>
 }
 export interface ChatStreamCollapseItemProps {

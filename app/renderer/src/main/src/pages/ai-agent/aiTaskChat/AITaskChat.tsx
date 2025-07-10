@@ -302,6 +302,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             setLeftExpand(true)
             // 重置回答定位
             setScrollTo(undefined)
+            setIsStopScroll(false)
             // 隐藏日志
             setLogExpand(false)
         })
@@ -355,7 +356,10 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
         // #endregion
 
         // #region chat-左侧任务栏定位到右侧回答栏模块
+        // 左侧执行任务跳转的定位位置
         const [scrollTo, setScrollTo] = useState<AIChatMessage.PlanTask>()
+        // 是否停止自动滚动到最新的更新内容
+        const [isStopScroll, setIsStopScroll] = useState(false)
         const handleSetScrollTo = useDebounceFn(
             (info: AIChatMessage.PlanTask) => {
                 setScrollTo(info)
@@ -422,6 +426,8 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                             consumption={uiConsumption}
                                             scrollToTask={scrollTo}
                                             setScrollToTask={setScrollTo}
+                                            isStopScroll={isStopScroll}
+                                            setIsStopScroll={setIsStopScroll}
                                             tasks={uiPlan}
                                             activeStream={activeStream}
                                             streams={uiStreams}
@@ -460,10 +466,13 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                     <AIAgentChatFooter
                                         execute={execute}
                                         review={!!reviewInfo}
-                                        positon={!!scrollTo}
+                                        positon={!!scrollTo || isStopScroll}
                                         showReExe={!!taskChat && !!taskChat.request}
                                         onStop={handleStopChat}
-                                        onPositon={() => setScrollTo(undefined)}
+                                        onPositon={() => {
+                                            setScrollTo(undefined)
+                                            setIsStopScroll(false)
+                                        }}
                                         onReExe={handleReExecute}
                                         onNewChat={handleBack}
                                     />

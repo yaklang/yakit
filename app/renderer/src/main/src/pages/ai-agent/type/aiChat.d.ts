@@ -175,7 +175,7 @@ export interface AIChatInfo {
         pressure: AIChatMessage.Pressure[]
         firstCost: AIChatMessage.AICostMS[]
         totalCost: AIChatMessage.AICostMS[]
-        consumption: AIChatMessage.Consumption
+        consumption: Record<string, AIChatMessage.Consumption>
         plans?: AIChatMessage.PlanTask
         taskList: AIChatMessage.PlanTask[]
         logs: AIChatMessage.Log[]
@@ -188,6 +188,7 @@ export declare namespace AIChatMessage {
     export interface Consumption {
         input_consumption: number
         output_consumption: number
+        consumption_uuid: string
     }
 
     /** 上下文压力 */

@@ -66,10 +66,7 @@ function useChatData(params?: UseChatDataParams) {
     const [pressure, setPressure] = useState<AIChatMessage.Pressure[]>([])
     const [firstCost, setFirstCost] = useState<AIChatMessage.AICostMS[]>([])
     const [totalCost, setTotalCost] = useState<AIChatMessage.AICostMS[]>([])
-    const [consumption, setConsumption] = useState<AIChatMessage.Consumption>({
-        input_consumption: 0,
-        output_consumption: 0
-    })
+    const [consumption, setConsumption] = useState<Record<string, AIChatMessage.Consumption>>({})
 
     const planTree = useRef<AIChatMessage.PlanTask>()
     const fetchPlanTree = useMemoizedFn(() => {
@@ -83,7 +80,25 @@ function useChatData(params?: UseChatDataParams) {
     const [logs, setLogs] = useState<AIChatMessage.Log[]>([])
 
     const [streams, setStreams] = useState<Record<string, AIChatStreams[]>>({})
-    const [activeStream, setActiveStream] = useState("")
+
+    // 从 active 里排除 nodeId 的计时器
+    const clearActiveStreamTime = useRef<Record<string, NodeJS.Timeout | null>>({})
+    const [activeStream, setActiveStream] = useState<string[]>([])
+    const handleSetClearActiveStreamTime = useMemoizedFn((streamId: string) => {
+        const time = clearActiveStreamTime.current[streamId]
+        if (time) {
+            clearTimeout(time)
+            clearActiveStreamTime.current[streamId] = setTimeout(() => {
+                setActiveStream((old) => old.filter((item) => item !== streamId))
+                clearActiveStreamTime.current[streamId] = null
+            }, 1000)
+        } else {
+            clearActiveStreamTime.current[streamId] = setTimeout(() => {
+                setActiveStream((old) => old.filter((item) => item != streamId))
+                clearActiveStreamTime.current[streamId] = null
+            }, 1000)
+        }
+    })
 
     let toolDataMapRef = useRef<Map<string, AIChatMessage.AIToolData>>(new Map())
 
@@ -270,14 +285,15 @@ function useChatData(params?: UseChatDataParams) {
         setPressure([])
         setFirstCost([])
         setTotalCost([])
-        setConsumption({input_consumption: 0, output_consumption: 0})
+        setConsumption({})
         planTree.current = undefined
         setPlan([])
         review.current = undefined
         currentPlansId.current = undefined
         setLogs([])
         setStreams({})
-        setActiveStream("")
+        setActiveStream([])
+        clearActiveStreamTime.current = {}
         setExecute(false)
         chatID.current = ""
         chatRequest.current = undefined
@@ -358,14 +374,21 @@ function useChatData(params?: UseChatDataParams) {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.Consumption
+                    console.log(`consumption---\n`, data)
+                    const onlyId = data.consumption_uuid || "system"
+
                     setConsumption((old) => {
+                        const newData = cloneDeep(old)
+                        const info = newData[onlyId]
                         if (
-                            data.input_consumption === old.input_consumption &&
-                            data.output_consumption === old.output_consumption
+                            info &&
+                            info.input_consumption === data.input_consumption &&
+                            info.output_consumption === data.output_consumption
                         ) {
                             return old
                         }
-                        return cloneDeep(data)
+                        newData[onlyId] = data
+                        return newData
                     })
                 } catch (error) {}
                 return
@@ -487,7 +510,13 @@ function useChatData(params?: UseChatDataParams) {
                 console.log("stream---\n", {type, nodeID, timestamp, taskIndex}, ipcContent, ipcStreamDelta)
 
                 handleUpdateStream({type, nodeID, timestamp, taskIndex, ipcContent, ipcStreamDelta})
-                setActiveStream(`${taskIndex || "system"}|${nodeID}-${timestamp}`)
+
+                const streamId = `${taskIndex || "system"}|${nodeID}-${timestamp}`
+                handleSetClearActiveStreamTime(streamId)
+                setActiveStream((old) => {
+                    if (old.includes(streamId)) return old
+                    return [...old, streamId]
+                })
                 return
             }
             if (res.Type === "tool_call_start") {
