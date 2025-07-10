@@ -7,6 +7,7 @@ import {
     AIAgentChatStreamProps,
     AIChatLeftSideProps,
     AIChatLogsProps,
+    AIChatToolDrawerContentProps,
     ChatStreamCollapseProps
 } from "../aiAgentType"
 import {
@@ -346,49 +347,22 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                         })}
                     >
                         {(streams[taskName] || []).map((info: AIChatStreams, index) => {
-                            const {nodeId, timestamp, data, toolAggregation} = info
+                            const {nodeId, timestamp, toolAggregation} = info
                             const key = `${taskName}-${nodeId}-${timestamp}`
                             const secondExpand = activeSecondPanel.includes(key)
                             if (isShowToolColorCard(nodeId)) {
-                                return <AIChatToolColorCard toolCall={info} />
+                                return <AIChatToolColorCard key={key} toolCall={info} />
                             }
                             if (isToolSummaryCard(nodeId) && toolAggregation) {
-                                console.log("toolAggregation", toolAggregation, info)
-                                return <AIChatToolItem item={toolAggregation} />
+                                return <AIChatToolItem key={key} item={toolAggregation} />
                             }
                             return (
-                                <ChatStreamCollapse
+                                <ChatStreamCollapseItem
+                                    info={info}
                                     key={key}
-                                    style={{marginBottom: 0}}
-                                    expand={secondExpand}
-                                    onChange={(value) => handleChangeSecondPanel(value, key)}
-                                    title={
-                                        <div className={styles["task-type-header"]}>
-                                            {taskAnswerToIconMap[nodeId] || <SolidLightningboltIcon />}
-                                            <div className={styles["task-type-header-title"]}>{nodeId}</div>
-                                            <div className={styles["task-type-header-time"]}>
-                                                {formatTimestamp(timestamp)}
-                                            </div>
-                                        </div>
-                                    }
-                                    className={styles["chat-stream-collapse-expand"]}
-                                >
-                                    {(data.reason || data.system) && (
-                                        <div className={styles["think-wrapper"]}>
-                                            {data.reason && <div>{data.reason}</div>}
-
-                                            {data.system && <div>{data.system}</div>}
-                                        </div>
-                                    )}
-
-                                    {data.stream && (
-                                        <div className={styles["anwser-wrapper"]}>
-                                            <React.Fragment>
-                                                <ChatMarkdown content={data.stream} skipHtml={true} />
-                                            </React.Fragment>
-                                        </div>
-                                    )}
-                                </ChatStreamCollapse>
+                                    secondExpand={secondExpand}
+                                    handleChangeSecondPanel={handleChangeSecondPanel}
+                                />
                             )
                         })}
                     </ChatStreamCollapse>
@@ -397,8 +371,50 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         </div>
     )
 })
+interface ChatStreamCollapseItemProps {
+    key: string
+    info: AIChatStreams
+    secondExpand: boolean
+    handleChangeSecondPanel: (expand: boolean, order: string) => void
+}
+const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo((props) => {
+    const {key, info, secondExpand, handleChangeSecondPanel} = props
+    const {nodeId, timestamp, data} = info
+    return (
+        <ChatStreamCollapse
+            key={key}
+            style={{marginBottom: 0}}
+            expand={secondExpand}
+            onChange={(value) => handleChangeSecondPanel(value, key)}
+            title={
+                <div className={styles["task-type-header"]}>
+                    {taskAnswerToIconMap[nodeId] || <SolidLightningboltIcon />}
+                    <div className={styles["task-type-header-title"]}>{nodeId}</div>
+                    <div className={styles["task-type-header-time"]}>{formatTimestamp(timestamp)}</div>
+                </div>
+            }
+            className={styles["chat-stream-collapse-expand"]}
+        >
+            {(data.reason || data.system) && (
+                <div className={styles["think-wrapper"]}>
+                    {data.reason && <div>{data.reason}</div>}
+
+                    {data.system && <div>{data.system}</div>}
+                </div>
+            )}
+
+            {data.stream && (
+                <div className={styles["anwser-wrapper"]}>
+                    <React.Fragment>
+                        <ChatMarkdown content={data.stream} skipHtml={true} />
+                    </React.Fragment>
+                </div>
+            )}
+        </ChatStreamCollapse>
+    )
+})
 /** @name 回答信息折叠组件 */
-const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props) => {
+export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props) => {
     const {id, className, style, title, headerExtra, children, expand, onChange} = props
 
     return (
@@ -952,6 +968,45 @@ export const AIChatLogs: React.FC<AIChatLogsProps> = memo((props) => {
                     )
                 })}
             </div>
+        </div>
+    )
+})
+
+export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = memo((props) => {
+    const {toolList} = props
+    const [secondExpand, setSecondExpand] = useState<string[]>([])
+    useEffect(() => {
+        if (toolList.length > 0) {
+            const last = toolList[toolList.length - 1]
+            setSecondExpand((preV) => {
+                return [...preV, `${last.nodeId}-${last.timestamp}`]
+            })
+        }
+    }, [toolList])
+    const handleChangeSecondPanel = useMemoizedFn((expand: boolean, expandKey: string) => {
+        setSecondExpand((preV) => {
+            if (expand) {
+                return [...preV, expandKey]
+            } else {
+                return preV.filter((item) => item !== expandKey)
+            }
+        })
+    })
+    return (
+        <div className={styles["ai-chat-tool-drawer-content"]}>
+            {toolList.map((info: AIChatStreams) => {
+                const {nodeId, timestamp, data} = info
+                const key = `${nodeId}-${timestamp}`
+                const expand = secondExpand.includes(key)
+                return (
+                    <ChatStreamCollapseItem
+                        key={key}
+                        info={info}
+                        secondExpand={expand}
+                        handleChangeSecondPanel={handleChangeSecondPanel}
+                    />
+                )
+            })}
         </div>
     )
 })

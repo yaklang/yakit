@@ -318,6 +318,7 @@ export declare namespace AIChatMessage {
         options: AIRequireOption[]
     }
 
+    /**AI工具聚合数据 前端使用 */
     export interface AIToolData {
         callToolId: string
         /**工具名称 */
@@ -328,14 +329,27 @@ export declare namespace AIChatMessage {
         summary: string
         /**总结的时间 */
         time: number
+        /**ai工具按钮 */
+        selectors: ReviewSelector[]
+        /**出现ai工具按钮后，按钮功能发送信息的时候需要的id */
+        interactiveId:string
     }
-
+    /**AI工具 接口返回的JSON结构 */
     export interface AIToolCall {
         call_tool_id: string
         tool_name?: string
         status?: string
         summary?: string
         tool?: {name?: string; description?: string}
+    }
+
+    /**AI工具 tool_call_watcher 返回的数据接口 */
+    export interface AIToolCallWatcher {
+        call_tool_id: string
+        id: string
+        selectors: ReviewSelector[]
+        tool: string
+        tool_description: string
     }
 }
 // #endregion

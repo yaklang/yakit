@@ -1,5 +1,5 @@
-import React, {ReactNode} from "react"
-import {AIChatMessage, AIChatStreams} from "../type/aiChat"
+import React, {ReactNode, useRef, useState} from "react"
+import {AIChatMessage, AIChatStreams, AIInputEvent} from "../type/aiChat"
 import styles from "./AIChatTool.module.scss"
 import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import {SolidToolIcon} from "@/assets/icon/solid"
@@ -13,6 +13,8 @@ import {v4 as uuidv4} from "uuid"
 import {isToolStdout} from "../utils"
 import {OutlineArrownarrowrightIcon} from "@/assets/icon/outline"
 import useAIAgentStore from "../useContext/useStore"
+import {AIChatToolDrawerContent} from "./AIAgentChatTemplate"
+const {ipcRenderer} = window.require("electron")
 
 interface AIChatToolProps {
     item: AIChatMessage.AIToolData
@@ -44,30 +46,41 @@ const OutlineSparklesColorsIcon = () => {
         </svg>
     )
 }
+/** @name AI工具按钮对应图标 */
+const AIToolToIconMap: Record<string, ReactNode> = {
+    "enough-cancel": <OutlineArrownarrowrightIcon />
+}
 export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.memo((props) => {
     const {activeChat} = useAIAgentStore()
     const {toolCall} = props
-    const {nodeId, data} = toolCall
-    const extra = useCreation(() => {
-        if (isToolStdout(nodeId)) {
-            return (
-                <div className={styles["card-extra"]}>
-                    <div className={styles["extra-btn"]} onClick={onSkip}>
-                        <span>跳过</span>
-                        <OutlineArrownarrowrightIcon />
-                    </div>
-                </div>
-            )
-        }
-        return null
-    }, [nodeId])
+    const {nodeId, data, toolAggregation} = toolCall
+
     const title = useCreation(() => {
         if (nodeId === "call-tools") return "Call-tools：参数生成中..."
         if (isToolStdout(nodeId)) return `${nodeId}：调用工具中...`
     }, [nodeId])
-    const onSkip = useMemoizedFn((e) => {
-        e.stopPropagation()
-        // console.log("activeChat", activeChat)
+    const onToolExtra = useMemoizedFn((item: AIChatMessage.ReviewSelector) => {
+        switch (item.value) {
+            case "enough-cancel":
+                onSkip(item)
+                break
+            default:
+                break
+        }
+    })
+    const onSkip = useMemoizedFn((item: AIChatMessage.ReviewSelector) => {
+        if (!activeChat) return
+        if (!toolAggregation?.interactiveId) return
+        const token = activeChat.id
+        const jsonInput = {
+            suggestion: item.value
+        }
+        const info: AIInputEvent = {
+            IsInteractiveMessage: true,
+            InteractiveId: toolAggregation.interactiveId, // reviewData.data.id
+            InteractiveJSONInput: JSON.stringify(jsonInput)
+        }
+        ipcRenderer.invoke("send-ai-task", token, info)
     })
     return (
         <div className={styles["ai-chat-tool-card"]}>
@@ -76,7 +89,18 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                     <OutlineSparklesColorsIcon />
                     <div>{title}</div>
                 </div>
-                {extra}
+                {isToolStdout(nodeId) && toolAggregation?.selectors && (
+                    <div className={styles["card-extra"]}>
+                        {toolAggregation.selectors.map((item) => {
+                            return (
+                                <div className={styles["extra-btn"]} onClick={() => onToolExtra(item)}>
+                                    <span>{item.prompt}</span>
+                                    {AIToolToIconMap[item.value]}
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
             </div>
             <div className={styles["card-content"]}>
                 {
@@ -106,11 +130,28 @@ interface AIChatToolItemProps {
 }
 export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) => {
     const {item} = props
+    const {activeChat} = useAIAgentStore()
+    const [toolList, setToolList] = useState<AIChatStreams[]>([])
+    const syncProcessEventIdRef = useRef<string>()
     const handleDetails = useMemoizedFn(() => {
+        if (!activeChat) return
+        if (!item?.callToolId) return
+        syncProcessEventIdRef.current = uuidv4()
+        const token = activeChat.id
+        const params: AIInputEvent = {
+            IsSyncMessage: true,
+            SyncType: "sync_process_event",
+            SyncJsonInput: JSON.stringify({
+                process_id: item?.callToolId,
+                sync_process_event_id: syncProcessEventIdRef.current
+            })
+        }
+        // console.log("sync-params", params)
+        ipcRenderer.invoke("send-ai-task", token, params)
         const m = showYakitDrawer({
             title: "详情",
             width: "40%",
-            content: <div>详情</div>,
+            content: <AIChatToolDrawerContent toolList={toolList} syncId={syncProcessEventIdRef.current || ""} />,
             onClose: () => m.destroy()
         })
     })
