@@ -170,7 +170,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     }, [type, advancedConfigShow, advancedConfigShow])
 
     return (
-        <ShortcutKeyFocusHook className={styles["web-fuzzer"]} ref={webFuzzerRef} focusId={props.id?[props.id]:undefined} isUpdateFocus={false}>
+        <ShortcutKeyFocusHook className={styles["web-fuzzer"]} boxRef={webFuzzerRef} focusId={props.id?[props.id]:undefined} isUpdateFocus={false}>
             <div className={styles["web-fuzzer-tab"]}>
                 {webFuzzerTabs.map((item) => (
                     <div
