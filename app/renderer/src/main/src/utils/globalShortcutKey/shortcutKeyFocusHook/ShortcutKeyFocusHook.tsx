@@ -13,13 +13,13 @@ interface ShortcutKeyFocusHookProps {
     style?: React.CSSProperties
     focusId?: string[]
     className?: string
-    ref?: ForwardedRef<any>
+    boxRef?: React.LegacyRef<HTMLDivElement>
     // 是否更新Focus
     isUpdateFocus?: boolean
 }
 
 const ShortcutKeyFocusHook: React.FC<ShortcutKeyFocusHookProps> = (props) => {
-    const {style, focusId, className, ref, isUpdateFocus = true} = props
+    const {style, focusId, className, boxRef, isUpdateFocus = true} = props
     const [shortcutIds, setShortcutIds] = useState<string[]>()
     const [isHint, setHint] = useState<boolean>(false)
 
@@ -51,7 +51,7 @@ const ShortcutKeyFocusHook: React.FC<ShortcutKeyFocusHookProps> = (props) => {
                     },
                     className
                 )}
-                ref={ref}
+                ref={boxRef}
                 style={style}
                 onFocus={(e) => {
                     e.stopPropagation()
