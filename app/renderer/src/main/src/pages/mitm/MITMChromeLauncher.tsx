@@ -26,6 +26,7 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import classNames from "classnames"
 import {OutlineSaveIcon} from "@/assets/icon/outline"
+import {OutlineRefreshIcon} from "@/assets/icon/outline"
 import {v4 as uuidv4} from "uuid"
 import {chromeLauncherParamsArr} from "@/defaultConstants/mitm"
 import {SolidStoreIcon} from "@/assets/icon/solid"
@@ -520,6 +521,56 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
         })
     }, [])
 
+    const resetToDefault = useMemoizedFn(() => {
+        // 显示确认对话框
+        Modal.confirm({
+            title: "确认恢复默认参数",
+            icon: <ExclamationCircleOutlined />,
+            content: "确定要将所有参数恢复到默认状态吗？这将丢失所有自定义设置。",
+            okText: "确认",
+            cancelText: "取消",
+            closable: true,
+            centered: true,
+            closeIcon: (
+                <div
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        Modal.destroyAll()
+                    }}
+                    className='modal-remove-icon'
+                >
+                    <RemoveIcon />
+                </div>
+            ),
+            onOk: () => {
+                // 重置为默认参数
+                let defaultParams = [...chromeLauncherParamsArr]
+                
+                // 应用handleChromeLauncherParams函数，确保扩展参数被正确处理
+                defaultParams = handleChromeLauncherParams(defaultParams, googleChromePluginPath)
+                
+                setData(defaultParams)
+                if (searchVal) {
+                    const filteredData = defaultParams.filter((item) =>
+                        item.parameterName.toLocaleLowerCase().includes(searchVal.toLocaleLowerCase())
+                    )
+                    setSearchData(filteredData)
+                }
+                
+                // 清除临时编辑状态
+                tempEditItem.current = undefined
+                setTempEditId(undefined)
+                setCurrentItem(undefined)
+                
+                // 保存到远程
+                setRemoteValue(RemoteGV.ChromeLauncherParams, JSON.stringify(defaultParams))
+                yakitNotify("success", "已恢复默认参数设置")
+            },
+            cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+            okButtonProps: {size: "small", className: "modal-ok-button"}
+        })
+    })
+
     const onRemove = useMemoizedFn((record: ChromeLauncherParams) => {
         if (record.id === tempEditId) {
             tempEditItem.current = undefined
@@ -768,12 +819,22 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                 enableDrag={false}
                 titleHeight={42}
                 title={
-                    <YakitInput.Search
-                        style={{width: 250}}
-                        placeholder='请输入参数名搜索'
-                        allowClear={true}
-                        onSearch={(value) => setSearchVal(value.trim())}
-                    />
+                    <div style={{display: "flex", alignItems: "center"}}>
+                        <YakitInput.Search
+                            style={{width: 250}}
+                            placeholder='请输入参数名搜索'
+                            allowClear={true}
+                            onSearch={(value) => setSearchVal(value.trim())}
+                        />
+                        <YakitButton
+                            type="text"
+                            onClick={resetToDefault}
+                            disabled={tempEditId !== undefined}
+                        >
+                            <OutlineRefreshIcon style={{marginRight: 4}} />
+                            恢复默认参数
+                        </YakitButton>
+                    </div>
                 }
                 extra={
                     <YakitButton

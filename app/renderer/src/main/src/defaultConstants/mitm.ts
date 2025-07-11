@@ -197,7 +197,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         parameterName: "--disable-settings-window",
         variableValues: "",
         variableType: "bool",
-        disabled: false,
+        disabled: true,
         desc: "禁用设置窗口",
         default: true
     },
@@ -206,7 +206,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         parameterName: "--disable-speech-api",
         variableValues: "",
         variableType: "bool",
-        disabled: false,
+        disabled: true,
         desc: "禁用语音API",
         default: true
     },
@@ -224,7 +224,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         parameterName: "--disable-presentation-api",
         variableValues: "",
         variableType: "bool",
-        disabled: false,
+        disabled: true,
         desc: "禁用演示API",
         default: true
     },
@@ -233,7 +233,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         parameterName: "--disable-permissions-api",
         variableValues: "",
         variableType: "bool",
-        disabled: false,
+        disabled: true,
         desc: "禁用权限API",
         default: true
     },
@@ -242,7 +242,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         parameterName: "--disable-new-zip-unpacker",
         variableValues: "",
         variableType: "bool",
-        disabled: false,
+        disabled: true,
         desc: "禁用新 ZIP 解压功能",
         default: true
     },
@@ -251,7 +251,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         parameterName: "--disable-media-session-api",
         variableValues: "",
         variableType: "bool",
-        disabled: false,
+        disabled: true,
         desc: "禁用媒体会话API",
         default: true
     },
@@ -278,7 +278,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         parameterName: "--no-first-run",
         variableValues: "",
         variableType: "bool",
-        disabled: false,
+        disabled: true,
         desc: "启动时跳过首次运行向导",
         default: true
     },
@@ -287,7 +287,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         parameterName: "--no-default-browser-check",
         variableValues: "",
         variableType: "bool",
-        disabled: false,
+        disabled: true,
         desc: "启动时不检查默认浏览器",
         default: true
     },
@@ -296,7 +296,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         parameterName: "--no-pings",
         variableValues: "",
         variableType: "bool",
-        disabled: false,
+        disabled: true,
         desc: "禁用 ping 跟踪",
         default: true
     },
@@ -305,7 +305,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         parameterName: "--no-service-autorun",
         variableValues: "",
         variableType: "bool",
-        disabled: false,
+        disabled: true,
         desc: "不自动运行服务",
         default: true
     },
@@ -314,7 +314,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         parameterName: "--media-cache-size",
         variableValues: "0",
         variableType: "input",
-        disabled: false,
+        disabled: true,
         desc: "设置媒体缓存大小为0",
         default: true
     },
@@ -323,7 +323,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         parameterName: "--use-fake-device-for-media-stream",
         variableValues: "",
         variableType: "bool",
-        disabled: false,
+        disabled: true,
         desc: "使用虚拟设备来捕获媒体流",
         default: true
     },
