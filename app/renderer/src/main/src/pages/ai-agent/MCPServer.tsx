@@ -15,8 +15,6 @@ import cloneDeep from "lodash/cloneDeep"
 import {setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import useMCPData from "./useMCPData"
-import useStore from "./useContext/useStore"
-import useDispatcher from "./useContext/useDispatcher"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
@@ -24,25 +22,25 @@ import styles from "./AIAgent.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 export const MCPServer: React.FC<MCPServerProps> = memo((props) => {
-    const {mcpServers} = useStore()
-    const {setMCPServers, getMCPServers} = useDispatcher()
+    // const {mcpServers} = useStore()
+    // const {setMCPServers, getMCPServers} = useDispatcher()
 
     // 缓存客户端配置信息
-    const handleCacheClientSetting = useMemoizedFn(() => {
-        if (!getMCPServers) return
-        const cache =
-            getMCPServers()
-                .filter((item) => !item.isDefault)
-                .map((item) => {
-                    const el = cloneDeep(item)
-                    el.status = false
-                    delete el.originalData
-                    delete el.tools
-                    delete el.resourceTemplates
-                    return el
-                }) || []
-        setRemoteValue(RemoteAIAgentGV.MCPClientList, JSON.stringify(cache))
-    })
+    // const handleCacheClientSetting = useMemoizedFn(() => {
+    //     if (!getMCPServers) return
+    //     const cache =
+    //         getMCPServers()
+    //             .filter((item) => !item.isDefault)
+    //             .map((item) => {
+    //                 const el = cloneDeep(item)
+    //                 el.status = false
+    //                 delete el.originalData
+    //                 delete el.tools
+    //                 delete el.resourceTemplates
+    //                 return el
+    //             }) || []
+    //     setRemoteValue(RemoteAIAgentGV.MCPClientList, JSON.stringify(cache))
+    // })
 
     /**
      * 初始默认MCP服务器
@@ -72,59 +70,58 @@ export const MCPServer: React.FC<MCPServerProps> = memo((props) => {
         setAddShow(true)
     })
     const handleCallbackAddServer = useMemoizedFn((result: boolean, info?: RenderMCPClientInfo) => {
-        if (result) {
-            if (info && setMCPServers) setMCPServers([...mcpServers, info])
-        }
-        setAddShow(false)
+        // if (result) {
+        //     if (info && setMCPServers) setMCPServers([...mcpServers, info])
+        // }
+        // setAddShow(false)
     })
 
     const [connectLoading, setConnectLoading] = useState<string[]>([])
     // 连接
     const handleConnectServer = useMemoizedFn((info: RenderMCPClientInfo) => {
-        const {id} = info
-        const loading = connectLoading.includes(id)
-        if (loading) return
-
-        setConnectLoading((old) => [...old, id])
-        grpcConnectMCPClient(info)
-            .then((res) => {
-                const {tools, resourceTemplates} = res
-                console.log("res", JSON.stringify(res))
-                setMCPServers &&
-                    setMCPServers((old) => {
-                        const newList = [...old]
-                        const index = newList.findIndex((el) => el.id === id)
-                        if (index > -1) {
-                            newList[index].status = true
-                            newList[index].originalData = res
-                            newList[index].tools = formatMCPTools(tools)
-                            newList[index].resourceTemplates = formatMCPResourceTemplates(resourceTemplates)
-                        }
-                        return [...newList]
-                    })
-            })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    setConnectLoading((old) => old.filter((el) => el !== id))
-                }, 200)
-            })
+        // const {id} = info
+        // const loading = connectLoading.includes(id)
+        // if (loading) return
+        // setConnectLoading((old) => [...old, id])
+        // grpcConnectMCPClient(info)
+        //     .then((res) => {
+        //         const {tools, resourceTemplates} = res
+        //         console.log("res", JSON.stringify(res))
+        //         setMCPServers &&
+        //             setMCPServers((old) => {
+        //                 const newList = [...old]
+        //                 const index = newList.findIndex((el) => el.id === id)
+        //                 if (index > -1) {
+        //                     newList[index].status = true
+        //                     newList[index].originalData = res
+        //                     newList[index].tools = formatMCPTools(tools)
+        //                     newList[index].resourceTemplates = formatMCPResourceTemplates(resourceTemplates)
+        //                 }
+        //                 return [...newList]
+        //             })
+        //     })
+        //     .catch(() => {})
+        //     .finally(() => {
+        //         setTimeout(() => {
+        //             setConnectLoading((old) => old.filter((el) => el !== id))
+        //         }, 200)
+        //     })
     })
 
     // 断开服务器-重置状态
     const handleResetServerInfo = useMemoizedFn((id: string) => {
-        setMCPServers &&
-            setMCPServers((old) => {
-                const newList = [...old]
-                const index = newList.findIndex((el) => el.id === id)
-                if (index > -1) {
-                    newList[index].status = false
-                    delete newList[index].originalData
-                    delete newList[index].tools
-                    delete newList[index].resourceTemplates
-                }
-                return [...newList]
-            })
+        // setMCPServers &&
+        //     setMCPServers((old) => {
+        //         const newList = [...old]
+        //         const index = newList.findIndex((el) => el.id === id)
+        //         if (index > -1) {
+        //             newList[index].status = false
+        //             delete newList[index].originalData
+        //             delete newList[index].tools
+        //             delete newList[index].resourceTemplates
+        //         }
+        //         return [...newList]
+        //     })
     })
 
     const [closeLoading, setCloseLoading] = useState<string[]>([])
@@ -147,20 +144,19 @@ export const MCPServer: React.FC<MCPServerProps> = memo((props) => {
     })
     // 删除
     const handleDeleteServer = useMemoizedFn((id: string) => {
-        const loading = closeLoading.includes(id)
-        if (loading) return
-
-        setCloseLoading((old) => [...old, id])
-        grpcDeleteMCPClient(id)
-            .then(() => {
-                setMCPServers && setMCPServers((old) => old.filter((el) => el.id !== id))
-            })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    setCloseLoading((old) => old.filter((el) => el !== id))
-                }, 200)
-            })
+        // const loading = closeLoading.includes(id)
+        // if (loading) return
+        // setCloseLoading((old) => [...old, id])
+        // grpcDeleteMCPClient(id)
+        //     .then(() => {
+        //         setMCPServers && setMCPServers((old) => old.filter((el) => el.id !== id))
+        //     })
+        //     .catch(() => {})
+        //     .finally(() => {
+        //         setTimeout(() => {
+        //             setCloseLoading((old) => old.filter((el) => el !== id))
+        //         }, 200)
+        //     })
     })
 
     const viewInfo = useRef<RenderMCPClientInfo>()
@@ -225,7 +221,7 @@ export const MCPServer: React.FC<MCPServerProps> = memo((props) => {
                 </div>
 
                 <div className={styles["list-body"]}>
-                    {mcpServers.map((item) => {
+                    {/* {mcpServers.map((item) => {
                         const {id, type, status, isDefault} = item
                         const find = MCPTransportTypeList.find((el) => el.value === type)
                         const connect = connectLoading.includes(id)
@@ -348,7 +344,7 @@ export const MCPServer: React.FC<MCPServerProps> = memo((props) => {
                                 </div>
                             </div>
                         )
-                    })}
+                    })} */}
                 </div>
             </div>
 

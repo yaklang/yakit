@@ -1,26 +1,25 @@
-import React, {memo, useEffect, useMemo, useState} from "react"
-import {AIChatSettingProps, FormItemSliderProps} from "./aiAgentType"
-import useStore from "./useContext/useStore"
-import useDispatcher from "./useContext/useDispatcher"
+import React, {memo, useEffect, useState} from "react"
+import {AIChatSettingProps, FormItemSliderProps} from "./type"
+import useAIAgentStore from "../useContext/useStore"
+import useAIAgentDispatcher from "../useContext/useDispatcher"
 import {Form, Slider, Tooltip} from "antd"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {useMemoizedFn, useUpdateEffect} from "ahooks"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {AIAgentSettingDefault} from "./defaultConstant"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {AIAgentSettingDefault} from "../defaultConstant"
 
 // import classNames from "classnames"
-import styles from "./AIAgent.module.scss"
+import styles from "./AIChatSetting.module.scss"
 
-export const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
+const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
     const [form] = Form.useForm()
 
-    const {setting} = useStore()
-    const {setSetting} = useDispatcher()
+    const {setting} = useAIAgentStore()
+    const {setSetting} = useAIAgentDispatcher()
 
     useEffect(() => {
         form && form.setFieldsValue({...(setting || {})})
@@ -39,19 +38,6 @@ export const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
 
     // AI主动问用户问题相关逻辑
     const AllowPlanUserInteractValue = Form.useWatch("AllowPlanUserInteract", form)
-
-    const forgeList = useMemo(() => {
-        return [
-            {label: "fragment_summarizer", value: "fragment_summarizer"},
-            {label: "long_text_summarizer", value: "long_text_summarizer"},
-            {label: "xss", value: "xss"},
-            {label: "sqlinject", value: "sqlinject"},
-            {label: "travelmaster", value: "travelmaster"},
-            {label: "pimatrix", value: "pimatrix"},
-            {label: "netscan", value: "netscan"},
-            {label: "recon", value: "recon"}
-        ]
-    }, [])
 
     return (
         <div className={styles["ai-chat-setting"]}>
@@ -99,15 +85,6 @@ export const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 </Form.Item>
                 <Form.Item label='使用默认系统配置AI' name='UseDefaultAIConfig' valuePropName='checked'>
                     <YakitSwitch />
-                </Form.Item>
-                <Form.Item label='任务模板' name='ForgeName'>
-                    <YakitAutoComplete
-                        size={"small"}
-                        showSearch
-                        options={forgeList}
-                        placeholder='请输入任务模板'
-                        filterOption={true}
-                    />
                 </Form.Item>
                 <Form.Item
                     label={
@@ -183,7 +160,24 @@ export const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <Form.Item label='AI 搜索本地工具' name='EnableAISearchTool' valuePropName='checked'>
                     <YakitSwitch />
                 </Form.Item>
-                <Form.Item label='搜索互联网搜索引擎' name='EnableAISearchInternet' valuePropName='checked'>
+                {/* <Form.Item label='搜索互联网搜索引擎' name='EnableAISearchInternet' valuePropName='checked'>
+                    <YakitSwitch />
+                </Form.Item> */}
+                <Form.Item
+                    label={
+                        <>
+                            关闭思考模式
+                            <Tooltip
+                                overlayClassName={styles["form-info-icon-tooltip"]}
+                                title={"打开这个选项可以通过追加 /no_think 标签来关闭 qwen3 的思考模式"}
+                            >
+                                <OutlineInformationcircleIcon className={styles["info-icon"]} />
+                            </Tooltip>
+                        </>
+                    }
+                    name='EnableQwenNoThinkMode'
+                    valuePropName='checked'
+                >
                     <YakitSwitch />
                 </Form.Item>
                 <Form.Item label='允许任务规划阶段人机交互' name='AllowPlanUserInteract' valuePropName='checked'>
@@ -211,6 +205,8 @@ export const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
         </div>
     )
 })
+
+export default AIChatSetting
 
 const FormItemSlider: React.FC<FormItemSliderProps> = React.memo((props) => {
     const {init, onChange, defaultValue, ...rest} = props

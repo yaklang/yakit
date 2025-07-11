@@ -1,51 +1,65 @@
 import React, {useEffect, useMemo, useState} from "react"
-import {AIAgentProps, AIAgentSetting, RenderMCPClientInfo} from "./aiAgentType"
+import {AIAgentProps, AIAgentSetting} from "./aiAgentType"
 import {AIAgentSideList} from "./AIAgentSideList"
 import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "./useContext/AIAgentContext"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
-import {ServerChat} from "./ServerChat"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {AIChatInfo} from "./type/aiChat"
 import {useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
 import {AIAgentSettingDefault, YakitAIAgentPageID} from "./defaultConstant"
 import cloneDeep from "lodash/cloneDeep"
+import {AITriageChatData} from "./aiTriageChat/type"
+import {AIAgentChat} from "./aiAgentChat/AIAgentChat"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
 
+/** 清空用户缓存的固定值 */
+const AIAgentCacheClearValue = "20250711"
+
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // #region ai-agent页面全局缓存
     // mcp 服务器列表
-    const [servers, setServers, getServers] = useGetSetState<RenderMCPClientInfo[]>([])
+    // const [servers, setServers, getServers] = useGetSetState<RenderMCPClientInfo[]>([])
     // ai-agent-chat 全局配置
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
+
+    // 当前连接中的 triage 对话集合
+    const [triages, setTriages, getTriages] = useGetSetState<AITriageChatData[]>([])
+    // 当前展示的 triage 对话
+    const [activeTriage, setActiveTriage] = useState<AITriageChatData>()
+
     // 历史对话
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
     // 当前展示对话
     const [activeChat, setActiveChat] = useState<AIChatInfo>()
 
+    // 缓存全局配置数据
     useUpdateEffect(() => {
         setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(getSetting()))
     }, [setting])
+    // 缓存历史对话数据
     useUpdateEffect(() => {
         setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, JSON.stringify(getChats()))
     }, [chats])
 
     const store: AIAgentContextStore = useMemo(() => {
         return {
-            mcpServers: servers,
             setting: setting,
+            triages: triages,
+            activeTriage: activeTriage,
             chats: chats,
             activeChat: activeChat
         }
-    }, [servers, setting, chats, activeChat])
+    }, [setting, triages, activeTriage, chats, activeChat])
     const dispatcher: AIAgentContextDispatcher = useMemo(() => {
         return {
-            setMCPServers: setServers,
             getSetting: getSetting,
             setSetting: setSetting,
-            getServers: getServers,
+            setTriages: setTriages,
+            getTriages: getTriages,
+            setActiveTriage: setActiveTriage,
             setChats: setChats,
             getChats: getChats,
             setActiveChat: setActiveChat
@@ -53,36 +67,47 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     }, [])
 
     useEffect(() => {
-        getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+        // 清空用户的无效缓存数据
+        getRemoteValue(RemoteAIAgentGV.AIAgentCacheClear)
             .then((res) => {
-                if (!res) return
-                try {
-                    const cache = JSON.parse(res) as AIAgentSetting
-                    if (typeof cache !== "object") return
-                    setSetting(cache)
-                } catch (error) {}
+                if (res === AIAgentCacheClearValue) {
+                    // 获取缓存的全局配置数据
+                    getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+                        .then((res) => {
+                            if (!res) return
+                            try {
+                                const cache = JSON.parse(res) as AIAgentSetting
+                                if (typeof cache !== "object") return
+                                setSetting(cache)
+                            } catch (error) {}
+                        })
+                        .catch(() => {})
+                    // 获取缓存的历史对话数据
+                    getRemoteValue(RemoteAIAgentGV.AIAgentChatHistory)
+                        .then((res) => {
+                            if (!res) return
+                            try {
+                                const cache = JSON.parse(res) as AIChatInfo[]
+                                if (!Array.isArray(cache) || cache.length === 0) return
+                                setChats(cache)
+                            } catch (error) {}
+                        })
+                        .catch(() => {})
+                } else {
+                    // 清空无效的用户缓存数据-mcp服务器数据
+                    setRemoteValue(RemoteAIAgentGV.MCPClientList, "")
+                    // 清空无效的用户缓存数据-全局配置数据
+                    setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, "")
+                    // 清空无效的用户缓存数据-taskChat历史对话数据
+                    setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, "")
+
+                    // 设置清空标志位
+                    setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
+                }
             })
             .catch(() => {})
-        getRemoteValue(RemoteAIAgentGV.MCPClientList)
-            .then((res) => {
-                if (!res) return
-                try {
-                    const cache = JSON.parse(res) as RenderMCPClientInfo[]
-                    if (!Array.isArray(cache) || cache.length === 0) return
-                    setServers(cache)
-                } catch (error) {}
-            })
-            .catch(() => {})
-        getRemoteValue(RemoteAIAgentGV.AIAgentChatHistory)
-            .then((res) => {
-                if (!res) return
-                try {
-                    const cache = JSON.parse(res) as AIChatInfo[]
-                    if (!Array.isArray(cache) || cache.length === 0) return
-                    setChats(cache)
-                } catch (error) {}
-            })
-            .catch(() => {})
+
+        return () => {}
     }, [])
     // #endregion
 
@@ -107,7 +132,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                 </div>
 
                 <div className={classNames(styles["ai-agent-chat"], {[styles["ai-agent-chat-mini"]]: isMini})}>
-                    <ServerChat />
+                    <AIAgentChat />
                 </div>
             </div>
         </AIAgentContext.Provider>

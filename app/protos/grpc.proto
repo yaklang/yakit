@@ -853,6 +853,7 @@ service Yak {
   // AI Task
   rpc StartAITask(stream AIInputEvent) returns(stream AIOutputEvent);
   rpc QueryAITask(AITaskQueryRequest) returns (AITaskQueryResponse);
+  rpc DeleteAITask(AITaskDeleteRequest) returns (DbOperateMessage);
 
   rpc StartAITriage(stream AITriageInputEvent) returns(stream AIOutputEvent);
 
@@ -862,7 +863,6 @@ service Yak {
   rpc DeleteAIForge(AIForgeFilter) returns (DbOperateMessage);
   rpc QueryAIForge(QueryAIForgeRequest) returns (QueryAIForgeResponse);
 
-  // mcp server
   rpc StartMcpServer(StartMcpServerRequest) returns(stream StartMcpServerResponse);
   rpc GetToolSetList(Empty) returns(GetToolSetListResponse);
 
@@ -992,6 +992,8 @@ message AIOutputEvent {
   int64 Timestamp = 10;
   string TaskIndex = 11;
   bool DisableMarkdown = 13;
+  bool IsSync = 12; // 是否是同步消息
+  string SyncID = 14; // 用于同步消息的 ID
 }
 
 message AIInputEvent {
@@ -1008,6 +1010,7 @@ message AIInputEvent {
 
   bool IsSyncMessage = 6;
   string SyncType = 7;
+  string SyncJsonInput = 10;
 }
 
 
@@ -1022,7 +1025,6 @@ message AITriageInputEvent {
   bool IsFreeInput = 6;
   string FreeInput = 7;
 }
-
 
 message McpConfig {
   string Type = 1;
@@ -1098,7 +1100,10 @@ message AIStartParams {
 }
 
 message AITaskFilter {
-
+  repeated string Name = 1;
+  repeated string Keyword = 2;
+  repeated string ForgeName = 3;
+  repeated string CoordinatorId = 5;
 }
 
 message AITaskQueryRequest {
@@ -1112,6 +1117,10 @@ message AITaskQueryResponse {
   int64 Total = 3;
 }
 
+message AITaskDeleteRequest {
+  AITaskFilter Filter = 1;
+}
+
 message AITask {
   string CoordinatorId = 1;
   string Name = 2;
@@ -1122,6 +1131,7 @@ message AITask {
 
 message AIForgeFilter {
   string ForgeName = 1;
+  repeated string ForgeNames = 11;
   string ForgeType = 2; // enum: yak or config
   string Keyword = 3;
   // tag
@@ -1157,6 +1167,7 @@ message QueryAIForgeResponse {
   repeated AIForge Data = 2;
   int64 Total = 3;
 }
+
 
 message StartMcpServerRequest {
   // listen host

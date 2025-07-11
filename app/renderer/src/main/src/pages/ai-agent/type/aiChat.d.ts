@@ -1,11 +1,12 @@
 import {KVPair} from "@/models/kv"
+import {PaginationSchema} from "@/pages/invoker/schema"
 
+// #region AI-(Task|Triage)
 export interface McpConfig {
     Type: string
     Key: string
     Url: string
 }
-
 export interface AIStartParams {
     CoordinatorId?: string
     Sequence?: number
@@ -80,6 +81,7 @@ export interface AIStartParams {
     /** 是否允许生成报告，默认不允许 */
     AllowGenerateReport?: boolean
 }
+
 export interface AIInputEvent {
     IsStart?: boolean
     Params?: AIStartParams // 提问问题相关
@@ -90,7 +92,21 @@ export interface AIInputEvent {
 
     IsSyncMessage?: boolean
     SyncType?: string
+    SyncJsonInput?: string
 }
+
+export interface AITriageInputEvent {
+    IsStart?: boolean
+    Params?: AIStartParams // 上下文AI配置
+
+    IsInteractiveMessage?: boolean // 暂无用
+    InteractiveId?: string // 暂无用
+    InteractiveJSONInput?: string // 暂无用
+
+    IsFreeInput?: boolean
+    FreeInput?: string
+}
+
 export interface AIOutputEvent {
     CoordinatorId: string
     Type: string
@@ -107,9 +123,13 @@ export interface AIOutputEvent {
     Timestamp: number
     // 任务索引
     TaskIndex: string
+    /** 是否是同步消息 */
+    IsSync: boolean
+    /**用于同步消息的 ID */
+    SyncID: string
 }
 
-/** UI 渲染, 计划相关信息 */
+/** UI 渲染, Review相关信息 */
 export interface AIChatReview {
     type: "plan_review_require" | "tool_use_review_require" | "task_review_require" | "require_user_interactive"
     data:
@@ -118,13 +138,25 @@ export interface AIChatReview {
         | AIChatMessage.TaskReviewRequire
         | AIChatMessage.AIReviewRequire
 }
+
+export interface AIChatReviewExtra {
+    type: "plan_task_analysis"
+    data: AIChatMessage.PlanReviewRequireExtra
+}
+
 /** 非 AI 交互型的review 选项 */
 export type NoAIChatReviewSelector = Exclude<AIChatReview["data"], AIChatMessage.AIReviewRequire>
 /** UI 渲染, 信息流相关信息 */
 export interface AIChatStreams {
-    type: string
+    nodeId: string
     timestamp: number
-    data: {system: string; reason: string; stream: string}
+    data: {
+        system: string
+        reason: string
+        stream: string
+    }
+    /**工具相关输出数据聚合 */
+    toolAggregation?: AIChatMessage.AIToolData
 }
 /** UI-chat 信息 */
 export interface AIChatInfo {
@@ -136,12 +168,14 @@ export interface AIChatInfo {
     question: string
     /** 时间 */
     time: number
+    /** 请求参数 */
+    request: AIStartParams
     /** 回答 */
     answer?: {
         pressure: AIChatMessage.Pressure[]
         firstCost: AIChatMessage.AICostMS[]
         totalCost: AIChatMessage.AICostMS[]
-        consumption: AIChatMessage.Consumption
+        consumption: Record<string, AIChatMessage.Consumption>
         plans?: AIChatMessage.PlanTask
         taskList: AIChatMessage.PlanTask[]
         logs: AIChatMessage.Log[]
@@ -154,18 +188,21 @@ export declare namespace AIChatMessage {
     export interface Consumption {
         input_consumption: number
         output_consumption: number
+        consumption_uuid: string
     }
 
     /** 上下文压力 */
     export interface Pressure {
         current_cost_token_size: number
         pressure_token_size: number
+        timestamp: number
     }
 
     /**  (首字符响应|总对话)耗时 */
     export interface AICostMS {
         ms: number
         second: number
+        timestamp: number
     }
 
     /** 审阅自动执行后的通知 */
@@ -190,6 +227,14 @@ export declare namespace AIChatMessage {
         /** 前端渲染专属属性, proto 上不存在 */
         state?: "success" | "error" | "wait" | "in-progress"
         subtasks?: PlanTask[]
+        /**评阅时树节点是否被删 */
+        isRemove: boolean
+        /**关联工具 */
+        tools: string[]
+        /**工具解释描述 */
+        description: string
+        /**是否为用户添加的节点 */
+        isUserAdd?: boolean
     }
     /** 计划审阅选项 */
     export interface ReviewSelector {
@@ -206,6 +251,15 @@ export declare namespace AIChatMessage {
         id: string
         plans: {root_task: PlanTask}
         selectors: ReviewSelector[]
+        plans_id: string
+    }
+
+    /** 计划审阅请求 root_task中得补充解释和工具数据 */
+    export interface PlanReviewRequireExtra {
+        description: string
+        index: string
+        keywords: string[]
+        plans_id: string
     }
 
     /** 改变计划 */
@@ -264,4 +318,123 @@ export declare namespace AIChatMessage {
         prompt: string
         options: AIRequireOption[]
     }
+
+    /**AI工具聚合数据 前端使用 */
+    export interface AIToolData {
+        callToolId: string
+        /**工具名称 */
+        toolName: string
+        /**工具执行完成的状态 default是后端没有发送状态type时前端默认值 */
+        status: "default" | "success" | "failed" | "user_cancelled"
+        /**执行完后的总结 */
+        summary: string
+        /**总结的时间 */
+        time: number
+        /**ai工具按钮 */
+        selectors: ReviewSelector[]
+        /**出现ai工具按钮后，按钮功能发送信息的时候需要的id */
+        interactiveId:string
+    }
+    /**AI工具 接口返回的JSON结构 */
+    export interface AIToolCall {
+        call_tool_id: string
+        tool_name?: string
+        status?: string
+        summary?: string
+        tool?: {name?: string; description?: string}
+    }
+
+    /**AI工具 tool_call_watcher 返回的数据接口 */
+    export interface AIToolCallWatcher {
+        call_tool_id: string
+        id: string
+        selectors: ReviewSelector[]
+        tool: string
+        tool_description: string
+    }
 }
+// #endregion
+
+// #region AI-Forge
+export interface AIForge {
+    Id: number
+    ForgeName: string
+    // yak type is yak script, config type is empty
+    /** yak 类型为脚本代码, config 类型为空 */
+    ForgeContent?: string
+    // yak or config
+    ForgeType: "yak" | "config"
+    Description?: string
+    // json config for UI
+    ParamsUIConfig?: string
+    // cli parameters
+    Params?: string
+    // for user preferences
+    UserPersistentData?: string
+    /** 可选，列表 */
+    ToolNames?: string[]
+    /** 可选，手输 */
+    ToolKeywords?: string[]
+    Action?: string
+    /** 可选，手输 */
+    Tag?: string[]
+    // 初始提示语
+    InitPrompt?: string
+    // 持久化提示语
+    PersistentPrompt?: string
+    // 计划提示语
+    PlanPrompt?: string
+    // 结果提示语
+    ResultPrompt?: string
+}
+
+export interface AIForgeFilter {
+    /** name 模糊搜索 */
+    ForgeName?: string
+    ForgeNames?: string[]
+    ForgeType?: AIForge["ForgeType"]
+    /** 多个字段的内容进行模糊搜索 */
+    Keyword?: string
+    Tag?: string
+}
+
+export interface QueryAIForgeRequest {
+    Pagination: PaginationSchema
+    Filter?: AIForgeFilter
+}
+
+export interface QueryAIForgeResponse {
+    Pagination: PaginationSchema
+    Data: AIForge[]
+    Total: number
+}
+// #endregion
+
+//#region ai tool
+export interface AITool {
+    Name: string
+    Description: string
+    Content: string
+    ToolPath: string
+    Keywords: string[]
+    IsFavorite: boolean
+}
+export interface GetAIToolListRequest {
+    Query: string
+    ToolName: string
+    Pagination: PaginationSchema
+    OnlyFavorites: boolean
+}
+export interface GetAIToolListResponse {
+    Tools: AITool[]
+    Pagination: PaginationSchema
+    Total: number
+}
+export interface ToggleAIToolFavoriteRequest {
+    ToolName: string
+}
+export interface ToggleAIToolFavoriteResponse {
+    IsFavorite: boolean
+    Message: string
+}
+//#endregion

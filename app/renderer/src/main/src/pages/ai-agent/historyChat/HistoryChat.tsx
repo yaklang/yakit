@@ -1,12 +1,12 @@
 import React, {memo, useMemo, useRef, useState} from "react"
-import {HistoryChatProps} from "./aiAgentType"
-import useStore from "./useContext/useStore"
-import useDispatcher from "./useContext/useDispatcher"
+import {HistoryChatProps} from "./type"
+import useAIAgentStore from "../useContext/useStore"
+import useAIAgentDispatcher from "../useContext/useDispatcher"
 import {useDebounce, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
-import {AIChatInfo} from "./type/aiChat"
-import {EditChatNameModal} from "./UtilModals"
-import {YakitAIAgentPageID} from "./defaultConstant"
+import {AIChatInfo} from "../type/aiChat"
+import {EditChatNameModal} from "../UtilModals"
+import {YakitAIAgentPageID} from "../defaultConstant"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
 import {OutlinePencilaltIcon, OutlinePlussmIcon, OutlineSearchIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {Tooltip} from "antd"
@@ -15,13 +15,13 @@ import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/Yaki
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 import classNames from "classnames"
-import styles from "./AIAgent.module.scss"
+import styles from "./HistoryChat.module.scss"
 
 export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
     const {onNewChat} = props
 
-    const {chats, activeChat} = useStore()
-    const {setChats, setActiveChat} = useDispatcher()
+    const {chats, activeChat} = useAIAgentStore()
+    const {setChats, setActiveChat} = useAIAgentDispatcher()
     const activeID = useMemo(() => {
         return activeChat?.id || ""
     }, [activeChat])
@@ -35,6 +35,11 @@ export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
     }, [chats, searchDebounce])
 
     const handleSetActiveChat = useMemoizedFn((info: AIChatInfo) => {
+        // 暂时性逻辑，因为老版本的对话信息里没有请求参数，导致在新版本无法使用对话里的重新执行功能
+        // 所以会提示警告，由用户决定是否删除历史对话
+        if (!info.request) {
+            yakitNotify("warning", "当前对话无请求参数信息，无法使用重新执行功能")
+        }
         setActiveChat && setActiveChat(info)
     })
 

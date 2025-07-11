@@ -1,14 +1,15 @@
-import React, {memo, ReactNode, useEffect, useMemo, useRef, useState} from "react"
+import React, {memo, ReactNode, UIEventHandler, useEffect, useMemo, useRef, useState} from "react"
 import {useControllableValue, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {
     AIAgentChatBodyProps,
     AIAgentChatFooterProps,
     AIAgentChatReviewProps,
     AIAgentChatStreamProps,
-    AIAgentChatTextareaProps,
-    AIAgentEmptyProps,
     AIChatLeftSideProps,
     AIChatLogsProps,
+    AIChatToolDrawerContentProps,
+    AIChatToolSync,
+    ChatStreamCollapseItemProps,
     ChatStreamCollapseProps
 } from "../aiAgentType"
 import {
@@ -28,7 +29,7 @@ import {
     OutlineWarpIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {formatNumberUnits, formatTime, formatTimeUnix} from "../utils"
+import {formatNumberUnits, isShowToolColorCard, isToolSummaryCard, reviewListToTrees} from "../utils"
 import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import {Input, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -38,7 +39,6 @@ import {
     SolidHashtagIcon,
     SolidLightbulbIcon,
     SolidLightningboltIcon,
-    SolidPaperairplaneIcon,
     SolidStopIcon,
     SolidToolIcon,
     SolidVariableIcon
@@ -46,74 +46,21 @@ import {
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {AITree} from "../aiTree/AITree"
 import cloneDeep from "lodash/cloneDeep"
-import {AIChatMessage, NoAIChatReviewSelector} from "../type/aiChat"
+import {AIChatMessage, AIChatStreams, NoAIChatReviewSelector} from "../type/aiChat"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {handleFlatAITree} from "../useChatData"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import YakitRunQuickly from "@/assets/aiAgent/yakit_run_quickly.gif"
-import {ContextPressureEcharts, ResponseSpeedEcharts} from "./AIEcharts"
+import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "./AIEcharts"
 import AIPlanReviewTree from "../aiPlanReviewTree/AIPlanReviewTree"
+import {yakitNotify} from "@/utils/notification"
+import {formatTime, formatTimestamp, formatTimeYMD} from "@/utils/timeUtil"
+import {QSInputTextarea} from "../template/template"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
-import {yakitNotify} from "@/utils/notification"
-
-/** @name 欢迎页 */
-export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
-    const {onSearch} = props
-
-    const [question, setQuestion] = useControllableValue<string>(props, {
-        defaultValue: "",
-        valuePropName: "question",
-        trigger: "setQuestion"
-    })
-
-    const isQuestion = useMemo(() => {
-        return !!(question && question.trim())
-    }, [question])
-
-    return (
-        <div className={styles["ai-agent-empty"]}>
-            <div className={styles["empty-header"]}>
-                <img className={styles["img-wrapper"]} src={YakitRunQuickly} alt='牛牛快跑' />
-                <div className={styles["title"]}>AI-Agent 安全助手</div>
-                <div className={styles["sub-title"]}>专注于安全编码与漏洞分析的智能助手</div>
-            </div>
-
-            <div className={styles["empty-input"]}>
-                <div className={styles["ai-agent-input"]}>
-                    <Input.TextArea
-                        className={styles["question-textArea"]}
-                        bordered={false}
-                        placeholder='请下发任务, AI-Agent将执行(shift + enter 换行)'
-                        value={question}
-                        autoSize={true}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        onKeyDown={(e) => {
-                            const keyCode = e.keyCode ? e.keyCode : e.key
-                            const shiftKey = e.shiftKey
-                            if (keyCode === 13 && shiftKey) {
-                                e.stopPropagation()
-                                e.preventDefault()
-                                setQuestion(`${question}\n`)
-                            }
-                            if (keyCode === 13 && !shiftKey) {
-                                e.stopPropagation()
-                                e.preventDefault()
-                                onSearch()
-                            }
-                        }}
-                    />
-
-                    <div className={styles["question-footer"]}>
-                        <YakitButton disabled={!isQuestion} icon={<SolidPaperairplaneIcon />} onClick={onSearch} />
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-})
+import {AIChatToolColorCard, AIChatToolItem} from "./AIChatTool"
+import emiter from "@/utils/eventBus/eventBus"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -129,15 +76,21 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     })
 
     // 上下文压力集合
-    const currentPressures = useMemo(() => {
-        return pressure.map((item) => item.current_cost_token_size) || []
+    const currentPressuresEcharts: ContextPressureEchartsProps["dataEcharts"] = useMemo(() => {
+        const data: number[] = []
+        const xAxis: string[] = []
+        pressure.forEach((item) => {
+            data.push(item.current_cost_token_size)
+            xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
+        })
+        return {data, xAxis}
     }, [pressure])
     // 最新的上下文压力
     const lastPressure = useMemo(() => {
-        const length = currentPressures.length
+        const length = currentPressuresEcharts.data.length
         if (length === 0) return 0
-        return currentPressures[length - 1] || 0
-    }, [currentPressures])
+        return currentPressuresEcharts.data[length - 1] || 0
+    }, [currentPressuresEcharts.data])
     // 上下文压力预设值
     const pressureThreshold = useMemo(() => {
         const length = pressure.length
@@ -146,15 +99,21 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     }, [pressure])
 
     // 首字符延迟集合
-    const firstCosts = useMemo(() => {
-        return cost.map((item) => item.ms) || []
+    const currentCostEcharts = useMemo(() => {
+        const data: number[] = []
+        const xAxis: string[] = []
+        cost.forEach((item) => {
+            data.push(item.ms)
+            xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
+        })
+        return {data, xAxis}
     }, [cost])
     // 最新的首字符延迟
     const lastFirstCost = useMemo(() => {
-        const length = firstCosts.length
+        const length = currentCostEcharts.data.length
         if (length === 0) return 0
-        return firstCosts[length - 1] || 0
-    }, [firstCosts])
+        return currentCostEcharts.data[length - 1] || 0
+    }, [currentCostEcharts])
 
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>
@@ -185,8 +144,8 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                         </div>
                     </div>
 
-                    {currentPressures.length > 0 && (
-                        <ContextPressureEcharts data={currentPressures} threshold={pressureThreshold} />
+                    {currentPressuresEcharts?.data?.length > 0 && (
+                        <ContextPressureEcharts dataEcharts={currentPressuresEcharts} threshold={pressureThreshold} />
                     )}
                 </div>
 
@@ -200,7 +159,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                             {`${lastFirstCost < 0 ? "-" : lastFirstCost}ms`}
                         </div>
                     </div>
-                    {firstCosts.length > 0 && <ResponseSpeedEcharts data={firstCosts} />}
+                    {currentCostEcharts?.data?.length > 0 && <ResponseSpeedEcharts dataEcharts={currentCostEcharts} />}
                 </div>
             </div>
         </div>
@@ -218,16 +177,30 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
     }, [info])
     // AI的Token消耗
     const token = useMemo(() => {
-        if (info?.answer) {
-            return [
-                formatNumberUnits(info.answer.consumption?.input_consumption || 0),
-                formatNumberUnits(info.answer.consumption?.output_consumption || 0)
-            ]
+        if (info.answer?.consumption?.input_consumption || info.answer?.consumption?.output_consumption) {
+            return [0, 0]
         }
-        return [
-            formatNumberUnits(consumption?.input_consumption || 0),
-            formatNumberUnits(consumption?.output_consumption || 0)
-        ]
+
+        if (info?.answer) {
+            let input = 0
+            let output = 0
+            const keys = Object.keys(info.answer.consumption || {})
+            for (let name of keys) {
+                input += info.answer.consumption[name]?.input_consumption || 0
+                output += info.answer.consumption[name]?.output_consumption || 0
+            }
+
+            return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
+        }
+
+        let input = 0
+        let output = 0
+        const keys = Object.keys(consumption || {})
+        for (let name of keys) {
+            input += consumption[name]?.input_consumption || 0
+            output += consumption[name]?.output_consumption || 0
+        }
+        return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
     }, [info, consumption])
 
     return (
@@ -249,7 +222,7 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
                         </div>
                     </div>
                     <div className={styles["divider-style"]}></div>
-                    <div className={styles["info-time"]}>创建时间: {formatTime(info.time)}</div>
+                    <div className={styles["info-time"]}>创建时间: {formatTimeYMD(info.time)}</div>
                 </div>
             </div>
 
@@ -272,13 +245,39 @@ const taskAnswerToIconMap: Record<string, ReactNode> = {
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
     const {scrollToTask, setScrollToTask, tasks, activeStream, streams} = props
 
+    const activeFirstTabKey = useMemo(() => {
+        if (!activeStream || activeStream.length === 0) return []
+        return [
+            ...new Set(
+                activeStream.map((item) => {
+                    return (item || "").split("|")[0]
+                })
+            )
+        ]
+    }, [activeStream])
+    const activeSecondTabKey = useMemo(() => {
+        if (!activeStream || activeStream.length === 0) return []
+        return activeStream.map((item) => {
+            const first = (item || "").split("|")[0] || ""
+            const second = (item || "").split("|")[1] || ""
+            return `${first}-${second}`
+        })
+    }, [activeStream])
+
     // 任务集合
     const lists = useMemo(() => {
         return Object.keys(streams)
     }, [streams])
 
+    const [isStopScroll, setIsStopScroll] = useControllableValue<boolean>(props, {
+        defaultValue: false,
+        valuePropName: "isStopScroll",
+        trigger: "setIsStopScroll"
+    })
+
     const wrapper = useRef<HTMLDivElement>(null)
     useEffect(() => {
+        if (isStopScroll) return
         if (wrapper.current) {
             const {scrollHeight} = wrapper.current
             const {height} = wrapper.current.getBoundingClientRect()
@@ -287,7 +286,15 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 wrapper.current.scrollTop = scrollHeight
             }
         }
-    }, [streams])
+    }, [streams, isStopScroll])
+    const handleWrapperScroll: UIEventHandler<HTMLDivElement> = useMemoizedFn((e) => {
+        if (wrapper.current) {
+            const {scrollHeight, scrollTop} = wrapper.current
+            const {height} = wrapper.current.getBoundingClientRect()
+            const offset = scrollHeight - scrollTop - height
+            if (offset > 20) setIsStopScroll(true)
+        }
+    })
 
     // 生成任务展示名称
     const handleGenerateTaskName = useMemoizedFn((order: string) => {
@@ -332,32 +339,48 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         }
     })
     const activeFirstPanel = useMemo(() => {
-        const active: string[] = []
+        let active: string[] = []
         if (scrollToTask) {
             active.push(scrollToTask.index)
             setTimeout(() => {
                 document.getElementById(scrollToTask.index)?.scrollIntoView()
             }, 100)
         }
-        if (activeStream) {
-            const first = (activeStream || "").split("|")[0]
-            active.push(first)
+        if (lists.length === 1) return [lists[0]]
+        if (activeFirstTabKey.length > 0) {
+            active = active.concat(activeFirstTabKey)
         }
         return active.concat(clickFirstPanel.filter((item) => !active.includes(item)))
-    }, [scrollToTask, activeStream, clickFirstPanel])
+    }, [lists, scrollToTask, activeFirstTabKey, clickFirstPanel])
 
     const [clickSecondPanel, setClickSecondPanel] = useState<string[]>([])
     const handleChangeSecondPanel = useMemoizedFn((expand: boolean, order: string) => {
+        setClickFirstPanel((old) => {
+            const first = order.split("-")[0]
+            if (expand) {
+                if (old.includes(first)) {
+                    return old
+                } else {
+                    return old.concat([first])
+                }
+            } else {
+                if (!old.includes(first)) {
+                    return old
+                } else {
+                    return old.filter((item) => item !== first)
+                }
+            }
+        })
         setClickSecondPanel((old) => {
             if (expand) {
                 if (old.includes(order)) {
-                    return cloneDeep(old)
+                    return old
                 } else {
                     return old.concat([order])
                 }
             } else {
                 if (!old.includes(order)) {
-                    return cloneDeep(old)
+                    return old
                 } else {
                     return old.filter((item) => item !== order)
                 }
@@ -365,18 +388,16 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         })
     })
     const activeSecondPanel = useMemo(() => {
-        const active: string[] = []
+        let active: string[] = []
         scrollToTask && active.push(scrollToTask.index)
-        if (activeStream) {
-            const first = (activeStream || "").split("|")[0] || ""
-            const second = (activeStream || "").split("|")[1] || ""
-            active.push(`${first}-${second}`)
+        if (activeSecondTabKey.length > 0) {
+            active = active.concat(activeSecondTabKey)
         }
         return active.concat(clickSecondPanel.filter((item) => !active.includes(item)))
-    }, [activeStream, clickSecondPanel])
+    }, [activeSecondTabKey, clickSecondPanel])
 
     return (
-        <div ref={wrapper} className={styles["ai-agent-chat-stream"]}>
+        <div ref={wrapper} className={styles["ai-agent-chat-stream"]} onScroll={handleWrapperScroll}>
             {lists.map((taskName) => {
                 const headerTitle = handleGenerateTaskName(taskName)
                 const firstExpand = activeFirstPanel.includes(taskName)
@@ -387,43 +408,28 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                         title={headerTitle}
                         expand={firstExpand}
                         onChange={(value) => handleChangeFirstPanel(value, taskName)}
+                        className={classNames({
+                            [styles["chat-stream-collapse-expand-first"]]: firstExpand
+                        })}
                     >
-                        {(streams[taskName] || []).map((info, index) => {
-                            const {type, timestamp, data} = info
-                            const key = `${taskName}-${type}-${timestamp}`
+                        {(streams[taskName] || []).map((info: AIChatStreams, index) => {
+                            const {nodeId, timestamp, toolAggregation} = info
+                            const key = `${taskName}-${nodeId}-${timestamp}`
                             const secondExpand = activeSecondPanel.includes(key)
+                            if (isShowToolColorCard(nodeId)) {
+                                return <AIChatToolColorCard key={key} toolCall={info} />
+                            }
+                            if (isToolSummaryCard(nodeId) && toolAggregation) {
+                                return <AIChatToolItem key={key} item={toolAggregation} />
+                            }
                             return (
-                                <ChatStreamCollapse
+                                <ChatStreamCollapseItem
                                     key={key}
-                                    style={{marginBottom: 0}}
-                                    expand={secondExpand}
-                                    onChange={(value) => handleChangeSecondPanel(value, key)}
-                                    title={
-                                        <div className={styles["task-type-header"]}>
-                                            {taskAnswerToIconMap[type] || <SolidLightningboltIcon />}
-                                            <div className={styles["task-type-header-title"]}>{type}</div>
-                                            <div className={styles["task-type-header-time"]}>
-                                                {formatTimeUnix(timestamp)}
-                                            </div>
-                                        </div>
-                                    }
-                                >
-                                    {(data.reason || data.system) && (
-                                        <div className={styles["think-wrapper"]}>
-                                            {data.reason && <div>{data.reason}</div>}
-
-                                            {data.system && <div>{data.system}</div>}
-                                        </div>
-                                    )}
-
-                                    {data.stream && (
-                                        <div className={styles["anwser-wrapper"]}>
-                                            <React.Fragment>
-                                                <ChatMarkdown content={data.stream} skipHtml={true} />
-                                            </React.Fragment>
-                                        </div>
-                                    )}
-                                </ChatStreamCollapse>
+                                    info={info}
+                                    expandKey={key}
+                                    secondExpand={secondExpand}
+                                    handleChangeSecondPanel={handleChangeSecondPanel}
+                                />
                             )
                         })}
                     </ChatStreamCollapse>
@@ -432,8 +438,44 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         </div>
     )
 })
+const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo((props) => {
+    const {expandKey, info, secondExpand, handleChangeSecondPanel, className} = props
+    const {nodeId, timestamp, data} = info
+    return (
+        <ChatStreamCollapse
+            key={expandKey}
+            style={{marginBottom: 0}}
+            expand={secondExpand}
+            onChange={(value) => handleChangeSecondPanel(value, expandKey)}
+            title={
+                <div className={styles["task-type-header"]}>
+                    {taskAnswerToIconMap[nodeId] || <SolidLightningboltIcon />}
+                    <div className={styles["task-type-header-title"]}>{nodeId}</div>
+                    <div className={styles["task-type-header-time"]}>{formatTimestamp(timestamp)}</div>
+                </div>
+            }
+            className={classNames(styles["chat-stream-collapse-expand"], className || "")}
+        >
+            {(data.reason || data.system) && (
+                <div className={styles["think-wrapper"]}>
+                    {data.reason && <div>{data.reason}</div>}
+
+                    {data.system && <div>{data.system}</div>}
+                </div>
+            )}
+
+            {data.stream && (
+                <div className={styles["anwser-wrapper"]}>
+                    <React.Fragment>
+                        <ChatMarkdown content={data.stream} skipHtml={true} />
+                    </React.Fragment>
+                </div>
+            )}
+        </ChatStreamCollapse>
+    )
+})
 /** @name 回答信息折叠组件 */
-const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props) => {
+export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props) => {
     const {id, className, style, title, headerExtra, children, expand, onChange} = props
 
     return (
@@ -460,68 +502,13 @@ const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props) => {
 
 /** @name 对话框内容 */
 export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) => {
-    const {execute, review, positon, onStop, onPositon, onReExe, onNewChat} = props
-
-    // const [question, setQuestion] = useState("")
-    // const isQuestion = useMemo(() => {
-    //     return !!(question && question.trim())
-    // }, [question])
-    // const [inputFocus, setInputFocus] = useState(false)
+    const {execute, review, positon, showReExe, onStop, onPositon, onReExe, onNewChat} = props
 
     return (
         <div className={styles["ai-agent-chat-footer"]}>
-            {/* <div className={styles["input-textarea-wrapper"]}>
-                <div
-                    className={classNames(styles["continue-ask-input"], {
-                        [styles["continue-ask-input-focus"]]: inputFocus
-                    })}
-                >
-                    <div className={styles["input-body"]}>
-                        <div className={styles["input-icon"]}>
-                            <div className={styles["icon-wrapper"]}>
-                                <ColorsSparklesIcon />
-                            </div>
-                        </div>
-
-                        <Input.TextArea
-                            className={styles["input-textArea"]}
-                            bordered={false}
-                            placeholder='告诉我你的需求...'
-                            value={question}
-                            autoSize={true}
-                            onChange={(e) => setQuestion(e.target.value)}
-                            onFocus={() => setInputFocus(true)}
-                            onBlur={() => setInputFocus(false)}
-                        />
-
-                        {!inputFocus && (
-                            <div className={styles["input-blur-btn"]}>
-                                <YakitButton
-                                    className={styles["input-btn-style"]}
-                                    size='small'
-                                    disabled={!isQuestion}
-                                    icon={<OutlineArrowrightIcon />}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    {inputFocus && (
-                        <div className={styles["input-footer-btn"]}>
-                            <YakitButton
-                                className={styles["input-btn-style"]}
-                                size='small'
-                                disabled={!isQuestion}
-                                icon={<OutlineArrowrightIcon />}
-                            />
-                        </div>
-                    )}
-                </div>
-            </div> */}
-
             <div className={styles["footer-btns"]}>
                 <div className={styles["btns-group"]}>
-                    {execute && !review && (
+                    {execute && (
                         <>
                             <Tooltip title='中止' overlayStyle={{paddingBottom: 3}}>
                                 <YakitButton
@@ -531,7 +518,7 @@ export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) 
                                     onClick={onStop}
                                 />
                             </Tooltip>
-                            {positon && (
+                            {positon && !review && (
                                 <Tooltip title='快速定位' overlayStyle={{paddingBottom: 3}}>
                                     <YakitButton
                                         className={styles["rounded-icon-btn"]}
@@ -544,31 +531,22 @@ export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) 
                         </>
                     )}
 
-                    {execute && review && (
-                        <YakitButton
-                            className={styles["rounded-text-icon-btn"]}
-                            colors='danger'
-                            icon={<SolidStopIcon className={styles["stop-icon"]} />}
-                            onClick={onStop}
-                        >
-                            中止
-                        </YakitButton>
-                    )}
-
                     {!execute && (
                         <>
-                            <YakitButton
-                                className={styles["rounded-text-icon-btn"]}
-                                icon={<OutlineRefreshIcon />}
-                                type='secondary2'
-                                onClick={onReExe}
-                            >
-                                重新执行
-                            </YakitButton>
+                            {!!showReExe && (
+                                <YakitButton
+                                    className={styles["rounded-text-icon-btn"]}
+                                    icon={<OutlineRefreshIcon />}
+                                    type='secondary2'
+                                    onClick={onReExe}
+                                >
+                                    重新执行
+                                </YakitButton>
+                            )}
                             <YakitButton
                                 className={styles["rounded-text-icon-btn"]}
                                 icon={<OutlinePlusIcon />}
-                                onClick={() => onNewChat()}
+                                onClick={onNewChat}
                             >
                                 新开对话
                             </YakitButton>
@@ -582,13 +560,30 @@ export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) 
 
 /** @name 审阅内容 */
 export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) => {
-    const {delayLoading, review, onSend, onSendAIRequire} = props
+    const {delayLoading, review, onSend, onSendAIRequire, planReviewTreeKeywordsMap} = props
 
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
         valuePropName: "expand",
         trigger: "setExpand"
     })
+
+    const [reviewTreeOption, setReviewTreeOption] = useState<AIChatMessage.ReviewSelector>()
+    const [reviewTrees, setReviewTrees] = useState<AIChatMessage.PlanTask[]>([])
+    const [currentPlansId, setCurrentPlansId] = useState<string>("")
+    const initReviewTreesRef = useRef<AIChatMessage.PlanTask[]>([])
+
+    useEffect(() => {
+        if (review.type === "plan_review_require") {
+            const data = review.data as AIChatMessage.PlanReviewRequire
+            const list: AIChatMessage.PlanTask[] = []
+            handleFlatAITree(list, data.plans.root_task)
+            initReviewTreesRef.current = [...list]
+            setReviewTrees(list)
+            setCurrentPlansId(data.plans_id)
+        }
+    }, [review])
+
     const handleExpand = useMemoizedFn(() => {
         setExpand((old) => !old)
     })
@@ -648,14 +643,22 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     }, [delayLoading, review])
 
     const planReview = useMemo(() => {
-        if (review.type === "plan_review_require") {
-            const data = review.data as AIChatMessage.PlanReviewRequire
-            const list: AIChatMessage.PlanTask[] = []
-            handleFlatAITree(list, data.plans.root_task)
-            return <AIPlanReviewTree list={list} />
+        if (reviewTrees.length > 0) {
+            const list = !!reviewTreeOption ? reviewTrees : initReviewTreesRef.current
+            return (
+                <AIPlanReviewTree
+                    defaultList={initReviewTreesRef.current}
+                    list={list}
+                    setList={setReviewTrees}
+                    editable={!!reviewTreeOption}
+                    planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
+                    currentPlansId={currentPlansId}
+                />
+            )
         }
         return null
-    }, [review])
+    }, [reviewTrees, reviewTreeOption, planReviewTreeKeywordsMap, currentPlansId])
+
     const taskReview = useMemo(() => {
         if (review.type === "task_review_require") {
             const data = review.data as AIChatMessage.TaskReviewRequire
@@ -737,13 +740,20 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     const [reviewQS, setReviewQS] = useState("")
 
     const handleShowEdit = useMemoizedFn((info: AIChatMessage.ReviewSelector) => {
-        if (editShow) return
-        if (!info.allow_extra_prompt) {
-            onSend(info)
-            return
+        switch (info.value) {
+            case "freedom-review":
+                setReviewTreeOption(info)
+                break
+            default:
+                if (editShow) return
+                if (!info.allow_extra_prompt) {
+                    onSend(info)
+                    return
+                }
+                editInfo.current = cloneDeep(info)
+                setEditShow(true)
+                break
         }
-        editInfo.current = cloneDeep(info)
-        setEditShow(true)
     })
     const handleCallbackEdit = useMemoizedFn((cb: boolean) => {
         if (cb && editInfo.current) {
@@ -763,12 +773,9 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
             (item) => item.value === "continue"
         )
         if (!find) return
+
         onSend(find)
     })
-
-    // 用来控制被disabled为true的button, 想触发tooltip的方法
-    const [tooltipShow, setTooltipShow] = useState(false)
-    const handleChangeTooltip = useMemoizedFn((show: boolean) => setTooltipShow(show))
 
     const noAIOptions = useMemo(() => {
         if (!["plan_review_require", "tool_use_review_require", "task_review_require"].includes(review?.type || "")) {
@@ -781,16 +788,6 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
 
         return (
             <div className={styles["review-selectors-wrapper"]}>
-                <Tooltip overlayStyle={{paddingBottom: 4}} title={"开发中..."} placement='top' visible={tooltipShow}>
-                    <YakitButton
-                        type='outline1'
-                        disabled={true}
-                        onMouseOver={() => handleChangeTooltip(true)}
-                        onMouseLeave={() => handleChangeTooltip(false)}
-                    >
-                        进入修改批阅模式
-                    </YakitButton>
-                </Tooltip>
                 {showList.map((el) => {
                     return (
                         <YakitButton key={el.value} type='outline2' onClick={() => handleShowEdit(el)}>
@@ -800,7 +797,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
                 })}
             </div>
         )
-    }, [tooltipShow, review])
+    }, [review])
     // #endregion
 
     // #region 审阅选项-AI交互用户相关逻辑
@@ -809,6 +806,17 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     const isRequireQS = useMemo(() => {
         return !!(requireQS && requireQS.trim())
     }, [requireQS])
+
+    const handleSubmit = useMemoizedFn(() => {
+        if (!!reviewTreeOption) {
+            const tree = reviewListToTrees(reviewTrees)
+            const jsonInput = {
+                suggestion: reviewTreeOption.value,
+                "reviewed-task-tree": tree[0]
+            }
+            onSendAIRequire(JSON.stringify(jsonInput))
+        }
+    })
 
     const handleAIRequireQSSend = useMemoizedFn(() => {
         if (!isRequireQS) {
@@ -824,7 +832,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     })
 
     const handleAIRequireOpSend = useMemoizedFn((info: AIChatMessage.AIRequireOption) => {
-        const jsonInput: Record<string, string> = {suggestion: info.prompt}
+        const jsonInput: Record<string, string> = {suggestion: info.prompt || info.prompt_title}
         onSendAIRequire(JSON.stringify(jsonInput))
     })
 
@@ -851,7 +859,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
         if (!options || options.length === 0)
             return (
                 <div className={styles["ai-require-input"]}>
-                    <AIAgentChatTextarea
+                    <QSInputTextarea
                         className={styles["textarea-style"]}
                         placeholder='请告诉我更多信息...'
                         value={requireQS}
@@ -863,9 +871,10 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
         return (
             <>
                 {(options || []).map((el) => {
+                    if (!el.prompt && !el.prompt_title) return null
                     return (
                         <YakitButton key={el.prompt} type='outline2' onClick={() => handleAIRequireOpSend(el)}>
-                            {el.prompt}
+                            {el.prompt || el.prompt_title}
                         </YakitButton>
                     )
                 })}
@@ -873,7 +882,6 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
         )
     }, [review, requireQS])
     // #endregion
-
     return (
         <div className={classNames(styles["ai-agent-chat-review"], wrapperClassName)}>
             <div className={classNames(styles["review-content"], {[styles["review-content-hidden"]]: !expand})}>
@@ -896,41 +904,42 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
                                 {toolReview}
                                 {aiRequireReview}
                             </div>
+                            {!reviewTreeOption && (
+                                <div className={styles["reivew-options"]}>
+                                    {aiOptions}
+                                    {!!noAIOptions &&
+                                        (editShow ? (
+                                            <div className={styles["review-input"]}>
+                                                <Input.TextArea
+                                                    bordered={false}
+                                                    placeholder={editInfo.current?.prompt || "请输入..."}
+                                                    value={reviewQS}
+                                                    autoSize={{minRows: 4, maxRows: 4}}
+                                                    onChange={(e) => setReviewQS(e.target.value)}
+                                                />
 
-                            <div className={styles["reivew-options"]}>
-                                {aiOptions}
-                                {!!noAIOptions &&
-                                    (editShow ? (
-                                        <div className={styles["review-input"]}>
-                                            <Input.TextArea
-                                                bordered={false}
-                                                placeholder={editInfo.current?.prompt || "请输入..."}
-                                                value={reviewQS}
-                                                autoSize={{minRows: 4, maxRows: 4}}
-                                                onChange={(e) => setReviewQS(e.target.value)}
-                                            />
-
-                                            <div className={styles["question-footer"]}>
-                                                <div></div>
-                                                <div className={styles["extra-btns"]}>
-                                                    <YakitButton
-                                                        className={styles["btn-style"]}
-                                                        type='outline2'
-                                                        icon={<OutlineXIcon />}
-                                                        onClick={() => handleCallbackEdit(false)}
-                                                    />
-                                                    <YakitButton
-                                                        className={styles["btn-style"]}
-                                                        icon={<OutlineArrowrightIcon />}
-                                                        onClick={() => handleCallbackEdit(true)}
-                                                    />
+                                                <div className={styles["question-footer"]}>
+                                                    <div></div>
+                                                    <div className={styles["extra-btns"]}>
+                                                        <YakitButton
+                                                            className={styles["btn-style"]}
+                                                            type='outline2'
+                                                            icon={<OutlineXIcon />}
+                                                            onClick={() => handleCallbackEdit(false)}
+                                                        />
+                                                        <YakitButton
+                                                            className={styles["btn-style"]}
+                                                            icon={<OutlineArrowrightIcon />}
+                                                            onClick={() => handleCallbackEdit(true)}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ) : (
-                                        noAIOptions
-                                    ))}
-                            </div>
+                                        ) : (
+                                            noAIOptions
+                                        ))}
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
@@ -939,7 +948,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
             <div className={styles["review-footer"]}>
                 <div className={styles["btn-group"]}>
                     <YakitButton
-                        type='outline2'
+                        type='text2'
                         icon={expand ? <OutlineChevrondoubledownIcon /> : <OutlineChevrondoubleupIcon />}
                         onClick={handleExpand}
                     >
@@ -949,10 +958,25 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
 
                 <div className={styles["btn-group"]}>
                     {isContinue && (
-                        <YakitButton onClick={handleContinue}>
-                            继续执行
-                            <OutlineWarpIcon />
-                        </YakitButton>
+                        <>
+                            {!!reviewTreeOption ? (
+                                <>
+                                    <YakitButton type='outline2' onClick={() => setReviewTreeOption(undefined)}>
+                                        取消
+                                    </YakitButton>
+                                    <YakitButton type='primary' onClick={handleSubmit}>
+                                        提交
+                                    </YakitButton>
+                                </>
+                            ) : (
+                                <>
+                                    <YakitButton onClick={handleContinue}>
+                                        继续执行
+                                        <OutlineWarpIcon />
+                                    </YakitButton>
+                                </>
+                            )}
+                        </>
                     )}
                     {review.type === "require_user_interactive" && !aiOptionsLength && (
                         <YakitButton disabled={!isRequireQS} loading={requireLoading} onClick={handleAIRequireQSSend}>
@@ -1009,15 +1033,57 @@ export const AIChatLogs: React.FC<AIChatLogsProps> = memo((props) => {
     )
 })
 
-const AIAgentChatTextarea: React.FC<AIAgentChatTextareaProps> = memo((props) => {
-    const {className, bordered, autoSize, ...rest} = props
+export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = memo((props) => {
+    const {syncId} = props
+    const [secondExpand, setSecondExpand] = useState<string[]>([])
+    const [toolList, setToolList] = useState<AIChatStreams[]>([])
 
+    useEffect(() => {
+        emiter.on("onTooCardDetails", onTooCardDetails)
+        return () => {
+            emiter.off("onTooCardDetails", onTooCardDetails)
+        }
+    }, [])
+
+    const onTooCardDetails = useMemoizedFn((res) => {
+        try {
+            const data: AIChatToolSync = JSON.parse(res)
+            if (data.syncId !== syncId) return
+            const {info} = data
+            setToolList((prev) => [...prev, info])
+            setSecondExpand((preV) => {
+                return [...preV, `${info.nodeId}-${info.timestamp}`]
+            })
+        } catch (error) {}
+    })
+    const handleChangeSecondPanel = useMemoizedFn((expand: boolean, expandKey: string) => {
+        setSecondExpand((preV) => {
+            if (expand) {
+                return [...preV, expandKey]
+            } else {
+                return preV.filter((item) => item !== expandKey)
+            }
+        })
+    })
     return (
-        <Input.TextArea
-            {...rest}
-            className={classNames(styles["ai-agent-chat-textarea"], className)}
-            bordered={false}
-            autoSize={true}
-        />
+        <div className={styles["ai-chat-tool-drawer-content"]}>
+            {toolList.map((info: AIChatStreams) => {
+                const {nodeId, timestamp} = info
+                const key = `${nodeId}-${timestamp}`
+                const expand = secondExpand.includes(key)
+                return (
+                    <ChatStreamCollapseItem
+                        key={key}
+                        expandKey={key}
+                        info={info}
+                        secondExpand={expand}
+                        handleChangeSecondPanel={handleChangeSecondPanel}
+                        className={classNames({
+                            [styles["ai-tool-collapse-expand"]]: expand
+                        })}
+                    />
+                )
+            })}
+        </div>
     )
 })

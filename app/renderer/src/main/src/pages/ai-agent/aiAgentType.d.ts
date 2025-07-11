@@ -1,9 +1,7 @@
 import {CSSProperties, Dispatch, ReactNode, SetStateAction} from "react"
 import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
 import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIStartParams} from "./type/aiChat"
-import {SliderSingleProps} from "antd"
 import {AITreeNodeProps} from "./aiTree/type"
-import {TextAreaProps} from "antd/lib/input"
 
 export interface AIAgentProps {}
 
@@ -61,18 +59,8 @@ export interface RenderMCPClientInfo extends MCPClientInfo {
 // #region UI左侧组件定义
 export interface AIAgentSideListProps {}
 // 侧边栏 tab 类型
-export type AIAgentTab = "history" | "setting" | "tool" //  | "mcp"
+export type AIAgentTab = "history" | "setting" | "forgeName" | "tool" //  | "mcp"
 
-// 全局配置
-export interface AIChatSettingProps {}
-// 表单组件-滑动输入条
-export type FormItemSliderProps = SliderSingleProps & {init?: boolean}
-
-// 历史对话
-export interface HistoryChatProps {
-    /** 新开对话框 */
-    onNewChat: () => void
-}
 // 编辑对话名字
 export interface EditChatNameModalProps {
     getContainer?: HTMLElement
@@ -101,16 +89,6 @@ export interface ServerInfoModalProps {
 // #endregion
 
 // #region UI右侧组件定义
-// 对话框
-export interface ServerChatProps {}
-
-// 欢迎页
-export interface AIAgentEmptyProps {
-    question: string
-    setQuestion: Dispatch<SetStateAction<string>>
-    onSearch: () => void
-}
-
 // 对话框左侧侧边栏
 export interface AIChatLeftSideProps {
     expand: boolean
@@ -124,17 +102,25 @@ export interface AIChatLeftSideProps {
 // 对话框回答
 export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
     info: AIChatInfo
-    consumption: AIChatMessage.Consumption
+    consumption: Record<string, AIChatMessage.Consumption>
 }
 
 export interface AIAgentChatStreamProps {
     scrollToTask?: AIChatMessage.PlanTask
     setScrollToTask?: Dispatch<SetStateAction<AIChatMessage.PlanTask | undefined>>
+    isStopScroll?: boolean
+    setIsStopScroll?: Dispatch<SetStateAction<boolean>>
     tasks: AIChatMessage.PlanTask[]
-    activeStream: string
+    activeStream: string[]
     streams: Record<string, AIChatStreams[]>
 }
-
+export interface ChatStreamCollapseItemProps {
+    expandKey: string
+    info: AIChatStreams
+    secondExpand: boolean
+    handleChangeSecondPanel: (expand: boolean, order: string) => void
+    className?: string
+}
 export interface ChatStreamCollapseProps {
     id?: string
     className?: string
@@ -145,10 +131,17 @@ export interface ChatStreamCollapseProps {
     expand?: boolean
     onChange?: (value: boolean) => void
 }
-
+export interface AIChatToolSync {
+    syncId: string
+    info: AIChatStreams
+}
 export interface AIAgentChatFooterProps {
+    /** 正在执行中 */
     execute: boolean
+    /** 是否在 review 步骤中 */
     review: boolean
+    /** 是否能显示重新执行按钮 */
+    showReExe?: boolean
     onStop: () => void
     positon: boolean
     onPositon: () => void
@@ -162,6 +155,7 @@ export interface AIAgentChatReviewProps {
     setExpand: Dispatch<SetStateAction<boolean>>
     delayLoading: boolean
     review: AIChatReview
+    planReviewTreeKeywordsMap: Map<string, AIChatMessage.PlanReviewRequireExtra>
     onSend: (info: AIChatMessage.ReviewSelector, qs?: string) => void
     onSendAIRequire: (value: string) => void
 }
@@ -171,7 +165,10 @@ export interface AIChatLogsProps {
     logs: AIChatMessage.Log[]
     onClose: () => void
 }
+// #endregion
 
-// 文本域输入组件
-export interface AIAgentChatTextareaProps extends TextAreaProps {}
+//#region AI工具查看详情
+export interface AIChatToolDrawerContentProps {
+    syncId: string
+}
 // #endregion

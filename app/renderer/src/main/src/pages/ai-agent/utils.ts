@@ -1,8 +1,8 @@
 import {yakitNotify} from "@/utils/notification"
 import {AIAgentSetting, RenderResourcesTemplates, RenderTools, RenderToolsParam} from "./aiAgentType"
 import cloneDeep from "lodash/cloneDeep"
-import moment from "moment"
 import isNil from "lodash/isNil"
+import {AIChatMessage} from "./type/aiChat"
 
 /** 处理默认值不同数据类型 */
 const handleDefaultValue = (value: any): string => {
@@ -169,6 +169,55 @@ export const convertMCPTools = (key: string, data: RenderToolsParam[], newData: 
         if (child && child.length > 0 && !key) convertMCPTools(node.key, child, newData)
     }
 }
+/**
+ * @name 将一维tree转换成树结构
+ */
+/**
+ * 将扁平数组转换为树形结构
+ * @param {AIChatMessage.PlanTask[]} items 扁平数据数组
+ * @returns {AIChatMessage.PlanTask[]} 树形结构数组
+ */
+export const reviewListToTrees = (items: AIChatMessage.PlanTask[]): AIChatMessage.PlanTask[] => {
+    // 创建映射表，以id为键存储所有节点
+    const map = {}
+    const tree: AIChatMessage.PlanTask[] = []
+
+    // 首先构建所有节点的映射
+    items.forEach((item) => {
+        // 如果是用户添加的节点且没有名称、目标和工具，则跳过
+        if (item.isUserAdd && !item.name && !item.goal && !item.tools.length) return
+        // 创建节点副本并初始化children数组
+        map[item.index] = {...item, subtasks: []}
+    })
+
+    // 构建树结构
+    items.forEach((item) => {
+        const node: AIChatMessage.PlanTask = map[item.index]
+        if (!node) return // 如果节点不存在，跳过
+        const parentId = getParentId(item.index)
+        // 如果有父节点，则添加到父节点的children中
+        if (parentId && map[parentId]) {
+            map[parentId].subtasks.push(node)
+        }
+        // 否则作为根节点
+        else {
+            tree.push(node)
+        }
+    })
+
+    return tree
+}
+
+/**
+ * 从节点ID提取父节点ID
+ * @param {String} id 当前节点ID
+ * @returns {String|null} 父节点ID或null(如果是根节点)
+ */
+const getParentId = (id) => {
+    const parts = id.split("-")
+    if (parts.length <= 1) return null
+    return parts.slice(0, -1).join("-")
+}
 
 /** 将 resourceTemplates 里的信息格式化成前端结构 */
 export const formatMCPResourceTemplates = (templates: any[]): RenderResourcesTemplates[] => {
@@ -188,28 +237,36 @@ export const formatMCPResourceTemplates = (templates: any[]): RenderResourcesTem
     }
     return data
 }
-
-/** @name 将时间戳转换为 YYYY-MM-DD HH:mm:ss */
-export const formatTime = (time: number): string => {
-    return moment(time).format("YYYY-MM-DD HH:mm:ss")
+/**是否为 tool stdout 节点 */
+export const isToolStdout = (nodeID: string) => {
+    if (!nodeID) return false
+    return nodeID.startsWith("tool-") && nodeID.endsWith("-stdout")
+}
+/**是否显示有总结的tool card */
+export const isToolSummaryCard = (nodeID: string) => {
+    switch (nodeID) {
+        case "tool_call_user_cancel":
+        case "tool_call_done":
+        case "tool_call_error":
+        case "tool_call_summary":
+            return true
+        default:
+            return false
+    }
+}
+/**是否显示紫色主题的彩色卡片 */
+export const isShowToolColorCard = (nodeID: string) => {
+    if (nodeID === "call-tools") return true
+    if (isToolStdout(nodeID)) return true
+    return false
 }
 
-/** @name 将纳秒转换为 YYYY-MM-DD HH:mm:ss */
-export const formatTimeNS = (time: number): string => {
-    const timestampNs = BigInt(`${time}`)
-    const divisor = BigInt(1000000) // 1e6
-
-    const quotient = timestampNs / divisor
-    const remainder = timestampNs % divisor
-
-    const timestampMs = Number(quotient) + Number(remainder) / 1e6
-
-    return moment(timestampMs).format("YYYY-MM-DD HH:mm:ss")
-}
-
-/** @name 将unix时间戳转换为 YYYY-MM-DD HH:mm:ss */
-export const formatTimeUnix = (time: number): string => {
-    return moment.unix(time).format("YYYY-MM-DD HH:mm:ss")
+/**是否为AI tool 需要展示在页面上的节点 */
+export const isToolSyncNode = (nodeID: string) => {
+    if (nodeID === "execute") return true
+    if (nodeID === "call-tools") return true
+    if (isToolStdout(nodeID)) return true
+    return false
 }
 
 // #region chat相关工具

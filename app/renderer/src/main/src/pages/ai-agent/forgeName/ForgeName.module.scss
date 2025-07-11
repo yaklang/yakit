@@ -1,0 +1,161 @@
+.forge-name {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background-color: #ffffff;
+
+    .header-wrapper {
+        padding: 8px 12px 0 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        .haeder-first {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            .first-title {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+
+                color: #31343f;
+                font-size: 12px;
+                font-weight: 500;
+            }
+        }
+
+        .header-second {
+            .search-icon {
+                svg {
+                    width: 16px;
+                    height: 16px;
+                    color: #868c97;
+                }
+            }
+        }
+    }
+}
+
+.forge-name-list {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    .list-wrapper {
+        flex: 1;
+        overflow: hidden auto;
+    }
+}
+
+.forge-list-opt {
+    cursor: pointer;
+    height: 41px;
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
+    background: var(--Colors-Use-Basic-Background, #fff);
+
+    &:last-child,
+    &:has(+ .forge-list-no-more),
+    &:has(+ .forge-list-loading) {
+        height: 42px;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
+    }
+    &:hover {
+        background: var(--Colors-Use-Neutral-Bg-Hover, #eef0f3);
+    }
+
+    .opt-title {
+        color: var(--Colors-Use-Neutral-Text-1-Title, #353639);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+    }
+}
+
+.forge-opt-popover {
+    padding-left: 4px;
+    :global {
+        .ant-popover-inner-content {
+            padding: 0;
+        }
+    }
+    .forge-detail {
+        width: 320px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        border-radius: 4px;
+        border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+        .detail-name {
+            overflow: hidden;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 20px;
+            letter-spacing: 0.1px;
+        }
+        .detail-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            .content-description {
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                font-size: 14px;
+                font-weight: 400;
+                line-height: 20px;
+            }
+            .content-tools {
+                padding: 8px;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                border-radius: 4px;
+                background: var(--Colors-Use-Neutral-Bg);
+                .tools-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                    font-size: 12px;
+                    font-weight: 400;
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+                .tools-body {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 4px;
+                    .tool-tag {
+                        margin-right: 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.forge-list-no-more {
+    padding: 12px 0;
+    .no-more-title {
+        color: var(--color-gray-Text-01, #ccd2de);
+        text-align: center;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 14px;
+    }
+}
+
+.forge-list-loading {
+    padding: 10px 0;
+    .loading-style {
+        align-items: center;
+    }
+}
