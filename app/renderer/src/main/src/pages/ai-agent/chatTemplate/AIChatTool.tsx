@@ -1,7 +1,7 @@
 import React, {ReactNode, useRef, useState} from "react"
 import {AIChatMessage, AIChatStreams, AIInputEvent} from "../type/aiChat"
 import styles from "./AIChatTool.module.scss"
-import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
+// import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import {SolidToolIcon} from "@/assets/icon/solid"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import classNames from "classnames"
@@ -105,19 +105,20 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
             <div className={styles["card-content"]}>
                 {
                     <>
-                        {(data.reason || data.system) && (
+                        {(data.reason || data.system || data.stream) && (
                             <div className={styles["think-wrapper"]}>
                                 {data.reason && <div>{data.reason}</div>}
                                 {data.system && <div>{data.system}</div>}
+                                {data.stream && <div>{data.stream}</div>}
                             </div>
                         )}
-                        {data.stream && (
+                        {/* {data.stream && (
                             <div className={styles["anwser-wrapper"]}>
                                 <React.Fragment>
                                     <ChatMarkdown content={data.stream} skipHtml={true} />
                                 </React.Fragment>
                             </div>
-                        )}
+                        )} */}
                     </>
                 }
             </div>
