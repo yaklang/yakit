@@ -647,20 +647,21 @@ function useChatData(params?: UseChatDataParams) {
         setStreams((old) => {
             const streams = cloneDeep(old)
             const valueInfo = streams[taskIndex]
-
-            const newValue = valueInfo.filter((ele) => !isToolStdout(ele.nodeId))
-            newValue.push({
-                nodeId: res.Type,
-                timestamp: timestamp,
-                data: {
-                    system: "",
-                    reason: "",
-                    stream: ""
-                },
-                toolAggregation: getToolData(callToolId)
-            })
-            if (streams[taskIndex]) {
-                streams[taskIndex] = [...newValue]
+            if (valueInfo) {
+                const newValue = valueInfo.filter((ele) => !isToolStdout(ele.nodeId))
+                newValue.push({
+                    nodeId: res.Type,
+                    timestamp: timestamp,
+                    data: {
+                        system: "",
+                        reason: "",
+                        stream: ""
+                    },
+                    toolAggregation: getToolData(callToolId)
+                })
+                if (streams[taskIndex]) {
+                    streams[taskIndex] = [...newValue]
+                }
             }
             return streams
         })
