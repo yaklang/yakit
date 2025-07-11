@@ -353,6 +353,8 @@ export const defalutColumnsOrder = [
     "Method",
     "StatusCode",
     "Url",
+    "Host",
+    "Path",
     "Payloads", // 此字段特殊不参与表格列自定义
     "FromPlugin",
     "Tags",
@@ -747,7 +749,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         const realArr = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
                         // toWebFuzzer 跳转过来 需要 特殊处理 Payloads 在Url后面
                         if (toWebFuzzer && realArr.findIndex((key: string) => key === "Payloads") === -1) {
-                            const urlIndex = realArr.findIndex((key: string) => key === "Url")
+                            const urlIndex = realArr.findIndex((key: string) => key === "Path")
                             realArr.splice(urlIndex + 1, 0, "Payloads")
                         }
                         setRemoteValue(
@@ -857,6 +859,16 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     filtersType: "input",
                     filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
                 }
+            },
+            {
+                title: "Host",
+                dataKey: "Host",
+                width: 200
+            },
+            {
+                title: "Path",
+                dataKey: "Path",
+                width: 400
             },
             {
                 title: "Payloads",
