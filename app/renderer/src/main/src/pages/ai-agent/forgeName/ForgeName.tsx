@@ -4,13 +4,14 @@ import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/Yaki
 import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {useDebounceEffect, useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
-import {QueryAIForgeRequest, QueryAIForgeResponse} from "../type/aiChat"
+import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../type/aiChat"
 import {grpcQueryAIForge} from "../grpc"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {SolidToolIcon} from "@/assets/icon/solid"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
 import styles from "./ForgeName.module.scss"
@@ -139,6 +140,16 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
     ).run
     // #endregion
 
+    const handleOnClick = useMemoizedFn((info: AIForge) => {
+        emiter.emit(
+            "onServerChatEvent",
+            JSON.stringify({
+                type: "open-forge-form",
+                params: {value: info}
+            })
+        )
+    })
+
     return (
         <div className={styles["forge-name"]}>
             <div className={styles["header-wrapper"]}>
@@ -216,7 +227,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                             </div>
                                         }
                                     >
-                                        <div className={styles["forge-list-opt"]}>
+                                        <div className={styles["forge-list-opt"]} onClick={() => handleOnClick(data)}>
                                             <div>{ForgeName}</div>
                                         </div>
                                     </YakitPopover>
