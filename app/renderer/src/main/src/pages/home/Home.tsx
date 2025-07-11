@@ -371,6 +371,7 @@ const Home: React.FC<HomeProp> = (props) => {
         }
         document.addEventListener("mousedown", handleClickOutside)
         return () => {
+            if (timer) clearInterval(timer)
             document.removeEventListener("mousedown", handleClickOutside)
         }
     }, [])
