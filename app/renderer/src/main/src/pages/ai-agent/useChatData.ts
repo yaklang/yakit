@@ -659,9 +659,7 @@ function useChatData(params?: UseChatDataParams) {
                     },
                     toolAggregation: getToolData(callToolId)
                 })
-                if (streams[taskIndex]) {
-                    streams[taskIndex] = [...newValue]
-                }
+                streams[taskIndex] = [...newValue]
             }
             return streams
         })

@@ -22,6 +22,7 @@ import {OutlineChevrondownIcon, OutlineChevronupIcon} from "@/assets/icon/outlin
 import cloneDeep from "lodash/cloneDeep"
 import {grpcQueryAIForge} from "../grpc"
 import {yakitNotify} from "@/utils/notification"
+import {AIChatTextareaProps} from "../template/type"
 
 import classNames from "classnames"
 import styles from "./AITriageChat.module.scss"
@@ -129,6 +130,12 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
         // #endregion
 
         // #region 问题相关逻辑
+        const textareaProps: AIChatTextareaProps["textareaProps"] = useMemo(() => {
+            return {
+                placeholder: "请告诉我，你想做什么...(shift + enter 换行)"
+            }
+        }, [])
+
         const [question, setQuestion] = useState("")
 
         /** 生成问题和答案内容的对象结构 */
@@ -249,9 +256,7 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                                 loading={execute}
                                 question={question}
                                 setQuestion={setQuestion}
-                                textareaProps={{
-                                    placeholder: "请告诉我，你想做什么...(shift + enter 换行)"
-                                }}
+                                textareaProps={textareaProps}
                                 onSubmit={handleTriageSend}
                             />
                         </div>

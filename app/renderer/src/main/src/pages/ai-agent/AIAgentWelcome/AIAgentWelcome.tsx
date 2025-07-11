@@ -1,10 +1,11 @@
-import React, {memo, useEffect, useRef, useState} from "react"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {AIAgentWelcomeProps} from "./type"
 import {AIForge, AIStartParams, QueryAIForgeRequest} from "../type/aiChat"
 import {grpcQueryAIForge} from "../grpc"
 import {AIForgeForm, AIForgeInfoOpt} from "../aiTriageChatTemplate/AITriageChatTemplate"
 import {AIChatTextarea} from "../template/template"
+import {AIChatTextareaProps} from "../template/type"
 
 // import classNames from "classnames"
 import AIAgentWelcomebg from "@/assets/aiAgent/ai-agent-welcome-bg.png"
@@ -40,6 +41,12 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo((props) => {
     // #endregion
 
     // #region 问题相关逻辑
+    const textareaProps: AIChatTextareaProps["textareaProps"] = useMemo(() => {
+        return {
+            placeholder: "请告诉我，你想做什么...(shift + enter 换行)"
+        }
+    }, [])
+
     const [question, setQuestion] = useState("")
 
     const handleTriageSubmit = useMemoizedFn((qs: string) => {
@@ -97,9 +104,7 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo((props) => {
                         <AIChatTextarea
                             question={question}
                             setQuestion={setQuestion}
-                            textareaProps={{
-                                placeholder: "请告诉我，你想做什么...(shift + enter 换行)"
-                            }}
+                            textareaProps={textareaProps}
                             onSubmit={handleTriageSubmit}
                         />
                     </div>

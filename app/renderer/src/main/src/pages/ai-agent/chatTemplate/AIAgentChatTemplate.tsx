@@ -346,11 +346,12 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 document.getElementById(scrollToTask.index)?.scrollIntoView()
             }, 100)
         }
+        if (lists.length === 1) return [lists[0]]
         if (activeFirstTabKey.length > 0) {
             active = active.concat(activeFirstTabKey)
         }
         return active.concat(clickFirstPanel.filter((item) => !active.includes(item)))
-    }, [scrollToTask, activeFirstTabKey, clickFirstPanel])
+    }, [lists, scrollToTask, activeFirstTabKey, clickFirstPanel])
 
     const [clickSecondPanel, setClickSecondPanel] = useState<string[]>([])
     const handleChangeSecondPanel = useMemoizedFn((expand: boolean, order: string) => {

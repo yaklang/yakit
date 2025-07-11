@@ -15,6 +15,9 @@ import {AIAgentChat} from "./aiAgentChat/AIAgentChat"
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
 
+/** 清空用户缓存的固定值 */
+const AIAgentCacheClearValue = "20250711"
+
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // #region ai-agent页面全局缓存
     // mcp 服务器列表
@@ -49,7 +52,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             chats: chats,
             activeChat: activeChat
         }
-    }, [setting, chats, activeChat])
+    }, [setting, triages, activeTriage, chats, activeChat])
     const dispatcher: AIAgentContextDispatcher = useMemo(() => {
         return {
             getSetting: getSetting,
@@ -64,28 +67,43 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     }, [])
 
     useEffect(() => {
-        // 获取缓存的全局配置数据
-        getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+        // 清空用户的无效缓存数据
+        getRemoteValue(RemoteAIAgentGV.AIAgentCacheClear)
             .then((res) => {
-                if (!res) return
-                try {
-                    const cache = JSON.parse(res) as AIAgentSetting
-                    if (typeof cache !== "object") return
-                    setSetting(cache)
-                } catch (error) {}
-            })
-            .catch(() => {})
-        // 清空无效的用户缓存数据
-        setRemoteValue(RemoteAIAgentGV.MCPClientList, "")
-        // 获取缓存的历史对话数据
-        getRemoteValue(RemoteAIAgentGV.AIAgentChatHistory)
-            .then((res) => {
-                if (!res) return
-                try {
-                    const cache = JSON.parse(res) as AIChatInfo[]
-                    if (!Array.isArray(cache) || cache.length === 0) return
-                    setChats(cache)
-                } catch (error) {}
+                if (res === AIAgentCacheClearValue) {
+                    // 获取缓存的全局配置数据
+                    getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+                        .then((res) => {
+                            if (!res) return
+                            try {
+                                const cache = JSON.parse(res) as AIAgentSetting
+                                if (typeof cache !== "object") return
+                                setSetting(cache)
+                            } catch (error) {}
+                        })
+                        .catch(() => {})
+                    // 获取缓存的历史对话数据
+                    getRemoteValue(RemoteAIAgentGV.AIAgentChatHistory)
+                        .then((res) => {
+                            if (!res) return
+                            try {
+                                const cache = JSON.parse(res) as AIChatInfo[]
+                                if (!Array.isArray(cache) || cache.length === 0) return
+                                setChats(cache)
+                            } catch (error) {}
+                        })
+                        .catch(() => {})
+                } else {
+                    // 清空无效的用户缓存数据-mcp服务器数据
+                    setRemoteValue(RemoteAIAgentGV.MCPClientList, "")
+                    // 清空无效的用户缓存数据-全局配置数据
+                    setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, "")
+                    // 清空无效的用户缓存数据-taskChat历史对话数据
+                    setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, "")
+
+                    // 设置清空标志位
+                    setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
+                }
             })
             .catch(() => {})
 
