@@ -145,7 +145,6 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
                 sync_process_event_id: syncProcessEventIdRef.current
             })
         }
-        // console.log("sync-params", params)
         ipcRenderer.invoke("send-ai-task", token, params)
         const m = showYakitDrawer({
             title: "详情",
@@ -207,7 +206,6 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
                     onClick={(e) => {
                         e.stopPropagation()
                     }}
-                    className='content-ellipsis'
                 >
                     {item.summary || "暂无内容"}
                 </div>
