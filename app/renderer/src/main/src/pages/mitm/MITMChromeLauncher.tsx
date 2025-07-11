@@ -543,27 +543,8 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                 </div>
             ),
             onOk: () => {
-                // 保存特殊参数的当前状态
-                const loadExtensionParam = data.find(item => item.parameterName === "--load-extension")
-                const disableExtensionsExceptParam = data.find(item => item.parameterName === "--disable-extensions-except")
-
                 // 重置为默认参数
                 let defaultParams = [...chromeLauncherParamsArr]
-                
-                // 特殊处理这两个参数
-                if (loadExtensionParam) {
-                    const index = defaultParams.findIndex(item => item.parameterName === "--load-extension")
-                    if (index !== -1) {
-                        defaultParams[index].disabled = loadExtensionParam.disabled
-                    }
-                }
-                
-                if (disableExtensionsExceptParam) {
-                    const index = defaultParams.findIndex(item => item.parameterName === "--disable-extensions-except")
-                    if (index !== -1) {
-                        defaultParams[index].disabled = disableExtensionsExceptParam.disabled
-                    }
-                }
                 
                 // 应用handleChromeLauncherParams函数，确保扩展参数被正确处理
                 defaultParams = handleChromeLauncherParams(defaultParams, googleChromePluginPath)
