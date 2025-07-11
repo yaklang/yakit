@@ -30,7 +30,7 @@ import {
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {formatNumberUnits, isShowToolColorCard, isToolSummaryCard, reviewListToTrees} from "../utils"
-import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
+// import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import {Input, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
@@ -456,21 +456,23 @@ const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo
             }
             className={classNames(styles["chat-stream-collapse-expand"], className || "")}
         >
-            {(data.reason || data.system) && (
+            {(data.reason || data.system||data.stream) && (
                 <div className={styles["think-wrapper"]}>
                     {data.reason && <div>{data.reason}</div>}
 
                     {data.system && <div>{data.system}</div>}
+
+                    {data.stream && <div>{data.stream}</div>}
                 </div>
             )}
 
-            {data.stream && (
+            {/* {data.stream && (
                 <div className={styles["anwser-wrapper"]}>
                     <React.Fragment>
                         <ChatMarkdown content={data.stream} skipHtml={true} />
                     </React.Fragment>
                 </div>
-            )}
+            )} */}
         </ChatStreamCollapse>
     )
 })
