@@ -247,6 +247,31 @@ retryHandler = func(https, req, rsp) {
     return false
 }
 */
+
+// customFailureChecker 允许自定义失败检查器，即使请求成功也可以将其标记为失败，定义为 func(https bool, req []byte, rsp []byte, fail func(string))
+// https 请求是否为https请求
+// req 请求数据
+// rsp 响应数据
+// fail 失败回调函数，调用后会将请求标记为失败
+/** 如需使用，取消注释修改内容即可
+customFailureChecker = func(https, req, rsp, fail) {
+    // 检查响应内容，如果包含错误信息则标记为失败
+    // if string(rsp).Contains("error") {
+    //     fail("响应包含错误信息")
+    // }
+    
+    // 检查状态码，如果是5xx错误则标记为失败
+    // statusCode = poc.GetStatusCodeFromResponse(rsp)
+    // if statusCode >= 500 {
+    //     fail("服务器内部错误: " + sprint(statusCode))
+    // }
+    
+    // 检查响应长度，如果过短可能是错误页面
+    // if len(rsp) < 100 {
+    //     fail("响应内容过短，可能是错误页面")
+    // }
+}
+*/
 `
 
 export const HotPatchTempDefault = [
