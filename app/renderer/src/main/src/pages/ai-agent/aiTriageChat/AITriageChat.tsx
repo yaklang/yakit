@@ -23,6 +23,8 @@ import cloneDeep from "lodash/cloneDeep"
 import {grpcQueryAIForge} from "../grpc"
 import {yakitNotify} from "@/utils/notification"
 import {AIChatTextareaProps} from "../template/type"
+import {AIAgentTriggerEventInfo} from "../aiAgentType"
+import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
 import styles from "./AITriageChat.module.scss"
@@ -212,6 +214,27 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
         // #endregion
 
         // #region  使用 AI-Forge 模板
+        useEffect(() => {
+            // ai-agent 页面左侧侧边栏向 chatUI 发送的事件
+            const onEvents = (res: string) => {
+                try {
+                    const data = JSON.parse(res) as AIAgentTriggerEventInfo
+                    if (!data.type) return
+
+                    if (data.type === "open-forge-form") {
+                        const {value} = data.params || {}
+                        if (value && value?.Id && value?.ForgeName) {
+                            handleActiveForge(value)
+                        }
+                    }
+                } catch (error) {}
+            }
+            emiter.on("onServerChatEvent", onEvents)
+            return () => {
+                emiter.off("onServerChatEvent", onEvents)
+            }
+        }, [])
+
         const [activeForge, setActiveForge] = useState<AIForge>()
         const handleActiveForge = useMemoizedFn((forge: AIForge) => {
             if (activeForge) return
