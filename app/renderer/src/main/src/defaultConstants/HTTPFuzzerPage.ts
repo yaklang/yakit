@@ -232,19 +232,20 @@ mirrorHTTPFlow = func(req, rsp, params) {
 }
 */
 
-// retryHandler 允许对重试的请求做处理，定义为 func(https bool, req []byte, rsp []byte) bool
-//     本热加载函数暂时不支持热加载重新执行，在 1.4.2-beta7 之后支持
+// retryHandler 允许对重试的请求做处理，定义为 func(https bool, retryCount int,req []byte, rsp []byte, retry func(...[]byte)) 
+// 本函数调用在 1.4.2-beta9 之后支持
 // https 请求是否为https请求
+// retryCount 此请求已重试次数
 // req 请求
 // rsp 响应
-// 返回值为是否重试, true 为重试, false 为不重试
-/** 如需使用，取消注释修改内容即可
-retryHandler = func(https, req, rsp) {
-    // 如果响应码为403，则重试
-    // if poc.GetStatusCodeFromResponse(rsp) == 403 {
-    //     return true
-    // }
-    return false
+// retry 重试回调，调用此函数即可触发重试，可以接收一个新的请求包，用于使用修改后的请求包重试，若不传则会使用原来的请求包重试
+/* 如需使用，取消注释修改内容即可
+retryHandler = (https,retryCount, req, rsp,retry) => {
+    // 如果响应码为405，则修改方法为 POST 重试
+    if poc.GetStatusCodeFromResponse(rsp) == 405 {
+       retry(poc.ReplaceHTTPPacketMethod(req,"POST"))
+    }
+    return 
 }
 */
 
