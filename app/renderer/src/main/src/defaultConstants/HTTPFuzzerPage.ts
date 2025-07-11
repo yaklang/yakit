@@ -254,6 +254,7 @@ retryHandler = (https,retryCount, req, rsp,retry) => {
 // req 请求数据
 // rsp 响应数据
 // fail 失败回调函数，调用后会将请求标记为失败
+// 本函数调用在 1.4.2-beta9 之后支持
 /** 如需使用，取消注释修改内容即可
 customFailureChecker = func(https, req, rsp, fail) {
     // 检查响应内容，如果包含错误信息则标记为失败
