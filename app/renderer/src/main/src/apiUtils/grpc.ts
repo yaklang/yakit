@@ -125,6 +125,7 @@ export const grpcFetchLocalYakVersion: APINoRequestFunc<string> = (hiddenError) 
             .invoke("get-current-yak")
             .then(resolve)
             .catch((e) => {
+                console.log(22222222222);
                 if (!hiddenError) yakitNotify("error", "获取本地引擎版本失败:" + e)
                 reject(e)
             })

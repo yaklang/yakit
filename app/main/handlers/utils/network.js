@@ -175,7 +175,14 @@ const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
                         throw new Error("校验值不存在")
                     }
                 })
-                .catch(reject)
+                .catch((err) => {
+                    if (err.response && err.response.status === 404) {
+                        // 你可以 resolve(null) 或 resolve("")
+                        resolve("")
+                    } else {
+                        reject(err)
+                    }
+                })
         } catch (error) {
             reject(error)
         }
