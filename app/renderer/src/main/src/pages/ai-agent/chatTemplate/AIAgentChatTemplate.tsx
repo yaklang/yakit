@@ -476,6 +476,7 @@ const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo
         </ChatStreamCollapse>
     )
 })
+
 /** @name 回答信息折叠组件 */
 export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props) => {
     const {id, className, style, title, headerExtra, children, expand, onChange} = props
