@@ -51,7 +51,7 @@ const NotepadShareModal = React.lazy(() => import("../../NotepadShareModal/Notep
 const NotepadOnlineList = React.lazy(() => import("./NotepadOnlineList/NotepadOnlineList"))
 
 const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((props) => {
-    const {pageId} = props
+    const {pageId,modifyNotepadPageInfo} = props
 
     const userInfo = useStore((s) => s.userInfo)
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
@@ -144,10 +144,11 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                     }, 200)
                 )
         } else {
+            let content = modifyNotepadPageInfo?.content||""
             // 新建笔记本并保存
             const params: API.PostNotepadRequest = {
                 title: initTabName(),
-                content: ""
+                content: content
             }
             perTabName.current = params.title
             setNotepadLoading(true)
@@ -158,7 +159,8 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                         notepadUserId: userInfo.user_id || 0,
                         headImg: userInfo.companyHeadImg || "",
                         userName: userInfo.companyName || "",
-                        hash
+                        hash,
+                        content
                     })
                     onUpdatePageInfo({
                         notepadHash: hash

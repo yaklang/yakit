@@ -224,6 +224,8 @@ export interface ModifyNotepadPageInfoProps {
     title?: string
     /**搜索关键词 */
     keyWordInfo?: {keyWord: string; position: number; line?: number}
+    /**自动带入内容 */
+    content?: string
 }
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>

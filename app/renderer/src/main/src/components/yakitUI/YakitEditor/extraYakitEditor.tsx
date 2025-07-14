@@ -16,6 +16,7 @@ import {openExternalWebsite, saveABSFileToOpen} from "@/utils/openWebsite"
 import {Modal} from "antd"
 import {execAutoDecode, execCodec} from "@/utils/encodec"
 import {YakitSystem} from "@/yakitGVDefine"
+import {useStore} from "@/store"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -27,6 +28,9 @@ import {HTTPFlowBodyByIdRequest} from "@/components/HTTPHistory"
 import {setClipboardText} from "@/utils/clipboard"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {useWhyDidYouUpdate} from "ahooks"
+import {GetReleaseEdition, PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
+import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
+import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 const HTTP_PACKET_EDITOR_DisableUnicodeDecode = "HTTP_PACKET_EDITOR_DisableUnicodeDecode"
@@ -85,7 +89,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         }),
         shallow
     )
-
+    const {userInfo} = useStore()
     const [system, setSystem] = useState<YakitSystem>("Darwin")
     const [disableUnicodeDecode, setDisableUnicodeDecode] = useState<boolean>(false)
 
@@ -181,6 +185,54 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     } catch (e) {
                         failed("自动生成 CSRF 失败")
                     }
+                }
+            },
+            copyNotepad: {
+                menu: [
+                    {
+                        key: "copy-to-notepad",
+                        label: `复制到${getNotepadNameByEdition()}${
+                            !userInfo.isLogin && GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
+                                ? "请登录"
+                                : ""
+                        }`,
+                        disabled: !userInfo.isLogin && GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
+                    }
+                ],
+                onRun: (editor: YakitIMonacoEditor, key: string) => {
+                    const text = editor.getModel()?.getValue() || ""
+                    if (!text) {
+                        info("数据包为空")
+                        return
+                    }
+                    let content = "```" + text + "\n```"
+                    // 跳转记事本
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.Modify_Notepad,
+                            params: {
+                                title: `数据包-${Date.now()}`,
+                                content
+                            }
+                        })
+                    )
+                }
+            },
+            exportTxt: {
+                menu: [
+                    {
+                        key: "export-txt",
+                        label: "导出为 txt 文件"
+                    }
+                ],
+                onRun: (editor: YakitIMonacoEditor, key: string) => {
+                    const text = editor.getModel()?.getValue() || ""
+                    if (!text) {
+                        info("数据包为空")
+                        return
+                    }
+                    saveABSFileToOpen(`数据包-${Date.now()}.txt`, text)
                 }
             },
             openURLBrowser: {
@@ -526,7 +578,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         JSON.stringify(downbodyParams),
         onClickUrlMenu,
         onClickOpenBrowserMenu,
-        noOpenPacketNewWindow
+        noOpenPacketNewWindow,
+        userInfo.isLogin
     ])
 
     return (
