@@ -198,7 +198,7 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
                     <SolidToolIcon />
                     <div>{item.toolName}</div>
                     {tag}
-                    <div className={styles["item-time"]}>{formatTimestamp(+item.time)}</div>
+                    <div className={styles["item-time"]}>{+item.time ? formatTimestamp(+item.time) : "-"}</div>
                 </div>
                 <YakitButton type='text'>查看详情</YakitButton>
             </div>

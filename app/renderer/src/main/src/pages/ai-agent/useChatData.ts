@@ -13,7 +13,7 @@ import {
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {isToolStdout, isToolSyncNode} from "./utils"
+import {isToolSyncNode, isToolStdout} from "./utils"
 import moment from "moment"
 import emiter from "@/utils/eventBus/eventBus"
 
@@ -507,8 +507,10 @@ function useChatData(params?: UseChatDataParams) {
                 const nodeID = res.NodeId
                 const timestamp = res.Timestamp
                 const taskIndex = res.TaskIndex
-                console.log("stream---\n", {type, nodeID, timestamp, taskIndex}, ipcContent, ipcStreamDelta)
-
+                if (isToolSyncNode(nodeID) && !taskIndex) {
+                    onCloseByErrorTaskIndexData(res)
+                    return
+                }
                 handleUpdateStream({type, nodeID, timestamp, taskIndex, ipcContent, ipcStreamDelta})
 
                 const streamId = `${taskIndex || "system"}|${nodeID}-${timestamp}`
@@ -541,7 +543,6 @@ function useChatData(params?: UseChatDataParams) {
                     })
                     aggregationToolData(res, data?.call_tool_id)
                 } catch (error) {}
-
                 return
             }
 
@@ -563,7 +564,7 @@ function useChatData(params?: UseChatDataParams) {
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
                     onSetToolData(data?.call_tool_id, {
                         status: "failed",
-                        time: res.Timestamp || moment().unix()
+                        time: res.Timestamp
                     })
                     aggregationToolData(res, data?.call_tool_id)
                 } catch (error) {}
@@ -642,6 +643,10 @@ function useChatData(params?: UseChatDataParams) {
         toolDataMapRef.current.delete(callToolId)
     })
     const aggregationToolData = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
+        if (!res.TaskIndex) {
+            onCloseByErrorTaskIndexData(res)
+            return
+        }
         const timestamp = res.Timestamp
         const taskIndex = res.TaskIndex
         setStreams((old) => {
@@ -666,31 +671,52 @@ function useChatData(params?: UseChatDataParams) {
     })
 
     const onSetToolSummary = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
+        if (!res.TaskIndex) {
+            onCloseByErrorTaskIndexData(res)
+            return
+        }
         const taskIndex = res.TaskIndex
         setStreams((old) => {
             const streams = cloneDeep(old)
             const valueInfo = streams[taskIndex]
-            const newValue = valueInfo.map((ele) => {
-                if (ele.toolAggregation?.callToolId === callToolId) {
-                    return {
-                        ...ele,
-                        toolAggregation: getToolData(callToolId)
+            if (valueInfo) {
+                const newValue = valueInfo.map((ele) => {
+                    if (ele.toolAggregation?.callToolId === callToolId) {
+                        return {
+                            ...ele,
+                            toolAggregation: getToolData(callToolId)
+                        }
                     }
-                }
-                return ele
-            })
-            if (streams[taskIndex]) {
+                    return ele
+                })
                 streams[taskIndex] = [...newValue]
             }
+
             return streams
         })
         onRemoveToolData(callToolId)
         selectorsRef.current = cloneDeep(defaultAIToolData)
     })
-
-    const onClose = useMemoizedFn((token: string) => {
+    const onCloseByErrorTaskIndexData = useMemoizedFn((res: AIOutputEvent) => {
+        onClose(chatID.current, {
+            tip: () =>
+                yakitNotify(
+                    "error",
+                    `TaskIndex数据异常:${JSON.stringify({
+                        ...res,
+                        Content: new Uint8Array(),
+                        StreamDelta: new Uint8Array()
+                    })}`
+                )
+        })
+    })
+    const onClose = useMemoizedFn((token: string, option?: {tip: () => void}) => {
         ipcRenderer.invoke("cancel-ai-task", token).catch(() => {})
-        yakitNotify("info", "AI 任务已取消")
+        if (option?.tip) {
+            option.tip()
+        } else {
+            yakitNotify("info", "AI 任务已取消")
+        }
     })
 
     useEffect(() => {
