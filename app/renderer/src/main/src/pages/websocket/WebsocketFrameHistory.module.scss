@@ -85,11 +85,11 @@
                     @if $type == red {
                         // 单色-红色单独处理
                         .table-tr.table-row-red {
-                            background: var(--yakit-table-select-row-bg-color-red);
+                            background: var(--Colors-Use-Error-Primary);
                             color: #fff;
                             font-weight: bold;
                             &:hover {
-                                background: var(--yakit-table-hover-row-bg-color-red);
+                                background: var(--Colors-Use-Error-Pressed);
                             }
                         }
                     } @else {

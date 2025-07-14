@@ -37,17 +37,17 @@
             }
 
             .ant-menu-item:hover {
-                background-color: #1890ff;
+                background-color: var(--Colors-Use-Blue-Bg);
                 color: #FFFFFF;
             }
 
             .ant-menu-submenu-title:hover {
-                background-color: #1890ff;
+                background-color: var(--Colors-Use-Blue-Bg);
                 color: #FFFFFF;
             }
 
             .ant-menu-submenu-active {
-                background-color: #1890ff;
+                background-color: var(--Colors-Use-Blue-Bg);
                 color: #ffffff;
             }
         }

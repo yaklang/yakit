@@ -4,43 +4,43 @@
     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: fetch-color($type, "color-5");
-    color: var(--ui-text-inverse-color);
+    color: var(--Colors-Use-Basic-White);
     border-color: fetch-color($type, "color-5");
 
     &.yakit-hover-button {
         background: fetch-color($type, "color-4");
-        color: var(--ui-text-inverse-color);
+        color: var(--Colors-Use-Basic-White);
         border-color: fetch-color($type, "color-4");
     }
     &.yakit-active-button {
         background: fetch-color($type, "color-6");
-        color: var(--ui-text-inverse-color);
+        color: var(--Colors-Use-Basic-White);
         border-color: fetch-color($type, "color-6");
     }
 
     &:focus {
         background: fetch-color($type, "color-5");
-        color: var(--ui-text-inverse-color);
+        color: var(--Colors-Use-Basic-White);
         border-color: fetch-color($type, "color-5");
     }
     &:hover {
         background: fetch-color($type, "color-4");
-        color: var(--ui-text-inverse-color);
+        color: var(--Colors-Use-Basic-White);
         border-color: fetch-color($type, "color-4");
     }
     &:active {
         background: fetch-color($type, "color-6");
-        color: var(--ui-text-inverse-color);
+        color: var(--Colors-Use-Basic-White);
         border-color: fetch-color($type, "color-6");
     }
     &[disabled] {
         background: var(--Colors-Use-Neutral-Disable);
-        color: var(--ui-text-inverse-color);
+        color: var(--Colors-Use-Basic-White);
         border-color: var(--Colors-Use-Neutral-Disable);
     }
     &[disabled]:hover {
         background: var(--Colors-Use-Neutral-Disable);
-        color: var(--ui-text-inverse-color);
+        color: var(--Colors-Use-Basic-White);
         border-color: var(--Colors-Use-Neutral-Disable);
     }
 }
@@ -162,7 +162,7 @@
 @mixin generateOutline2($type) {
     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
-    background: var(--ui-background-color);
+    background: var(--Colors-Use-Basic-Background);
     color: var(--Colors-Use-Neutral-Text-1-Title);
     border-color: var(--Colors-Use-Neutral-Border);
     svg {
@@ -174,7 +174,7 @@
     }
 
     &.yakit-hover-button {
-        background: var(--ui-background-color);
+        background: var(--Colors-Use-Basic-Background);
         color: fetch-color($type, "color-4");
         border-color: fetch-color($type, "color-4");
         svg {
@@ -182,7 +182,7 @@
         }
     }
     &.yakit-active-button {
-        background: var(--ui-background-color);
+        background: var(--Colors-Use-Basic-Background);
         color: fetch-color($type, "color-6");
         border-color: fetch-color($type, "color-6");
         svg {
@@ -191,7 +191,7 @@
     }
 
     &:focus {
-        background: var(--ui-background-color);
+        background: var(--Colors-Use-Basic-Background);
         color: var(--Colors-Use-Neutral-Text-1-Title);
         border-color: var(--Colors-Use-Neutral-Border);
         svg {
@@ -199,7 +199,7 @@
         }
     }
     &:hover {
-        background: var(--ui-background-color);
+        background: var(--Colors-Use-Basic-Background);
         color: fetch-color($type, "color-4");
         border-color: fetch-color($type, "color-4");
         svg {
@@ -207,7 +207,7 @@
         }
     }
     &:active {
-        background: var(--ui-background-color);
+        background: var(--Colors-Use-Basic-Background);
         color: fetch-color($type, "color-6");
         border-color: fetch-color($type, "color-6");
         svg {
@@ -215,7 +215,7 @@
         }
     }
     &[disabled] {
-        background: var(--ui-background-color);
+        background: var(--Colors-Use-Basic-Background);
         color: var(--Colors-Use-Neutral-Disable);
         border-color: var(--Colors-Use-Neutral-Border);
         svg {
@@ -223,7 +223,7 @@
         }
     }
     &[disabled]:hover {
-        background: var(--ui-background-color);
+        background: var(--Colors-Use-Basic-Background);
         color: var(--Colors-Use-Neutral-Disable);
         border-color: var(--Colors-Use-Neutral-Border);
         svg {

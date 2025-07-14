@@ -56,8 +56,11 @@
             align-items: center;
             color: var(--Colors-Use-Neutral-Text-1-Title);
             border-color: var(--Colors-Use-Neutral-Border);
-            background: var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Basic-Background);
             border-radius: 4px;
+            input {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
         }
         .ant-input:focus,
         .ant-input-focused,
@@ -312,9 +315,9 @@
             padding: 0 8px;
             height: 20px;
             width: calc(100% - 20px);
-            .ant-input {
-                height: 18px;
-            }
+            // .ant-input {
+            //     height: 18px;
+            // }
         }
         .ant-input-search-button .anticon-search {
             height: 12px;

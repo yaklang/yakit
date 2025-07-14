@@ -8,7 +8,7 @@
     --global-state-bg-color: var(--Colors-Use-Success-Primary);
 }
 .help-wrapper-bgcolor {
-    --global-state-bg-color: var(--yakit-tag-color-purple);
+    --global-state-bg-color: var(--Colors-Use-Purple-Bg);
 }
 
 .icon-style {
@@ -154,7 +154,7 @@
                             border: 1px solid rgba(86, 201, 145, 0.3);
                         }
                         .not-enabled-tag {
-                            color: var(--yakit-tag-color-red);
+                            color: var(--Colors-Use-Error-Primary);
                             background: var(--yakit-danger-1);
                             border: 1px solid rgba(244, 115, 107, 0.3);
                         }

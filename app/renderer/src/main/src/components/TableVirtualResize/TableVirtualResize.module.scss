@@ -377,8 +377,8 @@
                 }
 
                 .virtual-table-active-row {
-                    border-bottom: 1px solid var(--Colors-Use-Main-Primary) !important;
-                    border-top: 1px solid var(--Colors-Use-Main-Primary) !important;
+                    border-bottom: 1px solid var(--Colors-Use-Main-Border) !important;
+                    border-top: 1px solid var(--Colors-Use-Main-Border) !important;
                     background-color: var(--Colors-Use-Main-Bg);
                     color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
@@ -536,11 +536,14 @@
         .ant-popover-inner-content {
             padding: 0;
         }
+        .ant-popover-arrow-content::before{
+            background-color: var(--Colors-Use-Basic-Background)
+        }
 
         .ant-popover-inner {
             box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
             border-radius: 4px;
-            border: 1px solid #f0f2f5;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
         }
 
         .ant-popover-arrow {
@@ -597,6 +600,7 @@
             cursor: pointer;
             border-radius: 4px;
             justify-content: space-between;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
 
             &:hover {
                 background: var(--Colors-Use-Neutral-Bg-Hover);
@@ -613,6 +617,7 @@
             flex-direction: row;
             align-items: flex-start;
             padding: 6px 12px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .select-item-active {

@@ -1,6 +1,13 @@
 // ========================== ant descriptions yakit-start ==========================
 
 .yakit-descriptions {
+    .ant-descriptions-view {
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+    }
+    .ant-descriptions-view .ant-descriptions-row{
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    }
+
     .ant-descriptions-bordered .ant-descriptions-view {
         border: 0;
     }
@@ -13,12 +20,14 @@
     .ant-descriptions-item-label {
         padding: 12px 16px 12px 12px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
         height: 40px;
         min-width: 96px;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
     }
 
     .ant-descriptions-bordered .ant-descriptions-row {
-        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border) !important;
     }
 
     .ant-descriptions-bordered .ant-descriptions-item-label {
@@ -28,8 +37,9 @@
     .ant-descriptions-item-content {
         height: 40px;
         padding: 12px 16px 12px 12px;
-        background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        background-color: var(--Colors-Use-Neutral-Bg);
         color: var(--Colors-Use-Neutral-Text-1-Title);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
     }
 
     .ant-descriptions-bordered .ant-descriptions-item-label:last-child,

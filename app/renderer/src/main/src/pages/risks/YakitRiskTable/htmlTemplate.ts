@@ -90,7 +90,7 @@ export const getHtmlTemplate = () => {
                     </div>
                 ),
                 filterIcon: (filtered) => (
-                    <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+                    <SearchOutlined style={{ color: filtered ? 'var(--Colors-Use-Blue-Bg)' : undefined }} />
                 ),
                 onFilter: (value, record) =>
                     record[dataIndex]

@@ -1,5 +1,20 @@
 
 // ========================== Modal.confirm start ==========================
+.ant-modal-content{
+    background-color: var(--Colors-Use-Basic-Background);
+    .ant-modal-confirm-body{
+        .anticon{
+            color: var(--Colors-Use-Main-Primary);
+        }
+        .ant-modal-confirm-title{
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .ant-modal-confirm-content{
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+    }
+}
+
 .modal-remove-icon {
     svg {
         width: 16px;
@@ -15,17 +30,21 @@
 .modal-cancel-button {
     border-radius: 4px;
     color: var(--Colors-Use-Neutral-Text-1-Title);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Basic-Background);
     text-shadow: none;
     box-shadow: none;
 
     &:hover {
-        color: var(--Colors-Use-Main-Hover);
-        border-color: var(--Colors-Use-Main-Hover);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        border-color: var(--Colors-Use-Neutral-Bg-Hover);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);;
     }
 
     &:focus {
-        color: var(--Colors-Use-Main-Pressed);
-        border-color: var(--Colors-Use-Main-Pressed);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        border-color: var(--Colors-Use-Neutral-Bg-Hover);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);;
     }
 }
 

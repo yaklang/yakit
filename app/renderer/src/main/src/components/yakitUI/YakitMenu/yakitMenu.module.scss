@@ -10,8 +10,8 @@
     --menu-color: #{fetch-color($type, "color-5")};
     --menu-icon-color: #{fetch-color($type, "color-5")};
     --menu-background: var(--Colors-Use-Basic-Background);
-    --menu-active-color: var(--ui-background-color);
-    --menu-active-icon-color: var(--ui-background-color);
+    --menu-active-color: var(--Colors-Use-Basic-Background);
+    --menu-active-icon-color: var(--Colors-Use-Basic-Background);
     --menu-active-background: #{fetch-color($type, "color-5")};
     @include generateMenuSelect($type);
 }
@@ -46,17 +46,17 @@
     --menu-background: var(--Colors-Use-Basic-Background);
     --menu-active-color: var(--Colors-Use-Neutral-Text-1-Title);
     --menu-active-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    --menu-active-background: var(--ui-background-color);
+    --menu-active-background: var(--Colors-Use-Basic-Background);
     --menu-select-color: var(--Colors-Use-Neutral-Text-1-Title);
     --menu-select-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    --menu-select-background: var(--ui-background-color);
+    --menu-select-background: var(--Colors-Use-Basic-Background);
 }
 
 @mixin generateItemText($type: "primary") {
     --menu-color: #{fetch-color($type, "color-5")};
     --menu-icon-color: #{fetch-color($type, "color-5")};
     --menu-background: var(--Colors-Use-Basic-Background);
-    --menu-active-color: var(--Colors-Use-Neutral-Text-1-Title);   //var(--ui-background-color)
+    --menu-active-color: var(--Colors-Use-Neutral-Text-1-Title);   //var(--Colors-Use-Basic-Background)
     --menu-active-icon-color: #{fetch-color($type, "color-5")};
     --menu-active-background: var(--Colors-Use-Main-Focus);
     @include generateMenuSelect($type);
@@ -67,8 +67,8 @@
     --menu-color: var(--Colors-Use-Neutral-Text-1-Title);
     --menu-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
     --menu-background: var(--Colors-Use-Basic-Background);
-    --menu-active-color: var(--ui-background-color);
-    --menu-active-icon-color: var(--ui-background-color);
+    --menu-active-color: var(--Colors-Use-Basic-Background);
+    --menu-active-icon-color: var(--Colors-Use-Basic-Background);
     --menu-active-background: #{fetch-color("primary", "color-5")};
     @include generateMenuSelect();
 
@@ -97,7 +97,7 @@
 .yakit-menu-grey {
     --menu-color: var(--Colors-Use-Neutral-Text-1-Title);
     --menu-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    --menu-background: var(--ui-background-color);
+    --menu-background: var(--Colors-Use-Basic-Background);
     --menu-active-color: var(--Colors-Use-Neutral-Text-1-Title);
     --menu-active-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
     --menu-active-background: var(--ui-hover-background-color);
@@ -335,6 +335,7 @@
 /* ---------- 一级菜单相关类 ----------*/
 .yakit-menu-wrapper {
     border-right: 0px;
+    background: var(--Colors-Use-Basic-Background);
 
     :global {
         // 普通模式下

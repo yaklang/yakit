@@ -218,6 +218,9 @@
     :global {
         .ant-popover-inner-content {
             padding: 0;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
+            border-radius: 4px;
         }
     }
 
@@ -288,6 +291,9 @@
     :global {
         .ant-popover-inner-content {
             padding: 0;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
+            border-radius: 4px;
         }
     }
 }
@@ -396,6 +402,9 @@
     :global {
         .ant-popover-inner-content {
             padding: 4px;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
+            border-radius: 4px;
         }
     }
 }

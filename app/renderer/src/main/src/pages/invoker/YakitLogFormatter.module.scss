@@ -103,8 +103,8 @@
         border-radius: 4px 4px 0 0;
         background: linear-gradient(
                 0deg,
-                tools.fetch-color-transparen(var(--yakit-tag-color-red), 20%) 0%,
-                tools.fetch-color-transparen(var(--yakit-tag-color-red), 20%) 100%
+                tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 20%) 0%,
+                tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 20%) 100%
             ),
             #fff;
     }
@@ -124,9 +124,9 @@
     .file-status {
         padding: 0px 6px;
         border-radius: 8px;
-        border: 1px solid tools.fetch-color-transparen(var(--yakit-tag-color-red), 30%);
+        border: 1px solid tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 30%);
         background: rgba(246, 84, 74, 0.08);
-        color: var(--yakit-tag-color-red);
+        color: var(--Colors-Use-Error-Primary);
     }
     .file-description {
         color: var(--Colors-Use-Neutral-Text-1-Title);

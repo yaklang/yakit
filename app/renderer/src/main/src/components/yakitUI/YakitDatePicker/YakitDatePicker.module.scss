@@ -1,6 +1,6 @@
 .yakit-range-picker-wrapper {
     .picker-icon {
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        // color: var(--Colors-Use-Neutral-Text-3-Secondary);
         svg {
             height: 14px;
             width: 14px;
@@ -9,11 +9,15 @@
     :global {
         .ant-picker-range {
             border-radius: 4px;
-            border: 1px solid #eaecf3;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             padding: 6px 8px;
+            background-color: var(--Colors-Use-Neutral-Bg);
+        }
+        .ant-picker-range-separator span{
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
         .ant-picker-input > input {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-size: 12px;
             font-weight: 400;
             line-height: 16px;
@@ -25,6 +29,10 @@
         }
         .ant-picker-range .ant-picker-active-bar {
             background-color: var(--Colors-Use-Main-Primary);
+        }
+        .ant-picker-clear{
+            background-color: var(--Colors-Use-Neutral-Bg);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
 }
@@ -48,10 +56,20 @@
         }
         .ant-picker-cell-in-view.ant-picker-cell-range-start:not(.ant-picker-cell-range-start-single)::before,
         .ant-picker-cell-in-view.ant-picker-cell-range-end:not(.ant-picker-cell-range-end-single)::before {
-            background: #fbe7d9;
+            background: var(--Colors-Use-Neutral-Bg);
         }
         .ant-picker-cell-in-view.ant-picker-cell-in-range::before {
-            background: #fbe7d9;
+            background: var(--Colors-Use-Neutral-Bg);
+        }
+        .ant-picker-date-panel{
+            background: var(--Colors-Use-Neutral-Bg);
+            .ant-picker-header{
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+            }
+            .ant-picker-header>button{
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            }
         }
         .ant-picker-date-panel
             .ant-picker-cell-in-view.ant-picker-cell-in-range.ant-picker-cell-range-hover-start
@@ -59,7 +77,7 @@
         .ant-picker-date-panel
             .ant-picker-cell-in-view.ant-picker-cell-in-range.ant-picker-cell-range-hover-end
             .ant-picker-cell-inner::after {
-            background: #fbe7d9;
+            background: var(--Colors-Use-Neutral-Bg);
         }
         .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
             border: 1px solid var(--Colors-Use-Main-Primary);
@@ -103,9 +121,9 @@
         }
 
         .ant-picker-ranges .ant-picker-preset > .ant-tag-blue {
-            color: #f28b44;
-            background: rgba(242, 139, 68, 0.06);
-            border: 1px solid rgba(242, 139, 68, 0.3);
+            color: var(--Colors-Use-Main-Primary);
+            background: var(--Colors-Use-Main-Bg);
+            border: 1px solid var(--Colors-Use-Main-Border);
             cursor: pointer;
         }
 
@@ -113,14 +131,32 @@
             background: var(--Colors-Use-Main-Primary);
         }
         .ant-picker-time-panel-column > li.ant-picker-time-panel-cell.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
-            color: #fff;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-picker-ranges .ant-picker-ok .ant-btn-primary {
             background-color: var(--Colors-Use-Main-Primary);
-            color: #fff;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             border-radius: 4px;
             border: none;
             font-size: 12px;
+        }
+        .ant-picker-body .ant-picker-content thead tr th{
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .ant-picker-body .ant-picker-content tbody tr .ant-picker-cell {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+        .ant-picker-body .ant-picker-content tbody tr .ant-picker-cell-in-view {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .ant-picker-cell:hover:not(.ant-picker-cell-in-view) .ant-picker-cell-inner, .ant-picker-cell:hover:not(.ant-picker-cell-selected):not(.ant-picker-cell-range-start):not(.ant-picker-cell-range-end):not(.ant-picker-cell-range-hover-start):not(.ant-picker-cell-range-hover-end) .ant-picker-cell-inner{
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        }
+        .ant-picker-panel{
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        }
+        .ant-picker-footer{
+            background-color: var(--Colors-Use-Neutral-Bg);
         }
     }
 }

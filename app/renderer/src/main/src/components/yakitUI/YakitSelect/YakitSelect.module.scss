@@ -21,6 +21,14 @@
         .ant-select {
             display: flex;
             font-size: 12px;
+            background-color: var(--Colors-Use-Basic-Background);
+            .ant-select-selector{
+                background-color: var(--Colors-Use-Basic-Background);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
+            .ant-select-arrow{
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            }
         }
 
         .ant-tag {
@@ -84,8 +92,7 @@
 
 // ========================== popup ==========================
 .yakit-select-popup {
-    --select-background-color: var(--Colors-Use-Main-Bg);
-
+    background-color: var(--Colors-Use-Basic-Background);
     padding: 6px 4px;
     border-radius: 4px;
 
@@ -98,16 +105,17 @@
             border-radius: 4px;
 
             &:hover {
-                background-color: var(--Colors-Use-Neutral-Bg);
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
             }
         }
         .ant-select-item:not(.ant-select-item-option-grouped) {
             padding: 4px 8px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
             font-weight: 400;
-            background-color: var(--select-background-color);
+            background: var(--Colors-Use-Main-Bg);
             color: var(--Colors-Use-Main-Primary);
         }
 

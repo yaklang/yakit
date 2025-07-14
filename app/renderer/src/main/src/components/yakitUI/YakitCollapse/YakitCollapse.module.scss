@@ -67,6 +67,12 @@
                 background-color: transparent;
                 border-radius: 0;
             }
+            & > :global(.ant-collapse-expand-icon) {
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
+            & > :global(.ant-collapse-header-text) {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
         }
         &:global(:last-child) {
             border-radius: 0;
