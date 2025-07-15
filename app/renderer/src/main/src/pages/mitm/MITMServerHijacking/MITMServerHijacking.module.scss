@@ -84,7 +84,7 @@
         .mitm-hijacked-heard-left {
             display: flex;
             align-items: center;
-            margin-right: 8px;
+            margin-right: 5px;
         }
         .mitm-hijacked-heard-right {
             display: flex;
@@ -186,12 +186,23 @@
     &-left {
         display: flex;
         align-items: center;
-        gap: 8px;
     }
     &-right {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 5px;
+        .advancedSearch {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 2px;
+            .check-icon {
+                svg {
+                    width: 14px;
+                    height: 14px;
+                }
+            }
+        }
     }
 }
 
@@ -519,6 +530,9 @@
 
 .mitm-hijacked-heard-tab {
     :global {
+        .ant-radio-button-wrapper {
+            padding: 0 5px;
+        }
         .ant-radio-button-wrapper:nth-child(2) {
             padding: 0 2px;
         }

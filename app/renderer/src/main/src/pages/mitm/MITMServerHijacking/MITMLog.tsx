@@ -1,7 +1,13 @@
 import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./MITMServerHijacking.module.scss"
-import {HistorySearch, HTTPFlowShield, ShieldData, SourceType} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {
+    contentType,
+    HistorySearch,
+    HTTPFlowShield,
+    ShieldData,
+    SourceType
+} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {useCreation, useDebounceFn, useMemoizedFn, useSize} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -10,7 +16,7 @@ import {setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "../MITMConsts"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {OutlineRefreshIcon, OutlineSearchIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {OutlineCheckIcon, OutlineRefreshIcon, OutlineSearchIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {iconProcessMap, ProcessItem} from "@/components/HTTPHistory"
 import classNames from "classnames"
@@ -19,6 +25,8 @@ import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/
 import MITMContext from "../Context/MITMContext"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {Badge} from "antd"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {HTTPFlowTableFormConfiguration} from "@/components/HTTPFlowTable/HTTPFlowTableForm"
 
 const {ipcRenderer} = window.require("electron")
 interface MITMLogHeardExtraProps {
@@ -40,22 +48,21 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
         tableSelectNum,
         hasNewData
     } = props
-    // 屏蔽数据
-    const [shieldData, setShieldData] = useState<ShieldData>({
-        data: []
-    })
     const mitmContent = useContext(MITMContext)
-
     const mitmVersion = useCreation(() => {
         return mitmContent.mitmStore.version
     }, [mitmContent.mitmStore.version])
+
+    // #region 屏蔽数据
+    const [shieldData, setShieldData] = useState<ShieldData>({
+        data: []
+    })
     useEffect(() => {
         emiter.on("onGetMITMShieldDataEvent", onGetMITMShieldData)
         return () => {
             emiter.off("onGetMITMShieldDataEvent", onGetMITMShieldData)
         }
     }, [])
-
     const onGetMITMShieldData = useMemoizedFn((str: string) => {
         try {
             const value = JSON.parse(str)
@@ -64,7 +71,6 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
             setShieldData(shieldData)
         } catch (error) {}
     })
-
     const cancleFilter = useMemoizedFn((value) => {
         emiter.emit("cancleMitmFilterEvent", JSON.stringify({value, version: mitmVersion}))
     })
@@ -72,7 +78,9 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
         if (version !== mitmVersion) return
         emiter.emit("cancleMitmAllFilterEvent", mitmVersion)
     })
+    // #endregion
 
+    // #region SourceType
     const onHistorySourceTypeToMitm = useMemoizedFn((data) => {
         try {
             const value = JSON.parse(data)
@@ -87,7 +95,9 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
             emiter.off("onHistorySourceTypeToMitm", onHistorySourceTypeToMitm)
         }
     }, [])
+    // #endregion
 
+    // #region 进程
     const [processVisible, setProcessVisible] = useState<boolean>(false)
     const [searchProcessVal, setSearchProcessVal] = useState<string>("")
     const [processLoading, setProcessLoading] = useState<boolean>(false)
@@ -175,10 +185,11 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
             }
         }
     }, [processVisible])
+    // #endregion
 
+    // #region 搜索
     const headerRef = useRef<HTMLDivElement>(null)
     const headerSize = useSize(headerRef)
-
     const [searchVal, setSearchVal] = useState<string>("")
     const handleSearch = useMemoizedFn((searchValue, searchType) => {
         emiter.emit(
@@ -186,6 +197,53 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
             JSON.stringify({KeywordType: searchType, Keyword: searchValue, version: mitmVersion})
         )
     })
+    // #endregion
+
+    // #region 高级筛选
+    const [drawerFormVisible, setDrawerFormVisible] = useState<boolean>(false)
+
+    const [filterMode, setFilterMode] = useState<"shield" | "show">("shield")
+    const [hostName, setHostName] = useState<string[]>([])
+    const [urlPath, setUrlPath] = useState<string[]>([])
+    const [fileSuffix, setFileSuffix] = useState<string[]>([])
+    const [searchContentType, setSearchContentType] = useState<string>("")
+    const [excludeKeywords, setExcludeKeywords] = useState<string[]>([])
+
+    const isFilter: boolean = useMemo(() => {
+        return (
+            hostName.length > 0 ||
+            urlPath.length > 0 ||
+            fileSuffix.length > 0 ||
+            searchContentType?.length > 0 ||
+            excludeKeywords.length > 0
+        )
+    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords])
+
+    useEffect(() => {
+        emiter.on("onGetAdvancedSearchDataEvent", onGetAdvancedSearchData)
+        return () => {
+            emiter.off("onGetAdvancedSearchDataEvent", onGetAdvancedSearchData)
+        }
+    }, [])
+    const onGetAdvancedSearchData = useMemoizedFn((str: string) => {
+        try {
+            const value = JSON.parse(str)
+            const {advancedSearchData} = value
+            setFilterMode(advancedSearchData.filterMode)
+            setHostName(advancedSearchData.hostName)
+            setUrlPath(advancedSearchData.urlPath)
+            setFileSuffix(advancedSearchData.fileSuffix)
+            setSearchContentType(advancedSearchData.searchContentType)
+            setExcludeKeywords(advancedSearchData.excludeKeywords)
+            emiter.emit(
+                "onGetOtherPageAdvancedSearchDataEvent",
+                JSON.stringify({
+                    advancedSearchData
+                })
+            )
+        } catch (error) {}
+    })
+    // #endregion
 
     return (
         <div ref={headerRef} className={styles["mitm-log-heard"]}>
@@ -218,6 +276,61 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                 <TableTotalAndSelectNumber total={tableTotal} selectNum={tableSelectNum} />
             </div>
             <div className={styles["mitm-log-heard-right"]}>
+                <div className={styles["advancedSearch"]}>
+                    <YakitButton
+                        type='text'
+                        onClick={() => {
+                            setDrawerFormVisible(true)
+                        }}
+                        style={{padding: 0}}
+                    >
+                        高级筛选
+                    </YakitButton>
+                    {isFilter && (
+                        <YakitTag color={"success"} style={{margin: 0}}>
+                            已配置
+                            <OutlineCheckIcon className={styles["check-icon"]} />
+                        </YakitTag>
+                    )}
+                    {drawerFormVisible && (
+                        <HTTPFlowTableFormConfiguration
+                            pageType={"MITM"}
+                            responseType={contentType}
+                            visible={drawerFormVisible}
+                            setVisible={setDrawerFormVisible}
+                            onSave={(filters) => {
+                                const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} =
+                                    filters
+                                setFilterMode(filterMode)
+                                setHostName(hostName)
+                                setUrlPath(urlPath)
+                                setFileSuffix(fileSuffix)
+                                setSearchContentType(searchContentType)
+                                setExcludeKeywords(excludeKeywords)
+                                setDrawerFormVisible(false)
+                                emiter.emit(
+                                    "onGetOtherPageAdvancedSearchDataEvent",
+                                    JSON.stringify({
+                                        advancedSearchData: {
+                                            filterMode,
+                                            hostName,
+                                            urlPath,
+                                            fileSuffix,
+                                            searchContentType,
+                                            excludeKeywords
+                                        }
+                                    })
+                                )
+                            }}
+                            filterMode={filterMode}
+                            hostName={hostName}
+                            urlPath={urlPath}
+                            fileSuffix={fileSuffix}
+                            searchContentType={searchContentType}
+                            excludeKeywords={excludeKeywords}
+                        />
+                    )}
+                </div>
                 <YakitPopover
                     placement='bottom'
                     trigger='click'
@@ -291,7 +404,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                 <HistorySearch
                     searchVal={searchVal}
                     setSearchVal={setSearchVal}
-                    showPopoverSearch={headerSize?.width ? headerSize?.width <= 800 : true}
+                    showPopoverSearch={headerSize?.width ? headerSize?.width <= 900 : true}
                     handleSearch={handleSearch}
                 />
                 <YakitButton

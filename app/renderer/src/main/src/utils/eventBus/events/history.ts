@@ -6,4 +6,6 @@ export type HistoryEventProps = {
     onHistoryJumpWebTree: string // 跳转到指定树节点
     onEditTag: string
     onRefreshImportHistoryTable?: string
+    onGetAdvancedSearchDataEvent: string
+    onGetOtherPageAdvancedSearchDataEvent: string
 }
