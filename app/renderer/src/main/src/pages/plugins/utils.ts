@@ -422,6 +422,7 @@ export interface DownloadOnlinePluginsRequest {
     Status?: number[]
     UUID?: string[]
     ScriptName?: string[]
+    Official?: boolean[]
 }
 // 开发参数 转换为 DownloadOnlinePluginBatch接口类型
 export const convertDownloadOnlinePluginBatchRequestParams = (

@@ -674,6 +674,7 @@ export declare namespace API {
          * scriptName/help 模糊搜索
          */
         fieldKeywords?: string
+        official?: boolean[]
     }
     export interface PluginsWherePluginGroup {
         unSetGroup?: boolean

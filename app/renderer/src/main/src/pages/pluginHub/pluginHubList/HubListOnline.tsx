@@ -188,9 +188,10 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
 
             const queryFilter = getFilters()
             const queryFearch = getSearch()
-            const queryIsOfficial = getPluginSource()
-            
             const query: PluginsQueryProps = convertPluginsRequestParams(queryFilter, queryFearch, params)
+            if (getPluginSource() === "official") {
+                query.official = [true]
+            }
             try {
                 const res = await apiFetchOnlineList(query)
                 if (!res.data) res.data = []
@@ -393,7 +394,10 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         if (batchDownloadLoading) return
         let request: DownloadOnlinePluginsRequest = {}
 
-        const queryIsOfficial = getPluginSource()
+        if (getPluginSource() === "official") {
+            request.Official = [true]
+        }
+        
         if (allChecked) {
             request = {
                 ...request,
