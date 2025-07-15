@@ -1218,7 +1218,7 @@ const colors: {color: string; title: string}[] = [
     },
     {
         color: TableCellToColorTag["CYAN"],
-        title: "天蓝色"
+        title: "青色"
     },
     {
         color: TableCellToColorTag["GREY"],

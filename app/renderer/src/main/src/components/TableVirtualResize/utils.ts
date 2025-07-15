@@ -58,7 +58,7 @@ export const parseColorTag = (content?: string) => {
 }
 
 /**
- * @name 判断是否为单色的情况下，同时颜色为红色
+ * @name 判断是否为单色的情况下，同时颜色为红色和灰色
  */
 export const isCellRedSingleColor = (content?: string) => {
     if (!content) return false
@@ -66,8 +66,27 @@ export const isCellRedSingleColor = (content?: string) => {
     try {
         const colors: string[] = content.split(" ").filter((item) => !!item && item.indexOf("table-cell-bg-") > -1)
         if (colors.length === 1 && colors[0] === "table-cell-bg-red") return true
+        if (colors.length === 1 && colors[0] === "table-cell-bg-grey") return true
         else return false
     } catch (error) {
         return false
     }
+}
+
+// 判断是否是红色/灰色的单色样式
+export const getSingleColorType = (content?: string): "red" | "grey" | undefined => {
+    if (!content) return
+
+    try {
+        const colors = content.split(" ").filter((item) => !!item && item.includes("table-cell-bg-"))
+
+        if (colors.length === 1) {
+            if (colors[0] === "table-cell-bg-red") return "red"
+            if (colors[0] === "table-cell-bg-grey") return "grey"
+        }
+    } catch (e) {
+        return
+    }
+
+    return
 }

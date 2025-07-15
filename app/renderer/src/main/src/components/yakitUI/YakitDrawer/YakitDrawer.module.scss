@@ -4,12 +4,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            background-color: var(--Colors-Use-Neutral-Bg);
             padding: 8px 16px;
             height: 40px;
             border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             color: var(--Colors-Use-Neutral-Text-1-Title);
             border-radius: 0;
+            border-left: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+            box-shadow: -2px 0px 0px 0px var(--Colors-Use-Basic-Shadow);
         }
         .ant-drawer-title{
             color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -20,6 +22,8 @@
         }
         .ant-drawer-body{
             background: var(--Colors-Use-Basic-Background);
+            border-left: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+            box-shadow: -2px 0px 4px 0px var(--Colors-Use-Basic-Shadow);
         }
     }
 }
@@ -33,7 +37,7 @@
 }
 
 .yakit-drawer-icon {
-    color: var(--Colors-Use-Neutral-Disable);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
     &:hover {
         color: var(--Colors-Use-Main-Primary);
     }

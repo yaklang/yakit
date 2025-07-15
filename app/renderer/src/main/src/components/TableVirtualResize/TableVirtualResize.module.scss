@@ -203,11 +203,12 @@
         .virtual-table-list-container {
             width: 100%;
             overflow-y: overlay;
-            overflow-x: auto;
+            overflow-x: overlay;
             overflow-anchor: none;
             position: relative;
             padding-bottom: 34px;
             border: 1px solid var(--Colors-Use-Neutral-Border);
+            background-color: var(--Colors-Use-Basic-Background);
             // pointer-events: none;
 
             .virtual-table-list {
@@ -377,8 +378,8 @@
                 }
 
                 .virtual-table-active-row {
-                    border-bottom: 1px solid var(--Colors-Use-Main-Border) !important;
-                    border-top: 1px solid var(--Colors-Use-Main-Border) !important;
+                    border-bottom: 1px solid var(--Colors-Use-Main-Primary) !important;
+                    border-top: 1px solid var(--Colors-Use-Main-Primary) !important;
                     background-color: var(--Colors-Use-Main-Bg);
                     color: var(--Colors-Use-Neutral-Text-1-Title);
                 }

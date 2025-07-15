@@ -109,11 +109,11 @@ $allColors-hover: (
                         color: var(--yakit-colors-Error-100);
                     }
                     .virtual-table-active-cell-#{$type}.virtual-table-cell-#{$type} {
-                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 100%);
+                        background: generate-transparen(#{fetch-hover-color($type, "backgroundColor")}, 100%);
                         color: var(--yakit-colors-Error-100);
                     }
                     .virtual-table-active-cell-#{$type}.virtual-table-hover-cell-#{$type}.virtual-table-cell-#{$type} {
-                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 100%);
+                        background: generate-transparen(#{fetch-hover-color($type, "backgroundColor")}, 100%);
                         color: var(--yakit-colors-Error-100);
                     }
                 } @else {
@@ -138,11 +138,11 @@ $allColors-hover: (
                         color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                     .virtual-table-active-cell-#{$type}.virtual-table-cell-#{$type} {
-                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 100%);
+                        background: generate-transparen(#{fetch-hover-color($type, "backgroundColor")}, 100%);
                         color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                     .virtual-table-active-cell-#{$type}.virtual-table-hover-cell-#{$type}.virtual-table-cell-#{$type} {
-                        background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 100%);
+                        background: generate-transparen(#{fetch-hover-color($type, "backgroundColor")}, 100%);
                         color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                 }

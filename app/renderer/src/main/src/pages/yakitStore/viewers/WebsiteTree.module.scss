@@ -38,17 +38,17 @@
 
             .ant-menu-item:hover {
                 background-color: var(--Colors-Use-Blue-Bg);
-                color: #FFFFFF;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
 
             .ant-menu-submenu-title:hover {
                 background-color: var(--Colors-Use-Blue-Bg);
-                color: #FFFFFF;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
 
             .ant-menu-submenu-active {
                 background-color: var(--Colors-Use-Blue-Bg);
-                color: #ffffff;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
     }
