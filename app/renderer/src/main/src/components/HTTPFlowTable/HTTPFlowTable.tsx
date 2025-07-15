@@ -73,6 +73,7 @@ import {
     OutlineBanIcon,
     OutlineCogIcon,
     OutlineInformationcircleIcon,
+    OutlineQuestionmarkcircleIcon,
     OutlineRefreshIcon,
     OutlineSearchIcon,
     OutlineXIcon
@@ -4909,7 +4910,7 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
         )
     })
     return (
-        <>
+        <div className={style['http-history-search-wrapper']}>
             {showPopoverSearch ? (
                 <YakitPopover
                     overlayClassName={style["http-history-search-drop-down-popover"]}
@@ -4924,7 +4925,10 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
             ) : (
                 searchNode()
             )}
-        </>
+            <Tooltip title='Yakit的搜索功能只要是调用了后端FuzzSearch其实都是用的LIKE搜索，这导致用户如果想搜索`email_`这样的文本需要手动转义'>
+                <OutlineQuestionmarkcircleIcon className={style["http-history-search-question-icon"]} />
+            </Tooltip>
+        </div>
     )
 })
 

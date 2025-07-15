@@ -631,6 +631,20 @@
     @extend .inputSearchModule;
 }
 
+.http-history-search-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    .http-history-search-question-icon {
+        margin-left: 2px;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        }
+    }
+}
+
 .history-advanced-set-wrapper {
     .advanced-configuration-drawer-title {
         display: flex;
