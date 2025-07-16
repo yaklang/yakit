@@ -543,13 +543,13 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 <div className={styles["state-setting-wrapper"]}>
                     {!showProjectManage && !isIRify() && <UIOpRisk isEngineLink={isEngineLink} />}
                     {!showProjectManage && isIRify() && <UIOpIRifyRisk isEngineLink={isEngineLink} />}
-                    {/* {!isEnpriTraceAgent() && (
+                    {!isEnpriTraceAgent() && false && (
                         <UIOpNotice
                             isEngineLink={isEngineLink}
                             isRemoteMode={isRemoteMode}
                             onLogin={() => setLoginShow(true)}
                         />
-                    )} */}
+                    )}
                     {!showProjectManage && (
                         <UIOpSetting
                             engineMode={engineMode}
@@ -2218,7 +2218,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                         <div className={styles["notice-version-wrapper"]}>
                             <div className={styles["version-wrapper"]}>
                                 {/* 企业版内网Yakit更新 - 无需显示更新内容 */}
-                                {/* {yakitLastIntranetVersion.length > 0 && (
+                                {yakitLastIntranetVersion.length > 0 && false && (
                                     <UIOpUpdateYakit
                                         version={yakitVersion}
                                         lastVersion={yakitLastIntranetVersion}
@@ -2228,7 +2228,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                         isUpdate={isUpdateYakitIntranet}
                                         intranet={true}
                                     />
-                                )} */}
+                                )}
 
                                 {/* <UIOpUpdateYakit
                                     version={yakitVersion}
