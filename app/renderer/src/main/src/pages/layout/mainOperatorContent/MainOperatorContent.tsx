@@ -431,14 +431,14 @@ export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCac
     let tabName = routeKeyToLabel.get(YakitRoute.DB_HTTPHistoryAnalysis) || menuName
     let verbose = `${tabName}-1`
     return [
-        {
-            routeKey: routeConvertKey(YakitRoute.NewHome, ""),
-            verbose: "首页",
-            menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
-            route: YakitRoute.NewHome,
-            singleNode: true,
-            multipleNode: []
-        },
+        // {
+        //     routeKey: routeConvertKey(YakitRoute.NewHome, ""),
+        //     verbose: "首页",
+        //     menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+        //     route: YakitRoute.NewHome,
+        //     singleNode: true,
+        //     multipleNode: []
+        // },
         {
             routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
             verbose: "History",
@@ -488,7 +488,7 @@ export const getInitActiveTabKey = () => {
         return YakitRoute.AI_Agent
     }
 
-    return YakitRoute.NewHome
+    return YakitRoute.DB_HTTPHistory
 }
 
 /**@description 拖拽样式 */
