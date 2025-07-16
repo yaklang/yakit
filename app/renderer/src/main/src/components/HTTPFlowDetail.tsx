@@ -386,42 +386,42 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             </Descriptions.Item>
                         </Descriptions>
                         <div style={{width: "100%", overflow: "auto"}}>
-                            {flow.GetParams.length > 0 || flow.PostParams.length > 0 || flow.CookieParams.length > 0 ? (
-                                <PluginTabs>
-                                    {flow.GetParams.length > 0 && (
-                                        <TabPane key={"get"} tab={"GET 参数"}>
-                                            <FuzzableParamList
-                                                data={flow.GetParams}
-                                                sendToWebFuzzer={() => {
-                                                    if (props.onClose) props.onClose()
-                                                }}
-                                            />
-                                        </TabPane>
-                                    )}
-                                    {flow.PostParams.length > 0 && (
-                                        <TabPane key={"post"} tab={"POST 参数"}>
-                                            <FuzzableParamList
-                                                data={flow.PostParams}
-                                                sendToWebFuzzer={() => {
-                                                    if (props.onClose) props.onClose()
-                                                }}
-                                            />
-                                        </TabPane>
-                                    )}
-                                    {flow.CookieParams.length > 0 && (
-                                        <TabPane key={"cookie"} tab={"Cookie 参数"}>
-                                            <FuzzableParamList
-                                                data={flow.CookieParams}
-                                                sendToWebFuzzer={() => {
-                                                    if (props.onClose) props.onClose()
-                                                }}
-                                            />
-                                        </TabPane>
-                                    )}
-                                </PluginTabs>
-                            ) : (
+                            {/* {flow.GetParams.length > 0 || flow.PostParams.length > 0 || flow.CookieParams.length > 0 ? ( */}
+                            <PluginTabs>
+                                {/* {flow.GetParams.length > 0 && ( */}
+                                <TabPane key={"get"} tab={"GET 参数"}>
+                                    <FuzzableParamList
+                                        data={flow.GetParams}
+                                        sendToWebFuzzer={() => {
+                                            if (props.onClose) props.onClose()
+                                        }}
+                                    />
+                                </TabPane>
+                                {/* )} */}
+                                {/* {flow.PostParams.length > 0 && ( */}
+                                <TabPane key={"post"} tab={"POST 参数"}>
+                                    <FuzzableParamList
+                                        data={flow.PostParams}
+                                        sendToWebFuzzer={() => {
+                                            if (props.onClose) props.onClose()
+                                        }}
+                                    />
+                                </TabPane>
+                                {/* )} */}
+                                {/* {flow.CookieParams.length > 0 && ( */}
+                                <TabPane key={"cookie"} tab={"Cookie 参数"}>
+                                    <FuzzableParamList
+                                        data={flow.CookieParams}
+                                        sendToWebFuzzer={() => {
+                                            if (props.onClose) props.onClose()
+                                        }}
+                                    />
+                                </TabPane>
+                                {/* )} */}
+                            </PluginTabs>
+                            {/* ) : (
                                 ""
-                            )}
+                            )} */}
                         </div>
                         <Row gutter={8}>
                             <Col span={12}>

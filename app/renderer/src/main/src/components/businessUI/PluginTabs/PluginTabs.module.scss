@@ -15,7 +15,8 @@
                 height: 25px;
                 margin-bottom: 0;
                 &::before {
-                    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+                    // border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+                    border-bottom: none;
                     z-index: 0;
                 }
                 .ant-tabs-ink-bar {

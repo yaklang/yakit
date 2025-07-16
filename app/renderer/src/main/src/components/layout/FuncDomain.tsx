@@ -2783,8 +2783,6 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         } catch (error) {}
     })
 
-
-
     /** 单条点击阅读 */
     const singleRead = useMemoizedFn((info: SSARisk) => {
         apiNewRiskRead({ID: [info.Id]}).then(() => {
@@ -2813,11 +2811,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                 title: "详情",
                 content: (
                     <div style={{overflow: "auto", maxHeight: "70vh"}}>
-                        <YakitAuditRiskDetails
-                            info={res.Data[0]}
-                            isShowExtra={true}
-                            isExtraClick={() => m.destroy()}
-                        />
+                        <YakitAuditRiskDetails info={res.Data[0]} isShowExtra={true} isExtraClick={() => m.destroy()} />
                     </div>
                 )
             })

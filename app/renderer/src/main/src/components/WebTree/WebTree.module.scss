@@ -99,7 +99,7 @@
 
         .ant-tree-node-content-wrapper.ant-tree-node-selected {
             .ant-tree-iconEle .anticon {
-                color: var(--Colors-Use-Neutral-Text-1-Title);
+                color: var(--Colors-Use-Main-On-Primary);
             }
         }
 
@@ -109,7 +109,7 @@
                 background-color: var(--Colors-Use-Main-Pressed);
                 border-radius: 4px 0 0 4px;
                 .ant-tree-switcher-icon {
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    color: var(--Colors-Use-Main-On-Primary);
                 }
             }
 
@@ -124,6 +124,11 @@
                 .ant-tree-node-content-wrapper.ant-tree-node-selected {
                     background-color: var(--Colors-Use-Main-Hover);
                 }
+            }
+            .ant-tree-title {
+                white-space: nowrap;
+                width: calc(100% - 24px);
+                color: var(--Colors-Use-Main-On-Primary);
             }
         }
 

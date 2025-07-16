@@ -3,32 +3,32 @@ $color-list: (
         color-1: var(--Colors-Use-Main-Bg),
         color-2: var(--Colors-Use-Main-Focus),
         color-3: var(--Colors-Use-Main-Border),
-        color-4: var(--Colors-Use-Main-Primary),
-        color-5: var(--Colors-Use-Main-Hover),
+        color-4: var(--Colors-Use-Main-Hover),
+        color-5: var(--Colors-Use-Main-Primary),
         color-6: var(--Colors-Use-Main-Pressed)
     ),
     success: (
         color-1: var(--Colors-Use-Success-Bg),
         color-2: var(--Colors-Use-Success-Focus),
         color-3: var(--Colors-Use-Success-Border),
-        color-4: var(--Colors-Use-Success-Primary),
-        color-5: var(--Colors-Use-Success-Hover),
+        color-4: var(--Colors-Use-Success-Hover),
+        color-5: var(--Colors-Use-Success-Primary),
         color-6: var(--Colors-Use-Success-Pressed)
     ),
     danger: (
         color-1: var(--Colors-Use-Error-Bg),
         color-2: var(--Colors-Use-Error-Focus),
         color-3: var(--Colors-Use-Error-Border),
-        color-4: var(--Colors-Use-Error-Primary),
-        color-5: var(--Colors-Use-Error-Hover),
+        color-4: var(--Colors-Use-Error-Hover),
+        color-5: var(--Colors-Use-Error-Primary),
         color-6: var(--Colors-Use-Error-Pressed)
     ),
     infoBlue: (
         color-1: var(--Colors-Use-Blue-Bg),
         color-2: var(--Colors-Use-Blue-Focus),
         color-3: var(--Colors-Use-Blue-Border),
-        color-4: var(--Colors-Use-Blue-Primary),
-        color-5: var(--Colors-Use-Blue-Hover),
+        color-4: var(--Colors-Use-Blue-Hover),
+        color-5: var(--Colors-Use-Blue-Primary),
         color-6: var(--Colors-Use-Blue-Pressed)
     )
 );

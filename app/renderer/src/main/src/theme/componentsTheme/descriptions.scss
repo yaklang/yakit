@@ -3,6 +3,7 @@
 .yakit-descriptions {
     .ant-descriptions-view {
         border: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: none;
     }
     .ant-descriptions-view .ant-descriptions-row{
         border-bottom: 1px solid var(--Colors-Use-Neutral-Border);

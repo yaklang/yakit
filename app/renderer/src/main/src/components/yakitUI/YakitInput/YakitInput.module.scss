@@ -4,6 +4,7 @@
     width: 100%;
 
     :global {
+
         .ant-input-borderless {
             border: none;
             box-shadow: none !important;
@@ -49,6 +50,10 @@
 
         .ant-input:hover {
             border-color: var(--Colors-Use-Main-Hover);
+        }
+        .ant-input::placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+            opacity: 1; 
         }
         .ant-input-affix-wrapper {
             padding: 0 8px;
@@ -233,6 +238,10 @@
         //     // color: var(--Colors-Use-Neutral-Text-3-Secondary);
         //     // background-color: var(--Colors-Use-Neutral-Disable);
         // }
+        .ant-input::placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+            opacity: 1; 
+        }
 
         .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child .ant-input-search-button {
             border-radius: 0 4px 4px 0;
@@ -458,6 +467,10 @@
             font-size: 14px;
             color: var(--Colors-Use-Neutral-Disable);
         }
+        .ant-input::placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+            opacity: 1; 
+        }
         .textArea-resizer-icon {
             position: absolute;
             bottom: 2px;
@@ -509,6 +522,10 @@
         }
         .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover {
             border-color: var(--Colors-Use-Main-Hover);
+        }
+        .ant-input::placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+            opacity: 1; 
         }
         .ant-input-affix-wrapper:focus,
         .ant-input-affix-wrapper-focused {

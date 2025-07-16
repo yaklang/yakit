@@ -1,3 +1,14 @@
+// :global{
+//     .ant-empty-image{
+//         img{
+//             background-image: url("./empty.png"); // 默认亮色
+
+//             html[data-theme="dark"] & {
+//                 background-image: url("./dart-empty.png");
+//             }
+//         }
+//     }
+// }
 .yakit-empty {
     display: flex;
     flex-direction: column;

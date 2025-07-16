@@ -126,6 +126,7 @@
     }
     .yakit-checkbox-indeterminate:not(.yakit-checkbox-disabled) {
         background-color: #fff;
+        background: var(--Colors-Use-Basic-Background);
         border: 2px solid var(--Colors-Use-Main-Primary);
         .yakit-proto-checkbox-inner::after {
             top: 6px;

@@ -2,11 +2,13 @@
     display: flex;
     gap: 8px;
     justify-content: right;
-    // button {
-    //     &:not(:first-child) {
-    //         background-color: var(--Colors-Use-Main-Bg); 
-    //     }
-    // }
+    button {
+        &:not(:first-child):hover {
+            background-color: var(--Colors-Use-Main-Bg); 
+            border-color: var(--Colors-Use-Main-Primary);
+            color: var(--Colors-Use-Main-Primary);
+        }
+    }
 }
 
 .import-resource-popover {

@@ -15,6 +15,12 @@
             width: 16px;
             height: 16px;
         }
+        button {
+            &:hover{
+                border-color: var(--Colors-Use-Main-Primary) !important;
+                color: var(--Colors-Use-Main-Primary) !important;
+            }
+        }
     }
 
     .exchange-btn-wrapper {

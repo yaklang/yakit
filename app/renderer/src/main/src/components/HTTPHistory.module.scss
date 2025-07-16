@@ -23,7 +23,7 @@
                     padding: 12px 4px;
                     cursor: pointer;
                     user-select: none;
-                    border-bottom: 1px solid #EAECF3;
+                    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
                     font-weight: 600;
 
                     gap: 4px;
@@ -35,11 +35,11 @@
                     }
 
                     &:hover {
-                        background: rgba(204, 210, 222, .5);
+                        background: var(--Colors-Use-Neutral-Bg-Hover);
                     }
 
                     &-active {
-                        color: #ffffff;
+                        color: var(--Colors-Use-Main-On-Primary);
                         background-color: var(--Colors-Use-Main-Primary);
                         &:hover {
                             background-color: var(--Colors-Use-Main-Hover);

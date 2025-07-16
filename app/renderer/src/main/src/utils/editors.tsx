@@ -46,6 +46,7 @@ import {Selection} from "@/pages/yakRunner/RunnerTabs/RunnerTabsType"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useCampare} from "@/hook/useCompare/useCompare"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -922,7 +923,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             renderCode()
         } else if (originValue && type === "hex") {
             setRenderHTML(undefined)
-            setHexValue(originalPackage ? originalPackage :StringToUint8Array(originValue))
+            setHexValue(originalPackage ? originalPackage : StringToUint8Array(originValue))
         }
     }, [type])
 
@@ -937,7 +938,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                 size={"small"}
                 loading={props.loading || typeLoading}
                 bordered={props.bordered}
-                style={{height: "100%", width: "100%", backgroundColor: "#f0f2f5"}}
+                style={{height: "100%", width: "100%", backgroundColor: "var(--Colors-Use-Basic-Background)"}}
                 title={
                     !props.noHeader && (
                         <div style={{display: "flex", gap: 2, ...(props.titleStyle || {})}}>
@@ -1020,7 +1021,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                         />
                                     </Tooltip>
                                     {!props.noSetIngEditor && (
-                                        <Popover
+                                        <YakitPopover
                                             title={"配置编辑器"}
                                             content={
                                                 <>
@@ -1105,7 +1106,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                             visible={popoverVisible}
                                         >
                                             <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
-                                        </Popover>
+                                        </YakitPopover>
                                     )}
                                 </>
                             )}
