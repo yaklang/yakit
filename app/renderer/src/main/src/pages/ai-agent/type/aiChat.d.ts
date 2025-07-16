@@ -224,8 +224,8 @@ export declare namespace AIChatMessage {
         name: string
         /** 正文 */
         goal: string
-        /** 前端渲染专属属性, proto 上不存在 */
-        state?: "success" | "error" | "wait" | "in-progress"
+        /** 后端发送的任务状态 */
+        progress?: string
         subtasks?: PlanTask[]
         /**评阅时树节点是否被删 */
         isRemove: boolean
@@ -333,7 +333,7 @@ export declare namespace AIChatMessage {
         /**ai工具按钮 */
         selectors: ReviewSelector[]
         /**出现ai工具按钮后，按钮功能发送信息的时候需要的id */
-        interactiveId:string
+        interactiveId: string
     }
     /**AI工具 接口返回的JSON结构 */
     export interface AIToolCall {
