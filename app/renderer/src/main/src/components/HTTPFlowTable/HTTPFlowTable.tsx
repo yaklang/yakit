@@ -73,6 +73,7 @@ import {
     OutlineBanIcon,
     OutlineCogIcon,
     OutlineInformationcircleIcon,
+    OutlineQuestionmarkcircleIcon,
     OutlineRefreshIcon,
     OutlineSearchIcon,
     OutlineXIcon
@@ -738,10 +739,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const mitmVersion = useCreation(() => {
         return mitmContent.mitmStore.version
     }, [mitmContent.mitmStore.version])
-    const [data, setData, getData] = useGetState<HTTPFlow[]>([])
+    const [data, setData] = useState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
-    const [params, setParams, getParams] = useGetState<YakQueryHTTPFlowRequest>({
+    const [params, setParams] = useState<YakQueryHTTPFlowRequest>({
         SourceType: props.params?.SourceType || "mitm",
         RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
         RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
@@ -871,9 +872,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [])
 
-    // 初次进入页面 获取默认高级筛选项
+    const updateAdvancedSearch = useMemo(() => {
+        return ["History", "MITM"].includes(pageType || "") || showAdvancedSearch
+    }, [pageType, showAdvancedSearch])
+    // 获取默认高级筛选项
     useEffect(() => {
-        if (showAdvancedSearch) {
+        if (updateAdvancedSearch) {
             // 筛选模式
             getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode).then((e) => {
                 if (!!e) {
@@ -916,20 +920,33 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             })
         }
-    }, [])
+    }, [updateAdvancedSearch])
 
+    const comHostName = useCampare(hostName)
+    const comUrlPath = useCampare(urlPath)
+    const comFileSuffix = useCampare(fileSuffix)
+    const comExcludeKeywords = useCampare(excludeKeywords)
     useDebounceEffect(
-        () => {
-            if (pageType === "History" && showAdvancedSearch) {
+        useMemoizedFn(() => {
+            if (updateAdvancedSearch) {
                 let newParams = {...params}
+
+                let urlArr: string[] = []
+                shieldData.data.map((item) => {
+                    if (typeof item === "string") {
+                        urlArr = [...urlArr, item]
+                    }
+                })
+
                 // 屏蔽
                 if (filterMode === "shield") {
+                    urlArr.push(...hostName)
                     newParams = {
                         ...newParams,
                         SearchContentType: "",
                         ExcludeContentType: searchContentType.length === 0 ? [] : searchContentType.split(","),
                         IncludeInUrl: [],
-                        ExcludeInUrl: hostName,
+                        ExcludeInUrl: [...new Set(urlArr)],
                         IncludePath: [],
                         ExcludePath: urlPath,
                         IncludeSuffix: [],
@@ -944,7 +961,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         SearchContentType: searchContentType,
                         ExcludeContentType: [],
                         IncludeInUrl: hostName,
-                        ExcludeInUrl: [],
+                        ExcludeInUrl: urlArr,
                         IncludePath: urlPath,
                         ExcludePath: [],
                         IncludeSuffix: fileSuffix,
@@ -952,12 +969,34 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                 }
                 setParams(newParams)
+
+                emiter.emit(
+                    "onGetAdvancedSearchDataEvent",
+                    JSON.stringify({
+                        advancedSearchData: {
+                            filterMode,
+                            hostName,
+                            urlPath,
+                            fileSuffix,
+                            searchContentType,
+                            excludeKeywords
+                        }
+                    })
+                )
             }
-        },
-        [filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords],
+        }),
+        [
+            // 此处依赖如果是引用值 请务必用useCampare处理
+            updateAdvancedSearch,
+            filterMode,
+            comHostName,
+            comUrlPath,
+            comFileSuffix,
+            searchContentType,
+            comExcludeKeywords
+        ],
         {wait: 500}
     )
-
     const isFilter: boolean = useMemo(() => {
         return (
             hostName.length > 0 ||
@@ -967,7 +1006,52 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             excludeKeywords.length > 0
         )
     }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords])
+    const onGetOtherPageAdvancedSearchData = useMemoizedFn((str: string) => {
+        try {
+            const value = JSON.parse(str)
+            const {advancedSearchData} = value
+            setFilterMode(advancedSearchData.filterMode)
+            setHostName(advancedSearchData.hostName)
+            setUrlPath(advancedSearchData.urlPath)
+            setFileSuffix(advancedSearchData.fileSuffix)
+            setSearchContentType(advancedSearchData.searchContentType)
+            setExcludeKeywords(advancedSearchData.excludeKeywords)
+        } catch (error) {}
+    })
+    useEffect(() => {
+        if (updateAdvancedSearch) {
+            emiter.on("onGetOtherPageAdvancedSearchDataEvent", onGetOtherPageAdvancedSearchData)
+        }
+        return () => {
+            if (updateAdvancedSearch) {
+                emiter.off("onGetOtherPageAdvancedSearchDataEvent", onGetOtherPageAdvancedSearchData)
+            }
+        }
+    }, [updateAdvancedSearch])
+    const handleShieldDataUpdate = useMemoizedFn(() => {
+        setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(shieldData))
+        let idArr: number[] = []
+        let urlArr: string[] = []
+        shieldData.data.map((item) => {
+            if (typeof item === "string") {
+                urlArr = [...urlArr, item]
+            } else {
+                idArr = [...idArr, item]
+            }
+        })
 
+        setParams((prev) => {
+            // 高级筛选 屏蔽hostName
+            if (filterMode === "shield" && hostName.length) {
+                urlArr.push(...hostName)
+            }
+            return {
+                ...prev,
+                ExcludeId: idArr,
+                ExcludeInUrl: [...new Set(urlArr)]
+            }
+        })
+    })
     useEffect(() => {
         if (pageType === "MITM") {
             emiter.emit("onGetMITMShieldDataEvent", JSON.stringify({shieldData, version: mitmVersion}))
@@ -976,21 +1060,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (isOneceLoading.current) {
             getShieldList()
         } else {
-            setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(shieldData))
-            let idArr: number[] = []
-            let urlArr: string[] = []
-            shieldData.data.map((item) => {
-                if (typeof item === "string") {
-                    urlArr = [...urlArr, item]
-                } else {
-                    idArr = [...idArr, item]
-                }
-            })
-            setParams((prev) => ({
-                ...prev,
-                ExcludeId: idArr,
-                ExcludeInUrl: urlArr
-            }))
+            handleShieldDataUpdate()
         }
     }, [shieldData])
     useEffect(() => {
@@ -3810,8 +3880,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 emiter.off("cancleMitmFilterEvent", cancleMitmFilter)
                 emiter.off("cancleMitmAllFilterEvent", cancleAllFilter)
                 emiter.off("cleanMitmLogEvent", cleanLogTableData)
-                emiter.on("onMitmNoResetRefreshEvent", onMitmNoResetRefresh)
-                emiter.on("onMitmResetRefreshEvent", onMitmResetRefresh)
+                emiter.off("onMitmNoResetRefreshEvent", onMitmNoResetRefresh)
+                emiter.off("onMitmResetRefreshEvent", onMitmResetRefresh)
             }
         }
     }, [pageType])
@@ -4840,7 +4910,7 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
         )
     })
     return (
-        <>
+        <div className={style['http-history-search-wrapper']}>
             {showPopoverSearch ? (
                 <YakitPopover
                     overlayClassName={style["http-history-search-drop-down-popover"]}
@@ -4855,7 +4925,10 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
             ) : (
                 searchNode()
             )}
-        </>
+            <Tooltip title='Yakit的搜索功能只要是调用了后端FuzzSearch其实都是用的LIKE搜索，这导致用户如果想搜索`email_`这样的文本需要手动转义'>
+                <OutlineQuestionmarkcircleIcon className={style["http-history-search-question-icon"]} />
+            </Tooltip>
+        </div>
     )
 })
 
