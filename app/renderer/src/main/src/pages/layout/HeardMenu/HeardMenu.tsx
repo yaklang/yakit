@@ -200,62 +200,83 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             }
 
             let filterLocal: EnhancedPrivateRouteMenuProps[] = []
-            getRemoteValue(RemoteGV.UserDeleteMenu)
-                .then((val) => {
-                    if (val !== "{}") {
-                        let filters: string[] = []
-                        try {
-                            filters = (JSON.parse(val) || {})[menuMode] || []
-                        } catch (error) {}
-                        for (let item of DefaultMenu) {
-                            if (filters.includes(item.menuName)) continue
-                            const menu: EnhancedPrivateRouteMenuProps = {...item, children: []}
-                            if (item.children && item.children.length > 0) {
-                                for (let subitem of item.children) {
-                                    if (!filters.includes(`${item.menuName}-${subitem.menuName}`)) {
-                                        menu.children?.push({...subitem})
-                                    }
-                                }
-                            }
-                            filterLocal.push(menu)
-                        }
-                    } else {
-                        filterLocal = [...DefaultMenu]
-                    }
-                })
-                .catch(() => {
-                    filterLocal = [...DefaultMenu]
-                })
-                .finally(async () => {
-                    let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
-                    try {
-                        allowModify = JSON.parse(allowModify) || {}
-                    } catch (error) {
-                        allowModify = {}
-                    }
-                    if (!!allowModify[menuMode]) filterLocal = []
+            // getRemoteValue(RemoteGV.UserDeleteMenu)
+            //     .then((val) => {
+            //         if (val !== "{}") {
+            //             let filters: string[] = []
+            //             try {
+            //                 filters = (JSON.parse(val) || {})[menuMode] || []
+            //             } catch (error) {}
+            //             for (let item of DefaultMenu) {
+            //                 if (filters.includes(item.menuName)) continue
+            //                 const menu: EnhancedPrivateRouteMenuProps = {...item, children: []}
+            //                 if (item.children && item.children.length > 0) {
+            //                     for (let subitem of item.children) {
+            //                         if (!filters.includes(`${item.menuName}-${subitem.menuName}`)) {
+            //                             menu.children?.push({...subitem})
+            //                         }
+            //                     }
+            //                 }
+            //                 filterLocal.push(menu)
+            //             }
+            //         } else {
+            //             filterLocal = [...DefaultMenu]
+            //         }
+            //     })
+            //     .catch(() => {
+            //         filterLocal = [...DefaultMenu]
+            //     })
+            //     .finally(async () => {
+            //         let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
+            //         try {
+            //             allowModify = JSON.parse(allowModify) || {}
+            //         } catch (error) {
+            //             allowModify = {}
+            //         }
+            //         if (!!allowModify[menuMode]) filterLocal = []
 
-                    // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
-                    const {menus, isUpdate, pluginName} = privateUnionMenus(filterLocal, caches)
+            //         // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
+            //         const {menus, isUpdate, pluginName} = privateUnionMenus(filterLocal, caches)
 
-                    if (isInitRef.current) {
-                        isInitRef.current = false
-                        if (pluginName.length > 0) batchDownloadPlugin(menus, pluginName)
-                        else {
-                            setRouteMenu(menus)
-                            setSubMenuData(menus[0]?.children || [])
-                            setMenuId(menus[0]?.label || "")
-                            setTimeout(() => setLoading(false), 300)
-                        }
-                        if (isUpdate) updateMenus(menus)
-                    } else {
-                        if (isUpdate) updateMenus(menus)
-                        else setTimeout(() => setLoading(false), 300)
-                        setRouteMenu(menus)
-                        setSubMenuData(menus[0]?.children || [])
-                        setMenuId(menus[0]?.label || "")
-                    }
-                })
+            //         if (isInitRef.current) {
+            //             isInitRef.current = false
+            //             if (pluginName.length > 0) batchDownloadPlugin(menus, pluginName)
+            //             else {
+            //                 setRouteMenu(menus)
+            //                 setSubMenuData(menus[0]?.children || [])
+            //                 setMenuId(menus[0]?.label || "")
+            //                 setTimeout(() => setLoading(false), 300)
+            //             }
+            //             if (isUpdate) updateMenus(menus)
+            //         } else {
+            //             if (isUpdate) updateMenus(menus)
+            //             else setTimeout(() => setLoading(false), 300)
+            //             setRouteMenu(menus)
+            //             setSubMenuData(menus[0]?.children || [])
+            //             setMenuId(menus[0]?.label || "")
+            //         }
+            //     })
+
+            // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
+            const {menus, isUpdate, pluginName} = privateUnionMenus(filterLocal, caches)
+
+            if (isInitRef.current) {
+                isInitRef.current = false
+                if (pluginName.length > 0) batchDownloadPlugin(menus, pluginName)
+                else {
+                    setRouteMenu(menus)
+                    setSubMenuData(menus[0]?.children || [])
+                    setMenuId(menus[0]?.label || "")
+                    setTimeout(() => setLoading(false), 300)
+                }
+                if (isUpdate) updateMenus(menus)
+            } else {
+                if (isUpdate) updateMenus(menus)
+                else setTimeout(() => setLoading(false), 300)
+                setRouteMenu(menus)
+                setSubMenuData(menus[0]?.children || [])
+                setMenuId(menus[0]?.label || "")
+            }
         }
         if (isError) {
             ipcRenderer

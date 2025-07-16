@@ -382,7 +382,7 @@ export const NoScrollRoutes: YakitRoute[] = [
 ]
 /** 一级tab固定展示tab  */
 export const defaultFixedTabs: YakitRoute[] = [
-    YakitRoute.NewHome,
+    // YakitRoute.NewHome,
     YakitRoute.DB_HTTPHistory,
     YakitRoute.DB_HTTPHistoryAnalysis
 ]
