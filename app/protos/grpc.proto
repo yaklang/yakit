@@ -283,6 +283,7 @@ service Yak {
   rpc GetAllCodecMethods(Empty) returns(CodecMethods);
 
   rpc SaveCodecFlow(CustomizeCodecFlow) returns (Empty);
+  rpc UpdateCodecFlow(UpdateCodecFlowRequest) returns (Empty);
   rpc DeleteCodecFlow(DeleteCodecFlowRequest) returns (Empty);
   rpc GetAllCodecFlow(Empty) returns (GetCodecFlowResponse);
   rpc PacketPrettifyHelper(PacketPrettifyHelperRequest) returns (PacketPrettifyHelperResponse);
@@ -4746,6 +4747,14 @@ message CustomizeCodecFlow{
   string FlowName = 1;
   repeated CodecWork WorkFlow = 2;
   string WorkFlowUI = 3;
+  string FlowId = 4;
+}
+
+message UpdateCodecFlowRequest {
+  string FlowId = 1;
+  string FlowName = 2;
+  repeated CodecWork WorkFlow = 3;
+  string WorkFlowUI = 4;
 }
 
 message DeleteCodecFlowRequest {
