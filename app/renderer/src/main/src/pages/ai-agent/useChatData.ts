@@ -600,13 +600,16 @@ function useChatData(params?: UseChatDataParams) {
 
             if (res.Type === "plan") {
                 // 更新正在执行的任务树
-                console.log("plan---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
-                if (!res.IsJson) return
-                const tasks = JSON.parse(ipcContent) as {root_task: AIChatMessage.PlanTask}
-                planTree.current = cloneDeep(tasks.root_task)
-                const sum: AIChatMessage.PlanTask[] = []
-                handleFlatAITree(sum, tasks.root_task)
-                setPlan([...sum])
+                try {
+                    console.log("plan---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
+                    if (!res.IsJson) return
+                    const tasks = JSON.parse(ipcContent) as {root_task: AIChatMessage.PlanTask}
+                    planTree.current = cloneDeep(tasks.root_task)
+                    const sum: AIChatMessage.PlanTask[] = []
+                    handleFlatAITree(sum, tasks.root_task)
+                    setPlan([...sum])
+                } catch (error) {}
+                return
             }
 
             console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
