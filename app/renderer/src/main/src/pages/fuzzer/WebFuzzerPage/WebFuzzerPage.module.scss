@@ -21,24 +21,23 @@
             gap: 4px;
             color: var(--Colors-Use-Neutral-Text-1-Title);
             cursor: pointer;
-            background-color: #f0f1f3;
-            border-bottom: 1px solid #fff;
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             &:hover {
-                background-color: rgba(204, 210, 222, 0.5);
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
             }
         }
         &-item-active {
-            color: #fff;
+            color: var(--Colors-Use-Main-On-Primary);
             background-color: var(--Colors-Use-Main-Primary);
             &:hover {
                 background-color: var(--Colors-Use-Main-Hover);
             }
             svg {
-                color: #fff;
+                color: var(--Colors-Use-Main-On-Primary);
             }
         }
         &-item-advanced-config-unShow {
-            background-color: var(--Colors-Use-Main-Border);
+            background-color: var(--Colors-Use-Main-Primary);
         }
         &-label {
             font-weight: 600;

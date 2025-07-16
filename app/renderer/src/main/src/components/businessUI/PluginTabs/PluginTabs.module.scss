@@ -47,9 +47,9 @@
                     border-top: 1px solid var(--Colors-Use-Main-Border);
                     border-right: 1px solid var(--Colors-Use-Main-Border);
                     border-left: 1px solid var(--Colors-Use-Main-Border);
-                    background: var(--Colors-Use-Main-Border);
+                    background: var(--Colors-Use-Main-Primary);
                     .ant-tabs-tab-btn {
-                        color: var(--Colors-Use-Neutral-Text-1-Title);
+                        color: var(--Colors-Use-Main-On-Primary);
                         text-shadow: unset;
                     }
                 }
@@ -99,7 +99,7 @@
                     border-bottom: 1px solid var(--Colors-Use-Main-Border);
                     border-right: 1px solid var(--Colors-Use-Main-Border);
                     border-left: 1px solid var(--Colors-Use-Main-Border);
-                    background: var(--Colors-Use-Main-Border);
+                    background: var(--Colors-Use-Main-Primary);
                     .ant-tabs-tab-btn {
                         color: var(--Colors-Use-Neutral-Text-1-Title);
                         text-shadow: unset;
@@ -160,7 +160,7 @@
                     border-top: 1px solid var(--Colors-Use-Main-Border);
                     border-right: 1px solid var(--Colors-Use-Main-Border);
                     border-bottom: 1px solid var(--Colors-Use-Main-Border);
-                    background: var(--Colors-Use-Main-Border);
+                    background: var(--Colors-Use-Main-Primary);
                     .ant-tabs-tab-btn {
                         color: var(--Colors-Use-Neutral-Text-1-Title);
                         text-shadow: unset;
@@ -228,7 +228,7 @@
                     border-top: 1px solid var(--Colors-Use-Main-Border);
                     border-left: 1px solid var(--Colors-Use-Main-Border);
                     border-bottom: 1px solid var(--Colors-Use-Main-Border);
-                    background: var(--Colors-Use-Main-Border);
+                    background: var(--Colors-Use-Main-Primary);
                     .ant-tabs-tab-btn {
                         color: var(--Colors-Use-Neutral-Text-1-Title);
                         text-shadow: unset;
@@ -322,7 +322,7 @@
                 // 选中
                 .ant-tabs-tab.ant-tabs-tab-active {
                     border: 0;
-                    background: var(--Colors-Use-Main-Bg);
+                    background: var(--Colors-Use-Main-Primary);
                     color: var(--Colors-Use-Main-Border);
                     &::after {
                         content: "";

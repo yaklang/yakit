@@ -27,7 +27,7 @@
         }
 
         .yakit-flolder-icon {
-            color: var(--Colors-Use-Main-Hover);
+            color: var(--Colors-Use-Main-Primary);
         }
 
         .ant-spin-spinning {
@@ -82,7 +82,7 @@
         .ant-tree-treenode:not(.ant-tree-treenode-selected) {
             &:hover {
                 .ant-tree-switcher.ant-tree-switcher-noop {
-                    background-color: var(--Colors-Use-Basic-Background);
+                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
                     border-radius: 4px 0 0 4px;
                 }
                 .ant-tree-node-content-wrapper {

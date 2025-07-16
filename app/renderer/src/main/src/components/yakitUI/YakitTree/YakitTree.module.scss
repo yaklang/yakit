@@ -131,7 +131,7 @@
         }
 
         .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
-            color: #ffffff;
+            color: var(--Colors-Use-Main-On-Primary);
             background-color: var(--Colors-Use-Main-Primary);
             &:hover {
                 background-color: var(--Colors-Use-Main-Hover);
