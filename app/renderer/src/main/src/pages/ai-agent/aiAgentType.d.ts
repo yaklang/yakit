@@ -2,6 +2,8 @@ import {CSSProperties, Dispatch, ReactNode, SetStateAction} from "react"
 import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
 import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIStartParams} from "./type/aiChat"
 import {AITreeNodeProps} from "./aiTree/type"
+import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {AITabsEnum} from "./constant"
 
 export interface AIAgentProps {}
 
@@ -100,9 +102,11 @@ export interface AIChatLeftSideProps {
 }
 
 // 对话框回答
+export type AITabsEnumType = `${AITabsEnum}`
 export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
     info: AIChatInfo
     consumption: Record<string, AIChatMessage.Consumption>
+    coordinatorId?: string
 }
 
 export interface AIAgentChatStreamProps {
@@ -172,3 +176,7 @@ export interface AIChatToolDrawerContentProps {
     syncId: string
 }
 // #endregion
+
+//#region AI 展示内容的tab
+export interface AITabProps extends HoldGRPCStreamProps.InfoTab {}
+//#endregion

@@ -49,7 +49,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {QueryRisksRequest} from "@/pages/risks/YakitRiskTable/YakitRiskTableType"
 import {defQueryRisksRequest} from "@/pages/risks/YakitRiskTable/constants"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
-import {apiQueryRisks} from "@/pages/risks/YakitRiskTable/utils"
+import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
 import {OutlineChartpieIcon, OutlineLogIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import {LocalList, LocalPluginLog, LocalText} from "./LocalPluginLog"
 import {CodeScanResult} from "@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable"
@@ -86,16 +86,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     }, interval)
 
     const getTotal = useMemoizedFn(() => {
-        const params: QueryRisksRequest = {
-            ...defQueryRisksRequest,
-            Pagination: {
-                ...defQueryRisksRequest.Pagination,
-                Page: 1,
-                Limit: 1
-            },
-            RuntimeId: runtimeId
-        }
-        apiQueryRisks(params).then((allRes) => {
+        apiQueryRisksTotalByRuntimeId(runtimeId).then((allRes) => {
             if (+allRes.Total > 0) {
                 setTempTotal(+allRes.Total)
             }
@@ -238,7 +229,7 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
     )
 })
 /**HTTP 流量 */
-const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
+export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
     const {runtimeId, website = false} = props
 
     const [height, setHeight] = useState<number>(300) //表格所在div高度

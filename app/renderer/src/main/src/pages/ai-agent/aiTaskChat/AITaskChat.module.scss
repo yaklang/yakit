@@ -22,13 +22,77 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 24px;
+        gap: 16px;
         .header-title {
-            color: #31343f;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 16px;
             font-weight: 500;
             line-height: 24px;
             letter-spacing: 0.15px;
+            overflow: hidden;
+            gap: 8px;
+            .header-title-qs {
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                word-break: break-all;
+            }
+            .header-title-info-wrapper {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-shrink: 0;
+                .info-token {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    font-size: 12px;
+                    font-weight: 400;
+                }
+                .token-tag {
+                    height: 16px;
+                    padding: 2px 6px;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    border-radius: 2px;
+                    svg {
+                        width: 12px;
+                        height: 12px;
+                    }
+                }
+                .upload-token {
+                    background: var(--Colors-Use-Error-Bg-Hover);
+                    color: var(--Colors-Use-Error-Primary);
+                    svg {
+                        color: var(--Colors-Use-Error-Primary);
+                    }
+                }
+                .download-token {
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                    svg {
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                    }
+                }
+
+                .divider-style {
+                    width: 1px;
+                    height: 12px;
+                    border-left: 1px solid var(--Colors-Use-Neutral-Border);
+                }
+                .info-time {
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+            }
         }
         .header-extra {
             display: flex;

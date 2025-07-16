@@ -9,9 +9,9 @@ import cloneDeep from "lodash/cloneDeep"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import useChatData from "../useChatData"
-import {formatAIAgentSetting} from "../utils"
+import {formatAIAgentSetting, formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineNewspaperIcon, OutlineOpenIcon} from "@/assets/icon/outline"
+import {OutlineArrowdownIcon, OutlineArrowupIcon, OutlineNewspaperIcon, OutlineOpenIcon} from "@/assets/icon/outline"
 import {
     AIAgentChatBody,
     AIAgentChatFooter,
@@ -22,10 +22,12 @@ import {
 
 import classNames from "classnames"
 import styles from "./AITaskChat.module.scss"
+import {formatTimeYMD} from "@/utils/timeUtil"
 
 const AITaskChat: React.FC<AITaskChatProps> = memo(
     forwardRef((props, ref) => {
         const {onBack} = props
+        const [coordinatorId, setCoordinatorId] = useState<string>()
 
         useImperativeHandle(
             ref,
@@ -166,7 +168,8 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                 onReview: handleShowReview,
                 onReviewExtra: handleShowReviewExtra,
                 onReviewRelease: handleReleaseReview,
-                onEnd: handleChatingEnd
+                onEnd: handleChatingEnd,
+                setCoordinatorId
             })
         // #endregion
 
@@ -374,13 +377,67 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             setLogExpand((old) => !old)
         })
         // #endregion
+        //#region title UI 相关数据
+        // 问题
+        const qs = useMemo(() => {
+            if (!taskChat) return ""
+            return taskChat.question
+        }, [taskChat])
+        // AI的Token消耗
+        const token = useMemo(() => {
+            if (!taskChat) return [0, 0]
 
+            if (taskChat.answer?.consumption?.input_consumption || taskChat.answer?.consumption?.output_consumption) {
+                return [0, 0]
+            }
+
+            if (taskChat?.answer) {
+                let input = 0
+                let output = 0
+                const keys = Object.keys(taskChat.answer.consumption || {})
+                for (let name of keys) {
+                    input += taskChat.answer.consumption[name]?.input_consumption || 0
+                    output += taskChat.answer.consumption[name]?.output_consumption || 0
+                }
+
+                return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
+            }
+
+            let input = 0
+            let output = 0
+            const keys = Object.keys(uiConsumption || {})
+            for (let name of keys) {
+                input += uiConsumption[name]?.input_consumption || 0
+                output += uiConsumption[name]?.output_consumption || 0
+            }
+            return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
+        }, [taskChat, uiConsumption])
+        // #endregion
         return (
             <div className={styles["ai-task-chat"]}>
                 <div className={styles["task-chat-body"]}>
                     <div className={styles["task-chat-executing"]}>
                         <div className={styles["chat-executing-header"]}>
-                            <div className={styles["header-title"]}>AI-Agent</div>
+                            <div className={styles["header-title"]}>
+                                <div className={styles["header-title-qs"]}>{qs}</div>
+                                <div className={styles["header-title-info-wrapper"]}>
+                                    <div className={styles["info-token"]}>
+                                        Tokens:
+                                        <div className={classNames(styles["token-tag"], styles["upload-token"])}>
+                                            <OutlineArrowupIcon />
+                                            {token[0]}
+                                        </div>
+                                        <div className={classNames(styles["token-tag"], styles["download-token"])}>
+                                            <OutlineArrowdownIcon />
+                                            {token[1]}
+                                        </div>
+                                    </div>
+                                    <div className={styles["divider-style"]}></div>
+                                    <div className={styles["info-time"]}>
+                                        创建时间:{taskChat?.time ? <> {formatTimeYMD(taskChat.time)}</> : "-"}
+                                    </div>
+                                </div>
+                            </div>
 
                             <div className={styles["header-extra"]}>
                                 <YakitButton
@@ -431,6 +488,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                             tasks={uiPlan}
                                             activeStream={activeStream}
                                             streams={uiStreams}
+                                            coordinatorId={coordinatorId}
                                         />
                                     )}
                                 </div>

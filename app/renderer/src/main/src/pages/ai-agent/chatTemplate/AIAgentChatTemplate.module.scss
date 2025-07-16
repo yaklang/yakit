@@ -86,7 +86,6 @@
 .ai-agent-chat-body {
     width: 100%;
     height: 100%;
-    padding: 16px 12px 0 12px;
     display: flex;
     flex-direction: column;
     .body-question-info {
@@ -101,57 +100,6 @@
             letter-spacing: var(--spacing-radius-none, 0px);
             overflow: hidden;
         }
-        .info-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            .info-token {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                color: var(--Colors-Use-Neutral-Text-1-Tittle, #353639);
-                font-size: 12px;
-                font-weight: 400;
-            }
-            .token-tag {
-                height: 16px;
-                padding: 2px 6px;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                border-radius: 2px;
-                svg {
-                    width: 12px;
-                    height: 12px;
-                }
-            }
-            .upload-token {
-                background: var(--Colors-Use-Error-Bg-Hover, #fde9e9);
-                color: var(--Colors-Use-Error-Primary, #f15757);
-                svg {
-                    color: var(--Colors-Use-Error-Primary, #f15757);
-                }
-            }
-            .download-token {
-                background: var(--Colors-Use-Neutral-Bg-Hover, #eef0f3);
-                color: var(--Colors-Use-Neutral-Text-3-Secondary, #868c97);
-                svg {
-                    color: var(--Colors-Use-Neutral-Text-3-Secondary, #868c97);
-                }
-            }
-
-            .divider-style {
-                width: 1px;
-                height: 12px;
-                border-left: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
-            }
-            .info-time {
-                color: var(--Colors-Use-Neutral-Text-1-Tittle, #353639);
-                font-size: 12px;
-                font-weight: 400;
-                line-height: 16px;
-            }
-        }
     }
 
     .body-content {
@@ -159,9 +107,18 @@
         overflow: hidden;
     }
 }
-
+.ai-tabBar {
+    padding: 0px 8px;
+    background: var(--Colors-Use-Error-Primary);
+    border-radius: 8px;
+    color: var(--Colors-Use-Error-On-Primary);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+}
 /* ---------- AIAgentChatStream ----------*/
 .ai-agent-chat-stream {
+    padding: 16px 16px 0px 12px;
     width: 100%;
     height: 100%;
     overflow: hidden auto;

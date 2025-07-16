@@ -2,6 +2,7 @@ import {yakitNotify} from "@/utils/notification"
 import {QueryRisksRequest, QueryRisksResponse} from "./YakitRiskTableType"
 import {Risk} from "../schema"
 import {FieldName, Fields} from "../RiskTable"
+import {defQueryRisksRequest} from "./constants"
 
 const {ipcRenderer} = window.require("electron")
 /** QueryRisks */
@@ -16,7 +17,27 @@ export const apiQueryRisks: (query?: QueryRisksRequest) => Promise<QueryRisksRes
             })
     })
 }
-
+/** 获取风险与漏洞的总数 通过RuntimeId */
+export const apiQueryRisksTotalByRuntimeId: (RuntimeId: string) => Promise<QueryRisksResponse> = (RuntimeId) => {
+    return new Promise((resolve, reject) => {
+        const params: QueryRisksRequest = {
+            ...defQueryRisksRequest,
+            Pagination: {
+                ...defQueryRisksRequest.Pagination,
+                Page: 1,
+                Limit: 1
+            },
+            RuntimeId
+        }
+        ipcRenderer
+            .invoke("QueryRisks", params)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify("error", `QueryRisks 获取总数失败: ${e}`)
+                reject(e)
+            })
+    })
+}
 /**
  * @description QueryRisks 获取降序的增量数据
  */

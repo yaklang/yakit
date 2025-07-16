@@ -25,6 +25,7 @@ export interface UseChatDataParams {
     onReviewExtra?: (data: AIChatReviewExtra) => void
     onReviewRelease?: (id: string) => void
     onEnd?: () => void
+    setCoordinatorId?: (id: string) => void
 }
 
 /** 将树结构任务列表转换成一维数组 */
@@ -47,7 +48,7 @@ const defaultAIToolData: AIChatMessage.AIToolData = {
     interactiveId: ""
 }
 function useChatData(params?: UseChatDataParams) {
-    const {onReview, onReviewExtra, onReviewRelease, onEnd} = params || {}
+    const {onReview, onReviewExtra, onReviewRelease, onEnd, setCoordinatorId} = params || {}
 
     const chatID = useRef<string>("")
     const fetchToken = useMemoizedFn(() => {
@@ -73,6 +74,9 @@ function useChatData(params?: UseChatDataParams) {
     const [logs, setLogs] = useState<AIChatMessage.Log[]>([])
 
     const [streams, setStreams] = useState<Record<string, AIChatStreams[]>>({})
+
+    // CoordinatorId
+    const coordinatorId = useRef<{cache: string; sent: string}>({cache: "", sent: ""})
 
     // 从 active 里排除 nodeId 的计时器
     const clearActiveStreamTime = useRef<Record<string, NodeJS.Timeout | null>>({})
@@ -302,6 +306,10 @@ function useChatData(params?: UseChatDataParams) {
         chatID.current = token
         chatRequest.current = cloneDeep(params.Params)
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
+            // CoordinatorId
+            if (!!res?.CoordinatorId) {
+                onSetCoordinatorId(res.CoordinatorId)
+            }
             let ipcContent = ""
             let ipcStreamDelta = ""
             try {
@@ -633,6 +641,14 @@ function useChatData(params?: UseChatDataParams) {
         })
         console.log("start-ai-task", token, params)
         ipcRenderer.invoke("start-ai-task", token, params)
+    })
+
+    const onSetCoordinatorId = useMemoizedFn((CoordinatorId: string) => {
+        coordinatorId.current.cache = CoordinatorId
+        if (coordinatorId.current.sent !== coordinatorId.current.cache && setCoordinatorId) {
+            setCoordinatorId(coordinatorId.current.cache)
+            coordinatorId.current.sent = coordinatorId.current.cache
+        }
     })
     const getToolData = useMemoizedFn((callToolId: string): AIChatMessage.AIToolData => {
         return toolDataMapRef.current.get(callToolId) || cloneDeep(defaultAIToolData)

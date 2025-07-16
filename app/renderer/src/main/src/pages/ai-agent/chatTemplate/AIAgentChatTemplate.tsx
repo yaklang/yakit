@@ -1,5 +1,5 @@
 import React, {memo, ReactNode, UIEventHandler, useEffect, useMemo, useRef, useState} from "react"
-import {useControllableValue, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useControllableValue, useCreation, useInterval, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {
     AIAgentChatBodyProps,
     AIAgentChatFooterProps,
@@ -9,13 +9,12 @@ import {
     AIChatLogsProps,
     AIChatToolDrawerContentProps,
     AIChatToolSync,
+    AITabsEnumType,
     ChatStreamCollapseItemProps,
     ChatStreamCollapseProps
 } from "../aiAgentType"
 import {
-    OutlineArrowdownIcon,
     OutlineArrowrightIcon,
-    OutlineArrowupIcon,
     OutlineChevrondoubledownIcon,
     OutlineChevrondoubleupIcon,
     OutlineChevrondownIcon,
@@ -54,13 +53,21 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "./AIEcharts"
 import AIPlanReviewTree from "../aiPlanReviewTree/AIPlanReviewTree"
 import {yakitNotify} from "@/utils/notification"
-import {formatTime, formatTimestamp, formatTimeYMD} from "@/utils/timeUtil"
+import {formatTime, formatTimestamp} from "@/utils/timeUtil"
 import {QSInputTextarea} from "../template/template"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
 import {AIChatToolColorCard, AIChatToolItem} from "./AIChatTool"
 import emiter from "@/utils/eventBus/eventBus"
+import {AITabs, AITabsEnum} from "../constant"
+import {
+    PluginExecuteHttpFlow,
+    VulnerabilitiesRisksTable
+} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -168,66 +175,90 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
 /** @name 对话框内容 */
 export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
-    const {info, consumption, ...rest} = props
+    const {info, consumption, coordinatorId, ...rest} = props
 
-    // 问题
-    const qs = useMemo(() => {
-        if (!info) return ""
-        return info.question
-    }, [info])
-    // AI的Token消耗
-    const token = useMemo(() => {
-        if (info.answer?.consumption?.input_consumption || info.answer?.consumption?.output_consumption) {
-            return [0, 0]
-        }
-
-        if (info?.answer) {
-            let input = 0
-            let output = 0
-            const keys = Object.keys(info.answer.consumption || {})
-            for (let name of keys) {
-                input += info.answer.consumption[name]?.input_consumption || 0
-                output += info.answer.consumption[name]?.output_consumption || 0
+    //#region AI tab 相关逻辑
+    const [activeKey, setActiveKey] = useState<AITabsEnumType>(AITabsEnum.Task_Content)
+    const [allTotal, setAllTotal] = useState<number>(0)
+    const [tempTotal, setTempTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数
+    const [interval, setInterval] = useState<number | undefined>(1000)
+    useInterval(() => {
+        getTotal()
+    }, interval)
+    const getTotal = useMemoizedFn(() => {
+        if (!coordinatorId) return
+        apiQueryRisksTotalByRuntimeId(coordinatorId).then((allRes) => {
+            if (+allRes.Total > 0) {
+                setTempTotal(+allRes.Total)
             }
-
-            return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
+        })
+    })
+    const onSetRiskTotal = useMemoizedFn((total) => {
+        if (total > 0) {
+            setAllTotal(total)
+            if (interval) setInterval(undefined)
+        }
+    })
+    const renderTabContent = useMemoizedFn((key: AITabsEnumType) => {
+        switch (key) {
+            case AITabsEnum.Task_Content:
+                return <AIAgentChatStream {...rest} />
+            case AITabsEnum.Risk:
+                return !!coordinatorId ? (
+                    <VulnerabilitiesRisksTable
+                        runtimeId={coordinatorId}
+                        allTotal={allTotal}
+                        setAllTotal={onSetRiskTotal}
+                    />
+                ) : (
+                    <>
+                        <YakitEmpty />
+                    </>
+                )
+            case AITabsEnum.HTTP:
+                return !!coordinatorId ? (
+                    <PluginExecuteHttpFlow runtimeId={coordinatorId} website={false} />
+                ) : (
+                    <>
+                        <YakitEmpty />
+                    </>
+                )
+            default:
+                return <></>
+        }
+    })
+    const tabBarRender = useMemoizedFn((tab: YakitTabsProps) => {
+        if (tab.value === AITabsEnum.Risk) {
+            return (
+                <>
+                    {tab.label}
+                    {tempTotal ? <span className={styles["ai-tabBar"]}>{tempTotal}</span> : ""}
+                </>
+            )
         }
 
-        let input = 0
-        let output = 0
-        const keys = Object.keys(consumption || {})
-        for (let name of keys) {
-            input += consumption[name]?.input_consumption || 0
-            output += consumption[name]?.output_consumption || 0
+        return tab.label
+    })
+    const yakitTabs = useCreation(() => {
+        let tab = [...AITabs]
+        if (!tempTotal) {
+            tab = AITabs.filter((ele) => ele.value !== AITabsEnum.Risk)
         }
-        return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
-    }, [info, consumption])
-
+        return tab
+    }, [tempTotal])
+    //#endregion
     return (
         <div className={styles["ai-agent-chat-body"]}>
-            <div className={styles["body-question-info"]}>
-                <div className={classNames(styles["question-style"], "yakit-content-single-ellipsis")} title={qs}>
-                    {qs}
-                </div>
-                <div className={styles["info-wrapper"]}>
-                    <div className={styles["info-token"]}>
-                        Tokens:
-                        <div className={classNames(styles["token-tag"], styles["upload-token"])}>
-                            <OutlineArrowupIcon />
-                            {token[0]}
-                        </div>
-                        <div className={classNames(styles["token-tag"], styles["download-token"])}>
-                            <OutlineArrowdownIcon />
-                            {token[1]}
-                        </div>
-                    </div>
-                    <div className={styles["divider-style"]}></div>
-                    <div className={styles["info-time"]}>创建时间: {formatTimeYMD(info.time)}</div>
-                </div>
-            </div>
-
             <div className={styles["body-content"]}>
-                <AIAgentChatStream {...rest} />
+                <YakitSideTab
+                    type='horizontal'
+                    yakitTabs={yakitTabs}
+                    activeKey={activeKey}
+                    onActiveKey={(v) => setActiveKey(v as AITabsEnumType)}
+                    onTabPaneRender={tabBarRender}
+                >
+                    <div style={{height: "100%", overflow: "hidden"}}>{renderTabContent(activeKey)}</div>
+                </YakitSideTab>
             </div>
         </div>
     )
