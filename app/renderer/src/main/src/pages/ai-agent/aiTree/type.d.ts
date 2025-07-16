@@ -19,7 +19,7 @@ export interface AITreeNodeInfo {
 
 export interface AITreeEmptyNodeProps {
     isNode?: boolean
-    type?: AIChatMessage.PlanTask["state"] | ""
+    type?: AIChatMessage.PlanTask["progress"] | ""
     level: number
     levelDiff: number
     isStartEnd?: string

@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useState} from "react"
 import {
     AIPlanReviewTreeArrowLineProps,
     AIPlanReviewTreeItemProps,
@@ -8,13 +8,13 @@ import {
     SetItemOption
 } from "./AIPlanReviewTreeType"
 import styles from "./AIPlanReviewTree.module.scss"
-import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
+import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {ExpandIcon, RetractIcon} from "./icon"
 import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePlussmIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {AIChatMessage, AITool, GetAIToolListRequest, GetAIToolListResponse} from "../type/aiChat"
+import {AIChatMessage, GetAIToolListRequest, GetAIToolListResponse} from "../type/aiChat"
 import {yakitNotify} from "@/utils/notification"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -22,6 +22,7 @@ import {SolidAnnotationIcon, SolidToolIcon} from "@/assets/icon/solid"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {grpcGetAIToolList} from "../aiToolList/utils"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {generateTaskChatExecution} from "../defaultConstant"
 
 const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => {
     const {editable, planReviewTreeKeywordsMap, currentPlansId} = props
@@ -54,13 +55,8 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
         const newChildIndex = `${parentIndex}-${maxChildIndex + 1}`
 
         const newChildTask: AIChatMessage.PlanTask = {
+            ...generateTaskChatExecution(),
             index: newChildIndex,
-            name: ``,
-            goal: ``,
-            state: "wait",
-            isRemove: false,
-            tools: [],
-            description: "",
             isUserAdd: true
         }
 
@@ -120,13 +116,8 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
         const newSiblingIndex = parentIndex ? `${parentIndex}-${newSiblingNum}` : `${newSiblingNum}`
 
         const newSiblingTask: AIChatMessage.PlanTask = {
+            ...generateTaskChatExecution(),
             index: newSiblingIndex,
-            name: ``,
-            goal: ``,
-            state: "wait",
-            isRemove: false,
-            tools: [],
-            description: "",
             isUserAdd: true
         }
 

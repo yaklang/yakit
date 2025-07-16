@@ -46,8 +46,8 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
         const wrapperRef = useRef<HTMLDivElement>(null)
 
         // #region 展示数据和数据的处理逻辑
-        // 是否在执行中
-        const isExecuting = useRef(false)
+        // 发送消息后接受消息的 loading 状态
+        const [isExecuting, setIsExecuting] = useState(false)
         const [triageChat, setTriageChat] = useState<AITriageChatData>()
 
         // 验证对话集合是否可以操作数据，不能则返回null
@@ -125,7 +125,7 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                 } catch (error) {}
             }
             if (type === "finish") {
-                isExecuting.current = false
+                setIsExecuting(false)
             }
         })
         const [{execute}, events] = useChatTriage({onChatContent: handleFetchChatContent})
@@ -167,7 +167,7 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
             }
             setTriageChat(info)
 
-            isExecuting.current = true
+            setIsExecuting(true)
             events.onStart(info.id, {
                 IsStart: true,
                 Params: {...formatAIAgentSetting(setting), UserQuery: qs || ""}
@@ -195,7 +195,7 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                     }
                 }
             })
-            isExecuting.current = true
+            setIsExecuting(true)
             events.onSend(triageChat?.id, qs)
             setQuestion("")
         })
@@ -205,9 +205,9 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                 events.onClose(triageChat.id)
             }
             onClear()
-            isExecuting.current = false
             startLoading.current = false
             setTriageChat(undefined)
+            setIsExecuting(false)
             setQuestion("")
             setActiveForge(undefined)
         })
@@ -263,7 +263,7 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                 <div className={styles["chat-footer"]}>
                     <div className={styles["footer-body"]}>
                         <div className={styles["footer-inputs"]}>
-                            {!isExecuting.current && triageChat && triageChat.chats.length > 0 && (
+                            {!isExecuting && triageChat && triageChat.chats.length > 0 && (
                                 <div className={styles["clear-context"]}>
                                     <YakitButton
                                         className={styles["clear-btn"]}
@@ -276,7 +276,7 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                             )}
 
                             <AIChatTextarea
-                                loading={execute}
+                                loading={isExecuting}
                                 question={question}
                                 setQuestion={setQuestion}
                                 textareaProps={textareaProps}

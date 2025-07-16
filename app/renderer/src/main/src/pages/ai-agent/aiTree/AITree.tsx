@@ -84,7 +84,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo((props) => {
                 </div>
             )}
             <div className={styles["node-wrapper"]}>
-                <AITreeEmptyNode isNode={true} level={setting.nodeLevel} levelDiff={0} type={data.state} />
+                <AITreeEmptyNode isNode={true} level={setting.nodeLevel} levelDiff={0} type={data.progress || "wait"} />
                 <div className={styles["content"]} onClick={handleClick}>
                     <div
                         style={{width: 226 - (setting.nodeLevel || 0) * 16 - 10}}

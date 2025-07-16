@@ -16,6 +16,7 @@ import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {isToolSyncNode, isToolStdout} from "./utils"
 import moment from "moment"
 import emiter from "@/utils/eventBus/eventBus"
+import {generateTaskChatExecution} from "./defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -29,15 +30,7 @@ export interface UseChatDataParams {
 /** 将树结构任务列表转换成一维数组 */
 export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMessage.PlanTask) => {
     if (!Array.isArray(sum)) return null
-    sum.push({
-        index: task.index || "",
-        name: task.name || "",
-        goal: task.goal || "",
-        state: "wait",
-        isRemove: false,
-        tools: [],
-        description: ""
-    })
+    sum.push(generateTaskChatExecution(task))
     if (task.subtasks && task.subtasks.length > 0) {
         for (let subtask of task.subtasks) {
             handleFlatAITree(sum, subtask)
@@ -104,12 +97,12 @@ function useChatData(params?: UseChatDataParams) {
 
     // #region 改变任务状态相关方法
     /** 更新任务状态 */
-    const handleUpdateTaskState = useMemoizedFn((index: string, state: AIChatMessage.PlanTask["state"]) => {
+    const handleUpdateTaskState = useMemoizedFn((index: string, state: AIChatMessage.PlanTask["progress"]) => {
         setPlan((old) => {
             const newData = cloneDeep(old)
             return newData.map((item) => {
                 if (item.index === index) {
-                    item.state = state
+                    item.progress = state
                 }
                 return item
             })
@@ -120,8 +113,8 @@ function useChatData(params?: UseChatDataParams) {
         setPlan((old) => {
             const newData = cloneDeep(old)
             return newData.map((item) => {
-                if (item.state === "in-progress") {
-                    item.state = "error"
+                if (item.progress === "in-progress") {
+                    item.progress = "error"
                 }
                 return item
             })
@@ -374,7 +367,6 @@ function useChatData(params?: UseChatDataParams) {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.Consumption
-                    console.log(`consumption---\n`, data)
                     const onlyId = data.consumption_uuid || "system"
 
                     setConsumption((old) => {
@@ -426,8 +418,7 @@ function useChatData(params?: UseChatDataParams) {
                         const data = obj as AIChatMessage.TaskLog
                         setLogs((pre) => pre.concat([{level: "info", message: `task_execute : ${data.prompt}`}]))
                     } else if (obj.type && obj.type === "update_task_status") {
-                        const data = obj as AIChatMessage.UpdateTask
-                        console.log("update_task_status---\n", data, ipcContent)
+                        // const data = obj as AIChatMessage.UpdateTask
                         // 暂时不知道这步的具体作用，如果判断执行完成，可以通过 pop 进行判断
                         // 后续应该可以通过这步去判断执行的结果
                     } else if (obj.type && obj.type === "pop_task") {
@@ -606,6 +597,18 @@ function useChatData(params?: UseChatDataParams) {
                 } catch (error) {}
                 return
             }
+
+            if (res.Type === "plan") {
+                // 更新正在执行的任务树
+                console.log("plan---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
+                if (!res.IsJson) return
+                const tasks = JSON.parse(ipcContent) as {root_task: AIChatMessage.PlanTask}
+                planTree.current = cloneDeep(tasks.root_task)
+                const sum: AIChatMessage.PlanTask[] = []
+                handleFlatAITree(sum, tasks.root_task)
+                setPlan([...sum])
+            }
+
             console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
         })
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
