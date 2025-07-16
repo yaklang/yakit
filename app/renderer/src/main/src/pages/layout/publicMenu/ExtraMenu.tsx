@@ -185,7 +185,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
         }
         return (
             <>
-                <YakitPopover
+                {/*<YakitPopover
                     overlayClassName={styles["import-resource-popover"]}
                     overlayStyle={{paddingTop: 2}}
                     placement={"bottom"}
@@ -202,8 +202,8 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     >
                         {t("YakitButton.importResources")}
                     </YakitButton>
-                </YakitPopover>
-                <YakitButton
+                </YakitPopover>*/}
+                {/* <YakitButton
                     type='secondary2'
                     onClick={() => {
                         onMenuSelect({route: YakitRoute.Codec})
@@ -211,7 +211,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     icon={<SolidCodecIcon />}
                 >
                     {t("YakitRoute.Codec")}
-                </YakitButton>
+                </YakitButton> */}
                 <YakitButton
                     type='secondary2'
                     onClick={() => {
@@ -221,7 +221,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 >
                     {t("YakitRoute.Payload")}
                 </YakitButton>
-                <YakitButton
+                {/* <YakitButton
                     type='secondary2'
                     onClick={() => {
                         onMenuSelect({route: YakitRoute.YakScript})
@@ -229,8 +229,8 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     icon={<SolidTerminalIcon />}
                 >
                     {t("YakitRoute.YakRunner")}
-                </YakitButton>
-                <NotepadMenu isExpand={false} onRouteMenuSelect={onMenuSelect} />
+                </YakitButton> */}
+                {/* <NotepadMenu isExpand={false} onRouteMenuSelect={onMenuSelect} /> */}
                 <ImportLocalPlugin
                     visible={visibleImport}
                     setVisible={(v) => {

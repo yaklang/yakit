@@ -1874,7 +1874,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                     {stopScreen}
 
-                                    <HelpDoc system={system} />
+                                    {/* <HelpDoc system={system} /> */}
 
                                     {engineLink && (
                                         <>
@@ -1950,7 +1950,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         </>
                                     )}
 
-                                    <HelpDoc system={system} />
+                                    {/* <HelpDoc system={system} /> */}
 
                                     {stopScreen}
 
