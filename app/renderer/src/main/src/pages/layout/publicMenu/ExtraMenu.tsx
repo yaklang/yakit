@@ -163,7 +163,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 </YakitButton>
             ) : (
                 <>
-                    <YakitPopover
+                    {/* <YakitPopover
                         overlayClassName={styles["import-resource-popover"]}
                         overlayStyle={{paddingTop: 2}}
                         placement={"bottom"}
@@ -180,8 +180,8 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                         >
                             导入资源
                         </YakitButton>
-                    </YakitPopover>
-                    <YakitButton
+                    </YakitPopover> */}
+                    {/* <YakitButton
                         type='secondary2'
                         onClick={() => {
                             onMenuSelect({route: YakitRoute.Codec})
@@ -189,7 +189,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                         icon={<SolidCodecIcon />}
                     >
                         Codec
-                    </YakitButton>
+                    </YakitButton> */}
                     <YakitButton
                         type='secondary2'
                         onClick={() => {
@@ -199,16 +199,16 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     >
                         Payload
                     </YakitButton>
-                    <YakitButton
+                    {/* <YakitButton
                         type='secondary2'
                         onClick={() => {
                             onMenuSelect({route: YakitRoute.YakScript})
                         }}
                         icon={<SolidTerminalIcon />}
                     >
-                        Runner
-                    </YakitButton>
-                    <NotepadMenu isExpand={false} onRouteMenuSelect={onMenuSelect} />
+                        Yak Runner
+                    </YakitButton> */}
+                    {/* <NotepadMenu isExpand={false} onRouteMenuSelect={onMenuSelect} /> */}
                     <ImportLocalPlugin
                         visible={visibleImport}
                         setVisible={(v) => {

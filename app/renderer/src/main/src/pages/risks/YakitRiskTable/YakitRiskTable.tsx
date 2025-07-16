@@ -109,11 +109,8 @@ import {openPacketNewWindow} from "@/utils/openWebsite"
 import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {JumpToAuditEditorProps} from "@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType"
 import {Selection} from "@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType"
-<<<<<<< HEAD
 import MDEditor from "@uiw/react-md-editor"
-=======
 import {onCreateRiskReportModal} from "../CreatRiskReport/CreatRiskReport"
->>>>>>> 096623397 (feat:)
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem

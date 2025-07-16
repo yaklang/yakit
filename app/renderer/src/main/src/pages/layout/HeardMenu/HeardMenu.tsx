@@ -702,7 +702,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     {!isEnpriTraceAgent() ? (
                         <>
                             <ExtraMenu onMenuSelect={onRouteMenuSelect} />
-                            {!isIRify() && (
+                            {!isIRify() && false && (
                                 <>
                                     <Dropdown
                                         overlayClassName={style["customize-drop-menu"]}
