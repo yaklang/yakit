@@ -4747,7 +4747,6 @@ message CustomizeCodecFlow{
   string FlowName = 1;
   repeated CodecWork WorkFlow = 2;
   string WorkFlowUI = 3;
-  string FlowId = 4;
 }
 
 message UpdateCodecFlowRequest {
