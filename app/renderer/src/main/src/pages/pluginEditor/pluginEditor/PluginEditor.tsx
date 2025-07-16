@@ -266,12 +266,11 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 }
             } catch (e) {}
             const codeObjectInfo = codeObject?.info || {}
-            const scriptName = codeObjectInfo?.name || ""
-            setInitBaseInfo({
-                ...initBaseInfo,
-                ScriptName: scriptName.slice(0, 100),
-                Help: codeObjectInfo?.description || ""
-            } as YakitPluginBaseInfo)
+            const scriptName = (codeObjectInfo?.name || "").slice(0, 100)
+            if (baseInfoRef.current) {
+                baseInfoRef.current.setNameForm(scriptName)
+                baseInfoRef.current.setHelpForm(codeObjectInfo?.description || "")
+            }
         })
 
         // 检查退出时是否有未保存的情况(暂时只能给编辑使用)

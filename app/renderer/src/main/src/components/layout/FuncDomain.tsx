@@ -2759,8 +2759,6 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         } catch (error) {}
     })
 
-
-
     /** 单条点击阅读 */
     const singleRead = useMemoizedFn((info: SSARisk) => {
         apiNewRiskRead({ID: [info.Id]}).then(() => {
@@ -2789,11 +2787,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                 title: "详情",
                 content: (
                     <div style={{overflow: "auto", maxHeight: "70vh"}}>
-                        <YakitAuditRiskDetails
-                            info={res.Data[0]}
-                            isShowExtra={true}
-                            isExtraClick={() => m.destroy()}
-                        />
+                        <YakitAuditRiskDetails info={res.Data[0]} isShowExtra={true} isExtraClick={() => m.destroy()} />
                     </div>
                 )
             })
@@ -2908,7 +2902,6 @@ interface ScreenAndScreenshotProps {
     isRecording: boolean
     token: string
 }
-
 const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((props) => {
     const {system, isRecording, token} = props
     const [show, setShow] = useState<boolean>(false)
@@ -3050,6 +3043,8 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
     })
 
     // 性能采样
+    const performanceModalRef = useRef<any>(null)
+    const performanceModalLoading = useRef(false)
     const performanceParamsRef = useRef<{timeout: string}>({timeout: "10"})
     const {performanceSamplingInfo, setPerformanceSamplingLog, setSampling} = usePerformanceSampling()
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
@@ -3086,6 +3081,8 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
 
     const handlePerformanceSampling = () => {
         if (performanceSamplingInfo.isPerformanceSampling) return
+        if (performanceModalRef.current || performanceModalLoading.current) return // 已有弹窗或正在请求
+        performanceModalLoading.current = true
         grpcFetchLocalPluginDetail({Name: "核心引擎性能采样"}, true)
             .then((res) => {
                 const samplingPlugin = res
@@ -3146,14 +3143,20 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                             debugPluginStreamEvent.start()
                             setSampling(true)
                             m.destroy()
+                            performanceModalRef.current = null
+                            performanceModalLoading.current = false
                         })
                     },
                     onCancel: () => {
                         m.destroy()
+                        performanceModalRef.current = null
+                        performanceModalLoading.current = false
                     }
                 })
+                performanceModalRef.current = m
             })
             .catch(() => {
+                performanceModalLoading.current = false
                 yakitNotify("info", "找不到Yak 原生插件：核心引擎性能采样")
             })
     }
