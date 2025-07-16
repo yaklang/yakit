@@ -538,7 +538,8 @@ function useChatData(params?: UseChatDataParams) {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
                     onSetToolData(data?.call_tool_id, {
-                        status: "user_cancelled"
+                        status: "user_cancelled",
+                        time: res.Timestamp
                     })
                     aggregationToolData(res, data?.call_tool_id)
                 } catch (error) {}
@@ -550,7 +551,8 @@ function useChatData(params?: UseChatDataParams) {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
                     onSetToolData(data?.call_tool_id, {
-                        status: "success"
+                        status: "success",
+                        time: res.Timestamp
                     })
                     aggregationToolData(res, data?.call_tool_id)
                 } catch (error) {}
@@ -593,13 +595,13 @@ function useChatData(params?: UseChatDataParams) {
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
                     const currentToolData = getToolData(data.call_tool_id)
                     if (currentToolData.status === "user_cancelled") {
-                        currentToolData.summary = "当前工具调用已被取消，可点击查看详情查看具体信息"
+                        currentToolData.summary = "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
                     } else {
-                        currentToolData.summary = data.summary || "暂无内容"
+                        currentToolData.summary = data.summary || ""
                     }
                     onSetToolData(data?.call_tool_id, {
                         summary: currentToolData.summary,
-                        time: res.Timestamp || moment().unix()
+                        time: res.Timestamp
                     })
                     onSetToolSummary(res, data?.call_tool_id || "")
                 } catch (error) {}
