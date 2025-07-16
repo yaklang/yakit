@@ -28,6 +28,8 @@ import "../../plugins/plugins.scss"
 import styles from "./EditorInfo.module.scss"
 export interface EditorInfoFormRefProps {
     onSubmit: () => Promise<YakitPluginBaseInfo | undefined>
+    setNameForm: (name: string) => void
+    setHelpForm: (help: string) => void
 }
 interface EditorBaseInfoProps {
     ref?: ForwardedRef<EditorInfoFormRefProps>
@@ -37,7 +39,7 @@ interface EditorBaseInfoProps {
     /** 初始插件类型 */
     initType?: string
     setType: (type: string) => void
-    setName: (type: string) => void
+    setName: (name: string) => void
 }
 
 interface EditorInfoProps extends EditorBaseInfoProps {
@@ -58,7 +60,9 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
         useImperativeHandle(
             ref,
             () => ({
-                onSubmit: handleSubmit
+                onSubmit: handleSubmit,
+                setNameForm: updateName,
+                setHelpForm: updateHelp,
             }),
             []
         )
@@ -78,6 +82,17 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
                     resolve(undefined)
                 }
             })
+        })
+
+        // 更新Name
+        const updateName = useMemoizedFn((name: string) => {
+            if (!formRef || !formRef.current) return
+            formRef.current.setNameForm(name)
+        })
+        // 更新Help
+        const updateHelp = useMemoizedFn((help: string) => {
+            if (!formRef || !formRef.current) return
+            formRef.current.setHelpForm(help)
         })
 
         return (
@@ -119,7 +134,9 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
         useImperativeHandle(
             ref,
             () => ({
-                onSubmit: handleFormSubmit
+                onSubmit: handleFormSubmit,
+                setNameForm: (name: string) => form.setFieldsValue({ScriptName: name}),
+                setHelpForm: (help: string) => form.setFieldsValue({Help: help}),
             }),
             [form]
         )
