@@ -286,7 +286,7 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
     }, [visible])
 
     const handleCancel = useMemoizedFn(() => {
-        // onCallback(false)
+        onCallback(false)
     })
 
     const [updateLoading, setUpdateLoading] = useState<boolean>(false)
@@ -335,7 +335,7 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
             okButtonText='OK'
             okButtonProps={{loading: updateLoading}}
             cancelButtonText='忽略'
-            cancelButtonProps={{style: {display: "none"}}}
+            cancelButtonProps={{style: {display: updateLoading ? "none" : ""}}}
             onOk={yakitUpdate}
             onCancel={handleCancel}
         />
