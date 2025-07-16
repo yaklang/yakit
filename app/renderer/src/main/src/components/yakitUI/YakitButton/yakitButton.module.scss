@@ -60,7 +60,7 @@
         color: fetch-color($type, "color-4");
         border-color: fetch-color($type, "color-1");
         svg {
-            color: fetch-color($type, "color-4");
+            color: fetch-color($type, "color-5");
         }
     }
     &.yakit-active-button {
@@ -85,7 +85,7 @@
         color: fetch-color($type, "color-4");
         border-color: fetch-color($type, "color-3");
         svg {
-            color: fetch-color($type, "color-4");
+            color: fetch-color($type, "color-5");
         }
     }
     &:active {
@@ -175,10 +175,10 @@
 
     &.yakit-hover-button {
         background: var(--Colors-Use-Basic-Background);
-        color: fetch-color($type, "color-4");
-        border-color: fetch-color($type, "color-4");
+        color: fetch-color($type, "color-5");
+        border-color: fetch-color($type, "color-5");
         svg {
-            color: fetch-color($type, "color-4");
+            color: fetch-color($type, "color-5");
         }
     }
     &.yakit-active-button {
@@ -200,10 +200,10 @@
     }
     &:hover {
         background: var(--Colors-Use-Basic-Background);
-        color: fetch-color($type, "color-4");
-        border-color: fetch-color($type, "color-4");
+        color: fetch-color($type, "color-5");
+        border-color: fetch-color($type, "color-5");
         svg {
-            color: fetch-color($type, "color-4");
+            color: fetch-color($type, "color-5");
         }
     }
     &:active {

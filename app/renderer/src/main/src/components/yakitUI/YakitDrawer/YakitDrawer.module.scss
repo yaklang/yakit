@@ -15,6 +15,11 @@
         }
         .ant-drawer-title{
             color: var(--Colors-Use-Neutral-Text-1-Title);
+            .yakit-button-outline2{
+                &:hover{
+                    border-color: var(--Colors-Use-Main-Primary);
+                }
+            }
         }
         .ant-drawer-close {
             margin-right: 8px;
