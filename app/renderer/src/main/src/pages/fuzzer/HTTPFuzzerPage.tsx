@@ -657,7 +657,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // 切换【配置】/【规则】高级内容显示 type
     const [advancedConfigShowType, setAdvancedConfigShowType] = useState<WebFuzzerType>("config")
-    const [currentFuzzerPage, setCurrentFuzzerPage, getCurrentFuzzerPage] = useGetSetState<boolean>(true)
+    const [currentFuzzerPage, setCurrentFuzzerPage] = useGetSetState<boolean>(true)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
@@ -676,20 +676,20 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [_successCount, setSuccessCount, getSuccessCount] = useGetState(0)
     const [_failedCount, setFailedCount, getFailedCount] = useGetState(0)
 
-    // const [successFuzzer, setSuccessFuzzer] = useState<FuzzerResponse[]>([])
-    // const [failedFuzzer, setFailedFuzzer] = useState<FuzzerResponse[]>([])
-    const successFuzzerRef = useRef<FuzzerResponse[]>([]); // 成功的响应
-    const failedFuzzerRef = useRef<FuzzerResponse[]>([]); // 失败的响应
+    const successFuzzerRef = useRef<FuzzerResponse[]>([]) // 成功的响应
+    const failedFuzzerRef = useRef<FuzzerResponse[]>([]) // 失败的响应
+    const fuzzerResChartDataBufferRef = useRef<FuzzerResponse[]>([]) // 图标数据
+
     const successFuzzer: FuzzerResponse[] = useMemo(() => {
         // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
         // 这样，传递给下游组件的 prop 引用会变化，触发其更新
-        return [...successFuzzerRef.current];
-    }, [_successCount]);
+        return [...successFuzzerRef.current]
+    }, [_successCount])
     const failedFuzzer: FuzzerResponse[] = useMemo(() => {
         // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
         // 这样，传递给下游组件的 prop 引用会变化，触发其更新
-        return [...failedFuzzerRef.current];
-    }, [_failedCount]);
+        return [...failedFuzzerRef.current]
+    }, [_failedCount])
 
     /**/
 
@@ -827,6 +827,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onFuzzerAdvancedConfigShowType = useMemoizedFn((data) => {
         if (!inViewport) return
         try {
+            setCurrentFuzzerPage(true)
             const value = JSON.parse(data)
             setAdvancedConfigShowType(value.type)
         } catch (error) {}
@@ -953,13 +954,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setFirstResponse({...emptyFuzzer})
         successFuzzerRef.current = []
         failedFuzzerRef.current = []
+        fuzzerResChartDataBufferRef.current = []
         setRedirectedResponse(undefined)
         setSuccessCount(0)
         setFailedCount(0)
         if (!retryRef.current) {
             runtimeIdRef.current = ""
         }
-        setFuzzerResChartData("")
     })
 
     const retryRef = useRef<boolean>(false)
@@ -1167,7 +1168,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const tokenRef = useRef<string>(randomString(60))
     const taskIDRef = useRef<string>("")
     const runtimeIdRef = useRef<string>("")
-    const [fuzzerResChartData, setFuzzerResChartData] = useState<string>("")
+    // const [fuzzerResChartData, setFuzzerResChartData] = useState<string>("")
     useEffect(() => {
         const token = tokenRef.current
 
@@ -1184,9 +1185,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         ipcRenderer.on(errToken, (e, details) => {
             yakitNotify("error", `提交模糊测试请求失败 ${details}`)
         })
-        // let successBuffer: FuzzerResponse[] = []
-        // let failedBuffer: FuzzerResponse[] = []
-        let fuzzerResChartDataBuffer: FuzzerResChartData[] = []
         let count: number = 0 // 用于数据项请求字段
 
         const updateData = () => {
@@ -1199,19 +1197,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     successFuzzerRef.current.length +
                     failedCount +
                     successCount +
-                    fuzzerResChartDataBuffer.length ===
+                    fuzzerResChartDataBufferRef.current.length ===
                 0
             ) {
                 return
             }
-
-            // setSuccessFuzzer([...successBuffer])
-            // setFailedFuzzer([...failedBuffer])
             setFailedCount(failedCount)
             setSuccessCount(successCount)
-            // if (inViewportRef.current && getCurrentFuzzerPage()) {
-            //     setFuzzerResChartData(JSON.stringify(fuzzerResChartDataBuffer))
-            // }
         }
 
         const updateDataThrottle = throttle(updateData, 500, {leading: false, trailing: true})
@@ -1260,15 +1252,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 failedCount++
                 failedFuzzerRef.current.push(r)
             }
-            fuzzerResChartDataBuffer.push({
+
+            fuzzerResChartDataBufferRef.current.push({
                 Count: (r.Count as number) + 1,
                 TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
                 TCPDurationMs: +r.TCPDurationMs,
                 ConnectDurationMs: +r.ConnectDurationMs,
                 DurationMs: +r.DurationMs
-            })
-            if (fuzzerResChartDataBuffer.length > 5000) {
-                fuzzerResChartDataBuffer.shift()
+            } as FuzzerResponse)
+            if (fuzzerResChartDataBufferRef.current.length > 5000) {
+                fuzzerResChartDataBufferRef.current.shift()
             }
 
             if (successCount + failedCount >= 1) {
@@ -1283,7 +1276,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             count = 0
             successCount = 0
             failedCount = 0
-            fuzzerResChartDataBuffer = []
             dCountRef.current = 0
             taskIDRef.current = ""
             setTimeout(() => {
@@ -1293,13 +1285,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }, 500)
         })
 
-        // const updateDataId = setInterval(() => {
-        //     updateData()
-        // }, 300)
-
         return () => {
             ipcRenderer.invoke("cancel-HTTPFuzzer", token)
-            // clearInterval(updateDataId)
             ipcRenderer.removeAllListeners(errToken)
             ipcRenderer.removeAllListeners(dataToken)
             ipcRenderer.removeAllListeners(endToken)
@@ -2255,10 +2242,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     }}
                                                 >
                                                     <FuzzerConcurrentLoad
-                                                        inViewportCurrent={
-                                                            inViewport && advancedConfigShowType !== "sequence"
-                                                        }
-                                                        fuzzerResChartData={fuzzerResChartData}
+                                                        inViewportCurrent={inViewport && currentFuzzerPage}
+                                                        fuzzerResChartData={JSON.stringify(
+                                                            fuzzerResChartDataBufferRef.current
+                                                        )}
                                                         loading={loading}
                                                     />
                                                 </div>

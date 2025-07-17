@@ -133,10 +133,11 @@ const RpsAndCpsLineChart: React.FC<RpsAndCpsLineChartProps> = React.memo((props)
 })
 
 interface RequestDelayStackedAreaChartProps {
+    inViewportCurrent: boolean
     fuzzerResChartData: string
 }
 const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> = React.memo((props) => {
-    const {fuzzerResChartData} = props
+    const {inViewportCurrent, fuzzerResChartData} = props
     const [option, setOption] = useState<echarts.EChartsOption>({
         tooltip: {
             trigger: "axis",
@@ -256,16 +257,19 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
     })
 
     useEffect(() => {
-        updateData()
-    }, [fuzzerResChartData])
+        if (inViewportCurrent) {
+            updateData()
+        }
+    }, [fuzzerResChartData, inViewportCurrent])
 
     return <ReactECharts option={option} />
 })
 interface DurationMsLineChartProps {
+    inViewportCurrent: boolean
     fuzzerResChartData: string
 }
 const DurationMsLineChart: React.FC<DurationMsLineChartProps> = React.memo((props) => {
-    const {fuzzerResChartData} = props
+    const {fuzzerResChartData, inViewportCurrent} = props
     const [option, setOption] = useState<echarts.EChartsOption>(
         merge({}, lineDefaultOption, {
             yAxis: {
@@ -308,8 +312,10 @@ const DurationMsLineChart: React.FC<DurationMsLineChartProps> = React.memo((prop
     })
 
     useEffect(() => {
-        updateData()
-    }, [fuzzerResChartData])
+        if (inViewportCurrent) {
+            updateData()
+        }
+    }, [fuzzerResChartData, inViewportCurrent])
 
     return <ReactECharts option={option} />
 })
@@ -361,8 +367,11 @@ export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = React.m
                     ]
                 }}
             />
-            <RequestDelayStackedAreaChart fuzzerResChartData={fuzzerResChartData} />
-            <DurationMsLineChart fuzzerResChartData={fuzzerResChartData} />
+            <RequestDelayStackedAreaChart
+                fuzzerResChartData={fuzzerResChartData}
+                inViewportCurrent={inViewportCurrent}
+            />
+            <DurationMsLineChart fuzzerResChartData={fuzzerResChartData} inViewportCurrent={inViewportCurrent} />
         </>
     )
 })
