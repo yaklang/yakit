@@ -2,6 +2,19 @@ import {ChromeLauncherParams} from "@/pages/mitm/MITMChromeLauncher"
 import {MITMAdvancedFilter, MITMFilterData, MITMFilterSchema} from "@/pages/mitm/MITMServerStartForm/MITMFilters"
 import {v4 as uuidv4} from "uuid"
 
+// 浏览器启动最小参数配置
+export const chromeLauncherMinParams: ChromeLauncherParams[] = [
+    {
+        id: uuidv4(),
+        parameterName: "--no-first-run",
+        variableValues: "",
+        variableType: "bool",
+        disabled: false,
+        desc: "启动时跳过首次运行向导",
+        default: true
+    }
+]
+
 export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
     {
         id: uuidv4(),

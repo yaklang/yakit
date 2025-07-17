@@ -25,12 +25,14 @@ import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import classNames from "classnames"
-import {OutlineSaveIcon} from "@/assets/icon/outline"
+import {OutlineChevronupIcon, OutlineSaveIcon} from "@/assets/icon/outline"
 import {OutlineRefreshIcon} from "@/assets/icon/outline"
 import {v4 as uuidv4} from "uuid"
-import {chromeLauncherParamsArr} from "@/defaultConstants/mitm"
-import {SolidStoreIcon} from "@/assets/icon/solid"
+import {chromeLauncherMinParams, chromeLauncherParamsArr} from "@/defaultConstants/mitm"
+import {SolidCheckIcon, SolidStoreIcon} from "@/assets/icon/solid"
 import {useGoogleChromePluginPath} from "@/store"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {RemoteMitmGV} from "@/enums/mitm"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -74,6 +76,10 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
     })
     const {googleChromePluginPath} = useGoogleChromePluginPath()
 
+    const [chormeCheck, setChormeCheck] = useState<string>("customSet")
+    const [showChormeDropdown, setShowChormeDropdown] = useState<boolean>(false)
+    const chromedropdownRef = useRef<HTMLDivElement>(null)
+
     useEffect(() => {
         // 获取连接引擎的地址参数
         ipcRenderer
@@ -90,75 +96,104 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
             setSaveUserData(cacheRes === "true")
         })
 
+        getRemoteValue(RemoteMitmGV.MitmStartChromeCheck).then((e) => {
+            if (!!e) {
+                setChormeCheck(e)
+            } else {
+                setChormeCheck("customSet")
+            }
+        })
+        // dropdown 点击外部关闭
+        const handleClickOutside = (event) => {
+            if (chromedropdownRef.current && !chromedropdownRef.current.contains(event.target)) {
+                setShowChormeDropdown(false)
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside)
+
         ipcRenderer.invoke("getDefaultUserDataDir").then((e: string) => {
             setDefUserDataDir(e)
         })
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside)
+        }
     }, [])
-    return (
-        <Form
-            labelCol={{span: 4}}
-            wrapperCol={{span: 18}}
-            onSubmitCapture={async (e) => {
-                e.preventDefault()
-                // 代理认证用户名
-                let username = (await getRemoteValue(MITMConsts.MITMDefaultProxyUsername)) || ""
-                // 代理认证用户密码
-                let password = (await getRemoteValue(MITMConsts.MITMDefaultProxyPassword)) || ""
-                let newParams: {
-                    host: string
-                    port: number
-                    chromePath?: string
-                    userDataDir?: string
-                    username?: string
-                    password?: string
-                    disableCACertPage: boolean
-                    chromeFlags: ChromeLauncherParams[]
-                } = {
-                    ...params,
-                    username,
-                    password,
-                    userDataDir,
-                    disableCACertPage: props.disableCACertPage,
-                    chromeFlags: []
+
+    // 启动 chrome 模式
+    const handleStartChromeBefore = useMemoizedFn(() => {
+        if (chormeCheck === "customSet") {
+            startChrome(false)
+        } else if (chormeCheck === "defaultSet") {
+            startChrome(true)
+        }
+        setRemoteValue(RemoteMitmGV.MitmStartChromeCheck, chormeCheck)
+    })
+    const startChrome = useMemoizedFn(async (baseStart: boolean) => {
+        // 代理认证用户名
+        let username = (await getRemoteValue(MITMConsts.MITMDefaultProxyUsername)) || ""
+        // 代理认证用户密码
+        let password = (await getRemoteValue(MITMConsts.MITMDefaultProxyPassword)) || ""
+        let newParams: {
+            host: string
+            port: number
+            chromePath?: string
+            userDataDir?: string
+            username?: string
+            password?: string
+            disableCACertPage: boolean
+            chromeFlags: ChromeLauncherParams[]
+        } = {
+            ...params,
+            username,
+            password,
+            userDataDir,
+            disableCACertPage: props.disableCACertPage,
+            chromeFlags: []
+        }
+
+        setRemoteValue(RemoteGV.MITMUserDataSave, isSaveUserData + "")
+        userDataDirRef.current?.onSetRemoteValues(userDataDir)
+
+        Promise.allSettled([
+            getRemoteValue(RemoteGV.GlobalChromePath),
+            getRemoteValue(RemoteGV.ChromeLauncherParams)
+        ]).then((res) => {
+            if (res[0].status === "fulfilled") {
+                const value = res[0].value
+                if (value) {
+                    newParams.chromePath = JSON.parse(value)
                 }
+            }
 
-                setRemoteValue(RemoteGV.MITMUserDataSave, isSaveUserData + "")
-                userDataDirRef.current?.onSetRemoteValues(userDataDir)
+            let chromeFlags: ChromeLauncherParams[] = chromeLauncherParamsArr
+            if (res[1].status === "fulfilled") {
+                const value = res[1].value
+                if (value) {
+                    try {
+                        chromeFlags = JSON.parse(value)
+                    } catch (error) {}
+                }
+            }
 
-                Promise.allSettled([
-                    getRemoteValue(RemoteGV.GlobalChromePath),
-                    getRemoteValue(RemoteGV.ChromeLauncherParams)
-                ]).then((res) => {
-                    if (res[0].status === "fulfilled") {
-                        const value = res[0].value
-                        if (value) {
-                            newParams.chromePath = JSON.parse(value)
-                        }
-                    }
-
-                    let chromeFlags: ChromeLauncherParams[] = chromeLauncherParamsArr
-                    if (res[1].status === "fulfilled") {
-                        const value = res[1].value
-                        if (value) {
-                            try {
-                                chromeFlags = JSON.parse(value)
-                            } catch (error) {}
-                        }
-                    }
-                    newParams.chromeFlags = handleChromeLauncherParams(chromeFlags, googleChromePluginPath)
-
-                    ipcRenderer
-                        .invoke("LaunchChromeWithParams", newParams)
-                        .then((e) => {
-                            props.callback(params.host, params.port)
-                        })
-                        .catch((e) => {
-                            failed(`Chrome 启动失败：${e}`)
-                        })
+            if (baseStart) {
+                newParams.chromeFlags = handleChromeLauncherParams(chromeLauncherMinParams, googleChromePluginPath)
+            } else {
+                newParams.chromeFlags = handleChromeLauncherParams(chromeFlags, googleChromePluginPath)
+            }
+            ipcRenderer
+                .invoke("LaunchChromeWithParams", newParams)
+                .then((e) => {
+                    props.callback(params.host, params.port)
                 })
-            }}
-            style={{padding: 24}}
-        >
+                .catch((e) => {
+                    failed(`Chrome 启动失败：${e}，请尝试选择启动默认配置`)
+                })
+        })
+    })
+
+    return (
+        <Form labelCol={{span: 4}} wrapperCol={{span: 18}} style={{padding: 24}}>
             <Form.Item label={"配置代理"}>
                 <YakitInput.Group className={style["chrome-input-group"]}>
                     <YakitInput
@@ -253,17 +288,54 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                     </Space>
                 }
             >
-                <YakitButton
-                    type='primary'
-                    htmlType='submit'
-                    size='large'
-                    disabled={isSaveUserData === true && userDataDir.length === 0}
-                >
-                    启动免配置 Chrome
-                </YakitButton>
-                <YakitButton type='text' onClick={() => setChromeLauncherParamsVisible(true)}>
-                    更多参数
-                </YakitButton>
+                <div style={{display: "flex", alignItems: "center"}}>
+                    <div className={style["chrome-operation-btn-wrapper"]} ref={chromedropdownRef}>
+                        <div
+                            className={style["operation-btn-left"]}
+                            style={{borderRadius: "40px 0 0 40px"}}
+                            onClick={handleStartChromeBefore}
+                        >
+                            启动免配置 Chorme
+                        </div>
+                        <div
+                            className={style["operation-btn-right"]}
+                            style={{borderRadius: "0 40px 40px 0"}}
+                            onClick={() => setShowChormeDropdown(!showChormeDropdown)}
+                        >
+                            <OutlineChevronupIcon
+                                className={classNames(style["title-icon"], {
+                                    [style["rotate-180"]]: !showChormeDropdown
+                                })}
+                            />
+                        </div>
+                        <div
+                            className={style["operation-dropdown-wrapper"]}
+                            style={{display: showChormeDropdown ? "block" : "none"}}
+                        >
+                            {[
+                                {label: "自定义配置", key: "customSet"},
+                                {label: "默认配置", key: "defaultSet"}
+                            ].map((item) => (
+                                <div
+                                    className={classNames(style["operation-dropdown-list-item"], {
+                                        [style["active"]]: chormeCheck === item.key
+                                    })}
+                                    onClick={() => {
+                                        setChormeCheck(item.key)
+                                        setShowChormeDropdown(!showChormeDropdown)
+                                    }}
+                                    key={item.key}
+                                >
+                                    <span>{item.label}</span>
+                                    {chormeCheck === item.key && <SolidCheckIcon className={style["check-icon"]} />}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <YakitButton type='text' onClick={() => setChromeLauncherParamsVisible(true)}>
+                        更多参数
+                    </YakitButton>
+                </div>
                 {chromeLauncherParamsVisible && (
                     <YakitModal
                         title='浏览器参数配置'
@@ -545,10 +617,10 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
             onOk: () => {
                 // 重置为默认参数
                 let defaultParams = [...chromeLauncherParamsArr]
-                
+
                 // 应用handleChromeLauncherParams函数，确保扩展参数被正确处理
                 defaultParams = handleChromeLauncherParams(defaultParams, googleChromePluginPath)
-                
+
                 setData(defaultParams)
                 if (searchVal) {
                     const filteredData = defaultParams.filter((item) =>
@@ -556,12 +628,12 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                     )
                     setSearchData(filteredData)
                 }
-                
+
                 // 清除临时编辑状态
                 tempEditItem.current = undefined
                 setTempEditId(undefined)
                 setCurrentItem(undefined)
-                
+
                 // 保存到远程
                 setRemoteValue(RemoteGV.ChromeLauncherParams, JSON.stringify(defaultParams))
                 yakitNotify("success", "已恢复默认参数设置")
@@ -826,11 +898,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                             allowClear={true}
                             onSearch={(value) => setSearchVal(value.trim())}
                         />
-                        <YakitButton
-                            type="text"
-                            onClick={resetToDefault}
-                            disabled={tempEditId !== undefined}
-                        >
+                        <YakitButton type='text' onClick={resetToDefault} disabled={tempEditId !== undefined}>
                             <OutlineRefreshIcon style={{marginRight: 4}} />
                             恢复默认参数
                         </YakitButton>

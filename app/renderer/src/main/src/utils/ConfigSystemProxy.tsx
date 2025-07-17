@@ -101,7 +101,7 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
                 <Form layout='vertical' style={{padding: "0 24px 24px"}}>
                     <Form.Item
                         label='系统代理'
-                        help='系统代理能帮助用户自动代理系统所有请求，全局抓包'
+                        help='一键配置系统代理'
                         tooltip={{
                             title: "由于操作系统与 Yak 内核限制，无法使用原生 MacOS OC/Swift 接口实现设置代理。 Yak 引擎将弹出 osascript 授权页以改动系统代理，MacOS 用户认证即可。",
                             icon: <InformationCircleIcon />
