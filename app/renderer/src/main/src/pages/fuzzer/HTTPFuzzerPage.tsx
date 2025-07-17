@@ -108,7 +108,7 @@ import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated, openExternalWebsite, openPacketNewWindow} from "@/utils/openWebsite"
 import {PayloadGroupNodeProps, ReadOnlyNewPayload} from "../payloadManager/newPayload"
-import {createRoot} from "react-dom/client"
+import {createRoot, Root} from "react-dom/client"
 import {SolidPauseIcon, SolidPlayIcon} from "@/assets/icon/solid"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import blastingIdmp4 from "@/assets/blasting-id.mp4"
@@ -3158,18 +3158,20 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
     return <></>
 })
 
+let fizzOverlayRoot: Root | null = null
+let fizzOverlayDomNode: HTMLDivElement | null = null
 export const onAddOverlayWidget = (editor, rsp, isShow?: boolean) => {
-    editor.removeOverlayWidget({
-        getId() {
-            return "monaco.fizz.overlaywidget"
-        }
-    })
+    // 先移除旧的 widget 和卸载 React Root
+    onRemoveOverlayWidget(editor)
     if (!isShow) return
+
+    fizzOverlayDomNode = document.createElement("div")
+    fizzOverlayRoot = createRoot(fizzOverlayDomNode)
+    fizzOverlayRoot.render(<EditorOverlayWidget rsp={rsp} />)
+
     const fizzOverlayWidget = {
         getDomNode() {
-            const domNode = document.createElement("div")
-            createRoot(domNode).render(<EditorOverlayWidget rsp={rsp} />)
-            return domNode
+            return fizzOverlayDomNode!
         },
         getId() {
             return "monaco.fizz.overlaywidget"
@@ -3181,6 +3183,18 @@ export const onAddOverlayWidget = (editor, rsp, isShow?: boolean) => {
         }
     }
     editor.addOverlayWidget(fizzOverlayWidget)
+}
+const onRemoveOverlayWidget = (editor) => {
+    editor.removeOverlayWidget({
+        getId() {
+            return "monaco.fizz.overlaywidget"
+        }
+    })
+    if (fizzOverlayRoot) {
+        fizzOverlayRoot.unmount()
+        fizzOverlayRoot = null
+    }
+    fizzOverlayDomNode = null
 }
 
 interface EditorOverlayWidgetProps {
