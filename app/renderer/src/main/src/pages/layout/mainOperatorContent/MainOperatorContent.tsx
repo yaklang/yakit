@@ -162,7 +162,11 @@ import {BatchAddNewGroupFormItem} from "./BatchAddNewGroup"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
 import {getGlobalShortcutKeyEvents} from "@/utils/globalShortcutKey/events/global"
-import {convertKeyEventToKeyCombination, sortKeysCombination, unregisterShortcutFocusHandle} from "@/utils/globalShortcutKey/utils"
+import {
+    convertKeyEventToKeyCombination,
+    sortKeysCombination,
+    unregisterShortcutFocusHandle
+} from "@/utils/globalShortcutKey/utils"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
@@ -1359,11 +1363,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- @name 全局功能快捷键 Start ---------- */
     const isModalVisibleRef = useRef<boolean>(false)
     useShortcutKeyTrigger("removePage", (focus) => {
-        if(focus) {
+        if (focus) {
             let item = focus.find((i) => i.startsWith(currentTabKey))
-            if(item){
+            if (item) {
                 // 在此处进行关闭二级页面
-                emiter.emit("onRemoveSecondPage",item)   
+                emiter.emit("onRemoveSecondPageByFocus", item)
                 return
             }
         }
@@ -1731,6 +1735,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         switch (data.route) {
             case YakitRoute.AddYakitScript:
             case YakitRoute.HTTPFuzzer:
+            case YakitRoute.Codec:
                 const modalProps = getSubscribeClose(data.route)
                 if (modalProps) {
                     judgeDataIsFuncOrSettingForConfirm(
@@ -3046,21 +3051,21 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
     })
 
-    const onRemoveSecondPageFun = useMemoizedFn((focus: string) => {
-        if(focus === selectSubMenu.id){
+    const onRemoveSecondPageByFocusFun = useMemoizedFn((focus: string) => {
+        if (focus === selectSubMenu.id) {
             if (pageCache.length === 0) return
             unregisterShortcutFocusHandle(focus)
             subTabsRef.current?.onRemove(selectSubMenu)
-        }   
+        }
     })
+
     // 序列导入更新菜单
     useEffect(() => {
-        emiter.on("onRemoveSecondPage", onRemoveSecondPageFun)
+        emiter.on("onRemoveSecondPageByFocus", onRemoveSecondPageByFocusFun)
         return () => {
-            emiter.off("onRemoveSecondPage", onRemoveSecondPageFun)
+            emiter.off("onRemoveSecondPageByFocus", onRemoveSecondPageByFocusFun)
         }
     }, [])
-
 
     const flatSubPage = useMemo(() => {
         const newData: MultipleNodeInfo[] = []
@@ -3850,8 +3855,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
             onRemoveSubPage(removeItem)
         })
+
         /** 关闭当前标签页 */
-        const onRemoveSubPage = useMemoizedFn((removeItem: MultipleNodeInfo) => {
+        const onRemoveSubPageFun = useMemoizedFn((removeItem: MultipleNodeInfo) => {
             // 固定tab的多开页面，最后一个页面不能删除
             if (defaultFixedTabsNoSinglPageRoute.includes(pageItem.route) && subPage.length === 1) return
 
@@ -3884,6 +3890,33 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             onUpdatePageCache([...subPage])
             onUpdateSorting(subPage, currentTabKey)
         })
+
+        /** @description 多开页面的二级页面关闭事件 */
+        const onRemoveSubPage = useMemoizedFn((removeItem: MultipleNodeInfo) => {
+            switch (pageItem.route) {
+                case YakitRoute.Codec:
+                    emiter.emit("onCloseSubPageByJudge", JSON.stringify(removeItem))
+                    break
+                default:
+                    onRemoveSubPageFun(removeItem)
+                    break
+            }
+        })
+
+        const onCloseSubPageByInfoFun = useMemoizedFn((res) => {
+            try {
+                const data: MultipleNodeInfo = JSON.parse(res)
+                if (data.id === selectSubMenu.id) {
+                    onRemoveSubPageFun(data)
+                }
+            } catch (error) {}
+        })
+        useEffect(() => {
+            emiter.on("onCloseSubPageByInfo", onCloseSubPageByInfoFun)
+            return () => {
+                emiter.off("onCloseSubPageByInfo", onCloseSubPageByInfoFun)
+            }
+        }, [])
         /**
          * @description 页面节点的右键点击事件
          */
@@ -5374,7 +5407,6 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?
             } else {
                 m.destroy()
             }
-            
         },
         content: props?.content
     })
