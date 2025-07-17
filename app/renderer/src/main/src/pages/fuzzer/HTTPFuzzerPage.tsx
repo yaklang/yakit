@@ -678,18 +678,18 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // const [successFuzzer, setSuccessFuzzer] = useState<FuzzerResponse[]>([])
     // const [failedFuzzer, setFailedFuzzer] = useState<FuzzerResponse[]>([])
-    const successFuzzerRef = useRef<FuzzerResponse[]>([]); // 成功的响应
-    const failedFuzzerRef = useRef<FuzzerResponse[]>([]); // 失败的响应
+    const successFuzzerRef = useRef<FuzzerResponse[]>([]) // 成功的响应
+    const failedFuzzerRef = useRef<FuzzerResponse[]>([]) // 失败的响应
     const successFuzzer: FuzzerResponse[] = useMemo(() => {
         // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
         // 这样，传递给下游组件的 prop 引用会变化，触发其更新
-        return [...successFuzzerRef.current];
-    }, [_successCount]);
+        return [...successFuzzerRef.current]
+    }, [_successCount])
     const failedFuzzer: FuzzerResponse[] = useMemo(() => {
         // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
         // 这样，传递给下游组件的 prop 引用会变化，触发其更新
-        return [...failedFuzzerRef.current];
-    }, [_failedCount]);
+        return [...failedFuzzerRef.current]
+    }, [_failedCount])
 
     /**/
 
@@ -1186,7 +1186,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
         // let successBuffer: FuzzerResponse[] = []
         // let failedBuffer: FuzzerResponse[] = []
-        let fuzzerResChartDataBuffer: FuzzerResChartData[] = []
+        // let fuzzerResChartDataBuffer: FuzzerResChartData[] = []
         let count: number = 0 // 用于数据项请求字段
 
         const updateData = () => {
@@ -1196,11 +1196,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
             if (
                 failedFuzzerRef.current.length +
-                    successFuzzerRef.current.length +
-                    failedCount +
-                    successCount +
-                    fuzzerResChartDataBuffer.length ===
-                0
+                successFuzzerRef.current.length +
+                failedCount +
+                successCount
+                // +
+                // fuzzerResChartDataBuffer.length ===0
             ) {
                 return
             }
@@ -1231,7 +1231,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 // 重置extractedMap
                 reset()
             }
-            const r = {
+            let r = {
                 // 6.16
                 ...data,
                 Headers: data.Headers || [],
@@ -1254,28 +1254,31 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 successFuzzerRef.current.push(r)
                 // 超过最大显示 展示最新数据
                 if (successFuzzerRef.current.length > fuzzerTableMaxDataRef.current) {
+                    // successFuzzerRef.current.shift()
+                    successFuzzerRef.current[0] = null as any
                     successFuzzerRef.current.shift()
                 }
             } else {
                 failedCount++
                 failedFuzzerRef.current.push(r)
             }
-            fuzzerResChartDataBuffer.push({
-                Count: (r.Count as number) + 1,
-                TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
-                TCPDurationMs: +r.TCPDurationMs,
-                ConnectDurationMs: +r.ConnectDurationMs,
-                DurationMs: +r.DurationMs
-            })
-            if (fuzzerResChartDataBuffer.length > 5000) {
-                fuzzerResChartDataBuffer.shift()
-            }
+            // fuzzerResChartDataBuffer.push({
+            //     Count: (r.Count as number) + 1,
+            //     TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
+            //     TCPDurationMs: +r.TCPDurationMs,
+            //     ConnectDurationMs: +r.ConnectDurationMs,
+            //     DurationMs: +r.DurationMs
+            // })
+            // if (fuzzerResChartDataBuffer.length > 5000) {
+            //     fuzzerResChartDataBuffer.shift()
+            // }
 
             if (successCount + failedCount >= 1) {
                 updateDataThrottle()
             } else {
                 updateData()
             }
+            r = null as any
         })
 
         ipcRenderer.on(endToken, () => {
@@ -1283,7 +1286,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             count = 0
             successCount = 0
             failedCount = 0
-            fuzzerResChartDataBuffer = []
+            // fuzzerResChartDataBuffer = []
             dCountRef.current = 0
             taskIDRef.current = ""
             setTimeout(() => {
