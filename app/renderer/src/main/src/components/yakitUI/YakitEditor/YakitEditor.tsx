@@ -757,19 +757,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const fixContentTypeFun = useMemoizedFn(() => fixContentType)
     const originalContentTypeFun = useMemoizedFn(() => originalContentType)
     const fixContentTypeHoverMessageFun = useMemoizedFn(() => fixContentTypeHoverMessage)
-    const isDecoratingRef = useRef(false)
-    const safeDeltaDecorations = () => {
-        if (isDecoratingRef.current) return
-        isDecoratingRef.current = true
-        try {
-            if (deltaDecorationsRef.current) {
-                disableUnicodeDecodeRef.current = props.disableUnicodeDecode
-                deltaDecorationsRef.current()
-            }
-        } finally {
-            isDecoratingRef.current = false
-        }
-    }
     useEffect(() => {
         if (!editor) {
             return
@@ -806,6 +793,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         )
         const generateDecorations = (): YakitIModelDecoration[] => {
             // const text = model.getValue();
+            if (!model) return []
             const endsp = model.getPositionAt(1800)
             const dec: YakitIModelDecoration[] = []
             const text =
@@ -1056,12 +1044,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             current = model.deltaDecorations(current, generateDecorations())
         }
 
-        editor.onDidChangeModelContent(() => {
-            try {
-                safeDeltaDecorations()
-            } catch (e) {
-                // console.error("deltaDecorations error", e)
+        let lastValue = model.getValue()
+        editor.onDidChangeModelContent((e) => {
+            const newValue = model.getValue()
+            if (newValue === lastValue) {
+                return
             }
+            lastValue = newValue
+            current = model.deltaDecorations(current, generateDecorations())
         })
         current = model.deltaDecorations(current, generateDecorations())
 
@@ -1072,13 +1062,17 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
     }, [editor])
     useEffect(() => {
-        safeDeltaDecorations()
+        if (deltaDecorationsRef.current) {
+            disableUnicodeDecodeRef.current = props.disableUnicodeDecode
+            deltaDecorationsRef.current()
+        }
     }, [
         JSON.stringify(highLightText),
         JSON.stringify(highLightFind),
         props.disableUnicodeDecode,
         props.fixContentType,
-        props.originalContentType
+        props.originalContentType,
+        props.fixContentTypeHoverMessage
     ])
     // 定位高亮光标位置
     useDebounceEffect(
