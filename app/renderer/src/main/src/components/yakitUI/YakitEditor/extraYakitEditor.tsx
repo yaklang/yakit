@@ -31,6 +31,7 @@ import {useWhyDidYouUpdate} from "ahooks"
 import {GetReleaseEdition, PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 import emiter from "@/utils/eventBus/eventBus"
+import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
 const {ipcRenderer} = window.require("electron")
 
 const HTTP_PACKET_EDITOR_DisableUnicodeDecode = "HTTP_PACKET_EDITOR_DisableUnicodeDecode"
@@ -82,7 +83,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         onlyBasicMenu = false,
         ...restProps
     } = props
-
+    const {goAddNotepad} = useGoEditNotepad()
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById
@@ -206,17 +207,10 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         return
                     }
                     let content = "```" + text + "\n```"
-                    // 跳转记事本
-                    emiter.emit(
-                        "openPage",
-                        JSON.stringify({
-                            route: YakitRoute.Modify_Notepad,
-                            params: {
-                                title: `数据包-${Date.now()}`,
-                                content
-                            }
-                        })
-                    )
+                    goAddNotepad({
+                        title: `数据包-${Date.now()}`,
+                        content
+                    })
                 }
             },
             exportTxt: {

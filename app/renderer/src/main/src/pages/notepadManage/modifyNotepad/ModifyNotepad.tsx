@@ -31,11 +31,12 @@ const ModifyNotepadOnline = React.lazy(() => import("./modifyNotepadOnline/Modif
 const ModifyNotepadLocal = React.lazy(() => import("./modifyNotepadLocal/ModifyNotepadLocal"))
 
 const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
+    const {pageId} = props
     return isCommunityEdition() ? (
-        <ModifyNotepadLocal {...props} />
+        <ModifyNotepadLocal pageId={pageId} />
     ) : (
         <OnlineJudgment isJudgingLogin={true}>
-            <ModifyNotepadOnline {...props} />
+            <ModifyNotepadOnline pageId={pageId} />
         </OnlineJudgment>
     )
 })

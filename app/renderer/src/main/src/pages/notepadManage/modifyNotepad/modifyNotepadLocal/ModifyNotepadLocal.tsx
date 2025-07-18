@@ -56,7 +56,7 @@ const NotepadLocalList = React.lazy(() => import("./NotepadLocalList/NotepadLoca
 const highlightPulseClass = "highlight-pulse"
 
 const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props) => {
-    const {pageId,modifyNotepadPageInfo} = props
+    const {pageId} = props
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById,
@@ -130,7 +130,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     }, 200)
                 })
         } else {
-            let Content = modifyNotepadPageInfo?.content||""
+            let Content = pageInfo.content || ""
             // 新建笔记本并保存
             const params: CreateNoteRequest = {
                 Title: initTabName(),

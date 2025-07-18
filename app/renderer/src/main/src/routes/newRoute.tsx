@@ -687,7 +687,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Notepad_Manage:
             return <NotepadManage />
         case YakitRoute.Modify_Notepad:
-            return <ModifyNotepad pageId={params?.id || ""} modifyNotepadPageInfo={params?.modifyNotepadPageInfo} />
+            return <ModifyNotepad pageId={params?.id || ""} />
         case YakitRoute.YakRunner_Audit_Hole:
             return <YakRunnerAuditHole />
         case YakitRoute.System_Config:

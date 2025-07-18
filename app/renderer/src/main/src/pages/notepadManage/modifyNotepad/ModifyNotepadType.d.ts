@@ -3,7 +3,6 @@ import {ReactNode} from "react"
 import {ModifyNotepadPageInfoProps} from "@/store/pageInfo"
 export interface ModifyNotepadProps {
     pageId: string
-    modifyNotepadPageInfo?: ModifyNotepadPageInfoProps
 }
 
 export interface NoteLocal {

@@ -43,11 +43,12 @@ const toEditNotepad = (params: ToEditNotepadProps) => {
 /**
  * @description 新建笔记本
  */
-const toAddNotepad = () => {
+const toAddNotepad = (params?:ModifyNotepadPageInfoProps) => {
     const info = {
         route: YakitRoute.Modify_Notepad,
         params: {
-            notepadHash: ""
+            ...params,
+            notepadHash: "",
         }
     }
     emiter.emit("openPage", JSON.stringify(info))
@@ -98,8 +99,8 @@ export const useGoEditNotepad = (props?: GoEditNotepadProps) => {
             notepadPageList
         })
     })
-    const goAddNotepad = useMemoizedFn(() => {
-        toAddNotepad()
+    const goAddNotepad = useMemoizedFn((params?:ModifyNotepadPageInfoProps) => {
+        toAddNotepad(params)
     })
     return {goEditNotepad, goAddNotepad} as const
 }
