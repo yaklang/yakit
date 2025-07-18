@@ -514,3 +514,92 @@
         }
     }
 }
+
+.chrome-operation-btn-wrapper {
+    position: relative;
+    display: flex;
+    color: #ffffff;
+    border-radius: 40px;
+    .operation-btn-left {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 6px 10px;
+        cursor: pointer;
+        border-right: 1px solid #ffffff;
+        background-color: var(--Colors-Use-Main-Primary);
+        font-size: 14px;
+        font-weight: 600;
+        .open-icon {
+            margin-right: 4px;
+            svg {
+                width: 24px;
+                height: 24px;
+            }
+        }
+        &:hover {
+            background-color: var(--Colors-Use-Main-Hover);
+        }
+        &:active {
+            background-color: var(--Colors-Use-Main-Pressed);
+        }
+    }
+    .operation-btn-right {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 6px;
+        cursor: pointer;
+        transition: transform 0.5s;
+        background-color: var(--Colors-Use-Main-Pressed);
+        .title-icon {
+            transition: transform 0.5s;
+            &.rotate-180 {
+                transform: rotate(180deg);
+            }
+        }
+        &:hover {
+            background-color: var(--Colors-Use-Main-Primary);
+        }
+    }
+}
+
+.operation-dropdown-wrapper {
+    position: absolute;
+    right: 0;
+    top: 36px;
+    left: 0;
+    padding: 4px;
+    z-index: 9999;
+    transition: all 0.5 ease;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 4px;
+    background-color: #ffffff;
+    width: 180px;
+    .operation-dropdown-list-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 8px;
+        cursor: pointer;
+        color: #000000;
+        font-size: 14px;
+        line-height: 20px;
+        &:hover {
+            background-color: var(--Colors-Use-Main-Bg);
+        }
+        &.active {
+            color: var(--Colors-Use-Main-Primary);
+        }
+        .check-icon {
+            svg {
+                color: var(--Colors-Use-Main-Primary);
+            }
+        }
+    }
+}
+
+.chrome-start-desc {
+    font-size: 11px;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    margin-bottom: 5px;
+}
