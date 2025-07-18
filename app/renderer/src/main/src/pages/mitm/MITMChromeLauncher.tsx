@@ -332,9 +332,11 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                             ))}
                         </div>
                     </div>
-                    <YakitButton type='text' onClick={() => setChromeLauncherParamsVisible(true)}>
-                        更多参数
-                    </YakitButton>
+                    {chormeCheck === "customSet" && (
+                        <YakitButton type='text' onClick={() => setChromeLauncherParamsVisible(true)}>
+                            更多参数
+                        </YakitButton>
+                    )}
                 </div>
                 {chromeLauncherParamsVisible && (
                     <YakitModal
