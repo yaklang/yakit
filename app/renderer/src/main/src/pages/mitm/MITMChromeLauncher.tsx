@@ -31,7 +31,6 @@ import {v4 as uuidv4} from "uuid"
 import {chromeLauncherMinParams, chromeLauncherParamsArr} from "@/defaultConstants/mitm"
 import {SolidCheckIcon, SolidStoreIcon} from "@/assets/icon/solid"
 import {useGoogleChromePluginPath} from "@/store"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {RemoteMitmGV} from "@/enums/mitm"
 
 /**
@@ -313,8 +312,8 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                             style={{display: showChormeDropdown ? "block" : "none"}}
                         >
                             {[
-                                {label: "自定义配置", key: "customSet"},
-                                {label: "默认配置", key: "defaultSet"}
+                                {label: "预设参数启动", key: "customSet"},
+                                {label: "最小化参数启动", key: "defaultSet"}
                             ].map((item) => (
                                 <div
                                     className={classNames(style["operation-dropdown-list-item"], {
@@ -338,6 +337,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                         </YakitButton>
                     )}
                 </div>
+                <div className={style['chrome-start-desc']}>预设参数可在更多参数里配置启用参数和参数值，最小化参数不可配置，选择预设参数<span style={{color: "var(--Colors-Use-Error-Primary)"}}>无法启动</span>时，请选择最小化参数启动</div>
                 {chromeLauncherParamsVisible && (
                     <YakitModal
                         title='浏览器参数配置'
