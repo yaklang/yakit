@@ -718,14 +718,19 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     })
     // #endregion
 
-    // #region 表格自定义相关
+    // #region 表格自定义相关（excludeCustomColumnsKey这个变量暂时勿动，没有做其他列兼容）
     // 需要完全排除列字段，表格不可能出现的列
     const noColumnsKey = toWebFuzzer ? [] : ["Payloads"]
-    // 排除展示的列
+    // 不需要参与自定义的列（也就是不需要存进缓存）
+    const excludeCustomColumnsKey: string[] = ["Payloads"]
+    const specialCustoms = useMemoizedFn((key) => {
+        return excludeCustomColumnsKey.includes(key) || noColumnsKey.includes(key)
+    })
+    // 排除展示的列（包含noColumnsKey）
     const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(noColumnsKey)
     // 默认所有列展示顺序
-    const defalutColumnsOrderRef = useRef<string[]>(defalutColumnsOrder)
-    // 所有列展示顺序
+    const defalutColumnsOrderRef = useRef<string[]>(defalutColumnsOrder.filter((key) => !noColumnsKey.includes(key)))
+    // 所有列展示顺序（不包含excludeCustomColumnsKey）
     const [columnsOrder, setColumnsOrder] = useState<string[]>([])
     useEffect(() => {
         if (inViewport) {
@@ -737,25 +742,42 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 if (res[0].status === "fulfilled") {
                     const arr = res[0].value.split(",")
                     const excludeKeys = [...arr, ...noColumnsKey].filter((key) => key)
-                    if (!isEqual(excludeKeys, excludeColumnsKey)) {
+                    // 确保顺序缓存里面的key一定在默认所有列中存在
+                    const realArr = excludeKeys.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
+                    if (!isEqual(realArr, excludeColumnsKey)) {
                         refreshTabelKey = true
-                        setExcludeColumnsKey(excludeKeys)
+                        setExcludeColumnsKey(realArr)
                     }
+                    setRemoteValue(
+                        RemoteHistoryGV.HistroyExcludeColumnsKey,
+                        realArr.filter((key) => !specialCustoms(key)) + ""
+                    )
                 }
                 if (res[1].status === "fulfilled") {
                     try {
                         const arr = JSON.parse(res[1].value) || []
                         // 确保顺序缓存里面的key一定在默认所有列中存在
-                        const realArr = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
-                        // toWebFuzzer 跳转过来 需要 特殊处理 Payloads 在Url后面
-                        if (toWebFuzzer && realArr.findIndex((key: string) => key === "Payloads") === -1) {
-                            const urlIndex = realArr.findIndex((key: string) => key === "Path")
-                            realArr.splice(urlIndex + 1, 0, "Payloads")
+                        const arr2 = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
+                        // 按照 defalutColumnsOrderRef.current 顺序补充新增列
+                        defalutColumnsOrderRef.current.forEach((key: string, idx: number) => {
+                            if (!arr2.includes(key)) {
+                                let insertIdx = arr2.findIndex((k) => defalutColumnsOrderRef.current.indexOf(k) > idx)
+                                if (insertIdx === -1) {
+                                    arr2.push(key)
+                                } else {
+                                    arr2.splice(insertIdx, 0, key)
+                                }
+                            }
+                        })
+                        // 特殊处理 Payloads 在Path后面
+                        if (toWebFuzzer) {
+                            if (arr2.findIndex((key: string) => key === "Payloads") === -1) {
+                                const pathIndex = arr2.findIndex((key: string) => key === "Path")
+                                arr2.splice(pathIndex + 1, 0, "Payloads")
+                            }
                         }
-                        setRemoteValue(
-                            RemoteHistoryGV.HistroyColumnsOrder,
-                            JSON.stringify(realArr.filter((key) => !noColumnsKey.includes(key)))
-                        )
+                        const realArr = arr2.filter((key) => !specialCustoms(key))
+                        setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(realArr))
                         if (!isEqual(realArr, columnsOrder)) {
                             refreshTabelKey = true
                             setColumnsOrder(realArr)
@@ -777,6 +799,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const [idFixed, setIdFixed] = useState<boolean>(true)
 
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
+        // ⚠️ 注意：此处新增或删除列请务必同步 history页面，还有处理 defalutColumnsOrder 变量，这个变量是存的全部的列默认顺序key
         const columnArr: ColumnsTypeProps[] = [
             {
                 title: "序号",
@@ -1201,10 +1224,17 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             // 过滤掉 Id 和 action以及不可能出现的列
             const middleColumns = columnArr.filter((item) => !["Id", "action", ...noColumnsKey].includes(item.dataKey))
 
+            // 特殊处理一下 Payloads 位置
+            const realColumnsOrder = columnsOrder.slice()
+            if (toWebFuzzer) {
+                const pathIndex = columnsOrder.findIndex((key: string) => key === "Path")
+                realColumnsOrder.splice(pathIndex + 1, 0, "Payloads")
+            }
+
             // 先按 columnsOrder 排序
-            const sortedColumns = middleColumns
-                .filter((col) => columnsOrder.includes(col.dataKey))
-                .sort((a, b) => columnsOrder.indexOf(a.dataKey) - columnsOrder.indexOf(b.dataKey))
+            const sortedColumns = middleColumns.sort(
+                (a, b) => realColumnsOrder.indexOf(a.dataKey) - realColumnsOrder.indexOf(b.dataKey)
+            )
 
             // 先加上Id
             if (idColumn) finalColumns.push(idColumn)
@@ -1231,6 +1261,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         setIdFixed(realColumns.length !== 2)
         return realColumns
     }, [
+        toWebFuzzer,
         idFixed,
         columnsOrder,
         JSON.stringify(noColumnsKey),
@@ -1251,10 +1282,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     // #region 表格列 设置
     const [advancedSetVisible, setAdvancedSetVisible] = useState<boolean>(false)
     const isAdvancedSet = useCreation(() => {
-        const realDefalutColumnsOrder = defalutColumnsOrderRef.current.filter((key) => !noColumnsKey.includes(key))
-        const orderFlag =
+        const realDefalutColumnsOrder = defalutColumnsOrderRef.current.filter((key) => !specialCustoms(key))
+        const orderFlag1 =
             columnsOrder.length === 0 ? false : JSON.stringify(realDefalutColumnsOrder) !== JSON.stringify(columnsOrder)
-        return excludeColumnsKey.length > noColumnsKey.length || orderFlag
+        const orderFlag2 = !!excludeColumnsKey.filter((key) => !specialCustoms(key)).length
+        return orderFlag1 || orderFlag2
     }, [excludeColumnsKey, noColumnsKey, columnsOrder])
     // #endregion
 
@@ -2372,7 +2404,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 <AdvancedSet
                     showBackgroundRefresh={false}
                     columnsAllStr={JSON.stringify(
-                        configColumnRef.current.filter((item) => !noColumnsKey.includes(item.dataKey))
+                        configColumnRef.current.filter((item) => !specialCustoms(item.dataKey))
                     )}
                     onCancel={() => {
                         setAdvancedSetVisible(false)
