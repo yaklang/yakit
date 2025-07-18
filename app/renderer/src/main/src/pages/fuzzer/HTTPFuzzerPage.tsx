@@ -85,7 +85,7 @@ import {
 import {HTTPHeader} from "../mitm/MITMContentReplacerHeaderOperator"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {MatcherAndExtraction} from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
-import _ from "lodash"
+import _, {throttle} from "lodash"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
@@ -108,7 +108,7 @@ import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated, openExternalWebsite, openPacketNewWindow} from "@/utils/openWebsite"
 import {PayloadGroupNodeProps, ReadOnlyNewPayload} from "../payloadManager/newPayload"
-import {createRoot} from "react-dom/client"
+import {createRoot, Root} from "react-dom/client"
 import {SolidPauseIcon, SolidPlayIcon} from "@/assets/icon/solid"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import blastingIdmp4 from "@/assets/blasting-id.mp4"
@@ -657,7 +657,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // 切换【配置】/【规则】高级内容显示 type
     const [advancedConfigShowType, setAdvancedConfigShowType] = useState<WebFuzzerType>("config")
-    const [currentFuzzerPage, setCurrentFuzzerPage, getCurrentFuzzerPage] = useGetSetState<boolean>(true)
+    const [currentFuzzerPage, setCurrentFuzzerPage] = useGetSetState<boolean>(true)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
@@ -673,10 +673,23 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      * 内容
      * */
     const [_firstResponse, setFirstResponse, getFirstResponse] = useGetState<FuzzerResponse>(emptyFuzzer)
-    const [successFuzzer, setSuccessFuzzer] = useState<FuzzerResponse[]>([])
-    const [failedFuzzer, setFailedFuzzer] = useState<FuzzerResponse[]>([])
     const [_successCount, setSuccessCount, getSuccessCount] = useGetState(0)
     const [_failedCount, setFailedCount, getFailedCount] = useGetState(0)
+
+    const successFuzzerRef = useRef<FuzzerResponse[]>([]) // 成功的响应
+    const failedFuzzerRef = useRef<FuzzerResponse[]>([]) // 失败的响应
+    const fuzzerResChartDataBufferRef = useRef<FuzzerResponse[]>([]) // 图标数据
+
+    const successFuzzer: FuzzerResponse[] = useMemo(() => {
+        // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
+        // 这样，传递给下游组件的 prop 引用会变化，触发其更新
+        return [...successFuzzerRef.current]
+    }, [_successCount])
+    const failedFuzzer: FuzzerResponse[] = useMemo(() => {
+        // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
+        // 这样，传递给下游组件的 prop 引用会变化，触发其更新
+        return [...failedFuzzerRef.current]
+    }, [_failedCount])
 
     /**/
 
@@ -814,6 +827,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onFuzzerAdvancedConfigShowType = useMemoizedFn((data) => {
         if (!inViewport) return
         try {
+            setCurrentFuzzerPage(true)
             const value = JSON.parse(data)
             setAdvancedConfigShowType(value.type)
         } catch (error) {}
@@ -938,15 +952,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // 定时器
     const resetResponse = useMemoizedFn(() => {
         setFirstResponse({...emptyFuzzer})
-        setSuccessFuzzer([])
+        successFuzzerRef.current = []
+        failedFuzzerRef.current = []
+        fuzzerResChartDataBufferRef.current = []
         setRedirectedResponse(undefined)
-        setFailedFuzzer([])
         setSuccessCount(0)
         setFailedCount(0)
         if (!retryRef.current) {
             runtimeIdRef.current = ""
         }
-        setFuzzerResChartData("")
     })
 
     const retryRef = useRef<boolean>(false)
@@ -1154,7 +1168,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const tokenRef = useRef<string>(randomString(60))
     const taskIDRef = useRef<string>("")
     const runtimeIdRef = useRef<string>("")
-    const [fuzzerResChartData, setFuzzerResChartData] = useState<string>("")
+    // const [fuzzerResChartData, setFuzzerResChartData] = useState<string>("")
     useEffect(() => {
         const token = tokenRef.current
 
@@ -1171,9 +1185,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         ipcRenderer.on(errToken, (e, details) => {
             yakitNotify("error", `提交模糊测试请求失败 ${details}`)
         })
-        let successBuffer: FuzzerResponse[] = []
-        let failedBuffer: FuzzerResponse[] = []
-        let fuzzerResChartDataBuffer: FuzzerResChartData[] = []
         let count: number = 0 // 用于数据项请求字段
 
         const updateData = () => {
@@ -1182,24 +1193,20 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
 
             if (
-                failedBuffer.length +
-                    successBuffer.length +
+                failedFuzzerRef.current.length +
+                    successFuzzerRef.current.length +
                     failedCount +
                     successCount +
-                    fuzzerResChartDataBuffer.length ===
+                    fuzzerResChartDataBufferRef.current.length ===
                 0
             ) {
                 return
             }
-
-            setSuccessFuzzer([...successBuffer])
-            setFailedFuzzer([...failedBuffer])
             setFailedCount(failedCount)
             setSuccessCount(successCount)
-            if (inViewportRef.current && getCurrentFuzzerPage()) {
-                setFuzzerResChartData(JSON.stringify(fuzzerResChartDataBuffer))
-            }
         }
+
+        const updateDataThrottle = throttle(updateData, 500, {leading: false, trailing: true})
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
             taskIDRef.current = data.TaskId
@@ -1236,35 +1243,39 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
             if (data.Ok) {
                 successCount++
-                successBuffer.push(r)
+                successFuzzerRef.current.push(r)
                 // 超过最大显示 展示最新数据
-                if (successBuffer.length > fuzzerTableMaxDataRef.current) {
-                    successBuffer.shift()
+                if (successFuzzerRef.current.length > fuzzerTableMaxDataRef.current) {
+                    successFuzzerRef.current.shift()
                 }
             } else {
                 failedCount++
-                failedBuffer.push(r)
+                failedFuzzerRef.current.push(r)
             }
-            fuzzerResChartDataBuffer.push({
+
+            fuzzerResChartDataBufferRef.current.push({
                 Count: (r.Count as number) + 1,
                 TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
                 TCPDurationMs: +r.TCPDurationMs,
                 ConnectDurationMs: +r.ConnectDurationMs,
                 DurationMs: +r.DurationMs
-            })
-            if (fuzzerResChartDataBuffer.length > 5000) {
-                fuzzerResChartDataBuffer.shift()
+            } as FuzzerResponse)
+            if (fuzzerResChartDataBufferRef.current.length > 5000) {
+                fuzzerResChartDataBufferRef.current.shift()
+            }
+
+            if (successCount + failedCount >= 1) {
+                updateDataThrottle()
+            } else {
+                updateData()
             }
         })
 
         ipcRenderer.on(endToken, () => {
             updateData()
-            successBuffer = []
-            failedBuffer = []
             count = 0
             successCount = 0
             failedCount = 0
-            fuzzerResChartDataBuffer = []
             dCountRef.current = 0
             taskIDRef.current = ""
             setTimeout(() => {
@@ -1274,13 +1285,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }, 500)
         })
 
-        const updateDataId = setInterval(() => {
-            updateData()
-        }, 300)
-
         return () => {
             ipcRenderer.invoke("cancel-HTTPFuzzer", token)
-            clearInterval(updateDataId)
             ipcRenderer.removeAllListeners(errToken)
             ipcRenderer.removeAllListeners(dataToken)
             ipcRenderer.removeAllListeners(endToken)
@@ -2236,10 +2242,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     }}
                                                 >
                                                     <FuzzerConcurrentLoad
-                                                        inViewportCurrent={
-                                                            inViewport && advancedConfigShowType !== "sequence"
-                                                        }
-                                                        fuzzerResChartData={fuzzerResChartData}
+                                                        inViewportCurrent={inViewport && currentFuzzerPage}
+                                                        fuzzerResChartData={JSON.stringify(
+                                                            fuzzerResChartDataBufferRef.current
+                                                        )}
                                                         loading={loading}
                                                     />
                                                 </div>
@@ -3152,18 +3158,20 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
     return <></>
 })
 
+let fizzOverlayRoot: Root | null = null
+let fizzOverlayDomNode: HTMLDivElement | null = null
 export const onAddOverlayWidget = (editor, rsp, isShow?: boolean) => {
-    editor.removeOverlayWidget({
-        getId() {
-            return "monaco.fizz.overlaywidget"
-        }
-    })
+    // 先移除旧的 widget 和卸载 React Root
+    onRemoveOverlayWidget(editor)
     if (!isShow) return
+
+    fizzOverlayDomNode = document.createElement("div")
+    fizzOverlayRoot = createRoot(fizzOverlayDomNode)
+    fizzOverlayRoot.render(<EditorOverlayWidget rsp={rsp} />)
+
     const fizzOverlayWidget = {
         getDomNode() {
-            const domNode = document.createElement("div")
-            createRoot(domNode).render(<EditorOverlayWidget rsp={rsp} />)
-            return domNode
+            return fizzOverlayDomNode!
         },
         getId() {
             return "monaco.fizz.overlaywidget"
@@ -3175,6 +3183,18 @@ export const onAddOverlayWidget = (editor, rsp, isShow?: boolean) => {
         }
     }
     editor.addOverlayWidget(fizzOverlayWidget)
+}
+const onRemoveOverlayWidget = (editor) => {
+    editor.removeOverlayWidget({
+        getId() {
+            return "monaco.fizz.overlaywidget"
+        }
+    })
+    if (fizzOverlayRoot) {
+        fizzOverlayRoot.unmount()
+        fizzOverlayRoot = null
+    }
+    fizzOverlayDomNode = null
 }
 
 interface EditorOverlayWidgetProps {
