@@ -327,7 +327,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     style={{
                         ...directionStyle(editorInfo),
                         left: ["left"].includes(editorInfo?.direction.x || "") ? 0 : undefined,
-                        right: ["right", "middle"].includes(editorInfo?.direction.x || "") ? 0 : undefined,
+                        right: ["right", "middle"].includes(editorInfo?.direction.x || "") && !onClickSegmentedType ? 0 : undefined,
                         width: menuWidth ? menuWidth : 360,
                         maxHeight: menuHeight ? menuHeight : undefined
                     }}

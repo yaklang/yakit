@@ -1,6 +1,6 @@
 import {DataNode} from "antd/lib/tree"
 import {ReactNode} from "react"
-
+import {ModifyNotepadPageInfoProps} from "@/store/pageInfo"
 export interface ModifyNotepadProps {
     pageId: string
 }

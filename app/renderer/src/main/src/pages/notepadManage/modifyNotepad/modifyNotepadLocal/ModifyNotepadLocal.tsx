@@ -130,12 +130,14 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     }, 200)
                 })
         } else {
+            let Content = pageInfo.content || ""
             // 新建笔记本并保存
             const params: CreateNoteRequest = {
                 Title: initTabName(),
-                Content: ""
+                Content
             }
             perTabName.current = params.Title
+            notepadContentRef.current = params.Content
             setNotepadLoading(true)
             grpcCreateNote(params)
                 .then((res) => {
@@ -145,7 +147,8 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     }
                     setNote((v) => ({
                         ...v,
-                        Id: res.NoteId
+                        Id: res.NoteId,
+                        Content
                     }))
                     onUpdatePageInfo({
                         notepadHash: res.NoteId

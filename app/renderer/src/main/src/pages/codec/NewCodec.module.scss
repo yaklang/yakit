@@ -653,8 +653,10 @@
             .opt-wrapper {
                 display: flex;
                 align-items: center;
+                gap: 4px;
                 .opt {
                     cursor: pointer;
+                    display: flex;
                     svg {
                         height: 16px;
                         width: 16px;
@@ -669,11 +671,13 @@
                     }
                 }
                 .opt-copy {
-                    margin-top: 3px;
                     &:hover {
                         svg {
                             color: var(--yakit-primary-5);
                         }
+                    }
+                    .opt-copy-opt {
+                        margin-left: 0px;
                     }
                 }
             }

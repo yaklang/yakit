@@ -1,6 +1,6 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {Divider, Tooltip, Upload} from "antd"
-import {useMemoizedFn, useThrottleFn, useUpdateEffect, useDebounceEffect, useSize} from "ahooks"
+import {useMemoizedFn, useThrottleFn, useUpdateEffect, useDebounceEffect, useSize, useControllableValue} from "ahooks"
 import styles from "./NewCodec.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
@@ -17,8 +17,10 @@ import {
     OutlineClockIcon,
     OutlineDocumentduplicateIcon,
     OutlineDotshorizontalIcon,
+    OutlineFileUpIcon,
     OutlineImportIcon,
     OutlinePauseIcon,
+    OutlinePencilaltIcon,
     OutlinePlayIcon,
     OutlineSearchIcon,
     OutlineStarIcon,
@@ -58,6 +60,11 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import HexEditor from "react-hex-editor"
 import {HexEditorHandle} from "react-hex-editor/dist/types"
 import {setClipboardText} from "@/utils/clipboard"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {useSubscribeClose} from "@/store/tabSubscribe"
+import emiter from "@/utils/eventBus/eventBus"
+import {MultipleNodeInfo} from "../layout/mainOperatorContent/MainOperatorContentType"
+import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
@@ -827,25 +834,17 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
 interface CodecRunListHistoryStoreProps {
     popoverVisible: boolean
     setPopoverVisible: (v: boolean) => void
-    onSelect: (v: SaveObjProps) => void
+    onSelect: (v: CustomizeCodecFlowProps) => void
+    mitmSaveData: CustomizeCodecFlowProps[]
+    setCodecFlow?: (v?: CustomizeCodecFlowProps) => void
+    onMitmSaveFilter: () => void
 }
 
 export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> = React.memo((props) => {
-    const {popoverVisible, setPopoverVisible, onSelect} = props
-    const [mitmSaveData, setMitmSaveData] = useState<CustomizeCodecFlowProps[]>([])
+    const {popoverVisible, setPopoverVisible, onSelect, setCodecFlow, mitmSaveData, onMitmSaveFilter} = props
     useEffect(() => {
         onMitmSaveFilter()
     }, [popoverVisible])
-    const onMitmSaveFilter = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("GetAllCodecFlow")
-            .then((data: {Flows: CustomizeCodecFlowProps[]}) => {
-                setMitmSaveData(data.Flows)
-            })
-            .catch((e) => {
-                failed(`GetAllCodecFlow failed ${e}`)
-            })
-    })
 
     const removeItem = useMemoizedFn((FlowName, DeleteAll = false) => {
         ipcRenderer
@@ -860,11 +859,9 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
     })
 
     const onSelectItem = useMemoizedFn((item: CustomizeCodecFlowProps) => {
-        const {WorkFlowUI} = item
-        try {
-            onSelect(JSON.parse(WorkFlowUI))
-            setPopoverVisible(false)
-        } catch (error) {}
+        onSelect(item)
+        setCodecFlow && setCodecFlow(undefined)
+        setPopoverVisible(false)
     })
     return (
         <div className={styles["codec-run-list-history-store"]}>
@@ -906,7 +903,18 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
                                         e.stopPropagation()
                                     }}
                                 >
-                                    <CopyComponents copyText={item.FlowName} />
+                                    <CopyComponents className={styles["opt-copy-opt"]} copyText={item.FlowName} />
+                                </div>
+                                <div
+                                    className={classNames(styles["opt"], styles["opt-copy"])}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onSelect(item)
+                                        setCodecFlow && setCodecFlow(item)
+                                        setPopoverVisible(false)
+                                    }}
+                                >
+                                    <OutlinePencilaltIcon />
                                 </div>
                                 <div
                                     className={classNames(styles["opt"], styles["opt-del"])}
@@ -952,7 +960,12 @@ interface CustomizeCodecFlowProps {
     WorkFlowUI: string
 }
 
+interface NewCodecMiddleRunListPropsRefProps {
+    onUpdateFun: () => void
+}
+
 interface NewCodecMiddleRunListProps {
+    ref?: React.ForwardedRef<NewCodecMiddleRunListPropsRefProps>
     id: string
     fold: boolean
     setFold: (v: boolean) => void
@@ -962,6 +975,8 @@ interface NewCodecMiddleRunListProps {
     setOutputResponse: (v: CodecResponseProps) => void
     isClickToRunList: React.MutableRefObject<boolean>
     setRunLoading: (v: boolean) => void
+    codecFlow?: CustomizeCodecFlowProps
+    setCodecFlow: (v: CustomizeCodecFlowProps) => void
 }
 
 interface CheckFailProps {
@@ -984,7 +999,7 @@ const getMiddleItemStyle = (isDragging, draggableStyle) => {
 
 const CodecAutoRun = "CodecAutoRun"
 // codec中间可执行列表
-export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (props) => {
+export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwardRef((props, ref) => {
     const {
         id,
         fold,
@@ -1000,6 +1015,13 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const [filterName, setFilterName] = useState<string>()
     const [cacheModal, setCacheModal] = useState<boolean>(false)
+
+    const [codecFlow, setCodecFlow] = useControllableValue<CustomizeCodecFlowProps | undefined>(props, {
+        defaultValue: undefined,
+        valuePropName: "codecFlow",
+        trigger: "setCodecFlow"
+    })
+    const [mitmSaveData, setMitmSaveData] = useState<CustomizeCodecFlowProps[]>([])
     // 是否自动执行
     const [autoRun, setAutoRun] = useState<boolean>(false)
     useDebounceEffect(
@@ -1031,6 +1053,14 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
         )
     }, [autoRun])
 
+    useImperativeHandle(
+        ref,
+        () => ({
+            onUpdateFun
+        }),
+        []
+    )
+
     // 检查元素是否有滚动条
     const isScrollbar = useMemoizedFn((element: HTMLElement) => {
         return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
@@ -1047,22 +1077,53 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
     }, [rightItems, isClickToRunList])
 
     // 历史选取项
-    const onMenuSelect = useMemoizedFn((v: SaveObjProps) => {
-        setRightItems(v.rightItems)
+    const onMenuSelect = useMemoizedFn((v: CustomizeCodecFlowProps) => {
+        try {
+            const {WorkFlowUI} = v
+            const {rightItems} = JSON.parse(WorkFlowUI) as SaveObjProps
+            setRightItems(rightItems)
+        } catch (error) {}
     })
 
-    const onSaveFun = useMemoizedFn(() => {
-        if (typeof filterName !== "string" || filterName.length === 0) {
+    const onUpdateFun = useMemoizedFn(() => {
+        if (!codecFlow) return
+        const codecParams = getCodecParams()
+        if (!codecParams) return
+        if (rightItems.length === 0) {
+            warn("请从左侧列表拖入要使用的 Codec 工具")
+            return
+        }
+        ipcRenderer
+            .invoke("UpdateCodecFlow", codecParams)
+            .then(() => {
+                info("更新成功")
+            })
+            .catch((e) => {
+                failed(`UpdateCodecFlow failed ${e}`)
+            })
+    })
+
+    const getCodecParams = useMemoizedFn(() => {
+        if (!codecFlow && (typeof filterName !== "string" || filterName.length === 0)) {
             warn("请输入名字")
             return
         }
+        if (!codecFlow) {
+            let isAlready = mitmSaveData.find((item) => item.FlowName === filterName)
+            if (isAlready) {
+                warn("已存在同名历史记录，请修改名称")
+                return
+            }
+        }
+        let name = codecFlow?.FlowName || filterName
+        if (!name) return
         const saveObj: SaveObjProps = {
-            historyName: filterName,
+            historyName: name,
             rightItems
         }
 
-        let saveCodecParams: CustomizeCodecFlowProps = {
-            FlowName: filterName,
+        let codecParams: CustomizeCodecFlowProps = {
+            FlowName: name,
             // 后端所需内容
             WorkFlow: [],
             // 前端用于恢复界面所需内容
@@ -1101,15 +1162,22 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                     }
                 })
             }
-            saveCodecParams.WorkFlow.push(obj)
+            codecParams.WorkFlow.push(obj)
         })
+        return codecParams
+    })
+
+    const onSaveFun = useMemoizedFn(() => {
+        const codecParams = getCodecParams()
+        if (!codecParams) return
 
         ipcRenderer
-            .invoke("SaveCodecFlow", saveCodecParams)
+            .invoke("SaveCodecFlow", codecParams)
             .then(() => {
                 info("存储成功")
                 setFilterName(undefined)
                 setCacheModal(false)
+                onMitmSaveFilter()
             })
             .catch((e) => {
                 failed(`SaveCodecFlow failed ${e}`)
@@ -1297,6 +1365,17 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
         setRightItems([])
     })
 
+    const onMitmSaveFilter = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("GetAllCodecFlow")
+            .then((data: {Flows: CustomizeCodecFlowProps[]}) => {
+                setMitmSaveData(data.Flows)
+            })
+            .catch((e) => {
+                failed(`GetAllCodecFlow failed ${e}`)
+            })
+    })
+
     return (
         <div className={styles["new-codec-run-list"]}>
             <div className={styles["header"]}>
@@ -1315,11 +1394,20 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                     <span className={styles["count"]}>{rightItems.length}</span>
                 </div>
                 <div className={styles["extra"]}>
-                    <Tooltip title={"保存"}>
-                        <div className={styles["extra-icon"]} onClick={onSaveCodecRunListHistory}>
-                            <OutlineStorageIcon />
-                        </div>
-                    </Tooltip>
+                    {codecFlow ? (
+                        <Tooltip title={"保存更新"}>
+                            <div className={styles["extra-icon"]} onClick={onUpdateFun}>
+                                <OutlineFileUpIcon />
+                            </div>
+                        </Tooltip>
+                    ) : (
+                        <Tooltip title={"保存"}>
+                            <div className={styles["extra-icon"]} onClick={onSaveCodecRunListHistory}>
+                                <OutlineStorageIcon />
+                            </div>
+                        </Tooltip>
+                    )}
+
                     <YakitPopover
                         overlayClassName={styles["http-history-table-drop-down-popover"]}
                         content={
@@ -1327,6 +1415,9 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                 onSelect={(v) => onMenuSelect(v)}
                                 popoverVisible={popoverVisible}
                                 setPopoverVisible={setPopoverVisible}
+                                mitmSaveData={mitmSaveData}
+                                setCodecFlow={setCodecFlow}
+                                onMitmSaveFilter={onMitmSaveFilter}
                             />
                         }
                         trigger='click'
@@ -1461,7 +1552,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
             </YakitModal>
         </div>
     )
-}
+})
 
 interface NewCodecLeftDragListItemProps {
     node: CodecMethod[]
@@ -1965,6 +2056,97 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
     const [runLoading, setRunLoading] = useState<boolean>(false)
     // 是否为点击添加至执行列表
     const isClickToRunList = useRef<boolean>(false)
+    // 是否为编辑模式
+    const [codecFlow, setCodecFlow] = useState<CustomizeCodecFlowProps>()
+
+    const newCodecMiddleRunListRef = useRef<NewCodecMiddleRunListPropsRefProps>(null)
+    const {setSubscribeClose, getSubscribeClose} = useSubscribeClose()
+    const onCloseTab = useMemoizedFn((m) => {
+        ipcRenderer
+            .invoke("send-close-tab", {
+                router: YakitRoute.Codec
+            })
+            .then(() => {
+                m.destroy()
+            })
+    })
+    useEffect(() => {
+        if (getSubscribeClose(YakitRoute.Codec)) return
+        setSubscribeClose(YakitRoute.Codec, {
+            close: {
+                title: "关闭提示",
+                content: "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
+                onOkText: "确定",
+                onCancelText: "取消",
+                onOk: (m) => onCloseTab(m)
+            }
+        })
+    }, [])
+
+    const onCloseSubPageByJudgeFun = useMemoizedFn((res) => {
+        try {
+            const data: MultipleNodeInfo = JSON.parse(res)
+            if (id === data.id) {
+                // 编辑模式需提示
+                if (codecFlow && rightItems.length > 0) {
+                    const m = YakitModalConfirm({
+                        width: 420,
+                        type: "white",
+                        title: "关闭提示",
+                        content: "是否保存更新当前模板",
+                        onCancel() {
+                            m.destroy()
+                        },
+                        footer: (
+                            <div
+                                style={{
+                                    width: "100%",
+                                    padding: "0px 24px 24px 0px",
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    gap: 8
+                                }}
+                            >
+                                <YakitButton
+                                    type='outline2'
+                                    onClick={() => {
+                                        emiter.emit("onCloseSubPageByInfo", res)
+                                        m.destroy()
+                                    }}
+                                >
+                                    不保存
+                                </YakitButton>
+
+                                <YakitButton
+                                    type='primary'
+                                    onClick={() => {
+                                        newCodecMiddleRunListRef.current?.onUpdateFun()
+                                        setTimeout(() => {
+                                            m.destroy()
+                                            emiter.emit("onCloseSubPageByInfo", res)
+                                        }, 200)
+                                    }}
+                                >
+                                    保存
+                                </YakitButton>
+                            </div>
+                        )
+                    })
+                }
+                // 非编辑模式直接关闭
+                else {
+                    emiter.emit("onCloseSubPageByInfo", res)
+                }
+            }
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        emiter.on("onCloseSubPageByJudge", onCloseSubPageByJudgeFun)
+        return () => {
+            emiter.off("onCloseSubPageByJudge", onCloseSubPageByJudgeFun)
+        }
+    }, [])
 
     // 计算编码值总和
     const differentiate = useMemoizedFn((str: string) => {
@@ -2259,6 +2441,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                         onClickToRunList={onClickToRunList}
                     />
                     <NewCodecMiddleRunList
+                        ref={newCodecMiddleRunListRef}
                         id={id}
                         fold={fold}
                         setFold={setFold}
@@ -2268,6 +2451,8 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                         setOutputResponse={setOutputResponse}
                         isClickToRunList={isClickToRunList}
                         setRunLoading={setRunLoading}
+                        codecFlow={codecFlow}
+                        setCodecFlow={setCodecFlow}
                     />
                 </DragDropContext>
             )}
