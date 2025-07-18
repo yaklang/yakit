@@ -17,6 +17,12 @@ module.exports = {
             if (!windows) {
                 return
             }
+            // if(!!data?.RequestRaw){
+            //     data.RequestRaw=new Uint8Array()
+            // }
+            // if(!!data?.ResponseRaw){
+            //     data.ResponseRaw=new Uint8Array()
+            // }
             windows.webContents.send(`${token}-data`, data)
         })
         stream.on("error", (error) => {

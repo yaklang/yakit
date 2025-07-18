@@ -1223,7 +1223,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 // 重置extractedMap
                 reset()
             }
-            const r = {
+            let r = {
                 // 6.16
                 ...data,
                 Headers: data.Headers || [],
@@ -1237,7 +1237,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
 
             // 设置第一个 response
-            if (getFirstResponse().RequestRaw.length === 0) {
+            if (getFirstResponse().RequestRaw?.length === 0) {
                 setFirstResponse(r)
             }
 
@@ -1246,6 +1246,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 successFuzzerRef.current.push(r)
                 // 超过最大显示 展示最新数据
                 if (successFuzzerRef.current.length > fuzzerTableMaxDataRef.current) {
+                    successFuzzerRef.current[0].RequestRaw = null as any
+                    successFuzzerRef.current[0].ResponseRaw = null as any
+                    successFuzzerRef.current[0] = null as any
                     successFuzzerRef.current.shift()
                 }
             } else {
@@ -1261,6 +1264,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 DurationMs: +r.DurationMs
             } as FuzzerResponse)
             if (fuzzerResChartDataBufferRef.current.length > 5000) {
+                fuzzerResChartDataBufferRef.current[0] = null as any
                 fuzzerResChartDataBufferRef.current.shift()
             }
 
@@ -1269,6 +1273,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             } else {
                 updateData()
             }
+            r.RequestRaw = null as any
+            r.ResponseRaw = null as any
+            r = null as any
         })
 
         ipcRenderer.on(endToken, () => {
@@ -2233,7 +2240,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         pageId={props.id}
                                                     />
                                                 )}
-                                                <div
+                                                {/* <div
                                                     style={{
                                                         display: showSuccess === "Concurrent/Load" ? "block" : "none",
                                                         height: "100%",
@@ -2248,7 +2255,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         )}
                                                         loading={loading}
                                                     />
-                                                </div>
+                                                </div> */}
                                             </>
                                         ) : (
                                             <Result
