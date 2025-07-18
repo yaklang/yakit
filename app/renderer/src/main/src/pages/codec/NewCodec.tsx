@@ -1089,6 +1089,10 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
         if (!codecFlow) return
         const codecParams = getCodecParams()
         if (!codecParams) return
+        if (rightItems.length === 0) {
+            warn("请从左侧列表拖入要使用的 Codec 工具")
+            return
+        }
         ipcRenderer
             .invoke("UpdateCodecFlow", codecParams)
             .then(() => {
@@ -2084,7 +2088,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
             const data: MultipleNodeInfo = JSON.parse(res)
             if (id === data.id) {
                 // 编辑模式需提示
-                if (codecFlow) {
+                if (codecFlow && rightItems.length > 0) {
                     const m = YakitModalConfirm({
                         width: 420,
                         type: "white",
