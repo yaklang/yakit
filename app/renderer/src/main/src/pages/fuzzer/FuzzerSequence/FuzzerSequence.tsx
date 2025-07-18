@@ -2266,7 +2266,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                         extractedMap={extractedMap}
                                                     />
                                                 )}
-                                                <div
+                                                {/* <div
                                                     style={{
                                                         display: showSuccess === "Concurrent/Load" ? "block" : "none",
                                                         height: "100%",
@@ -2279,7 +2279,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                         fuzzerResChartData={JSON.stringify(fuzzerResChartData)}
                                                         loading={loading}
                                                     />
-                                                </div>
+                                                </div> */}
                                             </>
                                         ) : (
                                             <Result status={"warning"} title={"请执行序列后进行查看"} />
