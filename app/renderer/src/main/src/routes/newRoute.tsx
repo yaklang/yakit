@@ -476,7 +476,6 @@ export interface ComponentParams {
     /** 快捷键配置页面信息 */
     shortcutKeyPage?: ShortcutKeyPageName
 }
-
 function withRouteToPage(WrappedComponent) {
     return function WithPage(props) {
         return (
@@ -486,9 +485,61 @@ function withRouteToPage(WrappedComponent) {
                         return <div>未知错误</div>
                     }
                     return (
-                        <div>
+                        <div style={{padding: '20px', fontFamily: 'monospace'}}>
+                            <h3>页面发生错误</h3>
                             <p>逻辑性崩溃，请关闭重试！</p>
-                            <pre>{error?.message}</pre>
+                            <div style={{marginTop: '16px'}}>
+                                <h4>错误信息:</h4>
+                                <pre style={{background: '#f5f5f5', padding: '8px', borderRadius: '4px'}}>
+                                    {error?.message}
+                                </pre>
+                            </div>
+                            <div style={{marginTop: '16px'}}>
+                                <h4>错误堆栈:</h4>
+                                <pre style={{
+                                    background: '#f5f5f5', 
+                                    padding: '8px', 
+                                    borderRadius: '4px',
+                                    maxHeight: '300px',
+                                    overflow: 'auto',
+                                    fontSize: '12px'
+                                }}>
+                                    {error?.stack || '无堆栈信息'}
+                                </pre>
+                            </div>
+                            <div style={{marginTop: '16px'}}>
+                                <h4>组件信息:</h4>
+                                <pre style={{background: '#f5f5f5', padding: '8px', borderRadius: '4px'}}>
+                                    组件名称: {WrappedComponent?.name || WrappedComponent?.displayName || '未知组件'}
+                                </pre>
+                            </div>
+                            <div style={{marginTop: '16px'}}>
+                                <h4>传入参数:</h4>
+                                <pre style={{
+                                    background: '#f5f5f5', 
+                                    padding: '8px', 
+                                    borderRadius: '4px',
+                                    maxHeight: '200px',
+                                    overflow: 'auto',
+                                    fontSize: '12px'
+                                }}>
+                                    {JSON.stringify(props, null, 2)}
+                                </pre>
+                            </div>
+                            <button 
+                                onClick={resetErrorBoundary}
+                                style={{
+                                    marginTop: '16px',
+                                    padding: '8px 16px',
+                                    background: '#1890ff',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                重试
+                            </button>
                         </div>
                     )
                 }}
