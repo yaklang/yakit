@@ -2233,7 +2233,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         pageId={props.id}
                                                     />
                                                 )}
-                                                <div
+                                                {/* <div
                                                     style={{
                                                         display: showSuccess === "Concurrent/Load" ? "block" : "none",
                                                         height: "100%",
@@ -2248,7 +2248,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         )}
                                                         loading={loading}
                                                     />
-                                                </div>
+                                                </div> */}
                                             </>
                                         ) : (
                                             <Result
@@ -3134,12 +3134,12 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
             }
         ]
 
-        if (showConcurrentAndLoad) {
-            options.push({
-                value: "Concurrent/Load",
-                label: "并发/负载"
-            })
-        }
+        // if (showConcurrentAndLoad) {
+        //     options.push({
+        //         value: "Concurrent/Load",
+        //         label: "并发/负载"
+        //     })
+        // }
 
         return (
             <div className={styles["second-node-title"]}>
