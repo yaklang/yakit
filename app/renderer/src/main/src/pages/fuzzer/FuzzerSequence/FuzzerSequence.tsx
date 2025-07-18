@@ -111,6 +111,7 @@ import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag
 import {isEqual} from "lodash"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
+import {updateConcurrentLoad} from "@/utils/duplex/duplex"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 const FuzzerPageSetting = React.lazy(() => import("./FuzzerPageSetting"))
@@ -414,7 +415,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 }
             }
 
-            const r = {
+            let r = {
                 ...Response,
                 Headers: Response.Headers || [],
                 UUID: Response.UUID,
@@ -434,6 +435,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     successList.push(r)
                     // 超过最大显示 展示最新数据
                     if (successList.length > fuzzerTableMaxData) {
+                        successList[0].RequestRaw = null as unknown as Uint8Array
+                        successList[0].ResponseRaw = null as unknown as Uint8Array
+                        successList[0] = null as any
                         successList.shift()
                     }
                     successBufferRef.current.set(FuzzerIndex, successList)
@@ -479,6 +483,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     }
                 ])
             }
+
+            r = null as unknown as FuzzerResponse
         })
         ipcRenderer.on(endToken, () => {
             setTimeout(() => {
@@ -817,6 +823,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         onClearRef()
         fuzzerTableMaxDataRef.current.clear()
         resetResponse()
+
+        updateConcurrentLoad("rps", [])
+        updateConcurrentLoad("cps", [])
 
         resetDroppedCount()
         droppedSequenceIndexMapRef.current.clear()
@@ -2270,20 +2279,20 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                         extractedMap={extractedMap}
                                                     />
                                                 )}
-                                                {/* <div
-                                                    style={{
-                                                        display: showSuccess === "Concurrent/Load" ? "block" : "none",
-                                                        height: "100%",
-                                                        overflowY: "auto",
-                                                        overflowX: "hidden"
-                                                    }}
-                                                >
-                                                    <FuzzerConcurrentLoad
-                                                        inViewportCurrent={inViewport}
-                                                        fuzzerResChartData={JSON.stringify(fuzzerResChartData)}
-                                                        loading={loading}
-                                                    />
-                                                </div> */}
+                                                {showSuccess === "Concurrent/Load" && (
+                                                    <div
+                                                        style={{
+                                                            height: "100%",
+                                                            overflowY: "auto",
+                                                            overflowX: "hidden"
+                                                        }}
+                                                    >
+                                                        <FuzzerConcurrentLoad
+                                                            inViewportCurrent={inViewport}
+                                                            fuzzerResChartData={fuzzerResChartData}
+                                                        />
+                                                    </div>
+                                                )}
                                             </>
                                         ) : (
                                             <Result status={"warning"} title={"请执行序列后进行查看"} />

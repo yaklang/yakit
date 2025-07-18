@@ -1,11 +1,15 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef} from "react"
 import * as echarts from "echarts"
 import ReactECharts from "echarts-for-react"
 import {merge} from "lodash"
 import emiter from "@/utils/eventBus/eventBus"
-import {useMemoizedFn} from "ahooks"
-import {ConcurrentLoad, concurrentLoad, updateConcurrentLoad} from "@/utils/duplex/duplex"
+import {useMemoizedFn, useThrottleFn} from "ahooks"
+import {ConcurrentLoad, concurrentLoad} from "@/utils/duplex/duplex"
 import {formatTime} from "@/utils/timeUtil"
+
+const getCssVar = (varName: string) => {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim()
+}
 
 const lineDefaultOption: echarts.EChartsOption = {
     title: {
@@ -61,97 +65,128 @@ const lineDefaultOption: echarts.EChartsOption = {
 interface RpsAndCpsLineChartProps {
     type: keyof ConcurrentLoad
     inViewportCurrent: boolean
-    loading: boolean
     lineChartOption: echarts.EChartsOption
 }
 
 const RpsAndCpsLineChart: React.FC<RpsAndCpsLineChartProps> = React.memo((props) => {
-    const {type, inViewportCurrent, loading, lineChartOption} = props
+    const {type, inViewportCurrent, lineChartOption} = props
+    const chartRef = useRef<any>(null)
+    const optionRef = useRef<echarts.EChartsOption>(merge({}, lineDefaultOption, lineChartOption))
+    // const lastIndexRef = useRef(0)
+    // const xAxisDataRef = useRef<string[]>([])
 
-    const [option, setOption] = useState<echarts.EChartsOption>(merge({}, lineDefaultOption, lineChartOption))
+    const {run: throttledRenderData, cancel: cancelRenderData} = useThrottleFn(
+        () => {
+            const echartsInstance = chartRef.current?.getEchartsInstance()
+            if (!echartsInstance) return
+            const dataArr = concurrentLoad[type] || []
 
-    const updateData = useMemoizedFn(() => {
-        setOption((prevOption) => {
-            const series = prevOption.series || []
+            // const newData = dataArr.slice(lastIndexRef.current)
+            // if (newData.length === 0) return
 
-            const subtextPrefix = type === "rps" ? "当前发包数：" : "当前连接数："
-            const subtextSuffix = concurrentLoad[type][concurrentLoad[type].length - 1]?.number || 0
+            // // 追加 x 轴
+            // xAxisDataRef.current = [...xAxisDataRef.current, ...newData.map((point) => formatTime(point.time))]
+            // echartsInstance.setOption({
+            //     xAxis: [{data: xAxisDataRef.current}],
+            //     title: {
+            //         subtext:
+            //             (type === "rps" ? "当前发包数：" : "当前连接数：") + (dataArr[dataArr.length - 1]?.number || 0)
+            //     }
+            // })
 
-            return {
-                ...prevOption,
-                title: {
-                    subtext: subtextPrefix + subtextSuffix
-                },
-                xAxis: {
-                    ...prevOption.xAxis,
-                    data: concurrentLoad[type].map((point) => formatTime(point.time))
-                },
-                series: [
-                    {
-                        ...series[0],
-                        data: concurrentLoad[type].map((point) => point.number)
+            // // 追加 series
+            // echartsInstance.appendData({
+            //     seriesIndex: 0,
+            //     data: newData.map((point) => point.number)
+            // })
+
+            // echartsInstance.resize()
+
+            // lastIndexRef.current += newData.length
+
+            echartsInstance.setOption(
+                {
+                    ...optionRef.current,
+                    xAxis: {data: dataArr.map((point) => formatTime(point.time))},
+                    series: [
+                        {
+                            data: dataArr.map((point) => point.number)
+                        }
+                    ],
+                    title: {
+                        subtext:
+                            (type === "rps" ? "当前发包数：" : "当前连接数：") +
+                            (dataArr[dataArr.length - 1]?.number || 0)
                     }
-                ]
-            }
-        })
-    })
+                },
+                false,
+                true
+            )
+        },
+        {wait: 1000, leading: true, trailing: true}
+    )
 
-    const resetData = useMemoizedFn(() => {
+    const cancelWatch = useMemoizedFn(() => {
         if (type === "rps") {
-            emiter.off("onRefreshRps", updateData)
+            emiter.off("onRefreshRps", throttledRenderData)
         } else if (type === "cps") {
-            emiter.off("onRefreshCps", updateData)
+            emiter.off("onRefreshCps", throttledRenderData)
         }
+        cancelRenderData()
     })
 
     useEffect(() => {
         if (inViewportCurrent) {
+            throttledRenderData()
             if (type === "rps") {
-                emiter.on("onRefreshRps", updateData)
+                emiter.on("onRefreshRps", throttledRenderData)
             } else if (type === "cps") {
-                emiter.on("onRefreshCps", updateData)
-            }
-        } else {
-            if (loading) {
-                resetData()
+                emiter.on("onRefreshCps", throttledRenderData)
             }
         }
-    }, [type, inViewportCurrent, loading])
+
+        return () => {
+            cancelWatch()
+        }
+    }, [type, inViewportCurrent])
 
     useEffect(() => {
-        if (type === "rps") {
-            updateConcurrentLoad(type, [])
-        } else if (type === "cps") {
-            updateConcurrentLoad(type, [])
-        }
+        // lastIndexRef.current = 0
+        // xAxisDataRef.current = []
         return () => {
-            resetData()
+            cancelWatch()
         }
     }, [])
 
-    return <ReactECharts option={option} />
+    return <ReactECharts ref={chartRef} option={optionRef.current} style={{height: 400, width: "100%"}} />
 })
 
 interface RequestDelayStackedAreaChartProps {
     inViewportCurrent: boolean
-    fuzzerResChartData: string
+    fuzzerResChartData: FuzzerResChartData[]
 }
-const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> = React.memo((props) => {
-    const {inViewportCurrent, fuzzerResChartData} = props
-    const [option, setOption] = useState<echarts.EChartsOption>({
+const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> = ({
+    inViewportCurrent,
+    fuzzerResChartData
+}) => {
+    const chartRef = useRef<any>(null)
+    const optionRef = useRef<echarts.EChartsOption>({
         tooltip: {
             trigger: "axis",
             axisPointer: {
                 type: "cross",
                 label: {
-                    backgroundColor: "#6a7985"
+                    backgroundColor: getCssVar("--Colors-Use-Neutral-Text-1-Title")
                 }
             }
         },
         legend: {
             top: "3%",
             left: "45%",
-            data: ["TLS握手", "TCP连接", "总时长"]
+            data: ["TLS握手", "TCP连接", "总时长"],
+            textStyle: {
+                color: getCssVar("--Colors-Use-Neutral-Text-1-Title")
+            }
         },
         xAxis: [
             {
@@ -221,103 +256,144 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
             }
         ]
     })
-
-    const updateData = useMemoizedFn(() => {
-        try {
-            const d = JSON.parse(fuzzerResChartData) || []
-            setOption((prevOption) => {
-                const series = prevOption.series || []
-                const xAxis = prevOption.xAxis || []
-
-                return {
-                    ...prevOption,
-                    xAxis: [
-                        {
-                            ...xAxis[0],
-                            data: d.map((point: FuzzerResChartData) => point.Count)
-                        }
-                    ],
-                    series: [
-                        {
-                            ...series[0],
-                            data: d.map((point: FuzzerResChartData) => point.TLSHandshakeDurationMs)
-                        },
-                        {
-                            ...series[1],
-                            data: d.map((point: FuzzerResChartData) => point.TCPDurationMs)
-                        },
-                        {
-                            ...series[2],
-                            data: d.map((point: FuzzerResChartData) => point.ConnectDurationMs)
-                        }
-                    ]
-                }
-            })
-        } catch (error) {}
-    })
+    // const lastIndexRef = useRef(0)
+    // const xAxisDataRef = useRef<number[]>([])
 
     useEffect(() => {
-        if (inViewportCurrent) {
-            updateData()
+        // lastIndexRef.current = 0
+        // xAxisDataRef.current = []
+        return () => {
+            cancelRenderData()
         }
-    }, [fuzzerResChartData, inViewportCurrent])
+    }, [])
 
-    return <ReactECharts option={option} />
-})
-interface DurationMsLineChartProps {
-    inViewportCurrent: boolean
-    fuzzerResChartData: string
-}
-const DurationMsLineChart: React.FC<DurationMsLineChartProps> = React.memo((props) => {
-    const {fuzzerResChartData, inViewportCurrent} = props
-    const [option, setOption] = useState<echarts.EChartsOption>(
-        merge({}, lineDefaultOption, {
-            yAxis: {
-                name: "响应时延"
-            },
-            series: [
+    const {run: throttledRenderData, cancel: cancelRenderData} = useThrottleFn(
+        () => {
+            const echartsInstance = chartRef.current?.getEchartsInstance()
+            if (!echartsInstance) return
+
+            echartsInstance.setOption(
                 {
-                    itemStyle: {
-                        color: "#D6D394"
-                    },
-                    lineStyle: {
-                        color: "#D6D394"
-                    }
-                }
-            ]
-        })
+                    ...optionRef.current,
+                    xAxis: [{data: fuzzerResChartData.map((point) => point.Count)}],
+                    series: [
+                        {
+                            data: fuzzerResChartData.map((point: FuzzerResChartData) => point.TLSHandshakeDurationMs)
+                        },
+                        {
+                            data: fuzzerResChartData.map((point: FuzzerResChartData) => point.TCPDurationMs)
+                        },
+                        {
+                            data: fuzzerResChartData.map((point: FuzzerResChartData) => point.ConnectDurationMs)
+                        }
+                    ]
+                },
+                false,
+                true
+            )
+
+            // const newData = fuzzerResChartData.slice(lastIndexRef.current)
+            // if (newData.length === 0) return
+
+            // // 追加 x 轴
+            // xAxisDataRef.current = [...xAxisDataRef.current, ...newData.map((point) => point.Count)]
+            // echartsInstance.setOption({
+            //     xAxis: [{data: xAxisDataRef.current}]
+            // })
+
+            // // 追加 series
+            // echartsInstance.appendData({
+            //     seriesIndex: 0,
+            //     data: newData.map((point) => point.TLSHandshakeDurationMs)
+            // })
+            // echartsInstance.appendData({
+            //     seriesIndex: 1,
+            //     data: newData.map((point) => point.TCPDurationMs)
+            // })
+            // echartsInstance.appendData({
+            //     seriesIndex: 2,
+            //     data: newData.map((point) => point.ConnectDurationMs)
+            // })
+
+            // echartsInstance.resize()
+
+            // lastIndexRef.current += newData.length
+        },
+        {wait: 1000, leading: true, trailing: true}
     )
 
-    const updateData = useMemoizedFn(() => {
-        try {
-            const d = JSON.parse(fuzzerResChartData) || []
-            setOption((prevOption) => {
-                const series = prevOption.series || []
+    useEffect(() => {
+        if (!inViewportCurrent || !fuzzerResChartData?.length) return
+        throttledRenderData()
+    }, [inViewportCurrent, fuzzerResChartData])
 
-                return {
-                    ...prevOption,
-                    xAxis: {
-                        ...prevOption.xAxis,
-                        data: d.map((point: FuzzerResChartData) => point.Count)
-                    },
-                    series: [
-                        {
-                            ...series[0],
-                            data: d.map((point: FuzzerResChartData) => point.DurationMs)
-                        }
-                    ]
-                }
-            })
-        } catch (error) {}
-    })
+    return <ReactECharts ref={chartRef} option={optionRef.current} style={{height: 400, width: "100%"}} />
+}
+interface DurationMsLineChartProps {
+    inViewportCurrent: boolean
+    fuzzerResChartData: FuzzerResChartData[]
+    lineChartOption: echarts.EChartsOption
+}
+const DurationMsLineChart: React.FC<DurationMsLineChartProps> = React.memo((props) => {
+    const {inViewportCurrent, fuzzerResChartData, lineChartOption} = props
+    const chartRef = useRef<any>(null)
+    const optionRef = useRef<echarts.EChartsOption>(merge({}, lineDefaultOption, lineChartOption))
+    // const lastIndexRef = useRef(0)
+    // const xAxisDataRef = useRef<number[]>([])
 
     useEffect(() => {
-        if (inViewportCurrent) {
-            updateData()
+        // if (chartRef.current) {
+        //     lastIndexRef.current = 0
+        //     xAxisDataRef.current = []
+        // }
+        return () => {
+            cancelRenderData()
         }
+    }, [])
+
+    const {run: throttledRenderData, cancel: cancelRenderData} = useThrottleFn(
+        () => {
+            const echartsInstance = chartRef.current?.getEchartsInstance()
+            if (!echartsInstance) return
+
+            echartsInstance.setOption(
+                {
+                    ...optionRef.current,
+                    xAxis: {data: fuzzerResChartData.map((point) => point.Count)},
+                    series: [{data: fuzzerResChartData.map((point) => point.DurationMs)}]
+                },
+                false,
+                true
+            )
+
+            // const newData = fuzzerResChartData.slice(lastIndexRef.current)
+            // if (newData.length === 0) return
+
+            // // 追加 x 轴
+            // xAxisDataRef.current = [...xAxisDataRef.current, ...newData.map((point) => point.Count)]
+            // echartsInstance.setOption({
+            //     xAxis: {data: xAxisDataRef.current}
+            // })
+
+            // // 追加 series
+            // echartsInstance.appendData({
+            //     seriesIndex: 0,
+            //     data: newData.map((point) => point.DurationMs)
+            // })
+
+            // echartsInstance.resize()
+
+            // lastIndexRef.current += newData.length
+        },
+        {wait: 1000, leading: true, trailing: true}
+    )
+
+    useEffect(() => {
+        if (!inViewportCurrent || !fuzzerResChartData?.length) return
+        throttledRenderData()
     }, [fuzzerResChartData, inViewportCurrent])
 
-    return <ReactECharts option={option} />
+    return <ReactECharts ref={chartRef} option={optionRef.current} style={{height: 400, width: "100%"}} />
 })
 
 export interface FuzzerResChartData {
@@ -329,28 +405,34 @@ export interface FuzzerResChartData {
 }
 interface FuzzerConcurrentLoadProps {
     inViewportCurrent: boolean
-    loading: boolean
-    fuzzerResChartData: string
+    fuzzerResChartData: FuzzerResChartData[]
 }
 export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = React.memo((props) => {
-    const {inViewportCurrent, loading, fuzzerResChartData} = props
-
+    const {inViewportCurrent, fuzzerResChartData} = props
     return (
         <>
             <RpsAndCpsLineChart
                 type='rps'
                 inViewportCurrent={inViewportCurrent}
-                loading={loading}
                 lineChartOption={{
                     yAxis: {
                         name: "每秒发包数（5min）"
-                    }
+                    },
+                    series: [
+                        {
+                            itemStyle: {
+                                color: getCssVar("--Colors-Use-Blue-Primary")
+                            },
+                            lineStyle: {
+                                color: getCssVar("--Colors-Use-Blue-Primary")
+                            }
+                        }
+                    ]
                 }}
             />
             <RpsAndCpsLineChart
                 type='cps'
                 inViewportCurrent={inViewportCurrent}
-                loading={loading}
                 lineChartOption={{
                     yAxis: {
                         name: "每秒连接数（5min）"
@@ -358,10 +440,10 @@ export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = React.m
                     series: [
                         {
                             itemStyle: {
-                                color: "#F6544A"
+                                color: getCssVar("--Colors-Use-Red-Primary")
                             },
                             lineStyle: {
-                                color: "#F6544A"
+                                color: getCssVar("--Colors-Use-Red-Primary")
                             }
                         }
                     ]
@@ -371,7 +453,25 @@ export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = React.m
                 fuzzerResChartData={fuzzerResChartData}
                 inViewportCurrent={inViewportCurrent}
             />
-            <DurationMsLineChart fuzzerResChartData={fuzzerResChartData} inViewportCurrent={inViewportCurrent} />
+            <DurationMsLineChart
+                fuzzerResChartData={fuzzerResChartData}
+                inViewportCurrent={inViewportCurrent}
+                lineChartOption={{
+                    yAxis: {
+                        name: "响应时延"
+                    },
+                    series: [
+                        {
+                            itemStyle: {
+                                color: getCssVar("--Colors-Use-Yellow-Primary")
+                            },
+                            lineStyle: {
+                                color: getCssVar("--Colors-Use-Yellow-Primary")
+                            }
+                        }
+                    ]
+                }}
+            />
         </>
     )
 })

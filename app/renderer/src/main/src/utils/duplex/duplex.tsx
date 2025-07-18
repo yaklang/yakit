@@ -50,6 +50,12 @@ function handleConcurrentLoadData(key: keyof ConcurrentLoad, number: number) {
     arr.push({number, time: curTime})
     const trimmedData = arr.filter((point) => curTime - point.time < 300) // 最近5分钟数据
     updateConcurrentLoad(key, trimmedData)
+    if (key === "rps") {
+        emiter.emit("onRefreshRps")
+        emiter.emit("onRefreshCurRps", number)
+    } else {
+        emiter.emit("onRefreshCps")
+    }
 }
 
 export const startupDuplexConn = () => {
@@ -94,12 +100,9 @@ export const startupDuplexConn = () => {
                 // rps
                 case "rps":
                     handleConcurrentLoadData("rps", obj)
-                    emiter.emit("onRefreshRps")
-                    emiter.emit("onRefreshCurRps", obj)
                     break
                 case "cps":
                     handleConcurrentLoadData("cps", obj)
-                    emiter.emit("onRefreshCps")
                     break
             }
         } catch (error) {}
