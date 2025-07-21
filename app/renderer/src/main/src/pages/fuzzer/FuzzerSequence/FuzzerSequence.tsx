@@ -469,7 +469,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 })
                 // 超过最大显示 展示最新数据
                 if (fuzzerResChartData.length > 5000) {
-                    // fuzzerResChartData.shift()
+                    fuzzerResChartData.shift()
                 }
                 fuzzerResChartDataBufferRef.current.set(FuzzerIndex, fuzzerResChartData)
             } else {

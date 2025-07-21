@@ -78,47 +78,47 @@ const RpsAndCpsLineChart: React.FC<RpsAndCpsLineChartProps> = React.memo((props)
             if (!echartsInstance) return
             const dataArr = concurrentLoad[type] || []
 
-            const newData = dataArr.slice(lastIndexRef.current)
-            if (newData.length === 0) return
+            // const newData = dataArr.slice(lastIndexRef.current)
+            // if (newData.length === 0) return
 
-            // 追加 x 轴
-            xAxisDataRef.current = [...xAxisDataRef.current, ...newData.map((point) => formatTime(point.time))]
-            echartsInstance.setOption({
-                xAxis: [{data: xAxisDataRef.current}],
-                title: {
-                    subtext:
-                        (type === "rps" ? "当前发包数：" : "当前连接数：") + (dataArr[dataArr.length - 1]?.number || 0)
-                }
-            })
+            // // 追加 x 轴
+            // xAxisDataRef.current = [...xAxisDataRef.current, ...newData.map((point) => formatTime(point.time))]
+            // echartsInstance.setOption({
+            //     xAxis: [{data: xAxisDataRef.current}],
+            //     title: {
+            //         subtext:
+            //             (type === "rps" ? "当前发包数：" : "当前连接数：") + (dataArr[dataArr.length - 1]?.number || 0)
+            //     }
+            // })
 
-            // 追加 series
-            echartsInstance.appendData({
-                seriesIndex: 0,
-                data: newData.map((point) => point.number)
-            })
+            // // 追加 series
+            // echartsInstance.appendData({
+            //     seriesIndex: 0,
+            //     data: newData.map((point) => point.number)
+            // })
 
-            echartsInstance.resize()
+            // echartsInstance.resize()
 
-            lastIndexRef.current += newData.length
+            // lastIndexRef.current += newData.length
 
-            // echartsInstance.setOption(
-            //     {
-            //         ...optionRef.current,
-            //         xAxis: {data: dataArr.map((point) => formatTime(point.time))},
-            //         series: [
-            //             {
-            //                 data: dataArr.map((point) => point.number)
-            //             }
-            //         ],
-            //         title: {
-            //             subtext:
-            //                 (type === "rps" ? "当前发包数：" : "当前连接数：") +
-            //                 (dataArr[dataArr.length - 1]?.number || 0)
-            //         }
-            //     },
-            //     false,
-            //     true
-            // )
+            echartsInstance.setOption(
+                {
+                    ...optionRef.current,
+                    xAxis: {data: dataArr.map((point) => formatTime(point.time))},
+                    series: [
+                        {
+                            data: dataArr.map((point) => point.number)
+                        }
+                    ],
+                    title: {
+                        subtext:
+                            (type === "rps" ? "当前发包数：" : "当前连接数：") +
+                            (dataArr[dataArr.length - 1]?.number || 0)
+                    }
+                },
+                false,
+                true
+            )
         },
         {wait: 1000, leading: false, trailing: true}
     )
@@ -266,52 +266,52 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
             const echartsInstance = chartRef.current?.getEchartsInstance()
             if (!echartsInstance) return
 
-            // echartsInstance.setOption(
-            //     {
-            //         ...requestDelayStackedAreaChartOptions,
-            //         xAxis: [{data: fuzzerResChartData.map((point) => point.Count)}],
-            //         series: [
-            //             {
-            //                 data: fuzzerResChartData.map((point: FuzzerResChartData) => point.TLSHandshakeDurationMs)
-            //             },
-            //             {
-            //                 data: fuzzerResChartData.map((point: FuzzerResChartData) => point.TCPDurationMs)
-            //             },
-            //             {
-            //                 data: fuzzerResChartData.map((point: FuzzerResChartData) => point.ConnectDurationMs)
-            //             }
-            //         ]
-            //     },
-            //     false,
-            //     true
-            // )
+            echartsInstance.setOption(
+                {
+                    ...requestDelayStackedAreaChartOptions,
+                    xAxis: [{data: fuzzerResChartData.map((point) => point.Count)}],
+                    series: [
+                        {
+                            data: fuzzerResChartData.map((point: FuzzerResChartData) => point.TLSHandshakeDurationMs)
+                        },
+                        {
+                            data: fuzzerResChartData.map((point: FuzzerResChartData) => point.TCPDurationMs)
+                        },
+                        {
+                            data: fuzzerResChartData.map((point: FuzzerResChartData) => point.ConnectDurationMs)
+                        }
+                    ]
+                },
+                false,
+                true
+            )
 
-            const newData = fuzzerResChartData.slice(lastIndexRef.current)
-            if (newData.length === 0) return
+            // const newData = fuzzerResChartData.slice(lastIndexRef.current)
+            // if (newData.length === 0) return
 
-            // 追加 x 轴
-            xAxisDataRef.current = [...xAxisDataRef.current, ...newData.map((point) => point.Count)]
-            echartsInstance.setOption({
-                xAxis: [{data: xAxisDataRef.current}]
-            })
+            // // 追加 x 轴
+            // xAxisDataRef.current = [...xAxisDataRef.current, ...newData.map((point) => point.Count)]
+            // echartsInstance.setOption({
+            //     xAxis: [{data: xAxisDataRef.current}]
+            // })
 
-            // 追加 series
-            echartsInstance.appendData({
-                seriesIndex: 0,
-                data: newData.map((point) => point.TLSHandshakeDurationMs)
-            })
-            echartsInstance.appendData({
-                seriesIndex: 1,
-                data: newData.map((point) => point.TCPDurationMs)
-            })
-            echartsInstance.appendData({
-                seriesIndex: 2,
-                data: newData.map((point) => point.ConnectDurationMs)
-            })
+            // // 追加 series
+            // echartsInstance.appendData({
+            //     seriesIndex: 0,
+            //     data: newData.map((point) => point.TLSHandshakeDurationMs)
+            // })
+            // echartsInstance.appendData({
+            //     seriesIndex: 1,
+            //     data: newData.map((point) => point.TCPDurationMs)
+            // })
+            // echartsInstance.appendData({
+            //     seriesIndex: 2,
+            //     data: newData.map((point) => point.ConnectDurationMs)
+            // })
 
-            echartsInstance.resize()
+            // echartsInstance.resize()
 
-            lastIndexRef.current += newData.length
+            // lastIndexRef.current += newData.length
         },
         {wait: 1000, leading: false, trailing: true}
     )
@@ -369,34 +369,34 @@ const DurationMsLineChart: React.FC<DurationMsLineChartProps> = React.memo((prop
             const echartsInstance = chartRef.current?.getEchartsInstance()
             if (!echartsInstance) return
 
-            // echartsInstance.setOption(
-            //     {
-            //         ...durationMsLineChartOptions,
-            //         xAxis: {data: fuzzerResChartData.map((point) => point.Count)},
-            //         series: [{data: fuzzerResChartData.map((point) => point.DurationMs)}]
-            //     },
-            //     false,
-            //     true
-            // )
+            echartsInstance.setOption(
+                {
+                    ...durationMsLineChartOptions,
+                    xAxis: {data: fuzzerResChartData.map((point) => point.Count)},
+                    series: [{data: fuzzerResChartData.map((point) => point.DurationMs)}]
+                },
+                false,
+                true
+            )
 
-            const newData = fuzzerResChartData.slice(lastIndexRef.current)
-            if (newData.length === 0) return
+            // const newData = fuzzerResChartData.slice(lastIndexRef.current)
+            // if (newData.length === 0) return
 
-            // 追加 x 轴
-            xAxisDataRef.current = [...xAxisDataRef.current, ...newData.map((point) => point.Count)]
-            echartsInstance.setOption({
-                xAxis: {data: xAxisDataRef.current}
-            })
+            // // 追加 x 轴
+            // xAxisDataRef.current = [...xAxisDataRef.current, ...newData.map((point) => point.Count)]
+            // echartsInstance.setOption({
+            //     xAxis: {data: xAxisDataRef.current}
+            // })
 
-            // 追加 series
-            echartsInstance.appendData({
-                seriesIndex: 0,
-                data: newData.map((point) => point.DurationMs)
-            })
+            // // 追加 series
+            // echartsInstance.appendData({
+            //     seriesIndex: 0,
+            //     data: newData.map((point) => point.DurationMs)
+            // })
 
-            echartsInstance.resize()
+            // echartsInstance.resize()
 
-            lastIndexRef.current += newData.length
+            // lastIndexRef.current += newData.length
         },
         {wait: 1000, leading: false, trailing: true}
     )

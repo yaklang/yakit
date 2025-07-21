@@ -48,8 +48,8 @@ function handleConcurrentLoadData(key: keyof ConcurrentLoad, number: number) {
     const curTime = Math.floor(Date.now() / 1000)
     const arr = concurrentLoad[key].slice()
     arr.push({number, time: curTime})
-    // const trimmedData = arr.filter((point) => curTime - point.time < 300) // 最近5分钟数据
-    updateConcurrentLoad(key, arr)
+    const trimmedData = arr.filter((point) => curTime - point.time < 300) // 最近5分钟数据
+    updateConcurrentLoad(key, trimmedData)
     if (key === "rps") {
         emiter.emit("onRefreshRps")
         emiter.emit("onRefreshCurRps", number)

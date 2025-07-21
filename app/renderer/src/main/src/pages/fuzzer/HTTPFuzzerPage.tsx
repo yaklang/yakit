@@ -1271,7 +1271,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 DurationMs: +r.DurationMs
             } as FuzzerResChartData)
             if (fuzzerResChartDataBufferRef.current.length > 5000) {
-                // fuzzerResChartDataBufferRef.current.shift()
+                fuzzerResChartDataBufferRef.current.shift()
             }
 
             r = null as unknown as FuzzerResponse
