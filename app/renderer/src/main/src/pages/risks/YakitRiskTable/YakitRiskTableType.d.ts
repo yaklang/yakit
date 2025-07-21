@@ -74,6 +74,7 @@ export interface YakitRiskDetailsProps {
     border?: boolean
     isShowExtra?: boolean
     onRetest?: (info: Risk) => void
+    boxStyle?: React.CSSProperties
 }
 
 export interface YakitRiskSelectTagProps {

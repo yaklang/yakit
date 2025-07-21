@@ -2541,7 +2541,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                             {isShowCodeScanDetail(res) ? (
                                 <YakitCodeScanRiskDetails info={res} />
                             ) : (
-                                <YakitRiskDetails info={res} />
+                                <YakitRiskDetails info={res} boxStyle={{height:400}} />
                             )}
                         </div>
                     )

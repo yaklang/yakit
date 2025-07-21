@@ -1501,7 +1501,7 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 })
 
 export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((props) => {
-    const {info, isShowTime = true, className = "", border = true, isShowExtra, onRetest} = props
+    const {info, isShowTime = true, className = "", border = true, isShowExtra, onRetest, boxStyle} = props
     // 目前可展示的请求和响应类型
     const [currentShowType, setCurrentShowType] = useState<("request" | "response")[]>([])
     const [isShowCode, setIsShowCode] = useState<boolean>(true)
@@ -1786,7 +1786,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
 
                 {showType === "code" && isShowCode && (
                     <YakitResizeBox
-                        style={{padding: 6}}
+                        style={{padding: 6,...boxStyle}}
                         {...extraResizeBoxProps}
                         firstNode={<div className={styles["content-resize-first"]}>{codeNode(true)}</div>}
                         secondNode={<div className={styles["content-resize-first"]}>{codeNode(false)}</div>}
