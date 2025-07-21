@@ -27,7 +27,7 @@ export const getReleaseEditionName = () => {
         case PRODUCT_RELEASE_EDITION.IRify:
             return "IRify"
         case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
-            return "IRify-EnpriTrace"
+            return "无相"
         default:
             return "Yakit"
     }

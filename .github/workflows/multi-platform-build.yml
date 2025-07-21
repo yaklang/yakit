@@ -191,7 +191,7 @@ jobs:
                   elif [ "${{ inputs.version }}" = "irify" ]; then
                     echo "ENV_Software_Name=IRify" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "irifyee" ]; then
-                    echo "ENV_Software_Name=IRifyEnpriTrace" >> $GITHUB_ENV
+                    echo "ENV_Software_Name=WuXiang" >> $GITHUB_ENV
                   else
                     echo "No software version obtained" >&2
                     exit 1

@@ -109,10 +109,10 @@ FunctionEnd
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
     ${Else}
-        ${StrStr} $0 $EXEFILE "IRifyEnpriTrace"
+        ${StrStr} $0 $EXEFILE "WuXiang"
         ${If} $0 != "" ; irifyee
-            StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnpriTrace_InstallPath"
-            StrCpy $EXE_NAME "IRifyEnpriTrace"
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "WuXiang_InstallPath"
+            StrCpy $EXE_NAME "WuXiang"
         ${Else}
             ${StrStr} $0 $EXEFILE "EnpriTrace"
             ${If} $0 != "" ; ee
@@ -143,9 +143,9 @@ FunctionEnd
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
     ${Else}
-        ${If} ${FileExists} `$INSTDIR\IRifyEnpriTrace.exe` ; irifyee 
-            StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnpriTrace_InstallPath"
-            StrCpy $EXE_NAME "IRifyEnpriTrace"
+        ${If} ${FileExists} `$INSTDIR\WuXiang.exe` ; irifyee 
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "WuXiang_InstallPath"
+            StrCpy $EXE_NAME "WuXiang"
         ${Else}
             ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee
                 StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"

@@ -52,9 +52,9 @@ switch (platform) {
         break
     case "irifyee":
         appInfoOption = {
-            appId: "io.yaklang.irifyee",
-            extraMetadata: {name: "irifyee"},
-            productName: "IRifyEnpriTrace",
+            appId: "io.yaklang.WuXiang",
+            extraMetadata: {name: "WuXiang"},
+            productName: "WuXiang",
             copyright: "Copyright © 2021 v1ll4n"
         }
         macIcon = "app/assets/yakitsslogo.icns"
