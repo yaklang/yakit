@@ -222,7 +222,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
             if (!setting) return
             const value = JSON.parse(setting)
-            setDefaultHttpUrl(value.BaseUrl)
+            // setDefaultHttpUrl(value.BaseUrl)
             if (value?.pwd && value.pwd.length > 0) {
                 // 解密
                 ipcRenderer
@@ -230,14 +230,16 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     .then((res) => {
                         form.setFieldsValue({
                             ...value,
-                            pwd: res.Result
+                            pwd: res.Result,
+                            BaseUrl: ""
                         })
                         setFormValue({...value, pwd: res.Result})
                     })
                     .catch(() => {})
             } else {
                 form.setFieldsValue({
-                    ...value
+                    ...value,
+                    BaseUrl: ""
                 })
                 setFormValue({...value})
             }
@@ -293,8 +295,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     rules={[{required: true, message: "该项为必填"}, ...judgeUrl()]}
                 >
                     <YakitAutoComplete
-                        ref={httpHistoryRef}
-                        cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
+                        // ref={httpHistoryRef}
+                        // cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
                         initValue={defaultHttpUrl}
                         placeholder='请输入你的私有域地址'
                         defaultOpen={!enterpriseLogin}

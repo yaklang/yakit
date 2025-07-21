@@ -2076,20 +2076,18 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     const isUpdate = useMemo(() => {
         const unRead = messageList.filter((item) => !item.isRead).length > 0
         return (
-            (yakitLastVersion !== "" && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
-            lowerYaklangLastVersion ||
             unRead
         )
     }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion, messageList])
 
-    const [noticeType, setNoticeType] = useState<"message" | "update">("update")
-    useUpdateEffect(() => {
-        if (userInfo.isLogin) {
-            setNoticeType("message")
-        } else {
-            setNoticeType("update")
-        }
-    }, [userInfo.isLogin])
+    const [noticeType, setNoticeType] = useState<"message" | "update">("message")
+    // useUpdateEffect(() => {
+    //     if (userInfo.isLogin) {
+    //         setNoticeType("message")
+    //     } else {
+    //         setNoticeType("update")
+    //     }
+    // }, [userInfo.isLogin])
 
     const getAllMessage = useMemoizedFn(() => {
         setShow(false)
@@ -2153,7 +2151,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-notice-body"]}>
                     <div className={styles["notice-version-header"]}>
-                        <YakitRadioButtons
+                        {/* <YakitRadioButtons
                             value={noticeType}
                             onChange={(e) => {
                                 const value = e.target.value
@@ -2170,7 +2168,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     value: "update"
                                 }
                             ]}
-                        />
+                        /> */}
                         {noticeType === "update" ? (
                             <div className={styles["switch-title"]}>
                                 启动检测更新
@@ -2213,70 +2211,17 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                             </div>
                         )}
                     </div>
-
-                    {noticeType === "update" ? (
-                        <div className={styles["notice-version-wrapper"]}>
-                            <div className={styles["version-wrapper"]}>
-                                {/* 企业版内网Yakit更新 - 无需显示更新内容 */}
-                                {yakitLastIntranetVersion.length > 0 && (
-                                    <UIOpUpdateYakit
-                                        version={yakitVersion}
-                                        lastVersion={yakitLastIntranetVersion}
-                                        isUpdateWait={isIntranetYakitUpdateWait}
-                                        onDownload={onDownload}
-                                        role={userInfo.role}
-                                        isUpdate={isUpdateYakitIntranet}
-                                        intranet={true}
-                                    />
-                                )}
-
-                                <UIOpUpdateYakit
-                                    version={yakitVersion}
-                                    lastVersion={yakitLastVersion}
-                                    isUpdateWait={isYakitUpdateWait}
-                                    onDownload={onDownload}
-                                    role={userInfo.role}
-                                    updateContent={communityYakit}
-                                    onUpdateEdit={UpdateContentEdit}
-                                    isUpdate={isUpdateYakit}
-                                />
-                                <UIOpUpdateYaklang
-                                    version={yaklangVersion}
-                                    lastVersion={yaklangLastVersion}
-                                    localVersion={yaklangLocalVersion}
-                                    moreYaklangVersionList={moreYaklangVersionList}
-                                    isRemoteMode={isRemoteMode}
-                                    onDownload={onDownload}
-                                    role={userInfo.role}
-                                    updateContent={communityYaklang}
-                                    onUpdateEdit={UpdateContentEdit}
-                                    onNoticeShow={setShow}
-                                    isUpdate={isUpdateYaklang}
-                                    isUpdateYakit={isUpdateYakit}
-                                />
-                            </div>
-                            <div className={styles["history-version"]}>
-                                <div
-                                    className={styles["content-style"]}
-                                    onClick={() => ipcRenderer.invoke("open-url", WebsiteGV.YakitHistoryVersionAddress)}
-                                >
-                                    <GithubSvgIcon className={styles["icon-style"]} /> 历史版本
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className={styles["notice-info-wrapper"]}>
-                            <MessageCenter
-                                messageList={messageList}
-                                getAllMessage={getAllMessage}
-                                onLogin={() => {
-                                    setShow(false)
-                                    onLogin()
-                                }}
-                                onClose={() => setShow(false)}
-                            />
-                        </div>
-                    )}
+                    <div className={styles["notice-info-wrapper"]}>
+                        <MessageCenter
+                            messageList={messageList}
+                            getAllMessage={getAllMessage}
+                            onLogin={() => {
+                                setShow(false)
+                                onLogin()
+                            }}
+                            onClose={() => setShow(false)}
+                        />
+                    </div>
                 </div>
             </div>
         )

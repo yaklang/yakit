@@ -156,31 +156,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             let showUpdateYakit = false
             getLocalValue(LocalGVS.NoAutobootLatestVersionCheck)
                 .then(async (val: boolean) => {
-                    if (!val) {
-                        try {
-                            const promise = new Promise((_, reject) =>
-                                setTimeout(() => reject(new Error("Check engine source request timed out")), 2100)
-                            )
-                            const [res1, res2] = await Promise.allSettled([
-                                grpcFetchLocalYakitVersion(true),
-                                Promise.race([grpcFetchLatestYakitVersion({timeout: 2000}, true), promise])
-                            ])
-                            if (res1.status === "fulfilled") {
-                                currentYakit.current = res1.value || ""
-                            }
-                            if (res2.status === "fulfilled") {
-                                let latest = (res2.value || "") as string
-                                latestYakit.current = latest.startsWith("v") ? latest.substring(1) : latest
-                            }
-                            // 只要与线上的不一样就算需要更新，不需要进行版本号比较
-                            showUpdateYakit =
-                                !!currentYakit.current &&
-                                !!latestYakit.current &&
-                                currentYakit.current !== latestYakit.current
-                        } catch (error) {}
-                    } else {
-                        setLog((old) => old.concat(["跳过检查(可在软件更新处设置启动)，开始检查引擎是否有更新..."]))
-                    }
+                    setLog((old) => old.concat(["跳过检查(可在软件更新处设置启动)，开始检查引擎是否有更新..."]))
                 })
                 .catch(() => {})
                 .finally(() => {
@@ -234,13 +210,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         return
                     }
 
-                    if (!!currentYak.current && !!buildInYak.current && buildInYak.current > currentYak.current) {
-                        setLog((old) => old.concat(["检测到引擎有更新，打开更新弹框"]))
-                        setShowYak(true)
-                    } else {
+                    // if (!!currentYak.current && !!buildInYak.current && buildInYak.current > currentYak.current) {
+                    //     setLog((old) => old.concat(["检测到引擎有更新，打开更新弹框"]))
+                    //     setShowYak(true)
+                    // } else {
                         setLog((old) => old.concat(["引擎无更新"]))
                         handleCheckEngineSource(currentYak.current)
-                    }
+                    // }
                 } else {
                     setLog((old) => old.concat([`错误: ${res1.reason}`]))
                     setTimeout(() => {
@@ -492,14 +468,14 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 )}
 
                 {/* Yakit 更新弹窗 */}
-                {!isEnpriTraceAgent() && (
+                {/* {!isEnpriTraceAgent() && (
                     <UpdateYakitHint
                         current={currentYakit.current}
                         latest={latestYakit.current}
                         visible={showYakit}
                         onCallback={onCancelUpdateYakit}
                     />
-                )}
+                )} */}
 
                 {/* 引擎更新为内置版本 */}
                 <UpdateYakHint
