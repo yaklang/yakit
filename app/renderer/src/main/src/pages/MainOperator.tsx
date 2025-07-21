@@ -607,11 +607,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     {(isCommunityEdition() || isEnpriTrace()) && (
                         <YakChatCS visible={chatShow} setVisible={setChatShow} />
                     )}
-                    {(isCommunityEdition() || isEnpriTrace()) && !chatShow && (
+                    {/* {(isCommunityEdition() || isEnpriTrace()) && !chatShow && (
                         <div className='chat-icon-wrapper' onClick={onChatCS} draggable={true} ref={chartCSDragItemRef}>
                             <img src={yakitCattle} />
                         </div>
-                    )}
+                    )} */}
 
                     {messageCenterShow && (
                         <MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow} />

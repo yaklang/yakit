@@ -152,15 +152,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
     return (
         <div className={styles["extra-menu-wrapper"]}>
             {isIRify() ? (
-                <YakitButton
-                    type='secondary2'
-                    onClick={() => {
-                        onMenuSelect({route: YakitRoute.YakScript})
-                    }}
-                    icon={<SolidTerminalIcon />}
-                >
-                    Yak Runner
-                </YakitButton>
+                <></>
             ) : (
                 <>
                     <YakitPopover

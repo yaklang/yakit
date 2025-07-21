@@ -986,7 +986,7 @@ const GetUIOpSettingMenu = () => {
                     key: "webshell-manager",
                     label: "网站管理"
                 },
-                {key: "mcp", label: "Yak Mcp"},
+                // {key: "mcp", label: "Yak Mcp"},
                 {key: "ai-agent", label: "AI Agent"},
                 {key: "ssa-result-diff", label: "ssa-result-diff"}
             ]
