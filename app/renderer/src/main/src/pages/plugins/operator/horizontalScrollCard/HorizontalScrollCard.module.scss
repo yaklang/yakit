@@ -139,6 +139,8 @@ $keyColor: map-keys($CardStatusColor);
             border-radius: 4px;
             height: 88px;
             padding: 12px 16px;
+            overflow-x: auto;
+            overflow-y: hidden;
             &-tag {
                 @extend %display-flex-center;
                 gap: 2px;
@@ -160,6 +162,7 @@ $keyColor: map-keys($CardStatusColor);
                 &-item {
                     @extend %display-column-center;
                     gap: 4px;
+                    flex-shrink: 0;
                     &-data {
                         color: var(--yakit-header-color);
                         font-size: 16px;
@@ -181,7 +184,8 @@ $keyColor: map-keys($CardStatusColor);
             border-radius: 4px;
             flex: 1 0 fit-content;
             min-width: 96px;
-
+            min-height: 68px;
+            padding: 12px 16px;
             &-data {
                 color: var(--yakit-header-color);
                 font-size: 16px;
@@ -195,5 +199,18 @@ $keyColor: map-keys($CardStatusColor);
                 line-height: 16px; /* 133.333% */
             }
         }
+    }
+}
+.card-item-compact {
+    flex-direction: row;
+    padding: 5px 16px;
+    align-items: center;
+    gap: 8px;
+    min-height: unset;
+    .horizontal-scroll-card-list-item-info-single-id {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-break: break-all;
     }
 }

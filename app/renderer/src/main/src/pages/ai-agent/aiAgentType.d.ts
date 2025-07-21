@@ -99,6 +99,11 @@ export interface AIChatLeftSideProps {
     onLeafNodeClick?: AITreeNodeProps["onClick"]
     pressure: AIChatMessage.Pressure[]
     cost: AIChatMessage.AICostMS[]
+    card: AIChatMessage.AIInfoCard[]
+}
+
+export interface AICardListProps {
+    list: AIChatMessage.AIInfoCard[]
 }
 
 // 对话框回答

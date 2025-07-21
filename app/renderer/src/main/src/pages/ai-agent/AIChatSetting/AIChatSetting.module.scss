@@ -11,7 +11,7 @@
         align-items: center;
         border-bottom: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
         .header-title {
-            color: var(--Colors-Use-Neutral-Text-1-Tittle, #353639);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
@@ -29,7 +29,7 @@
                     padding-bottom: 0;
                     label {
                         height: unset;
-                        color: var(--Colors-Use-Neutral-Text-1-Title, #353639);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 400;
                     }

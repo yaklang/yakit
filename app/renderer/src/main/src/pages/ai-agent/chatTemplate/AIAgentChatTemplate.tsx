@@ -5,6 +5,7 @@ import {
     AIAgentChatFooterProps,
     AIAgentChatReviewProps,
     AIAgentChatStreamProps,
+    AICardListProps,
     AIChatLeftSideProps,
     AIChatLogsProps,
     AIChatToolDrawerContentProps,
@@ -68,10 +69,15 @@ import {
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
-
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+import {
+    HorizontalScrollCardItemInfoMultiple,
+    HorizontalScrollCardItemInfoSingle
+} from "@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard"
+const {YakitPanel} = YakitCollapse
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
-    const {tasks, pressure, cost, onLeafNodeClick} = props
+    const {tasks, pressure, cost, onLeafNodeClick, card} = props
 
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
@@ -121,7 +127,58 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         if (length === 0) return 0
         return currentCostEcharts.data[length - 1] || 0
     }, [currentCostEcharts])
-
+    const collapseList = useCreation(() => {
+        return [
+            {
+                value: "Data Card",
+                header: (
+                    <div className={styles["data-card-header"]}>
+                        <div className={styles["header-title"]}>Data Card</div>
+                        <div className={styles["total"]}>{card.length}</div>
+                    </div>
+                ),
+                extra: <></>,
+                content: <AICardList list={card} />
+            },
+            {
+                value: "上下文压力",
+                header: <div className={styles["header-title"]}>上下文压力</div>,
+                extra: (
+                    <div className={classNames(styles["tag-last"], styles["pressure-wrapper"])}>
+                        <OutlineEngineIcon />
+                        {formatNumberUnits(lastPressure)}
+                    </div>
+                ),
+                content: (
+                    <>
+                        {currentPressuresEcharts?.data?.length > 0 && (
+                            <ContextPressureEcharts
+                                dataEcharts={currentPressuresEcharts}
+                                threshold={pressureThreshold}
+                            />
+                        )}
+                    </>
+                )
+            },
+            {
+                value: "响应速度",
+                header: <div className={styles["header-title"]}>响应速度</div>,
+                extra: (
+                    <div className={classNames(styles["tag-last"], styles["cost-wrapper"])}>
+                        <OutlineRocketLaunchIcon />
+                        {`${lastFirstCost < 0 ? "-" : lastFirstCost}ms`}
+                    </div>
+                ),
+                content: (
+                    <>
+                        {currentCostEcharts?.data?.length > 0 && (
+                            <ResponseSpeedEcharts dataEcharts={currentCostEcharts} />
+                        )}
+                    </>
+                )
+            }
+        ]
+    }, [card, currentPressuresEcharts, pressureThreshold, currentCostEcharts, lastFirstCost, lastPressure])
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>
             <div className={styles["side-header"]}>
@@ -142,33 +199,35 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
             </div>
 
             <div className={styles["task-token"]}>
-                <div className={styles["line-echats"]}>
-                    <div className={styles["line-header"]}>
-                        <div className={styles["header-title"]}>上下文压力</div>
-                        <div className={classNames(styles["tag-last"], styles["pressure-wrapper"])}>
-                            <OutlineEngineIcon />
-                            {formatNumberUnits(lastPressure)}
-                        </div>
-                    </div>
-
-                    {currentPressuresEcharts?.data?.length > 0 && (
-                        <ContextPressureEcharts dataEcharts={currentPressuresEcharts} threshold={pressureThreshold} />
-                    )}
-                </div>
-
-                <div className={styles["divder-style"]}></div>
-
-                <div className={styles["line-echats"]}>
-                    <div className={styles["line-header"]}>
-                        <div className={styles["header-title"]}>响应速度</div>
-                        <div className={classNames(styles["tag-last"], styles["cost-wrapper"])}>
-                            <OutlineRocketLaunchIcon />
-                            {`${lastFirstCost < 0 ? "-" : lastFirstCost}ms`}
-                        </div>
-                    </div>
-                    {currentCostEcharts?.data?.length > 0 && <ResponseSpeedEcharts dataEcharts={currentCostEcharts} />}
-                </div>
+                <YakitCollapse defaultActiveKey={["Data Card", "上下文压力", "响应速度"]}>
+                    {collapseList.map((item) => (
+                        <YakitPanel key={item.value} header={item.header} extra={item.extra} style={{padding: 0}}>
+                            {item.content}
+                        </YakitPanel>
+                    ))}
+                </YakitCollapse>
             </div>
+        </div>
+    )
+})
+
+const AICardList: React.FC<AICardListProps> = React.memo((props) => {
+    const {list} = props
+    return (
+        <div className={styles["ai-card-list"]}>
+            {list.map((cardItem) => (
+                <React.Fragment key={cardItem.tag}>
+                    {cardItem.info.length > 1 ? (
+                        <HorizontalScrollCardItemInfoMultiple {...cardItem} />
+                    ) : (
+                        <HorizontalScrollCardItemInfoSingle
+                            tag={cardItem.tag}
+                            item={(cardItem.info || [])[0]}
+                            compact={true}
+                        />
+                    )}
+                </React.Fragment>
+            ))}
         </div>
     )
 })
@@ -487,7 +546,7 @@ const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo
             }
             className={classNames(styles["chat-stream-collapse-expand"], className || "")}
         >
-            {(data.reason || data.system||data.stream) && (
+            {(data.reason || data.system || data.stream) && (
                 <div className={styles["think-wrapper"]}>
                     {data.reason && <div>{data.reason}</div>}
 

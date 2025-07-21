@@ -163,14 +163,16 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             handleSaveChatInfo()
         })
 
-        const [{execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream}, events] =
-            useChatData({
-                onReview: handleShowReview,
-                onReviewExtra: handleShowReviewExtra,
-                onReviewRelease: handleReleaseReview,
-                onEnd: handleChatingEnd,
-                setCoordinatorId
-            })
+        const [
+            {execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream, card},
+            events
+        ] = useChatData({
+            onReview: handleShowReview,
+            onReviewExtra: handleShowReviewExtra,
+            onReviewRelease: handleReleaseReview,
+            onEnd: handleChatingEnd,
+            setCoordinatorId
+        })
         // #endregion
 
         // #region chat-对话相关方法和逻辑处理
@@ -465,6 +467,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                     onLeafNodeClick={handleSetScrollTo}
                                     pressure={uiPressure}
                                     cost={uiFirstCost}
+                                    card={card}
                                 />
                                 <div className={styles["open-wrapper"]}>
                                     <YakitButton
