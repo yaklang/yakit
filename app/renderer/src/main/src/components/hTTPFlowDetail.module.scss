@@ -92,6 +92,12 @@
             color: var(--Colors-Use-Main-Primary);;
         }
     }
+    :global{
+        .ant-empty{
+            overflow: auto;
+            padding-bottom: 12px;
+        }
+    }
 }
 
 .http-history-fold-box {
@@ -216,7 +222,7 @@
             justify-content: space-between;
             padding: 6px 8px;
             cursor: pointer;
-            color: #000000;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             line-height: 20px;
             width: 130px;
@@ -224,7 +230,7 @@
                 color: var(--Colors-Use-Main-Primary);
             }
             &:hover {
-                background-color: var(--Colors-Use-Main-Bg);
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
             }
             .check-icon {
                 svg {

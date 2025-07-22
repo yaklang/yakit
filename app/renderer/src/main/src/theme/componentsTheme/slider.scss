@@ -11,11 +11,22 @@
 .ant-slider-track {
     background-color: var(--Colors-Use-Main-Border);
 }
+.ant-slider:hover .ant-slider-rail{
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+}
+.ant-slider-rail{
+    background-color: var(--Colors-Use-Neutral-Bg);
+}
+.ant-slider-dot{
+    background-color: var(--Colors-Use-Neutral-Bg);
+    border-color: var(--Colors-Use-Neutral-Border);
+}
 .ant-slider-dot-active {
     border-color: var(--Colors-Use-Main-Border);
 }
 .ant-slider-handle {
     border: solid 2px var(--Colors-Use-Main-Border);
+    background-color: var(--Colors-Use-Neutral-Bg);
     &:focus {
         border-color: var(--Colors-Use-Main-Primary);
     }

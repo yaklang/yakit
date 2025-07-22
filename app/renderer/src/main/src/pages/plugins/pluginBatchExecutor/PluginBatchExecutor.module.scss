@@ -20,12 +20,12 @@
 
                 text-orientation: sideways-right;
                 writing-mode: vertical-rl;
-                border-top: 1px solid #fff;
+                border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 &:hover {
-                    background: rgba(204, 210, 222, 0.5);
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                 }
                 &-active {
-                    color: #ffffff;
+                    color: var(--Colors-Use-Main-On-Primary);
                     background-color: var(--Colors-Use-Main-Primary);
                     &:hover {
                         background-color: var(--Colors-Use-Main-Hover);
@@ -54,7 +54,7 @@
     .divider-style {
         width: 1px;
         height: 12px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }
 .plugin-batch-execute-form-wrapper {

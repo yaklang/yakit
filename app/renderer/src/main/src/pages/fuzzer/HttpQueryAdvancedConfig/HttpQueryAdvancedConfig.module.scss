@@ -23,6 +23,7 @@
         }
         .ant-form-item-with-help .ant-form-item-explain {
             font-size: 12px;
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
         }
     }
 
@@ -134,6 +135,7 @@
 .matchers-panel {
     display: flex;
     align-items: center;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 
     .matchers-number {
         @include HTTPFuzzerPageShare.circle-number;
@@ -173,7 +175,7 @@
     padding: 2px 8px;
     border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px;
-    background: #ffffff;
+    background: var(--Colors-Use-Basic-Background);
 
     &:hover {
         .matchersList-item-operate {
@@ -213,7 +215,7 @@
             @include HTTPFuzzerPageShare.base-icon-card;
 
             &:hover {
-                color: var(--yakit-danger-4);
+                color: var(--Colors-Use-Error-Border);
             }
 
             &:active,
@@ -297,7 +299,7 @@
             pointer-events: none;
             left: -6px;
             top: $_arrow-top;
-            border-left: 12px solid #fff;
+            border-left: 12px solid var(--Colors-Use-Neutral-Border);
             border-bottom: 12px solid transparent;
             transform: rotate(-45deg);
             transition: all 0.3s;
@@ -309,7 +311,7 @@
     border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px;
     padding: 8px;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
 
     &:hover {
         border-color: var(--Colors-Use-Main-Hover);
@@ -336,6 +338,11 @@
         width: 100%;
         outline: none;
         outline: 0;
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        &::placeholder{
+            color: var(--Colors-Use-Neutral-Disable);
+        }
     }
 
     .variable-item-textarea-body {
@@ -346,6 +353,11 @@
             width: 100%;
             outline: none;
             outline: 0;
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            &::placeholder{
+                color: var(--Colors-Use-Neutral-Disable);
+            }
         }
 
         .resizer-icon {

@@ -74,7 +74,7 @@
 }
 
 .yakit-tag-serious {
-    background: var(-Colors-Use-Error-Bg-Hover);
+    background: var(--Colors-Use-Error-Bg-Hover);
     border: 1px solid var(--Colors-Use-Error-Border);
     color: var(--Colors-Use-Status-Serious);
     svg {

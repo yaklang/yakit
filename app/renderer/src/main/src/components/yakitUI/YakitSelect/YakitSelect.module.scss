@@ -37,6 +37,10 @@
 
         .ant-select-clear {
             right: 12px;
+            background: var(--Colors-Use-Basic-Background);
+            .anticon-close-circle{
+                color: var(--Colors-Use-Neutral-Border);
+            }
         }
 
         .ant-select-arrow .anticon:not(.ant-select-suffix) {
@@ -95,6 +99,9 @@
     background-color: var(--Colors-Use-Basic-Background);
     padding: 6px 4px;
     border-radius: 4px;
+    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+    background: var(--Colors-Use-Basic-Background);
+    box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
 
     :global {
         .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
@@ -105,7 +112,8 @@
             border-radius: 4px;
 
             &:hover {
-                background-color: var(--Colors-Use-Neutral-Bg-Hover);
+                background: var(--Colors-Use-Neutral-Bg-Hover);
+                // color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
         .ant-select-item:not(.ant-select-item-option-grouped) {
@@ -115,8 +123,8 @@
 
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
             font-weight: 400;
-            background: var(--Colors-Use-Main-Bg);
             color: var(--Colors-Use-Main-Primary);
+            background: var(--Colors-Use-Main-Bg);
         }
 
         // ------------ 滚动条 ----------
@@ -138,13 +146,13 @@
             color: var(--select-primary-icon-color);
         }
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-            color: var(--select-primary-font-color);
-            background: var(--select-background-white);
+            color: var(--Colors-Use-Main-Primary);
+            background: var(--Colors-Use-Main-Bg);
         }
 
         .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
-            background: var(--select-background-color);
-            color: var(--select-primary-font-color);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            // color: var(--Colors-Use-Neutral-Text-1-Title);
             font-weight: 400;
         }
 

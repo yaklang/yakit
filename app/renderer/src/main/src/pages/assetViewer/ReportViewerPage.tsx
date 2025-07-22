@@ -190,7 +190,6 @@ const ReportList: React.FC<ReportListProp> = (props) => {
         <YakitCard
             className={styles["card"]}
             headStyle={{
-                background: "#fff",
                 height: 32,
                 minHeight: 32,
                 boxSizing: "content-box",
@@ -260,7 +259,10 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                                         height: 32,
                                         minHeight: 32,
                                         boxSizing: "content-box",
-                                        borderBottom: selectReportId == item.Id ? "1px solid #fff" : undefined
+                                        borderBottom:
+                                            selectReportId == item.Id
+                                                ? "1px solid var(--Colors-Use-Neutral-Border)"
+                                                : undefined
                                     }}
                                     bodyClassName={styles["list-item-body"]}
                                     bodyStyle={{
@@ -497,13 +499,13 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     <YakitCard
                         className={styles["card"]}
                         headStyle={{
-                            background: "#fff",
                             height: 32,
                             minHeight: 32,
                             boxSizing: "content-box",
                             borderBottom: "1px solid var(--Colors-Use-Neutral-Border)",
                             paddingLeft: 0,
-                            paddingRight: 0
+                            paddingRight: 0,
+                            background: "var(--Colors-Use-Basic-Background)"
                         }}
                         bodyStyle={{
                             padding: 0,

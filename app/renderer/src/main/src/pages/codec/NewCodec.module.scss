@@ -11,7 +11,7 @@
         align-items: center;
         gap: 6px;
         .drag-icon {
-            color: #ccd2de;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             svg {
                 height: 12px;
                 width: 12px;
@@ -39,7 +39,7 @@
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
     .star-icon-active {
-        color: #f28b44;
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 .new-codec {
@@ -89,7 +89,7 @@
             overflow: auto;
             .left-drag-list-collapse {
                 .panel-active-title {
-                    color: #f28b44;
+                    color: var(--Colors-Use-Main-Primary);
                 }
                 .star-icon {
                     height: 24px;
@@ -106,7 +106,7 @@
                     color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 }
                 .star-icon-active {
-                    color: #f28b44;
+                    color: var(--Colors-Use-Main-Focus);
                 }
                 .drag-list-item {
                     padding: 10px 12px;
@@ -122,7 +122,7 @@
                         align-items: center;
                         gap: 6px;
                         .drag-icon {
-                            color: #ccd2de;
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
                             svg {
                                 height: 12px;
                                 width: 12px;
@@ -276,7 +276,7 @@
                 }
                 .clear {
                     cursor: pointer;
-                    color: #f6544a;
+                    color: var(--Colors-Use-Error-Primary);
                     font-size: 12px;
                     font-weight: 500;
                     line-height: 16px;
@@ -414,7 +414,7 @@
                     }
                     .clear {
                         cursor: pointer;
-                        color: #f6544a;
+                        color: var(--Colors-Use-Error-Primary);
                         font-size: 12px;
                         font-weight: 500;
                         line-height: 16px;
@@ -435,17 +435,17 @@
                     .hNamKE.editAscii .byteValue.selection > .nybbleLowValue,
                     .hNamKE.notFocused .byteValue.selection > .nybbleLowValue {
                         background-color: var(--Colors-Use-Main-Primary) !important;
-                        color: #ffffff !important;
+                        color: var(--Colors-Use-Neutral-Bg) !important;
                     }
                     .hNamKE.editHex .asciiValue.selectionCursor,
                     .hNamKE.notFocused .asciiValue.selectionCursor {
                         background-color: var(--Colors-Use-Main-Primary) !important;
-                        color: #ffffff !important;
+                        color: var(--Colors-Use-Neutral-Bg) !important;
                     }
                     .hNamKE.editHex .asciiValue.selection,
                     .hNamKE.notFocused .asciiValue.selection {
                         background-color: var(--Colors-Use-Main-Primary) !important;
-                        color: #ffffff !important;
+                        color: var(--Colors-Use-Neutral-Bg) !important;
                     }
                 }
             }
@@ -487,7 +487,7 @@
             align-items: center;
             gap: 4px;
             .drag-icon {
-                color: #ccd2de;
+                color: var(--Colors-Use-Neutral-Disable);
                 svg {
                     height: 12px;
                     width: 12px;
@@ -502,7 +502,7 @@
                 color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             .text-active {
-                color: #ccd2de;
+                color: var(--Colors-Use-Neutral-Disable);
             }
         }
         .type-extra {
@@ -551,12 +551,12 @@
     }
 }
 .type-item-run {
-    border-bottom: 1px solid rgba(86, 201, 145, 0.3);
-    background: rgba(86, 201, 145, 0.2);
+    border-bottom: 1px solid var(--Colors-Use-Green-Border);
+    background: var(--Colors-Use-Green-Bg);
 }
 .type-item-suspend {
-    border-bottom: 1px solid rgba(244, 115, 107, 0.3);
-    background: rgba(244, 115, 107, 0.2);
+    border-bottom: 1px solid var(--Colors-Use-Error-Border);
+    background: var(--Colors-Use-Error-Bg);
 }
 .type-item-shield {
     border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
@@ -595,7 +595,7 @@
         margin-bottom: 8px;
     }
     .content {
-        color: var(--color-gray-Text-03, #85899e);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         font-size: 14px;
         font-weight: 400;
         line-height: 20px;
@@ -630,7 +630,7 @@
             position: relative;
             border-radius: 4px;
             &:hover {
-                background-color: rgb(248, 248, 248);
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
                 border-bottom: 1px solid transparent;
             }
             &:hover::after {
@@ -640,7 +640,7 @@
                 left: 0px;
                 width: 100%;
                 height: 1px;
-                background-color: #ffffff;
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
             }
             .name {
                 font-size: 13px;
@@ -658,13 +658,13 @@
                     svg {
                         height: 16px;
                         width: 16px;
-                        color: #b4bbca;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     }
                 }
                 .opt-del {
                     &:hover {
                         svg {
-                            color: #f6544a;
+                            color: var(--Colors-Use-Error-Primary);
                         }
                     }
                 }

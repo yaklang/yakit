@@ -40,6 +40,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .ant-input {
@@ -65,6 +66,11 @@
             border-radius: 4px;
             input {
                 color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
+        }
+        .ant-input-suffix{
+            .ant-input-show-count-suffix{
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
             }
         }
         .ant-input:focus,
@@ -103,8 +109,9 @@
 .yakit-input-disabled {
     :global {
         .ant-input[disabled] {
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            background-color: var(--Colors-Use-Neutral-Disable);
             border: 1px solid var(--Colors-Use-Neutral-Border);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
 }
@@ -188,6 +195,8 @@
             border-right: 0;
             border-radius: 4px;
             border-color: var(--search-border-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-input-affix-wrapper {
             padding: 0 8px;
@@ -208,11 +217,16 @@
             border-color: var(--search-border-hover-color);
         }
         .ant-input-affix-wrapper{
-            background: var(--Colors-Use-Basic-Background, #2A2B2D);
+            background: var(--Colors-Use-Basic-Background);
         }
         .ant-input-affix-wrapper > input {
-            background: var(--Colors-Use-Basic-Background, #2A2B2D);
+            background: var(--Colors-Use-Basic-Background);
             color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .ant-input-suffix{
+            .ant-input-show-count-suffix{
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
         }
         .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover {
             border-color: var(--search-border-hover-color);
@@ -452,6 +466,8 @@
         .ant-input {
             border-radius: 4px;
             border: 1px solid var(--Colors-Use-Neutral-Border);
+            background-color: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-input:hover {
             border-color: var(--Colors-Use-Main-Hover);
@@ -461,6 +477,11 @@
         .ant-input-focused {
             border-color: var(--Colors-Use-Main-Hover);
             box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
+        }
+        .ant-input-suffix{
+            .ant-input-show-count-suffix{
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
         }
 
         .ant-input-textarea-show-count::after {
@@ -478,11 +499,11 @@
             color: var(--Colors-Use-Neutral-Text-1-Title);
             z-index: 1;
             pointer-events: none;
-            background-color: #fff;
+            background-color: var(--Colors-Use-Basic-Background);
         }
-        .ant-input-textarea-show-count + .textArea-resizer-icon {
-            bottom: 23px;
-        }
+        // .ant-input-textarea-show-count + .textArea-resizer-icon {
+        //     bottom: 23px;
+        // }
         .ant-input-disabled + .textArea-resizer-icon {
             background-color: var(--Colors-Use-Neutral-Bg);
         }
@@ -516,6 +537,11 @@
             border-color: var(--Colors-Use-Neutral-Border);
             font-size: 12px;
             color: var(--Colors-Use-Neutral-Text-1-Title);
+            background-color: var(--Colors-Use-Basic-Background);
+            .ant-input{
+                background-color: var(--Colors-Use-Basic-Background);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
         }
         .ant-input-password-icon.anticon {
             color: var(--Colors-Use-Neutral-Disable);

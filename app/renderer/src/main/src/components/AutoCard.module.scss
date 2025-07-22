@@ -1,0 +1,9 @@
+.yakit-autoCard-wrap{
+    background-color: var(--Colors-Use-Neutral-Bg);
+    :global{
+        .ant-card-head{
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+    }
+}

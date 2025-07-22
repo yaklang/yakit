@@ -6,6 +6,7 @@
         .down-modal-heard {
             display: flex;
             justify-content: flex-start;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
 
             .modal-icon {
                 margin-right: 16px;
@@ -35,7 +36,7 @@
 }
 
 .modal-confirm-btns {
-    padding-bottom: 24px;
+    padding: 16px 0;
     width: 100%;
     display: flex;
     justify-content: flex-end;

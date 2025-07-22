@@ -6,6 +6,9 @@
             color: var(--Colors-Use-Neutral-Text-1-Title);
             border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         }
+        .ant-popover-inner-content{
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
     }
 }
 .yakit-popover-top-wrapper {
@@ -33,7 +36,7 @@
 
             .ant-popover-arrow-content {
                 border: 1px solid var(--Colors-Use-Neutral-Border);
-                background-color: var(--Colors-Use-Neutral-Border);
+                background-color: var(--Colors-Use-Basic-Background);
             }
 
             .ant-popover-arrow-content::before {
@@ -50,7 +53,7 @@
 
             .ant-popover-arrow-content {
                 border: 1px solid var(--Colors-Use-Neutral-Border);
-                background-color: var(--Colors-Use-Neutral-Border);
+                background-color: var(--Colors-Use-Basic-Background);
             }
 
             .ant-popover-arrow-content::before {

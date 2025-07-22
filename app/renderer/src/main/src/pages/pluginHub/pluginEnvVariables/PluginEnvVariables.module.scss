@@ -25,7 +25,7 @@
             line-height: 24px;
         }
         .subtitle-style {
-            color: #b4bbca;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-size: 12px;
             line-height: 16px;
         }
@@ -58,7 +58,7 @@
     .table-header {
         background-color: var(--Colors-Use-Neutral-Bg);
         display: flex;
-        border: 1px solid #eaecf3;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px 4px 0 0;
         .table-cell {
             color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -67,7 +67,7 @@
             line-height: 16px;
         }
         .table-cell:not(:last-child) {
-            border-right: 1px solid #eaecf3;
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
         }
     }
     .table-header-active-scroll {
@@ -86,16 +86,16 @@
 
     // 表行
     .table-tr {
-        border-left: 1px solid #eaecf3;
-        border-right: 1px solid #eaecf3;
-        border-bottom: 1px solid #eaecf3;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         .table-cell {
             color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             line-height: 16px;
         }
         .table-cell:not(:last-child) {
-            border-right: 1px solid #eaecf3;
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .table-cell:focus {
             border: 1px solid var(--Colors-Use-Main-Primary);
@@ -116,15 +116,15 @@
     }
 
     .table-footer-empty {
-        border-left: 1px solid #eaecf3;
-        border-right: 1px solid #eaecf3;
-        border-bottom: 1px solid #eaecf3;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 0 0 4px 4px;
         display: flex;
         justify-content: center;
         align-items: center;
         height: 50px;
-        color: #b4bbca;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         font-size: 12px;
     }
 }
@@ -136,12 +136,12 @@
     .divider-style {
         width: 1px;
         height: 12px;
-        border-left: 1px solid #eaecf3;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
     }
 }
 
 .plugin-env-value-noexist {
-    color: #f28b44;
+    color: var(--Colors-Use-Main-Primary);
 }
 
 // ---------- edit modal ----------

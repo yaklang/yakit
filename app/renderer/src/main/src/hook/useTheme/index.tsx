@@ -1,3 +1,4 @@
+import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {createContext, useContext, useEffect, useState} from "react"
 
 export type Theme = "light" | "dark"
@@ -10,12 +11,15 @@ const ThemeContext = createContext<{
     setTheme: () => {}
 })
 
+const preTheme = await getLocalValue("theme")
+
 export const ThemeProvider = ({children}: {children: React.ReactNode}) => {
-    const [theme, setThemeState] = useState<Theme>(() => (localStorage.getItem("theme") as Theme) || "light")
+    const [theme, setThemeState] = useState<Theme>(preTheme)
 
     const setTheme = (next: Theme) => {
         setThemeState(next)
         document.documentElement.setAttribute("data-theme", next)
+        setLocalValue("theme", next)
         localStorage.setItem("theme", next)
     }
 

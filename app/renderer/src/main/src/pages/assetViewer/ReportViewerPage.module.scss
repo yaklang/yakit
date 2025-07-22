@@ -4,6 +4,7 @@
         position: relative;
         margin-bottom: 8px;
         cursor: pointer;
+        background-color: var(--Colors-Use-Basic-Background);
         &-header {
             border: 1px solid var(--Colors-Use-Neutral-Border);
         }
@@ -18,7 +19,7 @@
         }
     }
     .icon-select {
-        color: #bfbfbf;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         position: absolute;
         right: 0;
         top: 0;
@@ -62,17 +63,37 @@
     }
     .report-viewer {
         position: relative;
+        background-color: var(--Colors-Use-Basic-White);
         height: 100%;
         .report-empty {
             position: absolute;
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
+            background-color: var(--Colors-Use-Basic-Background);
+            width: calc(100% + 1px);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            justify-content: center;
+            :global{
+                margin: 0;
+                border: none
+            }
         }
         .loading-wrapper {
             position: absolute;
+            background-color: var(--Colors-Use-Basic-Background);
             left: 50%;
             top: 50%;
+            transform: translate(-50%, -50%);
+            height: 100%;
+            width: calc(100% + 1px);
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            justify-content: center;
         }
     }
 }

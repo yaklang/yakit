@@ -18,6 +18,7 @@
     }
     .ant-pagination-item-active {
         border-color: var(--Colors-Use-Main-Primary);
+        background: var(--Colors-Use-Basic-Background);
     }
     .ant-pagination-item-active a {
         color: var(--Colors-Use-Main-Primary);
@@ -30,6 +31,7 @@
         border-color: var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
+        background-color: var(--Colors-Use-Neutral-Bg);
         &:hover {
             border-color: var(--Colors-Use-Main-Hover);
         }
@@ -47,13 +49,19 @@
         background-color: transparent;
     }
 
+    .ant-select-dropdown{
+        background-color: var(--Colors-Use-Basic-Background);
+        box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
+    }
+
     .ant-select-item {
         border-radius: 4px;
         padding: 4px 8px;
         margin: 0 4px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
 
         &:hover {
-            background-color: var(--Colors-Use-Neutral-Bg);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
             color: var(--Colors-Use-Main-Primary);
         }
     }
@@ -63,8 +71,7 @@
         background-color: var(--Colors-Use-Main-Focus);
         color: var(--Colors-Use-Main-Primary);
         &:hover {
-            background-color: var(--Colors-Use-Neutral-Bg);
-            color: var(--Colors-Use-Main-Primary);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
         }
     }
 }

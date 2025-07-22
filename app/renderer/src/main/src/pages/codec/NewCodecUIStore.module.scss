@@ -1,7 +1,7 @@
 .new-codec-input-ui {
     display: flex;
     flex-direction: row;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
     border-radius: 4px 4px 0px 0px;
     .main-focus {
         border-bottom: 1.5px solid var(--Colors-Use-Main-Primary);
@@ -17,19 +17,20 @@
         gap: 4px;
         flex: 1;
         height: 46px;
+        background: var(--Colors-Use-Basic-Background);
         .header {
             display: flex;
             flex-direction: row;
             align-items: center;
             gap: 4px;
             .title {
-                color: #b4bbca;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 11px;
                 font-weight: 400;
                 line-height: 16px;
             }
             .icon {
-                color: #f4736b;
+                color: var(--Colors-Use-Error-Focus);
                 font-family: SimSong;
                 font-size: 11px;
                 font-weight: 400;
@@ -54,19 +55,20 @@
             border-color: var(--Colors-Use-Main-Pressed);
         }
         .ant-input[disabled] {
-            background-color: #ffffff;
+            background-color: var(--Colors-Use-Basic-Background);
             border: unset;
         }
         .ant-input:focus {
             box-shadow: unset;
         }
+
     }
 }
 
 .new-codec-textarea-ui{
     display: flex;
     flex-direction: row;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Neutral-Bg);
     border-radius: 4px 4px 0px 0px;
     position: relative;
     .main-left-focus {
@@ -86,13 +88,13 @@
             align-items: center;
             gap: 4px;
             .title {
-                color: #b4bbca;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 font-size: 11px;
                 font-weight: 400;
                 line-height: 16px;
             }
             .icon {
-                color: #f4736b;
+                color: var(--Colors-Use-Error-Focus);
                 font-family: SimSong;
                 font-size: 11px;
                 font-weight: 400;
@@ -124,7 +126,7 @@
             border-color: var(--Colors-Use-Main-Pressed);
         }
         .ant-input[disabled] {
-            background-color: #ffffff;
+            background-color: var(--Colors-Use-Neutral-Bg);
             border: unset;
         }
         .ant-input:focus {
@@ -169,9 +171,11 @@
             height: 46px;
             padding: 4px 58px 6px 12px;
             border-radius: 4px 4px 0px 0px;
-            border: 1px solid #ffffff;
+            // border: 1px solid var(--Colors-Use-Neutral-Border);
             box-sizing: border-box;
-            border-bottom: 1.5px solid #ffffff;
+            // border-bottom: 1.5px solid var(--Colors-Use-Neutral-Border);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+            border: none;
             .ant-select-selection-item {
                 display: block;
                 padding-right: 0px;
@@ -181,17 +185,19 @@
             right: 8px;
         }
         .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            background-color: #ffffff;
+            background: var(--Colors-Use-Basic-Background);
         }
         .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-arrow {
-            color: #ccd2de;
+            color:var(--Colors-Use-Neutral-Text-3-Secondary);
         }
         .ant-select:not(.ant-select-customize-input) .ant-select-selector:hover {
-            border: 1px solid #ffffff;
-            border-bottom: 1.5px solid #ffffff;
+            // border: 1px solid var(--Colors-Use-Neutral-Border);
+            // border-bottom: 1.5px solid var(--Colors-Use-Neutral-Border);
+            border: none;
         }
         .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            border: 1px solid #ffffff;
+            // border: 1px solid var(--Colors-Use-Neutral-Border);
+            border: none;
             border-bottom: 1.5px solid var(--Colors-Use-Main-Primary);
             box-shadow: unset;
         }
@@ -261,13 +267,13 @@
         top: 4px;
         left: 12px;
         .title {
-            color: #b4bbca;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-size: 11px;
             font-weight: 400;
             line-height: 16px;
         }
         .icon {
-            color: #f4736b;
+            color: var(--Colors-Use-Error-Focus);
             font-family: SimSong;
             font-size: 11px;
             font-weight: 400;
@@ -290,12 +296,12 @@
     }
 }
 .new-codec-editor {
-    background-color: #fff;
+    background-color: var(--Colors-Use-Neutral-Bg);
     border-radius: 4px 4px 0px 0px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border-bottom: 1.5px solid #fff;
+    border-bottom: 1.5px solid var(--Colors-Use-Neutral-Border);
     .header {
         align-items: center;
         display: flex;
@@ -306,7 +312,7 @@
                 position: relative;
                 display: inline-block;
                 margin-left: 4px;
-                color: #f4736b;
+                color: var(--Colors-Use-Error-Focus);
                 font-family: SimSong;
                 font-size: 11px;
                 font-weight: 400;
@@ -319,7 +325,7 @@
             flex-direction: row;
             align-items: center;
             .apply {
-                color: #f28b44;
+                color: var(--Colors-Use-Main-Primary);
                 font-size: 12px;
                 font-style: normal;
                 font-weight: 500;
@@ -327,7 +333,7 @@
                 cursor: pointer;
             }
             .apply-disabled {
-                color: #ccd2de;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 cursor: no-drop;
             }
             .expand-box {
@@ -373,7 +379,7 @@
     .header {
         height: 24px;
         .title {
-            color: #b4bbca;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-size: 11px;
             font-weight: 400;
             line-height: 16px;

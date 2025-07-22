@@ -16,6 +16,7 @@ import {CacheDataHistoryProps, YakitOptionTypeProps, onGetRemoteValuesBase, onSe
 import {setRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
 import {OutlineCheckIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {SolidCloseCircleIcon} from "@/assets/icon/solid"
 const {Option, OptGroup} = Select
 
 /**

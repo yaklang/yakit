@@ -101,6 +101,11 @@
             .ant-tree-iconEle .anticon {
                 color: var(--Colors-Use-Main-On-Primary);
             }
+            .ant-tree-title {
+                white-space: nowrap;
+                width: calc(100% - 24px);
+                color: var(--Colors-Use-Main-On-Primary);
+            }
         }
 
         .ant-tree-treenode.ant-tree-treenode-switcher-close.ant-tree-treenode-selected,
@@ -124,11 +129,6 @@
                 .ant-tree-node-content-wrapper.ant-tree-node-selected {
                     background-color: var(--Colors-Use-Main-Hover);
                 }
-            }
-            .ant-tree-title {
-                white-space: nowrap;
-                width: calc(100% - 24px);
-                color: var(--Colors-Use-Main-On-Primary);
             }
         }
 

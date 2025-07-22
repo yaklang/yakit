@@ -26,6 +26,7 @@
                 justify-content: space-between;
                 align-items: center;
                 height: 35px;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 &:not(:first-child) {
                     border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 }

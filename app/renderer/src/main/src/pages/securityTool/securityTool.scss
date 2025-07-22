@@ -10,7 +10,7 @@
 %divider-style {
     width: 1px;
     height: 12px;
-    background-color: #eaecf3;
+    background-color: var(--Colors-Use-Neutral-Border);
 }
 @mixin execute-title($text) {
     display: flex;

@@ -11,6 +11,7 @@
     @extend %column-center;
     overflow: hidden;
     height: 100%;
+    background-color: var(--Colors-Use-Basic-Background);
     .space-engine-heard {
         // padding: 8px;
         z-index: 9;
@@ -115,7 +116,7 @@
 
 .ai-describe{
     width: 100%;
-    background: rgba(86, 201, 145, 0.1);
-    color: rgba(133, 137, 158, 1);
+    background: var(--Colors-Use-Green-Bg);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
     padding: 8px 16px;
 }

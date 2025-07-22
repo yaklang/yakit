@@ -18,14 +18,19 @@
         .ant-tree-switcher-loading-icon {
             color: var(--Colors-Use-Main-Primary);
         }
+        .ant-tree .ant-tree-node-content-wrapper:hover{
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        }
         .ant-tree-list-scrollbar-thumb {
-            background: #c1c1c1 !important;
+            background: var(--Colors-Use-Neutral-Disable) !important;
             width: 6px !important;
             transition: top 0.35s ease;
         }
         .ant-tree-checkbox-inner {
             border-color: var(--checkbox-border-color);
             border-radius: 4px;
+            border-color: var(--checkbox-border-disabled-color);
+            background: var(--Colors-Use-Basic-Background);
         }
         .ant-tree-checkbox-checked::after {
             border-color: var(--checkbox-border-primary-color);
@@ -72,7 +77,7 @@
         .ant-tree-checkbox-indeterminate .ant-tree-checkbox-inner {
             border-width: 2px !important;
             border-color: var(--checkbox-border-primary-color);
-            background-color: #ffffff !important;
+            background-color: var(--Colors-Use-Basic-Background) !important;
         }
         .ant-tree-checkbox-indeterminate:hover {
             .ant-tree-checkbox-inner {

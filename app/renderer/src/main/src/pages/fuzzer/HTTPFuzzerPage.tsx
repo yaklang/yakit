@@ -857,7 +857,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setSubscribeClose(YakitRoute.HTTPFuzzer, {
             close: {
                 title: "关闭提示",
-                content: "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
+                content: (
+                    <div style={{color: "var(--Colors-Use-Neutral-Text-3-Secondary)"}}>
+                        关闭一级菜单会关闭一级菜单下的所有二级菜单?
+                    </div>
+                ),
                 onOkText: "确定",
                 onCancelText: "取消",
                 onOk: (m) => onCloseTab(m)
@@ -1947,7 +1951,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             </div>
                             <Divider type='vertical' style={{margin: 0, top: 1}} />
                             <div className={styles["display-flex"]}>
-                                <Popover
+                                <YakitPopover
                                     trigger={"click"}
                                     placement={"leftTop"}
                                     destroyTooltipOnHide={true}
@@ -1972,7 +1976,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     <YakitButton type='text' icon={<ClockIcon />} style={{padding: "4px 0px"}}>
                                         历史
                                     </YakitButton>
-                                </Popover>
+                                </YakitPopover>
                             </div>
                             <div
                                 className={styles["blasting-example"]}
@@ -3403,8 +3407,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             <>
                 <YakitResizeBox
                     isVer={true}
-                    lineStyle={{display: !show ? "none" : "", background: "#f0f2f5"}}
-                    firstNodeStyle={{padding: !show ? 0 : undefined, background: "#f0f2f5"}}
+                    lineStyle={{display: !show ? "none" : "", background: "var(--Colors-Use-Basic-Background)"}}
+                    firstNodeStyle={{padding: !show ? 0 : undefined, background: "var(--Colors-Use-Basic-Background)"}}
                     firstNode={
                         <NewHTTPPacketEditor
                             language={fuzzerResponse?.DisableRenderStyles ? "text" : undefined}
@@ -3462,7 +3466,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                             }
                                             return undefined
                                         })()}
-                                        style={{height: "100%", backgroundColor: "#fff"}}
+                                        style={{height: "100%", backgroundColor: "var(--Colors-Use-Basic-Background)"}}
                                     >
                                         <>详细原因：{fuzzerResponse.Reason}</>
                                     </Result>
@@ -3541,7 +3545,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                     secondNodeStyle={{
                         display: show ? "" : "none",
                         padding: 0,
-                        border: "1px solid rgb(240, 240, 240)",
+                        border: "1px solid var(--Colors-Use-Neutral-Border)",
                         borderRadius: "0px 0px 0px 4px"
                     }}
                     lineDirection='bottom'

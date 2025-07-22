@@ -2,6 +2,7 @@
 .shell-receiver-contain {
     display: flex;
     overflow: hidden;
+    background-color: var(--Colors-Use-Basic-Background);
 }
 .shell-receiver {
     height: 100%;
@@ -21,7 +22,7 @@
             justify-content: space-between;
             padding: 14px 16px 10px 12px;
             align-items: center;
-            border-bottom: 1px solid #eaecf3;
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             .title {
                 display: flex;
                 flex-direction: row;
@@ -73,7 +74,7 @@
     padding: 14px 12px 12px 16px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #eaecf3;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
     flex-shrink: 0;
     .header {
         display: flex;
@@ -144,7 +145,7 @@
         }
         .item-box-active {
             background-color: var(--Colors-Use-Main-Primary);
-            color: #fff;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             &:hover {
                 background-color: var(--Colors-Use-Main-Primary);
             }
@@ -219,19 +220,19 @@
 .shell-receiver-middle-item {
     width: 300px;
     box-sizing: content-box;
-    border-right: 1px solid #eaecf3;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     .header {
         height: 24px;
         box-sizing: content-box;
-        background-color: #fff;
+        background-color: var(--Colors-Use-Basic-Background);
         padding: 14px 12px 10px 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid #eaecf3;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         .title {
             font-size: 12px;
             font-weight: 600;
@@ -291,13 +292,13 @@
         }
     }
     .footer {
-        border-top: 1px solid #eaecf3;
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
         box-shadow: 0px -8px 16px 0px var(--Colors-Use-Basic-Shadow);
         display: flex;
         flex-direction: column;
         gap: 12px;
         padding: 12px;
-        background-color: #fff;
+        background-color: var(--Colors-Use-Basic-Background);
         .select-box {
             display: flex;
             flex-direction: column;
@@ -318,7 +319,7 @@
         .line {
             height: 1px;
             width: 100%;
-            background-color: #eaecf3;
+            background-color: var(--Colors-Use-Basic-Background);
         }
     }
 }

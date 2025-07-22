@@ -19,11 +19,11 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {ReloadOutlined} from "@ant-design/icons"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import { DnslogMenuToPage } from "../layout/publicMenu/MenuDNSLog"
-import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
+import {DnslogMenuToPage} from "../layout/publicMenu/MenuDNSLog"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 
-export interface DNSLogPageProp {
-}
+export interface DNSLogPageProp {}
 
 const {ipcRenderer} = window.require("electron")
 
@@ -54,11 +54,11 @@ export interface DNSLogEvent {
 const {Option} = Select
 
 export interface SendMenuDnslogProps {
-    dnsLogType: "builtIn" | "custom",
-    token: string;
-    domain: string;
-    onlyARecord: boolean,
-    DNSMode?: string,
+    dnsLogType: "builtIn" | "custom"
+    token: string
+    domain: string
+    onlyARecord: boolean
+    DNSMode?: string
     UseLocal?: boolean
 }
 
@@ -85,15 +85,12 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         // 初始化-查看菜单是否开启dnslog并请求获取参数fDNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE
         ipcRenderer.invoke("dnslog-page-to-menu")
         // 获取菜单发送的配置参数
-        ipcRenderer.on(
-            "dnslog-menu-to-page-callback",
-            (e, data: DnslogMenuToPage) => {
-                if(data.isReset){
-                    // 重置
-                    reset()
-                }
-                else{
-                  setOnlyARecord(data.onlyARecord)
+        ipcRenderer.on("dnslog-menu-to-page-callback", (e, data: DnslogMenuToPage) => {
+            if (data.isReset) {
+                // 重置
+                reset()
+            } else {
+                setOnlyARecord(data.onlyARecord)
                 if (getToken() !== data.token || getDomain() !== data.domain) {
                     setToken(data.token || "")
                     setDomain(data.domain || "")
@@ -101,19 +98,16 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                     setSelectedMode(data.dnsMode)
                     setIsLocal(data.useLocal)
                     queryDNSLogByToken()
-                }  
                 }
-                
             }
-        )
+        })
         // 查看单条数据的详情
         ipcRenderer.on("dnslog-info-details-callback", (e, info: DNSLogEvent) => {
             openDetails.current = info
-            if(getRecords().length>0){
+            if (getRecords().length > 0) {
                 openDetailsItem()
-            }
-            else{
-                if(token){
+            } else {
+                if (token) {
                     dnsLogType === "builtIn" ? queryDNSLogByToken() : queryDNSLogTokenByScript()
                 }
             }
@@ -125,7 +119,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     }, [])
 
     // 重置
-    const reset = useMemoizedFn(()=>{
+    const reset = useMemoizedFn(() => {
         setToken("")
         setDomain("")
         setRecords([])
@@ -137,21 +131,22 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
 
     // 打开单条数据
     const openDetailsItem = useMemoizedFn(() => {
-
         if (openDetails.current) {
             for (let item of getRecords()) {
-                if (item.RemoteAddr === openDetails.current.RemoteAddr && item.Timestamp === openDetails.current.Timestamp) {
+                if (
+                    item.RemoteAddr === openDetails.current.RemoteAddr &&
+                    item.Timestamp === openDetails.current.Timestamp
+                ) {
                     setExpandRows(item.Index !== undefined ? [`${item.Index}`] : [])
                     break
                 }
             }
             openDetails.current = undefined
         }
-
     })
 
     // 同步给菜单里dnslog新的参数
-    const sendMenuDnslog = useMemoizedFn((data:SendMenuDnslogProps) => {
+    const sendMenuDnslog = useMemoizedFn((data: SendMenuDnslogProps) => {
         ipcRenderer.invoke("dnslog-page-change-menu", data)
     })
 
@@ -167,10 +162,17 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 DNSMode,
                 UseLocal
             })
-            .then((rsp: { Domain: string; Token: string }) => {
+            .then((rsp: {Domain: string; Token: string}) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
-                sendMenuDnslog({dnsLogType: getDnsLogType(), token: rsp.Token, domain: rsp.Domain, onlyARecord: getOnlyARecord(), DNSMode, UseLocal})
+                sendMenuDnslog({
+                    dnsLogType: getDnsLogType(),
+                    token: rsp.Token,
+                    domain: rsp.Domain,
+                    onlyARecord: getOnlyARecord(),
+                    DNSMode,
+                    UseLocal
+                })
             })
             .catch((e) => {
                 failed(`error: ${e}`)
@@ -185,7 +187,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         type: "builtIn",
                         Addr: "",
                         DNSMode,
-                        UseLocal: DNSMode === "内置" ? false : UseLocal,
+                        UseLocal: DNSMode === "内置" ? false : UseLocal
                     })
                 )
                 // 用于缓存历史勾选项
@@ -209,7 +211,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 DNSMode: getSelectedMode() || "",
                 UseLocal: getSelectedMode() === "内置" ? false : getIsLocal()
             })
-            .then((rsp: { Events: DNSLogEvent[] }) => {
+            .then((rsp: {Events: DNSLogEvent[]}) => {
                 setRecords(
                     rsp.Events.filter((i) => {
                         if (getOnlyARecord()) {
@@ -309,27 +311,32 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         )
     }, [])
 
-    useEffect(()=>{
+    useEffect(() => {
         getRemoteValue(DNS_LOG_COMMON_CACHE).then((data) => {
             if (!data) return
-            else{
+            else {
                 try {
                     let obj = JSON.parse(data)
                     setAutoQuery(obj.autoQuery)
                 } catch (error) {}
             }
         })
-    },[])
+    }, [])
 
     const updateTokenByScript = useMemoizedFn(() => {
         setLoading(true)
         setBtnLoading(true)
         ipcRenderer
             .invoke("RequireDNSLogDomainByScript", {ScriptName: params || ""})
-            .then((rsp: { Domain: string; Token: string }) => {
+            .then((rsp: {Domain: string; Token: string}) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
-                sendMenuDnslog({dnsLogType: getDnsLogType(), token: rsp.Token, domain: rsp.Domain, onlyARecord: getOnlyARecord()})
+                sendMenuDnslog({
+                    dnsLogType: getDnsLogType(),
+                    token: rsp.Token,
+                    domain: rsp.Domain,
+                    onlyARecord: getOnlyARecord()
+                })
             })
             .catch((e) => {
                 failed(`error: ${e}`)
@@ -354,7 +361,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         loading && setLoading(true)
         ipcRenderer
             .invoke("QueryDNSLogTokenByScript", {Token: token, ScriptName: params || ""})
-            .then((rsp: { Events: DNSLogEvent[] }) => {
+            .then((rsp: {Events: DNSLogEvent[]}) => {
                 setRecords(
                     rsp.Events.filter((i) => {
                         if (getOnlyARecord()) {
@@ -392,15 +399,17 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             title={
                 <div>
                     <Space>
-                        DNSLog
-                        <div style={{color: "#999"}}>使用 {getReleaseEditionName()} 自带的 DNSLog 反连服务</div>
+                        <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>DNSLog</div>
+                        <div style={{color: "var(--Colors-Use-Neutral-Text-3-Secondary)"}}>
+                            使用 {getReleaseEditionName()} 自带的 DNSLog 反连服务
+                        </div>
                     </Space>
                     <div
                         style={{
                             display: "flex",
                             gap: 16,
                             paddingTop: 12,
-                            borderRadius: 4,
+                            borderRadius: 4
                         }}
                     >
                         <YakitRadioButtons
@@ -451,25 +460,23 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                         ))}
                                     </YakitSelect>
                                 </Form.Item>
-                                {selectedMode !== "内置" && <Form.Item
-                                    style={{
-                                        marginBottom: 0,
-                                        marginRight: 10 // 添加右侧间隔isLocal
-                                    }}
-                                    label={"使用本地"}
-                                >
-                                    <YakitSwitch checked={isLocal} onChange={setIsLocal}/>
-                                </Form.Item>}
+                                {selectedMode !== "内置" && (
+                                    <Form.Item
+                                        style={{
+                                            marginBottom: 0,
+                                            marginRight: 10 // 添加右侧间隔isLocal
+                                        }}
+                                        label={"使用本地"}
+                                    >
+                                        <YakitSwitch checked={isLocal} onChange={setIsLocal} />
+                                    </Form.Item>
+                                )}
                                 <Divider
                                     style={{top: 6, margin: "0px 16px 0px 0px", height: "1em"}}
                                     type={"vertical"}
                                 />
                                 <Form.Item colon={false} style={{height: 24}}>
-                                    <YakitButton
-                                        type='primary'
-                                        htmlType='submit'
-                                        loading={btnLoading}
-                                    >
+                                    <YakitButton type='primary' htmlType='submit' loading={btnLoading}>
                                         生成一个可用域名
                                     </YakitButton>
                                 </Form.Item>
@@ -503,11 +510,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                     type={"vertical"}
                                 />
                                 <Form.Item colon={false} style={{height: 24}}>
-                                    <YakitButton
-                                        type='primary'
-                                        htmlType='submit'
-                                        loading={btnLoading}
-                                    >
+                                    <YakitButton type='primary' htmlType='submit' loading={btnLoading}>
                                         生成一个可用域名
                                     </YakitButton>
                                 </Form.Item>
@@ -515,8 +518,10 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         )}
                     </div>
                     {token !== "" && (
-                        <Row style={{marginTop: 5}} align="bottom">
-                            <Col style={{fontSize: 12}}>当前激活域名为：</Col>
+                        <Row style={{marginTop: 5}} align='bottom'>
+                            <Col style={{fontSize: 12, color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
+                                当前激活域名为：
+                            </Col>
                             <Col>
                                 <YakitTag enableCopy={true} color='blue' copyText={tokenDomain}></YakitTag>
                             </Col>
@@ -525,7 +530,6 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 </div>
             }
             bordered={false}
-            // style={{overflowY: "auto"}}
             bodyStyle={{overflow: "auto"}}
         >
             <Space direction={"vertical"} style={{width: "100%"}}>
@@ -554,8 +558,10 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                 }}
                                 label={"自动刷新记录"}
                             >
-                                <YakitSwitch checked={autoQuery} onChange={(val)=>{
-                                    setAutoQuery(val)
+                                <YakitSwitch
+                                    checked={autoQuery}
+                                    onChange={(val) => {
+                                        setAutoQuery(val)
                                         setRemoteValue(DNS_LOG_COMMON_CACHE, JSON.stringify({autoQuery: val}))
                                     }}
                                 />
@@ -572,38 +578,26 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                 }
                                 dnsLogType === "builtIn" ? queryDNSLogByToken() : queryDNSLogTokenByScript()
                             }}
-                            icon={<ReloadOutlined style={{position: "relative", top: 2}}/>}
+                            icon={<ReloadOutlined style={{position: "relative", top: 2}} />}
                         />
                     </div>
                 </Form>
-                <Table<DNSLogEvent>
-                    size={"small"}
+                <TableVirtualResize<DNSLogEvent>
+                    isRefresh={loading}
+                    titleHeight={0.01}
+                    renderTitle={<></>}
+                    renderKey='Index'
+                    data={records}
                     loading={loading}
-                    dataSource={records}
-                    rowKey={(i) => `${i.Index}`}
-                    expandable={{
-                        expandedRowKeys: expandRows,
-                        expandRowByClick: true,
-                        expandedRowRender: (i: DNSLogEvent) => {
-                            return (
-                                <div style={{width: "100%", height: 300}}>
-                                    <AutoCard style={{padding: 0}} bodyStyle={{padding: 0}}>
-                                        <YakEditor readOnly={true} valueBytes={i.Raw} bytes={true}/>
-                                    </AutoCard>
-                                </div>
-                            )
-                        },
-                        onExpandedRowsChange: (rows) => setExpandRows((rows as string[]) || [])
-                    }}
-                    pagination={false}
                     columns={[
-                        {title: "域名", dataIndex: "Domain"},
-                        {title: "类型", dataIndex: "DNSType"},
-                        {title: "远端IP", dataIndex: "RemoteIP"},
+                        {title: "域名", dataKey: "Domain"},
+                        {title: "类型", dataKey: "DNSType"},
+                        {title: "远端IP", dataKey: "RemoteIP"},
                         {
                             title: "Timestamp",
-                            render: (i: DNSLogEvent) => {
-                                return <Tag color={"geekblue"}>{formatTimestamp(i.Timestamp)}</Tag>
+                            dataKey: "Timestamp",
+                            render: (i: number) => {
+                                return <YakitTag color={"blue"}>{formatTimestamp(i)}</YakitTag>
                             }
                         }
                     ]}

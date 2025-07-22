@@ -249,6 +249,7 @@
                     display: flex;
                     align-items: center;
                     background: var(--Colors-Use-Basic-Background);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
 
                     &:first-child {
                         border-top-width: 0;
@@ -380,7 +381,7 @@
                 .virtual-table-active-row {
                     border-bottom: 1px solid var(--Colors-Use-Main-Primary) !important;
                     border-top: 1px solid var(--Colors-Use-Main-Primary) !important;
-                    background-color: var(--Colors-Use-Main-Bg);
+                    background-color: var(--Colors-Use-Main-Focus);
                     color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
                 .virtual-table-active-row.virtual-table-hover-row {

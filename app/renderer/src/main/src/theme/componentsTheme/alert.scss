@@ -1,0 +1,36 @@
+.ant-alert-success{
+    background-color: var(--Colors-Use-Success-Bg);
+    border: 1px solid var(--Colors-Use-Success-Border);
+    .ant-alert-content{
+        .ant-alert-message{
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+    }
+}
+.ant-alert-error{
+    background-color: var(--Colors-Use-Error-Bg);
+    border: 1px solid var(--Colors-Use-Error-Border);
+    .ant-alert-content{
+        .ant-alert-message{
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+    }
+}
+.ant-alert-warning{
+    background-color: var(--Colors-Use-Warning-Bg);
+    border: 1px solid var(--Colors-Use-Warning-Border);
+    .ant-alert-content{
+        .ant-alert-message{
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+    }
+}
+.ant-alert-info{
+    background-color: var(--Colors-Use-Blue-Bg);
+    border: 1px solid var(--Colors-Use-Blue-Border);
+    .ant-alert-content{
+        .ant-alert-message{
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+    }
+}

@@ -1,5 +1,5 @@
 .yakit-radio-buttons-solid {
-    --yakit-solid-primary-font-color: #fff;
+    --yakit-solid-primary-font-color: var(--Colors-Use-Main-On-Primary);
     --yakit-solid-primary-font-hover-color: var(--Colors-Use-Main-Hover);
     display: inline-flex;
     align-items: center;
@@ -44,6 +44,9 @@
 
         .ant-radio-button-wrapper:last-child {
             border-radius: 0 4px 4px 0;
+            &::before{
+                background-color: var(--Colors-Use-Neutral-Border);
+            }
         }
 
         .ant-radio-button-wrapper {
@@ -57,6 +60,9 @@
             background: var(--Colors-Use-Basic-Background);
             color: var(--Colors-Use-Neutral-Text-1-Title);
             word-break: keep-all;
+            &:not(:first-child)::before{
+                background-color: var(--Colors-Use-Neutral-Border);
+            }
         }
 
         .ant-radio-button-wrapper:hover {

@@ -703,7 +703,9 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                     <div className={styles["AnalysisMain-right-default-header"]}>
                                         <div className={styles["title-wrapper"]}>
                                             <span className={styles["title"]}>执行结果</span>{" "}
-                                            设置好热加载或规则后，即可点击执行进行处理
+                                            <span className={styles["content"]}>
+                                                设置好热加载或规则后，即可点击执行进行处理
+                                            </span>
                                         </div>
                                     </div>
                                     <div className={styles["exec-form-item"]}>

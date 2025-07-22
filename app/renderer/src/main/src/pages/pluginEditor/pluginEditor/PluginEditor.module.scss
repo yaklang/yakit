@@ -14,7 +14,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #eaecf3;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     .header-title {
         display: flex;
         align-items: center;

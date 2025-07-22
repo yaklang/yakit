@@ -7,7 +7,7 @@ const YakitCascader = <OptionType extends DefaultOptionType | BaseOptionType = D
     props: YakitCascaderProps<OptionType>
 ) => {
     return (
-        <div className={styles['yakit-cascader']}>
+        <div className={styles["yakit-cascader"]}>
             <Cascader {...props} dropdownClassName={styles["yakit-cascader-popup"]} />
         </div>
     )

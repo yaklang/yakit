@@ -79,7 +79,7 @@ $keyColor: map-keys($colors);
 }
 
 .dragging {
-    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    background-color: var(--Colors-Use-Neutral-Border);
     border-color: var(--Colors-Use-Neutral-Border);
     &::before {
         @extend .white-link;
@@ -301,7 +301,7 @@ $keyColor: map-keys($colors);
                     padding: 4px 6px;
                     border-radius: 4px 0 0 4px;
                     min-width: 16px;
-                    color: #fff;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     line-height: 16px;
                     font-weight: 600;
                     cursor: pointer;
@@ -313,7 +313,7 @@ $keyColor: map-keys($colors);
                     .tab-menu-sub-group-number {
                         border-radius: 8px;
                         padding: 2px 6px;
-                        background-color: #fff;
+                        background-color: var(--Colors-Use-Basic-Background);
                         height: 16px;
                         display: flex;
                         align-items: center;
@@ -553,13 +553,13 @@ $keyColor: map-keys($colors);
         position: absolute;
         bottom: -1px;
         left: 0;
-        background-color: #fff;
+        background-color: var(--Colors-Use-Neutral-Border);
         z-index: 2;
     }
 }
 
 .tab-menu-sub-item-active {
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
     color: var(--Colors-Use-Main-Primary);
     flex-shrink: 0;
 
@@ -657,7 +657,7 @@ $keyColor: map-keys($colors);
             .check-icon {
                 @extend .flex-align-center;
                 justify-content: center;
-                color: #fff;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
 
                 svg {
                     width: 16px;

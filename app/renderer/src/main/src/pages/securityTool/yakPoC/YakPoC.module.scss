@@ -31,6 +31,7 @@
     flex: 1;
     height: 100%;
     overflow: hidden;
+    background-color: var(--Colors-Use-Basic-Background);
     .yakpoc-tab-wrap {
         height: 100%;
         .yakpoc-tab {
@@ -47,12 +48,12 @@
 
                 text-orientation: sideways-right;
                 writing-mode: vertical-rl;
-                border-top: 1px solid #fff;
+                border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 &:hover {
-                    background: rgba(204, 210, 222, 0.5);
+                    background: var(--Colors-Use-Basic-Background);
                 }
                 &-active {
-                    color: #ffffff;
+                    color: var(--Colors-Use-Main-On-Primary);
                     background-color: var(--Colors-Use-Main-Primary);
                     &:hover {
                         background-color: var(--Colors-Use-Main-Hover);
@@ -70,7 +71,7 @@
         gap: 16px;
         height: 100%;
         overflow: hidden;
-        border-right: 1px solid #eaecf3;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         padding: 12px 8px;
         width: 33.33333%;
         max-width: 432px;
@@ -195,11 +196,11 @@
             .filter-body-left {
                 @extend %display-flex-center;
                 .count-num {
-                    color: var(--color-gray-text-02, #b4bbca);
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     font-size: 12px;
                     line-height: 16px;
                     .num-style {
-                        color: #f28b44;
+                        color: var(--Colors-Use-Main-Primary);
                         margin-left: 4px;
                     }
                 }
@@ -221,11 +222,11 @@
             max-width: 130px;
             padding: 12px;
             border-radius: 4px;
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            background-color: var(--Colors-Use-Neutral-Bg);
             margin: 4px;
             cursor: pointer;
             &:hover {
-                background-color: var(--Colors-Use-Neutral-Bg);
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
             }
             .item-tip {
                 @extend %display-column-center;
@@ -263,10 +264,10 @@
             }
             .item-tip {
                 .item-tip-name {
-                    color: #fff;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
                 .item-tip-number {
-                    color: #fff;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
             }
         }

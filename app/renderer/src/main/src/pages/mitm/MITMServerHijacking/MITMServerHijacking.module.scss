@@ -201,7 +201,7 @@
     position: relative;
     flex: 1;
     .body-length-text-red {
-        color: var(--yakit-danger-4);
+        color: var(--Colors-Use-Error-Border);
     }
     .status-code {
         color: var(--Colors-Use-Success-Hover);
@@ -288,7 +288,7 @@
                 cursor: pointer;
                 padding-right: 6px;
                 &:hover {
-                    color: var(--yakit-danger-4);
+                    color: var(--Colors-Use-Error-Border);
                 }
                 &:active {
                     color: var(--yakit-danger-6);
@@ -320,12 +320,12 @@
 
                 text-orientation: sideways-right;
                 writing-mode: vertical-rl;
-                border-top: 1px solid #fff;
+                border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 &:hover {
-                    background: rgba(204, 210, 222, 0.5);
+                    background: var(--Colors-Use-Basic-Background);
                 }
                 &-active {
-                    color: #ffffff;
+                    color: var(--Colors-Use-Main-On-Primary);
                     background-color: var(--Colors-Use-Main-Primary);
                     &:hover {
                         background-color: var(--Colors-Use-Main-Hover);

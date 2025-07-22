@@ -93,8 +93,8 @@
 
     .process-list-wrapper {
         overflow-y: overlay;
-        margin-top: 15px;
-        height: calc(100% - 40px);
+        // margin-top: 15px;
+        height: calc(100% - 28px);
 
         .process-list-item {
             display: flex;

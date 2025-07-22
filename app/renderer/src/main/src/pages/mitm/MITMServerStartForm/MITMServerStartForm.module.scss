@@ -38,7 +38,7 @@
         .form-rule {
             height: 28px;
             width: 100%;
-            background: #ffffff;
+            background: var(--Colors-Use-Neutral-Bg);
             border: 1px solid var(--Colors-Use-Neutral-Border);
             border-radius: 4px;
             display: flex;
@@ -55,6 +55,7 @@
                 padding: 6px 12px;
                 flex: 1;
                 font-size: 14px;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             .form-rule-icon {
                 width: 33px;
@@ -238,7 +239,7 @@
 }
 
 .import-text {
-    color: #B4BBCA;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
     font-size: 14px;
     font-weight: normal;
     margin-left: 16px;
@@ -303,7 +304,7 @@
             border-radius: 4px;
             cursor: pointer;
             &:hover {
-                background-color: rgb(248, 248, 248);
+                background-color: var(--Colors-Use-Neutral-Bg);
                 border-bottom: 1px solid transparent;
             }
             &:hover::after {
@@ -313,7 +314,7 @@
                 left: 0px;
                 width: 100%;
                 height: 1px;
-                background-color: #ffffff;
+                background-color: var(--Colors-Use-Neutral-Bg);
             }
             .name {
                 font-size: 13px;
@@ -328,7 +329,7 @@
                 svg {
                     height: 16px;
                     width: 16px;
-                    color: #b4bbca;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 }
                 margin-left: 8px;
             }
@@ -342,7 +343,7 @@
             .opt-del {
                 &:hover {
                     svg {
-                        color: #f6544a;
+                        color: var(--Colors-Use-Error-Bg);
                     }
                 }
             }
@@ -362,8 +363,8 @@
 
 .infoBox {
     width: 100%;
-    background: rgba(86, 201, 145, 0.1);
-    color: rgba(133, 137, 158, 1);
+    background: var(--Colors-Use-Green-Bg);
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
     padding: 8px 16px;
 }
 
@@ -403,7 +404,7 @@
     .filter-condition {
         @extend .flex-space-between-and-center;
         padding: 12px 12px 8px;
-        background-color: #fff;
+        background-color: var(--Colors-Use-Neutral-Bg);
         border-radius: 8px;
         flex-wrap: wrap;
         gap: 8px 0;
@@ -450,11 +451,16 @@
 .mitm-alert-msg {
     line-height: 25px;
     margin-bottom: 12px;
-    background-color: #fffbe6;
-    border: 1px solid #ffe58f;
+    background-color: var(--Colors-Use-Yellow-Bg);
+    border: 1px solid var(--Colors-Use-Yellow-Border);
     padding: 8px 15px;
     border-radius: 2px;
     margin-right: 8px;
+    button{
+        &:hover{
+            background-color: var(--Colors-Use-Yellow-Bg-Hover);
+        }
+    }
     .circle-icon {
         position: relative;
         top: 1px;

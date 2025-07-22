@@ -21,7 +21,6 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
             return EmptyPng
         }
     }, [theme])
-    console.log(props.imageStyle, "imageStyle")
     return (
         <Empty
             image={<img src={emptyImageTarget} alt='' />}

@@ -92,7 +92,7 @@
 .form-item-help {
     width: 100%;
     font-size: 14px;
-    color: var(--Colors-Use-Neutral-Text-1-Title);
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
     .divider-line {
         display: inline-block;
         width: 1px;
@@ -122,6 +122,7 @@
             font-size: 14px;
             display: flex;
             align-items: center;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             svg {
                 width: 12px;
             }

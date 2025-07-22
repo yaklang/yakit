@@ -18,7 +18,7 @@
     min-height: 300px;
     .matching-extraction-editor {
         padding-top: 16px;
-        background-color: #f0f2f5;
+        background-color: var(--Colors-Use-Basic-Background);
         height: 100%;
         :global {
             .monaco-editor .scroll-decoration {
@@ -50,7 +50,7 @@
             font-weight: 400;
             font-size: 12px;
             line-height: 16px;
-            color: var(--Colors-Use-Neutral-Disable);
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
             .primary-number {
                 color: var(--Colors-Use-Main-Primary);
                 margin: 0 4px;
@@ -100,7 +100,7 @@
         .matching-extraction-condition {
             @extend .flex-space-between-and-center;
             padding: 12px 12px 8px;
-            background-color: #fff;
+            background-color: var(--Colors-Use-Basic-Background);
             border-radius: 8px;
             flex-wrap: wrap;
             gap: 8px 0;
@@ -129,7 +129,7 @@
                 @extend .flex-center;
                 gap: 4px;
                 .header-id {
-                    color: var(--Colors-Use-Neutral-Disable);
+                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
                     @extend .flex-center;
                     gap: 4px;
                     margin-right: 8px;
@@ -146,7 +146,7 @@
     }
     .remove-icon {
         margin-left: 8px;
-        color: var(--Colors-Use-Neutral-Disable);
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
         svg {
             width: 16px;
             height: 16px;
@@ -180,7 +180,7 @@
             }
         }
         textarea::placeholder {
-            color: var(--Colors-Use-Neutral-Disable);
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
             font-size: 12px;
         }
         textarea::-webkit-resizer {
@@ -196,6 +196,11 @@
             overflow-y: overlay;
             min-height: 24px;
             line-height: 16px;
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            &::placeholder{
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
         }
         .resizer-icon {
             position: absolute;

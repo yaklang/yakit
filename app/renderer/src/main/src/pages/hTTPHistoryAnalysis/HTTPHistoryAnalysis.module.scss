@@ -26,16 +26,16 @@
         display: flex;
         align-items: center;
         height: 24px;
-        border-top: 1px solid #FFFFFF;
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
         background: var(--Colors-Use-Neutral-Bg);
 
         .footer-tab-item {
             padding: 0 16px;
             cursor: pointer;
-            border-right: 1px solid #FFFFFF;
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
 
             &:hover {
-                background-color: rgba(204, 210, 222, .5);
+                background-color: var(--Colors-Use-Neutral-Border);
             }
         }
     }
@@ -48,7 +48,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid #FFFFFF;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         background: var(--Colors-Use-Neutral-Bg);
 
         &-left {
@@ -57,11 +57,11 @@
             .header-tab-item {
                 padding: 4px 16px;
                 cursor: pointer;
-                border-right: 1px solid #FFFFFF;
+                border-right: 1px solid var(--Colors-Use-Neutral-Border);
             }
 
             .tab-item-active {
-                color: #FFFFFF;
+                color: var(--Colors-Use-Main-On-Primary);
                 background-color: var(--Colors-Use-Main-Primary);
             }
         }
@@ -143,9 +143,12 @@
                 }
 
                 span.title {
-                    color: #31343F;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 16px;
                     font-weight: 600;
+                }
+                span.content{
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 }
             }
 
@@ -187,11 +190,11 @@
                 align-items: center;
                 height: 30px;
                 margin-top: 2px;
-                border-bottom: 1px solid #EAECF3;
+                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 
                 &-text {
                     padding-left: 8px;
-                    color: #31343F;
+                    color: var(--Colors-Use-Neutral-Text-2-Primary);
                     font-size: 16px;
                     font-weight: 600;
                 }

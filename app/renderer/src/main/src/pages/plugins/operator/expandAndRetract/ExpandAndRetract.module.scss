@@ -3,10 +3,10 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px;
-    border-bottom: 1px solid #eaecf3;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     // position: relative;
     transition: background-color 0.3s ease;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
 
     position: sticky;
     top: 0;
@@ -32,14 +32,14 @@
 }
 
 .expand-and-retract-header-process {
-    background-color: #fff9f2;
+    background-color: var(--Colors-Use-Neutral-Bg);
 }
 .expand-and-retract-header-finished {
-    background-color: #f1fbf6;
+    background-color: var(--Colors-Use-Neutral-Bg);
 }
 
 .expand-and-retract-header-error {
-    background-color: #fef1f1;
+    background-color: var(--Colors-Use-Neutral-Bg);
 }
 
 .expand-and-retract-header-icon-body {
@@ -49,7 +49,7 @@
     right: 50%;
     left: 50%;
     top: 75%;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
     padding: 4px;
     border: 1px solid var(--Colors-Use-Neutral-Border);
     flex-shrink: 0;

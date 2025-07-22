@@ -5,8 +5,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    border-right: 1px solid #eaecf3;
-    background: #fff;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Basic-Background);
     transition:
         width 0.2s ease,
         opacity 0.2s ease;
@@ -27,7 +27,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #eaecf3;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Basic-Background);
 
     color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 12px;
@@ -64,6 +65,7 @@
     height: 100%;
     padding: 20px 12px 12px 12px;
     overflow: hidden auto;
+    background: var(--Colors-Use-Basic-Background);
 }
 .editor-info-form-global {
     :global {
@@ -226,7 +228,7 @@
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 border-radius: 4px;
-                background-color: #eaecf3;
+                background-color: var(--Colors-Use-Basic-Background);
                 font-size: 13px;
             }
             &:hover {
@@ -313,8 +315,9 @@
 }
 .plugin-type-select-dropdown {
     border-radius: 4px;
-    border: 1px solid #eaecf3;
-    background: #fff;
+    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+    background: var(--Colors-Use-Basic-Background);
+    /* Shadows/lg 16 */
     box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
 }
 .plugin-type-select-option {
@@ -340,18 +343,18 @@
         font-size: 12px;
         line-height: 16px;
         .name-style {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            color: var(--Colors-Use-Main-Primary);
             font-style: normal;
             font-weight: 600;
         }
         .description-style {
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            color: var(--Colors-Use-Main-Primary);
             font-style: normal;
             font-weight: 400;
             white-space: break-spaces;
         }
         .disable-color {
-            color: #ccd2de;
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }

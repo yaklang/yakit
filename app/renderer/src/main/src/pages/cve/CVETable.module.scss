@@ -80,8 +80,8 @@
 }
 
 .cve-list-product-success {
-    border: 1px solid #ffe5c6;
-    color: #ffb660;
+    border: 1px solid var(--Colors-Use-Yellow-Border);
+    color: var(--Colors-Use-Yellow-Primary);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -91,8 +91,8 @@
 
     .cve-list-severity {
         padding: 2px 6px;
-        border-right: 1px solid #ffe5c6;
-        background-color: rgba(255, 213, 131, 0.1);
+        border-right: 1px solid var(--Colors-Use-Yellow-Border);
+        background-color: var(--Colors-Use-Yellow-Bg);
         border-radius: 4px 0 0 4px;
         height: 20px;
         line-height: 20px;
@@ -123,32 +123,32 @@
 }
 
 .cve-list-product-warning {
-    border: 1px solid #fbc6a1;
-    color: #f28b44;
+    border: 1px solid var(--Colors-Use-Warning-Border);
+    color: var(--Colors-Use-Warning-Primary);
 
     .cve-list-severity {
-        border-right: 1px solid #fbc6a1;
-        background-color: #fbe7d9;
+        border-right: 1px solid var(--Colors-Use-Warning-Border);
+        background-color: var(--Colors-Use-Warning-Bg-Hover);
     }
 }
 
 .cve-list-product-danger {
-    border: 1px solid #f3c2bf;
-    color: #f7544a;
+    border: 1px solid var(--Colors-Use-Error-Border);
+    color: var(--Colors-Use-Status-Serious);
 
     .cve-list-severity {
-        border-right: 1px solid #f3c2bf;
-        background-color: rgba(246, 84, 74, 0.2);
+        border-right: 1px solid var(--Colors-Use-Error-Border);
+        background-color: var(--Colors-Use-Error-Bg-Hover);
     }
 }
 
 .cve-list-product-serious {
-    border: 1px solid #e99a95;
-    color: #cb2318;
+    border: 1px solid var(--Colors-Use-Error-Border);
+    color: var(--Colors-Use-Error-Primary);
 
     .cve-list-severity {
-        border-right: 1px solid #e99a95;
-        background-color: rgba(203, 35, 24, 0.2);
+        border-right: 1px solid var(--Colors-Use-Error-Border);
+        background-color: var(--Colors-Use-Error-Bg-Hover);
     }
 }
 
@@ -219,7 +219,7 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-            background-color: #ffffff;
+            background-color: var(--Colors-Use-Basic-Background);
             // position: sticky;
             // top: 0;
 
@@ -249,7 +249,7 @@
         margin-bottom: 4px;
         margin-right: 4px;
         height: 20px;
-        background: #ffffff;
+        background-color: var(--Colors-Use-Basic-Background);
         border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -329,7 +329,7 @@
             .cve-query-resetting {
                 color: var(--Colors-Use-Error-Primary);
                 &:hover {
-                    color: var(--yakit-danger-4);
+                    color: var(--Colors-Use-Error-Border);
                 }
                 &:active {
                     color: var(--yakit-danger-6);
@@ -358,7 +358,7 @@
 .cwe-tabs {
     :global {
         .ant-tabs-nav {
-            background-color: #ffffff !important;
+            background-color: var(--Colors-Use-Neutral-Bg) !important;
             position: sticky;
             top: 0;
         }
@@ -367,7 +367,7 @@
             overflow: initial !important;
         }
         .ant-tabs-tab {
-            background-color: #ffffff !important;
+            background-color: var(--Colors-Use-Neutral-Bg) !important;
             border-radius: 0 !important;
             // border-top: 1px solid var(--Colors-Use-Neutral-Border) !important;
         }
@@ -377,7 +377,7 @@
             border-top-width: 0 !important;
             &::before {
                 content: "";
-                border-top: 2px solid #f28b44;
+                border-top: 2px solid var(--Colors-Use-Main-Border);
                 width: calc(100% + 2px);
                 position: absolute;
                 height: 0;

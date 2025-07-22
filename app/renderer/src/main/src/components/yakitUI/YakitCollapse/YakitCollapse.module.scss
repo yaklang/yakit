@@ -36,6 +36,7 @@
         margin-bottom: 8px;
         & > :global(.ant-collapse-header) {
             border-top: 0;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             &:hover {
                 border-radius: 4px;
                 background: var(--Colors-Use-Neutral-Bg-Hover);

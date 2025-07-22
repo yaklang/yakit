@@ -23,7 +23,7 @@
     &:hover {
         cursor: not-allowed !important;
         user-select: none;
-        background-color: #fff !important;
+        background-color: var(--Colors-Use-Basic-Background) !important;
     }
 }
 
@@ -34,7 +34,7 @@
     height: 100%;
     flex: 1;
     overflow: hidden;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
 
     &-left {
         display: flex;
@@ -105,7 +105,7 @@
             height: 24px;
             border-radius: 50%;
             background-color: var(--Colors-Use-Neutral-Disable);
-            color: #fff;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             cursor: pointer;
         }
     }
@@ -115,13 +115,13 @@
         padding: 12px 12px 0;
 
         &-item-body {
-            background-color: #fff;
+            background-color: var(--Colors-Use-Basic-Background);
         }
 
         &-item {
             @extend .display-column-center;
             padding: 8px;
-            background-color: #fff;
+            background-color: var(--Colors-Use-Basic-Background);
             border-radius: 4px;
             border: 1px solid var(--Colors-Use-Neutral-Border);
             position: relative;
@@ -141,16 +141,16 @@
             &-heard {
                 @extend .display-flex-center;
                 justify-content: space-between;
-                color: var(--Colors-Use-Neutral-Disable);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
 
                 .drag-sort-icon {
                     @extend .icon;
-                    color: var(--Colors-Use-Neutral-Disable);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
 
                 .drag-sort-disabled-icon {
                     @extend .item-disabled;
-                    color: var(--Colors-Use-Neutral-Bg);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
 
                 &-title {
@@ -356,7 +356,7 @@
     @extend .display-column-center;
     flex: 1;
     overflow: hidden;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
     padding: 12px 16px;
 
     .all-sequence-response-heard {

@@ -12,10 +12,10 @@ export const invalidCacheAndUserData = (delTemporaryProject) => {
         content: (
             <Space direction={"vertical"} style={{width: "100%", padding: 20}}>
                 <Alert
-                    type='error'
+                    type='success'
                     message={`如果你的 ${getReleaseEditionName()} 出现异常，可使用此功能删除所有本地缓存和用户数据，重连重启。`}
                 />
-                <Alert type='error' message='注意，本操作将永久删除缓存数据，难以恢复，请谨慎操作' />
+                <Alert type='success' message='注意，本操作将永久删除缓存数据，难以恢复，请谨慎操作' />
             </Space>
         ),
         width: 700,

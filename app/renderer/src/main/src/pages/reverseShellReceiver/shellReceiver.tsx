@@ -378,7 +378,7 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
                 </div>
                 <div className={styles["extra"]}>
                     <YakitPopover
-                        placement="topRight"
+                        placement='topRight'
                         trigger='click'
                         content={
                             <div className={styles["setting-terminal"]}>

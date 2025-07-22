@@ -291,7 +291,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                 isVer={true}
                 isShowDefaultLineStyle={false}
                 lineDirection='bottom'
-                lineStyle={{backgroundColor: "#f0f1f3", height: 4}}
+                lineStyle={{backgroundColor: "var(--Colors-Use-Neutral-Bg)", height: 4}}
                 firstNodeStyle={{padding: 0}}
                 secondNodeStyle={{padding: 0}}
                 firstNode={
@@ -797,7 +797,7 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                                     {/* 左 */}
                                     {onShowUI(item.input, index, "left")}
                                 </div>
-                                <div style={{flex: 2, borderLeft: "1px solid #EAECF3"}}>
+                                <div style={{flex: 2, borderLeft: "1px solid var(--Colors-Use-Neutral-Border)"}}>
                                     {/* 右 */}
                                     {onShowUI(item.select, index, "right")}
                                 </div>
@@ -1756,7 +1756,7 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                                                     <OutlineStarIcon/>
                                                 </div> */}
                                                         <div
-                                                            style={{color: "#FFD583"}}
+                                                            style={{color: "var(--Colors-Use-Yellow-Primary)"}}
                                                             className={classNames(
                                                                 styles["star-icon"],
                                                                 styles["star-icon-active"]

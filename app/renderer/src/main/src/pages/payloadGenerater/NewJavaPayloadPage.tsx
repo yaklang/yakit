@@ -428,18 +428,26 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                                     <Tooltip
                                                                         placement='bottom'
                                                                         title={
-                                                                            <div style={{color: "#fff"}}>
+                                                                            <div
+                                                                                style={{
+                                                                                    color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                                                                                }}
+                                                                            >
                                                                                 在自己的服务器安装 yak 核心引擎，执行{" "}
                                                                                 <YakitCopyText
                                                                                     showText={
                                                                                         "yak bridge --secret [your-pass]"
                                                                                     }
-                                                                                    wrapStyle={{color: "#fff"}}
+                                                                                    wrapStyle={{
+                                                                                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                                                                                    }}
                                                                                 />{" "}
                                                                                 启动 Yak Bridge 公网服务{" "}
                                                                                 <Divider type={"vertical"} />
                                                                                 <Typography.Text
-                                                                                    style={{color: "#fff"}}
+                                                                                    style={{
+                                                                                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                                                                                    }}
                                                                                 >
                                                                                     yak version {`>=`} v1.0.11-sp9
                                                                                 </Typography.Text>
@@ -960,7 +968,6 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                     const diplay = (selectedOptions || []).map((item: any) => item.Label).join(" / ")
                                     return <>{diplay}</>
                                 }}
-                                
                             />
                         ) : (
                             <YakitSelect
@@ -1354,9 +1361,9 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
             />
             <YakitSpin spinning={loading}>
                 {type === "hex" ? (
-                    <YakitEditor readOnly={true} value={code} type="http"/>
+                    <YakitEditor readOnly={true} value={code} type='http' />
                 ) : (
-                    <YakitEditor readOnly={true} value={code} type="http"/>
+                    <YakitEditor readOnly={true} value={code} type='http' />
                 )}
             </YakitSpin>
         </YakitCard>

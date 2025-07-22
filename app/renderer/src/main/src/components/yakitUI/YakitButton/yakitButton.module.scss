@@ -34,14 +34,14 @@
         border-color: fetch-color($type, "color-6");
     }
     &[disabled] {
-        background: var(--Colors-Use-Neutral-Disable);
-        color: var(--Colors-Use-Basic-White);
-        border-color: var(--Colors-Use-Neutral-Disable);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+        color: var(--Colors-Use-Neutral-Disable);
     }
     &[disabled]:hover {
-        background: var(--Colors-Use-Neutral-Disable);
-        color: var(--Colors-Use-Basic-White);
-        border-color: var(--Colors-Use-Neutral-Disable);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+        color: var(--Colors-Use-Neutral-Disable);
     }
 }
 

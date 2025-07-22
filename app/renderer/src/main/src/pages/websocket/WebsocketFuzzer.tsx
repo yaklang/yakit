@@ -211,7 +211,6 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                 <YakitCard
                     className={styles["websocketClientOperator-card"]}
                     headStyle={{
-                        background: "#fff",
                         height: 32,
                         minHeight: 32,
                         boxSizing: "content-box",
@@ -352,7 +351,6 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                 <YakitCard
                     className={styles["websocketClientOperator-card"]}
                     headStyle={{
-                        background: "#fff",
                         height: 32,
                         minHeight: 32,
                         boxSizing: "content-box",
@@ -503,7 +501,6 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
                 <YakitCard
                     className={styles["websocketClientOperator-card"]}
                     headStyle={{
-                        background: "#fff",
                         height: 32,
                         minHeight: 32,
                         boxSizing: "content-box",
@@ -562,7 +559,6 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
                     <YakitCard
                         className={styles["websocketClientOperator-card"]}
                         headStyle={{
-                            background: "#fff",
                             height: 32,
                             minHeight: 32,
                             boxSizing: "content-box",

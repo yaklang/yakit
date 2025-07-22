@@ -215,7 +215,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                         name='IsRemote'
                         help={
                             params.IsRemote && (
-                                <div>
+                                <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
                                     在自己的服务器安装 yak 核心引擎，执行{" "}
                                     <YakitTag
                                         enableCopy={true}
@@ -223,7 +223,9 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                                         copyText={`yak bridge --secret [your-pass]`}
                                     ></YakitTag>{" "}
                                     启动 Yak Bridge 公网服务 <Divider type={"vertical"} />
-                                    <Text style={{color: "#999"}}>yak version {`>=`} v1.0.11-sp9</Text>
+                                    <Text style={{color: "var(--Colors-Use-Neutral-Text-4-Help-text)"}}>
+                                        yak version {`>=`} v1.0.11-sp9
+                                    </Text>
                                 </div>
                             )
                         }

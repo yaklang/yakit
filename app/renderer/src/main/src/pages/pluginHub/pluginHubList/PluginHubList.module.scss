@@ -10,8 +10,8 @@
     display: inline-flex;
     flex-direction: column;
     align-items: flex-start;
-    border-right: 1px solid #eaecf3;
-    border-left: 1px solid #eaecf3;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    border-left: 1px solid var(--Colors-Use-Neutral-Border);
     background: var(--Colors-Use-Neutral-Bg-Hover);
 }
 .side-bar-list-item {
@@ -21,7 +21,7 @@
     align-items: flex-start;
     gap: 4px;
     cursor: pointer;
-    border-bottom: 1px solid #ffffff;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     position: relative;
     user-select: none;
     .item-text {
@@ -40,16 +40,16 @@
     }
 }
 .side-bar-list-item:hover {
-    background-color: rgba(204, 210, 222, 0.5);
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
 }
 .side-bar-list-item-active {
     background-color: var(--Colors-Use-Main-Primary);
     border-bottom-color: var(--Colors-Use-Main-Primary);
     .item-text {
-        color: #ffffff;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     svg {
-        color: #ffffff;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     &::before {
         position: absolute;
@@ -151,7 +151,7 @@
 }
 .plugin-hub-tab-detail-list {
     width: 410px;
-    border-right: 1px solid #eaecf3;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
 }
 .hub-list-header-extra {
     display: flex;
@@ -164,13 +164,13 @@
     .divider-style {
         width: 1px;
         height: 12px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
     .exclamationcircleIcon {
         svg {
             width: 16px;
             height: 16px;
-            color: #b4bbca;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
 }
@@ -196,7 +196,7 @@
     .divider-style {
         width: 1px;
         height: 12px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Basic-Background);
     }
 
     path {
@@ -207,7 +207,7 @@
 .local-list-divider-style {
     width: 1px;
     height: 12px;
-    background-color: #eaecf3;
+    background-color: var(--Colors-Use-Basic-Background);
 }
 
 /* ---------- HubListFilter ----------*/
@@ -217,7 +217,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #eaecf3;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
     opacity: 1;
     transition:
         width 0.2s ease,
@@ -269,7 +269,7 @@
             padding: 6px 12px 8px 6px;
             cursor: pointer;
             &:hover {
-                background-color: #f0f1f3;
+                background-color: var(--Colors-Use-Neutral-Bg);
             }
             .list-item-left {
                 display: flex;
@@ -308,7 +308,7 @@
     }
     .to-end {
         text-align: center;
-        color: #ccd2de;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         font-size: 11px;
         padding-top: 12px;
         padding-bottom: 24px;
@@ -331,7 +331,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #eaecf3;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     .title-style {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 16px;
@@ -345,7 +345,7 @@
             margin: 0 16px;
             width: 1px;
             height: 16px;
-            background-color: #eaecf3;
+            background-color: var(--Colors-Use-Neutral-Bg);
         }
     }
 }
@@ -390,7 +390,7 @@
                 .divider-style {
                     width: 1px;
                     height: 12px;
-                    background-color: #eaecf3;
+                    background-color: var(--Colors-Use-Neutral-Bg);
                 }
                 .num-style {
                     color: #f28b44;
@@ -406,7 +406,7 @@
                 align-items: center;
                 gap: 8px;
                 border-radius: 4px;
-                border: 1px solid #eaecf3;
+                border: 1px solid var(--Colors-Use-Neutral-Border);
                 background: var(--Colors-Use-Neutral-Bg);
                 cursor: pointer;
 
@@ -418,12 +418,12 @@
                     color: #f28b44;
                 }
                 svg {
-                    color: #b4bbca;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 }
             }
             .tag-total-active {
-                border: 1px solid #fbc6a1;
-                background: rgba(242, 139, 68, 0.06);
+                border: 1px solid var(--Colors-Use-Main-Border);
+                background: var(--Colors-Use-Main-Bg);
             }
 
             svg {
@@ -549,8 +549,8 @@
         display: flex;
         flex-direction: column;
         border-radius: 8px;
-        border: 1px solid #eaecf3;
-        background: #fff;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Basic-Background);
         .opt-content {
             flex: 1 0 0;
             padding: 0px 12px;
@@ -563,7 +563,7 @@
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                border-bottom: 1px solid #eaecf3;
+                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
                 .title-style {
                     max-width: calc(100% - 91px);
                     height: 20px;
@@ -599,7 +599,7 @@
                         display: inline-flex;
                         align-items: center;
                         border-radius: 4px;
-                        border: 1px solid #eaecf3;
+                        border: 1px solid var(--Colors-Use-Neutral-Border);
                         background: var(--Colors-Use-Neutral-Bg);
                         .text-style {
                             max-width: 100%;
@@ -615,7 +615,7 @@
                     width: 100%;
                     height: 32px;
                     overflow: hidden;
-                    color: #b4bbca;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     font-size: 12px;
                     line-height: 16px;
                     word-break: break-word;
@@ -658,8 +658,8 @@
                             align-items: center;
                             border-radius: 28px;
                             border: 1px solid var(--Colors-Use-Neutral-Bg);
-                            background-color: #f0f1f3;
-                            color: #b4bbca;
+                            background-color: var(--Colors-Use-Basic-Background);
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
                             font-size: 12px;
                         }
                         .img-style + .img-style {
@@ -679,7 +679,7 @@
             justify-content: space-between;
             align-items: center;
             border-radius: 0px 0px 8px 8px;
-            border-top: 1px solid #eaecf3;
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
             background: var(--Colors-Use-Neutral-Bg);
             .footer-time {
                 display: flex;
@@ -691,7 +691,7 @@
                 svg {
                     width: 16px;
                     height: 16px;
-                    color: #b4bbca;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 }
             }
             .extra-footer {
@@ -701,7 +701,7 @@
         }
     }
     .opt-active-body {
-        border-color: #fbc6a1;
+        border-color: var(--Colors-Use-Main-Border);
     }
 
     .opt-check-wrapper {
@@ -717,12 +717,12 @@
         svg {
             width: 28px;
             height: 28px;
-            color: #ccd2de;
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
     .opt-check-active {
         svg {
-            color: #f28b44;
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }
@@ -731,7 +731,7 @@
 .hub-detail-list {
     width: 100%;
     height: 100%;
-    border-right: 1px solid #eaecf3;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
     padding: 12px 4px;
     display: flex;
     flex-direction: column;
@@ -761,18 +761,18 @@
                     line-height: 16px;
                 }
                 .count-num {
-                    color: var(--color-gray-text-02, #b4bbca);
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     font-size: 12px;
                     line-height: 16px;
                     .num-style {
-                        color: #f28b44;
+                        color: var(--Colors-Use-Main-Primary);
                     }
                 }
                 .divider-style {
                     margin: 2px 8px;
                     width: 1px;
                     height: 12px;
-                    background-color: #eaecf3;
+                    background-color: var(--Colors-Use-Neutral-Bg);
                 }
             }
         }
@@ -802,7 +802,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px 0;
-            border-top: 1px solid #eaecf3;
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
             border-bottom: 1px solid transparent;
             .plugin-details-item-info {
                 flex: 1 0 0;
@@ -829,7 +829,7 @@
                     svg {
                         width: 16px;
                         height: 16px;
-                        color: #b4bbca;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     }
                 }
             }
@@ -839,7 +839,7 @@
     .opt-wrapper-enableClick {
         cursor: pointer;
         &:hover {
-            background-color: #f0f1f3;
+            background-color: var(--Colors-Use-Neutral-Bg);
             .plugin-details-item {
                 border-color: transparent;
             }
@@ -930,7 +930,7 @@
     .divider-style {
         width: 1px;
         height: 12px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Basic-Background);
     }
     path {
         stroke-width: 1.5;
@@ -946,7 +946,7 @@
     .divider-style {
         width: 1px;
         height: 12px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Basic-Background);
     }
 }
 

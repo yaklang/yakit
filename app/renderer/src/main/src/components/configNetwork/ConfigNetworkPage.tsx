@@ -925,7 +925,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             }
                                             setParams({...params, MaxContentLength: value})
                                         }}
-                                        onPressEnter={()=>{
+                                        onPressEnter={() => {
                                             let value = parseInt(params.MaxContentLength + "" || "0", 10)
                                             if (!value || value === 0) {
                                                 value = 10
@@ -972,7 +972,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             }
                                             setSecondaryTabsNum(value)
                                         }}
-                                        onPressEnter={()=>{
+                                        onPressEnter={() => {
                                             let value = parseInt(secondaryTabsNum + "" || "0", 10)
                                             if (!value || value === 0) {
                                                 value = 100
@@ -1523,7 +1523,7 @@ export const AISortContent: React.FC<AISortContentProps> = (props) => {
 
     return (
         <div className={styles["ai-sort-content"]}>
-            <div>优先级为从上到下</div>
+            <div className={styles["ai-sort-describe"]}>优先级为从上到下</div>
             <div className={styles["menu-list"]}>
                 <DragDropContext onDragEnd={onDragEnd}>
                     <Droppable droppableId='droppable-payload' direction='vertical'>
