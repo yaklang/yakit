@@ -126,8 +126,24 @@
             .open-wrapper {
                 width: 100%;
                 display: flex;
-                justify-content: center;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
                 opacity: 1;
+                border-right: 1px solid var(--Colors-Use-Neutral-Border);
+                padding: 8px 4px 4px;
+                cursor: pointer;
+                .text {
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    font-size: 12px;
+                    font-weight: 500;
+                    line-height: 16px;
+                    text-align: center;
+                }
+                .side-header-btn {
+                    border-radius: 50%;
+                    background: var(--Colors-Use-Basic-Background);
+                }
             }
         }
 

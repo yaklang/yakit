@@ -298,7 +298,7 @@ function useChatData(params?: UseChatDataParams) {
         setExecute(false)
         chatID.current = ""
         chatRequest.current = undefined
-        coordinatorId.current = {cache: "", sent: ""}
+        onSetCoordinatorId("")
         setCard([])
         cardKVPair.current = new Map()
     })

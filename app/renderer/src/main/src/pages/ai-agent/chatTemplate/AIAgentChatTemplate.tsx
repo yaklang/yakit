@@ -19,6 +19,7 @@ import {
     OutlineChevrondoubledownIcon,
     OutlineChevrondoubleupIcon,
     OutlineChevrondownIcon,
+    OutlineChevronrightIcon,
     OutlineCloseIcon,
     OutlineEngineIcon,
     OutlineHandIcon,
@@ -182,12 +183,17 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>
             <div className={styles["side-header"]}>
+                <YakitButton
+                    type='outline2'
+                    className={styles["side-header-btn"]}
+                    icon={<OutlineChevronrightIcon />}
+                    onClick={handleCancelExpand}
+                    size='small'
+                />
                 <div className={styles["header-title"]}>
                     任务列表
                     <YakitRoundCornerTag>{tasks.length}</YakitRoundCornerTag>
                 </div>
-
-                <YakitButton type='text2' icon={<OutlineCloseIcon />} onClick={handleCancelExpand} />
             </div>
 
             <div className={styles["task-list"]}>
@@ -240,7 +246,16 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
     const [activeKey, setActiveKey] = useState<AITabsEnumType>(AITabsEnum.Task_Content)
     const [allTotal, setAllTotal] = useState<number>(0)
     const [tempTotal, setTempTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数
-    const [interval, setInterval] = useState<number | undefined>(1000)
+    const [interval, setInterval] = useState<number | undefined>(undefined)
+    useEffect(() => {
+        if (coordinatorId) {
+            setInterval(1000)
+        } else {
+            setAllTotal(0)
+            setTempTotal(0)
+            setActiveKey(AITabsEnum.Task_Content)
+        }
+    }, [coordinatorId])
     useInterval(() => {
         getTotal()
     }, interval)
@@ -286,12 +301,16 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
                 return <></>
         }
     })
+    const showRiskTotal = useCreation(() => {
+        if (allTotal > 0) return allTotal
+        return tempTotal
+    }, [allTotal, tempTotal])
     const tabBarRender = useMemoizedFn((tab: YakitTabsProps) => {
         if (tab.value === AITabsEnum.Risk) {
             return (
                 <>
                     {tab.label}
-                    {tempTotal ? <span className={styles["ai-tabBar"]}>{tempTotal}</span> : ""}
+                    {showRiskTotal ? <span className={styles["ai-tabBar"]}>{showRiskTotal}</span> : ""}
                 </>
             )
         }
@@ -316,7 +335,7 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
                     onActiveKey={(v) => setActiveKey(v as AITabsEnumType)}
                     onTabPaneRender={tabBarRender}
                 >
-                    <div style={{height: "100%", overflow: "hidden"}}>{renderTabContent(activeKey)}</div>
+                    <div className={styles["tab-content"]}>{renderTabContent(activeKey)}</div>
                 </YakitSideTab>
             </div>
         </div>

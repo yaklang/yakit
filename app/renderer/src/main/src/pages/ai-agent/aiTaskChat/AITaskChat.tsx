@@ -11,7 +11,12 @@ import {randomString} from "@/utils/randomUtil"
 import useChatData from "../useChatData"
 import {formatAIAgentSetting, formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineArrowdownIcon, OutlineArrowupIcon, OutlineNewspaperIcon, OutlineOpenIcon} from "@/assets/icon/outline"
+import {
+    OutlineArrowdownIcon,
+    OutlineArrowupIcon,
+    OutlineChevrondownIcon,
+    OutlineNewspaperIcon
+} from "@/assets/icon/outline"
 import {
     AIAgentChatBody,
     AIAgentChatFooter,
@@ -469,12 +474,14 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                     cost={uiFirstCost}
                                     card={card}
                                 />
-                                <div className={styles["open-wrapper"]}>
+                                <div className={styles["open-wrapper"]} onClick={() => setLeftExpand(true)}>
                                     <YakitButton
-                                        type='text2'
-                                        icon={<OutlineOpenIcon />}
-                                        onClick={() => setLeftExpand(true)}
+                                        type='outline2'
+                                        className={styles["side-header-btn"]}
+                                        icon={<OutlineChevrondownIcon />}
+                                        size='small'
                                     />
+                                    <div className={styles["text"]}>任务列表</div>
                                 </div>
                             </div>
 

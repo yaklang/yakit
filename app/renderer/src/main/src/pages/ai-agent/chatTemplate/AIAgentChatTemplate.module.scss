@@ -9,9 +9,9 @@
     .side-header {
         padding: 8px 12px 4px 12px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
         border-bottom: 0;
+        gap: 4px;
         .header-title {
             display: flex;
             align-items: center;
@@ -20,6 +20,10 @@
             color: #31343f;
             font-size: 12px;
             font-weight: 500;
+        }
+        .side-header-btn {
+            border-radius: 50%;
+            background: var(--Colors-Use-Basic-Background);
         }
     }
     .task-list {
@@ -33,9 +37,13 @@
         gap: 12px;
         max-height: 60%;
         overflow-y: auto;
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
         :global {
             .ant-collapse-item .ant-collapse-content > .ant-collapse-content-box {
                 padding: 0;
+            }
+            .ant-collapse-item:first-child > .ant-collapse-header {
+                border: 0;
             }
         }
         .data-card-header {
@@ -116,6 +124,10 @@
     .body-content {
         flex: 1;
         overflow: hidden;
+        .tab-content {
+            height: 100%;
+            overflow: hidden;
+        }
     }
 }
 .ai-tabBar {
