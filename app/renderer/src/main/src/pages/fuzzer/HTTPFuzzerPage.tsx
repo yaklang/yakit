@@ -3552,6 +3552,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     defActiveKey={activeKey}
                                     defActiveType={activeType}
                                     defActiveKeyAndOrder={activeKeyAndOrder}
+                                    pageType="webfuzzer"
                                 />
                             ) : (
                                 <></>

@@ -1,8 +1,8 @@
 import React, {Suspense, useEffect, useRef, useState} from "react"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {
-    useControllableValue,
     useCreation,
+    useDebounceEffect,
     useDebounceFn,
     useInViewport,
     useMemoizedFn,
@@ -15,6 +15,7 @@ import {RemoteHistoryGV} from "@/enums/history"
 import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
+    OutlinePlusIcon,
     OutlineRefreshIcon,
     OutlineReplyIcon,
     OutlineSearchIcon,
@@ -40,7 +41,7 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {MITMConsts} from "../mitm/MITMConsts"
 import {HTTPFlowDetailProp} from "@/components/HTTPFlowDetail"
-import {ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {HTTPFlow, ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {useCampare} from "@/hook/useCompare/useCompare"
@@ -63,12 +64,12 @@ import {HTTPHistoryFilter} from "./HTTPHistory/HTTPHistoryFilter"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import classNames from "classnames"
 import {cloneDeep} from "lodash"
+import {MatcherAndExtractionDrawer} from "../fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCard"
+import {MatcherActiveKey} from "../fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
+
 import styles from "./HTTPHistoryAnalysis.module.scss"
-
 const MITMRule = React.lazy(() => import("../mitm/MITMRule/MITMRule"))
-
 const {ipcRenderer} = window.require("electron")
-
 interface HTTPHistoryAnalysisProps {
     pageId: string
 }
@@ -91,7 +92,15 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
 
     const [isAllHttpFlow, setIsAllHttpFlow] = useState<boolean>(false)
     const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
+    const [clickedHttpFlowId, setClickedHttpFlowId] = useState<number>()
     const [hTTPFlowFilter, setHTTPFlowFilter] = useState<YakQueryHTTPFlowRequest>()
+    const onSetHTTPFlowFilter = useMemoizedFn((filterStr) => {
+        try {
+            const filter = JSON.parse(filterStr) || {}
+            delete filter.Pagination
+            setHTTPFlowFilter(filter)
+        } catch (error) {}
+    })
 
     const hTTPHistoryAnalysisRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(hTTPHistoryAnalysisRef)
@@ -164,15 +173,10 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                 firstNode={() => (
                     <div className={styles["HTTPHistoryAnalysis-top"]}>
                         <HTTPHistoryFilter
+                            onSetClickedHttpFlowId={setClickedHttpFlowId}
                             onSetSelectedHttpFlowIds={setSelectedHttpFlowIds}
                             onSetIsAllHttpFlow={setIsAllHttpFlow}
-                            onSetHTTPFlowFilter={(filterStr) => {
-                                try {
-                                    const filter = JSON.parse(filterStr) || {}
-                                    delete filter.Pagination
-                                    setHTTPFlowFilter(filter)
-                                } catch (error) {}
-                            }}
+                            onSetHTTPFlowFilter={onSetHTTPFlowFilter}
                             downstreamProxy={downstreamProxy}
                             toWebFuzzer={pageInfo.webFuzzer}
                             runtimeId={pageInfo.runtimeId}
@@ -190,6 +194,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                                 onSetOpenBottomTabsFlag={setOpenBottomTabsFlag}
                                 hTTPFlowFilter={hTTPFlowFilter}
                                 httpFlowIds={isAllHttpFlow ? [] : selectedHttpFlowIds.map((id) => Number(id))}
+                                clickHttpFlowId={clickedHttpFlowId}
                                 downstreamProxy={downstreamProxy}
                             />
                         )}
@@ -264,11 +269,19 @@ interface AnalysisMainProps {
     onSetOpenBottomTabsFlag: (flag: boolean) => void
     hTTPFlowFilter?: YakQueryHTTPFlowRequest
     httpFlowIds: number[]
+    clickHttpFlowId?: number
     downstreamProxy: string
 }
 const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
-    const {curBottomTab, onSetCurBottomTab, onSetOpenBottomTabsFlag, hTTPFlowFilter, httpFlowIds, downstreamProxy} =
-        props
+    const {
+        curBottomTab,
+        onSetCurBottomTab,
+        onSetOpenBottomTabsFlag,
+        hTTPFlowFilter,
+        httpFlowIds,
+        clickHttpFlowId,
+        downstreamProxy
+    } = props
 
     useEffect(() => {
         onSetRules()
@@ -399,6 +412,60 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const [sourceType, setSourceType] = useState<SourceType>("database")
     const [concurrency, setConcurrency] = useState<number>(10)
     const [enableDeduplicate, setEnableDeduplicate] = useState<boolean>(false)
+
+    // 匹配器和提取器（目前只支持匹配器）
+    const [visibleMatcherAndExtractionDrawer, setVisibleMatcherAndExtractionDrawer] = useState<boolean>(false)
+    const [defActiveKey, setDefActiveKey] = useState<string>("") // 提取器
+    const [defActiveKeyAndOrder, setDefActiveKeyAndOrder] = useState<MatcherActiveKey>({
+        order: 0,
+        defActiveKey: ""
+    }) // 匹配器
+    const [matchersList, setMatchersList] = useState<any[]>([])
+    const matcherValue = useCreation(() => {
+        return {matchersList: matchersList}
+    }, [matchersList])
+    const extractorValue = useCreation(() => {
+        return {extractorList: []}
+    }, [])
+
+    const [httpFlowLoading, setHttpFlowLoading] = useState<boolean>(false)
+    const [httpFlowRequest, setHttpFlowRequest] = useState<string>("")
+    useDebounceEffect(
+        () => {
+            getHttpFlow()
+        },
+        [clickHttpFlowId],
+        {wait: 300}
+    )
+    const getHttpFlow = useMemoizedFn(() => {
+        if (!clickHttpFlowId) {
+            setHttpFlowRequest("")
+            return
+        }
+        setHttpFlowLoading(true)
+        ipcRenderer
+            .invoke("GetHTTPFlowById", {Id: clickHttpFlowId})
+            .then((i: HTTPFlow) => {
+                const reqStr = (i.InvalidForUTF8Request ? i.SafeHTTPRequest! : Uint8ArrayToString(i.Request)) || ""
+                setHttpFlowRequest(reqStr)
+            })
+            .catch((e) => {
+                yakitNotify("error", `Query HTTPFlow failed: ${e}`)
+            })
+            .finally(() => {
+                setHttpFlowLoading(false)
+            })
+    })
+
+    const onOpenMatcherAndExtractionDrawer = useMemoizedFn(() => {
+        setVisibleMatcherAndExtractionDrawer(true)
+    })
+    const onCloseMatcherAndExtractionDrawer = useMemoizedFn(() => {
+        setVisibleMatcherAndExtractionDrawer(false)
+    })
+    const onSaveMatcherAndExtractionDrawer = useMemoizedFn((matcher, extractor) => {
+        setMatchersList(matcher.matchersList || [])
+    })
 
     // 编辑器
     const [rawRequest, setRawRequest] = useState<string>("")
@@ -842,6 +909,30 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                     <div className={styles["exec-form-item"]}>
                                         <span className={styles["exec-form-item-label"]}>单条记录内数据去重：</span>
                                         <YakitSwitch checked={enableDeduplicate} onChange={setEnableDeduplicate} />
+                                    </div>
+                                    <div className={styles["exec-form-item"]}>
+                                        <span className={styles["exec-form-item-label"]}>匹配器：</span>
+                                        <YakitButton
+                                            size='middle'
+                                            type='outline1'
+                                            onClick={onOpenMatcherAndExtractionDrawer}
+                                            icon={<OutlinePlusIcon />}
+                                            disabled={httpFlowLoading || httpFlowRequest === ""}
+                                        >
+                                            新增
+                                        </YakitButton>
+                                        <MatcherAndExtractionDrawer
+                                            pageType='History_Analysis'
+                                            visibleDrawer={visibleMatcherAndExtractionDrawer}
+                                            defActiveType='matchers'
+                                            httpResponse={httpFlowRequest}
+                                            defActiveKey={defActiveKey}
+                                            defActiveKeyAndOrder={defActiveKeyAndOrder}
+                                            matcherValue={matcherValue}
+                                            extractorValue={extractorValue}
+                                            onClose={onCloseMatcherAndExtractionDrawer}
+                                            onSave={onSaveMatcherAndExtractionDrawer}
+                                        />
                                     </div>
                                     <div className={styles["exec-btn"]}>
                                         <YakitButton

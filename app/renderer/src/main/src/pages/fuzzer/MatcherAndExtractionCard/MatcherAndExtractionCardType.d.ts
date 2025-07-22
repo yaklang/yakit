@@ -24,6 +24,7 @@ export interface MatcherAndExtractionProps {
     defActiveKey: string
     defActiveType: MatchingAndExtraction
     defActiveKeyAndOrder: MatcherActiveKey
+    pageType: "webfuzzer" | "History_Analysis"
 }
 
 export interface MatcherAndExtractionRefProps {
@@ -44,6 +45,7 @@ export interface ExtractorValueProps {
 
 export interface MatcherCollapseProps extends MatcherAndExtractorProps {
     ref?: React.ForwardedRef<MatcherCollapseRefProps>
+    pageType: MatcherAndExtractionDrawerPageType
     matcher: MatcherValueProps
     setMatcher: (m: MatcherValueProps) => void
     httpResponse: string
@@ -148,7 +150,9 @@ export interface ExtractionResultsContentProps {
     list: {Key: string; Value: string}[]
 }
 
+type MatcherAndExtractionDrawerPageType = "webfuzzer" | "History_Analysis"
 export interface MatcherAndExtractionDrawerProps {
+    pageType?: MatcherAndExtractionDrawerPageType
     visibleDrawer: boolean
     defActiveType: MatchingAndExtraction
     httpResponse: string
