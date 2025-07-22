@@ -12,6 +12,24 @@ export const chromeLauncherMinParams: ChromeLauncherParams[] = [
         disabled: false,
         desc: "启动时跳过首次运行向导",
         default: true
+    },
+    {
+        id: uuidv4(),
+        parameterName: "--ignore-certificate-errors",
+        variableValues: "",
+        variableType: "bool",
+        disabled: false,
+        desc: "忽略 SSL 证书错误",
+        default: true
+    },
+    {
+        id: uuidv4(),
+        parameterName: "--test-type",
+        variableValues: "",
+        variableType: "bool",
+        disabled: false,
+        desc: "表示这是一个测试实例",
+        default: true
     }
 ]
 
