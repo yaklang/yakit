@@ -2166,6 +2166,18 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             ),
             [fuzzerTableMaxData]
         )
+        const noMoreLimtAlertMsg = useMemo(
+            () => (
+                <div style={{fontSize: 12}}>
+                    需要进行高级筛选，多条件组合查询或其他复杂操作时，建议点击跳转到
+                    <YakitButton type='text' onClick={onShowAll} style={{padding: 0}}>
+                        流量分析器
+                    </YakitButton>
+                    进行操作
+                </div>
+            ),
+            []
+        )
 
         return (
             <>
@@ -2252,6 +2264,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                         isEnd={loading}
                                                         onDebug={onDebug}
                                                         moreLimtAlertMsg={moreLimtAlertMsg}
+                                                        noMoreLimtAlertMsg={noMoreLimtAlertMsg}
                                                         fuzzerTableMaxData={fuzzerTableMaxData}
                                                     />
                                                 )}
