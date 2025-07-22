@@ -1872,6 +1872,48 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         getNewCurrentPage()
     })
 
+    const jumpHTTPHistoryAnalysis = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.DB_HTTPHistoryAnalysis,
+                params: {
+                    webFuzzer: true,
+                    runtimeId: runtimeIdRef.current.split(","),
+                    sourceType: "scan",
+                    verbose: currentItem?.pageName ? `${currentItem?.pageName}-全部流量` : ""
+                }
+            })
+        )
+    })
+
+    const moreLimtAlertMsg = useMemo(
+        () => (
+            <div style={{fontSize: 12}}>
+                响应数量超过{fuzzerTableMaxData}
+                ，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
+                <YakitButton type='text' onClick={jumpHTTPHistoryAnalysis} style={{padding: 0}}>
+                    查看全部
+                </YakitButton>
+                查看所有数据
+            </div>
+        ),
+        [fuzzerTableMaxData]
+    )
+    const noMoreLimtAlertMsg = useMemo(
+        () => (
+            <div style={{fontSize: 12}}>
+                需要进行高级筛选，多条件组合查询或其他复杂操作时，建议点击跳转到
+                <YakitButton type='text' onClick={jumpHTTPHistoryAnalysis} style={{padding: 0}}>
+                    流量分析器
+                </YakitButton>
+                进行操作
+            </div>
+        ),
+        []
+    )
+
     return (
         <>
             <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
@@ -2183,42 +2225,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         extractedMap={extractedMap}
                                                         isEnd={loading}
                                                         pageId={props.id}
-                                                        moreLimtAlertMsg={
-                                                            <div style={{fontSize: 12}}>
-                                                                响应数量超过{fuzzerTableMaxData}
-                                                                ，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
-                                                                <YakitButton
-                                                                    type='text'
-                                                                    onClick={() => {
-                                                                        const currentItem:
-                                                                            | PageNodeItemProps
-                                                                            | undefined = queryPagesDataById(
-                                                                            YakitRoute.HTTPFuzzer,
-                                                                            props.id
-                                                                        )
-                                                                        emiter.emit(
-                                                                            "openPage",
-                                                                            JSON.stringify({
-                                                                                route: YakitRoute.DB_HTTPHistoryAnalysis,
-                                                                                params: {
-                                                                                    webFuzzer: true,
-                                                                                    runtimeId:
-                                                                                        runtimeIdRef.current.split(","),
-                                                                                    sourceType: "scan",
-                                                                                    verbose: currentItem?.pageName
-                                                                                        ? `${currentItem?.pageName}-全部流量`
-                                                                                        : ""
-                                                                                }
-                                                                            })
-                                                                        )
-                                                                    }}
-                                                                    style={{padding: 0}}
-                                                                >
-                                                                    查看全部
-                                                                </YakitButton>
-                                                                查看所有数据
-                                                            </div>
-                                                        }
+                                                        moreLimtAlertMsg={moreLimtAlertMsg}
+                                                        noMoreLimtAlertMsg={noMoreLimtAlertMsg}
                                                         fuzzerTableMaxData={fuzzerTableMaxData}
                                                     />
                                                 )}

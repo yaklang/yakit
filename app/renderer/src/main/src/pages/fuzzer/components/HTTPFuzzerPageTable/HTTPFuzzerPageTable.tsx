@@ -62,6 +62,7 @@ interface HTTPFuzzerPageTableProps {
     pageId?: string
     /**超过限制数据，alert文案显示 */
     moreLimtAlertMsg?: React.ReactNode
+    noMoreLimtAlertMsg?: React.ReactNode
     tableKeyUpDownEnabled?: boolean
     fuzzerTableMaxData?: number
 }
@@ -171,6 +172,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             onDebug,
             pageId,
             moreLimtAlertMsg,
+            noMoreLimtAlertMsg,
             tableKeyUpDownEnabled = true,
             fuzzerTableMaxData = DefFuzzerTableMaxData
         } = props
@@ -190,7 +192,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const tableRef = useRef<any>(null)
 
         const [scrollToIndex, setScrollToIndex] = useState<number>()
-        const [alertClose, setAlertClose] = useState<boolean>(false)
         const [alertHeight, setAlertHeight] = useState<number>(0)
 
         // useThrottleEffect(
@@ -935,6 +936,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             } catch (e) {}
         }, [editor])
 
+        const showAlertFlag = useMemo(() => {
+            return (moreLimtAlertMsg || noMoreLimtAlertMsg) && data.length > 1
+        }, [moreLimtAlertMsg, noMoreLimtAlertMsg, data])
+
         return (
             <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>
                 <YakitResizeBox
@@ -944,7 +949,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     secondNodeStyle={{padding: firstFull ? 0 : undefined, display: firstFull ? "none" : ""}}
                     firstNode={
                         <div className={styles["fuzzer-page-table-wrap"]}>
-                            {moreLimtAlertMsg && data.length >= fuzzerTableMaxData && (
+                            {showAlertFlag && (
                                 <div style={{padding: "0 2px"}}>
                                     <ReactResizeDetector
                                         onResize={(w, h) => {
@@ -958,30 +963,17 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                         refreshRate={50}
                                     />
                                     <Alert
-                                        message={moreLimtAlertMsg}
+                                        message={
+                                            data.length >= fuzzerTableMaxData ? moreLimtAlertMsg : noMoreLimtAlertMsg
+                                        }
                                         type='warning'
-                                        // closable
-                                        // closeIcon={
-                                        //     <YakitButton
-                                        //         style={{float: "right"}}
-                                        //         type='text2'
-                                        //         size={"middle"}
-                                        //         icon={<OutlineXIcon />}
-                                        //     />
-                                        // }
                                         style={{margin: "2px 0"}}
-                                        // onClose={(e) => {
-                                        //     setAlertClose(true)
-                                        // }}
                                     />
                                 </div>
                             )}
                             <div
                                 style={{
-                                    height:
-                                        moreLimtAlertMsg && data.length >= fuzzerTableMaxData && !alertClose
-                                            ? `calc(100% - ${alertHeight + 10}px)`
-                                            : "100%"
+                                    height: showAlertFlag ? `calc(100% - ${alertHeight + 10}px)` : "100%"
                                 }}
                             >
                                 <TableVirtualResize<FuzzerResponse>
