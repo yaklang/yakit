@@ -176,7 +176,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
             }
 
             if (baseStart) {
-                newParams.chromeFlags = handleChromeLauncherParams(chromeLauncherMinParams, googleChromePluginPath)
+                newParams.chromeFlags = chromeLauncherMinParams
             } else {
                 newParams.chromeFlags = handleChromeLauncherParams(chromeFlags, googleChromePluginPath)
             }
@@ -337,7 +337,10 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                         </YakitButton>
                     )}
                 </div>
-                <div className={style['chrome-start-desc']}>预设参数可在更多参数里配置启用参数和参数值，最小化参数不可配置，选择预设参数<span style={{color: "var(--Colors-Use-Error-Primary)"}}>无法启动</span>时，请选择最小化参数启动</div>
+                <div className={style["chrome-start-desc"]}>
+                    预设参数可在更多参数里配置启用参数和参数值，最小化参数不可配置，选择预设参数
+                    <span style={{color: "var(--Colors-Use-Error-Primary)"}}>无法启动</span>时，请选择最小化参数启动
+                </div>
                 {chromeLauncherParamsVisible && (
                     <YakitModal
                         title='浏览器参数配置'
