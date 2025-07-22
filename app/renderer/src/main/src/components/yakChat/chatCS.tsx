@@ -278,7 +278,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const [resTime, setResTime, getResTime] = useGetState<string>("")
     const resTimeRef = useRef<any>(null)
 
-    const [chatcsType, setChatcsType] = useState<"ChatCS" | "PluginAI">(userInfo.isLogin ? "ChatCS" : "PluginAI")
+    // const [chatcsType, setChatcsType] = useState<"ChatCS" | "PluginAI">(userInfo.isLogin ? "ChatCS" : "PluginAI")
+    const [chatcsType, setChatcsType] = useState<"ChatCS" | "PluginAI">("PluginAI")
     const [pluginAIParams, setPluginAIParams] = useState<CodecParamsProps>()
     const [pluginAIList, setPluginAIList] = useState<PluginAiItem[]>([])
     // 仅展示当前执行项
@@ -1127,7 +1128,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         >
                             <OutlineInformationcircleIcon className={styles["info-hint"]} />
                         </Tooltip> */}
-                        <YakitRadioButtons
+                        {/* <YakitRadioButtons
                             value={chatcsType}
                             onChange={(e) => {
                                 if (!userInfo.isLogin) {
@@ -1147,7 +1148,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                     label: "插件输出"
                                 }
                             ]}
-                        />
+                        /> */}
+                        插件输出
                     </div>
                     <div className={styles["header-extra"]}>
                         {chatcsType === "ChatCS" && history.length !== 0 && (
