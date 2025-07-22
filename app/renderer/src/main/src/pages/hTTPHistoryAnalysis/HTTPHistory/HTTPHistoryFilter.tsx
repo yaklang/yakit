@@ -86,7 +86,6 @@ import {
 import {useHttpFlowStore} from "@/store/httpFlow"
 import emiter from "@/utils/eventBus/eventBus"
 import {HTTPFlowDetailProp} from "@/components/HTTPFlowDetail"
-import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
@@ -107,6 +106,7 @@ interface TabsItem {
 }
 
 interface HTTPHistoryFilterProps {
+    onSetClickedHttpFlowId: (id?: number) => void
     onSetSelectedHttpFlowIds: (ids: string[]) => void
     onSetIsAllHttpFlow: (b: boolean) => void
     onSetHTTPFlowFilter: (filterStr: string) => void
@@ -117,6 +117,7 @@ interface HTTPHistoryFilterProps {
 }
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((props) => {
     const {
+        onSetClickedHttpFlowId,
         onSetSelectedHttpFlowIds,
         onSetIsAllHttpFlow,
         onSetHTTPFlowFilter,
@@ -330,6 +331,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             includeInUrl={includeInUrl}
                             ProcessName={curProcess}
                             onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
+                            onSetClickedHttpFlowId={onSetClickedHttpFlowId}
                             onSetIsAllHttpFlow={onSetIsAllHttpFlow}
                             downstreamProxy={downstreamProxy}
                             inMouseEnterTable={true}
@@ -373,6 +375,7 @@ interface HTTPFlowTableProps {
     ProcessName?: string[]
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
     onSetSelectedHttpFlowIds?: (ids: string[]) => void
+    onSetClickedHttpFlowId?: (id?: number) => void
     onSetIsAllHttpFlow?: (b: boolean) => void
     downstreamProxy?: string
     inMouseEnterTable?: boolean
@@ -387,6 +390,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         ProcessName,
         onQueryParams,
         onSetSelectedHttpFlowIds,
+        onSetClickedHttpFlowId,
         onSetIsAllHttpFlow,
         downstreamProxy = "",
         inMouseEnterTable = false,
@@ -570,6 +574,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         } else {
             setClickRow(undefined)
         }
+        onSetClickedHttpFlowId && onSetClickedHttpFlowId(rowDate?.Id)
     })
     const onSetCurrentRow = useDebounceFn(
         (rowDate: HTTPFlow | undefined) => {
