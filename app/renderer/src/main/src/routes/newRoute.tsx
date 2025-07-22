@@ -1265,6 +1265,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         icon: <PrivateOutlineSpaceEngineIcon />,
         hoverIcon: <PrivateSolidSpaceEngineIcon />,
         ...YakitRouteToPageInfo[YakitRoute.Space_Engine]
+    },
+    [YakitRoute.Yak_Java_Decompiler]:{
+        page: YakitRoute.Yak_Java_Decompiler,
+        icon: <PrivateOutlineAuditHoleIcon />,
+        hoverIcon: <PrivateSolidAuditHoleIcon />,
+        ...YakitRouteToPageInfo[YakitRoute.Yak_Java_Decompiler]
     }
     // [YakitRoute.AI_Agent]: {
     //     page: YakitRoute.AI_Agent,
@@ -1310,7 +1316,9 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
                   PrivateAllMenus[YakitRoute.YakRunner_Project_Manager],
                   PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
                   PrivateAllMenus[YakitRoute.YakRunner_Code_Scan],
-                  PrivateAllMenus[YakitRoute.Rule_Management]
+                  PrivateAllMenus[YakitRoute.Rule_Management],
+                  PrivateAllMenus[YakitRoute.YakRunner_Audit_Hole],
+                  PrivateAllMenus[YakitRoute.Yak_Java_Decompiler]
               ]
           },
           {
