@@ -464,57 +464,57 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         })
     }, [])
 
-    // 拖动chartCS
+    // // 拖动chartCS
     const chartCSDragAreaRef = useRef<any>(null)
-    const chartCSDragItemRef = useRef<any>(null)
-    const [chartCSDragAreaHeight, setChartCSDragAreaHeight] = useState<number>(0)
-    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-        entries.forEach((entry) => {
-            const h = entry.target.getBoundingClientRect().height
-            setChartCSDragAreaHeight(h)
-        })
-    })
-    // 从底部缩短软件高度时 拖拽元素始终保持在边界处可见
-    useUpdateEffect(() => {
-        if (chartCSDragItemRef.current) {
-            const top = parseInt(getComputedStyle(chartCSDragItemRef.current).getPropertyValue("top"))
-            const flag = top >= chartCSDragAreaHeight - 43 - 10 // 判读拖拽元素是否离最底部还有10px的距离
-            const currentTop = flag ? chartCSDragAreaHeight - 43 - 10 : top
-            chartCSDragItemRef.current.style.top = currentTop + "px"
-        }
-    }, [chartCSDragAreaHeight, chartCSDragItemRef])
+    // const chartCSDragItemRef = useRef<any>(null)
+    // const [chartCSDragAreaHeight, setChartCSDragAreaHeight] = useState<number>(0)
+    // const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+    //     entries.forEach((entry) => {
+    //         const h = entry.target.getBoundingClientRect().height
+    //         setChartCSDragAreaHeight(h)
+    //     })
+    // })
+    // // 从底部缩短软件高度时 拖拽元素始终保持在边界处可见
+    // useUpdateEffect(() => {
+    //     if (chartCSDragItemRef.current) {
+    //         const top = parseInt(getComputedStyle(chartCSDragItemRef.current).getPropertyValue("top"))
+    //         const flag = top >= chartCSDragAreaHeight - 43 - 10 // 判读拖拽元素是否离最底部还有10px的距离
+    //         const currentTop = flag ? chartCSDragAreaHeight - 43 - 10 : top
+    //         chartCSDragItemRef.current.style.top = currentTop + "px"
+    //     }
+    // }, [chartCSDragAreaHeight, chartCSDragItemRef])
 
-    useEffect(() => {
-        if (chartCSDragAreaRef.current && chartCSDragItemRef.current) {
-            const chartCSDragItemDom = chartCSDragItemRef.current
-            const dragAreaDom = chartCSDragAreaRef.current
+    // useEffect(() => {
+    //     if (chartCSDragAreaRef.current && chartCSDragItemRef.current) {
+    //         const chartCSDragItemDom = chartCSDragItemRef.current
+    //         const dragAreaDom = chartCSDragAreaRef.current
 
-            resizeObserver.observe(dragAreaDom)
-            dragAreaDom.addEventListener("dragover", function (e: {preventDefault: () => void}) {
-                e.preventDefault()
-            })
-            dragAreaDom.addEventListener(
-                "drop",
-                function (e: {
-                    dataTransfer: any
-                    preventDefault: () => void
-                    target: {getBoundingClientRect: () => any}
-                    clientY: number
-                }) {
-                    e.preventDefault()
-                    if (e.dataTransfer.getData("dragItem") === "chartCSDragItem") {
-                        const rect = dragAreaDom.getBoundingClientRect()
-                        const y = e.clientY - rect.top
-                        const currentTop = y >= rect.height - 43 - 10 ? rect.height - 43 - 10 : y
-                        chartCSDragItemDom.style.top = currentTop <= 0 ? 0 : currentTop + "px"
-                    }
-                }
-            )
-            chartCSDragItemDom.addEventListener("dragstart", function (e) {
-                e.dataTransfer.setData("dragItem", "chartCSDragItem")
-            })
-        }
-    }, [chartCSDragItemRef, chartCSDragAreaRef])
+    //         resizeObserver.observe(dragAreaDom)
+    //         dragAreaDom.addEventListener("dragover", function (e: {preventDefault: () => void}) {
+    //             e.preventDefault()
+    //         })
+    //         dragAreaDom.addEventListener(
+    //             "drop",
+    //             function (e: {
+    //                 dataTransfer: any
+    //                 preventDefault: () => void
+    //                 target: {getBoundingClientRect: () => any}
+    //                 clientY: number
+    //             }) {
+    //                 e.preventDefault()
+    //                 if (e.dataTransfer.getData("dragItem") === "chartCSDragItem") {
+    //                     const rect = dragAreaDom.getBoundingClientRect()
+    //                     const y = e.clientY - rect.top
+    //                     const currentTop = y >= rect.height - 43 - 10 ? rect.height - 43 - 10 : y
+    //                     chartCSDragItemDom.style.top = currentTop <= 0 ? 0 : currentTop + "px"
+    //                 }
+    //             }
+    //         )
+    //         chartCSDragItemDom.addEventListener("dragstart", function (e) {
+    //             e.dataTransfer.setData("dragItem", "chartCSDragItem")
+    //         })
+    //     }
+    // }, [chartCSDragItemRef, chartCSDragAreaRef])
 
     /** -------------------- 更新前瞻 Start -------------------- */
     // useEffect(() => {
@@ -607,11 +607,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     {(isCommunityEdition() || isEnpriTrace()) && (
                         <YakChatCS visible={chatShow} setVisible={setChatShow} />
                     )}
-                    {(isCommunityEdition() || isEnpriTrace()) && !chatShow && (
+                    {/* {(isCommunityEdition() || isEnpriTrace()) && !chatShow && (
                         <div className='chat-icon-wrapper' onClick={onChatCS} draggable={true} ref={chartCSDragItemRef}>
                             <img src={yakitCattle} />
                         </div>
-                    )}
+                    )} */}
 
                     {messageCenterShow && (
                         <MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow} />
