@@ -23,7 +23,7 @@ import {
     OutlineSplitScreenIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
+import yakitSSMiniProject from "@/assets/yakitMiniSS.png"
 import {YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "../icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
@@ -51,7 +51,6 @@ import {v4 as uuidv4} from "uuid"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {getMapFileDetail} from "../FileTreeMap/FileMap"
 import {isAcceptEligible} from "@/components/yakitUI/YakitForm/YakitForm"
 
@@ -969,7 +968,7 @@ export const YakJavaDecompilerWelcomePage: React.FC<YakJavaDecompilerWelcomePage
         <div className={styles["yak-runner-welcome-page"]} ref={ref}>
             <div className={styles["title"]}>
                 <div className={styles["icon-style"]}>
-                    <SolidYakCattleNoBackColorIcon />
+                    <img style={{height: "100%"}} src={yakitSSMiniProject} alt='暂无图片' />
                 </div>
                 <div className={styles["header-style"]}>欢迎使用 Java 反编译</div>
             </div>
