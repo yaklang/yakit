@@ -58,7 +58,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     // 处理指定页面和详情类型功能
     const handleSpecifiedPageAndDetail = useMemoizedFn((data: PluginHubPageInfoProps) => {
         const {tabActive, detailInfo, refeshList, openGroupDrawer} = data
-        onSetActive(tabActive || "online", false)
+        onSetActive(tabActive || "local", false)
         setOpenGroupDrawer(openGroupDrawer || false)
         if (detailInfo) {
             setAutoOpenDetailTab && setAutoOpenDetailTab(detailInfo.tabActive || undefined)
@@ -92,7 +92,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
             handleSpecifiedPageAndDetail(data)
             setOpenGroupDrawer(data.openGroupDrawer || false)
         } else {
-            onSetActive("online")
+            onSetActive("local")
         }
     }, [])
 
@@ -235,7 +235,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
             </div>
 
             <div className={styles["hub-list-body"]}>
-                {rendered.current.has("online") && (
+                {rendered.current.has("online") && false && (
                     <div
                         className={classNames(styles["side-content"], {
                             [styles["side-hidden-content"]]: active !== "online"
