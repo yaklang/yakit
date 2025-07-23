@@ -57,7 +57,7 @@ function NewApp() {
         // 解压Google 插件压缩包
         ipcRenderer.invoke("generate-chrome-plugin").then((res) => {
             setGoogleChromePluginPath(res)
-        })
+        }).catch((e) => {})
         // 获取系统信息
         handleFetchSystemInfo()
         // 告诉主进程软件的版本(CE|EE)
