@@ -169,6 +169,7 @@ import {
 } from "@/utils/globalShortcutKey/utils"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
+const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
 
@@ -219,7 +220,16 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
         key: "removeOtherItems"
     }
 ]
-
+/**
+ * 获取oldArray中被删除的数据
+ * @param oldArray
+ * @param newArray
+ * @returns
+ */
+const getDeletedItems = (oldArray: MultipleNodeInfo[], newArray: MultipleNodeInfo[]): MultipleNodeInfo[] => {
+    const newArrayIds = new Set(newArray.map((item) => item.id))
+    return oldArray.filter((oldItem) => !newArrayIds.has(oldItem.id))
+}
 /**
  * 生成组id
  * @returns {string} 生成的组id
@@ -4461,6 +4471,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                             case "closeOtherTabs":
                                 onCloseOtherTabs(group)
                                 break
+                            case "editGroup":
+                                onEditGroup(group)
+                                break
+
                             default:
                                 break
                         }
@@ -4472,6 +4486,74 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 true
             )
         })
+        /**编辑组合 */
+        const onEditGroup = useMemoizedFn((group: MultipleNodeInfo) => {
+            const groupChildren = (group.groupChildren || []).map((ele) => ({
+                ...ele,
+                pageParams: undefined
+            }))
+            const m = showYakitModal({
+                title: "编辑组",
+                footer: null,
+                content: (
+                    <BatchEditGroup
+                        groupName={group.verbose}
+                        groupChildren={groupChildren}
+                        tabList={collectLeafNodes(subPage)}
+                        onFinish={(l) =>
+                            onEditGroupSave(group, l, () => {
+                                m.destroy()
+                            })
+                        }
+                        onCancel={() => {
+                            m.destroy()
+                        }}
+                    ></BatchEditGroup>
+                )
+            })
+        })
+
+        const onEditGroupSave = useMemoizedFn(
+            (group: MultipleNodeInfo, list: MultipleNodeInfo[], callback: () => void) => {
+                const {index} = getPageItemById(subPage, group.id)
+                if (index === -1) return
+                let newSubPage: MultipleNodeInfo[] = []
+                if (list.length === 0) {
+                    // 清空该组,页面游离
+                    newSubPage = subPage.filter((ele) => ele.id !== group.id)
+                    newSubPage.splice(index, 0, ...(group.groupChildren || []))
+                } else {
+                    const ids = list.map((ele) => ele.id)
+                    const length = subPage.length
+                    for (let i = 0; i < length; i++) {
+                        let current: MultipleNodeInfo = subPage[i]
+                        if (current.id === group.id) {
+                            current = {
+                                ...current,
+                                groupChildren: list
+                            }
+                            const deletedItems = getDeletedItems(group.groupChildren || [], list).reverse()
+                            newSubPage.push(current)
+                            newSubPage.splice(newSubPage.length, 0, ...(deletedItems || []))
+                            continue
+                        }
+                        if (ids.includes(current.id)) continue
+                        let groupChildren: MultipleNodeInfo[] = []
+                        const childrenLength = current.groupChildren?.length || 0
+                        if (childrenLength) {
+                            groupChildren = current.groupChildren?.filter((ele) => !ids.includes(ele.id)) || []
+                        }
+
+                        if (childrenLength && groupChildren.length === 0) continue
+                        current.groupChildren = groupChildren
+                        newSubPage.push(current)
+                    }
+                }
+                onUpdatePageCache(newSubPage)
+                onUpdateSorting(newSubPage, currentTabKey)
+                callback()
+            }
+        )
         /**@description 取消组/将组内的页面变成游离的状态 */
         const onCancelGroup = useMemoizedFn((groupItem: MultipleNodeInfo) => {
             const index = subPage.findIndex((ele) => ele.id === groupItem.id)
@@ -5215,6 +5297,26 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
         setGroup({...group})
         onUpdateGroup({...group})
     })
+    const menu = useCreation(() => {
+        return [
+            {
+                label: "取消组合",
+                key: "cancelGroup"
+            },
+            {
+                label: "关闭组",
+                key: "closeGroup"
+            },
+            {
+                label: "关闭其他标签页",
+                key: "closeOtherTabs"
+            },
+            {
+                label: "编辑组合",
+                key: "editGroup"
+            }
+        ]
+    }, [])
 
     return (
         <div
@@ -5261,20 +5363,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
             <YakitMenu
                 type='grey'
                 width={232}
-                data={[
-                    {
-                        label: "取消组合",
-                        key: "cancelGroup"
-                    },
-                    {
-                        label: "关闭组",
-                        key: "closeGroup"
-                    },
-                    {
-                        label: "关闭其他标签页",
-                        key: "closeOtherTabs"
-                    }
-                ]}
+                data={menu}
                 onClick={({key}) => {
                     onOperateGroup(key as OperateGroup, group)
                 }}
