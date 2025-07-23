@@ -223,7 +223,7 @@ export interface SubTabGroupItemProps extends SubTabItemProps {
     subPage: MultipleNodeInfo[]
 }
 
-export type OperateGroup = "cancelGroup" | "closeGroup" | "closeOtherTabs"
+export type OperateGroup = "cancelGroup" | "closeGroup" | "closeOtherTabs" | "editGroup"
 /**
  * @description 组的右键点击展示内容
  * @property groupItem  组详情
