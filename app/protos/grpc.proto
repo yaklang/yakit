@@ -5366,6 +5366,9 @@ message AnalyzeHTTPFlowRequest{
   AnalyzeHTTPFlowConfig Config = 3 ;
   // 分析数据源
   AnalyzedDataSource Source = 4;
+  // 响应匹配器
+  repeated HTTPResponseMatcher Matchers = 5;
+  string MatchersCondition = 6;
 }
 
 message AnalyzedDataSource {
