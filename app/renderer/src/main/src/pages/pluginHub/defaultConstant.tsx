@@ -14,7 +14,7 @@ import {defaultFilter, defaultSearch} from "../plugins/builtInData"
 import {convertLocalPluginsRequestParams} from "../plugins/utils"
 
 export const HubSideBarList: {key: PluginSourceType; title: string; icon: ReactNode; hint: string}[] = [
-    {key: "online", title: "插件商店", icon: <OutlineOnlinePluginIcon />, hint: "插件商店"},
+    // {key: "online", title: "插件商店", icon: <OutlineOnlinePluginIcon />, hint: "插件商店"},
     {key: "own", title: "我的", icon: <OutlineOwnPluginIcon />, hint: "我的插件"},
     {key: "local", title: "本地", icon: <OutlineLocalPluginIcon />, hint: "本地插件"},
     {key: "setting", title: "配置", icon: <OutlineAdjustmentsIcon />, hint: "配置"},
