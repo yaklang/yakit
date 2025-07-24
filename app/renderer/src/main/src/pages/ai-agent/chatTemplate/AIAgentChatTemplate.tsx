@@ -305,12 +305,12 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
         if (allTotal > 0) return allTotal
         return tempTotal
     }, [allTotal, tempTotal])
-    const tabBarRender = useMemoizedFn((tab: YakitTabsProps) => {
+    const tabBarRender = useMemoizedFn((tab: YakitTabsProps, length: number) => {
         if (tab.value === AITabsEnum.Risk) {
             return (
                 <>
                     {tab.label}
-                    {showRiskTotal ? <span className={styles["ai-tabBar"]}>{showRiskTotal}</span> : ""}
+                    {showRiskTotal ? <span className={styles["ai-tabBar"]}>{length}</span> : ""}
                 </>
             )
         }
@@ -333,7 +333,7 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
                     yakitTabs={yakitTabs}
                     activeKey={activeKey}
                     onActiveKey={(v) => setActiveKey(v as AITabsEnumType)}
-                    onTabPaneRender={tabBarRender}
+                    onTabPaneRender={(ele) => tabBarRender(ele, showRiskTotal)}
                 >
                     <div className={styles["tab-content"]}>{renderTabContent(activeKey)}</div>
                 </YakitSideTab>
