@@ -5368,7 +5368,6 @@ message AnalyzeHTTPFlowRequest{
   AnalyzedDataSource Source = 4;
   // 响应匹配器
   repeated HTTPResponseMatcher Matchers = 5;
-  string MatchersCondition = 6;
 }
 
 message AnalyzedDataSource {

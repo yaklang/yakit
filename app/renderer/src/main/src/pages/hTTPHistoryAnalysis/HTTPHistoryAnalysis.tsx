@@ -1,4 +1,4 @@
-import React, {Suspense, useEffect, useRef, useState} from "react"
+import React, {ReactNode, Suspense, useEffect, useRef, useState} from "react"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {
     useCreation,
@@ -15,10 +15,14 @@ import {RemoteHistoryGV} from "@/enums/history"
 import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
+    OutlineEyeIcon,
+    OutlineInformationcircleIcon,
+    OutlineLightningboltIcon,
     OutlinePlusIcon,
     OutlineRefreshIcon,
     OutlineReplyIcon,
     OutlineSearchIcon,
+    OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -64,10 +68,27 @@ import {HTTPHistoryFilter} from "./HTTPHistory/HTTPHistoryFilter"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import classNames from "classnames"
 import {cloneDeep} from "lodash"
-import {MatcherAndExtractionDrawer} from "../fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCard"
-import {MatcherActiveKey} from "../fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {
+    ColorSelect,
+    MatcherAndExtractionDrawer,
+    MatcherItem,
+    onFilterEmptySubMatcher
+} from "../fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCard"
+import {
+    FilterEmptySubMatcherFunctionProps,
+    HTTPResponseMatcher,
+    MatcherActiveKey
+} from "../fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {
+    filterModeOptions,
+    matchersConditionOptions,
+    matcherTypeList
+} from "../fuzzer/MatcherAndExtractionCard/constants"
+import {Divider, Tooltip} from "antd"
+import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 import styles from "./HTTPHistoryAnalysis.module.scss"
+import {getAction} from "../fuzzer/HTTPFuzzerPage"
 const MITMRule = React.lazy(() => import("../mitm/MITMRule/MITMRule"))
 const {ipcRenderer} = window.require("electron")
 interface HTTPHistoryAnalysisProps {
@@ -90,9 +111,10 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
     })
     const [pageInfo, setPageInfo] = useState<HTTPHistoryAnalysisPageInfo>(initPageInfo())
 
-    const [isAllHttpFlow, setIsAllHttpFlow] = useState<boolean>(false)
+    const [refreshHttpTable, setRefreshHttpTable] = useState<boolean>(false)
     const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
-    const [clickedHttpFlowId, setClickedHttpFlowId] = useState<number>()
+    const [clickedHttpFlow, setClickedHttpFlow] = useState<HTTPFlow>()
+    const [firstHttpFlow, setFirstHttpFlow] = useState<HTTPFlow>()
     const [hTTPFlowFilter, setHTTPFlowFilter] = useState<YakQueryHTTPFlowRequest>()
     const onSetHTTPFlowFilter = useMemoizedFn((filterStr) => {
         try {
@@ -101,6 +123,11 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
             setHTTPFlowFilter(filter)
         } catch (error) {}
     })
+    const httpFlowIds = useCreation(() => {
+        return selectedHttpFlowIds?.map((id) => Number(id)) || []
+    }, [selectedHttpFlowIds])
+    const memoClickedHttpFlow = useCreation(() => clickedHttpFlow, [clickedHttpFlow?.Id])
+    const memoFirstHttpFlow = useCreation(() => firstHttpFlow, [firstHttpFlow?.Id])
 
     const hTTPHistoryAnalysisRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(hTTPHistoryAnalysisRef)
@@ -142,6 +169,21 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
             }
         })
     }, [])
+
+    const onMouseUp = useMemoizedFn(({firstSizePercent, secondSizePercent}) => {
+        setLastRatio({
+            firstRatio: firstSizePercent,
+            secondRatio: secondSizePercent
+        })
+        setRemoteValue(
+            RemoteHistoryGV.HTTPFlowAnalysisYakitResizeBox,
+            JSON.stringify({
+                firstSizePercent,
+                secondSizePercent
+            })
+        )
+    })
+
     const ResizeBoxProps = useCreation(() => {
         let p = cloneDeep(lastRatio)
 
@@ -149,8 +191,18 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
             p.firstRatio = "100%"
             p.secondRatio = "0%"
         }
-
-        return p
+        return {
+            ...p,
+            style: {
+                height: "calc(100% - 24px)"
+            },
+            secondNodeStyle: {
+                padding: 0,
+                display: openBottomTabsFlag ? "block" : "none",
+                minHeight: openBottomTabsFlag ? "400px" : "0"
+            },
+            lineStyle: {display: ""}
+        }
     }, [openBottomTabsFlag, lastRatio])
 
     const onClickFooterTabItem = (key: TabKeys) => {
@@ -166,59 +218,44 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
     return (
         <div className={styles["HTTPHistoryAnalysis"]} ref={hTTPHistoryAnalysisRef}>
             <YakitResizeBox
-                style={{height: "calc(100% - 24px)"}}
                 isVer={true}
                 freeze={openBottomTabsFlag}
                 isRecalculateWH={openBottomTabsFlag}
-                firstNode={() => (
+                firstNode={
                     <div className={styles["HTTPHistoryAnalysis-top"]}>
                         <HTTPHistoryFilter
-                            onSetClickedHttpFlowId={setClickedHttpFlowId}
+                            onSetClickedHttpFlow={setClickedHttpFlow}
+                            onSetFirstHttpFlow={setFirstHttpFlow}
                             onSetSelectedHttpFlowIds={setSelectedHttpFlowIds}
-                            onSetIsAllHttpFlow={setIsAllHttpFlow}
                             onSetHTTPFlowFilter={onSetHTTPFlowFilter}
+                            refreshHttpTable={refreshHttpTable}
                             downstreamProxy={downstreamProxy}
                             toWebFuzzer={pageInfo.webFuzzer}
                             runtimeId={pageInfo.runtimeId}
                             sourceType={pageInfo.sourceType}
                         />
                     </div>
-                )}
+                }
                 firstMinSize={40}
                 secondNode={
                     <div className={styles["HTTPHistoryAnalysis-bottom"]}>
                         {curBottomTab && (
                             <AnalysisMain
+                                inViewport={inViewport}
                                 curBottomTab={curBottomTab}
                                 onSetCurBottomTab={setCurBottomTab}
                                 onSetOpenBottomTabsFlag={setOpenBottomTabsFlag}
+                                onSetRefreshHttpTable={setRefreshHttpTable}
                                 hTTPFlowFilter={hTTPFlowFilter}
-                                httpFlowIds={isAllHttpFlow ? [] : selectedHttpFlowIds.map((id) => Number(id))}
-                                clickHttpFlowId={clickedHttpFlowId}
+                                httpFlowIds={httpFlowIds}
+                                clickHttpFlow={memoClickedHttpFlow}
+                                firstHttpFlow={memoFirstHttpFlow}
                                 downstreamProxy={downstreamProxy}
                             />
                         )}
                     </div>
                 }
-                secondNodeStyle={{
-                    padding: 0,
-                    display: openBottomTabsFlag ? "block" : "none",
-                    minHeight: openBottomTabsFlag ? "300px" : "0"
-                }}
-                lineStyle={{display: ""}}
-                onMouseUp={({firstSizePercent, secondSizePercent}) => {
-                    setLastRatio({
-                        firstRatio: firstSizePercent,
-                        secondRatio: secondSizePercent
-                    })
-                    setRemoteValue(
-                        RemoteHistoryGV.HTTPFlowAnalysisYakitResizeBox,
-                        JSON.stringify({
-                            firstSizePercent,
-                            secondSizePercent
-                        })
-                    )
-                }}
+                onMouseUp={onMouseUp}
                 {...ResizeBoxProps}
             />
             <div className={styles["HTTPHistoryAnalysis-footer-tab"]}>
@@ -261,25 +298,32 @@ interface AnalyzeHTTPFlowRequest {
     Replacers: MITMContentReplacerRule[]
     Config: AnalyzeHTTPFlowConfig
     Source: AnalyzedDataSource
+    Matchers: HTTPResponseMatcher[]
 }
 
 interface AnalysisMainProps {
+    inViewport?: boolean
     curBottomTab: TabKeys
     onSetCurBottomTab: (tab?: TabKeys) => void
     onSetOpenBottomTabsFlag: (flag: boolean) => void
+    onSetRefreshHttpTable: React.Dispatch<React.SetStateAction<boolean>>
     hTTPFlowFilter?: YakQueryHTTPFlowRequest
     httpFlowIds: number[]
-    clickHttpFlowId?: number
+    clickHttpFlow?: HTTPFlow
+    firstHttpFlow?: HTTPFlow
     downstreamProxy: string
 }
 const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const {
+        inViewport,
         curBottomTab,
         onSetCurBottomTab,
         onSetOpenBottomTabsFlag,
+        onSetRefreshHttpTable,
         hTTPFlowFilter,
         httpFlowIds,
-        clickHttpFlowId,
+        clickHttpFlow,
+        firstHttpFlow,
         downstreamProxy
     } = props
 
@@ -404,8 +448,31 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
             p.secondRatio = "100%"
             p.firstRatio = "0%"
         }
-        return p
+        return {
+            ...p,
+            firstNodeStyle: {
+                display: fullScreenSecondNode ? "none" : ""
+            },
+            lineStyle: {display: fullScreenFirstNode || fullScreenSecondNode ? "none" : ""},
+            secondNodeStyle: {
+                padding: fullScreenFirstNode || fullScreenSecondNode ? 0 : undefined,
+                display: fullScreenFirstNode ? "none" : ""
+            }
+        }
     }, [lastRatio, fullScreenFirstNode, fullScreenSecondNode])
+    const onMouseUp = useMemoizedFn(({firstSizePercent, secondSizePercent}) => {
+        setLastRatio({
+            firstRatio: firstSizePercent,
+            secondRatio: secondSizePercent
+        })
+        setRemoteValue(
+            RemoteHistoryGV.HTTPFlowAnalysisMainYakitResizeBox,
+            JSON.stringify({
+                firstSizePercent,
+                secondSizePercent
+            })
+        )
+    })
     // #endregion
 
     // #region 执行表单
@@ -413,14 +480,14 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const [concurrency, setConcurrency] = useState<number>(10)
     const [enableDeduplicate, setEnableDeduplicate] = useState<boolean>(false)
 
-    // 匹配器和提取器（目前只支持匹配器）
+    /* ------ 匹配器和提取器（目前只支持匹配器）start ----*/
     const [visibleMatcherAndExtractionDrawer, setVisibleMatcherAndExtractionDrawer] = useState<boolean>(false)
     const [defActiveKey, setDefActiveKey] = useState<string>("") // 提取器
     const [defActiveKeyAndOrder, setDefActiveKeyAndOrder] = useState<MatcherActiveKey>({
         order: 0,
         defActiveKey: ""
     }) // 匹配器
-    const [matchersList, setMatchersList] = useState<any[]>([])
+    const [matchersList, setMatchersList] = useState<HTTPResponseMatcher[]>([])
     const matcherValue = useCreation(() => {
         return {matchersList: matchersList}
     }, [matchersList])
@@ -432,31 +499,51 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const [httpFlowRequest, setHttpFlowRequest] = useState<string>("")
     useDebounceEffect(
         () => {
-            getHttpFlow()
+            if (firstHttpFlow?.Id) {
+                if (clickHttpFlow?.Id) {
+                    getHttpFlowById(clickHttpFlow)
+                } else {
+                    getHttpFlowById(firstHttpFlow)
+                }
+            } else {
+                setHttpFlowRequest("")
+            }
         },
-        [clickHttpFlowId],
-        {wait: 300}
+        [clickHttpFlow?.Id, firstHttpFlow?.Id],
+        {wait: 500}
     )
-    const getHttpFlow = useMemoizedFn(() => {
-        if (!clickHttpFlowId) {
-            setHttpFlowRequest("")
-            return
+    const getSafeHTTPRequest = (flow: HTTPFlow) => {
+        return (flow.InvalidForUTF8Request ? flow.SafeHTTPRequest! : flow.RequestString) || ""
+    }
+    const getHttpFlowById = (flow: HTTPFlow) => {
+        // 是否获取Request
+        let isGetRequest: boolean = true
+        // 请求不为空直接使用
+        if (flow.RequestString) {
+            isGetRequest = false
+            setHttpFlowRequest(getSafeHTTPRequest(flow))
         }
-        setHttpFlowLoading(true)
-        ipcRenderer
-            .invoke("GetHTTPFlowById", {Id: clickHttpFlowId})
-            .then((i: HTTPFlow) => {
-                const reqStr = (i.InvalidForUTF8Request ? i.SafeHTTPRequest! : Uint8ArrayToString(i.Request)) || ""
-                setHttpFlowRequest(reqStr)
-            })
-            .catch((e) => {
-                yakitNotify("error", `Query HTTPFlow failed: ${e}`)
-            })
-            .finally(() => {
-                setHttpFlowLoading(false)
-            })
-    })
+        if (isGetRequest) {
+            setHttpFlowLoading(true)
+            ipcRenderer
+                .invoke("GetHTTPFlowById", {Id: flow.Id})
+                .then((i: HTTPFlow) => {
+                    setHttpFlowRequest(getSafeHTTPRequest(i))
+                })
+                .catch((e) => {
+                    yakitNotify("error", `Query HTTPFlow failed: ${e}`)
+                })
+                .finally(() => {
+                    setHttpFlowLoading(false)
+                })
+        }
+    }
 
+    useEffect(() => {
+        if (!inViewport) {
+            onCloseMatcherAndExtractionDrawer()
+        }
+    }, [inViewport])
     const onOpenMatcherAndExtractionDrawer = useMemoizedFn(() => {
         setVisibleMatcherAndExtractionDrawer(true)
     })
@@ -466,6 +553,35 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const onSaveMatcherAndExtractionDrawer = useMemoizedFn((matcher, extractor) => {
         setMatchersList(matcher.matchersList || [])
     })
+
+    const onChangeMatcher = useMemoizedFn((params: {index: number; value: string; fileId: string}) => {
+        const {index, value, fileId} = params
+        setMatchersList((prev) => {
+            const copyPrev = cloneDeep(prev)
+            copyPrev[index] = {
+                ...copyPrev[index],
+                [fileId]: value
+            }
+            return copyPrev
+        })
+    })
+    const onRemoveMatcher = useMemoizedFn((index: number, subIndex: number) => {
+        const params: FilterEmptySubMatcherFunctionProps = {
+            matchers: matchersList,
+            index,
+            subIndex
+        }
+        const newMatchers = onFilterEmptySubMatcher(params)
+        setMatchersList(newMatchers)
+    })
+    const onEditMatcher = useMemoizedFn((index: number, subIndex: number) => {
+        setDefActiveKeyAndOrder({
+            order: index,
+            defActiveKey: `ID:${subIndex}`
+        })
+        onOpenMatcherAndExtractionDrawer()
+    })
+    /* ------ 匹配器和提取器（目前只支持匹配器）end ----*/
 
     // 编辑器
     const [rawRequest, setRawRequest] = useState<string>("")
@@ -556,7 +672,15 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         }
     })
 
-    const onStartExecute = () => {
+    const exitReturn = useMemoizedFn(() => {
+        onStopExecute()
+        setTimeout(() => {
+            setFullScreenSecondNode(false)
+            setIsExit(true)
+        }, 300)
+    })
+
+    const onStartExecute = useMemoizedFn(() => {
         // 热加载、规则保存操作
         onSaveHotCode(false)
         mitmRuleRef.current?.onSaveToDataBase(() => {})
@@ -575,7 +699,15 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
             },
             Source: {
                 SourceType: sourceType
-            }
+            },
+            Matchers:
+                sourceType === "database"
+                    ? matchersList.map((ele) => ({
+                          ...ele,
+                          Action: getAction(ele.filterMode),
+                          HitColor: !!getAction(ele.filterMode) ? "" : ele.HitColor // 只有仅匹配才传颜色
+                      }))
+                    : []
         }
         if (sourceType === "database") {
             execParamsRef.current.Source = {
@@ -598,7 +730,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
             setFullScreenSecondNode(true)
             setFullScreenFirstNode(false)
         })
-    }
+    })
 
     const onStopExecute = () => {
         ipcRenderer
@@ -625,6 +757,17 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
             }
         }
     }, [isExit, executeStatus])
+    useEffect(() => {
+        if (executeStatus === "finished") {
+            onSetRefreshHttpTable((prev) => !prev)
+        }
+    }, [executeStatus])
+
+    useUpdateEffect(() => {
+        if (inViewport && executeStatus === "default") {
+            onSetRefreshHttpTable((prev) => !prev)
+        }
+    }, [inViewport])
     // #endregion
 
     return (
@@ -661,7 +804,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                 <YakitResizeBox
                     isVer={false}
                     freeze={true}
-                    firstNode={() => (
+                    firstNode={
                         <div className={styles["AnalysisMain-left"]}>
                             <div
                                 className={styles["rule-wrapper"]}
@@ -756,17 +899,16 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                 )}
                             </div>
                         </div>
-                    )}
-                    firstNodeStyle={{
-                        display: fullScreenSecondNode ? "none" : ""
-                    }}
-                    lineStyle={{display: fullScreenFirstNode || fullScreenSecondNode ? "none" : ""}}
+                    }
                     firstMinSize={650}
                     secondMinSize={500}
                     secondNode={
                         <div className={styles["AnalysisMain-right"]}>
                             {executeStatus === "default" || isExit ? (
-                                <div className={styles["AnalysisMain-right-default"]}>
+                                <div
+                                    className={styles["AnalysisMain-right-default"]}
+                                    style={{overflow: sourceType === "database" ? "auto" : undefined}}
+                                >
                                     <div className={styles["AnalysisMain-right-default-header"]}>
                                         <div className={styles["title-wrapper"]}>
                                             <span className={styles["title"]}>执行结果</span>{" "}
@@ -794,7 +936,9 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                     </div>
                                     <div
                                         className={styles["exec-form-item"]}
-                                        style={{height: sourceType === "rawpacket" ? "calc(100% - 200px)" : undefined}}
+                                        style={{
+                                            height: sourceType === "rawpacket" ? `calc(100% - 200px)` : undefined
+                                        }}
                                     >
                                         {sourceType === "database" ? (
                                             <>
@@ -807,89 +951,81 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                             <div className={styles["rawpacket-editor-wrapper"]}>
                                                 <YakitResizeBox
                                                     firstNode={
-                                                        <>
-                                                            <NewHTTPPacketEditor
-                                                                originValue={rawRequest}
-                                                                isShowBeautifyRender={false}
-                                                                title={
-                                                                    <div className={styles["row-editor-title"]}>
-                                                                        <span style={{fontSize: 12}}>Request</span>
-                                                                        {reqSelectionByteCount > 0 && (
-                                                                            <YakitTag>
-                                                                                {reqSelectionByteCount} bytes
-                                                                            </YakitTag>
-                                                                        )}
-                                                                    </div>
-                                                                }
-                                                                extra={
-                                                                    <>
-                                                                        <YakitButton
-                                                                            size='small'
-                                                                            onClick={() => {
-                                                                                beautifyCode("req", rawRequest)
-                                                                            }}
-                                                                        >
-                                                                            美化
-                                                                        </YakitButton>
-                                                                    </>
-                                                                }
-                                                                noMinimap={true}
-                                                                onChange={setRawRequest}
-                                                                refreshTrigger={refreshTriggerReqEditor}
-                                                                onEditor={setReqEditor}
-                                                                onClickOpenPacketNewWindowMenu={() => {
-                                                                    openPacketNewWindow({
-                                                                        request: {
-                                                                            originValue: rawRequest
-                                                                        },
-                                                                        response: {
-                                                                            originValue: rawResponse
-                                                                        }
-                                                                    })
-                                                                }}
-                                                                editorOperationRecord='HTTP_FLOW_ANALYSIS_REQUEST_Record'
-                                                                onlyBasicMenu
-                                                                noLineNumber
-                                                            />
-                                                        </>
+                                                        <NewHTTPPacketEditor
+                                                            originValue={rawRequest}
+                                                            isShowBeautifyRender={false}
+                                                            title={
+                                                                <div className={styles["row-editor-title"]}>
+                                                                    <span style={{fontSize: 12}}>Request</span>
+                                                                    {reqSelectionByteCount > 0 && (
+                                                                        <YakitTag>
+                                                                            {reqSelectionByteCount} bytes
+                                                                        </YakitTag>
+                                                                    )}
+                                                                </div>
+                                                            }
+                                                            extra={
+                                                                <YakitButton
+                                                                    size='small'
+                                                                    onClick={() => {
+                                                                        beautifyCode("req", rawRequest)
+                                                                    }}
+                                                                >
+                                                                    美化
+                                                                </YakitButton>
+                                                            }
+                                                            noMinimap={true}
+                                                            onChange={setRawRequest}
+                                                            refreshTrigger={refreshTriggerReqEditor}
+                                                            onEditor={setReqEditor}
+                                                            onClickOpenPacketNewWindowMenu={() => {
+                                                                openPacketNewWindow({
+                                                                    request: {
+                                                                        originValue: rawRequest
+                                                                    },
+                                                                    response: {
+                                                                        originValue: rawResponse
+                                                                    }
+                                                                })
+                                                            }}
+                                                            editorOperationRecord='HTTP_FLOW_ANALYSIS_REQUEST_Record'
+                                                            onlyBasicMenu
+                                                            noLineNumber
+                                                        />
                                                     }
                                                     secondNode={
-                                                        <>
-                                                            <NewHTTPPacketEditor
-                                                                originValue={rawResponse}
-                                                                isShowBeautifyRender={false}
-                                                                title={
-                                                                    <div className={styles["row-editor-title"]}>
-                                                                        <span style={{fontSize: 12}}>Response</span>
-                                                                        {resSelectionByteCount > 0 && (
-                                                                            <YakitTag>
-                                                                                {resSelectionByteCount} bytes
-                                                                            </YakitTag>
-                                                                        )}
-                                                                    </div>
-                                                                }
-                                                                extra={
-                                                                    <>
-                                                                        <YakitButton
-                                                                            size='small'
-                                                                            onClick={() => {
-                                                                                beautifyCode("res", rawResponse)
-                                                                            }}
-                                                                        >
-                                                                            美化
-                                                                        </YakitButton>
-                                                                    </>
-                                                                }
-                                                                isResponse={true}
-                                                                noMinimap={true}
-                                                                onChange={setRawResponse}
-                                                                refreshTrigger={refreshTriggerResEditor}
-                                                                onEditor={setResEditor}
-                                                                editorOperationRecord='HTTP_FLOW_ANALYSIS_RESPONSE_Record'
-                                                                onlyBasicMenu
-                                                                noLineNumber
-                                                            />
-                                                        </>
+                                                        <NewHTTPPacketEditor
+                                                            originValue={rawResponse}
+                                                            isShowBeautifyRender={false}
+                                                            title={
+                                                                <div className={styles["row-editor-title"]}>
+                                                                    <span style={{fontSize: 12}}>Response</span>
+                                                                    {resSelectionByteCount > 0 && (
+                                                                        <YakitTag>
+                                                                            {resSelectionByteCount} bytes
+                                                                        </YakitTag>
+                                                                    )}
+                                                                </div>
+                                                            }
+                                                            extra={
+                                                                <YakitButton
+                                                                    size='small'
+                                                                    onClick={() => {
+                                                                        beautifyCode("res", rawResponse)
+                                                                    }}
+                                                                >
+                                                                    美化
+                                                                </YakitButton>
+                                                            }
+                                                            isResponse={true}
+                                                            noMinimap={true}
+                                                            onChange={setRawResponse}
+                                                            refreshTrigger={refreshTriggerResEditor}
+                                                            onEditor={setResEditor}
+                                                            editorOperationRecord='HTTP_FLOW_ANALYSIS_RESPONSE_Record'
+                                                            onlyBasicMenu
+                                                            noLineNumber
+                                                        />
                                                     }
                                                     firstMinSize={300}
                                                     secondMinSize={300}
@@ -910,30 +1046,158 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                         <span className={styles["exec-form-item-label"]}>单条记录内数据去重：</span>
                                         <YakitSwitch checked={enableDeduplicate} onChange={setEnableDeduplicate} />
                                     </div>
-                                    <div className={styles["exec-form-item"]}>
-                                        <span className={styles["exec-form-item-label"]}>匹配器：</span>
-                                        <YakitButton
-                                            size='middle'
-                                            type='outline1'
-                                            onClick={onOpenMatcherAndExtractionDrawer}
-                                            icon={<OutlinePlusIcon />}
-                                            disabled={httpFlowLoading || httpFlowRequest === ""}
-                                        >
-                                            新增
-                                        </YakitButton>
-                                        <MatcherAndExtractionDrawer
-                                            pageType='History_Analysis'
-                                            visibleDrawer={visibleMatcherAndExtractionDrawer}
-                                            defActiveType='matchers'
-                                            httpResponse={httpFlowRequest}
-                                            defActiveKey={defActiveKey}
-                                            defActiveKeyAndOrder={defActiveKeyAndOrder}
-                                            matcherValue={matcherValue}
-                                            extractorValue={extractorValue}
-                                            onClose={onCloseMatcherAndExtractionDrawer}
-                                            onSave={onSaveMatcherAndExtractionDrawer}
-                                        />
-                                    </div>
+                                    {sourceType === "database" && (
+                                        <div className={styles["exec-form-item"]}>
+                                            <span className={styles["exec-form-item-label"]}>
+                                                匹配器
+                                                <Tooltip title='[丢弃/保留]不会删除History流量数据，而用来决定流量是否会进入流量分析'>
+                                                    <OutlineInformationcircleIcon className={styles["info-icon"]} />
+                                                </Tooltip>
+                                                ：
+                                            </span>
+                                            <div>
+                                                {matchersList.length === 0 ? (
+                                                    <YakitButton
+                                                        size='middle'
+                                                        type='outline1'
+                                                        onClick={onOpenMatcherAndExtractionDrawer}
+                                                        icon={<OutlinePlusIcon />}
+                                                        disabled={httpFlowLoading || httpFlowRequest === ""}
+                                                    >
+                                                        新增
+                                                    </YakitButton>
+                                                ) : (
+                                                    <>
+                                                        {matchersList.map((matcherItem, index) => (
+                                                            <div
+                                                                className={styles["matchers-item"]}
+                                                                key={`matchersID:${index}`}
+                                                            >
+                                                                <div className={styles["matchers-heard"]}>
+                                                                    <div className={styles["matchers-heard-left"]}>
+                                                                        <YakitRadioButtons
+                                                                            buttonStyle='solid'
+                                                                            options={filterModeOptions}
+                                                                            size='small'
+                                                                            value={matcherItem.filterMode}
+                                                                            onChange={(e) => {
+                                                                                onChangeMatcher({
+                                                                                    index,
+                                                                                    value: e.target.value,
+                                                                                    fileId: "filterMode"
+                                                                                })
+                                                                            }}
+                                                                        />
+                                                                        {matcherItem.filterMode === "onlyMatch" && (
+                                                                            <ColorSelect
+                                                                                size='small'
+                                                                                value={matcherItem.HitColor}
+                                                                                onChange={(value) => {
+                                                                                    onChangeMatcher({
+                                                                                        index,
+                                                                                        value,
+                                                                                        fileId: "HitColor"
+                                                                                    })
+                                                                                }}
+                                                                            />
+                                                                        )}
+                                                                    </div>
+                                                                    <YakitRadioButtons
+                                                                        buttonStyle='solid'
+                                                                        options={matchersConditionOptions}
+                                                                        size='small'
+                                                                        value={matcherItem.SubMatcherCondition}
+                                                                        onChange={(e) => {
+                                                                            onChangeMatcher({
+                                                                                index,
+                                                                                value: e.target.value,
+                                                                                fileId: "SubMatcherCondition"
+                                                                            })
+                                                                        }}
+                                                                    />
+                                                                    <div className={styles["matchers-heard-right"]}>
+                                                                        <OutlineTrashIcon
+                                                                            className={styles["trashIcon"]}
+                                                                            onClick={() => {
+                                                                                setMatchersList((prev) => {
+                                                                                    return prev.filter(
+                                                                                        (_, i) => i !== index
+                                                                                    )
+                                                                                })
+                                                                            }}
+                                                                        />
+                                                                        <Divider type='vertical' />
+                                                                        <OutlineLightningboltIcon
+                                                                            className={styles["lightningboltIcon"]}
+                                                                            onClick={onOpenMatcherAndExtractionDrawer}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                {matcherItem.SubMatchers.map((subItem, subIndex) => (
+                                                                    <div
+                                                                        className={styles["matchersList-item"]}
+                                                                        key={`matchersID:${subIndex}`}
+                                                                    >
+                                                                        <div
+                                                                            className={
+                                                                                styles["matchersList-item-heard"]
+                                                                            }
+                                                                        >
+                                                                            <span className={styles["item-id"]}>
+                                                                                ID&nbsp;{subIndex}
+                                                                            </span>
+                                                                            <span>
+                                                                                [
+                                                                                {
+                                                                                    matcherTypeList.find(
+                                                                                        (e) =>
+                                                                                            e.value ===
+                                                                                            subItem.MatcherType
+                                                                                    )?.label
+                                                                                }
+                                                                                ]
+                                                                            </span>
+                                                                            <span className={styles["item-number"]}>
+                                                                                {subItem.Group?.length}
+                                                                            </span>
+                                                                        </div>
+                                                                        <MatchersAndExtractorsListItemOperate
+                                                                            onRemove={() =>
+                                                                                onRemoveMatcher(index, subIndex)
+                                                                            }
+                                                                            onEdit={() =>
+                                                                                onEditMatcher(index, subIndex)
+                                                                            }
+                                                                            popoverContent={
+                                                                                <MatcherItem
+                                                                                    matcherItem={subItem}
+                                                                                    onEdit={() => {}}
+                                                                                    notEditable={true}
+                                                                                    httpResponse=''
+                                                                                />
+                                                                            }
+                                                                        />
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ))}
+                                                    </>
+                                                )}
+                                                <MatcherAndExtractionDrawer
+                                                    pageType='History_Analysis'
+                                                    visibleDrawer={visibleMatcherAndExtractionDrawer}
+                                                    defActiveType='matchers'
+                                                    httpResponse={httpFlowRequest}
+                                                    defActiveKey={defActiveKey}
+                                                    defActiveKeyAndOrder={defActiveKeyAndOrder}
+                                                    matcherValue={matcherValue}
+                                                    extractorValue={extractorValue}
+                                                    onClose={onCloseMatcherAndExtractionDrawer}
+                                                    onSave={onSaveMatcherAndExtractionDrawer}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className={styles["exec-btn"]}>
                                         <YakitButton
                                             size='middle'
@@ -971,13 +1235,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                             <YakitButton
                                                 type='outline2'
                                                 icon={<OutlineReplyIcon />}
-                                                onClick={() => {
-                                                    onStopExecute()
-                                                    setTimeout(() => {
-                                                        setFullScreenSecondNode(false)
-                                                        setIsExit(true)
-                                                    }, 300)
-                                                }}
+                                                onClick={exitReturn}
                                             >
                                                 返回
                                             </YakitButton>
@@ -1022,29 +1280,90 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                             )}
                         </div>
                     }
-                    secondNodeStyle={{
-                        padding: fullScreenFirstNode || fullScreenSecondNode ? 0 : undefined,
-                        display: fullScreenFirstNode ? "none" : ""
-                    }}
-                    onMouseUp={({firstSizePercent, secondSizePercent}) => {
-                        setLastRatio({
-                            firstRatio: firstSizePercent,
-                            secondRatio: secondSizePercent
-                        })
-                        setRemoteValue(
-                            RemoteHistoryGV.HTTPFlowAnalysisMainYakitResizeBox,
-                            JSON.stringify({
-                                firstSizePercent,
-                                secondSizePercent
-                            })
-                        )
-                    }}
+                    onMouseUp={onMouseUp}
                     {...ResizeBoxProps}
                 />
             </div>
         </div>
     )
 })
+
+interface MatchersAndExtractorsListItemOperateProps {
+    onRemove: () => void
+    onEdit: () => void
+    popoverContent: ReactNode
+}
+const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListItemOperateProps> = React.memo(
+    (props) => {
+        const {onRemove, onEdit, popoverContent} = props
+        const [visiblePopover, setVisiblePopover] = useState<boolean>(false)
+        return (
+            <div
+                className={classNames(styles["matchersList-item-operate"], {
+                    [styles["matchersList-item-operate-hover"]]: visiblePopover
+                })}
+            >
+                <OutlineTrashIcon className={styles["trash-icon"]} onClick={onRemove} />
+
+                <Tooltip title='调试'>
+                    <OutlineLightningboltIcon className={styles["hollow-lightningBolt-icon"]} onClick={onEdit} />
+                </Tooltip>
+                <TerminalPopover
+                    popoverContent={popoverContent}
+                    visiblePopover={visiblePopover}
+                    setVisiblePopover={setVisiblePopover}
+                />
+            </div>
+        )
+    }
+)
+
+interface TerminalPopoverProps extends YakitPopoverProp {
+    popoverContent: ReactNode
+    visiblePopover: boolean
+    setVisiblePopover: (b: boolean) => void
+}
+
+const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props) => {
+    const {popoverContent, visiblePopover, setVisiblePopover} = props
+    const popoverContentRef = useRef<HTMLDivElement>(null)
+    const terminalIconRef = useRef<HTMLDivElement>(null)
+    const onSetArrowTop = useMemoizedFn(() => {
+        if (terminalIconRef.current && popoverContentRef.current) {
+            try {
+                const {top: iconOffsetTop, height: iconHeight} = terminalIconRef.current.getBoundingClientRect()
+                const {top: popoverContentOffsetTop} = popoverContentRef.current.getBoundingClientRect()
+                const arrowTop = iconOffsetTop - popoverContentOffsetTop + iconHeight / 2
+                popoverContentRef.current.style.setProperty("--arrow-top", `${arrowTop}px`)
+            } catch (error) {}
+        }
+    })
+    return (
+        <YakitPopover
+            placement='right'
+            overlayClassName={classNames(styles["matching-extraction-content"], styles["terminal-popover"])}
+            content={
+                <div className={styles["terminal-popover-content"]} ref={popoverContentRef}>
+                    {popoverContent}
+                </div>
+            }
+            visible={visiblePopover}
+            onVisibleChange={(v) => {
+                if (v) {
+                    setTimeout(() => {
+                        onSetArrowTop()
+                    }, 200)
+                }
+                setVisiblePopover(v)
+            }}
+        >
+            <span ref={terminalIconRef} style={{height: 24, lineHeight: "16px"}}>
+                <OutlineEyeIcon className={styles["terminal-icon"]} />
+            </span>
+        </YakitPopover>
+    )
+})
+
 interface HttpRuleProps {
     tableData: HTTPFlowRuleData[]
     currentSelectItem?: HTTPFlowRuleData
@@ -1084,29 +1403,31 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
     })
     // #endregion
 
+    const onSelect = useMemoizedFn((i) => {
+        if (!i) {
+            onSetCurrentSelectItem(undefined)
+            return
+        }
+        onSetCurrentSelectItem(i)
+        minWinSendToChildWin({
+            type: "openPacketNewWindow",
+            data: {
+                showParentPacketCom: {
+                    components: "HTTPFlowDetailMini",
+                    props: {
+                        ...HTTPFlowDetailMiniProps(i)
+                    }
+                }
+            }
+        })
+    })
+
     return (
         <div className={styles["HttpRule-first"]}>
             <HttpRuleTable
                 tableData={tableData}
                 currentSelectItem={currentSelectItem}
-                onSelect={(i) => {
-                    if (!i) {
-                        onSetCurrentSelectItem(undefined)
-                        return
-                    }
-                    onSetCurrentSelectItem(i)
-                    minWinSendToChildWin({
-                        type: "openPacketNewWindow",
-                        data: {
-                            showParentPacketCom: {
-                                components: "HTTPFlowDetailMini",
-                                props: {
-                                    ...HTTPFlowDetailMiniProps(i)
-                                }
-                            }
-                        }
-                    })
-                }}
+                onSelect={onSelect}
                 scrollToIndex={scrollToIndex}
                 onSetScrollToIndex={setScrollToIndex}
                 isRefreshTable={isRefreshTable}

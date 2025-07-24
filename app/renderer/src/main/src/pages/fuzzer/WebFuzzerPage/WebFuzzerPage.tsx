@@ -64,7 +64,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     // 高级配置的隐藏/显示
     const [advancedConfigShow, setAdvancedConfigShow] = useState<AdvancedConfigShowProps>({
         config: false,
-        rule: false
+        rule: true
     })
 
     useEffect(() => {
