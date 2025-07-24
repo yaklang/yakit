@@ -347,7 +347,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             render: (text) => (
                 <div
                     className={styles["basic"]}
-                    style={{wordBreak: "break-all", wordWrap: "break-word", whiteSpace: "pre"}}
+                    style={{wordBreak: "break-all", wordWrap: "break-word", whiteSpace: "pre-wrap"}}
                 >
                     {text}
                 </div>
@@ -673,6 +673,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                 }
                 bordered
                 dataSource={response?.Data}
+                // tableLayout="fixed"
                 // @ts-ignore
                 columns={onlyInsert ? InsertColumns : (columns as ColumnTypes)}
                 pagination={{
