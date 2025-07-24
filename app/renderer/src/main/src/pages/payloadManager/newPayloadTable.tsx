@@ -14,6 +14,7 @@ import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightCont
 import {
     OutlineArrowdownIcon,
     OutlineArrowupIcon,
+    OutlineDocumentduplicateIcon,
     OutlinePencilaltIcon,
     OutlineSelectorIcon,
     OutlineTrashIcon
@@ -24,6 +25,7 @@ import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../in
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {setClipboardText} from "@/utils/clipboard"
 const {ipcRenderer} = window.require("electron")
 
 interface EditableCellProps {
@@ -396,11 +398,18 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         {
             title: "操作",
             dataIndex: "operation",
-            width: 88,
+            width: 132,
             // @ts-ignore
             render: (_, record: Payload) => {
                 return (
                     <div className={styles["table-operation"]}>
+                        <OutlineDocumentduplicateIcon
+                            className={styles["copy"]}
+                            onClick={() => {
+                                setClipboardText(record.Content)
+                            }}
+                        />
+                        <Divider type='vertical' style={{top: 1, height: 12, margin: "0px 12px"}} />
                         <OutlineTrashIcon
                             className={styles["delete"]}
                             onClick={() => {
