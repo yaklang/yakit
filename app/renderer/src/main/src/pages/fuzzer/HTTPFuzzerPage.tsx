@@ -407,7 +407,7 @@ export function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
         })
 }
 
-const getAction = (mode) => {
+export const getAction = (mode) => {
     switch (mode) {
         case "drop":
             return "discard"
