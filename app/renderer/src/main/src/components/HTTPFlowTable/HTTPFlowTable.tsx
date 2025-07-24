@@ -1884,6 +1884,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         {
                             label: "DELETE",
                             value: "DELETE"
+                        },
+                        {
+                            label: "PATCH",
+                            value: "PATCH"
                         }
                     ]
                 }

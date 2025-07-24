@@ -244,7 +244,7 @@ monaco.languages.setMonarchTokensProvider(fuzzHTTPMonacoSpec, {
             // HTTP请求方法
             // 基础 Fuzz 标签解析
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
-            [/(GET|POST|OPTIONS|DELETE|PUT)/g, "http.method"],
+            [/(GET|POST|OPTIONS|DELETE|PUT|PATCH)/g, "http.method"],
             [/\s/, "delimiter", "@http_path"],
             // [/(html|div|src|\<\/?title\>|<alert>)/i, "keyword"],
             // [/(\<script\>|<alert>|<prompt>|<svg )/i, "keyword"],

@@ -22,7 +22,7 @@ export const Html = {
             [/[^<]+/], // text
 
             // http
-            [/(GET|POST|OPTIONS|DELETE|PUT)/g, "http.method"],
+            [/(GET|POST|OPTIONS|DELETE|PUT|PATCH)/g, "http.method"],
             // http path
             ["/(((http)|(https):)?\/\/[^\s]+)/", "http.url"],
             [/\/[^\s^?^\/]+/, "http.path"],
