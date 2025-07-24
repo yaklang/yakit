@@ -1611,16 +1611,14 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             {
                 label: "漏洞详情",
                 value: "detail"
-            }
-        ]
-        if (isShowCode) {
-            options.push({
+            },
+            {
                 label: "数据包",
                 value: "code"
-            })
-        }
+            }
+        ]
         return options
-    }, [isShowCode])
+    }, [])
 
     const extraResizeBoxProps = useCreation(() => {
         let p: YakitResizeBoxProps = {
@@ -1724,16 +1722,18 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                         </div>
                     )}
                 </div>
-                <YakitRadioButtons
-                    style={{margin: 6}}
-                    value={showType}
-                    onChange={(e) => {
-                        const value = e.target.value
-                        setShowType(value)
-                    }}
-                    buttonStyle='solid'
-                    options={getOptions}
-                />
+                {isShowCode && (
+                    <YakitRadioButtons
+                        style={{margin: 6}}
+                        value={showType}
+                        onChange={(e) => {
+                            const value = e.target.value
+                            setShowType(value)
+                        }}
+                        buttonStyle='solid'
+                        options={getOptions}
+                    />
+                )}
                 {showType === "detail" && (
                     <div className={styles["content-resize-second"]} ref={descriptionsRef}>
                         <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
@@ -1786,7 +1786,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
 
                 {showType === "code" && isShowCode && (
                     <YakitResizeBox
-                        style={{padding: 6,...boxStyle}}
+                        style={{padding: 6, ...boxStyle}}
                         {...extraResizeBoxProps}
                         firstNode={<div className={styles["content-resize-first"]}>{codeNode(true)}</div>}
                         secondNode={<div className={styles["content-resize-first"]}>{codeNode(false)}</div>}

@@ -81,13 +81,19 @@
     .table-operation {
         display: flex;
         justify-content: center;
+        .copy {
+            cursor: pointer;
+            color: #85899e;
+        }
         .delete {
+            cursor: pointer;
             color: #f6544a;
         }
         .edit {
             cursor: pointer;
             color: #85899e;
         }
+
         svg {
             height: 16px;
             width: 16px;

@@ -9,6 +9,7 @@ export interface YakQueryHTTPFlowRequest {
     Pagination?: Paging
     SearchURL?: string
     StatusCode?: string
+    ExcludeStatusCode?: string
     Methods?: string
     HaveCommonParams?: boolean
     HaveBody?: boolean
