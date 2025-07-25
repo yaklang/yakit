@@ -14,9 +14,10 @@ import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {isToolSyncNode, isToolStdout} from "./utils"
-import moment from "moment"
 import emiter from "@/utils/eventBus/eventBus"
 import {generateTaskChatExecution} from "./defaultConstant"
+import {checkStreamValidity, convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
+import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -25,6 +26,7 @@ export interface UseChatDataParams {
     onReviewExtra?: (data: AIChatReviewExtra) => void
     onReviewRelease?: (id: string) => void
     onEnd?: () => void
+    setCoordinatorId?: (id: string) => void
 }
 
 /** 将树结构任务列表转换成一维数组 */
@@ -47,7 +49,7 @@ const defaultAIToolData: AIChatMessage.AIToolData = {
     interactiveId: ""
 }
 function useChatData(params?: UseChatDataParams) {
-    const {onReview, onReviewExtra, onReviewRelease, onEnd} = params || {}
+    const {onReview, onReviewExtra, onReviewRelease, onEnd, setCoordinatorId} = params || {}
 
     const chatID = useRef<string>("")
     const fetchToken = useMemoizedFn(() => {
@@ -73,7 +75,13 @@ function useChatData(params?: UseChatDataParams) {
     const [logs, setLogs] = useState<AIChatMessage.Log[]>([])
 
     const [streams, setStreams] = useState<Record<string, AIChatStreams[]>>({})
+    const [card, setCard] = useState<AIChatMessage.AIInfoCard[]>([])
 
+    // CoordinatorId
+    const coordinatorId = useRef<{cache: string; sent: string}>({cache: "", sent: ""})
+    // card
+    const cardKVPair = useRef<Map<string, AIChatMessage.AICacheCard>>(new Map<string, AIChatMessage.AICacheCard>())
+    const cardTimeRef = useRef<NodeJS.Timeout | null>(null)
     // 从 active 里排除 nodeId 的计时器
     const clearActiveStreamTime = useRef<Record<string, NodeJS.Timeout | null>>({})
     const [activeStream, setActiveStream] = useState<string[]>([])
@@ -290,6 +298,9 @@ function useChatData(params?: UseChatDataParams) {
         setExecute(false)
         chatID.current = ""
         chatRequest.current = undefined
+        onSetCoordinatorId("")
+        setCard([])
+        cardKVPair.current = new Map()
     })
 
     const onStart = useMemoizedFn((token: string, params: AIInputEvent) => {
@@ -302,6 +313,10 @@ function useChatData(params?: UseChatDataParams) {
         chatID.current = token
         chatRequest.current = cloneDeep(params.Params)
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
+            // CoordinatorId
+            if (!!res?.CoordinatorId) {
+                onSetCoordinatorId(res.CoordinatorId)
+            }
             let ipcContent = ""
             let ipcStreamDelta = ""
             try {
@@ -530,7 +545,8 @@ function useChatData(params?: UseChatDataParams) {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
                     onSetToolData(data?.call_tool_id, {
-                        status: "user_cancelled"
+                        status: "user_cancelled",
+                        time: res.Timestamp
                     })
                     aggregationToolData(res, data?.call_tool_id)
                 } catch (error) {}
@@ -542,7 +558,8 @@ function useChatData(params?: UseChatDataParams) {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
                     onSetToolData(data?.call_tool_id, {
-                        status: "success"
+                        status: "success",
+                        time: res.Timestamp
                     })
                     aggregationToolData(res, data?.call_tool_id)
                 } catch (error) {}
@@ -585,13 +602,13 @@ function useChatData(params?: UseChatDataParams) {
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
                     const currentToolData = getToolData(data.call_tool_id)
                     if (currentToolData.status === "user_cancelled") {
-                        currentToolData.summary = "当前工具调用已被取消，可点击查看详情查看具体信息"
+                        currentToolData.summary = "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
                     } else {
-                        currentToolData.summary = data.summary || "暂无内容"
+                        currentToolData.summary = data.summary || ""
                     }
                     onSetToolData(data?.call_tool_id, {
                         summary: currentToolData.summary,
-                        time: res.Timestamp || moment().unix()
+                        time: res.Timestamp
                     })
                     onSetToolSummary(res, data?.call_tool_id || "")
                 } catch (error) {}
@@ -612,6 +629,14 @@ function useChatData(params?: UseChatDataParams) {
                 return
             }
 
+            if (res.Type === "yak_exec_result") {
+                try {
+                    if (!res.IsJson) return
+                    const data = JSON.parse(ipcContent) as AIChatMessage.AIPluginExecResult
+                    onHandleCard(data)
+                } catch (error) {}
+                return
+            }
             console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
         })
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
@@ -633,6 +658,45 @@ function useChatData(params?: UseChatDataParams) {
         })
         console.log("start-ai-task", token, params)
         ipcRenderer.invoke("start-ai-task", token, params)
+    })
+    const onHandleCard = useMemoizedFn((value: AIChatMessage.AIPluginExecResult) => {
+        try {
+            if (!value?.IsMessage) return
+            const message = value?.Message || ""
+            const obj: AIChatMessage.AICardMessage = JSON.parse(Buffer.from(message, "base64").toString("utf8"))
+            const logData = obj.content as StreamResult.Log
+            if (!(obj.type === "log" && logData.level === "feature-status-card-data")) return
+            const checkInfo: AIChatMessage.AICard = checkStreamValidity(obj.content as StreamResult.Log)
+            if (!checkInfo) return
+            const {id, data, tags} = checkInfo
+            const {timestamp} = logData
+            const originData = cardKVPair.current.get(id)
+            if (originData && originData.Timestamp > timestamp) {
+                return
+            }
+            cardKVPair.current.set(id, {
+                Id: id,
+                Data: data,
+                Timestamp: timestamp,
+                Tags: Array.isArray(tags) ? tags : []
+            })
+            onSetCard()
+        } catch (error) {}
+    })
+    const onSetCard = useMemoizedFn(() => {
+        if (cardTimeRef.current) return
+        cardTimeRef.current = setTimeout(() => {
+            const cacheCard: AIChatMessage.AIInfoCard[] = convertCardInfo(cardKVPair.current)
+            setCard(() => [...cacheCard])
+            cardTimeRef.current = null
+        }, 500)
+    })
+    const onSetCoordinatorId = useMemoizedFn((CoordinatorId: string) => {
+        coordinatorId.current.cache = CoordinatorId
+        if (coordinatorId.current.sent !== coordinatorId.current.cache && setCoordinatorId) {
+            setCoordinatorId(coordinatorId.current.cache)
+            coordinatorId.current.sent = coordinatorId.current.cache
+        }
     })
     const getToolData = useMemoizedFn((callToolId: string): AIChatMessage.AIToolData => {
         return toolDataMapRef.current.get(callToolId) || cloneDeep(defaultAIToolData)
@@ -659,7 +723,7 @@ function useChatData(params?: UseChatDataParams) {
             const streams = cloneDeep(old)
             const valueInfo = streams[taskIndex]
             if (valueInfo) {
-                const newValue = valueInfo.filter((ele) => !isToolStdout(ele.nodeId))
+                const newValue = valueInfo.filter((ele) => !isToolSyncNode(ele.nodeId))
                 newValue.push({
                     nodeId: res.Type,
                     timestamp: timestamp,
@@ -735,7 +799,7 @@ function useChatData(params?: UseChatDataParams) {
     }, [])
 
     return [
-        {execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream},
+        {execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream, card},
         {onStart, onSend, onClose, handleReset, fetchToken, fetchPlanTree}
     ] as const
 }

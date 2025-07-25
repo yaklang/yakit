@@ -1,5 +1,6 @@
+import {StreamResult, HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {KVPair} from "@/models/kv"
-import {PaginationSchema} from "@/pages/invoker/schema"
+import {ExecResult, PaginationSchema} from "@/pages/invoker/schema"
 
 // #region AI-(Task|Triage)
 export interface McpConfig {
@@ -352,6 +353,13 @@ export declare namespace AIChatMessage {
         tool: string
         tool_description: string
     }
+    export interface AIPluginExecResult extends Partial<Omit<ExecResult, "Message">> {
+        Message: string
+    }
+    export interface AICard extends StreamResult.Card {}
+    export interface AICardMessage extends StreamResult.Message {}
+    export interface AICacheCard extends HoldGRPCStreamProps.CacheCard {}
+    export interface AIInfoCard extends HoldGRPCStreamProps.InfoCards {}
 }
 // #endregion
 

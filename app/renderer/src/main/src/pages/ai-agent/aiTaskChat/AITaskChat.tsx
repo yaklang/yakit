@@ -9,9 +9,14 @@ import cloneDeep from "lodash/cloneDeep"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import useChatData from "../useChatData"
-import {formatAIAgentSetting} from "../utils"
+import {formatAIAgentSetting, formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineNewspaperIcon, OutlineOpenIcon} from "@/assets/icon/outline"
+import {
+    OutlineArrowdownIcon,
+    OutlineArrowupIcon,
+    OutlineChevrondownIcon,
+    OutlineNewspaperIcon
+} from "@/assets/icon/outline"
 import {
     AIAgentChatBody,
     AIAgentChatFooter,
@@ -22,10 +27,12 @@ import {
 
 import classNames from "classnames"
 import styles from "./AITaskChat.module.scss"
+import {formatTimeYMD} from "@/utils/timeUtil"
 
 const AITaskChat: React.FC<AITaskChatProps> = memo(
     forwardRef((props, ref) => {
         const {onBack} = props
+        const [coordinatorId, setCoordinatorId] = useState<string>()
 
         useImperativeHandle(
             ref,
@@ -161,13 +168,16 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             handleSaveChatInfo()
         })
 
-        const [{execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream}, events] =
-            useChatData({
-                onReview: handleShowReview,
-                onReviewExtra: handleShowReviewExtra,
-                onReviewRelease: handleReleaseReview,
-                onEnd: handleChatingEnd
-            })
+        const [
+            {execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream, card},
+            events
+        ] = useChatData({
+            onReview: handleShowReview,
+            onReviewExtra: handleShowReviewExtra,
+            onReviewRelease: handleReleaseReview,
+            onEnd: handleChatingEnd,
+            setCoordinatorId
+        })
         // #endregion
 
         // #region chat-对话相关方法和逻辑处理
@@ -374,13 +384,49 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             setLogExpand((old) => !old)
         })
         // #endregion
-
+        //#region title UI 相关数据
+        // 问题
+        const qs = useMemo(() => {
+            if (!taskChat) return ""
+            return taskChat.question
+        }, [taskChat])
+        // AI的Token消耗
+        const token = useMemo(() => {
+            let input = 0
+            let output = 0
+            const keys = Object.keys(uiConsumption || {})
+            for (let name of keys) {
+                input += uiConsumption[name]?.input_consumption || 0
+                output += uiConsumption[name]?.output_consumption || 0
+            }
+            return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
+        }, [uiConsumption])
+        // #endregion
         return (
             <div className={styles["ai-task-chat"]}>
                 <div className={styles["task-chat-body"]}>
                     <div className={styles["task-chat-executing"]}>
                         <div className={styles["chat-executing-header"]}>
-                            <div className={styles["header-title"]}>AI-Agent</div>
+                            <div className={styles["header-title"]}>
+                                <div className={styles["header-title-qs"]}>{qs}</div>
+                                <div className={styles["header-title-info-wrapper"]}>
+                                    <div className={styles["info-token"]}>
+                                        Tokens:
+                                        <div className={classNames(styles["token-tag"], styles["upload-token"])}>
+                                            <OutlineArrowupIcon />
+                                            {token[0]}
+                                        </div>
+                                        <div className={classNames(styles["token-tag"], styles["download-token"])}>
+                                            <OutlineArrowdownIcon />
+                                            {token[1]}
+                                        </div>
+                                    </div>
+                                    <div className={styles["divider-style"]}></div>
+                                    <div className={styles["info-time"]}>
+                                        创建时间:{taskChat?.time ? <> {formatTimeYMD(taskChat.time)}</> : "-"}
+                                    </div>
+                                </div>
+                            </div>
 
                             <div className={styles["header-extra"]}>
                                 <YakitButton
@@ -408,13 +454,16 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                     onLeafNodeClick={handleSetScrollTo}
                                     pressure={uiPressure}
                                     cost={uiFirstCost}
+                                    card={card}
                                 />
-                                <div className={styles["open-wrapper"]}>
+                                <div className={styles["open-wrapper"]} onClick={() => setLeftExpand(true)}>
                                     <YakitButton
-                                        type='text2'
-                                        icon={<OutlineOpenIcon />}
-                                        onClick={() => setLeftExpand(true)}
+                                        type='outline2'
+                                        className={styles["side-header-btn"]}
+                                        icon={<OutlineChevrondownIcon />}
+                                        size='small'
                                     />
+                                    <div className={styles["text"]}>任务列表</div>
                                 </div>
                             </div>
 
@@ -431,6 +480,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                             tasks={uiPlan}
                                             activeStream={activeStream}
                                             streams={uiStreams}
+                                            coordinatorId={coordinatorId}
                                         />
                                     )}
                                 </div>

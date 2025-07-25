@@ -29,15 +29,14 @@
         border-top: 0;
     }
 
-    .table-container {
-        border: 0 !important;
-        border-top: 1px solid var(--yakit-border-color) !important;
-    }
     .custom-table-container {
         border: 0 !important;
     }
 }
-
+.table-container {
+    border: 0 !important;
+    border-top: 1px solid var(--yakit-border-color) !important;
+}
 .plugin-execute-result-tab-content {
     @extend %display-column-center;
     justify-content: flex-start;

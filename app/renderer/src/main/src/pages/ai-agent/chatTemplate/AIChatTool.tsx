@@ -14,6 +14,7 @@ import {isToolStdout} from "../utils"
 import {OutlineArrownarrowrightIcon} from "@/assets/icon/outline"
 import useAIAgentStore from "../useContext/useStore"
 import {AIChatToolDrawerContent} from "./AIAgentChatTemplate"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 const {ipcRenderer} = window.require("electron")
 
 interface AIChatToolProps {
@@ -93,10 +94,16 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                     <div className={styles["card-extra"]}>
                         {toolAggregation.selectors.map((item) => {
                             return (
-                                <div className={styles["extra-btn"]} onClick={() => onToolExtra(item)}>
-                                    <span>{item.prompt}</span>
-                                    {AIToolToIconMap[item.value]}
-                                </div>
+                                <YakitPopconfirm
+                                    title='跳过会取消工具调用，使用当前输出结果进行后续工作决策，是否确认跳过'
+                                    key={item.value}
+                                    onConfirm={() => onToolExtra(item)}
+                                >
+                                    <div key={item.value} className={styles["extra-btn"]}>
+                                        <span>{item.prompt}</span>
+                                        {AIToolToIconMap[item.value]}
+                                    </div>
+                                </YakitPopconfirm>
                             )
                         })}
                     </div>
@@ -179,6 +186,18 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
                 break
         }
     }, [item.status])
+    const summaryEmpty = useCreation(() => {
+        switch (item.status) {
+            case "failed":
+                return "获取失败原因中..."
+            case "success":
+                return "执行结果正在总结中..."
+            case "user_cancelled":
+                return "工具调用取消中..."
+            default:
+                return "暂无内容"
+        }
+    }, [item.status])
     return (
         <div
             className={classNames(styles["ai-chat-tool-item"], {
@@ -208,7 +227,7 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
                         e.stopPropagation()
                     }}
                 >
-                    {item.summary || "暂无内容"}
+                    {item.summary || summaryEmpty}
                 </div>
             </div>
         </div>
