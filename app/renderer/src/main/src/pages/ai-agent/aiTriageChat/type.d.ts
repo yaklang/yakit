@@ -4,6 +4,8 @@ import {AIForge, AIStartParams} from "../type/aiChat"
 export interface AITriageChatRef {
     /** 开始启动 triage 数据流 */
     onStart: (qs: string) => void
+    /** 外接触发使用 forge 模板的功能 */
+    onTriggerExecForge: (id: number) => void
 }
 
 export interface AITriageChatProps {

@@ -201,6 +201,7 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
             }
         })
         if (!form) return
+        form.resetFields()
         form.setFieldsValue({...initRequiredFormValue})
     })
 
@@ -264,7 +265,7 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
             </div>
 
             <div className={styles["forge-form-body"]}>
-                {isUIParams ? (
+                {isUIParams && params && params.length !== 0 ? (
                     <Form
                         form={form}
                         onFinish={() => {}}

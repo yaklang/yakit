@@ -131,7 +131,8 @@ import {
     ScanPortPageInfoProps,
     SimpleDetectPageInfoProps,
     SpaceEnginePageInfoProps,
-    WebsocketFuzzerPageInfoProps
+    WebsocketFuzzerPageInfoProps,
+    AIForgeEditorPageInfoProps
 } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
@@ -173,6 +174,7 @@ const ModifyNotepad = React.lazy(() => import("@/pages/notepadManage/modifyNotep
 const NotepadManage = React.lazy(() => import("@/pages/notepadManage/notepadManage/NotepadManage"))
 const FingerprintManage = React.lazy(() => import("@/pages/fingerprintManage/FingerprintManage"))
 const SsaResDiff = React.lazy(() => import("@/pages/ssaResDiff/SsaResDiff"))
+const ForgeEditor = React.lazy(() => import("@/pages/aiForge/forgeEditor/ForgeEditor"))
 
 /**
  * @description 页面路由对应的页面信息
@@ -269,7 +271,9 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "shortcut-key": {label: "快捷键设置"},
     "fingerprint-manage": {label: "指纹库"},
     "ai-agent": {label: "AIAgent"},
-    "ssa-result-diff": {label: "ssa-result-diff"}
+    "ssa-result-diff": {label: "ssa-result-diff"},
+    "add-ai-forge": {label: "新建 Forge"},
+    "modify-ai-forge": {label: "编辑 Forge"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -315,7 +319,9 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.ShortcutKey,
     YakitRoute.FingerprintManage,
     YakitRoute.AI_Agent,
-    YakitRoute.Ssa_Result_Diff
+    YakitRoute.Ssa_Result_Diff,
+    YakitRoute.AddAIForge,
+    YakitRoute.ModifyAIForge
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -361,7 +367,9 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.ShortcutKey,
     YakitRoute.FingerprintManage,
     YakitRoute.AI_Agent,
-    YakitRoute.Ssa_Result_Diff
+    YakitRoute.Ssa_Result_Diff,
+    YakitRoute.AddAIForge,
+    YakitRoute.ModifyAIForge
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -475,6 +483,9 @@ export interface ComponentParams {
 
     /** 快捷键配置页面信息 */
     shortcutKeyPage?: ShortcutKeyPageName
+
+    /** 编辑 forge 模板 */
+    modifyAIForgePageInfo?: AIForgeEditorPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
     return function WithPage(props) {
@@ -485,57 +496,61 @@ function withRouteToPage(WrappedComponent) {
                         return <div>未知错误</div>
                     }
                     return (
-                        <div style={{padding: '20px', fontFamily: 'monospace'}}>
+                        <div style={{padding: "20px", fontFamily: "monospace"}}>
                             <h3>页面发生错误</h3>
                             <p>逻辑性崩溃，请关闭重试！</p>
-                            <div style={{marginTop: '16px'}}>
+                            <div style={{marginTop: "16px"}}>
                                 <h4>错误信息:</h4>
-                                <pre style={{background: '#f5f5f5', padding: '8px', borderRadius: '4px'}}>
+                                <pre style={{background: "#f5f5f5", padding: "8px", borderRadius: "4px"}}>
                                     {error?.message}
                                 </pre>
                             </div>
-                            <div style={{marginTop: '16px'}}>
+                            <div style={{marginTop: "16px"}}>
                                 <h4>错误堆栈:</h4>
-                                <pre style={{
-                                    background: '#f5f5f5', 
-                                    padding: '8px', 
-                                    borderRadius: '4px',
-                                    maxHeight: '300px',
-                                    overflow: 'auto',
-                                    fontSize: '12px'
-                                }}>
-                                    {error?.stack || '无堆栈信息'}
+                                <pre
+                                    style={{
+                                        background: "#f5f5f5",
+                                        padding: "8px",
+                                        borderRadius: "4px",
+                                        maxHeight: "300px",
+                                        overflow: "auto",
+                                        fontSize: "12px"
+                                    }}
+                                >
+                                    {error?.stack || "无堆栈信息"}
                                 </pre>
                             </div>
-                            <div style={{marginTop: '16px'}}>
+                            <div style={{marginTop: "16px"}}>
                                 <h4>组件信息:</h4>
-                                <pre style={{background: '#f5f5f5', padding: '8px', borderRadius: '4px'}}>
-                                    组件名称: {WrappedComponent?.name || WrappedComponent?.displayName || '未知组件'}
+                                <pre style={{background: "#f5f5f5", padding: "8px", borderRadius: "4px"}}>
+                                    组件名称: {WrappedComponent?.name || WrappedComponent?.displayName || "未知组件"}
                                 </pre>
                             </div>
-                            <div style={{marginTop: '16px'}}>
+                            <div style={{marginTop: "16px"}}>
                                 <h4>传入参数:</h4>
-                                <pre style={{
-                                    background: '#f5f5f5', 
-                                    padding: '8px', 
-                                    borderRadius: '4px',
-                                    maxHeight: '200px',
-                                    overflow: 'auto',
-                                    fontSize: '12px'
-                                }}>
+                                <pre
+                                    style={{
+                                        background: "#f5f5f5",
+                                        padding: "8px",
+                                        borderRadius: "4px",
+                                        maxHeight: "200px",
+                                        overflow: "auto",
+                                        fontSize: "12px"
+                                    }}
+                                >
                                     {JSON.stringify(props, null, 2)}
                                 </pre>
                             </div>
-                            <button 
+                            <button
                                 onClick={resetErrorBoundary}
                                 style={{
-                                    marginTop: '16px',
-                                    padding: '8px 16px',
-                                    background: '#1890ff',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer'
+                                    marginTop: "16px",
+                                    padding: "8px 16px",
+                                    background: "#1890ff",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    cursor: "pointer"
                                 }}
                             >
                                 重试
@@ -702,6 +717,10 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <FingerprintManage />
         case YakitRoute.Ssa_Result_Diff:
             return <SsaResDiff />
+        case YakitRoute.AddAIForge:
+            return <ForgeEditor />
+        case YakitRoute.ModifyAIForge:
+            return <ForgeEditor isModify={true} />
         default:
             return <div />
     }

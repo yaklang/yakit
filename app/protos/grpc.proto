@@ -1137,6 +1137,7 @@ message AIForgeFilter {
   string Keyword = 3;
   // tag
   repeated string Tag = 4;
+  int64 Id = 5;
 }
 
 message AIForge {

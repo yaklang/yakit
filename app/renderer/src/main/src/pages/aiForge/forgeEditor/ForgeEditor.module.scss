@@ -1,0 +1,348 @@
+// #region ForgeEditor
+.forge-editor {
+    width: 100%;
+    height: 100%;
+}
+
+.forge-editor-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.forge-editor-header {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    .header-title {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 24px;
+    }
+
+    .header-btn-group {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+    }
+}
+
+.forge-editor-body {
+    flex: 1;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+}
+
+// ----- editor info -----
+.forge-editor-info {
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Basic-Background);
+    transition:
+        width 0.2s ease,
+        opacity 0.2s ease;
+}
+.forge-editor-info-show {
+    opacity: 1;
+    width: 360px;
+}
+.forge-editor-info-hidden {
+    width: 0;
+    opacity: 0;
+}
+
+.editor-info-header {
+    width: 100%;
+    min-height: 48px;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    .info-header-title {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+    }
+}
+
+.editor-info-form-wrapper {
+    flex: 1;
+    padding: 20px 12px 12px 12px;
+    overflow: hidden auto;
+}
+.editor-info-form {
+    :global {
+        .form-item-required {
+            margin: 0 4px;
+            padding-top: 4px;
+            color: var(--Colors-Use-Error-Primary);
+            font-size: 14px;
+            line-height: 14px;
+        }
+
+        .ant-row.ant-form-item {
+            gap: 2px;
+            .ant-form-item-label {
+                padding-bottom: 0;
+            }
+            .ant-form-item-label > label.ant-form-item-required:not(.ant-form-item-required-mark-optional)::before {
+                display: none;
+            }
+        }
+    }
+
+    .item-input {
+        :global {
+            .ant-input-prefix {
+                svg {
+                    width: 16px;
+                    height: 16px;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                }
+            }
+        }
+    }
+    .item-select {
+        :global {
+            .ant-select-selector {
+                padding-left: 30px !important;
+                padding-top: 0 !important;
+                padding-bottom: 1px !important;
+            }
+        }
+    }
+    .item-select-prefix-icon {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 37px;
+        height: 32px;
+        padding-left: 12px;
+        padding-right: 8px;
+        display: flex;
+        align-items: center;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+    }
+}
+
+.forge-type-select {
+    width: 100%;
+    :global(.ant-select-selection-item) {
+        height: 21px;
+        .forge-type-select-option {
+            padding: 0;
+            align-items: center;
+            .description-style {
+                display: none;
+            }
+        }
+    }
+}
+.forge-type-select-dropdown {
+    border-radius: 4px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Basic-Background);
+    box-shadow: 0px 8px 16px 0px rgba(133, 137, 158, 0.1);
+}
+.forge-type-select-option {
+    width: 100%;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    .header-icon {
+        width: 16px;
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+    .type-content {
+        flex: 1;
+        overflow: hidden;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-style: normal;
+        font-weight: 600;
+    }
+}
+
+// ----- editor code -----
+.forge-editor-code {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.editor-code-header {
+    padding: 12px 12px 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    .code-header-radio {
+        border: 1px solid var(--yakit-primary-5);
+        background: var(--yakit-primary-5);
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--Colors-Use-Main-On-Primary);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 22px;
+        padding: 0 15px;
+    }
+}
+
+.editor-code-container {
+    padding: 0 12px 12px 12px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.editor-code-tab-panel {
+    height: 100%;
+    border-radius: 4px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    display: flex;
+    .code-tab-panel-left {
+        height: 100%;
+        flex: 1;
+        border-radius: 4px 0px 0px 4px;
+        overflow: hidden;
+
+        .panel-left-prompt-action {
+            padding: 0 12px 12px 12px;
+            overflow: hidden auto;
+            .prompt-action-item {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                .item-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    font-size: 14px;
+                    .prompt-icon {
+                        cursor: pointer;
+                        svg {
+                            width: 16px;
+                            height: 16px;
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                        }
+                    }
+                }
+            }
+            .prompt-action-item + .prompt-action-item {
+                margin-top: 12px;
+            }
+        }
+    }
+
+    .code-tab-panel-right {
+        width: 301px;
+        height: 100%;
+        border-radius: 0px 4px 4px 0px;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        background: #f8f8f8;
+    }
+}
+.code-tab-panel-show {
+    width: 100%;
+    height: 100%;
+}
+.code-tab-panel-hidden {
+    display: none;
+}
+
+.form-info-icon-tooltip {
+    padding-bottom: 2px;
+}
+// #endregion
+
+// #region AIForgeEditorPreviewParams
+.ai-forge-editor-preview-params {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .preview-params-header {
+        padding: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        .header-extra {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+    }
+    .preview-params-container {
+        flex: 1;
+        padding-top: 8px;
+        overflow: hidden auto;
+
+        :global {
+            .ant-form-item-label > label {
+                font-size: 12px;
+            }
+        }
+
+        .custom-params-wrapper {
+            padding: 0 12px;
+        }
+        .optional-params-wrapper {
+            padding: 0 12px;
+        }
+        .additional-params-divider {
+            margin: 16px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 4px;
+            .text-style {
+                color: #b4bbca;
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+            }
+            .divider-style {
+                flex: 1;
+                overflow: hidden;
+                height: 1px;
+                border-top: 1px dashed #eaecf3;
+            }
+        }
+
+        .to-end {
+            text-align: center;
+            color: var(--yakit-disable-text-color);
+            font-size: 11px;
+            padding-top: 12px;
+            padding-bottom: 24px;
+        }
+    }
+}
+// #endregion

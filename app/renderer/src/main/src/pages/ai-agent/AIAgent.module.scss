@@ -8,7 +8,7 @@
 }
 .ai-side-list {
     height: 100%;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
 }
 .ai-side-list-mini {
     position: absolute;
@@ -29,16 +29,16 @@
 .ai-agent-side-list {
     height: 100%;
     display: flex;
-    border-right: 1px solid #eaecf3;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
     z-index: 9;
 
     .side-list-bar {
         display: inline-flex;
         flex-direction: column;
         align-items: flex-start;
-        border-right: 1px solid #eaecf3;
-        border-left: 1px solid #eaecf3;
-        background: #f0f1f3;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
 
         .list-item {
             padding: 12px 4px;
@@ -47,11 +47,11 @@
             align-items: flex-start;
             gap: 4px;
             cursor: pointer;
-            border-bottom: 1px solid #ffffff;
+            border-bottom: 1px solid var(--Colors-Use-Basic-Background);
             position: relative;
             user-select: none;
             .item-title {
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-weight: 600;
                 line-height: 16px;
@@ -62,20 +62,20 @@
             svg {
                 width: 16px;
                 height: 16px;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Disable);
             }
         }
         .list-item:hover {
-            background-color: rgba(204, 210, 222, 0.5);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
         }
 
         .list-item-active {
             background-color: var(--yakit-primary-5);
             .item-title {
-                color: #ffffff;
+                color: var(--Colors-Use-Main-On-Primary);
             }
             svg {
-                color: #ffffff;
+                color: var(--Colors-Use-Main-On-Primary);
             }
 
             &::before {
@@ -160,12 +160,12 @@
         padding: 12px 16px;
         .header-style {
             font-size: 16px;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-weight: 600;
         }
         .description-style {
             font-size: 12px;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 
@@ -182,7 +182,7 @@
             .header-style {
                 padding: 6px 12px;
                 font-size: 14px;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
 
@@ -193,7 +193,7 @@
         }
 
         .server-item {
-            border: 1px solid #eaecf3;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             border-radius: 4px;
             padding: 8px;
 
@@ -202,7 +202,7 @@
                 justify-content: space-between;
                 align-items: center;
                 .header-style {
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 14px;
                     font-weight: 600;
                     line-height: 20px;
@@ -280,7 +280,7 @@
                     }
                 }
                 font-size: 16px;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-weight: 600;
                 line-height: 20px;
             }
@@ -293,7 +293,7 @@
             .params {
                 margin-top: 4px;
                 padding: 4px;
-                border: 1px solid #eaecf3;
+                border: 1px solid var(--Colors-Use-Neutral-Border);
                 border-radius: 4px;
                 .param-item {
                     .item-info {
@@ -337,7 +337,7 @@
 
         .resource-template-item {
             padding: 4px;
-            border: 1px solid #eaecf3;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             border-radius: 4px;
             .uri {
                 .icon-style {
@@ -348,7 +348,7 @@
                     }
                 }
                 font-size: 16px;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-weight: 600;
                 line-height: 20px;
             }

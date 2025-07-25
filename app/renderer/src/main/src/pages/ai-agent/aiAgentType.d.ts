@@ -122,6 +122,7 @@ export interface AIAgentChatStreamProps {
     tasks: AIChatMessage.PlanTask[]
     activeStream: string[]
     streams: Record<string, AIChatStreams[]>
+    defaultExpand?: boolean
 }
 export interface ChatStreamCollapseItemProps {
     expandKey: string
@@ -129,6 +130,7 @@ export interface ChatStreamCollapseItemProps {
     secondExpand: boolean
     handleChangeSecondPanel: (expand: boolean, order: string) => void
     className?: string
+    defaultExpand?: boolean
 }
 export interface ChatStreamCollapseProps {
     id?: string
@@ -137,6 +139,7 @@ export interface ChatStreamCollapseProps {
     title?: ReactNode
     headerExtra?: ReactNode
     children?: ReactNode
+    defaultExpand?: boolean
     expand?: boolean
     onChange?: (value: boolean) => void
 }

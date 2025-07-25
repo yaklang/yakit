@@ -23,8 +23,8 @@ import cloneDeep from "lodash/cloneDeep"
 import {grpcQueryAIForge} from "../grpc"
 import {yakitNotify} from "@/utils/notification"
 import {AIChatTextareaProps} from "../template/type"
-import {AIAgentTriggerEventInfo} from "../aiAgentType"
-import emiter from "@/utils/eventBus/eventBus"
+import {AIForgeListDefaultPagination} from "../defaultConstant"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 import classNames from "classnames"
 import styles from "./AITriageChat.module.scss"
@@ -36,7 +36,8 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
         useImperativeHandle(
             ref,
             () => ({
-                onStart: handleTriageStart
+                onStart: handleTriageStart,
+                onTriggerExecForge: handleReplaceActiveForge
             }),
             []
         )
@@ -214,31 +215,58 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
         // #endregion
 
         // #region  使用 AI-Forge 模板
-        useEffect(() => {
-            // ai-agent 页面左侧侧边栏向 chatUI 发送的事件
-            const onEvents = (res: string) => {
-                try {
-                    const data = JSON.parse(res) as AIAgentTriggerEventInfo
-                    if (!data.type) return
+        const [activeForge, setActiveForge] = useState<AIForge>()
 
-                    if (data.type === "open-forge-form") {
-                        const {value} = data.params || {}
-                        if (value && value?.Id && value?.ForgeName) {
-                            handleActiveForge(value)
+        const [replaceShow, setReplaceShow] = useState(false)
+        const replaceForge = useRef<AIForge>()
+        const handleReplaceOK = useMemoizedFn(() => {
+            setActiveForge(replaceForge.current)
+            handleReplaceCancel()
+        })
+        const handleReplaceCancel = useMemoizedFn(() => {
+            replaceForge.current = undefined
+            setReplaceShow(false)
+        })
+        const handleReplaceActiveForge = useMemoizedFn((id: number) => {
+            const forgeID = Number(id) || 0
+            if (!forgeID) {
+                yakitNotify("error", `准备使用的模板异常: id('${id}'), 操作失败`)
+                return
+            }
+
+            const request: QueryAIForgeRequest = {
+                Pagination: {...AIForgeListDefaultPagination},
+                Filter: {Id: id}
+            }
+
+            grpcQueryAIForge(request)
+                .then((res) => {
+                    const {Data} = res
+                    if (!Data || !Data[0]) {
+                        yakitNotify("error", `未获取到模板数据, 操作失败`)
+                        return
+                    }
+                    const forgeInfo = cloneDeep(Data[0])
+                    if (!activeForge) setActiveForge(forgeInfo)
+                    else {
+                        if (forgeInfo.Id === activeForge.Id) {
+                            // 同一个forge模板, 检查名字和参数是否一至
+                            let isReplace = false
+                            isReplace = forgeInfo.ForgeName !== activeForge.ForgeName
+                            isReplace = forgeInfo.ParamsUIConfig !== activeForge.ParamsUIConfig
+                            if (isReplace) setActiveForge(forgeInfo)
+                        } else {
+                            // 不同forge模板，弹出提示框是否替换
+                            replaceForge.current = {...forgeInfo}
+                            setReplaceShow(true)
                         }
                     }
-                } catch (error) {}
-            }
-            emiter.on("onServerChatEvent", onEvents)
-            return () => {
-                emiter.off("onServerChatEvent", onEvents)
-            }
-        }, [])
+                })
+                .catch(() => {})
+        })
 
-        const [activeForge, setActiveForge] = useState<AIForge>()
         const handleActiveForge = useMemoizedFn((forge: AIForge) => {
-            if (activeForge) return
-            setActiveForge(forge)
+            handleReplaceActiveForge(forge.Id)
         })
         const handleClearActiveForge = useMemoizedFn(() => {
             setActiveForge(undefined)
@@ -296,6 +324,17 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                         </div>
                     </div>
                 </div>
+
+                <YakitHint
+                    getContainer={wrapperRef.current || undefined}
+                    visible={replaceShow}
+                    title='警告'
+                    content={"是否要替换当前使用的forge模板?"}
+                    okButtonText='替换'
+                    onOk={handleReplaceOK}
+                    cancelButtonText='取消'
+                    onCancel={handleReplaceCancel}
+                />
             </div>
         )
     })

@@ -4,6 +4,7 @@ import {MCPTransportType} from "./type/mcpClient"
 import {OutlineCogIcon, OutlineSparklesIcon, OutlineTemplateIcon, OutlineWrenchIcon} from "@/assets/icon/outline"
 import {AIChatMessage} from "./type/aiChat"
 import {YakitSideTabProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {genDefaultPagination, PaginationSchema} from "../invoker/schema"
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
@@ -80,3 +81,9 @@ export const AITabs: YakitSideTabProps["yakitTabs"] = [
     {label: "HTTP 流量", value: AITabsEnum.HTTP},
     {label: "漏洞与风险", value: AITabsEnum.Risk}
 ]
+
+/** AI-Forge 列表查询条件里的页码默认条件 */
+export const AIForgeListDefaultPagination: PaginationSchema = {
+    ...genDefaultPagination(20),
+    OrderBy: "id"
+}
