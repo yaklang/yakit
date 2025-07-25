@@ -38,7 +38,8 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             ref,
             () => ({
                 onStart: handleStartChat,
-                onShowTask: handleSetTaskChat
+                onShowTask: handleSetTaskChat,
+                onGetExecuting: handleGetExecuting
             }),
             []
         )
@@ -177,6 +178,9 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             onReviewRelease: handleReleaseReview,
             onEnd: handleChatingEnd,
             setCoordinatorId
+        })
+        const handleGetExecuting = useMemoizedFn(() => {
+            return execute
         })
         // #endregion
 

@@ -120,7 +120,8 @@ import {
     defPage,
     getFuzzerProcessedCacheData,
     saveFuzzerCache,
-    usePageInfo
+    usePageInfo,
+    AIForgeEditorPageInfoProps
 } from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
@@ -708,6 +709,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.ShortcutKey:
                 addShortcutKey(params)
                 break
+            case YakitRoute.ModifyAIForge:
+                modifyAIForge(params)
+                break
             default:
                 break
         }
@@ -1032,6 +1036,34 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage({route: YakitRoute.Plugin_Hub})
     })
 
+    /**
+     * @name 新建forge模板
+     * @param source 触发打开页面的父页面路由
+     */
+    const modifyAIForge = useMemoizedFn((data: AIForgeEditorPageInfoProps) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.ModifyAIForge).length
+        if (isExist) {
+            const modalProps = getSubscribeClose(YakitRoute.ModifyAIForge)
+            if (modalProps) {
+                judgeDataIsFuncOrSettingForConfirm(
+                    modalProps["reset"],
+                    (setting) => {
+                        onModalSecondaryConfirm(setting, isModalVisibleRef)
+                    },
+                    () => {}
+                )
+            }
+        }
+        openMenuPage(
+            {route: YakitRoute.ModifyAIForge},
+            {
+                pageParams: {
+                    modifyAIForgePageInfo: {...data}
+                }
+            }
+        )
+    })
+
     /** @name 渲染端通信-关闭一个指定页面 */
     useEffect(() => {
         emiter.on("closePage", onClosePage)
@@ -1057,6 +1089,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
                 removeMenuPage({route: route, menuName: ""}, addNext ? {route: addNext, menuName: ""} : undefined)
                 break
+            case YakitRoute.AddAIForge:
+            case YakitRoute.ModifyAIForge:
+                // 新建|编辑 forge 的关闭后跳转回 ai-agent 页面
+                removeMenuPage({route: route, menuName: ""}, {route: YakitRoute.AI_Agent, menuName: ""})
+                break
+
             default:
                 removeMenuPage({route: route, menuName: ""})
                 break
@@ -1576,6 +1614,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.MITMHacker:
                 onMITMHackerPage(singleUpdateNode, 1)
                 break
+            case YakitRoute.ModifyAIForge:
+                onSetModifyAIForgeData(singleUpdateNode, 1)
+                break
             default:
                 break
         }
@@ -1644,6 +1685,27 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             routeKey: YakitRoute.AddYakitScript
         }
         setPagesData(YakitRoute.AddYakitScript, pageNodeInfo)
+    })
+    const onSetModifyAIForgeData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.ModifyAIForge,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                modifyAIForgePageInfo: node.pageParams?.modifyAIForgePageInfo
+                    ? {...node.pageParams.modifyAIForgePageInfo}
+                    : undefined
+            },
+            sortFieId: order
+        }
+        let pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [newPageNode],
+            routeKey: YakitRoute.ModifyAIForge
+        }
+        setPagesData(YakitRoute.ModifyAIForge, pageNodeInfo)
     })
     const onBatchExecutorPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
         const newPageNode: PageNodeItemProps = {
@@ -1746,6 +1808,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.AddYakitScript:
             case YakitRoute.HTTPFuzzer:
             case YakitRoute.Codec:
+            case YakitRoute.AddAIForge:
+            case YakitRoute.ModifyAIForge:
                 const modalProps = getSubscribeClose(data.route)
                 if (modalProps) {
                     judgeDataIsFuncOrSettingForConfirm(

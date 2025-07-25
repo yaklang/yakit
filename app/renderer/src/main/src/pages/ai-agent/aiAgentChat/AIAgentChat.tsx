@@ -2,13 +2,15 @@ import React, {memo, useEffect, useRef} from "react"
 import {AIAgentChatProps} from "./type"
 import {AIAgentWelcome} from "../AIAgentWelcome/AIAgentWelcome"
 import {useMemoizedFn} from "ahooks"
-import {AIStartParams} from "../type/aiChat"
+import {AIForge, AIStartParams} from "../type/aiChat"
 import {AITriageChatRef} from "../aiTriageChat/type"
 import {AITaskChatRef} from "../aiTaskChat/type"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIAgentStore from "../useContext/useStore"
+import {yakitNotify} from "@/utils/notification"
+import {AIAgentWelcomeRef} from "../AIAgentWelcome/type"
 
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
@@ -22,6 +24,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {activeChat} = useAIAgentStore()
 
     const [mode, setMode, getMode] = useGetSetState<"welcome" | "triage" | "task">("welcome")
+
+    // #region ai-agent-welcome 相关逻辑
+    const welcomeRef = useRef<AIAgentWelcomeRef>(null)
+    // #endregion
 
     // #region ai-triage-chat 相关逻辑
     /** tirage对话是否存在 */
@@ -74,6 +80,38 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     }, [activeChat])
     // #endregion
 
+    /** 从别的元素上触发使用 forge 模板的功能 */
+    const handleTriggerExecForge = useMemoizedFn((forge: AIForge) => {
+        if (!forge || !forge.Id) {
+            yakitNotify("error", "准备使用的模板数据异常，请稍后再试")
+            return
+        }
+
+        if (mode === "task" && taskChatRef.current) {
+            const isExec = taskChatRef.current.onGetExecuting()
+            if (isExec) {
+                yakitNotify("warning", "当前任务正在执行中，请稍后再试")
+                return
+            } else {
+                const domRef = isTriageChatExist.current ? triageChatRef.current : welcomeRef.current
+                if (domRef) {
+                    setMode(isTriageChatExist.current ? "triage" : "welcome")
+                    setTimeout(() => {
+                        if (domRef) {
+                            domRef.onTriggerExecForge(forge.Id)
+                        }
+                    }, 100)
+                }
+            }
+        }
+        if (mode === "welcome" && welcomeRef.current) {
+            welcomeRef.current.onTriggerExecForge(forge.Id)
+        }
+        if (mode === "triage" && triageChatRef.current) {
+            triageChatRef.current.onTriggerExecForge(forge.Id)
+        }
+    })
+
     useEffect(() => {
         // ai-agent 页面左侧侧边栏向 chatUI 发送的事件
         const onEvents = (res: string) => {
@@ -84,6 +122,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 if (data.type === "new-chat") {
                     if (["welcome", "triage"].includes(getMode())) return
                     setMode(isTriageChatExist.current ? "triage" : "welcome")
+                }
+
+                if (data.type === "open-forge-form") {
+                    const {value} = data.params || {}
+                    handleTriggerExecForge(value)
                 }
             } catch (error) {}
         }
@@ -96,7 +139,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     return (
         <div className={styles["ai-agent-chat"]}>
             <div className={classNames(styles["chat-body"], {[styles["chat-hidden-body"]]: mode !== "welcome"})}>
-                <AIAgentWelcome onTriageSubmit={handleStartTriageChat} onTaskSubmit={handleStartTaskChat} />
+                <AIAgentWelcome
+                    ref={welcomeRef}
+                    onTriageSubmit={handleStartTriageChat}
+                    onTaskSubmit={handleStartTaskChat}
+                />
             </div>
 
             <div className={classNames(styles["chat-body"], {[styles["chat-hidden-body"]]: mode !== "triage"})}>

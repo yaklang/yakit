@@ -106,5 +106,9 @@ export enum YakitRoute {
     // 指纹库
     FingerprintManage = "fingerprint-manage",
     // ssa-result-diff
-    Ssa_Result_Diff = "ssa-result-diff"
+    Ssa_Result_Diff = "ssa-result-diff",
+    // 新建 Forge
+    AddAIForge = "add-ai-forge",
+    // 编辑 Forge
+    ModifyAIForge = "modify-ai-forge"
 }

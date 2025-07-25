@@ -1,17 +1,30 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {ForgeNameProps} from "./type"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
-import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {OutlinePencilaltIcon, OutlinePlussmIcon, OutlineSearchIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {useDebounceEffect, useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
+import {
+    useDebounceEffect,
+    useDebounceFn,
+    useInViewport,
+    useMemoizedFn,
+    useThrottleFn,
+    useUpdateEffect,
+    useVirtualList
+} from "ahooks"
 import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../type/aiChat"
-import {grpcQueryAIForge} from "../grpc"
+import {grpcDeleteAIForge, grpcQueryAIForge} from "../grpc"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {SolidToolIcon} from "@/assets/icon/solid"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import emiter from "@/utils/eventBus/eventBus"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {Tooltip} from "antd"
+import {yakitNotify} from "@/utils/notification"
+import {AIForgeListDefaultPagination} from "../defaultConstant"
 
 import classNames from "classnames"
 import styles from "./ForgeName.module.scss"
@@ -19,16 +32,75 @@ import styles from "./ForgeName.module.scss"
 const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
     // const {} = props
 
+    // #region AIForge 模板增删改功能 使用功能
+    // 新建 forge 模板
+    const handleNewAIForge = useMemoizedFn(() => {
+        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AddAIForge}))
+    })
+    // 编辑 forge 模板
+    const handleModifyAIForge = useMemoizedFn((info: AIForge) => {
+        const id = Number(info.Id) || 0
+        if (!id) {
+            yakitNotify("error", `该模板 ID('${info.Id}') 异常, 无法编辑`)
+            return
+        }
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.ModifyAIForge,
+                params: {id: id, source: YakitRoute.AI_Agent}
+            })
+        )
+    })
+
+    // 删除的 forge 队列
+    const [delStatus, setDelStatus] = useState<number[]>([])
+    // 删除 forge 模板
+    const handleDeleteAIForge = useMemoizedFn((info: AIForge) => {
+        const id = Number(info.Id) || 0
+        if (!id) {
+            yakitNotify("error", `该模板 ID('${info.Id}') 异常, 无法编辑`)
+            return
+        }
+        const isLoading = delStatus.includes(id)
+        if (isLoading) return
+        setDelStatus((old) => [...old, id])
+        grpcDeleteAIForge({Id: id})
+            .then(() => {
+                yakitNotify("success", "删除Forge模板成功")
+                setData((old) => {
+                    return {
+                        ...old,
+                        Total: old.Total - 1,
+                        Data: old.Data.filter((item) => item.Id !== info.Id)
+                    }
+                })
+            })
+            .catch(() => {})
+            .finally(() => {
+                setTimeout(() => {
+                    setDelStatus((old) => old.filter((el) => el !== id))
+                }, 100)
+            })
+    })
+
+    // 点击使用 Forge
+    const handleOnClick = useMemoizedFn((info: AIForge) => {
+        emiter.emit(
+            "onServerChatEvent",
+            JSON.stringify({
+                type: "open-forge-form",
+                params: {value: info}
+            })
+        )
+    })
+    // #endregion
+
     // #region AI-Forge 列表数据
     const [total, setTotal] = useState(0)
     const [loading, setLoading] = useState(false)
     const [data, setData, getData] = useGetSetState<QueryAIForgeResponse>({
-        Pagination: {
-            Page: 1,
-            Limit: 20,
-            Order: "desc",
-            OrderBy: "id"
-        },
+        Pagination: {...AIForgeListDefaultPagination},
         Data: [],
         Total: 0
     })
@@ -63,6 +135,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
     })
     // 获取 AI-Forge 列表
     const fetchData = useMemoizedFn((isInit?: boolean) => {
+        if (isInit) isMore.current = true
         if (!isMore.current) return
         const pageInfo = getData().Pagination
         const request: QueryAIForgeRequest = {
@@ -109,6 +182,11 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
 
     useEffect(() => {
         fetchDataTotal()
+
+        emiter.on("onTriggerRefreshForgeList", handleEmiterUpdateData)
+        return () => {
+            emiter.off("onTriggerRefreshForgeList", handleEmiterUpdateData)
+        }
     }, [])
 
     const [search, setSearch] = useState("")
@@ -120,6 +198,59 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
         {wait: 300}
     )
 
+    // 通信触发的刷新列表请求
+    const handleEmiterTriggerRefresh = useDebounceFn(
+        () => {
+            fetchDataTotal()
+            isMore.current = true
+            fetchData(true)
+        },
+        {wait: 300}
+    ).run
+
+    // 通信触发更新数据请求
+    const handleEmiterUpdateData = useMemoizedFn((id: string) => {
+        console.log("handleEmiterUpdateData", id)
+
+        const forgesArr = getData().Data || []
+        const findIndex = forgesArr.findIndex((item) => Number(item.Id) === Number(id))
+        if (findIndex !== -1) {
+            // 存在数据则局部更新
+            const request: QueryAIForgeRequest = {
+                Pagination: {...AIForgeListDefaultPagination},
+                Filter: {Id: Number(id)}
+            }
+
+            grpcQueryAIForge(request, true)
+                .then((res) => {
+                    console.log("res", res.Data)
+
+                    const {Data} = res
+                    if (!Data || !Data[0]) {
+                        yakitNotify("error", "更新 forge 模板信息失败, 未获取到最新数据")
+                        return
+                    }
+                    const newInfo = Data[0]
+                    setData((old) => {
+                        const newData = {...old}
+                        newData.Data[findIndex] = newInfo
+                        return newData
+                    })
+                })
+                .catch(() => {})
+        } else {
+            // 不存在数据则刷新列表
+            handleEmiterTriggerRefresh()
+        }
+    })
+
+    const wrapper = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(wrapper)
+
+    useUpdateEffect(() => {
+        if (inViewport) handleFillList()
+    }, [inViewport])
+
     // 滚动加载更多
     const onScrollCapture = useThrottleFn(
         () => {
@@ -128,7 +259,6 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
             if (wrapperRef && wrapperRef.current) {
                 const {height} = wrapperRef.current.getBoundingClientRect()
                 const {scrollHeight, scrollTop} = wrapperRef.current
-                console.log("onScrollCapture", scrollHeight, scrollTop, height)
 
                 const scrollBottom = scrollHeight - scrollTop - height
                 if (scrollBottom > -10) {
@@ -140,25 +270,15 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
     ).run
     // #endregion
 
-    const handleOnClick = useMemoizedFn((info: AIForge) => {
-        emiter.emit(
-            "onServerChatEvent",
-            JSON.stringify({
-                type: "open-forge-form",
-                params: {value: info}
-            })
-        )
-    })
-
     return (
-        <div className={styles["forge-name"]}>
+        <div ref={wrapper} className={styles["forge-name"]}>
             <div className={styles["header-wrapper"]}>
                 <div className={styles["haeder-first"]}>
                     <div className={styles["first-title"]}>
                         模板库
                         <YakitRoundCornerTag>{total}</YakitRoundCornerTag>
                     </div>
-                    {/* <YakitButton icon={<OutlinePlussmIcon />} /> */}
+                    <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIForge} />
                 </div>
 
                 <div className={styles["header-second"]}>
@@ -179,6 +299,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                             const {Id, ForgeName, Description, ToolNames} = data
                             const key = Number(Id) || index
                             const tools = ToolNames ? ToolNames.filter(Boolean) : []
+                            const delLoading = delStatus.includes(Number(Id))
 
                             return (
                                 <React.Fragment key={key}>
@@ -228,7 +349,47 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                         }
                                     >
                                         <div className={styles["forge-list-opt"]} onClick={() => handleOnClick(data)}>
-                                            <div>{ForgeName}</div>
+                                            <div
+                                                className={classNames(
+                                                    styles["opt-title"],
+                                                    "yakit-content-single-ellipsis"
+                                                )}
+                                                title={ForgeName}
+                                            >
+                                                {ForgeName}
+                                            </div>
+
+                                            <div className={styles["item-extra"]}>
+                                                <Tooltip
+                                                    title={"编辑Forge"}
+                                                    placement='topRight'
+                                                    overlayClassName={styles["item-extra-tooltip"]}
+                                                >
+                                                    <YakitButton
+                                                        type='text2'
+                                                        icon={<OutlinePencilaltIcon />}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            handleModifyAIForge(data)
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                                <Tooltip
+                                                    title={"删除Forge"}
+                                                    placement='topRight'
+                                                    overlayClassName={styles["item-extra-tooltip"]}
+                                                >
+                                                    <YakitButton
+                                                        loading={delLoading}
+                                                        type='text2'
+                                                        icon={<OutlineTrashIcon className={styles["del-icon"]} />}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            handleDeleteAIForge(data)
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                            </div>
                                         </div>
                                     </YakitPopover>
                                 </React.Fragment>

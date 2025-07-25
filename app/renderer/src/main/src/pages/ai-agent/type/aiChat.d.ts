@@ -404,6 +404,7 @@ export interface AIForgeFilter {
     /** 多个字段的内容进行模糊搜索 */
     Keyword?: string
     Tag?: string
+    Id?: number
 }
 
 export interface QueryAIForgeRequest {

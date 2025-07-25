@@ -4,7 +4,6 @@ import {subscribeWithSelector, persist, StorageValue} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {AdvancedConfigShowProps} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {yakitNotify} from "@/utils/notification"
-import {RemoteGV} from "@/yakitGV"
 import {setRemoteProjectValue} from "@/utils/kv"
 import cloneDeep from "lodash/cloneDeep"
 import {createWithEqualityFn} from "zustand/traditional"
@@ -74,6 +73,15 @@ interface PageParamsInfoProps {
     modifyNotepadPageInfo?: ModifyNotepadPageInfoProps
     /** hTTPHacker v2 新版 */
     mitmHackerPageInfo?: MITMHackerPageInfoProps
+    /** 编辑 ai-forge 模板页面 */
+    modifyAIForgePageInfo?: AIForgeEditorPageInfoProps
+}
+
+export interface AIForgeEditorPageInfoProps {
+    /** 编辑时使用，为 forge 模板 id */
+    id: number
+    source: YakitRoute
+    [key: string]: any
 }
 
 export interface AddYakitScriptPageInfoProps {

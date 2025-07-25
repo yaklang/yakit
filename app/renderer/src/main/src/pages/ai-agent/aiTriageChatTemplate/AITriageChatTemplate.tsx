@@ -201,6 +201,7 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
             }
         })
         if (!form) return
+        form.resetFields()
         form.setFieldsValue({...initRequiredFormValue})
     })
 

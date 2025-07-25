@@ -6,6 +6,8 @@ export interface AITaskChatRef {
     onStart: (req: AIStartParams) => void
     /** 设置展示的 task 对话数据 */
     onShowTask: (data: AIChatInfo) => void
+    /** 获取当前是执行完还是在执行中 */
+    onGetExecuting: () => boolean
 }
 
 export interface AITaskChatProps {
