@@ -11,15 +11,15 @@
             font-style: normal;
             font-weight: 500;
             line-height: 16px;
-            background: #f8f8f8;
+            background: var(--Colors-Use-Neutral-Bg);
         }
         .ant-table-thead > tr > th,
         .ant-table-tbody > tr > td {
-            border-bottom: 1px solid #eaecf3;
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > thead > tr > th,
         .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > tbody > tr > td {
-            border-right: 1px solid #eaecf3;
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .ant-table-tbody > tr.ant-table-row:hover > td,
         .ant-table-tbody > tr > td.ant-table-cell-row-hover {
@@ -31,36 +31,36 @@
         }
         // 分页相关
         .ant-pagination-item-active {
-            border-color: #f28b44;
+            border-color: var(--Colors-Use-Main-Border);
         }
         .ant-pagination-item-active a {
-            color: #f28b44;
+            color: var(--Colors-Use-Main-Primary);
         }
         .ant-pagination-item:hover a {
-            color: #f28b44;
+            color: var(--Colors-Use-Main-Primary);
         }
         .ant-pagination-prev:hover .ant-pagination-item-link,
         .ant-pagination-next:hover .ant-pagination-item-link {
-            color: #f28b44;
-            border-color: #f28b44;
+            color: var(--Colors-Use-Main-Primary);
+            border-color: var(--Colors-Use-Main-Border);
         }
         .ant-pagination-jump-prev .ant-pagination-item-container .ant-pagination-item-link-icon,
         .ant-pagination-jump-next .ant-pagination-item-container .ant-pagination-item-link-icon {
-            color: #f28b44;
+            color: var(--Colors-Use-Main-Primary);
         }
         .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
-            border-color: #f28b44;
+            border-color: var(--Colors-Use-Main-Border);
         }
         .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            border-color: #f28b44;
+            border-color: var(--Colors-Use-Main-Border);
             box-shadow: 0 0 0 2px rgb(242 139 68 / 20%);
         }
         .ant-pagination-options-quick-jumper input:hover {
-            border-color: #f28b44;
+            border-color: var(--Colors-Use-Main-Border);
         }
         .ant-pagination-options-quick-jumper input:focus,
         .ant-pagination-options-quick-jumper input-focused {
-            border-color: #f28b44;
+            border-color: var(--Colors-Use-Main-Border);
             box-shadow: 0 0 0 2px rgb(242 139 68 / 20%);
         }
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
@@ -83,15 +83,15 @@
         justify-content: center;
         .copy {
             cursor: pointer;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
         .delete {
             cursor: pointer;
-            color: #f6544a;
+            color: var(--Colors-Use-Error-Primary);
         }
         .edit {
             cursor: pointer;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
 
         svg {
@@ -100,14 +100,14 @@
         }
     }
     .show-total {
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         font-size: 12px;
         font-style: normal;
         font-weight: 400;
         line-height: 16px;
     }
     .selector-icon {
-        color: #b4bbca;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         svg {
             width: 16px;
             height: 16px;
@@ -120,7 +120,7 @@
         color: var(--yakit-primary-5);
     }
     .selected-row {
-        border: 2px solid #1890ff; /* 选择你希望的边框样式 */
+        border: 2px solid var(--Colors-Use-Blue-Border); /* 选择你希望的边框样式 */
     }
 }
 .filter-box {
@@ -133,7 +133,7 @@
         gap: 4px;
         cursor: pointer;
         .icon {
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             width: 16px;
             height: 16px;
             display: flex;
@@ -144,7 +144,7 @@
         }
         .content {
             font-size: 12px;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-weight: 400;
             line-height: 16px;
             user-select: none;
@@ -153,18 +153,18 @@
     .hover-filter-item {
         &:hover {
             border-radius: 4px;
-            background: #f0f1f3;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
         }
     }
     .active-filter-item {
         .icon {
-            color: #f28b44;
+            color: var(--Colors-Use-Main-Primary);
         }
         .content {
-            color: #f28b44;
+            color: var(--Colors-Use-Main-Primary);
         }
         border-radius: 4px;
-        background: rgba(242, 139, 68, 0.06);
+        background: var(--Colors-Use-Basic-Background);
     }
 }
 .payload-edit-form {
@@ -178,7 +178,7 @@
         line-height: 20px;
         margin-bottom: 6px;
         .must {
-            color: #f4736b;
+            color: var(--Colors-Use-Red-Primary);
         }
     }
     .opt-btn {
