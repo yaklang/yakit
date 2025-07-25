@@ -2,7 +2,7 @@ import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {RenderMCPClientInfo} from "./aiAgentType"
 import {MCPCallToolRequest, MCPClientResource} from "./type/mcpClient"
-import {AIForge, AIForgeFilter, QueryAIForgeRequest, QueryAIForgeResponse} from "./type/aiChat"
+import {AIEventQueryRequest, AIEventQueryResponse, AIForge, AIForgeFilter, QueryAIForgeRequest, QueryAIForgeResponse} from "./type/aiChat"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -72,6 +72,19 @@ export const grpcMCPClientCancelCallTool: APIFunc<string, string> = (token, hidd
             })
     })
 }
+
+/**@name 查询AI事件 */
+export const grpcQueryAIEvent: APIFunc<AIEventQueryRequest, AIEventQueryResponse> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("QueryAIEvent", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "查询QueryAIEvent失败:" + e)
+                reject(e)
+            })
+    })
+}
 // #endregion
 
 // #region AI-Forge 相关 grpc 接口
@@ -124,3 +137,5 @@ export const grpcQueryAIForge: APIFunc<QueryAIForgeRequest, QueryAIForgeResponse
     })
 }
 // #endregion
+
+

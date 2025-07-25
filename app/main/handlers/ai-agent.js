@@ -79,6 +79,23 @@ module.exports = (win, getClient) => {
         return await asyncDeleteAIForge(params)
     })
 
+    
+    const asyncQueryAIEvent = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryAIEvent(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 查询QueryAIEvent
+    ipcMain.handle("QueryAIEvent", async (e, params) => {
+        return await asyncQueryAIEvent(params)
+    })
+
     const asyncQueryAIForge = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QueryAIForge(params, (err, data) => {

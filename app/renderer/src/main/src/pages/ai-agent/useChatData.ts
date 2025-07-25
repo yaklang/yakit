@@ -734,7 +734,6 @@ function useChatData(params?: UseChatDataParams) {
 
                 const newValue = valueInfo.filter((ele) => !isToolSyncNode(ele.nodeId))
                 const toolData = getToolData(callToolId)
-
                 newValue.push({
                     nodeId: res.Type,
                     timestamp: timestamp,
@@ -769,9 +768,15 @@ function useChatData(params?: UseChatDataParams) {
             if (valueInfo) {
                 const newValue = valueInfo.map((ele) => {
                     if (ele.toolAggregation?.callToolId === callToolId) {
+                        const toolData = getToolData(callToolId)
                         return {
                             ...ele,
-                            toolAggregation: getToolData(callToolId)
+                            toolAggregation: {
+                                ...toolData,
+                                toolStdoutContent: ele.toolAggregation?.toolStdoutContent || {
+                                    ...defaultAIToolData.toolStdoutContent
+                                }
+                            }
                         }
                     }
                     return ele

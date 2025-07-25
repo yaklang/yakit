@@ -183,7 +183,14 @@ export interface AIChatInfo {
         streams: Record<string, AIChatStreams[]>
     }
 }
-
+/**QueryAIEvent 接口请求 */
+export interface AIEventQueryRequest {
+    ProcessID: string
+}
+/**QueryAIEvent 接口返回 */
+export interface AIEventQueryResponse {
+    Events: AIOutputEvent[]
+}
 export declare namespace AIChatMessage {
     /** 输出 Token */
     export interface Consumption {
