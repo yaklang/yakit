@@ -392,24 +392,6 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
         }, [taskChat])
         // AI的Token消耗
         const token = useMemo(() => {
-            if (!taskChat) return [0, 0]
-
-            if (taskChat.answer?.consumption?.input_consumption || taskChat.answer?.consumption?.output_consumption) {
-                return [0, 0]
-            }
-
-            if (taskChat?.answer) {
-                let input = 0
-                let output = 0
-                const keys = Object.keys(taskChat.answer.consumption || {})
-                for (let name of keys) {
-                    input += taskChat.answer.consumption[name]?.input_consumption || 0
-                    output += taskChat.answer.consumption[name]?.output_consumption || 0
-                }
-
-                return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
-            }
-
             let input = 0
             let output = 0
             const keys = Object.keys(uiConsumption || {})
@@ -418,7 +400,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                 output += uiConsumption[name]?.output_consumption || 0
             }
             return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
-        }, [taskChat, uiConsumption])
+        }, [uiConsumption])
         // #endregion
         return (
             <div className={styles["ai-task-chat"]}>
