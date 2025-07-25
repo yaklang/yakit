@@ -15,7 +15,7 @@ const PrivateOutlineMitm = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7532)'>
             <path
@@ -25,10 +25,16 @@ const PrivateOutlineMitm = () => (
                 strokeLinecap='round'
                 strokeLinejoin='round'
             />
-            <path d='M2 20L22 20' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M2 20L22 20'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
             <path
                 d='M6 11H8.5L10 7L12 14L14.5 8.5L15.5 11H18'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -50,18 +56,18 @@ const PrivateSolidMitm = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110521)'>
             <path
                 d='M4 8.00001C4 6.52725 5.19391 5.33334 6.66667 5.33334H25.3333C26.8061 5.33334 28 6.52725 28 8.00001V20C28 21.4728 26.8061 22.6667 25.3333 22.6667H6.66667C5.19391 22.6667 4 21.4728 4 20V8.00001Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M1.66675 26.6667C1.66675 26.1144 2.11446 25.6667 2.66675 25.6667L29.3334 25.6667C29.8857 25.6667 30.3334 26.1144 30.3334 26.6667C30.3334 27.2189 29.8857 27.6667 29.3334 27.6667L2.66675 27.6667C2.11446 27.6667 1.66675 27.2189 1.66675 26.6667Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -89,7 +95,7 @@ const PrivateOutlineWebFuzzer = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4918_9813)'>
             <path
@@ -106,7 +112,7 @@ const PrivateOutlineWebFuzzer = () => (
             <circle cx='8' cy='20' r='2' stroke='var(--Colors-Use-Neutral-Text-1-Title)' strokeWidth='1.5' />
             <path
                 d='M12.5 11V7.5L8 13H11.5L11.5 16.5L16 11L12.5 11Z'
-                stroke='#F28B44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -142,10 +148,10 @@ const PrivateSolidWebFuzzer = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110821)'>
-            <circle cx='16' cy='16' r='12' fill='#F28B44' />
+            <circle cx='16' cy='16' r='12' fill='var(--Colors-Use-Main-Primary)' />
             <path
                 d='M24.0001 5.33332C24.0001 6.80608 22.8062 7.99999 21.3334 7.99999C19.8607 7.99999 18.6667 6.80608 18.6667 5.33332C18.6667 3.86056 19.8607 2.66666 21.3334 2.66666C22.8062 2.66666 24.0001 3.86056 24.0001 5.33332Z'
                 fill='white'
@@ -184,7 +190,7 @@ const PrivateOutlineWebsocketFuzzer = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_3031_9116)'>
             <path
@@ -196,7 +202,13 @@ const PrivateOutlineWebsocketFuzzer = () => (
                 d='M19.25 20C19.25 19.8473 19.3557 19.9165 18.9897 20.1328C18.6739 20.3195 18.167 20.5136 17.475 20.6866C16.1023 21.0298 14.1663 21.25 12 21.25V22.75C14.252 22.75 16.316 22.5225 17.8388 22.1418C18.5944 21.9529 19.2591 21.716 19.7529 21.4241C20.1966 21.1619 20.75 20.705 20.75 20H19.25ZM12 21.25C9.83371 21.25 7.89769 21.0298 6.52505 20.6866C5.83296 20.5136 5.32609 20.3195 5.0103 20.1328C4.64431 19.9165 4.75 19.8473 4.75 20H3.25C3.25 20.705 3.80341 21.1619 4.24706 21.4241C4.74092 21.716 5.40562 21.9529 6.16124 22.1418C7.68404 22.5225 9.74801 22.75 12 22.75V21.25ZM19.25 14V20H20.75V14H19.25ZM4.75 20V14H3.25V20H4.75ZM19.25 14C19.25 13.8473 19.3557 13.9165 18.9897 14.1328C18.6739 14.3195 18.167 14.5136 17.475 14.6866C16.1023 15.0298 14.1663 15.25 12 15.25V16.75C14.252 16.75 16.316 16.5225 17.8388 16.1418C18.5944 15.9529 19.2591 15.716 19.7529 15.4241C20.1966 15.1619 20.75 14.705 20.75 14H19.25ZM12 15.25C9.83371 15.25 7.89769 15.0298 6.52505 14.6866C5.83296 14.5136 5.32609 14.3195 5.0103 14.1328C4.64431 13.9165 4.75 13.8473 4.75 14H3.25C3.25 14.705 3.80341 15.1619 4.24706 15.4241C4.74092 15.716 5.40562 15.9529 6.16124 16.1418C7.68404 16.5225 9.74801 16.75 12 16.75V15.25ZM4.75 14C4.75 14.1527 4.64431 14.0835 5.0103 13.8672C5.32609 13.6805 5.83296 13.4864 6.52505 13.3134C7.89769 12.9702 9.83371 12.75 12 12.75V11.25C9.74801 11.25 7.68404 11.4775 6.16124 11.8582C5.40562 12.0471 4.74092 12.284 4.24706 12.5759C3.80341 12.8381 3.25 13.295 3.25 14H4.75ZM12 12.75C14.1663 12.75 16.1023 12.9702 17.475 13.3134C18.167 13.4864 18.6739 13.6805 18.9897 13.8672C19.3557 14.0835 19.25 14.1527 19.25 14H20.75C20.75 13.295 20.1966 12.8381 19.7529 12.5759C19.2591 12.284 18.5944 12.0471 17.8388 11.8582C16.316 11.4775 14.252 11.25 12 11.25V12.75Z'
                 fill='var(--Colors-Use-Neutral-Text-1-Title)'
             />
-            <path d='M12 6V14' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M12 6V14'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
             <path
                 d='M21 8V8C21 8.85693 20.3619 9.57976 19.5116 9.68605L16.7519 10.031C15.7511 10.1561 15 11.0069 15 12.0156V13'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
@@ -213,7 +225,7 @@ const PrivateOutlineWebsocketFuzzer = () => (
             />
             <path
                 d='M11.75 2.14434C11.9047 2.05502 12.0953 2.05502 12.25 2.14434L13.4821 2.85566C13.6368 2.94498 13.7321 3.11004 13.7321 3.28868V4.71132C13.7321 4.88996 13.6368 5.05502 13.4821 5.14434L12.25 5.85566C12.0953 5.94498 11.9047 5.94498 11.75 5.85566L10.5179 5.14434C10.3632 5.05502 10.2679 4.88996 10.2679 4.71132V3.28868C10.2679 3.11004 10.3632 2.94498 10.5179 2.85566L11.75 2.14434Z'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -249,12 +261,12 @@ const PrivateSolidWebsocketFuzzer = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110858)'>
             <path
                 d='M16 29.3333C21.8911 29.3333 26.6667 28.1394 26.6667 26.6667V18.6667C26.6667 20.1394 21.8911 21.3333 16 21.3333C10.109 21.3333 5.33337 20.1394 5.33337 18.6667V26.6667C5.33337 28.1394 10.109 29.3333 16 29.3333Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M27.4167 18.6667C27.4167 18.2524 27.0809 17.9167 26.6667 17.9167C26.2525 17.9167 25.9167 18.2524 25.9167 18.6667H27.4167ZM6.08337 18.6667C6.08337 18.2524 5.74759 17.9167 5.33337 17.9167C4.91916 17.9167 4.58337 18.2524 4.58337 18.6667H6.08337ZM25.9167 26.6667C25.9167 26.606 25.9478 26.7629 25.4468 27.059C24.9961 27.3254 24.294 27.5913 23.3606 27.8247C21.5054 28.2885 18.9027 28.5833 16 28.5833V30.0833C18.9884 30.0833 21.719 29.7812 23.7244 29.2799C24.7213 29.0307 25.5813 28.722 26.2101 28.3503C26.7887 28.0083 27.4167 27.4637 27.4167 26.6667H25.9167ZM16 28.5833C13.0974 28.5833 10.4947 28.2885 8.63947 27.8247C7.7061 27.5913 7.00396 27.3254 6.55324 27.059C6.0523 26.7629 6.08337 26.606 6.08337 26.6667H4.58337C4.58337 27.4637 5.2114 28.0083 5.78999 28.3503C6.41879 28.722 7.27875 29.0307 8.27567 29.2799C10.281 29.7812 13.0117 30.0833 16 30.0833V28.5833ZM25.9167 18.6667V26.6667H27.4167V18.6667H25.9167ZM6.08337 26.6667V18.6667H4.58337V26.6667H6.08337ZM25.9167 18.6667C25.9167 18.606 25.9478 18.7629 25.4468 19.059C24.9961 19.3254 24.294 19.5913 23.3606 19.8247C21.5054 20.2885 18.9027 20.5833 16 20.5833V22.0833C18.9884 22.0833 21.719 21.7812 23.7244 21.2799C24.7213 21.0307 25.5813 20.722 26.2101 20.3503C26.7887 20.0083 27.4167 19.4637 27.4167 18.6667H25.9167ZM16 20.5833C13.0974 20.5833 10.4947 20.2885 8.63947 19.8247C7.7061 19.5913 7.00396 19.3254 6.55324 19.059C6.0523 18.7629 6.08337 18.606 6.08337 18.6667H4.58337C4.58337 19.4637 5.2114 20.0083 5.78999 20.3503C6.41879 20.722 7.27875 21.0307 8.27567 21.2799C10.281 21.7812 13.0117 22.0833 16 22.0833V20.5833Z'
@@ -270,7 +282,7 @@ const PrivateSolidWebsocketFuzzer = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M16.75 1.94498C16.2859 1.67703 15.7141 1.67703 15.25 1.94498L13.4406 2.98964C12.9764 3.25759 12.6906 3.75278 12.6906 4.28868V6.37799C12.6906 6.91389 12.9765 7.40908 13.4406 7.67703L15 8.57738V18.6667C15 19.219 15.4477 19.6667 16 19.6667C16.5523 19.6667 17 19.219 17 18.6667V8.57732L18.5594 7.67703C19.0235 7.40908 19.3094 6.91389 19.3094 6.37799V4.28868C19.3094 3.75278 19.0235 3.25759 18.5594 2.98964L16.75 1.94498ZM14.6906 4.57735L16 3.82137L17.3094 4.57735V6.08932L16 6.8453L14.6906 6.08932V4.57735Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
         </g>
     </svg>
@@ -292,7 +304,7 @@ const PrivateOutlineBrute = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7557)'>
             <circle
@@ -305,13 +317,13 @@ const PrivateOutlineBrute = () => (
             />
             <path
                 d='M10.2541 8.75586C8.99872 9.0789 7.86907 9.88688 7.16972 11.0982C6.57554 12.1273 6.38881 13.2799 6.55947 14.3691'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
             />
             <path
                 d='M17 4.07183C17.8284 2.63695 19.6632 2.14533 21.0981 2.97375'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
             />
@@ -337,18 +349,18 @@ const PrivateSolidBrute = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110475)'>
             <path
                 d='M24.5708 23.4641C21.6253 28.5659 15.1017 30.3139 9.99989 27.3684C4.8981 24.4229 3.1501 17.8993 6.09562 12.7975C9.04114 7.69569 15.5648 5.94769 20.6666 8.89321C25.7683 11.8387 27.5163 18.3624 24.5708 23.4641Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M27.6308 4.83102C26.1959 4.00259 24.3611 4.49422 23.5327 5.9291C23.2566 6.40739 22.645 6.57126 22.1667 6.29512C21.6884 6.01898 21.5245 5.40739 21.8007 4.9291C23.1814 2.53763 26.2393 1.71826 28.6308 3.09897C29.1091 3.37511 29.273 3.9867 28.9968 4.46499C28.7207 4.94329 28.1091 5.10716 27.6308 4.83102Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -376,7 +388,7 @@ const PrivateOutlineBasicCrawler = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7447)'>
             <path
@@ -384,10 +396,10 @@ const PrivateOutlineBasicCrawler = () => (
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='1.5'
             />
-            <path d='M12 21V7' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M12 21V7' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
             <path
                 d='M15 6C15 4.34315 13.6569 3 12 3C10.3431 3 9 4.34315 9 6'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
             />
@@ -419,12 +431,12 @@ const PrivateSolidBasicCrawler = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110530)'>
             <path
                 d='M7.66663 13.3333C7.66663 10.9401 9.60673 9 12 9H20C22.3932 9 24.3333 10.9401 24.3333 13.3333V20C24.3333 24.6024 20.6023 28.3333 16 28.3333C11.3976 28.3333 7.66663 24.6024 7.66663 20V13.3333Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='2'
             />
@@ -432,7 +444,7 @@ const PrivateSolidBasicCrawler = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M16.0001 5C14.3433 5 13.0001 6.34315 13.0001 8C13.0001 8.55229 12.5524 9 12.0001 9C11.4478 9 11.0001 8.55229 11.0001 8C11.0001 5.23858 13.2387 3 16.0001 3C18.7615 3 21.0001 5.23858 21.0001 8C21.0001 8.55229 20.5524 9 20.0001 9C19.4478 9 19.0001 8.55229 19.0001 8C19.0001 6.34315 17.657 5 16.0001 5Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -460,7 +472,7 @@ const PrivateOutlineSpaceEngine = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_166_5755)'>
             <path
@@ -469,8 +481,13 @@ const PrivateOutlineSpaceEngine = () => (
                 d='M8.26 11.25H3.78363C4.09288 7.81832 6.50351 4.99257 9.7189 4.06941C9.51187 4.46715 9.32825 4.91563 9.16717 5.39887C8.64952 6.95181 8.32021 8.99973 8.26 11.25ZM2.25 12C2.25 6.61522 6.61522 2.25 12 2.25C17.3848 2.25 21.75 6.61522 21.75 12C21.75 12.1094 21.7482 12.2183 21.7446 12.3269C21.311 11.7675 20.7806 11.287 20.1787 10.9102C19.7462 7.63277 17.3897 4.96192 14.2811 4.06941C14.4881 4.46715 14.6718 4.91563 14.8328 5.39887C15.2643 6.69318 15.5649 8.33133 15.6879 10.1439C15.1691 10.2596 14.6757 10.4425 14.2172 10.683C14.1221 8.79358 13.8265 7.1232 13.4098 5.87321C13.1529 5.10255 12.8636 4.53298 12.5787 4.17149C12.2871 3.80155 12.0859 3.75 12 3.75C11.9141 3.75 11.7129 3.80155 11.4213 4.17149C11.1364 4.53298 10.8471 5.10255 10.5902 5.87321C10.1323 7.24686 9.82057 9.12821 9.76056 11.25H13.3338C12.7937 11.6674 12.3268 12.1749 11.9556 12.75H9.76056C9.82057 14.8718 10.1323 16.7531 10.5902 18.1268C10.8471 18.8975 11.1364 19.467 11.4213 19.8285C11.7129 20.1985 11.9141 20.25 12 20.25C12.0758 20.25 12.2415 20.2098 12.4799 19.9459C13.0258 20.5707 13.6992 21.0813 14.4594 21.4372C13.6738 21.6413 12.8496 21.75 12 21.75C6.61522 21.75 2.25 17.3848 2.25 12ZM9.16717 18.6011C9.32825 19.0844 9.51187 19.5329 9.7189 19.9306C6.50351 19.0074 4.09288 16.1817 3.78363 12.75H8.26C8.32021 15.0003 8.64952 17.0482 9.16717 18.6011Z'
                 fill='var(--Colors-Use-Neutral-Text-1-Title)'
             />
-            <path d='M20 19L22.1213 21.1213' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' />
-            <circle cx='17' cy='16' r='4' stroke='#f28b44' strokeWidth='1.5' />
+            <path
+                d='M20 19L22.1213 21.1213'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+            />
+            <circle cx='17' cy='16' r='4' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' />
         </g>
     </svg>
 )
@@ -488,10 +505,10 @@ const PrivateSolidSpaceEngine = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2619_79444)'>
-            <circle cx='16' cy='16' r='12' fill='#F28B44' />
+            <circle cx='16' cy='16' r='12' fill='var(--Colors-Use-Main-Primary)' />
             <path
                 fillRule='evenodd'
                 clipRule='evenodd'
@@ -499,12 +516,17 @@ const PrivateSolidSpaceEngine = () => (
                 fill='var(--Colors-Use-Neutral-Text-1-Title)'
             />
             <circle cx='22.6666' cy='21.3333' r='8' fill='white' />
-            <path d='M26.6666 25.3333L29.4951 28.1618' stroke='#F28B44' strokeWidth='2' strokeLinecap='round' />
+            <path
+                d='M26.6666 25.3333L29.4951 28.1618'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='2'
+                strokeLinecap='round'
+            />
             <path
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M22.6667 17C20.2735 17 18.3334 18.9401 18.3334 21.3333C18.3334 23.7266 20.2735 25.6667 22.6667 25.6667C25.0599 25.6667 27 23.7266 27 21.3333C27 18.9401 25.0599 17 22.6667 17ZM16.3334 21.3333C16.3334 17.8355 19.1689 15 22.6667 15C26.1645 15 29 17.8355 29 21.3333C29 24.8311 26.1645 27.6667 22.6667 27.6667C19.1689 27.6667 16.3334 24.8311 16.3334 21.3333Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
         </g>
     </svg>
@@ -526,7 +548,7 @@ const PrivateOutlineScanPort = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2721_76421)'>
             <path
@@ -535,7 +557,7 @@ const PrivateOutlineScanPort = () => (
                 d='M11.9999 2.25C10.4061 2.25 8.90999 2.68022 7.62193 3.43186C7.26417 3.64063 7.14339 4.09988 7.35215 4.45764C7.56092 4.8154 8.02017 4.93618 8.37793 4.72741C9.44325 4.10576 10.6794 3.75 11.9999 3.75C15.9978 3.75 19.2499 7.02114 19.2499 11.0701C19.2499 11.3814 19.2444 11.6914 19.2334 12H20.7343C20.7447 11.6913 20.7499 11.3813 20.7499 11.0701C20.7499 6.20508 16.8386 2.25 11.9999 2.25ZM20.5939 14H19.0848C18.927 15.3911 18.6583 16.7478 18.2878 18.0609C18.1753 18.4596 18.4073 18.8739 18.8059 18.9864C19.2046 19.0989 19.6189 18.8669 19.7314 18.4682C20.1388 17.0242 20.4299 15.5311 20.5939 14ZM16.7314 12C16.7437 11.6915 16.7498 11.3815 16.7498 11.0701C16.7498 8.43358 14.6293 6.28506 11.9998 6.28506C9.37033 6.28506 7.24984 8.43358 7.24984 11.0701C7.24984 11.3829 7.23926 11.693 7.21847 12H8.72157C8.74032 11.6926 8.74984 11.3825 8.74984 11.0701C8.74984 9.24964 10.2111 7.78506 11.9998 7.78506C13.7886 7.78506 15.2498 9.24964 15.2498 11.0701C15.2498 11.3816 15.2432 11.6917 15.2302 12H16.7314ZM15.0528 14H16.5656C16.5573 14.0658 16.5487 14.1314 16.5398 14.197C16.4842 14.6075 16.1064 14.8952 15.6959 14.8396C15.2869 14.7842 14.9997 14.4088 15.0528 14ZM12.7275 12C12.7423 11.6919 12.7498 11.3819 12.7498 11.0701C12.7498 10.6559 12.414 10.3201 11.9998 10.3201C11.5856 10.3201 11.2498 10.6559 11.2498 11.0701C11.2498 11.3821 11.2417 11.6921 11.2256 12H12.7275ZM11.0066 14H12.5259C12.1272 16.5838 11.2095 18.9955 9.8834 21.1221C9.66422 21.4735 9.20162 21.5808 8.85014 21.3616C8.49867 21.1424 8.39142 20.6798 8.6106 20.3284C9.79189 18.434 10.6215 16.2938 11.0066 14ZM8.46431 14H6.93185C6.59876 15.5067 6.01395 16.9144 5.22483 18.1798L5.86123 18.5767L5.22483 18.1798C5.20288 18.215 5.18144 18.2504 5.1605 18.286C4.95035 18.6429 5.06936 19.1026 5.4263 19.3128C5.78325 19.5229 6.24297 19.4039 6.45312 19.047C6.4676 19.0224 6.48243 18.9979 6.49763 18.9735C7.43218 17.4749 8.10873 15.797 8.46431 14ZM4.71087 12C4.73673 11.6934 4.74993 11.3833 4.74993 11.0701C4.74993 9.73427 5.10365 8.48438 5.7208 7.40815C5.92686 7.04882 5.8026 6.59049 5.44328 6.38444C5.08395 6.17839 4.62562 6.30264 4.41957 6.66196C3.67536 7.95974 3.24993 9.46611 3.24993 11.0701C3.24993 11.384 3.23461 11.6942 3.20469 12H4.71087ZM2.78564 14H4.35229C4.17895 14.6237 3.95163 15.2248 3.67565 15.7979C3.49593 16.1711 3.0477 16.3279 2.67451 16.1482C2.30132 15.9685 2.14448 15.5203 2.3242 15.1471C2.50206 14.7777 2.65653 14.3947 2.78564 14ZM15.8928 17.3253C16.0046 16.9264 15.772 16.5124 15.3732 16.4006C14.9744 16.2887 14.5604 16.5213 14.4485 16.9201C14.083 18.2231 13.5985 19.4763 13.0074 20.6664C12.8232 21.0374 12.9746 21.4875 13.3455 21.6717C13.7165 21.856 14.1666 21.7046 14.3509 21.3336C14.9832 20.0603 15.5017 18.7194 15.8928 17.3253Z'
                 fill='var(--Colors-Use-Neutral-Text-1-Title)'
             />
-            <path d='M1 12H23' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M1 12H23' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
         </g>
     </svg>
 )
@@ -544,7 +566,7 @@ export const PrivateOutlineScanPortIcon = (props: Partial<CustomIconComponentPro
 }
 const PrivateSolidScanPort = () => (
     <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
-        <circle cx='16' cy='16' r='11' fill='#F28B44' />
+        <circle cx='16' cy='16' r='11' fill='var(--Colors-Use-Main-Primary)' />
         <mask
             id='mask0_2619_79434'
             style={{maskType: "alpha"}}
@@ -554,7 +576,7 @@ const PrivateSolidScanPort = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2619_79434)'>
             <path
@@ -574,7 +596,7 @@ const PrivateSolidScanPort = () => (
             fillRule='evenodd'
             clipRule='evenodd'
             d='M0.333374 16C0.333374 15.4477 0.781089 15 1.33337 15H30.6667C31.219 15 31.6667 15.4477 31.6667 16C31.6667 16.5523 31.219 17 30.6667 17H1.33337C0.781089 17 0.333374 16.5523 0.333374 16Z'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
         />
     </svg>
 )
@@ -595,12 +617,12 @@ const PrivateOutlineSubDomainCollection = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_3031_9175)'>
             <path
                 d='M11 5H17C18.1046 5 19 5.89543 19 7V7'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -612,7 +634,13 @@ const PrivateOutlineSubDomainCollection = () => (
                 strokeLinecap='round'
                 strokeLinejoin='round'
             />
-            <path d='M3 11L22 11' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M3 11L22 11'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
             <path
                 d='M22 18V9C22 7.89543 21.1046 7 20 7H13.0704C12.4017 7 11.7772 6.6658 11.4063 6.1094L10.5937 4.8906C10.2228 4.3342 9.59834 4 8.92963 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18Z'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
@@ -637,18 +665,18 @@ const PrivateSolidSubDomainCollection = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_3549_105907)'>
             <path
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M14.6667 6.66666C14.6667 6.11437 15.1145 5.66666 15.6667 5.66666H24.3334C25.9903 5.66666 27.3334 7.0098 27.3334 8.66666V9.33332C27.3334 9.88561 26.8857 10.3333 26.3334 10.3333C25.7811 10.3333 25.3334 9.88561 25.3334 9.33332V8.66666C25.3334 8.11437 24.8857 7.66666 24.3334 7.66666H15.6667C15.1145 7.66666 14.6667 7.21894 14.6667 6.66666Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M29.3334 24V14.5H2.66675V24C2.66675 25.4728 3.86066 26.6667 5.33342 26.6667H26.6667C28.1395 26.6667 29.3334 25.4728 29.3334 24Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -676,7 +704,7 @@ const PrivateOutlineDirectoryScanning = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7395)'>
             <path
@@ -685,7 +713,7 @@ const PrivateOutlineDirectoryScanning = () => (
                 d='M5.75 5C5.75 4.30964 6.30964 3.75 7 3.75H12.5858C12.6521 3.75 12.7157 3.77634 12.7626 3.82322L18.1768 9.23744C18.2237 9.28432 18.25 9.34791 18.25 9.41421V12H19.75V9.41421C19.75 8.95009 19.5656 8.50497 19.2374 8.17678L13.8232 2.76256C13.495 2.43437 13.0499 2.25 12.5858 2.25H7C5.48122 2.25 4.25 3.48122 4.25 5V12H5.75V5ZM5.75 14H4.25V19C4.25 20.5188 5.48122 21.75 7 21.75H17C18.5188 21.75 19.75 20.5188 19.75 19V14H18.25V19C18.25 19.6904 17.6904 20.25 17 20.25H7C6.30964 20.25 5.75 19.6904 5.75 19V14ZM9 10.25C8.58579 10.25 8.25 10.5858 8.25 11C8.25 11.4142 8.58579 11.75 9 11.75H15C15.4142 11.75 15.75 11.4142 15.75 11C15.75 10.5858 15.4142 10.25 15 10.25H9ZM9 15.25C8.58579 15.25 8.25 15.5858 8.25 16C8.25 16.4142 8.58579 16.75 9 16.75H15C15.4142 16.75 15.75 16.4142 15.75 16C15.75 15.5858 15.4142 15.25 15 15.25H9Z'
                 fill='var(--Colors-Use-Neutral-Text-1-Title)'
             />
-            <path d='M1 12H23' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M1 12H23' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
         </g>
     </svg>
 )
@@ -703,12 +731,12 @@ const PrivateSolidDirectoryScanning = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2619_79379)'>
             <path
                 d='M9.33341 28H22.6668C24.1395 28 25.3334 26.8061 25.3334 25.3333V12.5523C25.3334 12.1987 25.1929 11.8595 24.9429 11.6095L17.7239 4.39052C17.4739 4.14048 17.1348 4 16.7811 4H9.33342C7.86066 4 6.66675 5.19391 6.66675 6.66667V25.3333C6.66675 26.8061 7.86066 28 9.33341 28Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -716,7 +744,12 @@ const PrivateSolidDirectoryScanning = () => (
                 d='M9.33342 5C8.41294 5 7.66675 5.74619 7.66675 6.66667V25.3333C7.66675 26.2538 8.41294 27 9.33341 27H22.6668C23.5872 27 24.3334 26.2538 24.3334 25.3333V12.5523C24.3334 12.4639 24.2983 12.3791 24.2358 12.3166L17.0168 5.09763C16.9543 5.03512 16.8695 5 16.7811 5H9.33342ZM5.66675 6.66667C5.66675 4.64162 7.30837 3 9.33342 3H16.7811C17.4 3 17.9935 3.24583 18.431 3.68342L25.65 10.9024C26.0876 11.34 26.3334 11.9334 26.3334 12.5523V25.3333C26.3334 27.3584 24.6918 29 22.6668 29H9.33341C7.30837 29 5.66675 27.3584 5.66675 25.3333V6.66667ZM11.0001 14.6667C11.0001 14.1144 11.4478 13.6667 12.0001 13.6667H20.0001C20.5524 13.6667 21.0001 14.1144 21.0001 14.6667C21.0001 15.219 20.5524 15.6667 20.0001 15.6667H12.0001C11.4478 15.6667 11.0001 15.219 11.0001 14.6667ZM11.0001 21.3333C11.0001 20.781 11.4478 20.3333 12.0001 20.3333H20.0001C20.5524 20.3333 21.0001 20.781 21.0001 21.3333C21.0001 21.8856 20.5524 22.3333 20.0001 22.3333H12.0001C11.4478 22.3333 11.0001 21.8856 11.0001 21.3333Z'
                 fill='var(--Colors-Use-Neutral-Text-1-Title)'
             />
-            <path d='M1.33337 16H30.6667' stroke='#F28B44' strokeWidth='2' strokeLinecap='round' />
+            <path
+                d='M1.33337 16H30.6667'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='2'
+                strokeLinecap='round'
+            />
         </g>
         <path
             fillRule='evenodd'
@@ -728,7 +761,7 @@ const PrivateSolidDirectoryScanning = () => (
             fillRule='evenodd'
             clipRule='evenodd'
             d='M0.333374 16C0.333374 15.4477 0.781089 15 1.33337 15H30.6667C31.219 15 31.6667 15.4477 31.6667 16C31.6667 16.5523 31.219 17 30.6667 17H1.33337C0.781089 17 0.333374 16.5523 0.333374 16Z'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
         />
     </svg>
 )
@@ -749,7 +782,7 @@ const PrivateOutlinePoc = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_3031_7833)'>
             <circle cx='12' cy='12' r='9' stroke='var(--Colors-Use-Neutral-Text-1-Title)' strokeWidth='1.5' />
@@ -760,7 +793,7 @@ const PrivateOutlinePoc = () => (
                 strokeLinecap='round'
                 strokeLinejoin='round'
             />
-            <circle cx='12' cy='12' r='3' stroke='#f28b44' strokeWidth='1.5' />
+            <circle cx='12' cy='12' r='3' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' />
         </g>
     </svg>
 )
@@ -778,12 +811,12 @@ const PrivateSolidPoc = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110501)'>
             <path
                 d='M28 16C28 22.6274 22.6274 28 16 28C9.37258 28 4 22.6274 4 16C4 9.37258 9.37258 4 16 4C22.6274 4 28 9.37258 28 16Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M20 16C20 18.2091 18.2091 20 16 20C13.7909 20 12 18.2091 12 16C12 13.7909 13.7909 12 16 12C18.2091 12 20 13.7909 20 16Z'
@@ -815,10 +848,16 @@ const PrivateOutlinePluginStore = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2970_81647)'>
-            <path d='M23 9L12 1L1 9' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M23 9L12 1L1 9'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
             <path
                 d='M4 13V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V11'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
@@ -828,7 +867,7 @@ const PrivateOutlinePluginStore = () => (
             />
             <path
                 d='M4 16H9V21H6C4.89543 21 4 20.1046 4 19V16Z'
-                stroke='#F28B44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -864,18 +903,18 @@ const PrivateSolidPluginStore = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110812)'>
             <path
                 d='M5.33325 14.7361C5.33325 13.858 5.76556 13.0361 6.48918 12.5386L14.4892 7.03864C15.3992 6.41301 16.6007 6.41301 17.5107 7.03864L25.5107 12.5386C26.2343 13.0361 26.6666 13.858 26.6666 14.7361V25.3333C26.6666 26.8061 25.4727 28 23.9999 28H7.99992C6.52716 28 5.33325 26.8061 5.33325 25.3333V14.7361Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M15.4118 0.524607C15.7625 0.269589 16.2375 0.269589 16.5882 0.524607L31.2548 11.1913C31.7015 11.5161 31.8002 12.1415 31.4754 12.5882C31.1506 13.0348 30.5251 13.1336 30.0785 12.8087L16 2.56984L1.92149 12.8087C1.47484 13.1336 0.849425 13.0348 0.524586 12.5882C0.199748 12.1415 0.298498 11.5161 0.745151 11.1913L15.4118 0.524607Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -891,7 +930,7 @@ const PrivateSolidPluginStore = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M4.33325 21.3333C4.33325 20.7811 4.78097 20.3333 5.33325 20.3333H11.9999C12.5522 20.3333 12.9999 20.7811 12.9999 21.3333V28C12.9999 28.5523 12.5522 29 11.9999 29H7.99992C5.97487 29 4.33325 27.3584 4.33325 25.3333V21.3333ZM6.33325 22.3333V25.3333C6.33325 26.2538 7.07944 27 7.99992 27H10.9999V22.3333H6.33325Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -920,7 +959,7 @@ const PrivateOutlineBatchPlugin = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7819)'>
             <path
@@ -937,9 +976,27 @@ const PrivateOutlineBatchPlugin = () => (
                 strokeLinecap='round'
                 strokeLinejoin='round'
             />
-            <path d='M5.5 9L10 8' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
-            <path d='M5.5 12H8.5' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
-            <path d='M5.5 15L9 16' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M5.5 9L10 8'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M5.5 12H8.5'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M5.5 15L9 16'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
         </g>
     </svg>
 )
@@ -957,12 +1014,12 @@ const PrivateSolidBatchPlugin = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4916_115569)'>
             <path
                 d='M4 8.65075C4 7.47313 4.77245 6.43494 5.90041 6.09655L13.9004 3.69655C15.6114 3.18326 17.3333 4.46445 17.3333 6.25075V25.7493C17.3333 27.5356 15.6114 28.8167 13.9004 28.3035L5.90041 25.9035C4.77245 25.5651 4 24.5269 4 23.3493V8.65075Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -974,7 +1031,7 @@ const PrivateSolidBatchPlugin = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M21.6666 7.60951C21.4196 7.6968 21.1388 7.68753 20.886 7.56113C20.392 7.31414 20.1918 6.71346 20.4388 6.21948C21.2429 4.61138 23.6666 5.18355 23.6666 6.98146V25.0186C23.6666 26.8165 21.2429 27.3887 20.4388 25.7806C20.1918 25.2866 20.392 24.6859 20.886 24.4389C21.1388 24.3125 21.4196 24.3033 21.6666 24.3906V7.60951Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -1020,7 +1077,7 @@ const PrivateOutlineShellReceiver = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7637)'>
             <path
@@ -1038,9 +1095,9 @@ const PrivateOutlineShellReceiver = () => (
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='1.5'
             />
-            <path d='M9 16V19' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' />
-            <path d='M12 16V19' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' />
-            <path d='M15 16V19' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M9 16V19' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M12 16V19' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M15 16V19' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
         </g>
     </svg>
 )
@@ -1058,10 +1115,10 @@ const PrivateSolidShellReceiver = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2589_76680)'>
-            <circle cx='15.9999' cy='17.3333' r='10.6667' fill='#F28B44' />
+            <circle cx='15.9999' cy='17.3333' r='10.6667' fill='var(--Colors-Use-Main-Primary)' />
             <path
                 d='M29.3334 21.3333V17.3333C29.3334 9.96954 23.3639 4 16.0001 4V4C8.63628 4 2.66675 9.96954 2.66675 17.3333V21.3333'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
@@ -1069,13 +1126,13 @@ const PrivateSolidShellReceiver = () => (
             />
             <path
                 d='M2.66675 18.6667H5.33341C6.80617 18.6667 8.00008 19.8606 8.00008 21.3333V24C8.00008 25.4728 6.80617 26.6667 5.33341 26.6667C3.86066 26.6667 2.66675 25.4728 2.66675 24V18.6667Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='2'
             />
             <path
                 d='M24 21.3333C24 19.8606 25.1939 18.6667 26.6667 18.6667H29.3333V24C29.3333 25.4728 28.1394 26.6667 26.6667 26.6667C25.1939 26.6667 24 25.4728 24 24V21.3333Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='2'
             />
@@ -1117,7 +1174,7 @@ const PrivateOutlineReverseServer = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7666)'>
             <rect
@@ -1138,16 +1195,16 @@ const PrivateOutlineReverseServer = () => (
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='1.5'
             />
-            <path d='M12 14V17' stroke='#f28b44' strokeWidth='1.5' />
+            <path d='M12 14V17' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' />
             <path
                 d='M20 17V16C20 14.8954 19.1046 14 18 14H6C4.89543 14 4 14.8954 4 16V17'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='1.5'
             />
-            <circle cx='17' cy='6' r='1' fill='#f28b44' />
-            <circle cx='17' cy='10' r='1' fill='#f28b44' />
+            <circle cx='17' cy='6' r='1' fill='var(--Colors-Use-Main-Primary)' />
+            <circle cx='17' cy='10' r='1' fill='var(--Colors-Use-Main-Primary)' />
             <circle cx='4.5' cy='18.5' r='1.5' stroke='var(--Colors-Use-Neutral-Text-1-Title)' strokeWidth='1.5' />
-            <circle cx='12' cy='18.5' r='1.5' stroke='#f28b44' strokeWidth='1.5' />
+            <circle cx='12' cy='18.5' r='1.5' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' />
             <circle cx='19.5' cy='18.5' r='1.5' stroke='var(--Colors-Use-Neutral-Text-1-Title)' strokeWidth='1.5' />
         </g>
     </svg>
@@ -1166,16 +1223,16 @@ const PrivateSolidReverseServer = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110681)'>
             <path
                 d='M5.33337 13.3333C5.33337 11.8606 6.52728 10.6667 8.00004 10.6667H24C25.4728 10.6667 26.6667 11.8606 26.6667 13.3333C26.6667 14.8061 25.4728 16 24 16H8.00004C6.52728 16 5.33337 14.8061 5.33337 13.3333Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M5.33337 8.00001C5.33337 6.52725 6.52728 5.33334 8.00004 5.33334H24C25.4728 5.33334 26.6667 6.52725 26.6667 8.00001C26.6667 9.47277 25.4728 10.6667 24 10.6667H8.00004C6.52728 10.6667 5.33337 9.47277 5.33337 8.00001Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <circle cx='22.6667' cy='7.99999' r='1.33333' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
             <circle cx='22.6667' cy='13.3333' r='1.33333' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
@@ -1183,7 +1240,7 @@ const PrivateSolidReverseServer = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M17 21.8374C18.1652 22.2492 19 23.3604 19 24.6667C19 26.3235 17.6569 27.6667 16 27.6667C14.3431 27.6667 13 26.3235 13 24.6667C13 23.3604 13.8348 22.2492 15 21.8374V18.6667H17V21.8374ZM15 24.6667C15 24.1144 15.4477 23.6667 16 23.6667C16.5523 23.6667 17 24.1144 17 24.6667C17 25.2189 16.5523 25.6667 16 25.6667C15.4477 25.6667 15 25.2189 15 24.6667Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -1211,7 +1268,7 @@ const PrivateOutlineDNSLog = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7697)'>
             <rect
@@ -1235,25 +1292,25 @@ const PrivateOutlineDNSLog = () => (
             />
             <path
                 d='M5.822 15.094C5.69 15.094 5.576 15.136 5.492 15.232C5.396 15.322 5.354 15.436 5.354 15.568C5.354 15.7 5.396 15.808 5.492 15.904C5.576 15.988 5.69 16.036 5.822 16.036C5.954 16.036 6.062 15.988 6.158 15.904C6.248 15.808 6.296 15.7 6.296 15.568C6.296 15.436 6.248 15.322 6.158 15.232C6.062 15.136 5.954 15.094 5.822 15.094Z'
-                fill='#f28b44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M8.40435 12.814C7.91835 12.814 7.54035 12.976 7.27035 13.3C7.01835 13.594 6.89235 13.978 6.89235 14.446C6.89235 14.926 7.01835 15.316 7.27635 15.616C7.54035 15.928 7.91235 16.084 8.39235 16.084C8.79435 16.084 9.11835 15.982 9.35835 15.784C9.60435 15.58 9.76635 15.268 9.83835 14.848H9.16035C9.10635 15.298 8.85435 15.526 8.39835 15.526C8.13435 15.526 7.93635 15.43 7.80435 15.244C7.66035 15.052 7.59435 14.782 7.59435 14.44C7.59435 14.104 7.66635 13.84 7.81035 13.654C7.95435 13.462 8.15235 13.372 8.40435 13.372C8.60835 13.372 8.77635 13.42 8.90235 13.516C9.02235 13.612 9.10635 13.756 9.14835 13.954H9.82635C9.76635 13.564 9.61035 13.276 9.36435 13.084C9.12435 12.904 8.80635 12.814 8.40435 12.814Z'
-                fill='#f28b44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M11.8156 12.814C11.3416 12.814 10.9636 12.964 10.6816 13.276C10.3936 13.582 10.2556 13.972 10.2556 14.452C10.2556 14.926 10.3936 15.316 10.6756 15.616C10.9636 15.928 11.3416 16.084 11.8156 16.084C12.2836 16.084 12.6676 15.928 12.9556 15.616C13.2316 15.316 13.3756 14.926 13.3756 14.452C13.3756 13.972 13.2316 13.582 12.9496 13.276C12.6616 12.964 12.2836 12.814 11.8156 12.814ZM11.8156 13.372C12.0976 13.372 12.3196 13.48 12.4756 13.708C12.6076 13.9 12.6796 14.152 12.6796 14.452C12.6796 14.746 12.6076 14.992 12.4756 15.19C12.3196 15.412 12.0976 15.526 11.8156 15.526C11.5276 15.526 11.3116 15.412 11.1556 15.19C11.0236 14.998 10.9576 14.752 10.9576 14.452C10.9576 14.152 11.0236 13.9 11.1556 13.708C11.3116 13.48 11.5276 13.372 11.8156 13.372Z'
-                fill='#f28b44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M15.4973 12.814C15.1973 12.814 14.9153 12.946 14.6573 13.216V12.898H13.9733V16H14.6573V14.14C14.6573 13.936 14.7173 13.756 14.8373 13.612C14.9573 13.456 15.1133 13.384 15.3113 13.384C15.7193 13.384 15.9233 13.618 15.9233 14.092V16H16.6073V14.104C16.6073 13.876 16.6613 13.702 16.7813 13.576C16.8953 13.444 17.0333 13.384 17.2013 13.384C17.4413 13.384 17.6093 13.438 17.7173 13.552C17.8193 13.66 17.8733 13.84 17.8733 14.086V16H18.5573V13.966C18.5573 13.624 18.4493 13.348 18.2453 13.132C18.0293 12.916 17.7653 12.814 17.4473 12.814C17.2373 12.814 17.0633 12.85 16.9253 12.922C16.7693 12.994 16.6193 13.126 16.4753 13.318C16.2773 12.982 15.9533 12.814 15.4973 12.814Z'
-                fill='#f28b44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M7.11765 13.1709C7.43161 12.7948 7.86965 12.614 8.4044 12.614C8.83548 12.614 9.19992 12.7107 9.4844 12.924L9.48747 12.9263C9.78227 13.1564 9.95816 13.4952 10.0241 13.9236L10.0595 14.154H8.98637L8.95275 13.9955C8.91836 13.8334 8.85467 13.7347 8.7793 13.6737C8.69753 13.6122 8.57674 13.572 8.4044 13.572C8.20785 13.572 8.07234 13.6381 7.9704 13.774L7.96856 13.7765C7.86137 13.9149 7.7944 14.1294 7.7944 14.44C7.7944 14.7605 7.85695 14.9807 7.9644 15.124L7.96755 15.1282C8.05674 15.2539 8.18946 15.326 8.3984 15.326C8.59384 15.326 8.71753 15.2775 8.79689 15.2066C8.87647 15.1355 8.93861 15.0176 8.96182 14.8242L8.98296 14.648H10.0633C10.0582 14.5839 10.0557 14.5186 10.0557 14.452C10.0557 13.9313 10.2067 13.4897 10.5347 13.1404C10.8607 12.7805 11.2959 12.614 11.8157 12.614C12.3311 12.614 12.7654 12.7815 13.0966 13.1404C13.417 13.488 13.5757 13.9286 13.5757 14.452C13.5757 14.9692 13.4173 15.4097 13.1029 15.7514C12.7724 16.1094 12.3323 16.284 11.8157 16.284C11.293 16.284 10.8595 16.1096 10.5293 15.7523C10.2587 15.4642 10.1088 15.1067 10.0675 14.6951L10.0355 14.8818C9.95796 15.3342 9.77883 15.6952 9.48606 15.938C9.20144 16.1728 8.828 16.284 8.3924 16.284C7.86523 16.284 7.43298 16.1103 7.12424 15.7458C6.82852 15.4016 6.6924 14.9618 6.6924 14.446C6.6924 13.9416 6.82884 13.5084 7.11765 13.1709ZM8.4044 13.014C7.96765 13.014 7.65002 13.1569 7.42404 13.4281L7.42226 13.4302C7.20768 13.6805 7.0924 14.015 7.0924 14.446C7.0924 14.8899 7.20811 15.2299 7.42803 15.4856L7.42908 15.4868C7.6483 15.7459 7.95986 15.884 8.3924 15.884C8.76071 15.884 9.03561 15.791 9.23097 15.6299C9.3871 15.5003 9.50981 15.3106 9.58754 15.048H9.32662C9.28041 15.2296 9.19607 15.3864 9.0634 15.5049C8.88926 15.6605 8.65895 15.726 8.3984 15.726C8.08026 15.726 7.81764 15.6068 7.64283 15.3619C7.46344 15.1214 7.3944 14.8024 7.3944 14.44C7.3944 14.0793 7.47118 13.7662 7.65132 13.5328C7.83731 13.2856 8.09744 13.172 8.4044 13.172C8.63873 13.172 8.8534 13.2272 9.02361 13.3569L9.02737 13.3598C9.15219 13.4597 9.24199 13.5932 9.29951 13.754H9.57694C9.50717 13.5262 9.39274 13.3604 9.24286 13.2429C9.04745 13.0969 8.77634 13.014 8.4044 13.014ZM11.8157 13.014C11.3881 13.014 11.0679 13.147 10.8301 13.4101L10.8273 13.4131C10.5803 13.6756 10.4557 14.0135 10.4557 14.452C10.4557 14.8848 10.5804 15.2226 10.8214 15.479L10.8226 15.4804C11.0684 15.7466 11.3907 15.884 11.8157 15.884C12.235 15.884 12.5632 15.7463 12.8087 15.4804C13.0461 15.2222 13.1757 14.8827 13.1757 14.452C13.1757 14.0155 13.0462 13.676 12.8027 13.4117C12.5579 13.1465 12.2363 13.014 11.8157 13.014ZM14.8573 12.797C15.0559 12.6771 15.27 12.614 15.4973 12.614C15.9085 12.614 16.2449 12.7389 16.486 12.9983C16.5949 12.8881 16.7116 12.8011 16.8372 12.7424C17.0111 12.6529 17.2178 12.614 17.4473 12.614C17.8136 12.614 18.13 12.7339 18.3868 12.9906L18.3908 12.9946C18.6331 13.2512 18.7573 13.5778 18.7573 13.966V16.2H17.6733V14.086C17.6733 13.8615 17.6228 13.7432 17.5719 13.6893C17.5181 13.6327 17.4158 13.584 17.2013 13.584C17.09 13.584 17.0077 13.6198 16.9327 13.7067L16.9263 13.7141C16.8538 13.7903 16.8073 13.9067 16.8073 14.104V16.2H15.7233V14.092C15.7233 13.8791 15.6769 13.7578 15.6192 13.6912C15.5663 13.6302 15.4768 13.584 15.3113 13.584C15.1715 13.584 15.0757 13.6302 14.9959 13.734L14.9911 13.7401C14.9047 13.8439 14.8573 13.9768 14.8573 14.14V16.2H13.7733V12.698H14.8573V12.797ZM14.4573 13.098H14.1733V15.8H14.4573V14.14C14.4573 13.8965 14.5293 13.6707 14.6812 13.487C14.6958 13.4682 14.7108 13.4503 14.7263 13.4334L14.4573 13.7148V13.098ZM14.7532 13.4052C14.9036 13.2551 15.0929 13.184 15.3113 13.184C15.5539 13.184 15.7704 13.2549 15.9215 13.4293C16.0678 13.5982 16.1233 13.831 16.1233 14.092V15.8H16.4073V14.104C16.4073 13.9069 16.4431 13.7257 16.5343 13.5728L16.4553 13.678L16.303 13.4196C16.1474 13.1554 15.8961 13.014 15.4973 13.014C15.263 13.014 15.0306 13.1149 14.8019 13.3542L14.7532 13.4052ZM16.6305 13.4445C16.6314 13.4435 16.6322 13.4426 16.6331 13.4417C16.7856 13.267 16.9782 13.184 17.2013 13.184C17.4666 13.184 17.7003 13.2432 17.8625 13.4145C18.0156 13.5766 18.0733 13.8185 18.0733 14.086V15.8H18.3573V13.966C18.3573 13.6714 18.2664 13.4466 18.1019 13.2714C17.927 13.0975 17.716 13.014 17.4473 13.014C17.2588 13.014 17.1191 13.0465 17.0178 13.0993L17.0092 13.1038C16.8929 13.1575 16.7669 13.2626 16.6353 13.438L16.6305 13.4445ZM11.8157 13.572C11.5887 13.572 11.4367 13.6514 11.3207 13.821C11.2179 13.9706 11.1577 14.1799 11.1577 14.452C11.1577 14.7226 11.217 14.9257 11.3199 15.0759C11.4376 15.2429 11.5918 15.326 11.8157 15.326C12.0339 15.326 12.1935 15.2426 12.3106 15.077C12.4168 14.9168 12.4797 14.7113 12.4797 14.452C12.4797 14.1834 12.4153 13.9732 12.3109 13.8213C12.1953 13.6524 12.0375 13.572 11.8157 13.572ZM10.9907 13.5949C11.1867 13.3086 11.4667 13.172 11.8157 13.172C12.1578 13.172 12.4441 13.3079 12.6406 13.5949C12.8001 13.8269 12.8797 14.1207 12.8797 14.452C12.8797 14.7796 12.7991 15.0655 12.6421 15.301L12.6394 15.305C12.4447 15.5821 12.1606 15.726 11.8157 15.726C11.4639 15.726 11.1863 15.5814 10.992 15.305L10.9909 15.3033C10.8302 15.0696 10.7577 14.7809 10.7577 14.452C10.7577 14.1242 10.8297 13.8292 10.9907 13.5949ZM5.34816 15.0929C5.47693 14.9504 5.64787 14.894 5.82205 14.894C6.0049 14.894 6.16444 14.9556 6.29947 15.0906C6.42713 15.2183 6.49605 15.3832 6.49605 15.568C6.49605 15.7565 6.42466 15.9121 6.30396 16.0408L6.2972 16.048L6.28975 16.0545C6.163 16.1654 6.00958 16.236 5.82205 16.236C5.63921 16.236 5.47366 16.1685 5.35063 16.0454C5.2156 15.9104 5.15405 15.7509 5.15405 15.568C5.15405 15.3922 5.21116 15.2251 5.34816 15.0929ZM5.82205 15.294C5.73524 15.294 5.68107 15.3197 5.64257 15.3637L5.63606 15.3712L5.62884 15.3779C5.57898 15.4247 5.55405 15.4828 5.55405 15.568C5.55405 15.6492 5.57651 15.7056 5.63347 15.7626C5.67844 15.8076 5.7409 15.836 5.82205 15.836C5.89558 15.836 5.95625 15.8125 6.01881 15.76C6.07329 15.6993 6.09605 15.6407 6.09605 15.568C6.09605 15.4888 6.06897 15.4258 6.01663 15.3734C5.95966 15.3165 5.90321 15.294 5.82205 15.294Z'
-                fill='#f28b44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M6 6.5H14'
@@ -1261,7 +1318,7 @@ const PrivateOutlineDNSLog = () => (
                 strokeWidth='1.5'
                 strokeLinecap='round'
             />
-            <path d='M17 6.5H18' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M17 6.5H18' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
         </g>
     </svg>
 )
@@ -1279,7 +1336,7 @@ const PrivateSolidDNSLog = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110672)'>
             <rect
@@ -1293,7 +1350,7 @@ const PrivateSolidDNSLog = () => (
             />
             <path
                 d='M4 12H28V24C28 25.4728 26.8061 26.6667 25.3333 26.6667H6.66667C5.19391 26.6667 4 25.4728 4 24V12Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M7.76274 20.1254C7.58674 20.1254 7.43474 20.1814 7.32274 20.3094C7.19474 20.4294 7.13874 20.5814 7.13874 20.7574C7.13874 20.9334 7.19474 21.0774 7.32274 21.2054C7.43474 21.3174 7.58674 21.3814 7.76274 21.3814C7.93874 21.3814 8.08274 21.3174 8.21074 21.2054C8.33074 21.0774 8.39474 20.9334 8.39474 20.7574C8.39474 20.5814 8.33074 20.4294 8.21074 20.3094C8.08274 20.1814 7.93874 20.1254 7.76274 20.1254Z'
@@ -1327,7 +1384,7 @@ const PrivateSolidDNSLog = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M21.6666 8.66666C21.6666 8.11437 22.1143 7.66666 22.6666 7.66666H24C24.5522 7.66666 25 8.11437 25 8.66666C25 9.21894 24.5522 9.66666 24 9.66666H22.6666C22.1143 9.66666 21.6666 9.21894 21.6666 8.66666Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
         </g>
     </svg>
@@ -1349,12 +1406,12 @@ const PrivateOutlineICMPSizeLog = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7727)'>
             <path
                 d='M7 21L10.5858 17.4142C11.3668 16.6332 12.6332 16.6332 13.4142 17.4142L17 21'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
             />
@@ -1364,9 +1421,9 @@ const PrivateOutlineICMPSizeLog = () => (
                 strokeWidth='1.5'
             />
             <path d='M2 3H22' stroke='var(--Colors-Use-Neutral-Text-1-Title)' strokeWidth='1.5' strokeLinecap='round' />
-            <path d='M8 13L8 10' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' />
-            <path d='M12 13V8' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' />
-            <path d='M16 13L16 6' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M8 13L8 10' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M12 13V8' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M16 13L16 6' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
         </g>
     </svg>
 )
@@ -1384,18 +1441,18 @@ const PrivateSolidICMPSizeLog = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110664)'>
             <path
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M17.1784 23.9261C16.5276 23.2752 15.4723 23.2752 14.8214 23.9261L10.0404 28.7071C9.64983 29.0976 9.01667 29.0976 8.62615 28.7071C8.23562 28.3166 8.23562 27.6834 8.62615 27.2929L13.4072 22.5118C14.8391 21.0799 17.1607 21.0799 18.5926 22.5118L23.3737 27.2929C23.7642 27.6834 23.7642 28.3166 23.3737 28.7071C22.9832 29.0976 22.35 29.0976 21.9595 28.7071L17.1784 23.9261Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M5.33325 4H26.6666V18.6667C26.6666 20.1394 25.4727 21.3333 23.9999 21.3333H7.99992C6.52716 21.3333 5.33325 20.1394 5.33325 18.6667V4Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -1423,7 +1480,7 @@ const PrivateOutlineTCPPortLog = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7755)'>
             <path
@@ -1434,7 +1491,7 @@ const PrivateOutlineTCPPortLog = () => (
             />
             <path
                 d='M11.5 6.28868C11.8094 6.11004 12.1906 6.11004 12.5 6.28868L15.8301 8.21132C16.1395 8.38996 16.3301 8.72008 16.3301 9.07735V12.9226C16.3301 13.2799 16.1395 13.61 15.8301 13.7887L12.5 15.7113C12.1906 15.89 11.8094 15.89 11.5 15.7113L8.16987 13.7887C7.86047 13.61 7.66987 13.2799 7.66987 12.9226V9.07735C7.66987 8.72008 7.86047 8.38996 8.16987 8.21132L11.5 6.28868Z'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinejoin='round'
             />
@@ -1450,7 +1507,7 @@ const PrivateOutlineTCPPortLog = () => (
                 r='1.5'
                 transform='rotate(120 12.2188 20.9773)'
                 fill='white'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
             />
             <path
@@ -1465,7 +1522,7 @@ const PrivateOutlineTCPPortLog = () => (
                 r='1.5'
                 transform='rotate(-120 3.78097 6.53104)'
                 fill='white'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
             />
             <path
@@ -1474,7 +1531,14 @@ const PrivateOutlineTCPPortLog = () => (
                 strokeWidth='1.5'
                 strokeLinecap='round'
             />
-            <circle cx='20.6338' cy='6.5' r='1.5' fill='white' stroke='#f28b44' strokeWidth='1.5' />
+            <circle
+                cx='20.6338'
+                cy='6.5'
+                r='1.5'
+                fill='white'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+            />
         </g>
     </svg>
 )
@@ -1492,12 +1556,12 @@ const PrivateSolidTCPPortLog = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2619_79388)'>
             <path
                 d='M15.9999 1.33316L27.5469 7.99983V21.3332L15.9999 27.9998L4.45288 21.3332V7.99983L15.9999 1.33316Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -1519,7 +1583,7 @@ const PrivateSolidTCPPortLog = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M17.1578 28.4695C17.434 27.9912 17.2701 27.3797 16.7918 27.1035C16.3135 26.8274 15.7019 26.9912 15.4258 27.4695C15.1496 27.9478 15.3135 28.5594 15.7918 28.8356C16.2701 29.1117 16.8817 28.9478 17.1578 28.4695ZM17.7918 25.3715C19.2267 26.1999 19.7183 28.0347 18.8899 29.4695C18.0615 30.9044 16.2267 31.396 14.7918 30.5676C13.3569 29.7392 12.8653 27.9044 13.6937 26.4695C14.5222 25.0347 16.3569 24.543 17.7918 25.3715Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M4.04138 6.97535C4.99796 6.42307 6.22114 6.75082 6.77343 7.7074C7.32571 8.66399 6.99796 9.88717 6.04138 10.4395C5.08479 10.9917 3.86161 10.664 3.30933 9.7074C2.75704 8.75082 3.08479 7.52764 4.04138 6.97535Z'
@@ -1529,7 +1593,7 @@ const PrivateSolidTCPPortLog = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M4.17541 9.2074C4.45155 9.6857 5.06314 9.84957 5.54144 9.57343C6.01973 9.29729 6.1836 8.6857 5.90746 8.2074C5.63132 7.72911 5.01973 7.56524 4.54144 7.84138C4.06314 8.11752 3.89927 8.72911 4.17541 9.2074ZM6.54144 11.3055C5.10656 12.1339 3.27179 11.6423 2.44336 10.2074C1.61493 8.77253 2.10656 6.93776 3.54144 6.10933C4.97631 5.2809 6.81109 5.77253 7.63951 7.20741C8.46794 8.64228 7.97631 10.4771 6.54144 11.3055Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M29.5122 8.66684C29.5122 9.77141 28.6168 10.6668 27.5122 10.6668C26.4076 10.6668 25.5122 9.77141 25.5122 8.66684C25.5122 7.56227 26.4076 6.66684 27.5122 6.66684C28.6168 6.66684 29.5122 7.56227 29.5122 8.66684Z'
@@ -1539,7 +1603,7 @@ const PrivateSolidTCPPortLog = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M27.5122 7.66684C26.9599 7.66684 26.5122 8.11455 26.5122 8.66684C26.5122 9.21912 26.9599 9.66684 27.5122 9.66684C28.0645 9.66684 28.5122 9.21912 28.5122 8.66684C28.5122 8.11455 28.0645 7.66684 27.5122 7.66684ZM24.5122 8.66684C24.5122 7.00999 25.8554 5.66684 27.5122 5.66684C29.1691 5.66684 30.5122 7.00999 30.5122 8.66684C30.5122 10.3237 29.1691 11.6668 27.5122 11.6668C25.8554 11.6668 24.5122 10.3237 24.5122 8.66684Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
         </g>
     </svg>
@@ -1561,19 +1625,19 @@ const PrivateOutlinePayloadGenerater = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7793)'>
             <path
                 d='M7 18.5L3.28735 19.6138C2.64574 19.8063 2 19.3258 2 18.656V14C2 12.8954 2.89543 12 4 12H10C11.1046 12 12 12.8954 12 14M6 16.5L4 17V16'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
                 strokeLinejoin='round'
             />
             <path
                 d='M9 8C9 9.10457 8.10457 10 7 10C5.89543 10 5 9.10457 5 8C5 6.89543 5.89543 6 7 6C8.10457 6 9 6.89543 9 8Z'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -1602,18 +1666,18 @@ const PrivateSolidPayloadGenerater = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110649)'>
             <path
                 d='M15.6907 8C16.7171 6.22222 19.2831 6.22222 20.3095 8L28.9697 23C29.9961 24.7778 28.7131 27 26.6603 27H9.33983C7.28703 27 6.00403 24.7778 7.03043 23L15.6907 8Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M9.33341 9C8.41294 9 7.66675 9.74619 7.66675 10.6667C7.66675 11.5871 8.41294 12.3333 9.33341 12.3333C10.2539 12.3333 11.0001 11.5871 11.0001 10.6667C11.0001 9.74619 10.2539 9 9.33341 9ZM5.66675 10.6667C5.66675 8.64162 7.30837 7 9.33341 7C11.3585 7 13.0001 8.64162 13.0001 10.6667C13.0001 12.6917 11.3585 14.3333 9.33341 14.3333C7.30837 14.3333 5.66675 12.6917 5.66675 10.6667Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -1641,7 +1705,7 @@ const PrivateOutlineCodec = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7584)'>
             <path
@@ -1660,14 +1724,14 @@ const PrivateOutlineCodec = () => (
             />
             <path
                 d='M9.77783 19.1877V19.7778C9.77783 21.0051 10.7728 22 12.0001 22C13.2274 22 14.2223 21.0051 14.2223 19.7778V19.1877'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.66667'
                 strokeLinecap='square'
                 strokeLinejoin='round'
             />
             <path
                 d='M19.0708 4.92847L18.2852 5.71414M5.71439 5.71414L4.92871 4.92847'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.66667'
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -1689,7 +1753,7 @@ const PrivateSolidCodec = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110495)'>
             <path
@@ -1700,7 +1764,7 @@ const PrivateSolidCodec = () => (
             />
             <path
                 d='M10.7621 10.7622C7.86934 13.655 7.86934 18.3451 10.7621 21.2379L11.5726 22.0484C11.8519 22.3039 12.436 22.9333 12.5385 23.4074H19.4614C19.7036 23.0342 20.2358 22.2399 20.4272 22.0484L21.2378 21.2379C24.1305 18.3451 24.1305 13.655 21.2378 10.7622C18.345 7.86943 13.6549 7.86943 10.7621 10.7622Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -1718,7 +1782,7 @@ const PrivateSolidCodec = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M5.78589 5.78561C6.2198 5.3517 6.92332 5.3517 7.35723 5.78561L8.4048 6.83318C8.83872 7.26709 8.83872 7.97061 8.4048 8.40453C7.97088 8.83844 7.26737 8.83844 6.83345 8.40453L5.78589 7.35696C5.35197 6.92304 5.35197 6.21953 5.78589 5.78561ZM26.2134 5.78561C26.6473 6.21953 26.6473 6.92304 26.2134 7.35696L25.1659 8.40453C24.7319 8.83844 24.0284 8.83844 23.5945 8.40453C23.1606 7.97061 23.1606 7.26709 23.5945 6.83318L24.6421 5.78561C25.076 5.3517 25.7795 5.3517 26.2134 5.78561Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
         </g>
     </svg>
@@ -1740,7 +1804,7 @@ const PrivateOutlineDataCompare = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2812_7610)'>
             <path
@@ -1754,7 +1818,7 @@ const PrivateOutlineDataCompare = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M12.25 4.25H12C11.5858 4.25 11.25 4.58579 11.25 5V19C11.25 19.4142 11.5858 19.75 12 19.75H12.25V4.25ZM13.75 19.75H19C20.5188 19.75 21.75 18.5188 21.75 17V7C21.75 5.48122 20.5188 4.25 19 4.25H13.75V5.75H19C19.6904 5.75 20.25 6.30964 20.25 7V17C20.25 17.6904 19.6904 18.25 19 18.25H13.75V19.75Z'
-                fill='#f28b44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M12 2V22'
@@ -1779,18 +1843,18 @@ const PrivateSolidDataCompare = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110607)'>
             <path
                 d='M4 9.33332C4 7.86056 5.19391 6.66666 6.66667 6.66666H16V25.3333H6.66667C5.19391 25.3333 4 24.1394 4 22.6667V9.33332Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M16.3333 5.92132C16.1288 6.10442 16 6.37052 16 6.66669V25.3334C16 25.6295 16.1288 25.8956 16.3333 26.0787V5.92132ZM18.3333 26.3334H25.3333C27.3584 26.3334 29 24.6917 29 22.6667V9.33335C29 7.30831 27.3584 5.66669 25.3333 5.66669H18.3333V7.66669H25.3333C26.2538 7.66669 27 8.41288 27 9.33335V22.6667C27 23.5872 26.2538 24.3334 25.3333 24.3334H18.3333V26.3334Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -1818,7 +1882,7 @@ const PrivateOutlineReport = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_3031_9207)'>
             <path
@@ -1828,7 +1892,13 @@ const PrivateOutlineReport = () => (
                 strokeLinecap='round'
                 strokeLinejoin='round'
             />
-            <path d='M6 8L14 8' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M6 8L14 8'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
             <path
                 d='M6 13L12 13'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
@@ -1857,12 +1927,12 @@ const PrivateSolidReport = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110833)'>
             <path
                 d='M4 6C4 4.89543 4.89543 4 6 4H20.6667C21.7712 4 22.6667 4.89543 22.6667 6V26C22.6667 27.1046 21.7712 28 20.6667 28H8C5.79086 28 4 26.2091 4 24V6Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
         </g>
         <path
@@ -1896,7 +1966,7 @@ const PrivateOutlinePorts = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_3031_7917)'>
             <path
@@ -1920,11 +1990,41 @@ const PrivateOutlinePorts = () => (
                 strokeLinecap='round'
                 strokeLinejoin='round'
             />
-            <path d='M6 12V16' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
-            <path d='M9 12V16' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
-            <path d='M12 12V16' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
-            <path d='M15 12V16' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
-            <path d='M18 12V16' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M6 12V16'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M9 12V16'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M12 12V16'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M15 12V16'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M18 12V16'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
         </g>
     </svg>
 )
@@ -1942,12 +2042,12 @@ const PrivateSolidPorts = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110623)'>
             <path
                 d='M2.66675 12.6667C2.66675 11.5621 3.56218 10.6667 4.66675 10.6667H8.00008H16.0001H24.0001H27.3334C28.438 10.6667 29.3334 11.5621 29.3334 12.6667V24.6667C29.3334 25.7712 28.438 26.6667 27.3334 26.6667H4.66675C3.56218 26.6667 2.66675 25.7712 2.66675 24.6667V12.6667Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -1975,7 +2075,7 @@ const PrivateOutlineRisk = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_3031_7890)'>
             <path
@@ -1994,7 +2094,7 @@ const PrivateOutlineRisk = () => (
             />
             <path
                 d='M12 6.375V7.5M12 9.75H12.0056M8.12134 12H15.8787C16.7406 12 17.2793 11.0625 16.8483 10.3125L12.9697 3.5625C12.5387 2.8125 11.4613 2.8125 11.0303 3.5625L7.15168 10.3125C6.72072 11.0625 7.25942 12 8.12134 12Z'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -2016,12 +2116,12 @@ const PrivateSolidRisk = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110804)'>
             <path
                 d='M4 10C4 8.89543 4.89543 8 6 8H26C27.1046 8 28 8.89543 28 10V22C28 23.1046 27.1046 24 26 24H6C4.89543 24 4 23.1046 4 22V10Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -2055,7 +2155,7 @@ const PrivateOutlineDomain = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_3031_9146)'>
             <mask
@@ -2096,7 +2196,7 @@ const PrivateOutlineDomain = () => (
             <g mask='url(#mask2_3031_9146)'>
                 <path
                     d='M11.6583 8.12427C11.879 8.04399 12.121 8.04399 12.3417 8.12427L20.4156 11.0602C21.2932 11.3794 21.2932 12.6206 20.4156 12.9398L12.3417 15.8757C12.121 15.956 11.879 15.956 11.6583 15.8757L3.58443 12.9398C2.70675 12.6206 2.70676 11.3794 3.58443 11.0602L11.6583 8.12427Z'
-                    stroke='#f28b44'
+                    stroke='var(--Colors-Use-Main-Primary)'
                     strokeWidth='1.5'
                 />
             </g>
@@ -2122,7 +2222,7 @@ const PrivateSolidDomain = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110655)'>
             <mask
@@ -2166,12 +2266,12 @@ const PrivateSolidDomain = () => (
                     fillRule='evenodd'
                     clipRule='evenodd'
                     d='M15.3165 9.85116C15.758 9.69061 16.242 9.69061 16.6835 9.85116L28.424 14.1204C30.1793 14.7587 30.1793 17.2413 28.424 17.8796L16.6835 22.1489C16.242 22.3094 15.758 22.3094 15.3165 22.1489L3.57604 17.8796C1.82068 17.2413 1.82068 14.7587 3.57604 14.1204L15.3165 9.85116ZM16 11.7307L4.25952 16L16 20.2693L27.7405 16L16 11.7307Z'
-                    fill='#F28B44'
+                    fill='var(--Colors-Use-Main-Primary)'
                 />
             </g>
             <path
                 d='M15.6583 4.12426C15.879 4.04399 16.121 4.04399 16.3418 4.12426L28.0822 8.39353C28.9599 8.71269 28.9599 9.95397 28.0822 10.2731L16.3418 14.5424C16.121 14.6227 15.879 14.6227 15.6583 14.5424L3.91778 10.2731C3.0401 9.95397 3.0401 8.71269 3.91778 8.39353L15.6583 4.12426Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -2196,7 +2296,7 @@ const PrivateOutlineWebsiteTree = () => (
             width='10.5'
             height='3.5'
             rx='1.25'
-            stroke='#F28B44'
+            stroke='var(--Colors-Use-Main-Primary)'
             strokeWidth='1.5'
             strokeLinecap='round'
         />
@@ -2242,7 +2342,7 @@ const PrivateSolidWebsiteTree = () => (
         />
         <path
             d='M13.3333 16C13.3333 14.5272 14.5272 13.3333 15.9999 13.3333H26.6666C28.1393 13.3333 29.3333 14.5273 29.3333 16V17.3333C29.3333 18.8061 28.1393 20 26.6666 20H15.9999C14.5272 20 13.3333 18.8061 13.3333 17.3333V16Z'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
         />
         <path
             fillRule='evenodd'
@@ -2252,7 +2352,7 @@ const PrivateSolidWebsiteTree = () => (
         />
         <path
             d='M13.3333 25.3333C13.3333 23.8606 14.5272 22.6667 15.9999 22.6667H26.6666C28.1393 22.6667 29.3333 23.8606 29.3333 25.3333V26.6667C29.3333 28.1394 28.1393 29.3333 26.6666 29.3333H15.9999C14.5272 29.3333 13.3333 28.1394 13.3333 26.6667V25.3333Z'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
         />
         <path
             fillRule='evenodd'
@@ -2264,7 +2364,7 @@ const PrivateSolidWebsiteTree = () => (
             fillRule='evenodd'
             clipRule='evenodd'
             d='M7.66675 12C7.66675 11.4477 7.21903 11 6.66675 11C6.11446 11 5.66675 11.4477 5.66675 12V16.6667V24C5.66675 25.6569 7.00989 27 8.66675 27H10.6667C11.219 27 11.6667 26.5523 11.6667 26C11.6667 25.4477 11.219 25 10.6667 25H8.66675C8.11446 25 7.66675 24.5523 7.66675 24V17.6667H10.6667C11.219 17.6667 11.6667 17.2189 11.6667 16.6667C11.6667 16.1144 11.219 15.6667 10.6667 15.6667H7.66675V12Z'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
         />
     </svg>
 )
@@ -2285,7 +2385,7 @@ const PrivateOutlineHTTPHistory = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_3031_8824)'>
             <path
@@ -2295,8 +2395,20 @@ const PrivateOutlineHTTPHistory = () => (
                 strokeLinecap='round'
                 strokeLinejoin='round'
             />
-            <path d='M6 8L9 8' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
-            <path d='M12 8L17 8' stroke='#f28b44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M6 8L9 8'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M12 8L17 8'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
             <path
                 d='M6 12L9 12'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
@@ -2336,7 +2448,7 @@ const PrivateOutlineHTTPHistory = () => (
             />
             <path
                 d='M19 15V17L20.5 18.5'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -2358,10 +2470,10 @@ const PrivateSolidHTTPHistory = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110636)'>
-            <rect x='4' y='5.33334' width='22.6667' height='21.3333' rx='2' fill='#F28B44' />
+            <rect x='4' y='5.33334' width='22.6667' height='21.3333' rx='2' fill='var(--Colors-Use-Main-Primary)' />
             <path
                 fillRule='evenodd'
                 clipRule='evenodd'
@@ -2392,7 +2504,7 @@ const PrivateSolidHTTPHistory = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M25.3333 19C25.8855 19 26.3333 19.4477 26.3333 20V22.2525L28.0404 23.9596C28.4309 24.3501 28.4309 24.9832 28.0404 25.3738C27.6498 25.7643 27.0167 25.7643 26.6261 25.3738L24.6261 23.3738C24.4386 23.1862 24.3333 22.9319 24.3333 22.6667V20C24.3333 19.4477 24.781 19 25.3333 19Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
         </g>
     </svg>
@@ -2405,7 +2517,7 @@ const PrivateOutlineFingerprintManage = () => {
     return (
         <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
             <mask id='mask0_38051_62408' maskUnits='userSpaceOnUse' x='0' y='0' width='24' height='24'>
-                <rect width='24' height='24' fill='#D9D9D9' />
+                <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
             </mask>
             <g mask='url(#mask0_38051_62408)'>
                 <path
@@ -2482,7 +2594,7 @@ const PrivateSolidFingerprintManage = () => {
     return (
         <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
             <mask id='mask0_38051_63673' maskUnits='userSpaceOnUse' x='0' y='0' width='32' height='32'>
-                <rect width='32' height='32' fill='#D9D9D9' />
+                <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
             </mask>
             <g mask='url(#mask0_38051_63673)'>
                 <path
@@ -2581,16 +2693,19 @@ const PrivateOutlineCVE = () => (
         />
         <path
             d='M9.53513 12.0691L7.39673 12.1454C7.39673 12.1454 6.46246 12.4182 6.4522 13.4287C6.4522 13.4287 6.3906 14.5683 7.37033 14.8059H10.2817L9.63926 15.9265H7.2002C7.2002 15.9265 5.493 15.5583 5.40207 13.5109C5.40207 13.5109 5.24073 11.4575 7.231 11.0131H10.0015V11.5719H9.53073L9.53513 12.0691ZM10.4019 11.0102V11.5074L10.7891 11.4971V10.9999L10.4019 11.0102ZM11.2203 11.0102V11.5074L11.6075 11.4971V10.9999L11.2203 11.0102Z'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
         />
-        <path d='M9.99585 11.5485V12.0487L10.383 12.0384V11.5383L9.99585 11.5485Z' fill='#F28B44' />
+        <path
+            d='M9.99585 11.5485V12.0487L10.383 12.0384V11.5383L9.99585 11.5485Z'
+            fill='var(--Colors-Use-Main-Primary)'
+        />
         <path
             d='M9.63037 12.0751L10.789 12.0487L12.0944 14.4848C12.0944 14.4848 12.1398 14.567 12.1589 14.4848L14.0216 11.0103H18.5785L17.9801 12.1103H14.6449L12.7118 15.6171L12.395 15.9999H11.8142C11.8142 15.9999 11.1616 15.2754 9.63037 12.0751Z'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
         />
         <path
             d='M18.3454 13.0107L17.8672 13.8555H15.8139V14.8381L18.5786 14.8587L18.0036 15.9235L14.7711 15.9997V12.9755L18.3454 13.0107Z'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
         />
     </svg>
 )
@@ -2601,7 +2716,7 @@ const PrivateSolidCVE = () => (
     <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
             d='M6.12109 29.5758H25.8787C26.9832 29.5758 27.8787 28.6803 27.8787 27.5758V8.90925C27.8787 8.37882 27.668 7.87011 27.2929 7.49503L22.8079 3.01004C22.4328 2.63497 21.9241 2.42426 21.3937 2.42426H6.12109C5.01652 2.42426 4.12109 3.31969 4.12109 4.42426V27.5758C4.12109 28.6803 5.01652 29.5758 6.12109 29.5758Z'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
         />
         <path
             d='M23.2422 9.21213H25.823C26.2684 9.21213 26.4915 8.67356 26.1765 8.35858L22.0957 4.27781C21.7808 3.96283 21.2422 4.18591 21.2422 4.63136V7.21213C21.2422 8.3167 22.1376 9.21213 23.2422 9.21213Z'
@@ -2653,12 +2768,12 @@ const PrivateSolidYakRunner = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2551_73558)'>
             <path
                 d='M2.66669 8C2.66669 6.52724 3.99325 5.33334 5.62965 5.33334H26.3704C28.0068 5.33334 29.3334 6.52724 29.3334 8V24C29.3334 25.4728 28.0068 26.6667 26.3704 26.6667H5.62965C3.99325 26.6667 2.66669 25.4728 2.66669 24V8Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='2'
                 strokeLinecap='round'
@@ -2691,7 +2806,7 @@ const PrivateSolidPayloadManager = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2551_73610)'>
             <rect
@@ -2700,7 +2815,7 @@ const PrivateSolidPayloadManager = () => (
                 width='21.3333'
                 height='24'
                 rx='2.66667'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='2'
             />
@@ -2745,12 +2860,12 @@ const PrivateSolidDefaultPlugin = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110482)'>
             <path
                 d='M13.9999 4.14816C13.9999 2.59358 15.2602 1.33334 16.8147 1.33334C18.3693 1.33334 19.6295 2.59358 19.6295 4.14816V5.55557C19.6295 6.33286 20.2597 6.96297 21.037 6.96297H25.2592C26.0365 6.96297 26.6666 7.59309 26.6666 8.37038V12.5926C26.6666 13.3699 26.0365 14 25.2592 14H23.8518C22.2972 14 21.037 15.2602 21.037 16.8148C21.037 18.3694 22.2972 19.6296 23.8518 19.6296H25.2592C26.0365 19.6296 26.6666 20.2598 26.6666 21.037V25.2593C26.6666 26.0366 26.0365 26.6667 25.2592 26.6667H21.037C20.2597 26.6667 19.6295 26.0366 19.6295 25.2593V23.8519C19.6295 22.2973 18.3693 21.037 16.8147 21.037C15.2602 21.037 13.9999 22.2973 13.9999 23.8519V25.2593C13.9999 26.0366 13.3698 26.6667 12.5925 26.6667H8.37029C7.593 26.6667 6.96288 26.0366 6.96288 25.2593V21.037C6.96288 20.2598 6.33276 19.6296 5.55547 19.6296H4.14807C2.59349 19.6296 1.33325 18.3694 1.33325 16.8148C1.33325 15.2602 2.59349 14 4.14807 14H5.55547C6.33276 14 6.96288 13.3699 6.96288 12.5926V8.37038C6.96288 7.59309 7.593 6.96297 8.37029 6.96297H12.5925C13.3698 6.96297 13.9999 6.33286 13.9999 5.55557V4.14816Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 fillRule='evenodd'
@@ -2782,7 +2897,7 @@ const PrivateOutlineDefaultPlugin = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2879_6168)'>
             <path
@@ -2794,7 +2909,7 @@ const PrivateOutlineDefaultPlugin = () => (
             />
             <path
                 d='M10.5 4.16667V3.11111C10.5 1.94518 11.4452 1 12.6111 1C13.777 1 14.7222 1.94518 14.7222 3.11111V4.16667M4.16667 14.7222H3.11111C1.94518 14.7222 1 13.777 1 12.6111C1 11.4452 1.94518 10.5 3.11111 10.5H4.16667'
-                stroke='#f28b44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -2843,7 +2958,7 @@ const PrivateOutlineAuditCode = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M20.7803 4.6363C21.0732 4.92919 21.0732 5.40406 20.7803 5.69696L19.1137 7.36362C18.8208 7.65652 18.3459 7.65652 18.053 7.36362L17.2197 6.53029C16.9268 6.2374 16.9268 5.76252 17.2197 5.46963C17.5126 5.17674 17.9874 5.17674 18.2803 5.46963L18.5833 5.77263L19.7197 4.6363C20.0126 4.3434 20.4874 4.3434 20.7803 4.6363Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
         </g>
         <defs>
@@ -2950,7 +3065,7 @@ const PrivateOutlineCodeScan = () => (
             fillRule='evenodd'
             clipRule='evenodd'
             d='M18.2554 14.5855C18.4449 13.8048 19.5551 13.8048 19.7446 14.5855C19.867 15.0897 20.4448 15.3291 20.8879 15.059C21.5739 14.6411 22.3589 15.4261 21.941 16.1121C21.6709 16.5552 21.9103 17.133 22.4145 17.2554C23.1952 17.4449 23.1952 18.5551 22.4145 18.7446C21.9103 18.867 21.6709 19.4448 21.941 19.8879C22.3589 20.5739 21.5739 21.3589 20.8879 20.941C20.4448 20.6709 19.867 20.9103 19.7446 21.4145C19.5551 22.1952 18.4449 22.1952 18.2554 21.4145C18.133 20.9103 17.5552 20.6709 17.1121 20.941C16.4261 21.3589 15.6411 20.5739 16.059 19.8879C16.3291 19.4448 16.0897 18.867 15.5855 18.7446C14.8048 18.5551 14.8048 17.4449 15.5855 17.2554C16.0897 17.133 16.3291 16.5552 16.059 16.1121C15.6411 15.4261 16.4261 14.6411 17.1121 15.059C17.5552 15.3291 18.133 15.0897 18.2554 14.5855ZM20.5 18C20.5 18.8284 19.8284 19.5 19 19.5C18.1716 19.5 17.5 18.8284 17.5 18C17.5 17.1716 18.1716 16.5 19 16.5C19.8284 16.5 20.5 17.1716 20.5 18Z'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
         />
     </svg>
 )
@@ -3031,7 +3146,7 @@ const PrivateOutlineProjectManager = () => (
             height='16.5'
             rx='0.85'
             transform='rotate(-6 15.8243 3.9947)'
-            stroke='#F28B44'
+            stroke='var(--Colors-Use-Main-Primary)'
             strokeWidth='1.5'
         />
         <rect
@@ -3043,7 +3158,7 @@ const PrivateOutlineProjectManager = () => (
             stroke='var(--Colors-Use-Neutral-Text-1-Title)'
             strokeWidth='1.5'
         />
-        <path d='M10.5 7.96429H11.5' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+        <path d='M10.5 7.96429H11.5' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
         <path
             d='M10.5 11.9643H11.5'
             stroke='var(--Colors-Use-Neutral-Text-1-Title)'
@@ -3059,8 +3174,8 @@ const PrivateOutlineProjectManager = () => (
             stroke='var(--Colors-Use-Neutral-Text-1-Title)'
             strokeWidth='1.5'
         />
-        <path d='M3.5 7.96429H4.5' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
-        <path d='M3.5 11.9643H4.5' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+        <path d='M3.5 7.96429H4.5' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
+        <path d='M3.5 11.9643H4.5' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
         <path
             d='M3.5 15.9643H4.5'
             stroke='var(--Colors-Use-Neutral-Text-1-Title)'
@@ -3095,7 +3210,7 @@ const PrivateSolidProjectManager = () => (
             width='4.5'
             height='16.5'
             rx='0.85'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
             stroke='var(--Colors-Use-Neutral-Text-1-Title)'
             strokeWidth='1.5'
         />
@@ -3117,7 +3232,7 @@ const PrivateSolidProjectManager = () => (
             width='4.5'
             height='16.5'
             rx='0.85'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
             stroke='var(--Colors-Use-Neutral-Text-1-Title)'
             strokeWidth='1.5'
         />
@@ -3157,7 +3272,7 @@ const PrivateOutlineRuleManagement = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_2970_81541)'>
             <path
@@ -3173,7 +3288,13 @@ const PrivateOutlineRuleManagement = () => (
                 strokeWidth='1.5'
                 strokeLinejoin='round'
             />
-            <path d='M6 11L14 11' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M6 11L14 11'
+                stroke='var(--Colors-Use-Main-Primary)'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
             <path
                 d='M6 16L9 16'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
@@ -3190,7 +3311,7 @@ const PrivateOutlineRuleManagement = () => (
             />
             <path
                 d='M15.3334 17.1227L16.4445 18.2541L18.6667 15.9913'
-                stroke='#F28B44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -3215,12 +3336,12 @@ const PrivateSolidRuleManagement = () => (
             width='32'
             height='32'
         >
-            <rect width='32' height='32' fill='#D9D9D9' />
+            <rect width='32' height='32' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_4633_110845)'>
             <path
                 d='M22.6667 26V6C22.6667 4.89543 21.7712 4 20.6667 4H11.4951C10.9647 4 10.456 4.21071 10.0809 4.58579L4.58579 10.0809C4.21071 10.456 4 10.9647 4 11.4951V26C4 27.1046 4.89543 28 6 28H20.6667C21.7712 28 22.6667 27.1046 22.6667 26Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
             <path
                 d='M30.2618 17.985C30.115 17.4074 29.5809 17.0138 28.9858 17.0446C28.8557 17.0513 28.7246 17.0547 28.5926 17.0547C26.6421 17.0547 24.8621 16.3096 23.5086 15.0761C23.0315 14.6413 22.3018 14.6413 21.8246 15.0761C20.4712 16.3096 18.6912 17.0546 16.7407 17.0546C16.6088 17.0546 16.4777 17.0512 16.3475 17.0445C15.7524 17.0138 15.2184 17.4074 15.0716 17.9849C14.8614 18.8116 14.75 19.6773 14.75 20.5675C14.75 25.3532 17.9662 29.3937 22.3498 30.5425C22.5575 30.5969 22.7758 30.5969 22.9836 30.5425C27.3671 29.3937 30.5833 25.3532 30.5833 20.5675C30.5833 19.6773 30.4719 18.8117 30.2618 17.985Z'
@@ -3250,7 +3371,7 @@ const PrivateSolidRuleManagement = () => (
                 fillRule='evenodd'
                 clipRule='evenodd'
                 d='M25.5896 20.6083C25.9836 20.9953 25.9893 21.6284 25.6024 22.0225L22.6394 25.0395C22.4514 25.2309 22.1943 25.3388 21.9259 25.3388C21.6576 25.3388 21.4005 25.2309 21.2125 25.0395L19.731 23.531C19.344 23.1369 19.3497 22.5038 19.7438 22.1168C20.1378 21.7298 20.7709 21.7355 21.1579 22.1296L21.9259 22.9116L24.1754 20.6211C24.5624 20.2271 25.1956 20.2213 25.5896 20.6083Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
             />
         </g>
     </svg>
@@ -3273,7 +3394,7 @@ const PrivateOutlineAuditHole = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_38498_159371)'>
             <path
@@ -3281,10 +3402,10 @@ const PrivateOutlineAuditHole = () => (
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='1.5'
             />
-            <path d='M12 21V7' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M12 21V7' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.5' strokeLinecap='round' />
             <path
                 d='M15 6C15 4.34315 13.6569 3 12 3C10.3431 3 9 4.34315 9 6'
-                stroke='#F28B44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
             />
@@ -3305,7 +3426,7 @@ const PrivateOutlineAuditHole = () => (
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='1.2'
             />
-            <circle cx='16.5' cy='16.5' r='1.9' stroke='#F28B44' strokeWidth='1.2' />
+            <circle cx='16.5' cy='16.5' r='1.9' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.2' />
         </g>
     </svg>
 )
@@ -3324,7 +3445,7 @@ const PrivateSolidAuditHole = () => (
             width='24'
             height='24'
         >
-            <rect width='24' height='24' fill='#D9D9D9' />
+            <rect width='24' height='24' fill='var(--Colors-Use-Neutral-Text-1-Title)' />
         </mask>
         <g mask='url(#mask0_38498_159449)'>
             <path
@@ -3334,13 +3455,13 @@ const PrivateSolidAuditHole = () => (
             />
             <path
                 d='M15 6C15 4.34315 13.6569 3 12 3C10.3431 3 9 4.34315 9 6'
-                stroke='#F28B44'
+                stroke='var(--Colors-Use-Main-Primary)'
                 strokeWidth='1.5'
                 strokeLinecap='round'
             />
             <path
                 d='M5.75 10C5.75 8.20507 7.20507 6.75 9 6.75H15C16.7949 6.75 18.25 8.20508 18.25 10V15C18.25 18.4518 15.4518 21.25 12 21.25C8.54822 21.25 5.75 18.4518 5.75 15V10Z'
-                fill='#F28B44'
+                fill='var(--Colors-Use-Main-Primary)'
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='1.5'
             />
@@ -3362,7 +3483,7 @@ const PrivateSolidAuditHole = () => (
                 stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 strokeWidth='1.2'
             />
-            <circle cx='16.5' cy='16.5' r='1.9' stroke='#F28B44' strokeWidth='1.2' />
+            <circle cx='16.5' cy='16.5' r='1.9' stroke='var(--Colors-Use-Main-Primary)' strokeWidth='1.2' />
         </g>
     </svg>
 )
@@ -3402,7 +3523,7 @@ const PrivateOutlineAIAgent = () => (
         />
         <path
             d='M13.8818 7.74303C13.2989 7.41918 13.2989 6.58082 13.8818 6.25697L14.8218 5.73477C15.2054 5.52165 15.5216 5.20538 15.7348 4.82176L16.257 3.88181C16.5808 3.29888 17.4192 3.29888 17.743 3.88181L18.2652 4.82176C18.4783 5.20538 18.7946 5.52165 19.1782 5.73477L20.1182 6.25697C20.7011 6.58082 20.7011 7.41918 20.1182 7.74303L19.1782 8.26523C18.7946 8.47835 18.4783 8.79462 18.2652 9.17824L17.743 10.1182C17.4192 10.7011 16.5808 10.7011 16.257 10.1182L15.7348 9.17824C15.5216 8.79462 15.2054 8.47835 14.8218 8.26523L13.8818 7.74303Z'
-            stroke='#F28B44'
+            stroke='var(--Colors-Use-Main-Primary)'
             strokeWidth='1.5'
         />
     </svg>
@@ -3418,7 +3539,7 @@ const PrivateSolidAIAgent = () => (
             width='6.5'
             height='6.5'
             rx='0.85'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
             stroke='var(--Colors-Use-Neutral-Text-1-Title)'
             strokeWidth='1.5'
         />
@@ -3428,7 +3549,7 @@ const PrivateSolidAIAgent = () => (
             width='6.5'
             height='6.5'
             rx='0.85'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
             stroke='var(--Colors-Use-Neutral-Text-1-Title)'
             strokeWidth='1.5'
         />
@@ -3438,7 +3559,7 @@ const PrivateSolidAIAgent = () => (
             width='6.5'
             height='6.5'
             rx='0.85'
-            fill='#F28B44'
+            fill='var(--Colors-Use-Main-Primary)'
             stroke='var(--Colors-Use-Neutral-Text-1-Title)'
             strokeWidth='1.5'
         />

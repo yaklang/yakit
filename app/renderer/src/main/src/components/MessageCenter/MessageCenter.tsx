@@ -21,16 +21,13 @@ import {
     MessageQueryParamsProps
 } from "./utils"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {RollingLoadList} from "../RollingLoadList/RollingLoadList"
 import {PageNodeItemProps, PluginHubPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {pluginSupplementJSONConvertToData} from "@/pages/pluginEditor/utils/convert"
-import IconNoLoginMessage from "@/assets/no_login_message.png"
-import LoginMessage from "@/assets/login_message.png"
-import {shallow} from "zustand/shallow"
 import {apiGetNotepadDetail} from "@/pages/notepadManage/notepadManage/utils"
 import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
+import {LoginMessageIcon, NoLoginMessageIcon} from "./IconMessageCenter"
 const {ipcRenderer} = window.require("electron")
 
 export interface MessageItemProps {
@@ -364,14 +361,16 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
                         </div>
                     ) : (
                         <div className={styles["meeage-no-data"]}>
-                            <img src={LoginMessage} alt='' />
+                            {/* <img src={LoginMessage} alt='' /> */}
+                            <LoginMessageIcon />
                             <div className={styles["text"]}>暂无消息</div>
                         </div>
                     )}
                 </>
             ) : (
                 <div className={styles["meeage-no-login"]}>
-                    <img src={IconNoLoginMessage} alt='' />
+                    {/* <img src={LightIconNoLoginMessage} alt='' /> */}
+                    <NoLoginMessageIcon />
                     <div className={styles["text"]}>登录后才可查看消息</div>
                     <div>
                         <YakitButton type='primary' onClick={onLogin}>

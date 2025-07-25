@@ -1874,11 +1874,11 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 setTimeout(() => setLoading(false), 300)
                 return
             }
-            if (isShowExternalProjectCode && !info.ExternalProjectCode){
+            if (isShowExternalProjectCode && !info.ExternalProjectCode) {
                 setTimeout(() => setLoading(false), 300)
                 return
             }
-            if (isShowExternalModule && !info.ExternalModule){
+            if (isShowExternalModule && !info.ExternalModule) {
                 setTimeout(() => setLoading(false), 300)
                 return
             }
@@ -2569,8 +2569,8 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                             </div>
                             <div className={styles["download-progress"]}>
                                 <Progress
-                                    strokeColor='#F28B44'
-                                    trailColor='#F0F2F5'
+                                    strokeColor='var(--Colors-Use-Main-Primary)'
+                                    trailColor='var(--Colors-Use-Neutral-Bg)'
                                     percent={+percent.toFixed(2)}
                                     format={(p, sp) => {
                                         return <div className={styles["progress-content-style"]}>{`进度 ${p}%`}</div>

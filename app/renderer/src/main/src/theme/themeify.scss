@@ -5,7 +5,8 @@ $color-list: (
         color-3: var(--Colors-Use-Main-Border),
         color-4: var(--Colors-Use-Main-Hover),
         color-5: var(--Colors-Use-Main-Primary),
-        color-6: var(--Colors-Use-Main-Pressed)
+        color-6: var(--Colors-Use-Main-Pressed),
+        color-7: var(--Colors-Use-Main-On-Primary)
     ),
     success: (
         color-1: var(--Colors-Use-Success-Bg),
@@ -13,7 +14,7 @@ $color-list: (
         color-3: var(--Colors-Use-Success-Border),
         color-4: var(--Colors-Use-Success-Hover),
         color-5: var(--Colors-Use-Success-Primary),
-        color-6: var(--Colors-Use-Success-Pressed)
+        color-7: var(--Colors-Use-Main-On-Primary)
     ),
     danger: (
         color-1: var(--Colors-Use-Error-Bg),
@@ -21,7 +22,8 @@ $color-list: (
         color-3: var(--Colors-Use-Error-Border),
         color-4: var(--Colors-Use-Error-Hover),
         color-5: var(--Colors-Use-Error-Primary),
-        color-6: var(--Colors-Use-Error-Pressed)
+        color-6: var(--Colors-Use-Error-Pressed),
+        color-7: var(--Colors-Use-Main-On-Primary)
     ),
     infoBlue: (
         color-1: var(--Colors-Use-Blue-Bg),
@@ -29,7 +31,8 @@ $color-list: (
         color-3: var(--Colors-Use-Blue-Border),
         color-4: var(--Colors-Use-Blue-Hover),
         color-5: var(--Colors-Use-Blue-Primary),
-        color-6: var(--Colors-Use-Blue-Pressed)
+        color-6: var(--Colors-Use-Blue-Pressed),
+        color-7: var(--Colors-Use-Main-On-Primary)
     )
 );
 @function fetch-color($type, $color) {

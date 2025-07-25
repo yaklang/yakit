@@ -266,8 +266,8 @@ const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
         <>
             <div className={classNames(styles["plugin-progress"], "yakit-progress-wrapper")}>
                 <Progress
-                    strokeColor='#F28B44'
-                    trailColor='#F0F2F5'
+                    strokeColor='var(--Colors-Use-Main-Primary)'
+                    trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={percent}
                     format={(percent) => `已检测 ${percent}%`}
                 />
@@ -391,8 +391,8 @@ export const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
         <>
             <div className={classNames(styles["plugin-progress"], "yakit-progress-wrapper")}>
                 <Progress
-                    strokeColor='#F28B44'
-                    trailColor='#F0F2F5'
+                    strokeColor='var(--Colors-Use-Main-Primary)'
+                    trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={percent}
                     format={(percent) => `已上传 ${percent}%`}
                 />

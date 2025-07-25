@@ -109,9 +109,9 @@
 .yakit-input-disabled {
     :global {
         .ant-input[disabled] {
-            background-color: var(--Colors-Use-Neutral-Disable);
+            color: var(--Colors-Use-Neutral-Disable);
             border: 1px solid var(--Colors-Use-Neutral-Border);
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
         }
     }
 }
@@ -195,14 +195,14 @@
             border-right: 0;
             border-radius: 4px;
             border-color: var(--search-border-color);
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            background-color: var(--Colors-Use-Basic-Background);
             color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-input-affix-wrapper {
             padding: 0 8px;
             height: 24px;
             .ant-input {
-                height: 22px;
+                height: 100%;
             }
         }
 

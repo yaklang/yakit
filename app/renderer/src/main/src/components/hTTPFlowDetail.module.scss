@@ -4,6 +4,14 @@
     }
 }
 
+.flow-detail-tabs{
+    :global{
+        .ant-tabs-top > .ant-tabs-nav::before{
+            border-bottom: none !important
+        }
+    }
+}
+
 .http-history-box {
     height: 100%;
     &-header {

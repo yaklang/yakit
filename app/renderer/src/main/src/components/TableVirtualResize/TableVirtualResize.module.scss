@@ -17,6 +17,7 @@
 
         .ant-spin-dot-item {
             background-color: var(--Colors-Use-Main-Primary);
+            color: var(--Colors-Use-Main-On-Primary);
         }
     }
 
@@ -292,6 +293,10 @@
                     color: var(--Colors-Use-Neutral-Disable);
                     background-color: var(--Colors-Use-Neutral-Bg-Hover);
                 }
+                .virtual-table-row-cell-disabled:hover{
+                    color: var(--Colors-Use-Neutral-Disable) !important;
+
+                }
 
                 .virtual-table-row-cell-border-right-0 {
                     border-right: 0;
@@ -326,7 +331,7 @@
 
                 .virtual-table-row-content {
                     height: 100%;
-                    background-color: #fff;
+                    background-color: var(--Colors-Use-Basic-Background);
                     border-right: 1px solid var(--Colors-Use-Neutral-Border);
 
                     &:last-child {
@@ -375,7 +380,7 @@
 
                 .virtual-table-hover-row {
                     background: var(--Colors-Use-Neutral-Bg);
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    // color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
 
                 .virtual-table-active-row {
@@ -538,8 +543,12 @@
         .ant-popover-inner-content {
             padding: 0;
         }
+        .ant-popover-arrow-content{
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            background-color: var(--Colors-Use-Basic-Background);
+        }
         .ant-popover-arrow-content::before{
-            background-color: var(--Colors-Use-Basic-Background)
+            background: none
         }
 
         .ant-popover-inner {

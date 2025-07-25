@@ -15,7 +15,7 @@
 }
 
 .variable-list {
-    color: var(--Colors-Use-Neutral-Disable);
+    color: var(--Colors-Use-Neutral-Bg);
     .variable-list-panel {
         &:hover {
             .variable-list-remove {
@@ -51,7 +51,7 @@
                 }
             }
             .ant-collapse-content > .ant-collapse-content-box {
-                padding-bottom: 0;
+                padding-bottom: 12px;
             }
         }
     }

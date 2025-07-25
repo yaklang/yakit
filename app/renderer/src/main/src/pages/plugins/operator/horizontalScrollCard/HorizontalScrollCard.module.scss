@@ -13,7 +13,7 @@
     width: 24px;
     height: 24px;
     flex-shrink: 0;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
     border-radius: 50%;
     border: 1px solid var(--Colors-Use-Neutral-Border);
     @extend %display-flex-center;

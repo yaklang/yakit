@@ -4,9 +4,10 @@
     display: flex;
     position: relative;
     overflow: hidden;
+    background-color: var(--Colors-Use-Basic-Background);
 }
 .resize-box .resize-split-line:hover {
-    border: 2px solid rgb(0, 174, 255);
+    border: 2px solid var(--Colors-Use-Blue-Border);
 }
 .resize-box .mask-body {
     position: absolute;

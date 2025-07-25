@@ -385,7 +385,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                 </Tooltip>
                             </Descriptions.Item>
                         </Descriptions>
-                        <div style={{width: "100%", overflow: "auto"}}>
+                        <div style={{width: "100%", overflow: "auto"}} className={styles["flow-detail-tabs"]}>
                             {flow.GetParams.length > 0 || flow.PostParams.length > 0 || flow.CookieParams.length > 0 ? (
                                 <PluginTabs>
                                     {flow.GetParams.length > 0 && (

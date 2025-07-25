@@ -10,7 +10,7 @@
 
     --select-background-color: var(--Colors-Use-Main-Focus);
     --select-background-disabled-color: var(--Colors-Use-Neutral-Bg);
-    --select-background-white: var(--yakit-neutral10-color);
+    --select-background-white: var(--Colors-Use-Neutral-Bg);
 
     --select-primary-icon-color: var(--Colors-Use-Main-Primary);
 
@@ -129,7 +129,7 @@
 
         // ------------ 滚动条 ----------
         .rc-virtual-list-scrollbar-thumb {
-            background: #c1c1c1 !important;
+            background: var(--Colors-Use-Neutral-Text-3-Secondary) !important;
         }
     }
 }
@@ -146,7 +146,7 @@
             color: var(--select-primary-icon-color);
         }
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-            color: var(--Colors-Use-Main-Primary);
+            color: var(--Colors-Use-Main-On-Primary);
             background: var(--Colors-Use-Main-Bg);
         }
 
@@ -251,6 +251,9 @@
 
         .ant-select-selection-overflow {
             min-height: 20px;
+        }
+        .ant-select-selection-placeholder{
+            color: var(--Colors-Use-Neutral-Disable);
         }
 
         .ant-select-selection-overflow-item {

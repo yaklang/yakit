@@ -199,7 +199,7 @@
                         }
                     }
                     .tabs-opt-selected {
-                        background: var(--yakit-neutral10-color);
+                        background: var(--Colors-Use-Neutral-Bg);
                         box-shadow: 0px 2px 4px var(--Colors-Use-Basic-Shadow);
                         border-radius: 4px;
                         color: var(--Colors-Use-Main-Primary);
@@ -412,6 +412,7 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                color: var(--Colors-Use-Main-On-Primary);
             }
             .update-title {
                 height: 16px;
@@ -624,7 +625,7 @@
 
 :global {
     .user-dropdown-menu-box {
-        border: 1px solid #eaecf3;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         box-shadow: 0px 2px 4px var(--Colors-Use-Basic-Shadow);
         border-radius: 4px;
         .ant-dropdown-menu {
@@ -638,7 +639,7 @@
                     margin: 0 4px;
                     border-radius: 4px;
                     &:hover {
-                        color: #fff;
+                        color: var(--Colors-Use-Main-On-Primary);
                         background-color: var(--Colors-Use-Main-Primary);
                     }
                 }
@@ -664,7 +665,6 @@
         font-weight: 400;
         font-size: 11px;
         line-height: 20px;
-        // color: #FFFFFF;
         color: var(--Colors-Use-Main-Primary);
         margin-left: 4px;
         padding-right: 6px;
@@ -678,10 +678,10 @@
     background-color: var(--Colors-Use-Main-Primary);
     &-avatar {
         background-color: var(--Colors-Use-Basic-Background);
-        color: var(--Colors-Use-Main-Primary);
+        color: var(--Colors-Use-Main-On-Primary);
     }
     &-text {
-        color: #ffffff;
+        color: var(--Colors-Use-Main-On-Primary);
     }
 }
 

@@ -547,10 +547,10 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
             onOk: () => {
                 // 重置为默认参数
                 let defaultParams = [...chromeLauncherParamsArr]
-                
+
                 // 应用handleChromeLauncherParams函数，确保扩展参数被正确处理
                 defaultParams = handleChromeLauncherParams(defaultParams, googleChromePluginPath)
-                
+
                 setData(defaultParams)
                 if (searchVal) {
                     const filteredData = defaultParams.filter((item) =>
@@ -558,12 +558,12 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                     )
                     setSearchData(filteredData)
                 }
-                
+
                 // 清除临时编辑状态
                 tempEditItem.current = undefined
                 setTempEditId(undefined)
                 setCurrentItem(undefined)
-                
+
                 // 保存到远程
                 setRemoteValue(RemoteGV.ChromeLauncherParams, JSON.stringify(defaultParams))
                 yakitNotify("success", "已恢复默认参数设置")
@@ -828,11 +828,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                             allowClear={true}
                             onSearch={(value) => setSearchVal(value.trim())}
                         />
-                        <YakitButton
-                            type="text"
-                            onClick={resetToDefault}
-                            disabled={tempEditId !== undefined}
-                        >
+                        <YakitButton type='text' onClick={resetToDefault} disabled={tempEditId !== undefined}>
                             <OutlineRefreshIcon style={{marginRight: 4}} />
                             恢复默认参数
                         </YakitButton>

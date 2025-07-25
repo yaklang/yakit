@@ -15,8 +15,8 @@
                 height: 25px;
                 margin-bottom: 0;
                 &::before {
-                    // border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-                    border-bottom: none;
+                    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+                    // border-bottom: none;
                     z-index: 0;
                 }
                 .ant-tabs-ink-bar {
@@ -231,7 +231,7 @@
                     border-bottom: 1px solid var(--Colors-Use-Main-Border);
                     background: var(--Colors-Use-Main-Primary);
                     .ant-tabs-tab-btn {
-                        color: var(--Colors-Use-Neutral-Text-1-Title);
+                        color: var(--Colors-Use-Main-On-Primary);
                         text-shadow: unset;
                     }
                 }
@@ -324,7 +324,7 @@
                 .ant-tabs-tab.ant-tabs-tab-active {
                     border: 0;
                     background: var(--Colors-Use-Main-Primary);
-                    color: var(--Colors-Use-Main-Border);
+                    color: var(--Colors-Use-Main-On-Primary);
                     &::after {
                         content: "";
                         position: absolute;
@@ -334,12 +334,12 @@
                         border-bottom: 2px solid var(--Colors-Use-Main-Border);
                     }
                     .ant-tabs-tab-btn {
-                        color: var(--Colors-Use-Main-Border);
+                        color: var(--Colors-Use-Main-On-Primary);
                         text-shadow: unset;
                     }
                     .anticon {
                         svg {
-                            color: var(--Colors-Use-Main-Border);
+                            color: var(--Colors-Use-Main-On-Primary);
                         }
                     }
                 }

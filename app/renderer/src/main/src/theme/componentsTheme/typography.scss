@@ -1,0 +1,10 @@
+.ant-typography{
+    mark{
+        background-color: var(--Colors-Use-Warning-Bg);
+        color: var(--Colors-Use-Warning-Primary);
+    }
+    code{
+        background-color: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Neutral-Text-2-Primary);
+    }
+}

@@ -408,6 +408,7 @@
         .body-to-bottom:hover {
             border: 1.5px solid var(--Colors-Use-Main-Primary);
             background: var(--Colors-Use-Main-Primary);
+            color: var(--Colors-Use-Main-On-Primary);
             svg {
                 color: var(--Colors-Use-Neutral-Text-1-Title);
             }
@@ -554,7 +555,7 @@
                 .footer-active-submit {
                     background: var(--Colors-Use-Main-Primary);
                     svg {
-                        color: var(--Colors-Use-Neutral-Text-1-Title);
+                        color: var(--Colors-Use-Main-On-Primary);
                     }
                 }
             }

@@ -4,33 +4,33 @@
     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: fetch-color($type, "color-5");
-    color: var(--Colors-Use-Basic-White);
+    color: fetch-color($type, "color-7");
     border-color: fetch-color($type, "color-5");
 
     &.yakit-hover-button {
         background: fetch-color($type, "color-4");
-        color: var(--Colors-Use-Basic-White);
+        color: fetch-color($type, "color-7");
         border-color: fetch-color($type, "color-4");
     }
     &.yakit-active-button {
         background: fetch-color($type, "color-6");
-        color: var(--Colors-Use-Basic-White);
+        color: fetch-color($type, "color-7");
         border-color: fetch-color($type, "color-6");
     }
 
     &:focus {
         background: fetch-color($type, "color-5");
-        color: var(--Colors-Use-Basic-White);
+        color: fetch-color($type, "color-7");
         border-color: fetch-color($type, "color-5");
     }
     &:hover {
         background: fetch-color($type, "color-4");
-        color: var(--Colors-Use-Basic-White);
+        color: fetch-color($type, "color-7");
         border-color: fetch-color($type, "color-4");
     }
     &:active {
         background: fetch-color($type, "color-6");
-        color: var(--Colors-Use-Basic-White);
+        color: fetch-color($type, "color-7");
         border-color: fetch-color($type, "color-6");
     }
     &[disabled] {

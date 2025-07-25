@@ -14,7 +14,7 @@ import {
     RuleUploadAndDownloadModalProps,
     OnlineRuleGroupListProps,
     AlertMessage,
-    SyntaxFlowRuleOnlineProgress,
+    SyntaxFlowRuleOnlineProgress
 } from "./RuleManagementType"
 import {useDebounceEffect, useDebounceFn, useMap, useMemoizedFn, useSize, useUpdateEffect, useVirtualList} from "ahooks"
 import {
@@ -70,11 +70,7 @@ import {failed, yakitNotify} from "@/utils/notification"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {
-    DefaultRuleContent,
-    DefaultRuleGroupFilterPageMeta,
-    RuleLanguageList
-} from "@/defaultConstants/RuleManagement"
+import {DefaultRuleContent, DefaultRuleGroupFilterPageMeta, RuleLanguageList} from "@/defaultConstants/RuleManagement"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
@@ -2274,8 +2270,8 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
                 <span className={styles["text"]}>规则{type === "upload" ? "上传" : "下载"}</span>
             </div>
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={Math.trunc(stream[0]?.Progress * 100)}
                 format={(percent) => `进度 ${percent}%`}
             />

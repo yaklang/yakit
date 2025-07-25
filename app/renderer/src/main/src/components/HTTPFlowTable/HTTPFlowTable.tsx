@@ -5001,8 +5001,8 @@ export const ImportExportProgress: React.FC<ImportExportProgressProps> = React.m
             <div style={{padding: 15}} className='yakit-progress-wrapper'>
                 {importExportStream[importExportStream.length - 1]?.Percent === undefined && <div>{subTitle}</div>}
                 <Progress
-                    strokeColor='#F28B44'
-                    trailColor='#F0F2F5'
+                    strokeColor='var(--Colors-Use-Main-Primary)'
+                    trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={Math.trunc(importExportStream[importExportStream.length - 1]?.Percent * 100)}
                     format={(percent) => `${percent}%`}
                 />

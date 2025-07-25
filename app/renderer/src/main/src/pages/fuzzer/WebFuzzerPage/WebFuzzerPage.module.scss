@@ -23,7 +23,7 @@
             cursor: pointer;
             border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             &:hover {
-                background-color: var(--Colors-Use-Neutral-Bg-Hover);
+                background-color: var(--Colors-Use-Neutral-Border);
             }
         }
         &-item-active {

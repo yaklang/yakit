@@ -40,8 +40,8 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = me
                     <div className={styles["hint-right-title"]}>{title}</div>
                     <div className={styles["download-progress"]}>
                         <Progress
-                            strokeColor='#F28B44'
-                            trailColor='#F0F2F5'
+                            strokeColor='var(--Colors-Use-Main-Primary)'
+                            trailColor='var(--Colors-Use-Neutral-Bg)'
                             percent={Math.floor((streamData.Progress || 0) * 100)}
                             showInfo={false}
                         />
@@ -100,4 +100,3 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = me
         </div>
     )
 })
-

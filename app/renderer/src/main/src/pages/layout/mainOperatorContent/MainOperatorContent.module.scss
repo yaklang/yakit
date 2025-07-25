@@ -261,7 +261,7 @@ $keyColor: map-keys($colors);
             display: flex;
             overflow: hidden;
             width: 100%;
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            background-color: var(--Colors-Use-Neutral-Bg);
             position: relative;
 
             &::after {
@@ -319,6 +319,7 @@ $keyColor: map-keys($colors);
                         align-items: center;
                         width: 18px;
                         justify-content: center;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                 }
 

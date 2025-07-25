@@ -16,7 +16,7 @@
     flex-direction: column;
     overflow: hidden;
     padding: 12px;
-    background-color: var(--Colors-Use-Basic-Background);
+    background-color: var(--Colors-Use-Neutral-Bg);
     :global {
         .ant-result-warning .ant-result-icon > .anticon {
             color: var(--Colors-Use-Warning-Primary);
@@ -190,12 +190,12 @@
 
 .editor-wrap-icon {
     svg {
-        color: #fff;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         &:hover {
-            color: #fff;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         &:active {
-            color: #fff;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 }
@@ -222,7 +222,7 @@
 }
 
 .editor-overlay-widget {
-    background-color: #f0f2f5;
+    background-color: var(--Colors-Use-Neutral-Bg);
     color: var(--Colors-Use-Neutral-Text-1-Title);
     // padding: 4px 8px;
     font-size: 10px;
@@ -255,8 +255,8 @@
         justify-content: space-between;
         background: var(--Colors-Use-Neutral-Disable);
         padding-right: 8px;
-        border-top: 1px solid #fff;
-        border-bottom: 1px solid #fff;
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         &-tab {
             @extend .display-flex-center;
             align-items: center;
@@ -264,10 +264,10 @@
                 @extend .display-flex-center;
                 padding: 4px 12px;
                 gap: 4px;
-                border-right: 1px solid #fff;
+                border-right: 1px solid var(--Colors-Use-Neutral-Border);
                 cursor: pointer;
                 &:hover {
-                    background-color: rgba(240, 241, 243, 0.5);
+                    background-color: var(--Colors-Use-Neutral-Bg-Hover)
                 }
                 .tab-icon {
                     width: 16px;
@@ -281,12 +281,12 @@
             }
             &-item-active {
                 background-color: var(--Colors-Use-Main-Primary);
-                color: #fff;
+                color: var(--Colors-Use-Main-On-Primary);
                 &:hover {
                     background-color: var(--Colors-Use-Main-Hover);
                 }
                 .tab-icon {
-                    color: #fff;
+                    color: var(--Colors-Use-Main-On-Primary);
                 }
             }
         }

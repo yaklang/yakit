@@ -8,7 +8,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #b4bbca;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     .btn-group {
@@ -20,7 +20,7 @@
     .divider-style {
         width: 1px;
         height: 12px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     .share-disabled-btn {
@@ -68,7 +68,7 @@
 /* ---------- HubOperateHint ----------*/
 .hub-operate-hint {
     .operate-style {
-        color: #f28b44;
+        color: var(--Colors-Use-Main-Primary);
     }
     .content-style {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
@@ -137,7 +137,7 @@
                         svg {
                             width: 16px;
                             height: 16px;
-                            color: #b4bbca;
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         }
                     }
                 }
@@ -160,7 +160,7 @@
         .divider-style {
             width: 1px;
             height: 12px;
-            background-color: #eaecf3;
+            background-color: var(--Colors-Use-Neutral-Bg);
             margin-left: 16px;
             margin-right: 16px;
         }
@@ -215,8 +215,8 @@
 
 .infoBox {
     width: 100%;
-    background: rgba(86, 201, 145, 0.1);
-    color: rgba(133, 137, 158, 1);
+    background: var(--Colors-Use-Green-Bg);
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
     padding: 8px 16px;
     margin-bottom: 15px;
 }

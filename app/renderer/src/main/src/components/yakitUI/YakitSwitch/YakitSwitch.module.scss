@@ -9,7 +9,7 @@
     --switch-background-close-color: var(--Colors-Use-Neutral-Disable); // switch关闭的时候的背景色
     --switch-background-disable-color: var(--Colors-Use-Neutral-Bg);
 
-    --switch-inner-circular-background-color: var(--yakit-neutral10-color); // 里面的圆圈
+    --switch-inner-circular-background-color: var(--Colors-Use-Main-On-Primary); // 里面的圆圈
 
     padding: 3px;
 
@@ -109,6 +109,9 @@
         .ant-switch-checked {
             .ant-switch-handle {
                 left: calc(100% - 16px - 2px);
+                &::before{
+                    background-color: var(--Colors-Use-Main-On-Primary);
+                }
             }
 
             .ant-switch-inner {

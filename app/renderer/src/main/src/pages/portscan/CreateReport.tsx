@@ -107,8 +107,8 @@ const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((prop
                 />
                 {showReportPercent && (
                     <Progress
-                        strokeColor='#F28B44'
-                        trailColor='#F0F2F5'
+                        strokeColor='var(--Colors-Use-Main-Primary)'
+                        trailColor='var(--Colors-Use-Neutral-Bg)'
                         percent={Math.trunc(reportPercent * 100)}
                         format={(percent) => `${percent}%`}
                         style={{marginTop: 12}}

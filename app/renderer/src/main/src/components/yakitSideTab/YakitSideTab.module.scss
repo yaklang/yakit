@@ -2,8 +2,8 @@
     display: inline-flex;
     flex-direction: column;
     align-items: flex-start;
-    border-right: 1px solid #eaecf3;
-    border-left: 1px solid #eaecf3;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    border-left: 1px solid var(--Colors-Use-Neutral-Border);
     background: var(--Colors-Use-Neutral-Bg-Hover);
     height: 100%;
 }
@@ -14,7 +14,7 @@
     align-items: flex-start;
     gap: 4px;
     cursor: pointer;
-    border-bottom: 1px solid #ffffff;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     position: relative;
     user-select: none;
     .item-text {
@@ -33,16 +33,16 @@
     }
 }
 .yakit-side-tab-item:hover {
-    background-color: rgba(204, 210, 222, 0.5);
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
 }
 .yakit-side-tab-item-active {
     background-color: var(--Colors-Use-Main-Primary);
-    border-bottom-color: var(--Colors-Use-Main-Primary);
+    border-bottom-color: var(--Colors-Use-Main-Border);
     .item-text {
-        color: #ffffff;
+        color: var(--Colors-Use-Main-On-Primary);
     }
     svg {
-        color: #ffffff;
+        color: var(--Colors-Use-Main-On-Primary);
     }
     &::before {
         position: absolute;

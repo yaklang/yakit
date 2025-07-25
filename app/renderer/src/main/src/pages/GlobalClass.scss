@@ -16,9 +16,12 @@
 @use  "../theme/componentsTheme/result.scss";
 @use  "../theme/componentsTheme/alert.scss";
 @use  "../theme/componentsTheme/divider.scss";
+@use  "../theme/componentsTheme/typography.scss";
 
+// typography
 body {
     color: var(--Colors-Use-Neutral-Text-1-Title);
+    background-color: var(--Colors-Use-Neutral-Bg);
 }
 
 a {

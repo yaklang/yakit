@@ -54,7 +54,7 @@
         padding: 12px;
         border-radius: 4px;
         border: 1px solid var(--Colors-Use-Neutral-Border);
-        background: #fff;
+        background: var(--Colors-Use-Basic-Background);
         max-height: 20vh;
         overflow-y: auto;
     }
@@ -70,7 +70,7 @@
     @extend %display-column-center;
     gap: 4px;
     .file-card {
-        background-color: #fff;
+        background-color: var(--Colors-Use-Basic-Background);
         border-radius: 4px;
     }
     .file-heard {
@@ -87,6 +87,7 @@
         grid-template-rows: 1fr;
         padding: 0 12px;
         transition: grid-template-rows 0.3s ease;
+        background-color: var(--Colors-Use-Basic-Background);
     }
     .file-card-body-hidden {
         grid-template-rows: 0fr;
@@ -106,7 +107,7 @@
                 tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 20%) 0%,
                 tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 20%) 100%
             ),
-            #fff;
+            var(--Colors-Use-Basic-Background);
     }
     .file-card-title {
         @extend %display-flex-center;
@@ -125,7 +126,7 @@
         padding: 0px 6px;
         border-radius: 8px;
         border: 1px solid tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 30%);
-        background: rgba(246, 84, 74, 0.08);
+        background: var(--Colors-Use-Main-Bg);
         color: var(--Colors-Use-Error-Primary);
     }
     .file-description {
@@ -178,7 +179,7 @@
             @extend %display-flex-center;
             justify-content: space-between;
             padding: 10px 16px 10px 20px;
-            background-color: #fff;
+            background-color: var(--Colors-Use-Basic-Background);
 
             color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 16px;
@@ -214,7 +215,7 @@
         border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
         padding: 16px 20px;
-        background-color: #fff;
+        background-color: var(--Colors-Use-Basic-Background);
 
         .graph-content-title {
             @extend %display-flex-center;

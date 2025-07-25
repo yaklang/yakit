@@ -1,22 +1,22 @@
-import React, {memo, useEffect, useRef, useState} from "react"
-import {useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
-import {PluginLogListProps} from "./PluginLogType"
-import {API} from "@/services/swagger/resposeType"
-import {PluginLogOpt} from "./PluginLogOpt"
-import {httpDeleteComment, httpFetchPluginLogs} from "../utils/http"
+import React, { memo, useEffect, useRef, useState } from "react"
+import { useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect } from "ahooks"
+import { PluginLogListProps } from "./PluginLogType"
+import { API } from "@/services/swagger/resposeType"
+import { PluginLogOpt } from "./PluginLogOpt"
+import { httpDeleteComment, httpFetchPluginLogs } from "../utils/http"
 import emiter from "@/utils/eventBus/eventBus"
-import {useStore} from "@/store"
-import {PluginLogCodeDiff, PluginLogMergeDetail} from "./PluginLogMergeDetail"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import { useStore } from "@/store"
+import { PluginLogCodeDiff, PluginLogMergeDetail } from "./PluginLogMergeDetail"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint"
 import cloneDeep from "lodash/cloneDeep"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {AuthorImg} from "@/pages/plugins/funcTemplate"
-import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
-import {TextareaForImage} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType"
-import {pluginSupplementJSONConvertToData} from "@/pages/pluginEditor/utils/convert"
-import {ImagePreviewList} from "../utilsUI/UtilsTemplate"
-import {formatTimestamp} from "@/utils/timeUtil"
+import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
+import { AuthorImg } from "@/pages/plugins/funcTemplate"
+import { YakitRoundCornerTag } from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
+import { TextareaForImage } from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType"
+import { pluginSupplementJSONConvertToData } from "@/pages/pluginEditor/utils/convert"
+import { ImagePreviewList } from "../utilsUI/UtilsTemplate"
+import { formatTimestamp } from "@/utils/timeUtil"
 
 // import classNames from "classnames"
 import styles from "./PluginLog.module.scss"
@@ -24,7 +24,7 @@ import UnLogin from "@/assets/unLogin.png"
 
 /** @name 插件日志 */
 export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
-    const {triggerRefresh, getContainer, type, plugin, onReply, onRefreshTotals, callbackTotal} = props
+    const { triggerRefresh, getContainer, type, plugin, onReply, onRefreshTotals, callbackTotal } = props
 
     const wrapperRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(wrapperRef)
@@ -71,7 +71,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
         if (!wrapperRef.current) return
         if (response.data.length === 0) return
 
-        const {scrollHeight} = wrapperRef.current
+        const { scrollHeight } = wrapperRef.current
         const height = wrapperRef.current.getBoundingClientRect().height
         if (scrollHeight - height <= 20) {
             handleFetchLogs()
@@ -87,16 +87,16 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
             }
         },
         [inViewport, plugin],
-        {wait: 300, leading: true}
+        { wait: 300, leading: true }
     )
 
     /** ---------- 列表数据获取逻辑 Start ---------- */
     const latestAuditInfo = useRef<API.PluginsLogsDetail>()
     // 获取最新审核信息
     const handleFetchNewCheckLog = useMemoizedFn((callback?: () => void) => {
-        httpFetchPluginLogs({data: {uuid: plugin.uuid, logType: "check"}, params: {page: 1, limit: 1}}, true)
+        httpFetchPluginLogs({ data: { uuid: plugin.uuid, logType: "check" }, params: { page: 1, limit: 1 } }, true)
             .then((res) => {
-                const {data} = res
+                const { data } = res
                 if (data && data.length > 0) {
                     latestAuditInfo.current = data[0]
                 } else {
@@ -124,7 +124,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
         if (beforeId.current) request.beforeId = beforeId.current
 
         setLoading(true)
-        httpFetchPluginLogs({data: request, params: {limit: limit}})
+        httpFetchPluginLogs({ data: request, params: { limit: limit } })
             .then((res) => {
                 let data: API.PluginsLogsDetail[] = []
                 if (!beforeId.current) {
@@ -144,9 +144,9 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
                     }
                     return item
                 })
-                setResponse({...res, data: [...data]})
+                setResponse({ ...res, data: [...data] })
             })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => {
                 setTimeout(() => {
                     setLoading(false)
@@ -164,19 +164,19 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
             //     handleFetchLogs()
             // }
         }),
-        {wait: 300, leading: true}
+        { wait: 300, leading: true }
     ).run
     // 加载更多
     const onLoadMore = useThrottleFn(
         useMemoizedFn(() => {
             if (loading || !hasMore.current) return
             if (!wrapperRef.current) return
-            const {scrollTop, scrollHeight} = wrapperRef.current || {scrollTop: 0, scrollHeight: 0}
+            const { scrollTop, scrollHeight } = wrapperRef.current || { scrollTop: 0, scrollHeight: 0 }
             const height = wrapperRef.current.getBoundingClientRect().height
             const scrollBottom = scrollHeight - scrollTop - height
             if (scrollBottom <= 100) handleFetchLogs()
         }),
-        {wait: 200}
+        { wait: 200 }
     ).run
     /** ---------- 列表数据获取逻辑  End ---------- */
 
@@ -193,7 +193,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
         }
     }, [])
 
-    const {userInfo} = useStore()
+    const { userInfo } = useStore()
     useUpdateEffect(() => {
         resetFetchLogs()
         if (showMerge) handleCallbackMerge(false)
@@ -279,7 +279,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
             .then(() => {
                 result = true
             })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => {
                 if (result) {
                     setResponse((res) => {
@@ -319,7 +319,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
     })
     const replyRoleTag = useMemoizedFn(() => {
         if (!replyInfo.current) return null
-        const {parentComment} = replyInfo.current
+        const { parentComment } = replyInfo.current
         if (!parentComment) return null
         const isAuthors = parentComment.isAuthors
         const role = parentComment.userRole
@@ -340,9 +340,9 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
         return null
     })
     const replyContent = useMemoizedFn(() => {
-        const contents: {text: string; imgs: TextareaForImage[]} = {text: "", imgs: []}
+        const contents: { text: string; imgs: TextareaForImage[] } = { text: "", imgs: [] }
         if (!replyInfo.current) return contents
-        const {parentComment} = replyInfo.current
+        const { parentComment } = replyInfo.current
         if (!parentComment) return contents
 
         if (parentComment.logType === "comment") {
@@ -408,7 +408,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
                 visible={delCommentShow}
                 title='删除评论'
                 content='是否确认要删除该条评论'
-                okButtonProps={{loading: delCommentLoading}}
+                okButtonProps={{ loading: delCommentLoading }}
                 onOk={handleDelCommentOK}
                 onCancel={handleDelCommentClose}
             />

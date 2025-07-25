@@ -98,7 +98,7 @@
         box-sizing: border-box;
         width: 100%;
         padding: 8px 16px 16px;
-        background: var(--yakit-neutral10-color);
+        background: var(--Colors-Use-Neutral-Bg);
         border-radius: 0px 0px 4px 4px;
         .body-info {
             box-sizing: border-box;
@@ -108,7 +108,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #ffffff;
+            background: var(--Colors-Use-Neutral-Bg);
             .info-left {
                 flex: 1;
                 height: 100%;
@@ -213,8 +213,8 @@
         border-width: 1px 0px 0px 0px;
         border-style: solid;
         border-color: var(--Colors-Use-Neutral-Border);
-        .yakit-input-number {
-            background-color: var(--yakit-neutral10-color);
-        }
+        // .yakit-input-number {
+        //     background-color: var(--Colors-Use-Neutral-Bg);
+        // }
     }
 }

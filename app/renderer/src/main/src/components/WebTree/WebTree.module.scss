@@ -125,6 +125,7 @@
             &:hover {
                 .ant-tree-switcher {
                     background-color: var(--Colors-Use-Main-Primary);
+                    color: var(--Colors-Use-Main-On-Primary);
                 }
                 .ant-tree-node-content-wrapper.ant-tree-node-selected {
                     background-color: var(--Colors-Use-Main-Hover);
@@ -143,6 +144,7 @@
             }
             .ant-tree-switcher.ant-tree-switcher-noop {
                 background-color: var(--Colors-Use-Main-Primary);
+                color: var(--Colors-Use-Main-On-Primary);
                 border-radius: 4px 0 0 4px;
             }
         }

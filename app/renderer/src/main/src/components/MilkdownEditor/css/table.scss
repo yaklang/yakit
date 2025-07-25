@@ -68,8 +68,8 @@
         display: flex;
         transform: translateX(-50%);
         left: 50%;
-        background-color: #fff;
-        border: 1px solid #ccc;
+        background-color: var(--Colors-Use-Basic-Background);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
     }
     milkdown-table-block .cell-handle .button-group[data-show="false"] {
@@ -81,7 +81,7 @@
         width: max-content;
     }
     milkdown-table-block .cell-handle .button-group button:hover {
-        background-color: #f0f0f0;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     milkdown-table-block .line-handle {
@@ -99,7 +99,7 @@
         color: var(--Colors-Use-Main-Primary);
         border: 1px solid var(--Colors-Use-Main-Border);
         padding: 0 4px;
-        background: #fff;
+        background: var(--Colors-Use-Basic-Background);
         border-radius: 4px;
         width: 24px;
         cursor: pointer;
@@ -129,7 +129,7 @@
     milkdown-table-block .drag-preview {
         position: absolute;
         z-index: 100;
-        border: 1px solid #ccc;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         opacity: 0.5;
         display: flex;
         flex-direction: column;

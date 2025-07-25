@@ -164,7 +164,13 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                     title: "进度",
                     dataKey: "Percent",
                     render: (v) => (
-                        <Progress percent={Math.trunc(v * 100)} status='active' className={styles["table-progress"]} />
+                        <Progress
+                            strokeColor='var(--Colors-Use-Main-Primary)'
+                            trailColor='var(--Colors-Use-Neutral-Bg)'
+                            percent={Math.trunc(v * 100)}
+                            status='active'
+                            className={styles["table-progress"]}
+                        />
                     ),
                     sorterProps: {
                         sorter: true,

@@ -155,8 +155,8 @@ export const InstallFFmpeg: React.FC<InstallFFmpegProp> = (props) => {
         <>
             <div className={styles["download-progress"]}>
                 <Progress
-                    strokeColor='#F28B44'
-                    trailColor='#F0F2F5'
+                    strokeColor='var(--Colors-Use-Main-Primary)'
+                    trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={percent}
                     format={(percent) => `已下载 ${percent}%`}
                 />

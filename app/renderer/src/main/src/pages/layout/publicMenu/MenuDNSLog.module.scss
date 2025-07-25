@@ -69,7 +69,6 @@
                 svg {
                     width: 16px;
                     height: 16px;
-                    // color: #85899e;
                     color: var(--Colors-Use-Neutral-Text-3-Secondary)
                 }
             }
@@ -244,7 +243,7 @@
         height: 168px;
         display: flex;
         flex-direction: column;
-        border: 1px solid #eaecf3;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
         .body-header {
             width: 100%;
@@ -252,7 +251,7 @@
             display: flex;
             border-radius: 4px 4px 0px 0px;
             background: var(--Colors-Use-Neutral-Bg);
-            border-bottom: 1px solid #eaecf3;
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             .opt-style {
                 font-weight: 500;
             }
@@ -294,7 +293,7 @@
                     }
                 }
                 .list-opt + .list-opt {
-                    border-top: 1px solid #eaecf3;
+                    border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 }
             }
         }

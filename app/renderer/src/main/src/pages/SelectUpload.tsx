@@ -246,7 +246,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
             </Form.Item>
             {percent > 0 && (
                 <div style={{width: 276, margin: "0 auto", paddingBottom: 14}}>
-                    <Progress percent={Math.floor((percent || 0) * 100)} />
+                    <Progress
+                        strokeColor='var(--Colors-Use-Main-Primary)'
+                        trailColor='var(--Colors-Use-Neutral-Bg)'
+                        percent={Math.floor((percent || 0) * 100)}
+                    />
                 </div>
             )}
             <div style={{textAlign: "center"}}>

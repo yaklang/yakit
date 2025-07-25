@@ -53,12 +53,12 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {Selection} from "./RunnerTabs/RunnerTabsType"
 import {LeftSideType} from "./LeftSideBar/LeftSideBarType"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
-import { onSetSelectedSearchVal } from "./AuditSearchModal/AuditSearch"
-import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
-import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
-import { getStorageAuditCodeShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/yakRunnerAuditCode"
+import {onSetSelectedSearchVal} from "./AuditSearchModal/AuditSearch"
+import {registerShortcutKeyHandle, unregisterShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"
+import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
+import {getStorageAuditCodeShortcutKeyEvents} from "@/utils/globalShortcutKey/events/page/yakRunnerAuditCode"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
-import { monacaLanguageType } from "../yakRunner/utils"
+import {monacaLanguageType} from "../yakRunner/utils"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props
@@ -73,7 +73,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     /** ---------- 审计规则 ---------- */
     const [auditRule, setAuditRule] = useState<string>("")
     /** ---------- RuntimeID作用于全局，用于条件筛选 ---------- */
-    const [runtimeID,setRuntimeID] = useState<string>("")
+    const [runtimeID, setRuntimeID] = useState<string>("")
     /** ---------- 审计运行状态 ---------- */
     const [auditExecuting, setAuditExecuting] = useState<boolean>(false)
 
@@ -662,7 +662,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             auditExecuting,
             runtimeID
         }
-    }, [pageInfo, fileTree, projectName, areaInfo, activeFile, auditRule, auditExecuting,runtimeID])
+    }, [pageInfo, fileTree, projectName, areaInfo, activeFile, auditRule, auditExecuting, runtimeID])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
@@ -730,15 +730,16 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     }
 
     // 双击Shift
-    const [lastShiftTime, setLastShiftTime] = useState<number>(0);
+    const [lastShiftTime, setLastShiftTime] = useState<number>(0)
     const handleDoubleShift = useMemoizedFn(() => {
-        const now = Date.now();
-        if (now - lastShiftTime < 300) { // 300ms 内连点两次 Shift
+        const now = Date.now()
+        if (now - lastShiftTime < 300) {
+            // 300ms 内连点两次 Shift
             // 在这里处理连点两次 Shift 的逻辑
             emiter.emit("onOpenSearchModal")
         }
-        setLastShiftTime(now);
-    });
+        setLastShiftTime(now)
+    })
     const shortcutRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(shortcutRef)
     useEffect(() => {
@@ -854,8 +855,8 @@ export const AuditCodeStatusInfo: React.FC<AuditCodeStatusInfoProps> = (props) =
                     <div className={styles["hint-right-title"]}>{title}</div>
                     <div className={styles["download-progress"]}>
                         <Progress
-                            strokeColor='#F28B44'
-                            trailColor='#F0F2F5'
+                            strokeColor='var(--Colors-Use-Main-Primary)'
+                            trailColor='var(--Colors-Use-Neutral-Bg)'
                             percent={Math.floor((streamData.Progress || 0) * 100)}
                             showInfo={false}
                         />

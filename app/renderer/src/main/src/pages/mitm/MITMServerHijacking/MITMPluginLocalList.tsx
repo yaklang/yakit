@@ -402,8 +402,8 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
             mask={false}
         >
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={percent}
                 format={(percent) => `已下载 ${percent}%`}
             />
@@ -486,8 +486,8 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
             mask={false}
         >
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={percent}
                 format={(percent) => `已更新 ${percent}%`}
             />
@@ -1118,9 +1118,9 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                                     onEditInputBlur(item, newName)
                                     setEditGroup("")
                                 }}
-                                onPressEnter={()=>{
+                                onPressEnter={() => {
                                     onEditInputBlur(item, newName)
-                                    setEditGroup("") 
+                                    setEditGroup("")
                                 }}
                                 autoFocus={true}
                                 value={newName}

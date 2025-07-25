@@ -22,7 +22,7 @@
             width: 8px;
             height: 8px;
             inset: 0;
-            background-color: #fff;
+            background-color: var(--Colors-Use-Basic-Background);
             border-radius: 9px;
             box-shadow: 0 2px 4px var(--Colors-Use-Basic-Shadow);
             transition: all 0.2s ease-in-out;
@@ -40,6 +40,7 @@
 
 .yakit-proto-switch-wrapper-checked {
     background: var(--Colors-Use-Main-Primary);
+    color: var(--Colors-Use-Main-On-Primary);
     border: 1px solid var(--Colors-Use-Main-Primary);
     .yakit-proto-switch-checked {
         transition: all 0.2s ease-in-out;

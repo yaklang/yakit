@@ -1479,8 +1479,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 mask={false}
             >
                 <Progress
-                    strokeColor='#F28B44'
-                    trailColor='#F0F2F5'
+                    strokeColor='var(--Colors-Use-Main-Primary)'
+                    trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={percent}
                     format={(percent) => `已上传 ${percent}%`}
                 />

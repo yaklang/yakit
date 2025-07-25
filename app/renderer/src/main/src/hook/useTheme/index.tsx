@@ -11,7 +11,13 @@ const ThemeContext = createContext<{
     setTheme: () => {}
 })
 
-const preTheme = await getLocalValue("theme")
+let preTheme: Theme = "light"
+
+try {
+    preTheme = await getLocalValue("theme")
+} catch {
+    preTheme = "light"
+}
 
 export const ThemeProvider = ({children}: {children: React.ReactNode}) => {
     const [theme, setThemeState] = useState<Theme>(preTheme)

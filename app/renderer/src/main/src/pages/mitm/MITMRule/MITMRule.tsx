@@ -54,6 +54,8 @@ import ReactResizeDetector from "react-resize-detector"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {useCampare} from "@/hook/useCompare/useCompare"
+import loading from "@/alibaba/ali-react-table-dist/dist/base-table/loading"
+import text from "bizcharts/lib/components/Annotation/text"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -455,18 +457,21 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     title: "命中颜色",
                     dataKey: "Color",
                     ellipsis: false,
-                    width: 85,
-                    render: (text, record: MITMContentReplacerRule) => (
-                        <div className={classNames(styles["table-hit-color-content"])}>
-                            <div className={classNames(styles["table-hit-color"], HitColor[text]?.className)} />
-                            {HitColor[text]?.title || "-"}
-                        </div>
-                    )
+                    width: 85
                 },
                 {
                     title: "追加 Tag",
                     dataKey: "ExtraTag",
-                    minWidth: 120
+                    minWidth: 120,
+                    render: (text, record: MITMContentReplacerRule) => (
+                        <div
+                            className={classNames({
+                                [styles["action-icon-edit-disabled"]]: record.Disabled
+                            })}
+                        >
+                            {text}
+                        </div>
+                    )
                 },
                 {
                     title: "操作",
@@ -987,6 +992,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             return (
                 <YakitInput.Search
                     size='small'
+                    allowClear={true}
                     placeholder='请输入关键字搜索'
                     style={{maxWidth: 200}}
                     value={valueSearch}

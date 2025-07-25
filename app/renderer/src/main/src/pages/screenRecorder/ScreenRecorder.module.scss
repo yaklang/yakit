@@ -23,7 +23,7 @@
                 font-weight: 400;
                 font-size: 12px;
                 line-height: 16px;
-                color: var(--Colors-Use-Neutral-Disable);
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
             }
         }
         .heard-extra {
@@ -32,7 +32,7 @@
             justify-content: flex-end;
             min-width: 635px;
             .refresh-icon {
-                color: var(--Colors-Use-Neutral-Text-1-Title);
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 margin-left: 16px;
                 cursor: pointer;
                 &:hover {
@@ -200,8 +200,9 @@
                     justify-content: flex-end;
                     svg {
                         cursor: pointer;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         &:hover {
-                            color: var(--Colors-Use-Main-Hover);
+                            color: var(--Colors-Use-Main-Primary);
                         }
                     }
                     .icon-trash {

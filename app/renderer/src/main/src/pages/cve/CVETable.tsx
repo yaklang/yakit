@@ -1,13 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Divider, Empty, Progress, Space, Table, Tag} from "antd"
 import {defQueryCVERequest, QueryCVERequest} from "@/pages/cve/CVEViewer"
-import {
-    useDebounceEffect,
-    useDebounceFn,
-    useGetState,
-    useMemoizedFn,
-    useUpdateEffect
-} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {ExecResult, genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {ResizeBox} from "@/components/ResizeBox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -642,8 +636,8 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                         {tipNode}
                         <div className={styles["download-progress"]}>
                             <Progress
-                                strokeColor='#F28B44'
-                                trailColor='#F0F2F5'
+                                strokeColor='var(--Colors-Use-Main-Primary)'
+                                trailColor='var(--Colors-Use-Neutral-Bg)'
                                 percent={percent}
                                 format={(percent) => `已下载 ${percent}%`}
                             />
