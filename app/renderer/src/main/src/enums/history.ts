@@ -18,4 +18,5 @@ export enum RemoteHistoryGV {
     HTTPFlowTableAnalysisExcludeKeywords = "HTTPFlowTable-AnalysisFilter-ExcludeKeywords",
     HTTPFlowAnalysisMainYakitResizeBox = "HTTPFlowAnalysisMain-YakitResizeBox",
     HTTPFlowAnalysisYakitResizeBox = "HTTPFlowAnalysis-YakitResizeBox",
+    HTTPFlowTableAnalysisStatusCode = "HTTPFlowTable-AnalysisFilter-StatusCode",
 }

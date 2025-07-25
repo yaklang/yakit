@@ -804,6 +804,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [fileSuffix, setFileSuffix] = useState<string[]>([])
     const [searchContentType, setSearchContentType] = useState<string>("")
     const [excludeKeywords, setExcludeKeywords] = useState<string[]>([])
+    const [statusCode, setStatusCode] = useState<string>("")
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
 
@@ -919,6 +920,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     setExcludeKeywords(excludeKeywords)
                 }
             })
+            // 状态码
+            getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableStatusCode).then((e) => {
+                if (!!e) {
+                    const statusCode: string = e
+                    setStatusCode(statusCode)
+                }
+            })
         }
     }, [updateAdvancedSearch])
 
@@ -926,6 +934,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const comUrlPath = useCampare(urlPath)
     const comFileSuffix = useCampare(fileSuffix)
     const comExcludeKeywords = useCampare(excludeKeywords)
+    const comStatusCode = useCampare(statusCode)
     useDebounceEffect(
         useMemoizedFn(() => {
             if (updateAdvancedSearch) {
@@ -951,7 +960,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         ExcludePath: urlPath,
                         IncludeSuffix: [],
                         ExcludeSuffix: fileSuffix,
-                        ExcludeKeywords: excludeKeywords
+                        ExcludeKeywords: excludeKeywords,
+                        ExcludeStatusCode: statusCode
                     }
                 }
                 // 展示
@@ -965,7 +975,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         IncludePath: urlPath,
                         ExcludePath: [],
                         IncludeSuffix: fileSuffix,
-                        ExcludeSuffix: []
+                        ExcludeSuffix: [],
+                        ExcludeKeywords: [],
+                        ExcludeStatusCode: ""
                     }
                 }
                 setParams(newParams)
@@ -979,7 +991,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             urlPath,
                             fileSuffix,
                             searchContentType,
-                            excludeKeywords
+                            excludeKeywords,
+                            statusCode
                         }
                     })
                 )
@@ -993,7 +1006,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             comUrlPath,
             comFileSuffix,
             searchContentType,
-            comExcludeKeywords
+            comExcludeKeywords,
+            comStatusCode
         ],
         {wait: 500}
     )
@@ -1003,9 +1017,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             urlPath.length > 0 ||
             fileSuffix.length > 0 ||
             searchContentType?.length > 0 ||
-            excludeKeywords.length > 0
+            excludeKeywords.length > 0 || 
+            statusCode?.length > 0
         )
-    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords])
+    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords,statusCode])
     const onGetOtherPageAdvancedSearchData = useMemoizedFn((str: string) => {
         try {
             const value = JSON.parse(str)
@@ -1016,6 +1031,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setFileSuffix(advancedSearchData.fileSuffix)
             setSearchContentType(advancedSearchData.searchContentType)
             setExcludeKeywords(advancedSearchData.excludeKeywords)
+            setStatusCode(advancedSearchData.statusCode)
         } catch (error) {}
     })
     useEffect(() => {
@@ -4323,13 +4339,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     visible={drawerFormVisible}
                     setVisible={setDrawerFormVisible}
                     onSave={(filters) => {
-                        const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} = filters
+                        const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords,statusCode} = filters
                         setFilterMode(filterMode)
                         setHostName(hostName)
                         setUrlPath(urlPath)
                         setFileSuffix(fileSuffix)
                         setSearchContentType(searchContentType)
                         setExcludeKeywords(excludeKeywords)
+                        setStatusCode(statusCode)
                         setDrawerFormVisible(false)
                     }}
                     filterMode={filterMode}
@@ -4338,6 +4355,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     fileSuffix={fileSuffix}
                     searchContentType={searchContentType}
                     excludeKeywords={excludeKeywords}
+                    statusCode={statusCode}
                 />
             )}
             <EditTagsModal

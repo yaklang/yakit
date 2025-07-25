@@ -452,6 +452,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const [fileSuffix, setFileSuffix] = useState<string[]>([])
     const [searchContentType, setSearchContentType] = useState<string>("")
     const [excludeKeywords, setExcludeKeywords] = useState<string[]>([])
+    const [statusCode, setStatusCode] = useState<string>("")
     useEffect(() => {
         getDefautAdvancedSearch()
     }, [])
@@ -497,6 +498,13 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 setExcludeKeywords(excludeKeywords)
             }
         })
+        // 状态码
+        getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisStatusCode).then((e) => {
+            if (!!e) {
+                const statusCode: string = e
+                setStatusCode(statusCode)
+            }
+        })
     }
     useDebounceEffect(
         () => {
@@ -513,7 +521,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         ExcludePath: urlPath,
                         IncludeSuffix: [],
                         ExcludeSuffix: fileSuffix,
-                        ExcludeKeywords: excludeKeywords
+                        ExcludeKeywords: excludeKeywords,
+                        ExcludeStatusCode: statusCode
                     }
                 }
                 // 展示
@@ -527,12 +536,14 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         IncludePath: urlPath,
                         ExcludePath: [],
                         IncludeSuffix: fileSuffix,
-                        ExcludeSuffix: []
+                        ExcludeSuffix: [],
+                        ExcludeKeywords: [],
+                        ExcludeStatusCode: ""
                     }
                 }
             })
         },
-        [filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords],
+        [filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords, statusCode],
         {wait: 500}
     )
     const isFilter: boolean = useCreation(() => {
@@ -541,9 +552,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             urlPath.length > 0 ||
             fileSuffix.length > 0 ||
             searchContentType?.length > 0 ||
-            excludeKeywords.length > 0
+            excludeKeywords.length > 0 ||
+            statusCode?.length > 0
         )
-    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords])
+    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords, statusCode])
     // #endregion
 
     // #region 表格勾选，表格行选中相关
@@ -2364,13 +2376,22 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     visible={drawerFormVisible}
                     setVisible={setDrawerFormVisible}
                     onSave={(filters) => {
-                        const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} = filters
+                        const {
+                            filterMode,
+                            hostName,
+                            urlPath,
+                            fileSuffix,
+                            searchContentType,
+                            excludeKeywords,
+                            statusCode
+                        } = filters
                         setFilterMode(filterMode)
                         setHostName(hostName)
                         setUrlPath(urlPath)
                         setFileSuffix(fileSuffix)
                         setSearchContentType(searchContentType)
                         setExcludeKeywords(excludeKeywords)
+                        setStatusCode(statusCode)
                         setDrawerFormVisible(false)
                     }}
                     filterMode={filterMode}
@@ -2379,6 +2400,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     fileSuffix={fileSuffix}
                     searchContentType={searchContentType}
                     excludeKeywords={excludeKeywords}
+                    statusCode={statusCode}
                 />
             )}
             {/* 导出HAR数据 */}

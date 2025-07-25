@@ -14,6 +14,7 @@ import cloneDeep from "lodash/cloneDeep"
 import styles from "./HTTPFlowTableForm.module.scss"
 import {HTTPHistorySourcePageType} from "../HTTPHistory"
 import {RemoteHistoryGV} from "@/enums/history"
+import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 
 export interface HTTPFlowTableFormConfigurationProps {
     pageType?: HTTPHistorySourcePageType
@@ -27,6 +28,7 @@ export interface HTTPFlowTableFormConfigurationProps {
     fileSuffix: string[]
     searchContentType: string
     excludeKeywords: string[]
+    statusCode: string
 }
 
 export interface HTTPFlowTableFromValue {
@@ -36,6 +38,7 @@ export interface HTTPFlowTableFromValue {
     fileSuffix: string[]
     searchContentType: string
     excludeKeywords: string[]
+    statusCode: string
 }
 
 export enum HTTPFlowTableFormConsts {
@@ -44,7 +47,8 @@ export enum HTTPFlowTableFormConsts {
     HTTPFlowTableUrlPath = "YAKIT_HTTPFlowTableUrlPath",
     HTTPFlowTableFileSuffix = "YAKIT_HTTPFlowTableFileSuffix",
     HTTPFlowTableContentType = "YAKIT_HTTPFlowTableContentType",
-    HTTPFlowTableExcludeKeywords = "YAKIT_HTTPFlowTableExcludeKeywords"
+    HTTPFlowTableExcludeKeywords = "YAKIT_HTTPFlowTableExcludeKeywords",
+    HTTPFlowTableStatusCode = "YAKIT_HTTPFlowTableStatusCode"
 }
 
 export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigurationProps> = (props) => {
@@ -59,7 +63,8 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         urlPath,
         fileSuffix,
         searchContentType,
-        excludeKeywords
+        excludeKeywords,
+        statusCode
     } = props
 
     /** ---------- 高级筛选 Start ---------- */
@@ -78,6 +83,8 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
     const oldSearchContentType = useRef<string[]>([])
     // 原始数据-关键字
     const oldExcludeKeywords = useRef<string[]>([])
+    // 原始数据-状态码
+    const oldStatusCode = useRef<string>("")
 
     const [form] = Form.useForm()
 
@@ -86,7 +93,14 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         return new Promise<HTTPFlowTableFromValue>((resolve, reject) => {
             form.validateFields()
                 .then((formValue) => {
-                    const {filterMode, urlPath = [], hostName = [], fileSuffix = [], excludeKeywords = []} = formValue
+                    const {
+                        filterMode,
+                        urlPath = [],
+                        hostName = [],
+                        fileSuffix = [],
+                        excludeKeywords = [],
+                        statusCode = ""
+                    } = formValue
                     let searchContentType: string = (formValue.searchContentType || []).join(",")
                     if (pageType === "HTTPHistoryFilter") {
                         setRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFilterMode, filterMode)
@@ -98,6 +112,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                             RemoteHistoryGV.HTTPFlowTableAnalysisExcludeKeywords,
                             JSON.stringify(excludeKeywords)
                         )
+                        setRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisStatusCode, statusCode)
                     } else {
                         setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode, filterMode)
                         setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableHostName, JSON.stringify(hostName))
@@ -108,6 +123,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                             HTTPFlowTableFormConsts.HTTPFlowTableExcludeKeywords,
                             JSON.stringify(excludeKeywords)
                         )
+                        setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableStatusCode, statusCode)
                     }
                     const info: HTTPFlowTableFromValue = {
                         filterMode: filterMode,
@@ -115,7 +131,8 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                         urlPath,
                         fileSuffix,
                         searchContentType,
-                        excludeKeywords
+                        excludeKeywords,
+                        statusCode
                     }
                     resolve(info)
                 })
@@ -151,7 +168,17 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         oldSearchContentType.current = searchType
         // 关键字
         oldExcludeKeywords.current = excludeKeywords
-        form.setFieldsValue({filterMode, hostName, urlPath, fileSuffix, searchContentType: searchType, excludeKeywords})
+        // 状态码
+        oldStatusCode.current = statusCode
+        form.setFieldsValue({
+            filterMode,
+            hostName,
+            urlPath,
+            fileSuffix,
+            searchContentType: searchType,
+            excludeKeywords,
+            statusCode
+        })
     }, [visible])
 
     // 保存
@@ -181,7 +208,8 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                 urlPath: oldUrlPath.current,
                 fileSuffix: oldFileSuffix.current,
                 searchContentType: oldSearchContentType.current,
-                excludeKeywords: oldExcludeKeywords.current
+                excludeKeywords: oldExcludeKeywords.current,
+                statusCode: oldStatusCode.current
             }
             isModify = JSON.stringify(oldValue) !== JSON.stringify(newValue)
 
@@ -300,6 +328,11 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                         {filterModeVal === "shield" && (
                             <Form.Item label='关键字' name='excludeKeywords' help={"匹配逻辑与外面搜索关键字逻辑一样"}>
                                 <YakitSelect mode='tags'></YakitSelect>
+                            </Form.Item>
+                        )}
+                        {filterModeVal === "shield" && (
+                            <Form.Item label='状态码' name='statusCode' help={"可输入200或200-204格式,多个用逗号分隔"}>
+                                <YakitInput />
                             </Form.Item>
                         )}
                     </Form>

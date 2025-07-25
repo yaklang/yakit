@@ -208,16 +208,17 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     const [fileSuffix, setFileSuffix] = useState<string[]>([])
     const [searchContentType, setSearchContentType] = useState<string>("")
     const [excludeKeywords, setExcludeKeywords] = useState<string[]>([])
-
+    const [statusCode, setStatusCode] = useState<string>("")
     const isFilter: boolean = useMemo(() => {
         return (
             hostName.length > 0 ||
             urlPath.length > 0 ||
             fileSuffix.length > 0 ||
             searchContentType?.length > 0 ||
-            excludeKeywords.length > 0
+            excludeKeywords.length > 0 ||
+            statusCode?.length > 0
         )
-    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords])
+    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords,statusCode])
 
     useEffect(() => {
         emiter.on("onGetAdvancedSearchDataEvent", onGetAdvancedSearchData)
@@ -235,6 +236,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
             setFileSuffix(advancedSearchData.fileSuffix)
             setSearchContentType(advancedSearchData.searchContentType)
             setExcludeKeywords(advancedSearchData.excludeKeywords)
+            setStatusCode(advancedSearchData.statusCode)
             emiter.emit(
                 "onGetOtherPageAdvancedSearchDataEvent",
                 JSON.stringify({
@@ -299,7 +301,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                             visible={drawerFormVisible}
                             setVisible={setDrawerFormVisible}
                             onSave={(filters) => {
-                                const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} =
+                                const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords,statusCode} =
                                     filters
                                 setFilterMode(filterMode)
                                 setHostName(hostName)
@@ -307,6 +309,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                                 setFileSuffix(fileSuffix)
                                 setSearchContentType(searchContentType)
                                 setExcludeKeywords(excludeKeywords)
+                                setStatusCode(statusCode)
                                 setDrawerFormVisible(false)
                                 emiter.emit(
                                     "onGetOtherPageAdvancedSearchDataEvent",
@@ -317,7 +320,8 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                                             urlPath,
                                             fileSuffix,
                                             searchContentType,
-                                            excludeKeywords
+                                            excludeKeywords,
+                                            statusCode
                                         }
                                     })
                                 )
@@ -328,6 +332,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                             fileSuffix={fileSuffix}
                             searchContentType={searchContentType}
                             excludeKeywords={excludeKeywords}
+                            statusCode={statusCode}
                         />
                     )}
                 </div>

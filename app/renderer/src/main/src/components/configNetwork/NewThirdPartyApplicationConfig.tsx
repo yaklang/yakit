@@ -226,7 +226,6 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                             }
                         >
                             <YakitAutoComplete
-                                showSearch
                                 options={modelNameAllOptions}
                                 onFocus={getModelNameOption}
                                 dropdownRender={(menu) => {
@@ -235,6 +234,12 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                                             <YakitSpin spinning={modelOptionLoading}>{menu}</YakitSpin>
                                         </>
                                     )
+                                }}
+                                filterOption={(inputValue, option) => {
+                                    if (option?.value && typeof option?.value === "string") {
+                                        return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                                    }
+                                    return false
                                 }}
                             ></YakitAutoComplete>
                         </Form.Item>
