@@ -184,7 +184,10 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
     /** 保存功能 */
     const handleSave = useMemoizedFn(() => {
         return new Promise<void>(async (resolve, reject) => {
-            if (saveLoading) return
+            if (saveLoading) {
+                reject()
+                return
+            }
             setSaveLoading(true)
 
             try {
@@ -206,7 +209,8 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                 if (content) {
                     const codeInfo = await onCodeToInfo({type: "yak", code: content || ""}, true)
                     if (codeInfo) {
-                        formData.ParamsUIConfig = JSON.stringify(codeInfo?.CliParameter ?? [])
+                        const params = codeInfo.CliParameter || []
+                        formData.ParamsUIConfig = params.length === 0 ? undefined : JSON.stringify(params ?? [])
                     }
                 } else {
                     formData.ParamsUIConfig = ""
@@ -235,7 +239,10 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                                     return
                                 }
                             }
+                            console.log("resInfo1", resInfo)
+
                             forgeData.current = cloneDeep(resInfo)
+                            console.log("resInfo2", forgeData.current)
                             emiter.emit("onTriggerRefreshForgeList", `${resInfo.Id}`)
                             yakitNotify("success", "保存成功")
                             resolve()
@@ -252,7 +259,6 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                             setSaveLoading(false)
                         }, 300)
                     })
-                resolve()
             } catch (error) {
                 reject()
                 setTimeout(() => {
@@ -623,8 +629,8 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                                                 validator: async (_, value) => {
                                                     if (!value || !value.trim())
                                                         return Promise.reject(new Error("描述必填"))
-                                                    if (value.trim().length > 100)
-                                                        return Promise.reject(new Error("描述最长100位"))
+                                                    // if (value.trim().length > 100)
+                                                    //     return Promise.reject(new Error("描述最长100位"))
                                                 }
                                             }
                                         ]}
