@@ -62,7 +62,6 @@ import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
 import {AIChatToolColorCard, AIChatToolItem} from "./AIChatTool"
 import emiter from "@/utils/eventBus/eventBus"
-import {AITabs, AITabsEnum} from "../constant"
 import {
     PluginExecuteHttpFlow,
     VulnerabilitiesRisksTable
@@ -70,12 +69,11 @@ import {
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
-import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {
     HorizontalScrollCardItemInfoMultiple,
     HorizontalScrollCardItemInfoSingle
 } from "@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard"
-const {YakitPanel} = YakitCollapse
+import {AITabs, AITabsEnum} from "../defaultConstant"
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks, pressure, cost, onLeafNodeClick, card} = props

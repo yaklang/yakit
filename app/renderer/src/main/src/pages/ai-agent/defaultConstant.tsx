@@ -3,6 +3,7 @@ import {AIAgentSetting, AIAgentTab} from "./aiAgentType"
 import {MCPTransportType} from "./type/mcpClient"
 import {OutlineCogIcon, OutlineSparklesIcon, OutlineTemplateIcon, OutlineWrenchIcon} from "@/assets/icon/outline"
 import {AIChatMessage} from "./type/aiChat"
+import {YakitSideTabProps} from "@/components/yakitSideTab/YakitSideTabType"
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
@@ -65,3 +66,17 @@ export const generateTaskChatExecution: (info?: AIChatMessage.PlanTask) => AICha
 
     return data
 }
+
+export enum AITabsEnum {
+    Task_Content = "task-content",
+    File_System = "file-system",
+    HTTP = "http",
+    Risk = "risk"
+}
+/** @name AI 默认展示的tab集合 */
+export const AITabs: YakitSideTabProps["yakitTabs"] = [
+    {label: "任务内容", value: AITabsEnum.Task_Content},
+    // {label: "更新文件系统", value: AITabsEnum.File_System},
+    {label: "HTTP 流量", value: AITabsEnum.HTTP},
+    {label: "漏洞与风险", value: AITabsEnum.Risk}
+]

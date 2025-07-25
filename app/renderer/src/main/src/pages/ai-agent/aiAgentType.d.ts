@@ -3,7 +3,7 @@ import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
 import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIStartParams} from "./type/aiChat"
 import {AITreeNodeProps} from "./aiTree/type"
 import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AITabsEnum} from "./constant"
+import {AITabsEnum} from "./defaultConstant"
 
 export interface AIAgentProps {}
 
