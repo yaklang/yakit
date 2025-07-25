@@ -855,6 +855,7 @@ service Yak {
   rpc StartAITask(stream AIInputEvent) returns(stream AIOutputEvent);
   rpc QueryAITask(AITaskQueryRequest) returns (AITaskQueryResponse);
   rpc DeleteAITask(AITaskDeleteRequest) returns (DbOperateMessage);
+  rpc QueryAIEvent(AIEventQueryRequest) returns (AIEventQueryResponse);
 
   rpc StartAITriage(stream AITriageInputEvent) returns(stream AIOutputEvent);
 
@@ -1105,6 +1106,22 @@ message AITaskFilter {
   repeated string Keyword = 2;
   repeated string ForgeName = 3;
   repeated string CoordinatorId = 5;
+}
+
+message AIEventFilter {
+  repeated string EventUUIDS = 1;
+  repeated string  EventType = 2;
+  repeated string CoordinatorId = 3;
+}
+
+
+message AIEventQueryRequest {
+  AIEventFilter Filter = 1;
+  string  ProcessID = 2;
+}
+
+message AIEventQueryResponse {
+  repeated AIOutputEvent Events = 1;
 }
 
 message AITaskQueryRequest {

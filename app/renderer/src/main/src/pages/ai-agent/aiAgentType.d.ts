@@ -181,7 +181,7 @@ export interface AIChatLogsProps {
 
 //#region AI工具查看详情
 export interface AIChatToolDrawerContentProps {
-    syncId: string
+    callToolId: string
 }
 // #endregion
 

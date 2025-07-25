@@ -136,7 +136,9 @@
     }
     .item-content {
         display: flex;
+        flex-direction: column;
         border-radius: 0 0 8px 8px;
+        gap: 12px;
         padding: 8px;
         color: var(--Colors-Use-Neutral-Text-4-Help-text);
         font-size: 12px;
@@ -144,6 +146,21 @@
         line-height: 16px;
         letter-spacing: 0.5px;
         overflow: hidden;
+        .item-stdout-content {
+            display: flex;
+            gap: 4px;
+            position: relative;
+        }
+        .item-stdout-show-all {
+            color: var(--Colors-Use-Main-Primary);
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 14px;
+            flex-shrink: 0;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+        }
     }
 }
 

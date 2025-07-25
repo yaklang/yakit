@@ -138,29 +138,16 @@ interface AIChatToolItemProps {
 }
 export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) => {
     const {item} = props
-    const {activeChat} = useAIAgentStore()
-    const syncProcessEventIdRef = useRef<string>()
     const handleDetails = useMemoizedFn(() => {
-        if (!activeChat) return
         if (!item?.callToolId) return
-        syncProcessEventIdRef.current = uuidv4()
-        const token = activeChat.id
-        const params: AIInputEvent = {
-            IsSyncMessage: true,
-            SyncType: "sync_process_event",
-            SyncJsonInput: JSON.stringify({
-                process_id: item?.callToolId,
-                sync_process_event_id: syncProcessEventIdRef.current
-            })
-        }
-        ipcRenderer.invoke("send-ai-task", token, params)
         const m = showYakitDrawer({
             title: "详情",
             width: "40%",
             bodyStyle: {padding: 0},
-            content: <AIChatToolDrawerContent syncId={syncProcessEventIdRef.current || ""} />,
+            content: <AIChatToolDrawerContent callToolId={item?.callToolId} />,
             onClose: () => m.destroy()
         })
+       
     })
     const tag = useCreation(() => {
         switch (item.status) {
@@ -198,6 +185,12 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
                 return "暂无内容"
         }
     }, [item.status])
+    const toolStdoutShowContent = useCreation(() => {
+        return item?.toolStdoutContent?.content || ""
+    }, [item.toolStdoutContent])
+    const isShowAll = useCreation(() => {
+        return !!item?.toolStdoutContent?.isShowAll
+    }, [item.toolStdoutContent])
     return (
         <div
             className={classNames(styles["ai-chat-tool-item"], {
@@ -222,6 +215,27 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
                 <YakitButton type='text'>查看详情</YakitButton>
             </div>
             <div className={styles["item-content"]}>
+                {toolStdoutShowContent && (
+                    <div
+                        className={styles["item-stdout-content"]}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                    >
+                        {toolStdoutShowContent}
+                        {isShowAll && (
+                            <span
+                                className={styles["item-stdout-show-all"]}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDetails()
+                                }}
+                            >
+                                查看全部
+                            </span>
+                        )}
+                    </div>
+                )}
                 <div
                     onClick={(e) => {
                         e.stopPropagation()

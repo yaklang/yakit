@@ -183,7 +183,14 @@ export interface AIChatInfo {
         streams: Record<string, AIChatStreams[]>
     }
 }
-
+/**QueryAIEvent 接口请求 */
+export interface AIEventQueryRequest {
+    ProcessID: string
+}
+/**QueryAIEvent 接口返回 */
+export interface AIEventQueryResponse {
+    Events: AIOutputEvent[]
+}
 export declare namespace AIChatMessage {
     /** 输出 Token */
     export interface Consumption {
@@ -335,6 +342,11 @@ export declare namespace AIChatMessage {
         selectors: ReviewSelector[]
         /**出现ai工具按钮后，按钮功能发送信息的时候需要的id */
         interactiveId: string
+        /**tool stdout 内容展示前200个字符 */
+        toolStdoutContent: {
+            content: string
+            isShowAll: boolean
+        }
     }
     /**AI工具 接口返回的JSON结构 */
     export interface AIToolCall {

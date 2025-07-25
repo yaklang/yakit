@@ -47,7 +47,13 @@ import {
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {AITree} from "../aiTree/AITree"
 import cloneDeep from "lodash/cloneDeep"
-import {AIChatMessage, AIChatStreams, NoAIChatReviewSelector} from "../type/aiChat"
+import {
+    AIChatMessage,
+    AIChatStreams,
+    AIEventQueryRequest,
+    AIEventQueryResponse,
+    NoAIChatReviewSelector
+} from "../type/aiChat"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {handleFlatAITree} from "../useChatData"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -74,6 +80,8 @@ import {
     HorizontalScrollCardItemInfoSingle
 } from "@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard"
 import {AITabs, AITabsEnum} from "../defaultConstant"
+import {grpcQueryAIEvent} from "../grpc"
+import {Uint8ArrayToString} from "@/utils/str"
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks, pressure, cost, onLeafNodeClick, card} = props
@@ -1177,28 +1185,54 @@ export const AIChatLogs: React.FC<AIChatLogsProps> = memo((props) => {
 })
 
 export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = memo((props) => {
-    const {syncId} = props
+    const {callToolId} = props
     const [secondExpand, setSecondExpand] = useState<string[]>([])
     const [toolList, setToolList] = useState<AIChatStreams[]>([])
-
+    const [loading, setLoading] = useState<boolean>(false)
     useEffect(() => {
-        emiter.on("onTooCardDetails", onTooCardDetails)
-        return () => {
-            emiter.off("onTooCardDetails", onTooCardDetails)
-        }
+        getList()
     }, [])
 
-    const onTooCardDetails = useMemoizedFn((res) => {
-        try {
-            const data: AIChatToolSync = JSON.parse(res)
-            if (data.syncId !== syncId) return
-            const {info} = data
-            setToolList((prev) => [...prev, info])
-            setSecondExpand((preV) => {
-                return [...preV, `${info.nodeId}-${info.timestamp}`]
+    const getList = useMemoizedFn(() => {
+        if (!callToolId) return
+        const params: AIEventQueryRequest = {
+            ProcessID: callToolId
+        }
+        setLoading(true)
+        grpcQueryAIEvent(params)
+            .then((res: AIEventQueryResponse) => {
+                const {Events} = res
+                const list: AIChatStreams[] = []
+                Events.filter((ele) => ele.Type === "stream").forEach((item) => {
+                    const type = item.IsSystem ? "systemStream" : item.IsReason ? "reasonStream" : "stream"
+                    const nodeID = item.NodeId
+                    const timestamp = item.Timestamp
+                    let ipcContent = ""
+                    let ipcStreamDelta = ""
+                    try {
+                        ipcContent = Uint8ArrayToString(item.Content) || ""
+                        ipcStreamDelta = Uint8ArrayToString(item.StreamDelta) || ""
+                    } catch (error) {}
+                    const current: AIChatStreams = {
+                        nodeId: nodeID,
+                        timestamp: timestamp,
+                        data: {system: "", reason: "", stream: ""}
+                    }
+                    if (type === "systemStream") current.data.system = ipcContent + ipcStreamDelta
+                    if (type === "reasonStream") current.data.reason = ipcContent + ipcStreamDelta
+                    if (type === "stream") current.data.stream = ipcContent + ipcStreamDelta
+                    list.push(current)
+                })
+                setToolList(list)
+                setSecondExpand(list.map((ele) => `${ele.nodeId}-${ele.timestamp}`))
             })
-        } catch (error) {}
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
     })
+
     const handleChangeSecondPanel = useMemoizedFn((expand: boolean, expandKey: string) => {
         setSecondExpand((preV) => {
             if (expand) {
@@ -1210,23 +1244,29 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
     })
     return (
         <div className={styles["ai-chat-tool-drawer-content"]}>
-            {toolList.map((info: AIChatStreams) => {
-                const {nodeId, timestamp} = info
-                const key = `${nodeId}-${timestamp}`
-                const expand = secondExpand.includes(key)
-                return (
-                    <ChatStreamCollapseItem
-                        key={key}
-                        expandKey={key}
-                        info={info}
-                        secondExpand={expand}
-                        handleChangeSecondPanel={handleChangeSecondPanel}
-                        className={classNames({
-                            [styles["ai-tool-collapse-expand"]]: expand
-                        })}
-                    />
-                )
-            })}
+            {loading ? (
+                <YakitSpin />
+            ) : (
+                <>
+                    {toolList.map((info: AIChatStreams) => {
+                        const {nodeId, timestamp} = info
+                        const key = `${nodeId}-${timestamp}`
+                        const expand = secondExpand.includes(key)
+                        return (
+                            <ChatStreamCollapseItem
+                                key={key}
+                                expandKey={key}
+                                info={info}
+                                secondExpand={expand}
+                                handleChangeSecondPanel={handleChangeSecondPanel}
+                                className={classNames({
+                                    [styles["ai-tool-collapse-expand"]]: expand
+                                })}
+                            />
+                        )
+                    })}
+                </>
+            )}
         </div>
     )
 })
