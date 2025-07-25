@@ -15,7 +15,12 @@ import {SolidStopIcon} from "@/assets/icon/solid"
 import {Form, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {AIForgeBuiltInTag, DefaultForgeTypeList} from "../defaultConstant"
+import {
+    AIForgeBuiltInTag,
+    DefaultForgeConfigToCode,
+    DefaultForgeTypeList,
+    DefaultForgeYakToCode
+} from "../defaultConstant"
 import {AIForge, GetAIToolListRequest, QueryAIForgeRequest} from "@/pages/ai-agent/type/aiChat"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -163,10 +168,11 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                 PlanPrompt: forgeData.current.PlanPrompt || "",
                 ResultPrompt: forgeData.current.ResultPrompt || ""
             })
+
             setContent(
-                forgeData.current.ForgeType === "yak"
-                    ? forgeData.current.ForgeContent || ""
-                    : forgeData.current.Params || ""
+                forgeData.current.ForgeType === "config"
+                    ? forgeData.current.ForgeContent || forgeData.current.Params || ""
+                    : forgeData.current.ForgeContent || ""
             )
             setTriggerParseContent((old) => !old)
         }
@@ -183,9 +189,8 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
 
             try {
                 const formData: EditorAIForge = await handleFetchFormData()
+                formData.ForgeContent = content || ""
                 if (formData.ForgeType === "config") {
-                    formData.Params = content || ""
-
                     formData.InitPrompt = promptAction.InitPrompt ?? ""
                     formData.PersistentPrompt = promptAction.PersistentPrompt ?? ""
                     formData.PlanPrompt = promptAction.PlanPrompt ?? ""
@@ -193,7 +198,6 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                     formData.Action = promptAction.Action ?? ""
                 }
                 if (formData.ForgeType === "yak") {
-                    formData.ForgeContent = content || ""
                     formData.ToolNames = undefined
                     formData.ToolKeywords = undefined
                 }
@@ -210,8 +214,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
 
                 // 生成最终需要保存的数据
                 const requestData: AIForge = {...(forgeData.current || {}), ...formData} as AIForge
-                if (requestData.ForgeType === "yak") requestData.Params = undefined
-                if (requestData.ForgeType === "config") requestData.ForgeContent = undefined
+                requestData.Params = undefined
 
                 const apiFunc = requestData.Id ? grpcUpdateAIForge : grpcCreateAIForge
                 console.log("apiFunc", requestData, "\n", requestData.Id ? "grpcUpdateAIForge" : "grpcCreateAIForge")
@@ -291,6 +294,16 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
     const isTypeToConfig = useMemo(() => {
         return type === "config"
     }, [type])
+
+    // 改变模板类型时触发源码改变
+    const handleTypeChange = useMemoizedFn((type: AIForge["ForgeType"]) => {
+        if (type === "yak") {
+            setContent(DefaultForgeYakToCode)
+        } else {
+            setContent(DefaultForgeConfigToCode)
+        }
+        setTriggerParseContent((old) => !old)
+    })
 
     // 获取表单数据
     const handleFetchFormData: () => Promise<EditorAIForge> = useMemoizedFn(() => {
@@ -393,7 +406,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
     })
 
     // yak 模板下的源码或者简易模板下的参数代码
-    const [content, setContent] = useState("")
+    const [content, setContent] = useState(DefaultForgeYakToCode)
     const [triggerParseContent, setTriggerParseContent] = useState(false)
     // #endregion
 
@@ -551,6 +564,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                                         <YakitSelect
                                             wrapperClassName={styles["forge-type-select"]}
                                             dropdownClassName={styles["forge-type-select-dropdown"]}
+                                            onChange={handleTypeChange}
                                         >
                                             {DefaultForgeTypeList.map((item, index) => {
                                                 return (
@@ -619,14 +633,13 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                                     </Form.Item>
 
                                     <Form.Item
-                                        label='Tag'
-                                        // label={
-                                        //     <>
-                                        //         Tag<span className='form-item-required'>*</span>:
-                                        //     </>
-                                        // }
+                                        label={
+                                            <>
+                                                Tag<span className='form-item-required'>*</span>:
+                                            </>
+                                        }
                                     >
-                                        <Form.Item noStyle name='Tag'>
+                                        <Form.Item noStyle name='Tag' rules={[{required: true, message: "Tag必填"}]}>
                                             <YakitSelect
                                                 wrapperClassName={styles["item-select"]}
                                                 mode='tags'

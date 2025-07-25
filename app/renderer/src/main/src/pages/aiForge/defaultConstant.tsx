@@ -23,3 +23,11 @@ export const AIForgeBuiltInTag: string[] = [
     "娱乐",
     "日志分析"
 ]
+
+/** @name forge-yak类型默认源码 */
+export const DefaultForgeYakToCode = `forgeHandle = func(params) {
+
+}`
+/** @name forge-config类型默认源码 */
+export const DefaultForgeConfigToCode = `query = cli.String("query", cli.setRequired(true), cli.setHelp("query"))
+cli.check()`

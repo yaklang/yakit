@@ -485,6 +485,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                             activeStream={activeStream}
                                             streams={uiStreams}
                                             coordinatorId={coordinatorId}
+                                            defaultExpand={!taskChat?.answer?.streams}
                                         />
                                     )}
                                 </div>
@@ -537,7 +538,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                 </div>
 
                 <div className={classNames(styles["task-chat-log"], {[styles["task-chat-log-hidden"]]: !logExpand})}>
-                    <AIChatLogs logs={uiLogs} onClose={hadnleLogShow} />
+                    {logExpand && <AIChatLogs logs={uiLogs} onClose={hadnleLogShow} />}
                 </div>
             </div>
         )

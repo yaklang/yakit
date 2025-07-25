@@ -1,5 +1,5 @@
 import React, {memo, ReactNode, UIEventHandler, useEffect, useMemo, useRef, useState} from "react"
-import {useControllableValue, useCreation, useInterval, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useControllableValue, useCreation, useInterval, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
 import {
     AIAgentChatBodyProps,
     AIAgentChatFooterProps,
@@ -371,26 +371,26 @@ const taskAnswerToIconMap: Record<string, ReactNode> = {
 }
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {scrollToTask, setScrollToTask, tasks, activeStream, streams} = props
+    const {scrollToTask, setScrollToTask, tasks, activeStream, streams, defaultExpand} = props
 
-    const activeFirstTabKey = useMemo(() => {
-        if (!activeStream || activeStream.length === 0) return []
-        return [
-            ...new Set(
-                activeStream.map((item) => {
-                    return (item || "").split("|")[0]
-                })
-            )
-        ]
-    }, [activeStream])
-    const activeSecondTabKey = useMemo(() => {
-        if (!activeStream || activeStream.length === 0) return []
-        return activeStream.map((item) => {
-            const first = (item || "").split("|")[0] || ""
-            const second = (item || "").split("|")[1] || ""
-            return `${first}-${second}`
-        })
-    }, [activeStream])
+    // const activeFirstTabKey = useMemo(() => {
+    //     if (!activeStream || activeStream.length === 0) return []
+    //     return [
+    //         ...new Set(
+    //             activeStream.map((item) => {
+    //                 return (item || "").split("|")[0]
+    //             })
+    //         )
+    //     ]
+    // }, [activeStream])
+    // const activeSecondTabKey = useMemo(() => {
+    //     if (!activeStream || activeStream.length === 0) return []
+    //     return activeStream.map((item) => {
+    //         const first = (item || "").split("|")[0] || ""
+    //         const second = (item || "").split("|")[1] || ""
+    //         return `${first}-${second}`
+    //     })
+    // }, [activeStream])
 
     // 任务集合
     const lists = useMemo(() => {
@@ -406,22 +406,22 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     const wrapper = useRef<HTMLDivElement>(null)
     useEffect(() => {
         if (isStopScroll) return
-        if (wrapper.current) {
-            const {scrollHeight} = wrapper.current
-            const {height} = wrapper.current.getBoundingClientRect()
-            if (height < scrollHeight) {
-                if (!isScrollTo.current) return
-                wrapper.current.scrollTop = scrollHeight
-            }
-        }
+        // if (wrapper.current) {
+        //     const {scrollHeight} = wrapper.current
+        //     const {height} = wrapper.current.getBoundingClientRect()
+        //     if (height < scrollHeight) {
+        //         if (!isScrollTo.current) return
+        //         wrapper.current.scrollTop = scrollHeight
+        //     }
+        // }
     }, [streams, isStopScroll])
     const handleWrapperScroll: UIEventHandler<HTMLDivElement> = useMemoizedFn((e) => {
-        if (wrapper.current) {
-            const {scrollHeight, scrollTop} = wrapper.current
-            const {height} = wrapper.current.getBoundingClientRect()
-            const offset = scrollHeight - scrollTop - height
-            if (offset > 20) setIsStopScroll(true)
-        }
+        // if (wrapper.current) {
+        //     const {scrollHeight, scrollTop} = wrapper.current
+        //     const {height} = wrapper.current.getBoundingClientRect()
+        //     const offset = scrollHeight - scrollTop - height
+        //     if (offset > 20) setIsStopScroll(true)
+        // }
     })
 
     // 生成任务展示名称
@@ -443,107 +443,108 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
     const [clickFirstPanel, setClickFirstPanel] = useState<string[]>([])
     // 关闭一级容器，自动关闭该一级下的二级容器
-    const handleChangeFirstPanel = useMemoizedFn((expand: boolean, order: string) => {
-        setClickFirstPanel((old) => {
-            if (expand) {
-                if (old.includes(order)) {
-                    return cloneDeep(old)
-                } else {
-                    return old.concat([order])
-                }
-            } else {
-                if (!old.includes(order)) {
-                    return cloneDeep(old)
-                } else {
-                    return old.filter((item) => item !== order)
-                }
-            }
-        })
-        if (!expand) {
-            if (order === scrollToTask?.index && setScrollToTask) setScrollToTask(undefined)
-            setClickSecondPanel((old) => {
-                return old.filter((item) => !item.startsWith(order))
-            })
-        }
-    })
-    const activeFirstPanel = useMemo(() => {
-        let active: string[] = []
-        if (scrollToTask) {
-            active.push(scrollToTask.index)
-            setTimeout(() => {
-                document.getElementById(scrollToTask.index)?.scrollIntoView()
-            }, 100)
-        }
-        if (lists.length === 1) return [lists[0]]
-        if (activeFirstTabKey.length > 0) {
-            active = active.concat(activeFirstTabKey)
-        }
-        return active.concat(clickFirstPanel.filter((item) => !active.includes(item)))
-    }, [lists, scrollToTask, activeFirstTabKey, clickFirstPanel])
+    // const handleChangeFirstPanel = useMemoizedFn((expand: boolean, order: string) => {
+    //     setClickFirstPanel((old) => {
+    //         if (expand) {
+    //             if (old.includes(order)) {
+    //                 return cloneDeep(old)
+    //             } else {
+    //                 return old.concat([order])
+    //             }
+    //         } else {
+    //             if (!old.includes(order)) {
+    //                 return cloneDeep(old)
+    //             } else {
+    //                 return old.filter((item) => item !== order)
+    //             }
+    //         }
+    //     })
+    //     if (!expand) {
+    //         if (order === scrollToTask?.index && setScrollToTask) setScrollToTask(undefined)
+    //         setClickSecondPanel((old) => {
+    //             return old.filter((item) => !item.startsWith(order))
+    //         })
+    //     }
+    // })
+    // const activeFirstPanel = useMemo(() => {
+    //     let active: string[] = []
+    //     if (scrollToTask) {
+    //         active.push(scrollToTask.index)
+    //         setTimeout(() => {
+    //             document.getElementById(scrollToTask.index)?.scrollIntoView()
+    //         }, 100)
+    //     }
+    //     if (lists.length === 1) return [lists[0]]
+    //     if (activeFirstTabKey.length > 0) {
+    //         active = active.concat(activeFirstTabKey)
+    //     }
+    //     return active.concat(clickFirstPanel.filter((item) => !active.includes(item)))
+    // }, [lists, scrollToTask, activeFirstTabKey, clickFirstPanel])
 
     const [clickSecondPanel, setClickSecondPanel] = useState<string[]>([])
-    const handleChangeSecondPanel = useMemoizedFn((expand: boolean, order: string) => {
-        setClickFirstPanel((old) => {
-            const first = order.split("-")[0]
-            if (expand) {
-                if (old.includes(first)) {
-                    return old
-                } else {
-                    return old.concat([first])
-                }
-            } else {
-                if (!old.includes(first)) {
-                    return old
-                } else {
-                    return old.filter((item) => item !== first)
-                }
-            }
-        })
-        setClickSecondPanel((old) => {
-            if (expand) {
-                if (old.includes(order)) {
-                    return old
-                } else {
-                    return old.concat([order])
-                }
-            } else {
-                if (!old.includes(order)) {
-                    return old
-                } else {
-                    return old.filter((item) => item !== order)
-                }
-            }
-        })
-    })
-    const activeSecondPanel = useMemo(() => {
-        let active: string[] = []
-        scrollToTask && active.push(scrollToTask.index)
-        if (activeSecondTabKey.length > 0) {
-            active = active.concat(activeSecondTabKey)
-        }
-        return active.concat(clickSecondPanel.filter((item) => !active.includes(item)))
-    }, [activeSecondTabKey, clickSecondPanel])
+    // const handleChangeSecondPanel = useMemoizedFn((expand: boolean, order: string) => {
+    //     setClickFirstPanel((old) => {
+    //         const first = order.split("-")[0]
+    //         if (expand) {
+    //             if (old.includes(first)) {
+    //                 return old
+    //             } else {
+    //                 return old.concat([first])
+    //             }
+    //         } else {
+    //             if (!old.includes(first)) {
+    //                 return old
+    //             } else {
+    //                 return old.filter((item) => item !== first)
+    //             }
+    //         }
+    //     })
+    //     setClickSecondPanel((old) => {
+    //         if (expand) {
+    //             if (old.includes(order)) {
+    //                 return old
+    //             } else {
+    //                 return old.concat([order])
+    //             }
+    //         } else {
+    //             if (!old.includes(order)) {
+    //                 return old
+    //             } else {
+    //                 return old.filter((item) => item !== order)
+    //             }
+    //         }
+    //     })
+    // })
+    // const activeSecondPanel = useMemo(() => {
+    //     let active: string[] = []
+    //     scrollToTask && active.push(scrollToTask.index)
+    //     if (activeSecondTabKey.length > 0) {
+    //         active = active.concat(activeSecondTabKey)
+    //     }
+    //     return active.concat(clickSecondPanel.filter((item) => !active.includes(item)))
+    // }, [activeSecondTabKey, clickSecondPanel])
 
     return (
         <div ref={wrapper} className={styles["ai-agent-chat-stream"]} onScroll={handleWrapperScroll}>
             {lists.map((taskName) => {
                 const headerTitle = handleGenerateTaskName(taskName)
-                const firstExpand = activeFirstPanel.includes(taskName)
+                // const firstExpand = activeFirstPanel.includes(taskName)
                 return (
                     <ChatStreamCollapse
                         key={taskName}
                         id={taskName}
                         title={headerTitle}
-                        expand={firstExpand}
-                        onChange={(value) => handleChangeFirstPanel(value, taskName)}
+                        defaultExpand={defaultExpand ?? true}
+                        // expand={firstExpand}
+                        // onChange={(value) => handleChangeFirstPanel(value, taskName)}
                         className={classNames({
-                            [styles["chat-stream-collapse-expand-first"]]: firstExpand
+                            [styles["chat-stream-collapse-expand-first"]]: true // firstExpand
                         })}
                     >
                         {(streams[taskName] || []).map((info: AIChatStreams, index) => {
                             const {nodeId, timestamp, toolAggregation} = info
                             const key = `${taskName}-${nodeId}-${timestamp}`
-                            const secondExpand = activeSecondPanel.includes(key)
+                            // const secondExpand = activeSecondPanel.includes(key)
                             if (isShowToolColorCard(nodeId)) {
                                 return <AIChatToolColorCard key={key} toolCall={info} />
                             }
@@ -555,8 +556,9 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                                     key={key}
                                     info={info}
                                     expandKey={key}
-                                    secondExpand={secondExpand}
-                                    handleChangeSecondPanel={handleChangeSecondPanel}
+                                    secondExpand={false}
+                                    handleChangeSecondPanel={() => {}}
+                                    defaultExpand={defaultExpand}
                                 />
                             )
                         })}
@@ -567,14 +569,15 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     )
 })
 const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo((props) => {
-    const {expandKey, info, secondExpand, handleChangeSecondPanel, className} = props
+    const {expandKey, info, secondExpand, handleChangeSecondPanel, className, defaultExpand} = props
     const {nodeId, timestamp, data} = info
     return (
         <ChatStreamCollapse
             key={expandKey}
             style={{marginBottom: 0}}
-            expand={secondExpand}
-            onChange={(value) => handleChangeSecondPanel(value, expandKey)}
+            defaultExpand={defaultExpand ?? true}
+            // expand={secondExpand}
+            // onChange={(value) => handleChangeSecondPanel(value, expandKey)}
             title={
                 <div className={styles["task-type-header"]}>
                     {taskAnswerToIconMap[nodeId] || <SolidLightningboltIcon />}
@@ -607,12 +610,17 @@ const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo
 
 /** @name 回答信息折叠组件 */
 export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props) => {
-    const {id, className, style, title, headerExtra, children, expand, onChange} = props
+    const {id, className, style, title, headerExtra, children} = props
+
+    const [expand, setExpand] = useControllableValue<boolean>(props, {
+        defaultValuePropName: "defaultExpand",
+        valuePropName: "expand"
+    })
 
     return (
         <div id={id} className={classNames(className, styles["chat-stream-collapse"])} style={style}>
             <div className={styles["collapse-header"]}>
-                <div className={styles["header-body"]} onClick={() => onChange && onChange(!expand)}>
+                <div className={styles["header-body"]} onClick={() => setExpand(!expand)}>
                     <div className={classNames(styles["expand-icon"], {[styles["no-expand-icon"]]: !expand})}>
                         <OutlineChevrondownIcon />
                     </div>
@@ -1124,15 +1132,21 @@ export const AIChatLogs: React.FC<AIChatLogsProps> = memo((props) => {
 
     const wrapper = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-        if (wrapper.current) {
-            const {scrollHeight} = wrapper.current
-            const {height} = wrapper.current.getBoundingClientRect()
-            if (height < scrollHeight) {
-                wrapper.current.scrollTop = scrollHeight
-            }
-        }
-    }, [logs])
+    useThrottleEffect(
+        () => {
+            requestAnimationFrame(() => {
+                if (wrapper.current) {
+                    const {scrollHeight} = wrapper.current
+                    const {height} = wrapper.current.getBoundingClientRect()
+                    if (height < scrollHeight) {
+                        wrapper.current.scrollTop = scrollHeight
+                    }
+                }
+            })
+        },
+        [logs],
+        {wait: 300, leading: false}
+    )
 
     return (
         <div className={styles["ai-chat-logs"]}>
