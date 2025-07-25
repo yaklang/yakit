@@ -32,7 +32,14 @@ import {
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {YakRunnerNewFileIcon, YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "../icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
+import {
+    useDebounceFn,
+    useLongPress,
+    useMemoizedFn,
+    useSize,
+    useThrottleFn,
+    useUpdateEffect
+} from "ahooks"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerType"
@@ -76,8 +83,8 @@ import {
     YaklangLanguageSuggestionRequest
 } from "@/utils/monacoSpec/yakCompletionSchema"
 import {getModelContext} from "@/utils/monacoSpec/yakEditor"
-import { openFolder } from "../RunnerFileTree/RunnerFileTree"
-import { JumpToEditorProps } from "../BottomEditorDetails/BottomEditorDetailsType"
+import {openFolder} from "../RunnerFileTree/RunnerFileTree"
+import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -948,6 +955,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     // 是否允许展示二进制
     const [allowBinary, setAllowBinary] = useState<boolean>(false)
+    const isDestroy = useRef<boolean>(false);
 
     const nowPathRef = useRef<string>()
     useEffect(() => {
@@ -1024,7 +1032,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             // 注入语法检查结果
             newActiveFile = await getDefaultActiveFile(newActiveFile)
             // 如若文件检查结果出来时 文件已被切走 则不再更新
-            if (newActiveFile.path !== nowPathRef.current) return
+            if (newActiveFile.path !== nowPathRef.current || isDestroy.current) return
             // 更新位置信息
             if (positionRef.current) {
                 // 此处还需要将位置信息记录至areaInfo用于下次打开时直接定位光标
@@ -1104,6 +1112,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             cursorSelection.dispose()
             focusEditor.dispose()
             blurEditor.dispose()
+            isDestroy.current = true
         }
     }, [reqEditor])
 

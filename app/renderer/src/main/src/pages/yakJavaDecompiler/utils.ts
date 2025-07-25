@@ -220,29 +220,6 @@ export const updateFileTree: (
 }
 
 /**
- * @name 语法检查
- */
-export const onSyntaxCheck = (code: string, type: string) => {
-    return new Promise(async (resolve, reject) => {
-        // StaticAnalyzeError
-        ipcRenderer
-            .invoke("StaticAnalyzeError", {Code: StringToUint8Array(code), PluginType: type})
-            .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
-                if (e && e.Result.length > 0) {
-                    const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
-                    // monaco.editor.setModelMarkers(model, "owner", markers)
-                    resolve(markers)
-                } else {
-                    resolve([])
-                }
-            })
-            .catch(() => {
-                resolve([])
-            })
-    })
-}
-
-/**
  * @name 判断分栏数据里是否存在未保存文件
  */
 export const judgeAreaExistFileUnSave = (areaInfo: AreaInfoProps[]): Promise<string[]> => {
