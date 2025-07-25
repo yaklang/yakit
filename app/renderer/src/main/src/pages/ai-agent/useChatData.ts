@@ -46,7 +46,11 @@ const defaultAIToolData: AIChatMessage.AIToolData = {
     summary: "",
     time: 0,
     selectors: [],
-    interactiveId: ""
+    interactiveId: "",
+    toolStdoutContent: {
+        content: "",
+        isShowAll: false
+    }
 }
 function useChatData(params?: UseChatDataParams) {
     const {onReview, onReviewExtra, onReviewRelease, onEnd, setCoordinatorId} = params || {}
@@ -723,7 +727,14 @@ function useChatData(params?: UseChatDataParams) {
             const streams = cloneDeep(old)
             const valueInfo = streams[taskIndex]
             if (valueInfo) {
+                const toolStdout = valueInfo.find((ele) => isToolStdout(ele.nodeId))
+                const content = toolStdout?.data.stream || toolStdout?.data.reason || toolStdout?.data.system || ""
+                const isShowAll = !!(content && content.length > 200)
+                const toolStdoutShowContent = isShowAll ? content.substring(0, 200) + "..." : content
+
                 const newValue = valueInfo.filter((ele) => !isToolSyncNode(ele.nodeId))
+                const toolData = getToolData(callToolId)
+
                 newValue.push({
                     nodeId: res.Type,
                     timestamp: timestamp,
@@ -732,7 +743,13 @@ function useChatData(params?: UseChatDataParams) {
                         reason: "",
                         stream: ""
                     },
-                    toolAggregation: getToolData(callToolId)
+                    toolAggregation: {
+                        ...toolData,
+                        toolStdoutContent: {
+                            content: toolStdoutShowContent,
+                            isShowAll
+                        }
+                    }
                 })
                 streams[taskIndex] = [...newValue]
             }
