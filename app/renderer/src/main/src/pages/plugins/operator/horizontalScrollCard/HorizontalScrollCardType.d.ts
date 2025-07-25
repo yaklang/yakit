@@ -30,6 +30,7 @@ export interface HorizontalScrollCardItemInfoSingleProps {
     item: StatusCardProps
     tag: string
     compact: boolean
+    className?: string
 }
 /**滚动信息记录 */
 export interface HorizontalScrollCardScrollProps {

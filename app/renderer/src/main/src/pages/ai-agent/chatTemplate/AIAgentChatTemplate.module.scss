@@ -34,21 +34,13 @@
     .task-token {
         display: flex;
         flex-direction: column;
-        gap: 12px;
         max-height: 60%;
         overflow-y: auto;
-        border-top: 1px solid var(--Colors-Use-Neutral-Border);
-        :global {
-            .ant-collapse-item .ant-collapse-content > .ant-collapse-content-box {
-                padding: 0;
-            }
-            .ant-collapse-item:first-child > .ant-collapse-header {
-                border: 0;
-            }
-        }
+
         .data-card-header {
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: 4px;
             .total {
                 display: flex;
@@ -58,6 +50,7 @@
                 gap: 10px;
                 border-radius: 8px;
                 background: var(--Colors-Use-Neutral-Bg-Hover);
+                height: 16px;
             }
         }
         .header-title {
@@ -87,6 +80,28 @@
         }
         .cost-wrapper {
             color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        }
+        .chat-left-side-collapse {
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
+            border-radius: 0;
+            &:hover {
+                background: initial;
+            }
+            .collapse-header {
+                height: 32px;
+            }
+            .ai-card-list-single {
+                border-radius: 0;
+            }
+            .collapse-body {
+                padding: 4px 8px 8px 8px;
+            }
+            .collapse-body-hidden {
+                padding: 0 8px;
+            }
+            .ai-card-list {
+                padding: 0;
+            }
         }
     }
 }

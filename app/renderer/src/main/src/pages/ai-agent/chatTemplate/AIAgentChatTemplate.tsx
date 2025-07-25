@@ -128,6 +128,8 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         if (length === 0) return 0
         return currentCostEcharts.data[length - 1] || 0
     }, [currentCostEcharts])
+    //#region 折叠面板
+    const [expandKeys, setExpandKeys] = useState<string[]>(["Data Card", "上下文压力", "响应速度"])
     const collapseList = useCreation(() => {
         return [
             {
@@ -180,6 +182,16 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
             }
         ]
     }, [card, currentPressuresEcharts, pressureThreshold, currentCostEcharts, lastFirstCost, lastPressure])
+    const handleChangePanel = useMemoizedFn((expand: boolean, key: string) => {
+        setExpandKeys((old) => {
+            if (expand) {
+                return old.concat([key])
+            } else {
+                return old.filter((item) => item !== key)
+            }
+        })
+    })
+    //#endregion
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>
             <div className={styles["side-header"]}>
@@ -205,13 +217,21 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
             </div>
 
             <div className={styles["task-token"]}>
-                <YakitCollapse defaultActiveKey={["Data Card", "上下文压力", "响应速度"]}>
-                    {collapseList.map((item) => (
-                        <YakitPanel key={item.value} header={item.header} extra={item.extra} style={{padding: 0}}>
+                {collapseList.map((item) => {
+                    const expandKey = expandKeys.includes(item.value)
+                    return (
+                        <ChatStreamCollapse
+                            key={item.value}
+                            style={{marginBottom: 0}}
+                            expand={expandKey}
+                            onChange={(value) => handleChangePanel(value, item.value)}
+                            title={item.header}
+                            className={classNames(styles["chat-left-side-collapse"])}
+                        >
                             {item.content}
-                        </YakitPanel>
-                    ))}
-                </YakitCollapse>
+                        </ChatStreamCollapse>
+                    )
+                })}
             </div>
         </div>
     )
@@ -230,6 +250,7 @@ const AICardList: React.FC<AICardListProps> = React.memo((props) => {
                             tag={cardItem.tag}
                             item={(cardItem.info || [])[0]}
                             compact={true}
+                            className={styles["ai-card-list-single"]}
                         />
                     )}
                 </React.Fragment>
@@ -593,13 +614,11 @@ export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props
     return (
         <div id={id} className={classNames(className, styles["chat-stream-collapse"])} style={style}>
             <div className={styles["collapse-header"]}>
-                <div className={styles["header-body"]}>
+                <div className={styles["header-body"]} onClick={() => onChange && onChange(!expand)}>
                     <div className={classNames(styles["expand-icon"], {[styles["no-expand-icon"]]: !expand})}>
                         <OutlineChevrondownIcon />
                     </div>
-                    <div className={styles["header-title"]} onClick={() => onChange && onChange(!expand)}>
-                        {title}
-                    </div>
+                    <div className={styles["header-title"]}>{title}</div>
                 </div>
 
                 {<div className={styles["header-extra"]}>{headerExtra || null}</div>}

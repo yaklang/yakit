@@ -246,7 +246,7 @@ export const HorizontalScrollCardItemInfoMultiple: React.FC<StatusCardListProps>
 
 export const HorizontalScrollCardItemInfoSingle: React.FC<HorizontalScrollCardItemInfoSingleProps> = React.memo(
     (props) => {
-        const {tag, item, compact} = props
+        const {tag, item, compact, className = ""} = props
         const isSuccess = useMemo(() => {
             return getTextColor(tag || item.Id) === "success"
         }, [tag, item.Id])
@@ -266,7 +266,8 @@ export const HorizontalScrollCardItemInfoSingle: React.FC<HorizontalScrollCardIt
                         [styles["text-success"]]: isSuccess,
                         [styles["text-error"]]: isError,
                         [styles["card-item-compact"]]: compact
-                    }
+                    },
+                    className
                 )}
             >
                 {compact ? (
