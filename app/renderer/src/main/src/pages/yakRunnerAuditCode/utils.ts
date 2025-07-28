@@ -146,10 +146,11 @@ export const grpcFetchRiskOrRuleTree: (
         search?: string
         task_id?: string
         result_id?: string
+        compare?: string
     }
 ) => Promise<{res: RequestYakURLResponse; data: FileNodeMapProps[]}> = (
     path,
-    {program, type, search, task_id, result_id}
+    {program, type, search, task_id, result_id, compare}
 ) => {
     return new Promise(async (resolve, reject) => {
         // ssadb path为/时 展示最近编译
@@ -178,6 +179,10 @@ export const grpcFetchRiskOrRuleTree: (
                     {
                         Key: "result_id",
                         Value: result_id
+                    },
+                    {
+                        Key: "compare",
+                        Value: compare
                     }
                 ]
             }

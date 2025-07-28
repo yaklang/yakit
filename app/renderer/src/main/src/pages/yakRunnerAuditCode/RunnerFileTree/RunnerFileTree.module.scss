@@ -58,6 +58,23 @@
             .tree-body {
                 height: 100%;
                 overflow: hidden;
+                .compare-select-box {
+                    height: 24px;
+                    margin: 0px 12px 4px;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    .compare-select {
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        flex: 1;
+                        overflow: hidden;
+                        .compare-select-label {
+                            white-space: nowrap;
+                        }
+                    }
+                }
             }
             .hidden-tree-body {
                 display: none;

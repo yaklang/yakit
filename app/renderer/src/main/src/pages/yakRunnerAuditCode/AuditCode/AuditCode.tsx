@@ -1394,7 +1394,7 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                 </div>
                 <div className={styles["onlyRisk-box"]}>
                     <YakitCheckbox
-                        value={query.Filter.OnlyRisk}
+                        checked={query.Filter.OnlyRisk}
                         onChange={(e) => {
                             setQuery({
                                 ...query,

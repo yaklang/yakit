@@ -18,6 +18,7 @@ export interface RiskTreeProps {
     search?: string
     task_id?: string
     result_id?: string
+    compare?: string
 }
 
 export interface RuleTreeProps {}
