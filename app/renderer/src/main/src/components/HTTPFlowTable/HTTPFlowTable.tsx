@@ -4134,7 +4134,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     overlayClassName={style["http-history-table-color-popover"]}
                                                     content={
                                                         <ColorSearch
-                                                            color={color}
+                                                            color={cloneDeep(color)}
                                                             setColor={setColor}
                                                             onReset={() => setColor([])}
                                                             onSure={() => onColorSure()}
