@@ -1463,9 +1463,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         },
         {wait: 500}
     ).run
+    const comParams = useCampare(params)
     useUpdateEffect(() => {
         queyChangeUpdateData()
-    }, [params])
+    }, [comParams])
     // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
     const updateData = useMemoizedFn(() => {
         if (boxHeightRef.current) {
