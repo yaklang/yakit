@@ -342,6 +342,7 @@ export interface CodeScoreModalProps extends CodeScoreBaseProps {
     visible: boolean
     /** 关闭弹窗(true:合格|false:不合格) */
     onCancel: (value: boolean) => any
+    title?: string
 }
 
 /** 插件源码评分返回信息 */

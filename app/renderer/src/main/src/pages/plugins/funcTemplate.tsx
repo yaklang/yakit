@@ -1685,7 +1685,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
 
 /** @name 插件源码评分弹窗 */
 export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
-    const {visible, onCancel, ...rest} = props
+    const {visible, onCancel, title, ...rest} = props
 
     // 不合格|取消
     const onFailed = useMemoizedFn(() => {
@@ -1704,7 +1704,7 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
 
     return (
         <YakitModal
-            title='插件基础检测'
+            title={title || '插件基础检测'}
             type='white'
             width={"50%"}
             centered={true}
