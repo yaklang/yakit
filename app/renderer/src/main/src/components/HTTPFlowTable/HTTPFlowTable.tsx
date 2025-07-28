@@ -934,7 +934,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const comUrlPath = useCampare(urlPath)
     const comFileSuffix = useCampare(fileSuffix)
     const comExcludeKeywords = useCampare(excludeKeywords)
-    const comStatusCode = useCampare(statusCode)
     useDebounceEffect(
         useMemoizedFn(() => {
             if (updateAdvancedSearch) {
@@ -999,7 +998,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }),
         [
-            // 此处依赖如果是引用值 请务必用useCampare处理
+            // ⚠️ 注意：此处依赖如果是引用值 请务必用useCampare处理
             updateAdvancedSearch,
             filterMode,
             comHostName,
@@ -1007,7 +1006,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             comFileSuffix,
             searchContentType,
             comExcludeKeywords,
-            comStatusCode
+            statusCode
         ],
         {wait: 500}
     )
