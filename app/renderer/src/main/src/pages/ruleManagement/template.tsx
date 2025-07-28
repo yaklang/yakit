@@ -1360,7 +1360,13 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 hiddenSpecialBtn={true}
                 visible={scoreHint}
                 onCancel={handleScoreHintCallback}
-                title='插件基础检测'
+                title='SyntaxFlow规则检测'
+                scoreHintData={[
+                    "基础编译测试,判断SyntaxFlow规则的语法是否符合规范,是否存在不正确语法导致编译不通过",
+                    "检查规则中的描述部分是否包含desc和solution字段",
+                    "检查规则中是否包含alert, 规则应该包含alert语句产生检测结果",
+                    "检查规则中的测试用例是否能通过规则检测,SyntaxFlow规则中应该包含正反测试用例,对于正向漏洞代码SyntaxFlow规则应该能正常产生alert,而对于反向测试不应该产生alert(误报)"
+                ]}
             />
         </>
     )

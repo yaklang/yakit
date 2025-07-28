@@ -335,6 +335,8 @@ export interface CodeScoreModuleProps extends CodeScoreBaseProps {
     callback: (value: boolean) => any
     /** 是否隐藏评分的提示信息 */
     hiddenScoreHint?: boolean
+    /** 自定义评分的结果信息 */
+    scoreHintData?: string[]
 }
 
 /** 插件源码评分弹窗 */
@@ -343,6 +345,7 @@ export interface CodeScoreModalProps extends CodeScoreBaseProps {
     /** 关闭弹窗(true:合格|false:不合格) */
     onCancel: (value: boolean) => any
     title?: string
+    scoreHintData?: string[]
 }
 
 /** 插件源码评分返回信息 */

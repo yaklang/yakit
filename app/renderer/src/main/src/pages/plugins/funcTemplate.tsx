@@ -1514,7 +1514,8 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
         specialHint = "(无法判断，是否需要转人工审核)",
         specialBtnText = "转人工审核",
         specialExtraBtn = null,
-        hiddenSpecialBtn = false
+        hiddenSpecialBtn = false,
+        scoreHintData
     } = props
 
     const [loading, setLoading] = useState<boolean>(true)
@@ -1583,20 +1584,31 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
             {!hiddenScoreHint && (
                 <div className={styles["header-wrapper"]}>
                     <div className={styles["title-style"]}>检测项包含：</div>
-                    <div className={styles["header-body"]}>
-                        <div className={styles["opt-content"]}>
-                            <div className={styles["content-order"]}>1</div>
-                            基础编译测试，判断语法是否符合规范，是否存在不正确语法；
+                    {Array.isArray(scoreHintData) ? (
+                        <div className={styles["header-body"]}>
+                            {scoreHintData.map((item, index) => (
+                                <div className={styles["opt-content"]} key={index}>
+                                    <div className={styles["content-order"]}>{index + 1}</div>
+                                    {item}
+                                </div>
+                            ))}
                         </div>
-                        <div className={styles["opt-content"]}>
-                            <div className={styles["content-order"]}>2</div>
-                            把基础防误报服务器作为测试基准，防止条件过于宽松导致的误报；
+                    ) : (
+                        <div className={styles["header-body"]}>
+                            <div className={styles["opt-content"]}>
+                                <div className={styles["content-order"]}>1</div>
+                                基础编译测试，判断语法是否符合规范，是否存在不正确语法；
+                            </div>
+                            <div className={styles["opt-content"]}>
+                                <div className={styles["content-order"]}>2</div>
+                                把基础防误报服务器作为测试基准，防止条件过于宽松导致的误报；
+                            </div>
+                            <div className={styles["opt-content"]}>
+                                <div className={styles["content-order"]}>3</div>
+                                检查插件执行过程是否会发生崩溃。
+                            </div>
                         </div>
-                        <div className={styles["opt-content"]}>
-                            <div className={styles["content-order"]}>3</div>
-                            检查插件执行过程是否会发生崩溃。
-                        </div>
-                    </div>
+                    )}
                 </div>
             )}
             {loading && (
@@ -1704,7 +1716,7 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
 
     return (
         <YakitModal
-            title={title || '插件基础检测'}
+            title={title || "插件基础检测"}
             type='white'
             width={"50%"}
             centered={true}
