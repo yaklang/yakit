@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Divider, Form, Input, Progress, Tooltip} from "antd"
+import {Divider, Progress, Tooltip} from "antd"
 import {
+    useCreation,
     useDebounceEffect,
     useDebounceFn,
     useGetState,
@@ -30,6 +31,7 @@ import {
     OutlineRefreshIcon,
     OutlineSparklesIcon,
     OutlineTrashIcon,
+    OutlineUploadIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {OutlineAddPayloadIcon, PropertyIcon, PropertyNoAddIcon} from "./icon"
@@ -77,9 +79,11 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {setClipboardText} from "@/utils/clipboard"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {isEnpriTrace} from "@/utils/envfile"
+import {NewPayloadOnlineList} from "./NewPayloadOnlineList"
 const {ipcRenderer} = window.require("electron")
 
 interface UploadStatusInfoProps {
@@ -718,7 +722,7 @@ const findItemById = (items: DataItem[], targetId: string): DataItem | null => {
 }
 
 // 根据Id获取此项(如在文件夹中 则获取至文件夹那一层)
-const findFoldersById = (items: DataItem[], targetId: string) => {
+export const findFoldersById = (items: DataItem[], targetId: string) => {
     for (const item of items) {
         if (item.id === targetId) {
             return item
@@ -747,7 +751,7 @@ const compareArrays = (arr1, arr2) => {
 }
 
 // 判断字符串中是否存在/*,
-const isIncludeSpecial = (v: string) => /[/*,]/.test(v)
+export const isIncludeSpecial = (v: string) => /[/*,]/.test(v)
 
 // 将后端结构数据捏成渲染数组
 const nodesToDataFun = (nodes: PayloadGroupNodeProps[]) => {
@@ -774,7 +778,7 @@ const nodesToDataFun = (nodes: PayloadGroupNodeProps[]) => {
     })
 }
 
-interface DataItem {
+export interface DataItem {
     type: "File" | "Folder" | "DataBase"
     name: string
     id: string
@@ -799,7 +803,7 @@ export interface PayloadGroupNodeProps {
 const droppable = "droppable"
 const droppableGroup = "droppableGroup"
 
-export interface NewPayloadListProps {
+export interface NewPayloadLocalListProps {
     listLoading: boolean
     data: DataItem[]
     setData: (v: DataItem[]) => void
@@ -822,7 +826,7 @@ export interface NewPayloadListProps {
     onSetFloderChecked?: (id: string[]) => void
 }
 
-export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
+export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) => {
     const {
         listLoading,
         data,
@@ -1552,7 +1556,7 @@ export const FileComponentClone: React.FC<FileComponentCloneProps> = (props) => 
                     [styles["extra-hover"]]: !menuOpen
                 })}
             >
-                <div className={styles["file-count"]}>10</div>
+                <div className={styles["file-count"]}>{file.type === "DataBase" ? file.number : ""}</div>
                 <div
                     className={styles["extra-icon"]}
                     onClick={(e) => {
@@ -1843,6 +1847,15 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                 )
                                             },
                                             {
+                                                key: "upload",
+                                                label: (
+                                                    <div className={styles["extra-menu"]}>
+                                                        <OutlineUploadIcon />
+                                                        <div className={styles["menu-name"]}>上传</div>
+                                                    </div>
+                                                )
+                                            },
+                                            {
                                                 type: "divider"
                                             },
                                             {
@@ -1889,6 +1902,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                     break
                                                 case "rename":
                                                     setEditInput(true)
+                                                    break
+                                                case "upload":
                                                     break
                                                 case "delete":
                                                     setDeleteVisible(true)
@@ -2367,6 +2382,15 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                       )
                   },
                   {
+                      key: "upload",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlineUploadIcon />
+                              <div className={styles["menu-name"]}>上传</div>
+                          </div>
+                      )
+                  },
+                  {
                       type: "divider"
                   },
                   {
@@ -2414,6 +2438,15 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           <div className={styles["extra-menu"]}>
                               <OutlineDatabasebackupIcon />
                               <div className={styles["menu-name"]}>转为数据库存储</div>
+                          </div>
+                      )
+                  },
+                  {
+                      key: "upload",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlineUploadIcon />
+                              <div className={styles["menu-name"]}>上传</div>
                           </div>
                       )
                   },
@@ -2574,6 +2607,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                     break
                                                 case "toDatabase":
                                                     onGroupToDatabase()
+                                                    break
+                                                case "upload":
                                                     break
                                                 case "delete":
                                                     setDeleteVisible(true)
@@ -3416,6 +3451,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
 
     const [listLoading, setListLoading] = useState<boolean>(false)
     const [data, setData] = useState<DataItem[]>([])
+    const [isOnlyShowLocal, setOnlyShowLocal] = useState<boolean>(false)
 
     // 关闭Payload
     const [isClosePayload, setClosePayload] = useState<boolean>(false)
@@ -3603,21 +3639,45 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
         }
     }, [])
 
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "50%",
+            secondRatio: "50%",
+            firstMinSize: 250,
+            secondMinSize: 250
+        }
+        if (isOnlyShowLocal || !isEnpriTrace()) {
+            p.firstRatio = "100%"
+            p.secondRatio = "0%"
+        }
+        return p
+    }, [isOnlyShowLocal])
+
     return (
         <div className={styles["new-payload"]} id='new-payload'>
             <div className={styles["payload-list-box"]} style={isExpand ? {width: 0, opacity: 0} : {}}>
-                <NewPayloadList
-                    listLoading={listLoading}
-                    data={data}
-                    setData={setData}
-                    cacheNodesRef={cacheNodesRef}
-                    onQueryGroup={onQueryGroup}
-                    setGroup={setGroup}
-                    setFolder={setFolder}
-                    setContentType={setContentType}
-                    codePath={codePath}
-                    selectItem={selectItem}
-                    setSelectItem={setSelectItem}
+                <YakitResizeBox
+                    isVer={true}
+                    firstNodeStyle={{padding: 0}}
+                    lineStyle={{display: isOnlyShowLocal || !isEnpriTrace() ? "none" : ""}}
+                    secondNodeStyle={{padding: 0, display: isOnlyShowLocal || !isEnpriTrace() ? "none" : ""}}
+                    firstNode={
+                        <NewPayloadLocalList
+                            listLoading={listLoading}
+                            data={data}
+                            setData={setData}
+                            cacheNodesRef={cacheNodesRef}
+                            onQueryGroup={onQueryGroup}
+                            setGroup={setGroup}
+                            setFolder={setFolder}
+                            setContentType={setContentType}
+                            codePath={codePath}
+                            selectItem={selectItem}
+                            setSelectItem={setSelectItem}
+                        />
+                    }
+                    secondNode={<NewPayloadOnlineList />}
+                    {...ResizeBoxProps}
                 />
             </div>
             {data.length === 0 ? (
@@ -3787,7 +3847,7 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
             className={classNames(styles["new-payload-only-insert"], styles["new-payload"])}
         >
             <div className={styles["payload-list-box"]}>
-                <NewPayloadList
+                <NewPayloadLocalList
                     listLoading={false}
                     data={data}
                     setData={setData}
