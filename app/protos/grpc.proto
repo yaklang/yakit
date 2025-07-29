@@ -896,6 +896,17 @@ service Yak {
   rpc GetAllVectorStoreCollections(Empty) returns (GetAllVectorStoreCollectionsResponse);
   rpc DeleteSearchVectorDatabase(DeleteSearchVectorDatabaseRequest) returns (GeneralResponse);
 
+  // Knowledge Base
+  rpc GetKnowledgeBaseNameList(Empty) returns(GetKnowledgeBaseNameListResponse);
+  rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns(GeneralResponse);
+  rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns(GeneralResponse);
+  rpc UpdateKnowledgeBase(UpdateKnowledgeBaseRequest) returns(GeneralResponse);
+
+  rpc DeleteKnowledgeBaseEntry(DeleteKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc CreateKnowledgeBaseEntry(CreateKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc UpdateKnowledgeBaseEntry(UpdateKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc SearchKnowledgeBaseEntry(SearchKnowledgeBaseEntryRequest) returns(SearchKnowledgeBaseEntryResponse);
+
   // 第三方应用管理
   rpc ListThirdPartyBinary(Empty) returns (ListThirdPartyBinaryResponse);
   rpc InstallThirdPartyBinary(InstallThirdPartyBinaryRequest) returns (stream ExecResult);
@@ -1281,67 +1292,6 @@ message AIStartParams {
   bool AllowGenerateReport = 24;
 
   int64 TaskMaxContinueCount = 25;
-}
-
-message AITaskFilter {
-
-}
-
-message AITaskQueryRequest {
-  Paging Pagination = 1;
-  AITaskFilter Filter = 2;
-}
-
-message AITaskQueryResponse {
-  Paging Pagination = 1;
-  repeated AITask Data = 2;
-  int64 Total = 3;
-}
-
-message AITask {
-  string CoordinatorId = 1;
-  string Name = 2;
-  int64 Seq = 3;
-  string UserInput = 4;
-  string ForgeName = 5;
-}
-
-message AIForgeFilter {
-  string ForgeName = 1;
-  string ForgeType = 2; // enum: yak or config
-  string Keyword = 3;
-  // tag
-  repeated string Tag = 4;
-}
-
-message AIForge {
-  int64 Id = 1;
-  string ForgeName = 2;
-  string ForgeContent = 3; // yak type is yak script, config type is empty
-  string ForgeType = 4; // yak or config
-  string Description = 5;
-  string ParamsUIConfig = 6; // json config for UI
-  string Params = 7; // cli parameters
-  string UserPersistentData = 8; // for user preferences
-  repeated string ToolNames = 9;
-  repeated string ToolKeywords = 10;
-  string Action = 11;
-  repeated string Tag = 12;
-  string InitPrompt = 13; // 初始提示语
-  string PersistentPrompt = 14; // 持久化提示语
-  string PlanPrompt = 15; // 计划提示语
-  string ResultPrompt = 16; // 结果提示语
-}
-
-message QueryAIForgeRequest {
-  Paging Pagination = 1;
-  AIForgeFilter Filter = 2;
-}
-
-message QueryAIForgeResponse {
-  Paging Pagination = 1;
-  repeated AIForge Data = 2;
-  int64 Total = 3;
 }
 
 message AITaskFilter {
