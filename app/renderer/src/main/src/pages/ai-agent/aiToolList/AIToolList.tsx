@@ -12,10 +12,10 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineStarIcon} from "@/assets/icon/outline"
 import styles from "./AIToolList.module.scss"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {AITool, GetAIToolListRequest, GetAIToolListResponse, ToggleAIToolFavoriteRequest} from "../type/aiChat"
+import {tagColors} from "../defaultConstant"
 
 const toolTypeOptions = [
     {
@@ -163,17 +163,6 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
 })
 export default AIToolList
 
-const colors: YakitTagColor[] = [
-    "blue",
-    "bluePurple",
-    "cyan",
-    "green",
-    "info",
-    "purple",
-    "success",
-    "warning",
-    "yellow"
-]
 const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
     const {item, onSetData} = props
     const onFavorite = useMemoizedFn((e) => {
@@ -189,16 +178,17 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
         })
     })
     const tags = useCreation(() => {
+        const length = tagColors.length
         return (
             <div className={styles["ai-tool-list-item-keywords"]}>
                 {item.Keywords.map((keyword) => {
-                    const number = Math.floor(Math.random() * colors.length)
+                    const number = Math.floor(Math.random() * length)
                     return (
                         <YakitTag
                             size='small'
                             key={keyword}
                             className={styles["ai-tool-list-item-keywords-tag"]}
-                            color={colors[number]}
+                            color={tagColors[number]}
                         >
                             {keyword}
                         </YakitTag>

@@ -1,0 +1,16 @@
+.ai-start-model-form {
+    display: flex;
+    gap: 8px;
+    align-items: start;
+    padding: 24px;
+    :global {
+        .ant-form {
+            flex: 1;
+        }
+    }
+    .button-group {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+}
