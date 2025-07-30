@@ -166,7 +166,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         fixContentTypeHoverMessage
     } = props
 
-    const wrapperRef = useRef<HTMLDivElement>(null)
     const isInitRef = useRef<boolean>(false)
     const {shortcutIds} = useFocusContextStore()
     const [focusIds, setFocusIds] = useState<string[]>([`${ShortcutKeyFocusType.Monaco}-${uuidv4()}`])
@@ -1107,24 +1106,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         )
     })
 
-    /** 监听键盘快捷键 */
-    useKeyPress(
-        (e) => true,
-        (e) => {
-            const filterKey = [16, 17, 18, 93]
-            if (filterKey.includes(e.keyCode)) return
-            const keys = convertKeyEventToKeyCombination(e)
-            if (keys) {
-                let sortKeys = sortKeysCombination(keys)
-                const keyToMenu = keyBindingRef.current[sortKeys.join("-")]
-                if (!keyToMenu) return
-                e.stopPropagation()
-                menuItemHandle(keyToMenu[0], keyToMenu)
-            }
-        },
-        {target: wrapperRef}
-    )
-
     /** 计算编辑器的高度 有点问题，为什么用state记录而不是ref记录，测试过后删除该问题 */
     const handleEditorMount = (editor: YakitIMonacoEditor, monaco: any) => {
         editor.onDidChangeModelDecorations(() => {
@@ -1660,7 +1641,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             />
             {disabled && <div className={styles["yakit-editor-shade"]}></div>}
             <div
-                ref={wrapperRef}
                 className={styles["yakit-editor-container"]}
                 onContextMenu={(e) => {
                     e.stopPropagation()
@@ -1703,6 +1683,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                     // 判断当前输入是否激活 编辑器内部快捷键
                                     const isActiveYakEditor = isYakEditorShortcut(e.browserEvent)
                                     if (isActiveYakEditor) {
+                                        const keys = convertKeyEventToKeyCombination(e.browserEvent)
+                                        if (keys) {
+                                            let sortKeys = sortKeysCombination(keys)
+                                            const keyToMenu = keyBindingRef.current[sortKeys.join("-")]
+                                            if (!keyToMenu) return
+                                            e.stopPropagation()
+                                            menuItemHandle(keyToMenu[0], keyToMenu)
+                                        }
                                         e.browserEvent.stopImmediatePropagation()
                                         return
                                     }
@@ -1711,7 +1699,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                     if (event) {
                                         // 未接入时特殊处理removePage,接入monaco快捷键后移除此项
                                         if (["removePage"].includes(event)) e.browserEvent.stopImmediatePropagation()
-
                                         // 由于目前 存在老版本键盘快捷键(line：1112) 暂时不做后续接入 等待第二版焦点与monaco绑定
                                         // e.browserEvent.stopImmediatePropagation()
                                         return
