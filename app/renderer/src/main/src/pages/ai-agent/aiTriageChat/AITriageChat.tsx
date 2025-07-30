@@ -20,10 +20,9 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevrondownIcon, OutlineChevronupIcon} from "@/assets/icon/outline"
 import cloneDeep from "lodash/cloneDeep"
-import {grpcQueryAIForge} from "../grpc"
+import {grpcGetAIForge, grpcQueryAIForge} from "../grpc"
 import {yakitNotify} from "@/utils/notification"
 import {AIChatTextareaProps} from "../template/type"
-import {AIForgeListDefaultPagination} from "../defaultConstant"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 import classNames from "classnames"
@@ -234,19 +233,9 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                 return
             }
 
-            const request: QueryAIForgeRequest = {
-                Pagination: {...AIForgeListDefaultPagination},
-                Filter: {Id: id}
-            }
-
-            grpcQueryAIForge(request)
+            grpcGetAIForge(forgeID)
                 .then((res) => {
-                    const {Data} = res
-                    if (!Data || !Data[0]) {
-                        yakitNotify("error", `未获取到模板数据, 操作失败`)
-                        return
-                    }
-                    const forgeInfo = cloneDeep(Data[0])
+                    const forgeInfo = cloneDeep(res)
                     if (!activeForge) setActiveForge(forgeInfo)
                     else {
                         if (forgeInfo.Id === activeForge.Id) {
