@@ -79,7 +79,6 @@ module.exports = (win, getClient) => {
         return await asyncDeleteAIForge(params)
     })
 
-    
     const asyncQueryAIEvent = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QueryAIEvent(params, (err, data) => {
@@ -107,9 +106,25 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    // 查询 AI-Forge
+    // 查询 AI-Forge 列表
     ipcMain.handle("QueryAIForge", async (e, params) => {
         return await asyncQueryAIForge(params)
+    })
+
+    const asyncGetAIForge = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAIForge(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 查询 AI-Forge 单个详情
+    ipcMain.handle("GetAIForge", async (e, params) => {
+        return await asyncGetAIForge(params)
     })
     // #endregion
 

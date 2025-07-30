@@ -13,7 +13,7 @@ import {
     useVirtualList
 } from "ahooks"
 import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../type/aiChat"
-import {grpcDeleteAIForge, grpcQueryAIForge} from "../grpc"
+import {grpcDeleteAIForge, grpcGetAIForge, grpcQueryAIForge} from "../grpc"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {SolidToolIcon} from "@/assets/icon/solid"
@@ -217,24 +217,12 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
         const findIndex = forgesArr.findIndex((item) => Number(item.Id) === Number(id))
         if (findIndex !== -1) {
             // 存在数据则局部更新
-            const request: QueryAIForgeRequest = {
-                Pagination: {...AIForgeListDefaultPagination},
-                Filter: {Id: Number(id)}
-            }
-
-            grpcQueryAIForge(request, true)
+            grpcGetAIForge(Number(id))
                 .then((res) => {
-                    console.log("res", res.Data)
-
-                    const {Data} = res
-                    if (!Data || !Data[0]) {
-                        yakitNotify("error", "更新 forge 模板信息失败, 未获取到最新数据")
-                        return
-                    }
-                    const newInfo = Data[0]
+                    console.log("ForgeName-grpcGetAIForge-res", res)
                     setData((old) => {
                         const newData = {...old}
-                        newData.Data[findIndex] = newInfo
+                        newData.Data[findIndex] = res
                         return newData
                     })
                 })

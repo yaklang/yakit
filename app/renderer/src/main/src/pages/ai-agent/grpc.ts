@@ -2,7 +2,14 @@ import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {RenderMCPClientInfo} from "./aiAgentType"
 import {MCPCallToolRequest, MCPClientResource} from "./type/mcpClient"
-import {AIEventQueryRequest, AIEventQueryResponse, AIForge, AIForgeFilter, QueryAIForgeRequest, QueryAIForgeResponse} from "./type/aiChat"
+import {
+    AIEventQueryRequest,
+    AIEventQueryResponse,
+    AIForge,
+    AIForgeFilter,
+    QueryAIForgeRequest,
+    QueryAIForgeResponse
+} from "./type/aiChat"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -89,7 +96,7 @@ export const grpcQueryAIEvent: APIFunc<AIEventQueryRequest, AIEventQueryResponse
 
 // #region AI-Forge 相关 grpc 接口
 /** @name 创建 AI-Forge */
-export const grpcCreateAIForge: APIFunc<AIForge, undefined> = (param, hiddenError) => {
+export const grpcCreateAIForge: APIFunc<AIForge, {CreateID: number}> = (param, hiddenError) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("CreateAIForge", param)
@@ -124,7 +131,7 @@ export const grpcDeleteAIForge: APIFunc<AIForgeFilter, undefined> = (param, hidd
             })
     })
 }
-/** @name 查询 AI-Forge */
+/** @name 查询 AI-Forge 列表 */
 export const grpcQueryAIForge: APIFunc<QueryAIForgeRequest, QueryAIForgeResponse> = (param, hiddenError) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
@@ -136,6 +143,23 @@ export const grpcQueryAIForge: APIFunc<QueryAIForgeRequest, QueryAIForgeResponse
             })
     })
 }
+/** @name 查询 AI-Forge 单个详情 */
+export const grpcGetAIForge: APIFunc<number, AIForge> = (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        const id = Number(param) || 0
+        if (!id) {
+            if (!hiddenError) yakitNotify("error", `获取Forge详情失败: ID(${param})数据异常`)
+            reject(new Error("`获取Forge详情失败: ID(${param})数据异常`"))
+            return
+        }
+
+        ipcRenderer
+            .invoke("GetAIForge", {ID: id})
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "查询Forge详情失败:" + e)
+                reject(e)
+            })
+    })
+}
 // #endregion
-
-
