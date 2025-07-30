@@ -1688,7 +1688,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                             let sortKeys = sortKeysCombination(keys)
                                             const keyToMenu = keyBindingRef.current[sortKeys.join("-")]
                                             if (!keyToMenu) return
-                                            e.stopPropagation()
                                             menuItemHandle(keyToMenu[0], keyToMenu)
                                         }
                                         e.browserEvent.stopImmediatePropagation()

@@ -273,7 +273,7 @@ export const getStorageYakEditorShortcutKeyEvents = () => {
             if (!res) return
             try {
                 const data: EventsType = JSON.parse(res)
-                currentKeyEvents = addScopeShow(data, YakEditorDefaultShortcut)
+                currentKeyEvents = addScopeShow(data, YakEditorShortcutKeyEvents)
             } catch (error) {}
         })
         .catch(() => {})
@@ -326,15 +326,16 @@ export const isYakEditorShortcut = (ev: KeyboardEvent): boolean => {
     if (!keys) return false
     let nowKey = sortKeysCombination(keys).join("")
     let has = false
-    Object.keys(YakEditorShortcutKeyEvents).forEach((key) => {
-        let itemKey = sortKeysCombination(YakEditorShortcutKeyEvents[key].keys).join("")
+    Object.keys(getYakEditorShortcutKeyEvents()).forEach((key) => {
+        let itemKey = sortKeysCombination(getYakEditorShortcutKeyEvents()[key].keys).join("")
         if (nowKey === itemKey) {
             has = true
         }
     })
-    if (has) {
-        // 等待接入功能
-    }
+    // if (has) {
+    //     // 等待接入功能
+
+    // }
     return has
 }
 

@@ -12,7 +12,7 @@ export enum ShortcutKeyFocusType {
 export const addScopeShow = (newEvent, oldEvent) => {
     // 每次获取快捷键需更新其作用域
     Object.keys(newEvent).forEach((key) => {
-        if (oldEvent[key].scopeShow) {
+        if (oldEvent[key]?.scopeShow) {
             newEvent[key] = {...newEvent[key], scopeShow: oldEvent[key].scopeShow}
         }
     })
