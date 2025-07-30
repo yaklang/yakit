@@ -133,7 +133,6 @@ const httpSubmenu: {
         params: {
             WorkFlow: [{CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: "GET"}]}]
         } as MutateHTTPRequestParams,
-        // 此处牵涉变量提升（由于编辑器菜单快捷键 keybindings 的作用域不一定非得是全局，存在mitm页面级快捷键，因此如若全使用字符形式不利于区分作用域）
         keybindings: YakEditorOptionShortcutKey.CommonMutateHttpMethodGet
     },
     {

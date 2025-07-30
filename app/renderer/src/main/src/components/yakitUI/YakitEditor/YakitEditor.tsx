@@ -433,7 +433,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             if (!editor) return
             /** 是否执行过方法(onRightContextMenu) */
             let executeFunc = false
-console.log("keyPath",key, keyPath);
 
             if (keyPath.length === 2) {
                 const menuName = keyPath[1]
