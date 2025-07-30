@@ -679,7 +679,7 @@ const ImportFileModal: React.FC<ImportFileModalProps> = (props) => {
             onOk={() => onOk(value)}
         >
             <div className={styles["import-editor"]} onDragOver={handleDragOver} onDrop={handleDrop}>
-                <YakitEditor value={value} setValue={setValue}></YakitEditor>
+                <YakitEditor value={value} setValue={setValue} type="json"></YakitEditor>
             </div>
         </YakitModal>
     )

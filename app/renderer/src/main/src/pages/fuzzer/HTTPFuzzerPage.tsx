@@ -2317,7 +2317,7 @@ export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
     return (
         <YakitSpin spinning={loading} style={{width: "100%", height: "100%"}}>
             <div style={{height: "100%"}}>
-                <YakitEditor fontSize={14} type={"text"} readOnly={true} value={value} />
+                <YakitEditor fontSize={14} type={"plaintext"} readOnly={true} value={value} />
             </div>
         </YakitSpin>
     )
