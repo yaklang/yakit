@@ -58,6 +58,8 @@
             .tree-body {
                 height: 100%;
                 overflow: hidden;
+                display: flex;
+                flex-direction: column;
                 .compare-select-box {
                     height: 24px;
                     margin: 0px 12px 4px;

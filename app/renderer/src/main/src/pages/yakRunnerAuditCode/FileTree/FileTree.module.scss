@@ -1,7 +1,8 @@
 /* ---------- FileTree ----------*/
 .file-tree {
-    height: 100%;
     padding: 0px 0px 0px 4px;
+    flex: 1;
+    overflow: hidden;
     :global {
         .ant-tree .ant-tree-treenode {
             padding-bottom: 0;
