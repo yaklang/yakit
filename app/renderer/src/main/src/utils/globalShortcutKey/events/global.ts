@@ -29,7 +29,7 @@ export const addScopeShow = (newEvent, oldEvent) => {
 export enum GlobalShortcutKey {
     /** 截图 */
     Screenshot = "screenshot",
-    /** 关闭当前页面及二级页面 */
+    /** 关闭当前页面 */
     RemovePage = "removePage",
     /** 新增二级页面 */
     AddSubPage = "addSubPage",
@@ -54,7 +54,7 @@ const globalShortcutKeyEvents: EventsType = {
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.KEY_B]
     },
     removePage: {
-        name: "关闭当前页面及二级页面",
+        name: "关闭当前页面",
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_W]
     },
     addSubPage: {
