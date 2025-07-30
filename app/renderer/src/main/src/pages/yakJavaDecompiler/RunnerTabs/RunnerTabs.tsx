@@ -14,7 +14,7 @@ import {Droppable, Draggable} from "@hello-pangea/dnd"
 
 import classNames from "classnames"
 import styles from "./RunnerTabs.module.scss"
-import {KeyToIcon} from "../FileTree/icon"
+import {KeyToIcon} from "../../yakRunner/FileTree/icon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineChevrondoubleleftIcon,

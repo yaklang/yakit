@@ -2,7 +2,7 @@ import {failed, warn, yakitNotify} from "@/utils/notification"
 import {CodeScoreSmokingEvaluateResponseProps} from "../plugins/funcTemplateType"
 import {RequestYakURLResponse} from "../yakURLTree/data"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps} from "./FileTree/FileTreeType"
-import {FileDefault, FileSuffix, FolderDefault} from "./FileTree/icon"
+import {FileDefault, FileSuffix, FolderDefault} from "../yakRunner/FileTree/icon"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
     ConvertYakStaticAnalyzeErrorToMarker,
