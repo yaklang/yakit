@@ -1,4 +1,4 @@
-import {OtherMenuListProps, YakitEditorKeyCode, YakitIMonacoEditor} from "./YakitEditorType"
+import {OtherMenuListProps, YakitIMonacoEditor} from "./YakitEditorType"
 import {EditorMenuItemType} from "./EditorMenu"
 import {Space} from "antd"
 import {showModal} from "@/utils/showModal"
@@ -12,6 +12,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
 import {CodecResponseProps, CodecWorkProps} from "@/pages/codec/NewCodec"
 import {getClipboardText, setClipboardText} from "@/utils/clipboard"
+import {getGlobalShortcutKeyEvents, GlobalShortcutKey} from "@/utils/globalShortcutKey/events/global"
+import { YakEditorOptionShortcutKey } from "@/utils/globalShortcutKey/events/page/yakEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -123,7 +125,7 @@ const httpSubmenu: {
     key: string
     label: string
     params?: MutateHTTPRequestParams
-    keybindings?: YakitEditorKeyCode[]
+    keybindings?: string
 }[] = [
     {
         key: "mutate-http-method-get",
@@ -131,11 +133,8 @@ const httpSubmenu: {
         params: {
             WorkFlow: [{CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: "GET"}]}]
         } as MutateHTTPRequestParams,
-        keybindings: [
-            process.platform === "darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-            YakitEditorKeyCode.Shift,
-            YakitEditorKeyCode.KEY_H
-        ]
+        // 此处牵涉变量提升（由于编辑器菜单快捷键 keybindings 的作用域不一定非得是全局，存在mitm页面级快捷键，因此如若全使用字符形式不利于区分作用域）
+        keybindings: YakEditorOptionShortcutKey.CommonMutateHttpMethodGet
     },
     {
         key: "mutate-http-method-post",

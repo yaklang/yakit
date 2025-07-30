@@ -2,7 +2,6 @@ import React, {useEffect, useMemo, useState} from "react"
 import {
     OtherMenuListProps,
     YakitEditorExtraRightMenuType,
-    YakitEditorKeyCode,
     YakitEditorProps,
     YakitIMonacoEditor
 } from "./YakitEditorType"
@@ -27,11 +26,11 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {HTTPFlowBodyByIdRequest} from "@/components/HTTPHistory"
 import {setClipboardText} from "@/utils/clipboard"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
-import {useWhyDidYouUpdate} from "ahooks"
 import {GetReleaseEdition, PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
-import emiter from "@/utils/eventBus/eventBus"
 import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
+import { getGlobalShortcutKeyEvents, GlobalShortcutKey } from "@/utils/globalShortcutKey/events/global"
+import { YakEditorOptionShortcutKey } from "@/utils/globalShortcutKey/events/page/yakEditor"
 const {ipcRenderer} = window.require("electron")
 
 const HTTP_PACKET_EDITOR_DisableUnicodeDecode = "HTTP_PACKET_EDITOR_DisableUnicodeDecode"
@@ -420,16 +419,12 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             {
                                 key: "发送并跳转",
                                 label: "发送并跳转",
-                                keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                                keybindings: YakEditorOptionShortcutKey.CommonSendAndJumpToWebFuzzer
                             },
                             {
                                 key: "仅发送",
                                 label: "仅发送",
-                                keybindings: [
-                                    YakitEditorKeyCode.Control,
-                                    YakitEditorKeyCode.Shift,
-                                    YakitEditorKeyCode.KEY_R
-                                ]
+                                keybindings: YakEditorOptionShortcutKey.CommonSendToWebFuzzer
                             }
                         ]
                     }
@@ -471,16 +466,12 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             {
                                 key: "发送并跳转",
                                 label: "发送并跳转",
-                                keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                                keybindings: YakEditorOptionShortcutKey.CommonSendAndJumpToWebFuzzer
                             },
                             {
                                 key: "仅发送",
                                 label: "仅发送",
-                                keybindings: [
-                                    YakitEditorKeyCode.Control,
-                                    YakitEditorKeyCode.Shift,
-                                    YakitEditorKeyCode.KEY_R
-                                ]
+                                keybindings: YakEditorOptionShortcutKey.CommonSendToWebFuzzer
                             }
                         ]
                     }

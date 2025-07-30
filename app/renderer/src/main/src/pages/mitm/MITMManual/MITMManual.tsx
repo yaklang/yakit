@@ -37,7 +37,7 @@ import {
 } from "@/defaultConstants/mitmV2"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {availableColors, onSendToTab} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import classNames from "classnames"
 import styles from "./MITMManual.module.scss"
@@ -77,6 +77,8 @@ import {getGlobalShortcutKeyEvents, GlobalShortcutKey, ShortcutKeyFocusType} fro
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "@/utils/prettifyPacket"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import { YakitKeyBoard, YakitKeyMod } from "@/utils/globalShortcutKey/keyboard"
+import { YakEditorOptionShortcutKey } from "@/utils/globalShortcutKey/events/page/yakEditor"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
     forwardRef((props, ref) => {
@@ -1172,11 +1174,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
             {
                 key: "trigger-auto-hijacked",
                 label: "切换为自动劫持模式",
-                keybindings: [
-                    YakitEditorKeyCode.Shift,
-                    SystemInfo.system === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                    YakitEditorKeyCode.KEY_T
-                ]
+                keybindings: YakEditorOptionShortcutKey.TriggerAutoHijacked
             },
             {
                 key: "submit-data",

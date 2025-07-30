@@ -21,7 +21,6 @@ import {
     YakitIMonacoEditor,
     YakitEditorProps,
     YakitITextModel,
-    YakitEditorKeyCode,
     KeyboardToFuncProps,
     YakitIModelDecoration,
     OperationRecord,
@@ -33,9 +32,7 @@ import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from 
 import {StringToUint8Array} from "@/utils/str"
 import {baseMenuLists, extraMenuLists} from "./contextMenus"
 import {EditorMenu, EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType} from "./EditorMenu"
-import {YakitSystem} from "@/yakitGVDefine"
 import cloneDeep from "lodash/cloneDeep"
-import {convertKeyboard, keySortHandle} from "./editorUtils"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 import classNames from "classnames"
@@ -74,6 +71,7 @@ import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {
     getStorageYakEditorShortcutKeyEvents,
+    getYakEditorShortcutKeyEvents,
     isPageOrGlobalShortcut,
     isYakEditorDefaultShortcut,
     isYakEditorShortcut
@@ -81,6 +79,12 @@ import {
 import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
 import useFocusContextStore from "@/utils/globalShortcutKey/shortcutKeyFocusHook/hooks/useStore"
 import {ShortcutKeyFocusType} from "@/utils/globalShortcutKey/events/global"
+import {
+    convertKeyboardToUIKey,
+    convertKeyEventToKeyCombination,
+    sortKeysCombination
+} from "@/utils/globalShortcutKey/utils"
+import {YakitKeyBoard, YakitKeyMod} from "@/utils/globalShortcutKey/keyboard"
 
 export interface CodecTypeProps {
     key?: string
@@ -162,7 +166,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         fixContentTypeHoverMessage
     } = props
 
-    const systemRef = useRef<YakitSystem>("Darwin")
     const wrapperRef = useRef<HTMLDivElement>(null)
     const isInitRef = useRef<boolean>(false)
     const {shortcutIds} = useFocusContextStore()
@@ -430,6 +433,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             if (!editor) return
             /** 是否执行过方法(onRightContextMenu) */
             let executeFunc = false
+console.log("keyPath",key, keyPath);
 
             if (keyPath.length === 2) {
                 const menuName = keyPath[1]
@@ -597,10 +601,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     info.children = contextMenuKeybindingHandle(info.key, info.children)
                 } else {
                     if (info.key === "cut" && info.label === "剪切") {
-                        const keysContent = convertKeyboard(systemRef.current, [
-                            systemRef.current === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                            YakitEditorKeyCode.KEY_X
-                        ])
+                        const keysContent = convertKeyboardToUIKey([YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_X])
 
                         info.label = keysContent ? (
                             <div className={styles["editor-context-menu-keybind-wrapper"]}>
@@ -612,10 +613,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         )
                     }
                     if (info.key === "copy" && info.label === "复制") {
-                        const keysContent = convertKeyboard(systemRef.current, [
-                            systemRef.current === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                            YakitEditorKeyCode.KEY_C
-                        ])
+                        const keysContent = convertKeyboardToUIKey([YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_C])
                         info.label = keysContent ? (
                             <div className={styles["editor-context-menu-keybind-wrapper"]}>
                                 <div className={styles["content-style"]}>复制</div>
@@ -626,10 +624,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         )
                     }
                     if (info.key === "paste" && info.label === "粘贴") {
-                        const keysContent = convertKeyboard(systemRef.current, [
-                            systemRef.current === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                            YakitEditorKeyCode.KEY_V
-                        ])
+                        const keysContent = convertKeyboardToUIKey([YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_V])
                         info.label = keysContent ? (
                             <div className={styles["editor-context-menu-keybind-wrapper"]}>
                                 <div className={styles["content-style"]}>粘贴</div>
@@ -641,11 +636,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     }
 
                     if (info.keybindings && info.keybindings.length > 0) {
-                        const keysContent = convertKeyboard(systemRef.current, info.keybindings)
-
+                        const keyArr = getYakEditorShortcutKeyEvents()[info.keybindings].keys
+                        const keysContent = convertKeyboardToUIKey(keyArr)
                         // 记录自定义快捷键映射按键的回调事件
                         if (keysContent) {
-                            let sortKeys = keySortHandle(info.keybindings)
+                            let sortKeys = sortKeysCombination(keyArr)
                             keyBindingRef.current[sortKeys.join("-")] = parentKey ? [info.key, parentKey] : [info.key]
                         }
 
@@ -685,59 +680,51 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
          * @description 使用下方的判断逻辑，将导致后续的(额外菜单变动)无法在右键菜单再渲染中生效
          */
         // if (isInitRef.current) return
+        rightContextMenu.current = [...DefaultMenuTop]
+        keyBindingRef.current = {}
 
-        ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
-            systemRef.current = systemType
-
-            rightContextMenu.current = [...DefaultMenuTop]
-            keyBindingRef.current = {}
-
-            if (type === "http") {
-                rightContextMenu.current = rightContextMenu.current.concat([
-                    {key: "http-show-break", label: getShowBreak() ? "隐藏换行符" : "显示换行符"}
-                ])
-            }
-            if (language === "yak") {
+        if (type === "http") {
+            rightContextMenu.current = rightContextMenu.current.concat([
+                {key: "http-show-break", label: getShowBreak() ? "隐藏换行符" : "显示换行符"}
+            ])
+        }
+        if (language === "yak") {
+            rightContextMenu.current = rightContextMenu.current.concat([
+                {type: "divider"},
+                {key: "yak-formatter", label: "Yak 代码格式化"}
+            ])
+        }
+        if (menuType.length > 0) {
+            const types = Array.from(new Set(menuType))
+            for (let key of types)
                 rightContextMenu.current = rightContextMenu.current.concat([
                     {type: "divider"},
-                    {key: "yak-formatter", label: "Yak 代码格式化"}
+                    cloneDeep(extraMenuLists[key].menu[0])
                 ])
+        }
+
+        // 缓存需要排序的自定义菜单
+        let sortContextMenu: OtherMenuListProps[] = []
+        for (let menus in contextMenu) {
+            /* 需要排序项 */
+            if (typeof contextMenu[menus].order === "number") {
+                sortContextMenu = sortContextMenu.concat(cloneDeep(contextMenu[menus]) as any as OtherMenuListProps[])
+            } else {
+                /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */
+                rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))
             }
-            if (menuType.length > 0) {
-                const types = Array.from(new Set(menuType))
-                for (let key of types)
-                    rightContextMenu.current = rightContextMenu.current.concat([
-                        {type: "divider"},
-                        cloneDeep(extraMenuLists[key].menu[0])
-                    ])
-            }
+        }
 
-            // 缓存需要排序的自定义菜单
-            let sortContextMenu: OtherMenuListProps[] = []
-            for (let menus in contextMenu) {
-                /* 需要排序项 */
-                if (typeof contextMenu[menus].order === "number") {
-                    sortContextMenu = sortContextMenu.concat(
-                        cloneDeep(contextMenu[menus]) as any as OtherMenuListProps[]
-                    )
-                } else {
-                    /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */
-                    rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))
-                }
-            }
+        // 底部默认菜单
+        rightContextMenu.current = rightContextMenu.current.concat([...DefaultMenuBottom])
 
-            // 底部默认菜单
-            rightContextMenu.current = rightContextMenu.current.concat([...DefaultMenuBottom])
+        // 当存在order项则需要排序
+        if (sortContextMenu.length > 0) {
+            rightContextMenu.current = sortMenuFun(rightContextMenu.current, sortContextMenu)
+        }
+        rightContextMenu.current = contextMenuKeybindingHandle("", rightContextMenu.current)
 
-            // 当存在order项则需要排序
-            if (sortContextMenu.length > 0) {
-                rightContextMenu.current = sortMenuFun(rightContextMenu.current, sortContextMenu)
-            }
-
-            rightContextMenu.current = contextMenuKeybindingHandle("", rightContextMenu.current)
-
-            if (!forceRenderMenu) isInitRef.current = true
-        })
+        if (!forceRenderMenu) isInitRef.current = true
     }, [forceRenderMenu, menuType, contextMenu, contextMenuPlugin, customHTTPMutatePlugin])
 
     /**
@@ -1127,21 +1114,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         (e) => {
             const filterKey = [16, 17, 18, 93]
             if (filterKey.includes(e.keyCode)) return
-
-            let activeKey: number[] = []
-            if (e.shiftKey) activeKey.push(16)
-            if (e.ctrlKey) activeKey.push(17)
-            if (e.altKey) activeKey.push(18)
-            if (e.metaKey) activeKey.push(93)
-            activeKey.push(e.keyCode)
-            if (activeKey.length <= 1) return
-            activeKey = keySortHandle(activeKey)
-
-            const keyToMenu = keyBindingRef.current[activeKey.join("-")]
-            if (!keyToMenu) return
-
-            e.stopPropagation()
-            menuItemHandle(keyToMenu[0], keyToMenu)
+            const keys = convertKeyEventToKeyCombination(e)
+            if (keys) {
+                let sortKeys = sortKeysCombination(keys)
+                const keyToMenu = keyBindingRef.current[sortKeys.join("-")]
+                if (!keyToMenu) return
+                e.stopPropagation()
+                menuItemHandle(keyToMenu[0], keyToMenu)
+            }
         },
         {target: wrapperRef}
     )

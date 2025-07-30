@@ -42,6 +42,7 @@ import {
     setStorageChatCSShortcutKeyEvents
 } from "./page/chatCS"
 import {PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
+import { getStorageYakEditorShortcutKeyEvents, getYakEditorShortcutKeyEvents, resetYakEditorShortcutKeyEvents, setStorageYakEditorShortcutKeyEvents } from "./page/yakEditor"
 
 export interface ShortcutKeyEventInfo {
     name: string
@@ -80,6 +81,8 @@ export enum ShortcutKeyPage {
     YakRunner = YakitRoute.YakScript,
     // ChatCS
     ChatCS = "chat-cs",
+    // 编辑器
+    YakEditor = "yak-editor",
 
     // 多页面快捷键（多页面与页面属于同级绑定）
     YakitMultiple = "yakit-multiple"
@@ -128,6 +131,13 @@ export const pageEventMaps: Record<`${ShortcutKeyPage}`, PageToEventInfo> = {
         resetEvents: resetChatCSShortcutKeyEvents,
         getStorage: getStorageChatCSShortcutKeyEvents,
         setStorage: setStorageChatCSShortcutKeyEvents,
+        scopeShow: [Yakit, EnpriTrace]
+    },
+    "yak-editor": {
+        getEvents: getYakEditorShortcutKeyEvents,
+        resetEvents: resetYakEditorShortcutKeyEvents,
+        getStorage: getStorageYakEditorShortcutKeyEvents,
+        setStorage: setStorageYakEditorShortcutKeyEvents,
         scopeShow: [Yakit, EnpriTrace]
     },
     "yakit-multiple": {
