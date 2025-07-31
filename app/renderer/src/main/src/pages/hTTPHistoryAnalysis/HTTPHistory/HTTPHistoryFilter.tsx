@@ -2168,15 +2168,19 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         }
     }, [])
 
-    useEffect(() => {
-        if (onSetFirstHttpFlow) {
-            if (data.length) {
-                onSetFirstHttpFlow(getHTTPFlowReqAndResToString(data[0]))
-            } else {
-                onSetFirstHttpFlow(undefined)
+    useDebounceEffect(
+        () => {
+            if (onSetFirstHttpFlow) {
+                if (data.length) {
+                    onSetFirstHttpFlow(getHTTPFlowReqAndResToString(data[0]))
+                } else {
+                    onSetFirstHttpFlow(undefined)
+                }
             }
-        }
-    }, [data])
+        },
+        [data],
+        {wait: 300}
+    )
 
     return (
         <div className={styles["HTTPFlowFilterTable"]} ref={hTTPFlowFilterTableRef}>
