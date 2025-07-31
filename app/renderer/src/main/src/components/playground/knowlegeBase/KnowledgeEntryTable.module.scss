@@ -1,0 +1,29 @@
+.knowledge-entry-table {
+    height: 100%;
+    
+    .title-cell {
+        font-weight: 500;
+        color: #262626;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .keywords-cell {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        
+        .ant-tag {
+            margin: 0;
+        }
+    }
+    
+    .summary-cell {
+        color: #595959;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
+    }
+} 
