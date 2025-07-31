@@ -30,7 +30,7 @@ const devToolMenu = {
     label: "View",
     submenu: [
         {role: "reload", accelerator: ""},
-        {role: "forceReload"},
+        {role: "forceReload", accelerator: ""},
         {role: "toggleDevTools"},
         {type: "separator"},
         {role: "resetZoom"},
