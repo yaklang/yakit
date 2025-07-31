@@ -288,34 +288,26 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
     // 校验引擎是否为官方发布版本
     const [showCheckEngine, setShowCheckEngine] = useState<boolean>(false)
-    const getCurrentYak = (): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            grpcFetchLocalYakVersion(true)
-                .then((res: string) => {
-                    if (res) {
-                        const v = res.startsWith("v") ? res.slice(1) : res
-                        checkEngineSource(v, resolve, reject)
-                    } else {
-                        setShowCheckEngine(false)
-                        reject()
-                    }
-                })
-                .catch(() => {
-                    setShowCheckEngine(false)
-                    reject()
-                })
-        })
+    const getCurrentYak = async (): Promise<string> => {
+        try {
+            const res = await grpcFetchLocalYakVersion(true)
+            if (res) {
+                const v = res.startsWith("v") ? res.slice(1) : res
+                await checkEngineSource(v)
+            } else {
+                setShowCheckEngine(false)
+                throw new Error("no res")
+            }
+        } catch (e) {
+            setShowCheckEngine(false)
+            throw e
+        }
+        return ""
     }
-    const checkEngineSource = async (
-        localYaklang: string,
-        resolve: (value: string | PromiseLike<string>) => void,
-        reject
-    ) => {
+    const checkEngineSource = async (localYaklang: string) => {
         try {
             const [res1, res2] = await Promise.all([
-                // 远端
                 grpcFetchSpecifiedYakVersionHash({version: localYaklang, config: {timeout: 3000}}, true),
-                // 本地
                 grpcFetchLocalYakVersionHash()
             ])
 
@@ -328,10 +320,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     setShowCheckEngine(true)
                 }
             }
-            resolve("")
+            return ""
         } catch (error) {
             setShowCheckEngine(false)
-            reject()
+            throw error
         }
     }
     const onUseOfficialEngine = async () => {
@@ -427,12 +419,15 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         if (serverPushStatus) {
             settledArr.push(updatePluginTotal)
         }
-        Promise.allSettled(settledArr.map((promiseFunc) => promiseFunc()))
-            .then((values) => {
-                isRunRef.current = false
-                setTimeout(() => (isIRify() ? updateIRifyState() : updateState()), 100)
+        Promise.allSettled(settledArr.map((promiseFunc) => promiseFunc())).then((results) => {
+            results.forEach((result) => {
+                if (result.status === "rejected") {
+                    // console.log("单个任务失败：", result.reason)
+                }
             })
-            .catch(() => {})
+            isRunRef.current = false
+            setTimeout(() => (isIRify() ? updateIRifyState() : updateState()), 100)
+        })
     })
 
     const [timeInterval, setTimeInterval, getTimeInterval] = useGetState<number>(5)
