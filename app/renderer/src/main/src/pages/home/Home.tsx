@@ -789,16 +789,6 @@ const Home: React.FC<HomeProp> = (props) => {
                                     <div className={styles["home-card-header-title"]}>
                                         <PublicMitmIcon className={styles["title-icon"]} />
                                         <span className={styles["title-text"]}>MITM 交互式劫持</span>
-                                        <YakitButton
-                                            type='outline1'
-                                            style={{marginLeft: 8}}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                onMenu({route: YakitRoute.HTTPHacker})
-                                            }}
-                                        >
-                                            MITM 劫持 v1
-                                        </YakitButton>
                                     </div>
                                     <div className={styles["home-card-header-desc"]}>
                                         安装 SSL/TLS

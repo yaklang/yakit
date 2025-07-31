@@ -45,10 +45,13 @@ import {
 } from "../MITMHacker/utils"
 import {Tooltip} from "antd"
 import {openConsoleNewWindow} from "@/utils/openWebsite"
+import usePluginTrace from "./PluginTrace/usePluginTrace"
+import {PluginTrace} from "./PluginTrace/PluginTrace"
+import {PluginTraceRefProps} from "./PluginTrace/type"
 
 const {ipcRenderer} = window.require("electron")
 
-type tabKeys = "all" | "loaded" | "hot-patch"
+type tabKeys = "all" | "loaded" | "hot-patch" | "trace"
 interface TabsItem {
     key: tabKeys
     label: ReactElement | string
@@ -158,6 +161,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         {
             key: "hot-patch",
             label: "热加载",
+            contShow: false // 初始为false
+        },
+        {
+            key: "trace",
+            label: "插件追踪",
             contShow: false // 初始为false
         }
     ])
@@ -485,6 +493,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         />
                     </>
                 )
+            case "trace":
+                return <></>
             default:
                 return (
                     <div style={{width: "100%"}}>
@@ -512,6 +522,17 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             ...script,
             Content: value
         })
+    })
+
+    const pluginTraceRef = useRef<PluginTraceRefProps>({noDetailFun: () => {}})
+    const [noRefreshPluginTraces, setNoRefreshPluginTraces] = useState<boolean>(false)
+    const [puginTraceData, pluginTraceEvent] = usePluginTrace({
+        noRefreshPluginTraces,
+        onStart: () => {
+            pluginTraceRef.current.noDetailFun()
+        },
+        onError: () => {},
+        onEnd: () => {}
     })
 
     const onRenderContent = useMemoizedFn(() => {
@@ -594,7 +615,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         </div>
                     </div>
                 )
-            default:
+            case "all":
                 return (
                     <div className={styles["plugin-hijack-content-list"]}>
                         <PluginGroup
@@ -692,6 +713,27 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         </YakitSpin>
                     </div>
                 )
+            case "trace":
+                return (
+                    <PluginTrace
+                        ref={pluginTraceRef}
+                        isInitTrace={puginTraceData.isInitTrace}
+                        startLoading={puginTraceData.startLoading}
+                        tracing={puginTraceData.tracing}
+                        stopLoading={puginTraceData.stopLoading}
+                        isRefreshPluginTraces={puginTraceData.isRefreshPluginTraces}
+                        startPluginTrace={pluginTraceEvent.startPluginTrace}
+                        stopPluginTrace={pluginTraceEvent.stopPluginTrace}
+                        cancelPluginTraceById={pluginTraceEvent.cancelPluginTraceById}
+                        syncTracesToState={pluginTraceEvent.syncTracesToState}
+                        refreshNow={pluginTraceEvent.refreshNow}
+                        pluginTraceStats={pluginTraceEvent.pluginTraceStats}
+                        pluginTraceList={pluginTraceEvent.pluginTraceList}
+                        onSetNoRefreshPluginTraces={setNoRefreshPluginTraces}
+                    />
+                )
+            default:
+                return <></>
         }
     })
 

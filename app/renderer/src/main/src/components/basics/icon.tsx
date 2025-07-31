@@ -72,3 +72,4 @@ const YakitCloseSvg = () => (
 export const YakitCloseSvgIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={YakitCloseSvg} {...props} />
 }
+
