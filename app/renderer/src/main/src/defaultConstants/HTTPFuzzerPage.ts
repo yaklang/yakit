@@ -22,7 +22,7 @@ export const DefFuzzerConcurrent = 20
 
 export const defaultAdvancedConfigShow: AdvancedConfigShowProps = {
     config: false,
-    rule: false
+    rule: true
 }
 
 export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {

@@ -86,7 +86,6 @@ import {
 import {useHttpFlowStore} from "@/store/httpFlow"
 import emiter from "@/utils/eventBus/eventBus"
 import {HTTPFlowDetailProp} from "@/components/HTTPFlowDetail"
-import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
@@ -107,9 +106,11 @@ interface TabsItem {
 }
 
 interface HTTPHistoryFilterProps {
+    onSetClickedHttpFlow: (flow?: HTTPFlow) => void
+    onSetFirstHttpFlow: (flow?: HTTPFlow) => void
     onSetSelectedHttpFlowIds: (ids: string[]) => void
-    onSetIsAllHttpFlow: (b: boolean) => void
     onSetHTTPFlowFilter: (filterStr: string) => void
+    refreshHttpTable?: boolean
     downstreamProxy: string
     toWebFuzzer?: boolean
     runtimeId?: string[]
@@ -117,9 +118,11 @@ interface HTTPHistoryFilterProps {
 }
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((props) => {
     const {
+        onSetClickedHttpFlow,
+        onSetFirstHttpFlow,
         onSetSelectedHttpFlowIds,
-        onSetIsAllHttpFlow,
         onSetHTTPFlowFilter,
+        refreshHttpTable,
         downstreamProxy,
         toWebFuzzer,
         runtimeId,
@@ -254,7 +257,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                 isVer={false}
                 freeze={openTabsFlag}
                 isRecalculateWH={openTabsFlag}
-                firstNode={() => (
+                firstNode={
                     <div className={styles["HTTPHistoryFilter-left"]}>
                         <div className={styles["tab-wrap"]}>
                             <div className={styles["tab"]}>
@@ -318,7 +321,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             </div>
                         </div>
                     </div>
-                )}
+                }
                 lineStyle={{display: ""}}
                 firstMinSize={openTabsFlag ? "325px" : "24px"}
                 secondMinSize={720}
@@ -330,7 +333,9 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             includeInUrl={includeInUrl}
                             ProcessName={curProcess}
                             onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
-                            onSetIsAllHttpFlow={onSetIsAllHttpFlow}
+                            onSetClickedHttpFlow={onSetClickedHttpFlow}
+                            onSetFirstHttpFlow={onSetFirstHttpFlow}
+                            refresh={refreshHttpTable}
                             downstreamProxy={downstreamProxy}
                             inMouseEnterTable={true}
                             toWebFuzzer={toWebFuzzer}
@@ -373,7 +378,9 @@ interface HTTPFlowTableProps {
     ProcessName?: string[]
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
     onSetSelectedHttpFlowIds?: (ids: string[]) => void
-    onSetIsAllHttpFlow?: (b: boolean) => void
+    onSetClickedHttpFlow?: (flow?: HTTPFlow) => void
+    onSetFirstHttpFlow?: (flow?: HTTPFlow) => void
+    refresh?: boolean
     downstreamProxy?: string
     inMouseEnterTable?: boolean
     toWebFuzzer?: boolean
@@ -387,7 +394,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         ProcessName,
         onQueryParams,
         onSetSelectedHttpFlowIds,
-        onSetIsAllHttpFlow,
+        onSetClickedHttpFlow,
+        onSetFirstHttpFlow,
+        refresh,
         downstreamProxy = "",
         inMouseEnterTable = false,
         toWebFuzzer = false,
@@ -562,14 +571,13 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const [clickRow, setClickRow] = useState<HTTPFlow>()
     const onRowClick = useMemoizedFn((rowDate?: HTTPFlow) => {
         if (rowDate) {
-            setClickRow(rowDate)
             minWinSendToChildWin({
                 type: "openPacketNewWindow",
                 data: getPacketNewWindow(rowDate)
             })
-        } else {
-            setClickRow(undefined)
         }
+        setClickRow(rowDate)
+        onSetClickedHttpFlow && onSetClickedHttpFlow(rowDate)
     })
     const onSetCurrentRow = useDebounceFn(
         (rowDate: HTTPFlow | undefined) => {
@@ -628,8 +636,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const compareSelectedRowKeys = useCampare(selectedRowKeys)
     useDebounceEffect(
         () => {
-            onSetSelectedHttpFlowIds && onSetSelectedHttpFlowIds(selectedRowKeys)
-            onSetIsAllHttpFlow && onSetIsAllHttpFlow(isAllSelect)
+            onSetSelectedHttpFlowIds && onSetSelectedHttpFlowIds(isAllSelect ? [] : selectedRowKeys)
         },
         [isAllSelect, compareSelectedRowKeys],
         {wait: 300}
@@ -852,6 +859,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         {
                             label: "DELETE",
                             value: "DELETE"
+                        },
+                        {
+                            label: "PATCH",
+                            value: "PATCH"
                         }
                     ]
                 }
@@ -1541,7 +1552,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     })
     const onRowContextMenu = useMemoizedFn((rowData: HTTPFlow, _, event: React.MouseEvent) => {
         if (rowData) {
-            setClickRow(rowData)
+            onSetCurrentRow(rowData)
         }
 
         let rowContextmenu: any[] = []
@@ -2087,7 +2098,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
     useUpdateEffect(() => {
         queyChangeUpdateData()
-    }, [query])
+    }, [query, refresh])
 
     const update = useMemoizedFn((page: number) => {
         const isInit = page === 1
@@ -2112,7 +2123,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         const copyParams = {...params}
         copyParams.Color = copyParams.Color ? copyParams.Color : []
         copyParams.StatusCode = copyParams.StatusCode ? copyParams.StatusCode : ""
-        onQueryParams && onQueryParams(JSON.stringify(copyParams), false)
+        onQueryParams && onQueryParams(JSON.stringify(copyParams), copyParams.SearchURL ? false : true)
         ipcRenderer
             .invoke("QueryHTTPFlows", params)
             .then((res: YakQueryHTTPFlowResponse) => {
@@ -2130,7 +2141,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 if (isInit) {
                     setIsRefresh((prev) => !prev)
                     resetSelected()
-                    setClickRow(undefined)
                 } else {
                     if (isAllSelect) {
                         setSelectedRowKeys(d.map((item) => item.Id + ""))
@@ -2142,7 +2152,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 yakitNotify("error", `查询 http flow 失败: ${e}`)
             })
             .finally(() => {
-                setLoading(false)
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
             })
     })
 
@@ -2155,6 +2167,20 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             emiter.off("onDeleteToUpdateHTTPHistoryFilter", onDeleteToUpdateHTTPHistoryFilter)
         }
     }, [])
+
+    useDebounceEffect(
+        () => {
+            if (onSetFirstHttpFlow) {
+                if (data.length) {
+                    onSetFirstHttpFlow(getHTTPFlowReqAndResToString(data[0]))
+                } else {
+                    onSetFirstHttpFlow(undefined)
+                }
+            }
+        },
+        [data],
+        {wait: 300}
+    )
 
     return (
         <div className={styles["HTTPFlowFilterTable"]} ref={hTTPFlowFilterTableRef}>
@@ -2330,6 +2356,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                     onClick={() => {
                                         setAdvancedSetVisible(true)
                                     }}
+                                    style={{padding: isAdvancedSet ? 0 : undefined}}
                                 >
                                     {isAdvancedSet && "已配置"}
                                 </YakitButton>
@@ -2365,6 +2392,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 inMouseEnterTable={inMouseEnterTable}
                 onChange={onTableChange}
                 onRowContextMenu={onRowContextMenu}
+                currentSelectItem={clickRow}
                 onSetCurrentRow={onSetCurrentRow}
                 onRowDoubleClick={onHTTPFlowFilterTableRowDoubleClick}
             />

@@ -197,7 +197,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                     <>
                         <div style={{height: 500, overflow: "hidden"}}>
                             <YakitEditor
-                                type={"text"}
+                                type={"plaintext"}
                                 value={content}
                                 setValue={value => {
                                     setContent(value);

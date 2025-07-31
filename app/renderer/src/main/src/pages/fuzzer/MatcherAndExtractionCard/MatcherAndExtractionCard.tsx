@@ -41,7 +41,7 @@ import {useCreation, useMap, useMemoizedFn, useSize, useUpdateEffect} from "ahoo
 import {yakitNotify} from "@/utils/notification"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import _ from "lodash"
+import _, {cloneDeep} from "lodash"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -124,6 +124,7 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
 export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo(
     React.forwardRef((props, ref) => {
         const {
+            pageType,
             onClose,
             onSave,
             extractorValue,
@@ -419,37 +420,41 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                 <div className={styles["matching-extraction"]} ref={contentRef}>
                     <div className={styles["matching-extraction-heard"]}>
                         <div className={styles["matching-extraction-title"]}>
-                            <YakitRadioButtons
-                                value={type}
-                                onChange={(e) => {
-                                    const {value} = e.target
-                                    setType(value)
-                                    if (value === "matchers" && matcher.matchersList.length === 0) {
-                                        setMatcher({
-                                            ...matcher,
-                                            matchersList: [_.cloneDeepWith(defaultMatcherItem)]
-                                        })
-                                    }
-                                    if (value === "extractors" && extractor.extractorList.length === 0) {
-                                        setExtractor({
-                                            ...extractor,
-                                            extractorList: [_.cloneDeepWith(defaultExtractorItem)]
-                                        })
-                                    }
-                                }}
-                                buttonStyle='solid'
-                                size={isSmallMode ? "small" : "middle"}
-                                options={[
-                                    {
-                                        value: "matchers",
-                                        label: "匹配器"
-                                    },
-                                    {
-                                        value: "extractors",
-                                        label: "数据提取器"
-                                    }
-                                ]}
-                            />
+                            {pageType === "webfuzzer" ? (
+                                <YakitRadioButtons
+                                    value={type}
+                                    onChange={(e) => {
+                                        const {value} = e.target
+                                        setType(value)
+                                        if (value === "matchers" && matcher.matchersList.length === 0) {
+                                            setMatcher({
+                                                ...matcher,
+                                                matchersList: [_.cloneDeepWith(defaultMatcherItem)]
+                                            })
+                                        }
+                                        if (value === "extractors" && extractor.extractorList.length === 0) {
+                                            setExtractor({
+                                                ...extractor,
+                                                extractorList: [_.cloneDeepWith(defaultExtractorItem)]
+                                            })
+                                        }
+                                    }}
+                                    buttonStyle='solid'
+                                    size={isSmallMode ? "small" : "middle"}
+                                    options={[
+                                        {
+                                            value: "matchers",
+                                            label: "匹配器"
+                                        },
+                                        {
+                                            value: "extractors",
+                                            label: "数据提取器"
+                                        }
+                                    ]}
+                                />
+                            ) : (
+                                "匹配器"
+                            )}
                             <span className={styles["matching-extraction-title-tip"]}>
                                 已添加
                                 <span className={styles["primary-number"]}>
@@ -459,8 +464,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                             </span>
                         </div>
                         <div className={styles["matching-extraction-extra"]}>
-                            {type === "matchers" ? (
-                                <>
+                            <>
+                                {type === "matchers" ? (
                                     <YakitButton
                                         type='outline1'
                                         icon={<PlusIcon />}
@@ -469,27 +474,26 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                                     >
                                         添加匹配器
                                     </YakitButton>
-                                </>
-                            ) : (
-                                <>
-                                    <YakitButton
-                                        type='outline1'
-                                        icon={<PlusIcon />}
-                                        onClick={() => onAddCondition("extractors")}
-                                        size={isSmallMode ? "small" : undefined}
-                                    >
-                                        添加条件
-                                    </YakitButton>
-                                    <YakitButton
-                                        type='outline1'
-                                        onClick={() => onExecute()}
-                                        size={isSmallMode ? "small" : undefined}
-                                    >
-                                        调试执行
-                                    </YakitButton>
-                                </>
-                            )}
-
+                                ) : (
+                                    <>
+                                        <YakitButton
+                                            type='outline1'
+                                            icon={<PlusIcon />}
+                                            onClick={() => onAddCondition("extractors")}
+                                            size={isSmallMode ? "small" : undefined}
+                                        >
+                                            添加条件
+                                        </YakitButton>
+                                        <YakitButton
+                                            type='outline1'
+                                            onClick={() => onExecute()}
+                                            size={isSmallMode ? "small" : undefined}
+                                        >
+                                            调试执行
+                                        </YakitButton>
+                                    </>
+                                )}
+                            </>
                             <YakitButton
                                 type='primary'
                                 onClick={() => onApplyConfirm()}
@@ -508,15 +512,18 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         defActiveKeyAndOrder={defActiveKeyAndOrder}
                         httpResponse={httpResponse}
                         isSmallMode={isSmallMode}
+                        pageType={pageType}
                     />
-                    <ExtractorCollapse
-                        type={type}
-                        extractor={extractor}
-                        setExtractor={setExtractor}
-                        defActiveKey={defActiveKey}
-                        httpResponse={httpResponse}
-                        isSmallMode={isSmallMode}
-                    />
+                    {pageType === "webfuzzer" && (
+                        <ExtractorCollapse
+                            type={type}
+                            extractor={extractor}
+                            setExtractor={setExtractor}
+                            defActiveKey={defActiveKey}
+                            httpResponse={httpResponse}
+                            isSmallMode={isSmallMode}
+                        />
+                    )}
                 </div>
             </YakitSpin>
         )
@@ -528,20 +535,22 @@ const isMatcherEmpty = (matchersList) => {
 }
 export const onFilterEmptySubMatcher = (param: FilterEmptySubMatcherFunctionProps) => {
     const {matchers, index, subIndex} = param
+    const matchersCopy = cloneDeep(matchers)
     let newMatchers: HTTPResponseMatcher[] = []
-    matchers.forEach((m, n) => {
+    matchersCopy.forEach((m, n) => {
         if (n === index) {
             m.SubMatchers = m.SubMatchers.filter((_, s) => s !== subIndex)
         }
         if (m.SubMatchers.length > 0) {
-            newMatchers = [...newMatchers, {...m}]
+            newMatchers.push(m)
         }
     })
     return newMatchers
 }
 export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
     forwardRef((props, ref) => {
-        const {type, matcher, setMatcher, notEditable, defActiveKeyAndOrder, httpResponse, isSmallMode} = props
+        const {type, matcher, setMatcher, notEditable, defActiveKeyAndOrder, httpResponse, isSmallMode, pageType} =
+            props
         const [activeKey, {set: setActiveKey, get: getActiveKey}] = useMap<number, string>(
             new Map([[0, `${defActiveKeyAndOrder.defActiveKey || "ID:0"}`]])
         )
@@ -668,7 +677,9 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
             >
                 <Alert
                     message={
-                        "多个匹配器是为了同时达到多个功能效果，比如染不同颜色或丢包的同时染色，如需要转成yaml只能配置一个匹配器"
+                        pageType === "webfuzzer"
+                            ? "多个匹配器是为了同时达到多个功能效果，比如染不同颜色或丢包的同时染色，如需要转成yaml只能配置一个匹配器"
+                            : "应用匹配器后，流量先经过匹配器条件过滤后，再根据规则/热加载配置进一步处理"
                     }
                     type='warning'
                     style={{marginBottom: 8}}
@@ -1307,6 +1318,7 @@ export const ExtractionResultsContent: React.FC<ExtractionResultsContentProps> =
 
 export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProps> = React.memo((props) => {
     const {
+        pageType = "webfuzzer",
         visibleDrawer,
         defActiveType,
         httpResponse,
@@ -1339,6 +1351,7 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
             placement='bottom'
         >
             <MatcherAndExtractionCard
+                pageType={pageType}
                 defActiveType={defActiveType}
                 httpResponse={httpResponse}
                 defActiveKey={defActiveKey}

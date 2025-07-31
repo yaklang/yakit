@@ -219,7 +219,6 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
                 m.destroy()
             },
             onOk: (e) => {
-                // BUG 偶现编辑器有内容 yamlContRef.current没有值 暂不清楚原因
                 if (yamlContRef.current) {
                     execImportYaml()
                     m.destroy()
@@ -386,6 +385,7 @@ const MultimodeImportYaml: React.FC<MultimodeImportYamlProp> = React.memo(({read
     useEffect(() => {
         const updateYamlContent = (cont: string) => {
             setYamlCont(cont)
+            editorContChange(cont)
         }
         emiter.on("onImportYamlPopEditorContent", updateYamlContent)
         return () => {
@@ -429,7 +429,7 @@ const MultimodeImportYaml: React.FC<MultimodeImportYamlProp> = React.memo(({read
 
     return (
         <div className={styles.multimodeImportYaml} ref={multimodeImportYamlRef}>
-            <YakitEditor key={yamlContent} value={yamlContent} setValue={editorContChange}></YakitEditor>
+            <YakitEditor key={yamlContent} value={yamlContent} setValue={editorContChange} type='yaml'></YakitEditor>
         </div>
     )
 })
