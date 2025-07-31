@@ -809,7 +809,6 @@ service Yak {
   rpc UpdateSSARiskDisposals(UpdateSSARiskDisposalsRequest) returns (UpdateSSARiskDisposalsResponse);
   rpc DeleteSSARiskDisposals(DeleteSSARiskDisposalsRequest) returns (DeleteSSARiskDisposalsResponse);
   rpc GetSSARiskDisposal(GetSSARiskDisposalRequest) returns (GetSSARiskDisposalResponse);
-
   rpc SSARiskFeedbackToOnline(SSARiskFeedbackToOnlineRequest) returns (Empty);
 
   rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
@@ -1134,6 +1133,93 @@ message BuildVectorIndexForKnowledgeBaseRequest {
   int32 EfSearch = 9;
   int32 EfConstruct = 10;
   string DistanceFuncType = 11;
+}
+
+message GetKnowledgeBaseNameListResponse {
+  repeated string KnowledgeBaseNames = 1;
+}
+
+message CreateKnowledgeBaseRequest {
+  string KnowledgeBaseName = 1;
+  string KnowledgeBaseDescription = 2;
+  string KnowledgeBaseType = 3;
+}
+
+message UpdateKnowledgeBaseRequest {
+  int64 KnowledgeBaseId = 1;
+  string KnowledgeBaseName = 2;
+  string KnowledgeBaseDescription = 3;
+  string KnowledgeBaseType = 4;
+}
+
+message DeleteKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseEntryId = 1;
+}
+
+message SearchKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseId = 1;
+  string Keyword = 2;
+  Paging Pagination = 3;
+}
+
+message SearchKnowledgeBaseEntryResponse {
+  repeated KnowledgeBaseEntry KnowledgeBaseEntries = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message CreateKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseID = 1;
+  string KnowledgeTitle = 2;
+  string KnowledgeType = 3;
+  int32 ImportanceScore = 4;
+  repeated string Keywords = 5;
+  string KnowledgeDetails = 6;
+  string Summary = 7;
+  int32 SourcePage = 8;
+  repeated string PotentialQuestions = 9;
+  repeated float PotentialQuestionsVector = 10;
+}
+
+message UpdateKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseEntryID = 2;
+  string KnowledgeTitle = 3;
+  string KnowledgeType = 4;
+  int32 ImportanceScore = 5;
+  repeated string Keywords = 6;
+  string KnowledgeDetails = 7;
+  string Summary = 8;
+  int32 SourcePage = 9;
+  repeated string PotentialQuestions = 10;
+}
+
+message KnowledgeBaseEntry {
+  int64 ID = 1;
+  int64 KnowledgeBaseId = 2;
+  string KnowledgeTitle = 3;
+  string KnowledgeType = 4;
+  int32 ImportanceScore = 5;
+  repeated string Keywords = 6;
+  string KnowledgeDetails = 7;
+  string Summary = 8;
+  int32 SourcePage = 9;
+  repeated string PotentialQuestions = 10;
+  repeated float PotentialQuestionsVector = 11;
+}
+
+message DeleteKnowledgeBaseRequest {
+  int64 KnowledgeBaseId = 1;
+
+  // Knowledge Base
+  rpc GetKnowledgeBaseNameList(Empty) returns(GetKnowledgeBaseNameListResponse);
+  rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns(GeneralResponse);
+  rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns(GeneralResponse);
+  rpc UpdateKnowledgeBase(UpdateKnowledgeBaseRequest) returns(GeneralResponse);
+
+  rpc DeleteKnowledgeBaseEntry(DeleteKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc CreateKnowledgeBaseEntry(CreateKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc UpdateKnowledgeBaseEntry(UpdateKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc SearchKnowledgeBaseEntry(SearchKnowledgeBaseEntryRequest) returns(SearchKnowledgeBaseEntryResponse);
 }
 
 message GetKnowledgeBaseNameListResponse {
@@ -7006,6 +7092,13 @@ message SyntaxFlowScanTask {
 
   SyntaxFlowScanRequest Config = 14;
   string Kind = 15; // "debug" | "scan"
+  // diff
+  int64 NewRiskCount = 16;
+  int64 InfoCount = 17;
+  int64 LowCount = 18;
+  int64 WarningCount = 19;
+  int64 CriticalCount = 20;
+  int64 HighCount = 21;
   // diff
   int64 NewRiskCount = 16;
   int64 InfoCount = 17;

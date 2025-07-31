@@ -221,6 +221,7 @@ module.exports = {
         require("./handlers/auditRisk")(win, getClient)
         require("./handlers/fingerprint")(win, getClient)
         require("./handlers/third_party_binary")(win, getClient)
+        require("./handlers/knowlegebase")(win, getClient)
 
         // start chrome manager
         try {
