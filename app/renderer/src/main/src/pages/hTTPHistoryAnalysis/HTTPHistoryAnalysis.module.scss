@@ -161,7 +161,7 @@
                         svg {
                             width: 16px;
                             height: 16px;
-                            color: var(--yakit-helper-text-color);
+                            color: var(--Colors-Use-Neutral-Text-4-Help-text);
                         }
                     }
                 }
@@ -482,7 +482,7 @@
             transform: rotate(-45deg);
             pointer-events: none;
             border-bottom: 12px solid transparent;
-            border-left: 12px solid var(--yakit-colors-Neutral-0);
+            border-left: 12px solid var(--Colors-Use-Basic-White);
         }
     }
 }
