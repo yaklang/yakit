@@ -293,11 +293,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             const res = await grpcFetchLocalYakVersion(true)
             if (res) {
                 const v = res.startsWith("v") ? res.slice(1) : res
-                try {
-                    await checkEngineSource(v)
-                } catch (error) {
-                    throw error
-                }
+                await checkEngineSource(v)
             } else {
                 setShowCheckEngine(false)
                 throw new Error("no res")
