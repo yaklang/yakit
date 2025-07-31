@@ -34,7 +34,7 @@ import {
     setYakRunnerHistory,
     updateAreaFileInfo
 } from "./utils"
-import {FileDefault, FileSuffix, FolderDefault} from "./FileTree/icon"
+import {FileDefault, FileSuffix, FolderDefault} from "../yakRunner/FileTree/icon"
 import moment from "moment"
 import {YakURLResource} from "../yakURLTree/data"
 import { monacaLanguageType } from "../yakRunner/utils"

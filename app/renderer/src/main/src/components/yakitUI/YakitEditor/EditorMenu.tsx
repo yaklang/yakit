@@ -4,7 +4,6 @@ import {Menu, MenuProps, Tooltip} from "antd"
 import {ItemType} from "antd/lib/menu/hooks/useItems"
 import {ChevronRightIcon} from "@/assets/newIcon"
 import {MenuDividerType} from "rc-menu/lib/interface"
-import {YakitEditorKeyCode} from "./YakitEditorType"
 
 import classNames from "classnames"
 import styles from "@/components/yakitUI/YakitMenu/yakitMenu.module.scss"
@@ -19,7 +18,7 @@ export interface EditorMenuItemProps {
     itemIcon?: ReactNode
     title?: string
     /** @description !!! 请最少使用其中一个(ctrl/alt/meta/shift)[不能重复使用] 搭配 字母或F1-12 使用快捷键功能 */
-    keybindings?: YakitEditorKeyCode[]
+    keybindings?: string
 }
 export interface EditorMenuItemDividerProps {
     type: "divider"

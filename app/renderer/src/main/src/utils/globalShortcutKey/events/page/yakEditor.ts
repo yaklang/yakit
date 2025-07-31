@@ -224,11 +224,44 @@ export const isConflictToYakEditor = (Shortcut: string[]) => {
 /** 编辑器基础快捷键 */
 export enum YakEditorBaseShortcutKey {}
 /** 编辑器扩展快捷键 */
-export enum YakEditorOptionShortcutKey {}
+export enum YakEditorOptionShortcutKey {
+    /** --- 编辑器菜单快捷键 --- */
+    /** 发送并跳转 */
+    CommonSendAndJumpToWebFuzzer = "sendAndJump*common",
+    /** 仅发送 */
+    CommonSendToWebFuzzer = "send*common",
+    /** 自定义HTTP数据包变形标记 - GET */
+    CommonMutateHttpMethodGet = "mutate-http-method-get",
+    /** 切换为自动劫持模式 */
+    TriggerAutoHijacked = "trigger-auto-hijacked",
+    /** 放行该 HTTP Response */
+    ForwardResponse = "forward-response"
+}
 
 type EventsType = Record<`${YakEditorBaseShortcutKey | YakEditorOptionShortcutKey}`, ShortcutKeyEventInfo>
 
-const YakEditorShortcutKeyEvents: EventsType = {}
+const YakEditorShortcutKeyEvents: EventsType = {
+    "sendAndJump*common": {
+        name: "发送并跳转",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_R]
+    },
+    "send*common": {
+        name: "仅发送",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_R]
+    },
+    "mutate-http-method-get": {
+        name: "改变 HTTP 方法成 GET",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_H]
+    },
+    "trigger-auto-hijacked": {
+        name: "切换为自动劫持模式",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_T]
+    },
+    "forward-response": {
+        name: "放行该 HTTP Response",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_F]
+    }
+}
 
 let currentKeyEvents: EventsType | null = null
 const LocalStorageKey = "yakit-editor-shortcut-key-events"
@@ -240,7 +273,7 @@ export const getStorageYakEditorShortcutKeyEvents = () => {
             if (!res) return
             try {
                 const data: EventsType = JSON.parse(res)
-                currentKeyEvents = addScopeShow(data, YakEditorDefaultShortcut)
+                currentKeyEvents = addScopeShow(data, YakEditorShortcutKeyEvents)
             } catch (error) {}
         })
         .catch(() => {})
@@ -256,6 +289,12 @@ export const setStorageYakEditorShortcutKeyEvents = (events: Record<string, Shor
 export const getYakEditorShortcutKeyEvents = () => {
     if (currentKeyEvents) return currentKeyEvents
     return YakEditorShortcutKeyEvents
+}
+
+/** 重置快捷键 */
+export const resetYakEditorShortcutKeyEvents = () => {
+    currentKeyEvents = null
+    setLocalValue(LocalStorageKey, JSON.stringify(YakEditorShortcutKeyEvents))
 }
 
 const isAllowPass = (arr: string[]) => {
@@ -287,15 +326,16 @@ export const isYakEditorShortcut = (ev: KeyboardEvent): boolean => {
     if (!keys) return false
     let nowKey = sortKeysCombination(keys).join("")
     let has = false
-    Object.keys(YakEditorShortcutKeyEvents).forEach((key) => {
-        let itemKey = sortKeysCombination(YakEditorShortcutKeyEvents[key].keys).join("")
+    Object.keys(getYakEditorShortcutKeyEvents()).forEach((key) => {
+        let itemKey = sortKeysCombination(getYakEditorShortcutKeyEvents()[key].keys).join("")
         if (nowKey === itemKey) {
             has = true
         }
     })
-    if (has) {
-        // 等待接入功能
-    }
+    // if (has) {
+    //     // 等待接入功能
+
+    // }
     return has
 }
 

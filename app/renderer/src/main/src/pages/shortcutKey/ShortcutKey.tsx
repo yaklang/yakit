@@ -24,6 +24,8 @@ const getShortcutPageName = (page) => {
         return "多页面"
     } else if (page === "chat-cs") {
         return "ChatCS"
+    } else if (page === "yak-editor") {
+        return "编辑器"
     } else {
         return `${YakitRouteToPageInfo[page].label}`
     }

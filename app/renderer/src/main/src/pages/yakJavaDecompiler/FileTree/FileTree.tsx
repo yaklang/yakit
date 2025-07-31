@@ -6,7 +6,7 @@ import {Tree} from "antd"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitMenuItemProps, YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {FolderDefault, FolderDefaultExpanded, KeyToIcon} from "./icon"
+import {FolderDefault, FolderDefaultExpanded, KeyToIcon} from "../../yakRunner/FileTree/icon"
 import {LoadingOutlined} from "@ant-design/icons"
 
 import classNames from "classnames"

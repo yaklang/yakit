@@ -132,7 +132,7 @@ import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAut
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {FileDefault, FileSuffix, KeyToIcon} from "../FileTree/icon"
+import {FileDefault, FileSuffix, KeyToIcon} from "../../yakRunner/FileTree/icon"
 import {RiskTree} from "../RunnerFileTree/RunnerFileTree"
 const {YakitPanel} = YakitCollapse
 
@@ -1394,7 +1394,7 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                 </div>
                 <div className={styles["onlyRisk-box"]}>
                     <YakitCheckbox
-                        value={query.Filter.OnlyRisk}
+                        checked={query.Filter.OnlyRisk}
                         onChange={(e) => {
                             setQuery({
                                 ...query,

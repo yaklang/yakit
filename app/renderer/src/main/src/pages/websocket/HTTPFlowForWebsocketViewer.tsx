@@ -4,7 +4,7 @@ import {HTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {Uint8ArrayToString} from "@/utils/str"
 import {ThunderboltOutlined} from "@ant-design/icons"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {HighLightText, OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {HighLightText, OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -18,6 +18,7 @@ import {HistoryHighLightText} from "@/components/HTTPFlowDetail"
 import styles from "./HTTPFlowForWebsocketViewer.module.scss"
 import {IMonacoEditor} from "@/utils/editors"
 import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
+import { YakEditorOptionShortcutKey } from "@/utils/globalShortcutKey/events/page/yakEditor"
 export interface HTTPFlowForWebsocketViewerProp {
     pageType?: HTTPHistorySourcePageType
     historyId?: string
@@ -185,16 +186,12 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
                             {
                                 key: "发送并跳转",
                                 label: "发送并跳转",
-                                keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                                keybindings: YakEditorOptionShortcutKey.CommonSendAndJumpToWebFuzzer
                             },
                             {
                                 key: "仅发送",
                                 label: "仅发送",
-                                keybindings: [
-                                    YakitEditorKeyCode.Control,
-                                    YakitEditorKeyCode.Shift,
-                                    YakitEditorKeyCode.KEY_R
-                                ]
+                                keybindings: YakEditorOptionShortcutKey.CommonSendToWebFuzzer
                             }
                         ]
                     }

@@ -325,6 +325,8 @@ interface CodeScoreBaseProps {
     specialExtraBtn?: ReactNode
     /** 隐藏特殊失败情况时的操作元素 */
     hiddenSpecialBtn?: boolean
+    /** 自定义评分的结果信息 */
+    scoreHintData?: string[]
 }
 
 /** 插件源码评分模块 */
@@ -342,6 +344,7 @@ export interface CodeScoreModalProps extends CodeScoreBaseProps {
     visible: boolean
     /** 关闭弹窗(true:合格|false:不合格) */
     onCancel: (value: boolean) => any
+    title?: string
 }
 
 /** 插件源码评分返回信息 */

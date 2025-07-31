@@ -14,7 +14,7 @@ import {
     RuleUploadAndDownloadModalProps,
     OnlineRuleGroupListProps,
     AlertMessage,
-    SyntaxFlowRuleOnlineProgress,
+    SyntaxFlowRuleOnlineProgress
 } from "./RuleManagementType"
 import {useDebounceEffect, useDebounceFn, useMap, useMemoizedFn, useSize, useUpdateEffect, useVirtualList} from "ahooks"
 import {
@@ -70,11 +70,7 @@ import {failed, yakitNotify} from "@/utils/notification"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {
-    DefaultRuleContent,
-    DefaultRuleGroupFilterPageMeta,
-    RuleLanguageList
-} from "@/defaultConstants/RuleManagement"
+import {DefaultRuleContent, DefaultRuleGroupFilterPageMeta, RuleLanguageList} from "@/defaultConstants/RuleManagement"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
@@ -110,6 +106,7 @@ import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
 import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+import {CodeScoreModal} from "../plugins/funcTemplate"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -938,6 +935,17 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
     /** ---------- 审计详情 End ---------- */
 
+    /** ---------- 代码评分 Start ---------- */
+    const [scoreHint, setScoreHint] = useState<boolean>(false)
+    const handleOpenScoreHint = useMemoizedFn(() => {
+        if (scoreHint) return
+        setScoreHint(true)
+    })
+    const handleScoreHintCallback = useMemoizedFn((value: boolean) => {
+        if (!value) setScoreHint(false)
+    })
+    /** ---------- 代码评分 End ---------- */
+
     const getTabsState = useMemo(() => {
         const tabsState: HoldGRPCStreamProps.InfoTab[] = [
             {tabName: "漏洞与风险", type: "ssa-risk"},
@@ -974,356 +982,393 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     }, [isEdit, auditDetailShow])
 
     return (
-        <YakitDrawer
-            getContainer={getContainer}
-            placement='bottom'
-            mask={false}
-            closable={false}
-            keyboard={false}
-            className={styles["edit-rule-drawer"]}
-            bodyStyle={{padding: 0}}
-            height={showHeight}
-            title={drawerTitle}
-            extra={
-                <div className={styles["drawer-extra"]}>
-                    <YakitButton loading={loading} onClick={handleFormSubmit}>
-                        保存
-                    </YakitButton>
-                    <div className={styles["divider-style"]}></div>
-                    <YakitButton type='text2' icon={<OutlineXIcon />} onClick={handleCancel} />
-                </div>
-            }
-            visible={visible}
-        >
-            {/* 审计详情 */}
-            <div className={classNames(styles["drawer-body"], {[styles["drawer-hidden"]]: !auditDetailShow})}>
-                <React.Suspense fallback={<YakitSpin spinning={true} />}>
-                    {auditDetailShow && auditInfo.current && (
-                        <RuleDebugAuditDetail auditData={auditData} info={auditInfo.current} />
-                    )}
-                </React.Suspense>
-            </div>
-
-            <div className={classNames(styles["drawer-body"], {[styles["drawer-hidden"]]: auditDetailShow})}>
-                {/* 基础信息 */}
-                <div
-                    className={classNames(styles["rule-info"], {
-                        [styles["rule-info-show"]]: expand,
-                        [styles["rule-info-hidden"]]: !expand
-                    })}
-                >
-                    <div className={styles["info-header"]}>
-                        <div className={styles["header-title"]}>基础信息</div>
-                        <Tooltip title='收起基础信息' visible={infoTooltipShow} onVisibleChange={setInfoTooltipShow}>
-                            <YakitButton type='text2' icon={<OutlineCloseIcon />} onClick={handleSetExpand} />
-                        </Tooltip>
+        <>
+            <YakitDrawer
+                getContainer={getContainer}
+                placement='bottom'
+                mask={false}
+                closable={false}
+                keyboard={false}
+                className={styles["edit-rule-drawer"]}
+                bodyStyle={{padding: 0}}
+                height={showHeight}
+                title={drawerTitle}
+                extra={
+                    <div className={styles["drawer-extra"]}>
+                        <YakitButton loading={loading} onClick={handleFormSubmit}>
+                            保存
+                        </YakitButton>
+                        <div className={styles["divider-style"]}></div>
+                        <YakitButton type='text2' icon={<OutlineXIcon />} onClick={handleCancel} />
                     </div>
+                }
+                visible={visible}
+            >
+                {/* 审计详情 */}
+                <div className={classNames(styles["drawer-body"], {[styles["drawer-hidden"]]: !auditDetailShow})}>
+                    <React.Suspense fallback={<YakitSpin spinning={true} />}>
+                        {auditDetailShow && auditInfo.current && (
+                            <RuleDebugAuditDetail auditData={auditData} info={auditInfo.current} />
+                        )}
+                    </React.Suspense>
+                </div>
 
-                    <div className={styles["info-setting"]}>
-                        <Form layout='vertical' form={form} className={styles["info-setting-form"]}>
-                            <Form.Item
-                                label={
-                                    <>
-                                        规则名<span className='form-item-required'>*</span>:
-                                    </>
-                                }
-                                name={"RuleName"}
-                                rules={[{required: true, message: "规则名必填"}]}
+                <div className={classNames(styles["drawer-body"], {[styles["drawer-hidden"]]: auditDetailShow})}>
+                    {/* 基础信息 */}
+                    <div
+                        className={classNames(styles["rule-info"], {
+                            [styles["rule-info-show"]]: expand,
+                            [styles["rule-info-hidden"]]: !expand
+                        })}
+                    >
+                        <div className={styles["info-header"]}>
+                            <div className={styles["header-title"]}>基础信息</div>
+                            <Tooltip
+                                title='收起基础信息'
+                                visible={infoTooltipShow}
+                                onVisibleChange={setInfoTooltipShow}
                             >
-                                <YakitInput
-                                    maxLength={100}
-                                    placeholder='请输入规则名'
-                                    disabled={isEdit || isBuildInRule}
-                                />
-                            </Form.Item>
+                                <YakitButton type='text2' icon={<OutlineCloseIcon />} onClick={handleSetExpand} />
+                            </Tooltip>
+                        </div>
 
-                            <Form.Item
-                                label={
-                                    <>
-                                        语言<span className='form-item-required'>*</span>:
-                                    </>
-                                }
-                                name={"Language"}
-                                rules={[{required: true, message: "语言必填"}]}
-                            >
-                                <YakitSelect
-                                    allowClear
-                                    size='large'
-                                    disabled={isBuildInRule}
-                                    options={RuleLanguageList}
-                                />
-                            </Form.Item>
+                        <div className={styles["info-setting"]}>
+                            <Form layout='vertical' form={form} className={styles["info-setting-form"]}>
+                                <Form.Item
+                                    label={
+                                        <>
+                                            规则名<span className='form-item-required'>*</span>:
+                                        </>
+                                    }
+                                    name={"RuleName"}
+                                    rules={[{required: true, message: "规则名必填"}]}
+                                >
+                                    <YakitInput
+                                        maxLength={100}
+                                        placeholder='请输入规则名'
+                                        disabled={isEdit || isBuildInRule}
+                                    />
+                                </Form.Item>
 
-                            <Form.Item label={"所属分组"} name={"GroupNames"}>
-                                <YakitSelect
-                                    mode='tags'
-                                    placeholder='请选择分组'
-                                    allowClear={true}
-                                    disabled={isBuildInRule}
-                                    options={groups}
-                                    searchValue={groupSearch}
-                                    onSearch={handleGroupSearchChange}
-                                    onChange={() => {
-                                        setGroupSearch("")
-                                    }}
-                                />
-                            </Form.Item>
+                                <Form.Item
+                                    label={
+                                        <>
+                                            语言<span className='form-item-required'>*</span>:
+                                        </>
+                                    }
+                                    name={"Language"}
+                                    rules={[{required: true, message: "语言必填"}]}
+                                >
+                                    <YakitSelect
+                                        allowClear
+                                        size='large'
+                                        disabled={isBuildInRule}
+                                        options={RuleLanguageList}
+                                    />
+                                </Form.Item>
 
-                            <Form.Item label={"描述"} name={"Description"}>
-                                <YakitInput.TextArea
-                                    disabled={isBuildInRule}
-                                    isShowResize={false}
-                                    maxLength={200}
-                                    showCount={true}
-                                    autoSize={{minRows: 2, maxRows: 4}}
-                                />
-                            </Form.Item>
-                        </Form>
-                        {Object.keys(alertMsg).length > 0 && (
-                            <div style={{flex: 1}}>
-                                <YakitSpin spinning={loadingAlertMsg}>
-                                    <div style={{marginBottom: 5}}>
-                                        漏洞提取{" "}
-                                        <YakitRoundCornerTag>{Object.keys(alertMsg).length}</YakitRoundCornerTag>
-                                    </div>
-                                    <div className={styles["info-setting-alertMsg"]}>
-                                        <YakitCollapse
-                                            activeKey={activePanelKey}
-                                            onChange={(key) => {
-                                                setActivePanelKey(Array.isArray(key) ? key[key.length - 1] : key)
-                                            }}
-                                        >
-                                            {alertMsgEntries.map(([key, alert]) => {
-                                                const title = SeverityMapTag.find((item) =>
-                                                    item.key.includes(alert.Severity || "")
-                                                )
-                                                return (
-                                                    <YakitPanel
-                                                        header={
-                                                            <span
-                                                                className={classNames(
-                                                                    styles["title"],
-                                                                    "yakit-content-single-ellipsis"
-                                                                )}
-                                                                title={alert.TitleZh || alert.Title || "-"}
-                                                            >
-                                                                {alert.TitleZh || alert.Title || "-"}
-                                                            </span>
-                                                        }
-                                                        key={key}
-                                                        extra={
-                                                            <div className={styles["severity"]}>
-                                                                <YakitTag
-                                                                    color={title?.tag as YakitTagColor}
-                                                                    closable={false}
-                                                                    icon={
-                                                                        <OutlineExclamationIcon
-                                                                            className={styles["exclamationIcon"]}
-                                                                        />
-                                                                    }
+                                <Form.Item label={"所属分组"} name={"GroupNames"}>
+                                    <YakitSelect
+                                        mode='tags'
+                                        placeholder='请选择分组'
+                                        allowClear={true}
+                                        disabled={isBuildInRule}
+                                        options={groups}
+                                        searchValue={groupSearch}
+                                        onSearch={handleGroupSearchChange}
+                                        onChange={() => {
+                                            setGroupSearch("")
+                                        }}
+                                    />
+                                </Form.Item>
+
+                                <Form.Item label={"描述"} name={"Description"}>
+                                    <YakitInput.TextArea
+                                        disabled={isBuildInRule}
+                                        isShowResize={false}
+                                        maxLength={200}
+                                        showCount={true}
+                                        autoSize={{minRows: 2, maxRows: 4}}
+                                    />
+                                </Form.Item>
+                            </Form>
+                            {Object.keys(alertMsg).length > 0 && (
+                                <div style={{flex: 1}}>
+                                    <YakitSpin spinning={loadingAlertMsg}>
+                                        <div style={{marginBottom: 5}}>
+                                            漏洞提取{" "}
+                                            <YakitRoundCornerTag>{Object.keys(alertMsg).length}</YakitRoundCornerTag>
+                                        </div>
+                                        <div className={styles["info-setting-alertMsg"]}>
+                                            <YakitCollapse
+                                                activeKey={activePanelKey}
+                                                onChange={(key) => {
+                                                    setActivePanelKey(Array.isArray(key) ? key[key.length - 1] : key)
+                                                }}
+                                            >
+                                                {alertMsgEntries.map(([key, alert]) => {
+                                                    const title = SeverityMapTag.find((item) =>
+                                                        item.key.includes(alert.Severity || "")
+                                                    )
+                                                    return (
+                                                        <YakitPanel
+                                                            header={
+                                                                <span
+                                                                    className={classNames(
+                                                                        styles["title"],
+                                                                        "yakit-content-single-ellipsis"
+                                                                    )}
+                                                                    title={alert.TitleZh || alert.Title || "-"}
                                                                 >
-                                                                    {title ? title.name : alert.Severity || "-"}
-                                                                </YakitTag>
-                                                                <div onClick={(e) => e.stopPropagation()}>
-                                                                    <YakitPopover
-                                                                        trigger='click'
-                                                                        overlayClassName={
-                                                                            styles["severity-menu-popover"]
-                                                                        }
-                                                                        overlayStyle={{paddingTop: 2}}
-                                                                        content={
-                                                                            <div
-                                                                                className={
-                                                                                    styles["severity-menu-cont-wrapper"]
-                                                                                }
-                                                                            >
-                                                                                {SeverityMapTag.map((item) => (
-                                                                                    <div
-                                                                                        key={item.name}
-                                                                                        className={classNames(
-                                                                                            styles[
-                                                                                                "severity-menu-item"
-                                                                                            ],
-                                                                                            {
-                                                                                                [styles["active"]]:
-                                                                                                    item.key.includes(
-                                                                                                        alert.Severity ||
-                                                                                                            ""
-                                                                                                    )
-                                                                                            }
-                                                                                        )}
-                                                                                        onClick={() => {
-                                                                                            const severity = [
-                                                                                                "critical",
-                                                                                                "high",
-                                                                                                "middle",
-                                                                                                "low",
-                                                                                                "info"
-                                                                                            ].filter((sev) =>
-                                                                                                item.key.includes(sev)
-                                                                                            )
-                                                                                            if (!severity[0]) return
-                                                                                            handleClickSeverity(
-                                                                                                key,
-                                                                                                severity[0]
-                                                                                            )
-                                                                                        }}
-                                                                                    >
-                                                                                        {item.name}
-                                                                                        {item.key.includes(
-                                                                                            alert.Severity || ""
-                                                                                        ) && (
-                                                                                            <SolidCheckIcon
-                                                                                                className={
-                                                                                                    styles["check-icon"]
-                                                                                                }
-                                                                                            />
-                                                                                        )}
-                                                                                    </div>
-                                                                                ))}
-                                                                            </div>
+                                                                    {alert.TitleZh || alert.Title || "-"}
+                                                                </span>
+                                                            }
+                                                            key={key}
+                                                            extra={
+                                                                <div className={styles["severity"]}>
+                                                                    <YakitTag
+                                                                        color={title?.tag as YakitTagColor}
+                                                                        closable={false}
+                                                                        icon={
+                                                                            <OutlineExclamationIcon
+                                                                                className={styles["exclamationIcon"]}
+                                                                            />
                                                                         }
                                                                     >
-                                                                        <Tooltip title='修改漏洞等级'>
-                                                                            <YakitButton
-                                                                                icon={<OutlineSelectorIcon />}
-                                                                                type='text2'
-                                                                                size='small'
-                                                                            ></YakitButton>
-                                                                        </Tooltip>
-                                                                    </YakitPopover>
+                                                                        {title ? title.name : alert.Severity || "-"}
+                                                                    </YakitTag>
+                                                                    <div onClick={(e) => e.stopPropagation()}>
+                                                                        <YakitPopover
+                                                                            trigger='click'
+                                                                            overlayClassName={
+                                                                                styles["severity-menu-popover"]
+                                                                            }
+                                                                            overlayStyle={{paddingTop: 2}}
+                                                                            content={
+                                                                                <div
+                                                                                    className={
+                                                                                        styles[
+                                                                                            "severity-menu-cont-wrapper"
+                                                                                        ]
+                                                                                    }
+                                                                                >
+                                                                                    {SeverityMapTag.map((item) => (
+                                                                                        <div
+                                                                                            key={item.name}
+                                                                                            className={classNames(
+                                                                                                styles[
+                                                                                                    "severity-menu-item"
+                                                                                                ],
+                                                                                                {
+                                                                                                    [styles["active"]]:
+                                                                                                        item.key.includes(
+                                                                                                            alert.Severity ||
+                                                                                                                ""
+                                                                                                        )
+                                                                                                }
+                                                                                            )}
+                                                                                            onClick={() => {
+                                                                                                const severity = [
+                                                                                                    "critical",
+                                                                                                    "high",
+                                                                                                    "middle",
+                                                                                                    "low",
+                                                                                                    "info"
+                                                                                                ].filter((sev) =>
+                                                                                                    item.key.includes(
+                                                                                                        sev
+                                                                                                    )
+                                                                                                )
+                                                                                                if (!severity[0]) return
+                                                                                                handleClickSeverity(
+                                                                                                    key,
+                                                                                                    severity[0]
+                                                                                                )
+                                                                                            }}
+                                                                                        >
+                                                                                            {item.name}
+                                                                                            {item.key.includes(
+                                                                                                alert.Severity || ""
+                                                                                            ) && (
+                                                                                                <SolidCheckIcon
+                                                                                                    className={
+                                                                                                        styles[
+                                                                                                            "check-icon"
+                                                                                                        ]
+                                                                                                    }
+                                                                                                />
+                                                                                            )}
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            }
+                                                                        >
+                                                                            <Tooltip title='修改漏洞等级'>
+                                                                                <YakitButton
+                                                                                    icon={<OutlineSelectorIcon />}
+                                                                                    type='text2'
+                                                                                    size='small'
+                                                                                ></YakitButton>
+                                                                            </Tooltip>
+                                                                        </YakitPopover>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        }
-                                                    >
-                                                        <ChatMarkdown content={alert.Description} />
-                                                    </YakitPanel>
-                                                )
-                                            })}
-                                        </YakitCollapse>
-                                    </div>
-                                </YakitSpin>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className={styles["rule-code"]}>
-                    <div className={styles["code-header"]}>
-                        <div className={styles["header-tab"]}>
-                            {!expand && (
-                                <Tooltip
-                                    placement='topLeft'
-                                    title='展开基础信息'
-                                    visible={codeTooltipShow}
-                                    onVisibleChange={setCodeTooltipShow}
-                                >
-                                    <YakitButton type='text2' icon={<OutlineOpenIcon />} onClick={handleSetExpand} />
-                                </Tooltip>
-                            )}
-
-                            <YakitRadioButtons
-                                buttonStyle='solid'
-                                value={activeTab}
-                                options={[
-                                    {value: "code", label: "规则内容"},
-                                    {value: "debug", label: "执行结果"}
-                                ]}
-                                onChange={(e) => setActiveTab(e.target.value)}
-                            />
-                        </div>
-
-                        <div className={styles["header-extra"]}>
-                            {!!progress && <PluginExecuteProgress percent={progress} name='执行进度' />}
-                            {isExecuting ? (
-                                <div className={styles["extra-btns"]}>
-                                    <YakitButton danger onClick={handleStop}>
-                                        停止
-                                    </YakitButton>
+                                                            }
+                                                        >
+                                                            <ChatMarkdown content={alert.Description} />
+                                                        </YakitPanel>
+                                                    )
+                                                })}
+                                            </YakitCollapse>
+                                        </div>
+                                    </YakitSpin>
                                 </div>
-                            ) : (
-                                <YakitButton icon={<SolidPlayIcon />} onClick={handleExecute}>
-                                    执行
-                                </YakitButton>
                             )}
                         </div>
                     </div>
 
-                    <div className={styles["code-body"]}>
-                        <div className={styles["code-tab"]}>
-                            <div
-                                tabIndex={activeTab === "code" ? 1 : -1}
-                                className={classNames(styles["tab-pane-show"], {
-                                    [styles["tab-pane-hidden"]]: activeTab !== "code"
-                                })}
-                            >
-                                <div className={styles["tab-pane-code"]}>
-                                    <div className={styles["code-editor"]}>
-                                        <YakitEditor
-                                            readOnly={isBuildInRule}
-                                            type={SyntaxFlowMonacoSpec}
-                                            value={content}
-                                            setValue={setContent}
+                    <div className={styles["rule-code"]}>
+                        <div className={styles["code-header"]}>
+                            <div className={styles["header-tab"]}>
+                                {!expand && (
+                                    <Tooltip
+                                        placement='topLeft'
+                                        title='展开基础信息'
+                                        visible={codeTooltipShow}
+                                        onVisibleChange={setCodeTooltipShow}
+                                    >
+                                        <YakitButton
+                                            type='text2'
+                                            icon={<OutlineOpenIcon />}
+                                            onClick={handleSetExpand}
                                         />
-                                    </div>
-                                </div>
+                                    </Tooltip>
+                                )}
+
+                                <YakitRadioButtons
+                                    buttonStyle='solid'
+                                    value={activeTab}
+                                    options={[
+                                        {value: "code", label: "规则内容"},
+                                        {value: "debug", label: "执行结果"}
+                                    ]}
+                                    onChange={(e) => setActiveTab(e.target.value)}
+                                />
                             </div>
 
-                            <div
-                                tabIndex={activeTab === "debug" ? 1 : -1}
-                                className={classNames(styles["tab-pane-show"], styles["tab-pane-execute"], {
-                                    [styles["tab-pane-hidden"]]: activeTab !== "debug"
-                                })}
-                            >
-                                {isShowResult ? (
-                                    <PluginExecuteResult
-                                        streamInfo={{
-                                            progressState: [],
-                                            cardState: streamInfo.cardState,
-                                            tabsState: getTabsState,
-                                            logState: streamInfo.logState,
-                                            tabsInfoState: {},
-                                            riskState: [],
-                                            rulesState: []
-                                        }}
-                                        runtimeId={runtimeId}
-                                        loading={isExecuting}
-                                        defaultActiveKey={undefined}
-                                    />
-                                ) : (
-                                    <div className={styles["tab-pane-empty"]}>
-                                        <YakitEmpty style={{marginTop: 60}} description={"点击【执行】以开始"} />
+                            <div className={styles["header-extra"]}>
+                                {!!progress && <PluginExecuteProgress percent={progress} name='执行进度' />}
+                                {isExecuting ? (
+                                    <div className={styles["extra-btns"]}>
+                                        <YakitButton danger onClick={handleStop}>
+                                            停止
+                                        </YakitButton>
                                     </div>
+                                ) : (
+                                    <YakitButton icon={<SolidPlayIcon />} onClick={handleExecute}>
+                                        执行
+                                    </YakitButton>
                                 )}
                             </div>
                         </div>
 
-                        <div className={styles["code-params"]}>
-                            <div className={styles["params-header"]}>
-                                <span className={styles["header-title"]}>参数配置</span>
+                        <div className={styles["code-body"]}>
+                            <div className={styles["code-tab"]}>
+                                <div
+                                    tabIndex={activeTab === "code" ? 1 : -1}
+                                    className={classNames(styles["tab-pane-show"], {
+                                        [styles["tab-pane-hidden"]]: activeTab !== "code"
+                                    })}
+                                >
+                                    <div className={styles["tab-pane-code"]}>
+                                        <div className={styles["code-editor"]}>
+                                            <YakitEditor
+                                                readOnly={isBuildInRule}
+                                                type={SyntaxFlowMonacoSpec}
+                                                value={content}
+                                                setValue={setContent}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    tabIndex={activeTab === "debug" ? 1 : -1}
+                                    className={classNames(styles["tab-pane-show"], styles["tab-pane-execute"], {
+                                        [styles["tab-pane-hidden"]]: activeTab !== "debug"
+                                    })}
+                                >
+                                    {isShowResult ? (
+                                        <PluginExecuteResult
+                                            streamInfo={{
+                                                progressState: [],
+                                                cardState: streamInfo.cardState,
+                                                tabsState: getTabsState,
+                                                logState: streamInfo.logState,
+                                                tabsInfoState: {},
+                                                riskState: [],
+                                                rulesState: []
+                                            }}
+                                            runtimeId={runtimeId}
+                                            loading={isExecuting}
+                                            defaultActiveKey={undefined}
+                                        />
+                                    ) : (
+                                        <div className={styles["tab-pane-empty"]}>
+                                            <YakitEmpty style={{marginTop: 60}} description={"点击【执行】以开始"} />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
-                            <div className={styles["params-container"]}>
-                                <Form form={debugForm} className={styles["params-form"]}>
-                                    <Form.Item label={"项目名称"} name={"project"}>
-                                        <YakitSelect
-                                            mode='multiple'
-                                            showSearch={true}
-                                            placeholder='请选择项目后调试'
-                                            options={project}
-                                            defaultActiveFirstOption={false}
-                                            filterOption={false}
-                                            notFoundContent='暂无数据'
-                                            onSearch={handleSearchProject}
-                                        />
-                                    </Form.Item>
-                                </Form>
+                            <div className={styles["code-params"]}>
+                                <div className={styles["params-header"]}>
+                                    <span className={styles["header-title"]}>参数配置</span>
+                                    <YakitButton type='text' onClick={handleOpenScoreHint}>
+                                        自动检测
+                                    </YakitButton>
+                                </div>
+
+                                <div className={styles["params-container"]}>
+                                    <Form form={debugForm} className={styles["params-form"]}>
+                                        <Form.Item label={"项目名称"} name={"project"}>
+                                            <YakitSelect
+                                                mode='multiple'
+                                                showSearch={true}
+                                                placeholder='请选择项目后调试'
+                                                options={project}
+                                                defaultActiveFirstOption={false}
+                                                filterOption={false}
+                                                notFoundContent='暂无数据'
+                                                onSearch={handleSearchProject}
+                                            />
+                                        </Form.Item>
+                                    </Form>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </YakitDrawer>
+            </YakitDrawer>
+            {/* 代码评分弹窗 */}
+            <CodeScoreModal
+                type={SyntaxFlowMonacoSpec}
+                code={content || ""}
+                successHint=' '
+                failedHint=' '
+                specialHint=' '
+                hiddenSpecialBtn={true}
+                visible={scoreHint}
+                onCancel={handleScoreHintCallback}
+                title='SyntaxFlow规则检测'
+                scoreHintData={[
+                    "基础编译测试,判断SyntaxFlow规则的语法是否符合规范,是否存在不正确语法导致编译不通过",
+                    "检查规则中的描述部分是否包含desc和solution字段",
+                    "检查规则中是否包含alert, 规则应该包含alert语句产生检测结果",
+                    "检查规则中的测试用例是否能通过规则检测,SyntaxFlow规则中应该包含正反测试用例,对于正向漏洞代码SyntaxFlow规则应该能正常产生alert,而对于反向测试不应该产生alert(误报)"
+                ]}
+            />
+        </>
     )
 })
 

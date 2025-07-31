@@ -33,7 +33,6 @@ import {getMapFolderDetail} from "../FileTreeMap/ChildMap"
 import {Tooltip} from "antd"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {AfreshAuditModal, AuditHistoryTable} from "../AuditCode/AuditCode"
-
 import {KeyToIcon} from "@/pages/yakRunner/FileTree/icon"
 import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
@@ -43,7 +42,6 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps} from "../FileTree/FileTreeType"
 import {AuditSearchModal} from "../AuditSearchModal/AuditSearch"
-import {FolderDefault} from "../FileTree/icon"
 import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {YakURLResource} from "@/pages/yakURLTree/data"
@@ -52,6 +50,8 @@ import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import moment from "moment"
 
 const GlobalFilterFunction = React.lazy(() => import("../GlobalFilterFunction/GlobalFilterFunction"))
 
@@ -310,6 +310,50 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
 
     const [options, setOptions] = useState<SelectOptionsProps[]>([{label: "全部", value: ""}])
     const [checkItem, setCheckItem] = useState<string>("")
+    const [isShowCompare, setShowCompare] = useState<boolean>(false)
+    const [compare, setCompare] = useState<string>()
+    // 查找最接近的时间戳
+    const findClosestTimestamp = useMemoizedFn((target: number, options) => {
+        if (!options || options.length === 0) {
+            return null // 返回当前时间戳
+        }
+        // 转换为moment对象并排序
+        const sorted = [...options].sort((a, b) => parseInt(a.CreatedAt) - parseInt(b.CreatedAt))
+        const targetTime = moment.unix(target)
+        // 查找之前最接近的
+        const before = sorted.filter((item) => moment.unix(item.CreatedAt).isBefore(targetTime))
+        if (before.length > 0) {
+            return before[before.length - 1]
+        }
+        // 查找之后最接近的
+        const after = sorted.find((item) => moment.unix(item.CreatedAt).isAfter(targetTime))
+        if (after) {
+            return after
+        }
+        // 查找本身
+        const me = sorted.find((item) => moment.unix(item.CreatedAt).isSame(targetTime))
+        if (me) {
+            return me
+        }
+        return null
+    })
+
+    useUpdateEffect(() => {
+        if (options.length > 1 && isShowCompare) {
+            const item = options.find((item) => item.value === checkItem) as any
+            const createdAt = item.CreatedAt
+            const target = findClosestTimestamp(createdAt,options)
+            if(target){
+                setCompare(target.value)
+            }
+            else{
+                setCompare(undefined)
+            }
+        } else {
+            setCompare(undefined)
+        }
+    }, [isShowCompare])
+
     const getRiskSelectList = useMemoizedFn(async () => {
         try {
             if (projectName) {
@@ -325,7 +369,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                 </YakitTag>
                             </span>
                         ),
-                        value: item.TaskId
+                        value: item.TaskId,
+                        CreatedAt: item.CreatedAt
                     }
                 })
                 setOptions([{label: "全部", value: ""}, ...newOptions])
@@ -333,6 +378,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         } catch (error) {}
     })
     useEffect(() => {
+        setShowCompare(false)
         getRiskSelectList()
     }, [projectName])
 
@@ -344,19 +390,51 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
 
     useUpdateEffect(() => {
         setRuntimeID && setRuntimeID(checkItem)
+        if(checkItem === ""){
+            setShowCompare(false)
+        }
     }, [checkItem])
 
     const getSelectDom = useMemoizedFn(() => {
         return (
-            <YakitSelect
-                value={checkItem}
-                options={options}
-                onChange={(value) => {
-                    setCheckItem(value)
-                }}
-                style={{margin: "0px 12px 4px"}}
-                size='small'
-            />
+            <>
+                <YakitSelect
+                    value={checkItem}
+                    options={options}
+                    onChange={(value) => {
+                        setCheckItem(value)
+                    }}
+                    style={{margin: "0px 12px 4px"}}
+                    size='small'
+                />
+                {options.length > 1 && (
+                    <div className={styles["compare-select-box"]}>
+                        <YakitCheckbox
+                            checked={checkItem === "" ? false : isShowCompare}
+                            onChange={(e) => {
+                                setShowCompare(e.target.checked)
+                            }}
+                            disabled={checkItem === "" || options.length <= 1}
+                        >
+                            <span style={{fontSize: 12, whiteSpace: "nowrap"}}>只看新增</span>
+                        </YakitCheckbox>
+                        {isShowCompare && (
+                            <div className={styles["compare-select"]}>
+                                <div className={styles["compare-select-label"]}>对比数据</div>
+                                <YakitSelect
+                                    value={compare}
+                                    options={options.filter((item) => item.value !== "")}
+                                    onChange={(value) => {
+                                        setCompare(value)
+                                    }}
+                                    size='small'
+                                    wrapperStyle={{overflow: "hidden"}}
+                                />
+                            </div>
+                        )}
+                    </div>
+                )}
+            </>
         )
     })
 
@@ -496,6 +574,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         projectName={projectName}
                                         init={fileRefresh}
                                         task_id={checkItem}
+                                        compare={compare}
                                     />
                                 </div>
                             )}
@@ -511,6 +590,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         projectName={projectName}
                                         init={ruleRefresh}
                                         task_id={checkItem}
+                                        compare={compare}
                                     />
                                 </div>
                             )}
@@ -677,7 +757,7 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
 
 // 漏洞/规则 树
 export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
-    const {type, projectName, onSelectedNodes, init, search, task_id, result_id} = props
+    const {type, projectName, onSelectedNodes, init, search, task_id, result_id, compare} = props
     /** ---------- 文件树 ---------- */
     const [riskTree, setRiskTree] = useState<FileTreeListProps[]>([])
     const [refreshRiskTree, setRefreshRiskTree] = useState<boolean>(false)
@@ -694,7 +774,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
 
     useEffect(() => {
         projectName && onInitRiskTreeFun(projectName)
-    }, [projectName, init, task_id])
+    }, [projectName, init, task_id, compare])
 
     // 将文件详情注入文件树结构中 并 根据foldersMap修正其子项
     const initRiskFileTree = useMemoizedFn((data: FileTreeListProps[], depth: number) => {
@@ -741,7 +821,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
         setFoucsedKey("")
         setExpandedKeys([])
         if (program.length > 0) {
-            const {res, data} = await grpcFetchRiskOrRuleTree("/", {program, type, search, task_id, result_id})
+            const {res, data} = await grpcFetchRiskOrRuleTree("/", {program, type, search, task_id, result_id, compare})
             const children: FileTreeListProps[] = []
             let childArr: string[] = []
             data.forEach((item) => {
@@ -766,7 +846,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
                 setRefreshRiskTree(!refreshRiskTree)
                 resolve("")
             } else {
-                grpcFetchRiskOrRuleTree(path, {program, type, search, task_id, result_id}).then(({data}) => {
+                grpcFetchRiskOrRuleTree(path, {program, type, search, task_id, result_id, compare}).then(({data}) => {
                     if (data.length > 0) {
                         let childArr: string[] = []
                         data.forEach((item) => {
@@ -879,7 +959,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
                     setExpandedKeys={setExpandedKeys}
                 />
             ) : (
-                <div style={{marginTop:20}}>
+                <div style={{marginTop: 20}}>
                     <YakitEmpty title='暂无漏洞' />
                 </div>
             )}
