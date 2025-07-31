@@ -53,6 +53,7 @@ export interface TableVirtualResizeProps<T> {
     isShowTitle?: boolean
     extra?: ReactNode
     data: T[]
+    overscan?: number
     renderKey: string
     columns: ColumnsTypeProps[]
     rowSelection?: RowSelectionProps<T>

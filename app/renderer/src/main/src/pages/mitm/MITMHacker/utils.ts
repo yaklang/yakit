@@ -439,7 +439,7 @@ export type ManualHijackListStatusType = `${ManualHijackListStatus}`
 export interface SingleManualHijackInfoMessage {
     /**前端展示使用，到达顺序 */
     arrivalOrder?: number
-    manualHijackListAction:ManualHijackListAction
+    manualHijackListAction: ManualHijackListAction
     TaskID: string
     Request: Uint8Array
     Response: Uint8Array
@@ -773,4 +773,51 @@ export const grpcClientMITMHooks = (version: string) => {
             ipcRenderer.removeAllListeners(url)
         }
     }
+}
+
+type TraceControlMode = "start_stream" | "stop_stream" | "cancel_trace" | "set_tracing"
+interface PluginTraceRequest {
+    // 控制字段
+    ControlMode: TraceControlMode
+    TraceID?: string
+    EnableTracing: boolean
+}
+/**开始追踪*/
+export const grpcMITMStartPluginTrace: APIFunc<PluginTraceRequest, null> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        const url = `start-mitm-plugin-trace`
+        ipcRenderer
+            .invoke(url, params)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "grpcMITMStartPluginTrace 失败:" + e)
+                reject(e)
+            })
+    })
+}
+/**停止追踪 */
+export const grpcMITMStopPluginTrace: APINoRequestFunc<null> = (hiddenError) => {
+    return new Promise((resolve, reject) => {
+        const url = `mitm-plugin-trace-stop`
+        ipcRenderer
+            .invoke(url)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "grpcMITMStopPluginTrace 失败:" + e)
+                reject(e)
+            })
+    })
+}
+/**取消特定Trace */
+export const grpcMITMPluginTraceIDCancel: APIFunc<string, null> = (traceID, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        const url = `mitm-plugin-traceID-cancel`
+        ipcRenderer
+            .invoke(url, traceID)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "grpcMITMPluginTraceIDCancel 失败:" + e)
+                reject(e)
+            })
+    })
 }

@@ -108,6 +108,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const {
         size = "small",
         data,
+        overscan = 10,
         rowSelection,
         renderKey,
         enableDrag,
@@ -183,7 +184,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: defItemHeight,
-        overscan: 10
+        overscan: overscan
     })
 
     const checkboxPropsMap = useCreation(() => {

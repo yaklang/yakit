@@ -764,6 +764,10 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         }
     }, [inViewport])
 
+    const setTotalFun = useMemoizedFn((t) => {
+        setTotal(t)
+        getAllSatisfyScript(t)
+    })
     const onRenderFirstNode = useMemoizedFn(() => {
         switch (status) {
             case "idle":
@@ -913,10 +917,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         onSelectAll={onSelectAll}
                         setIsSelectAll={setIsSelectAll}
                         total={total}
-                        setTotal={(t) => {
-                            setTotal(t)
-                            getAllSatisfyScript(t)
-                        }}
+                        setTotal={setTotalFun}
                         groupNames={groupNames}
                         setGroupNames={setGroupNames}
                         onSetOpenTabsFlag={setOpenTabsFlag}
@@ -998,7 +999,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             firstNode={() => <div className={style["mitm-server-start-pre-first"]}>{onRenderFirstNode()}</div>}
             lineStyle={{display: isFullScreenFirstNode ? "none" : ""}}
             firstMinSize={openTabsFlag ? "400px" : "24px"}
-            secondMinSize={720}
+            secondMinSize={500}
             secondNode={() => (
                 <div
                     className={style["mitm-server-start-pre-second"]}
