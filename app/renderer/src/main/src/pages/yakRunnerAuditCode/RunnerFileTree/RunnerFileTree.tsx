@@ -311,7 +311,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const [options, setOptions] = useState<SelectOptionsProps[]>([{label: "全部", value: ""}])
     const [checkItem, setCheckItem] = useState<string>("")
     const [isShowCompare, setShowCompare] = useState<boolean>(false)
-    const [compare, setCompare] = useState<string | undefined>(undefined)
+    const [compare, setCompare] = useState<string>()
     // 查找最接近的时间戳
     const findClosestTimestamp = useMemoizedFn((target: number, options) => {
         if (!options || options.length === 0) {
