@@ -24,7 +24,7 @@ export interface MatcherAndExtractionProps {
     defActiveKey: string
     defActiveType: MatchingAndExtraction
     defActiveKeyAndOrder: MatcherActiveKey
-    pageType: "webfuzzer" | "History_Analysis"
+    pageType: MatcherAndExtractionDrawerPageType
 }
 
 export interface MatcherAndExtractionRefProps {
