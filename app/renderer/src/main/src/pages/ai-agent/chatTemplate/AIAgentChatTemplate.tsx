@@ -82,6 +82,7 @@ import {
 import {AITabs, AITabsEnum} from "../defaultConstant"
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
+import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks, pressure, cost, onLeafNodeClick, card} = props
@@ -678,6 +679,7 @@ export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) 
 
                     {!execute && (
                         <>
+                            <AIModelSelect radius={true} />
                             {!!showReExe && (
                                 <YakitButton
                                     className={styles["rounded-text-icon-btn"]}
