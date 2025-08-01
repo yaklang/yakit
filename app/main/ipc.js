@@ -220,6 +220,7 @@ module.exports = {
         require("./handlers/syntaxFlow")(win, getClient)
         require("./handlers/auditRisk")(win, getClient)
         require("./handlers/fingerprint")(win, getClient)
+        require("./handlers/third_party_binary")(win, getClient)
 
         // start chrome manager
         try {

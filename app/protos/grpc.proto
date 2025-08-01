@@ -803,6 +803,7 @@ service Yak {
   rpc UpdateSSARiskDisposals(UpdateSSARiskDisposalsRequest) returns (UpdateSSARiskDisposalsResponse);
   rpc DeleteSSARiskDisposals(DeleteSSARiskDisposalsRequest) returns (DeleteSSARiskDisposalsResponse);
   rpc GetSSARiskDisposal(GetSSARiskDisposalRequest) returns (GetSSARiskDisposalResponse);
+
   rpc SSARiskFeedbackToOnline(SSARiskFeedbackToOnlineRequest) returns (Empty);
 
   rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
@@ -864,7 +865,9 @@ service Yak {
   rpc UpdateAIForge(AIForge) returns (DbOperateMessage);
   rpc DeleteAIForge(AIForgeFilter) returns (DbOperateMessage);
   rpc QueryAIForge(QueryAIForgeRequest) returns (QueryAIForgeResponse);
+  rpc GetAIForge(GetAIForgeRequest) returns (AIForge);
 
+  // mcp server
   rpc StartMcpServer(StartMcpServerRequest) returns(stream StartMcpServerResponse);
   rpc GetToolSetList(Empty) returns(GetToolSetListResponse);
 
@@ -886,6 +889,49 @@ service Yak {
   rpc InitSearchVectorDatabase(InitSearchVectorDatabaseRequest) returns (stream ExecResult);
   rpc GetAllVectorStoreCollections(Empty) returns (GetAllVectorStoreCollectionsResponse);
   rpc DeleteSearchVectorDatabase(DeleteSearchVectorDatabaseRequest) returns (GeneralResponse);
+
+  // 第三方应用管理
+  rpc ListThirdPartyBinary(Empty) returns (ListThirdPartyBinaryResponse);
+  rpc InstallThirdPartyBinary(InstallThirdPartyBinaryRequest) returns (stream ExecResult);
+  rpc UninstallThirdPartyBinary(UninstallThirdPartyBinaryRequest) returns (GeneralResponse);
+  rpc IsThirdPartyBinaryReady(IsThirdPartyBinaryReadyRequest) returns (IsThirdPartyBinaryReadyResponse);
+  rpc StartThirdPartyBinary(StartThirdPartyBinaryRequest) returns (stream ExecResult);
+}
+
+message ThirdPartyBinary {
+  string Name = 1;
+  bool SupportCurrentPlatform = 2;
+  string Description = 3;
+  string InstallPath = 4;
+  string DownloadURL = 5;
+}
+
+message ListThirdPartyBinaryResponse {
+  repeated ThirdPartyBinary Binaries = 1;
+}
+
+message InstallThirdPartyBinaryRequest {
+  string Name = 1;
+  string Proxy = 2;
+  bool Force = 3;
+}
+
+message UninstallThirdPartyBinaryRequest {
+  string Name = 1;
+}
+
+message IsThirdPartyBinaryReadyRequest {
+  string Name = 1;
+}
+
+message IsThirdPartyBinaryReadyResponse {
+  bool IsReady = 1;
+  string Error = 2;
+}
+
+message StartThirdPartyBinaryRequest {
+  string Name = 1;
+  repeated string Args = 2;
 }
 
 message DeleteSearchVectorDatabaseRequest {
@@ -990,6 +1036,7 @@ message AIOutputEvent {
   bool IsReason = 6;
   bytes StreamDelta = 7;
   bool IsJson = 8;
+  bool IsResult = 15;
   bytes Content = 9;
   int64 Timestamp = 10;
   string TaskIndex = 11;
@@ -1027,6 +1074,7 @@ message AITriageInputEvent {
   bool IsFreeInput = 6;
   string FreeInput = 7;
 }
+
 
 message McpConfig {
   string Type = 1;
@@ -1187,6 +1235,9 @@ message QueryAIForgeResponse {
   int64 Total = 3;
 }
 
+message GetAIForgeRequest {
+  int64 ID = 1;
+}
 
 message StartMcpServerRequest {
   // listen host
@@ -1765,8 +1816,10 @@ message SmokingEvaluatePluginRequest {
   string PluginName = 2;
 
   string Code = 3;
-  string PluginType = 4;
+  // "syntaxflow" | "nuclei" | "mitm" | "port-scan" | "codec" | "yak"
+  string PluginType = 4; 
 }
+
 
 message SmokingEvaluateResult {
   string Item = 1;
@@ -1780,6 +1833,7 @@ message SmokingEvaluatePluginResponse {
   int64 Score = 1;
   repeated SmokingEvaluateResult Results = 2;
 }
+
 
 message IsVulinboxReadyRequest {
 
@@ -6024,6 +6078,8 @@ message RenderHTTPFuzzerPacketResponse {
 
 message SmokingEvaluatePluginBatchRequest {
   repeated string ScriptNames = 1;
+    // "syntaxflow" | "nuclei" | "mitm" | "port-scan" | "codec" | "yak"
+  string PluginType = 2; 
 }
 
 message SmokingEvaluatePluginBatchResponse {
@@ -6166,6 +6222,7 @@ message DbOperateMessage {
   string Operation = 2; // 操作 (增删改查)
   int64 EffectRows = 3; // 影响行数
   string ExtraMessage = 4; // 额外信息
+  int64 CreateID = 5;
 }
 
 message CPE {
@@ -6314,6 +6371,7 @@ message AlertMessage{
   string Tag = 10;
   map<string, string> Extra = 11;
 }
+
 message  SyntaxFlowRuleInput{
   string RuleName = 1; // RuleName作为索引，因此不能update RuleName
   string Content = 2;
@@ -6343,7 +6401,6 @@ message SyntaxFlowRuleFilter {
   string FilterLibRuleKind = 14; // "lib"library规则，"noLib"非library规则，空为所有规则
 }
 
-
 message SSAProgram{
   // basic info
   int64 CreateAt = 1;
@@ -6361,26 +6418,26 @@ message SSAProgram{
   uint32 Id = 13;
   // risk number
   int64 CriticalRiskNumber = 10;
-  int64 HighRiskNumber = 9;    
-  int64 WarnRiskNumber = 11;   
-  int64 LowRiskNumber = 12;    
-  int64 InfoRiskNumber = 14; 
+  int64 HighRiskNumber = 9;
+  int64 WarnRiskNumber = 11;
+  int64 LowRiskNumber = 12;
+  int64 InfoRiskNumber = 14;
 }
 
-message SSARiskDiffItem {
+message SSARiskDiffItem{
   string ProgramName = 1;
   string RuleName = 2;
   string Variable = 3;
   string RiskRuntimeId = 4;
 }
 
-message SSARiskDiffRequest {
+message SSARiskDiffRequest{
   SSARiskDiffItem BaseLine = 1; // 原项目
   SSARiskDiffItem Compare = 2; // 被对比的项目
   bool DefaultCompare = 3;
 }
 
-message SSARiskDiffResponse {
+message SSARiskDiffResponse{
   SSARisk BaseRisk = 1;
   SSARisk CompareRisk = 2;
   string RuleName = 3;
@@ -6557,11 +6614,14 @@ message SyntaxFlowScanRequest{
 
   // for new rule scan task
   SyntaxFlowRuleInput RuleInput = 6; // 用于新建规则时的调试功能
+  // 并发，默认5
+  uint32  Concurrency =7;
 }
 
 message QuerySyntaxFlowScanTaskRequest{
   Paging Pagination = 1;
   SyntaxFlowScanTaskFilter Filter = 2;
+  bool ShowDiffRisk = 3;
 }
 
 message SyntaxFlowScanTaskFilter{
@@ -6602,6 +6662,13 @@ message SyntaxFlowScanTask {
 
   SyntaxFlowScanRequest Config = 14;
   string Kind = 15; // "debug" | "scan"
+  // diff
+  int64 NewRiskCount = 16;
+  int64 InfoCount = 17;
+  int64 LowCount = 18;
+  int64 WarningCount = 19;
+  int64 CriticalCount = 20;
+  int64 HighCount = 21;
 }
 
 message DeleteSyntaxFlowScanTaskRequest{
@@ -6783,7 +6850,7 @@ message SSARisk {
   // other mesg
   string Solution = 28;
   string Description = 29 ;
-  string LatestDisposalStatus = 30; // 最新处置状态 no_set | is_issue | no_issue | suspicious
+  string LatestDisposalStatus = 30; // 最新处置状态 not_set | is_issue | not_issue | suspicious
 }
 
 message SSARisksFilter {
@@ -6804,7 +6871,8 @@ message SSARisksFilter {
   repeated string FunctionName = 14;
   int64 BeforeCreatedAt = 15;
   int64 AfterCreatedAt = 16;
-  repeated string LatestDisposalStatus = 17;  // no_set | is_issue | no_issue | suspicious
+  repeated string LatestDisposalStatus = 17;  // not_set | is_issue | not_issue | suspicious
+  SSARiskDiffRequest SSARiskDiffRequest = 18;
 }
 
 message QuerySSARisksRequest {
@@ -6855,15 +6923,6 @@ message SSARiskFeedbackToOnlineRequest {
   SSARisksFilter Filter = 2;
 }
 
-message ExportSyntaxFlowsRequest {
-  SyntaxFlowRuleFilter Filter = 1;
-  string Password = 2;
-  string TargetPath = 3;
-}
-message ImportSyntaxFlowsRequest {
-  string InputPath = 1;
-  string Password = 2;
-}
 message SSARiskDisposalData{
   int64 Id =1 ;
   int64 CreatedAt = 2;
@@ -6895,8 +6954,8 @@ message CreateSSARiskDisposalsResponse {
 }
 
 message QuerySSARiskDisposalsRequest {
-  Paging  Pagination=1;
-  SSARiskDisposalsFilter Filter = 2;
+    Paging  Pagination=1;
+    SSARiskDisposalsFilter Filter = 2;
 }
 
 message QuerySSARiskDisposalsResponse {
@@ -6929,9 +6988,19 @@ message GetSSARiskDisposalRequest{
 }
 
 message GetSSARiskDisposalResponse{
-  repeated SSARiskDisposalData Data = 1;
+ repeated SSARiskDisposalData Data = 1;
 }
 
+
+message ExportSyntaxFlowsRequest {
+  SyntaxFlowRuleFilter Filter = 1;
+  string Password = 2;
+  string TargetPath = 3;
+}
+message ImportSyntaxFlowsRequest {
+  string InputPath = 1;
+  string Password = 2;
+}
 
 message SyntaxflowsProgress {
   // 进度  0-1.0
