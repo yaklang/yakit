@@ -1,5 +1,6 @@
 import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
 import {LocalModelConfig} from "../type/aiChat"
+import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 
 export interface AIModelListProps {}
 
@@ -26,5 +27,7 @@ export interface AILocalModelListItemProps {
     item: LocalModelConfig
 }
 export interface AIOnlineModelListItemProps {
-    item: SelectOptionsProps
+    item: ThirdPartyApplicationConfig
+    onRemove: (item: ThirdPartyApplicationConfig) => void
+    onEdit: (item: ThirdPartyApplicationConfig) => void
 }
