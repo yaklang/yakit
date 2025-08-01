@@ -11,11 +11,10 @@ import {
 } from "./AIModelListType"
 import styles from "./AIModelList.module.scss"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitRadioButtonsProps} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
-import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
 import {
     grpcCancelStartLocalModel,
     grpcGetSupportedLocalModels,
@@ -31,8 +30,10 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineClouddownloadIcon,
     OutlineDotsverticalIcon,
+    OutlinePencilaltIcon,
     OutlinePlusIcon,
-    OutlineRefreshIcon
+    OutlineRefreshIcon,
+    OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
@@ -46,13 +47,71 @@ import {randomString} from "@/utils/randomUtil"
 import {AIStartModelForm} from "./aiStartModelForm/AIStartModelForm"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AddAIModel} from "./addAIModel/AddAIModel"
+import NewThirdPartyApplicationConfig from "@/components/configNetwork/NewThirdPartyApplicationConfig"
+import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
+import {GlobalNetworkConfig, ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 
 const {ipcRenderer} = window.require("electron")
+
+const setAIOnlineModal = (params: {
+    config: GlobalNetworkConfig
+    item?: ThirdPartyApplicationConfig
+    onSuccess: () => void
+}) => {
+    const {config, item, onSuccess} = params
+    let formValues
+    if (!!item) {
+        const extraParams: Record<string, any> = {}
+        item.ExtraParams?.forEach((item) => {
+            extraParams[item.Key] = item.Value
+        })
+        formValues = {
+            Type: item.Type,
+            ...extraParams
+        }
+    }
+    let m = showYakitModal({
+        title: "添加第三方应用",
+        width: 600,
+        footer: null,
+        closable: true,
+        maskClosable: false,
+        content: (
+            <div style={{margin: 24, marginRight: 45}}>
+                <NewThirdPartyApplicationConfig
+                    isOnlyShowAiType={true}
+                    formValues={formValues}
+                    onAdd={(data) => {
+                        if (!config) return
+                        const existedResult: ThirdPartyApplicationConfig[] = config?.AppConfigs || []
+                        const index = (config?.AppConfigs || []).findIndex((i) => i.Type === data.Type)
+                        if (index === -1) {
+                            existedResult.push(data)
+                        } else {
+                            existedResult[index] = {
+                                ...existedResult[index],
+                                ...data
+                            }
+                        }
+                        const params: GlobalNetworkConfig = {...config, AppConfigs: existedResult}
+
+                        console.log("apiSetGlobalNetworkConfig", params, config, data)
+                        apiSetGlobalNetworkConfig(params).then(() => {
+                            onSuccess()
+                            m.destroy()
+                        })
+                    }}
+                    onCancel={() => m.destroy()}
+                />
+            </div>
+        )
+    })
+}
 
 const modelTypeOptions: YakitRadioButtonsProps["options"] = [
     {
         label: (
-            <Tooltip placement='right' title='通过api访问模型,接受AI信息或向AI发送消息,可配置多个'>
+            <Tooltip placement='topLeft' title='通过api访问模型,接受AI信息或向AI发送消息,可配置多个'>
                 线上
             </Tooltip>
         ),
@@ -61,7 +120,7 @@ const modelTypeOptions: YakitRadioButtonsProps["options"] = [
     {
         label: (
             <Tooltip
-                placement='right'
+                placement='top'
                 title='本地AI模型管理器用于管理本地AI模型,支持一键下载和安装模型,支持模型状态监控和管理。通过本地模型服务,可以实现本地化AI服务,无需依赖云端服务'
             >
                 本地
@@ -71,7 +130,7 @@ const modelTypeOptions: YakitRadioButtonsProps["options"] = [
     }
 ]
 const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
-    const [modelType, setModelType] = useState<AIModelType>("local")
+    const [modelType, setModelType] = useState<AIModelType>("online")
 
     const [onlineTotal, setOnlineTotal] = useState<number>(0)
     const [localTotal, setLocalTotal] = useState<number>(0)
@@ -90,18 +149,45 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
         }
     }, [modelType, localTotal, onlineTotal])
     const onRefresh = useMemoizedFn(() => {
-        if (modelType === "online") {
-            onlineRef.current?.onRefresh()
-        } else {
-            localRef.current?.onRefresh()
+        switch (modelType) {
+            case "online":
+                onlineRef.current?.onRefresh()
+                break
+            case "local":
+                localRef.current?.onRefresh()
+                break
+            default:
+                break
         }
     })
     const onAdd = useMemoizedFn(() => {
+        switch (modelType) {
+            case "online":
+                onAddOnline()
+                break
+            case "local":
+                onAddLocal()
+                break
+            default:
+                break
+        }
+    })
+    const onAddLocal = useMemoizedFn(() => {
         const m = showYakitModal({
             title: "添加本地模型",
             width: "50%",
             content: <AddAIModel onCancel={() => m.destroy()} />,
             footer: null
+        })
+    })
+    const onAddOnline = useMemoizedFn(() => {
+        apiGetGlobalNetworkConfig().then((obj) => {
+            setAIOnlineModal({
+                config: obj,
+                onSuccess: () => {
+                    onlineRef.current?.onRefresh()
+                }
+            })
         })
     })
     return (
@@ -119,11 +205,9 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
                 </div>
                 <div className={styles["ai-model-list-header-right"]}>
                     <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={onRefresh} />
-                    {modelType === "local" && (
-                        <YakitButton type='text' icon={<OutlinePlusIcon />} onClick={onAdd}>
-                            添加模型
-                        </YakitButton>
-                    )}
+                    <YakitButton type='text' icon={<OutlinePlusIcon />} onClick={onAdd}>
+                        添加模型
+                    </YakitButton>
                 </div>
             </div>
             {modelType === "online" ? (
@@ -142,7 +226,10 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         const {setOnlineTotal} = props
         const [spinning, setSpinning] = useState<boolean>(false)
         const [isRef, setIsRef] = useState<boolean>(false)
-
+        const [list, setList] = useState<ThirdPartyApplicationConfig[]>([])
+        const configRef = useRef<GlobalNetworkConfig>()
+        const onlineListRef = useRef<HTMLDivElement>(null)
+        const [inViewport = true] = useInViewport(onlineListRef)
         useImperativeHandle(
             ref,
             () => ({
@@ -153,24 +240,51 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             []
         )
         useEffect(() => {
-            getList()
-        }, [])
+            if (inViewport) getList()
+        }, [inViewport])
         const getList = useMemoizedFn(() => {
-            setTimeout(() => {
-                setSpinning(false)
-                setOnlineTotal(100) // 模拟获取数据
-                setIsRef((v) => !v)
-            }, 200)
+            setSpinning(true)
+            apiGetGlobalNetworkConfig()
+                .then((res) => {
+                    console.log("apiGetGlobalNetworkConfig", res)
+                    configRef.current = res
+                    setList(res.AppConfigs || [])
+                    setOnlineTotal(res.AppConfigs?.length || 0)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setSpinning(false)
+                        setIsRef((v) => !v)
+                    }, 200)
+                })
+        })
+        const onEdit = useMemoizedFn((item: ThirdPartyApplicationConfig) => {
+            if (!configRef.current) return
+            setAIOnlineModal({
+                config: configRef.current,
+                item,
+                onSuccess: () => {
+                    getList()
+                }
+            })
+        })
+        const onRemove = useMemoizedFn((item: ThirdPartyApplicationConfig) => {
+            if (!configRef.current) return
+            const newList = list.filter((i) => i.Type !== item.Type)
+            setList(newList)
+            apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: newList}).then(() => {
+                getList()
+            })
         })
         return (
-            <YakitSpin spinning={spinning}>
-                <RollingLoadList<SelectOptionsProps>
-                    data={[]}
+            <YakitSpin spinning={spinning} ref={onlineListRef}>
+                <RollingLoadList<ThirdPartyApplicationConfig>
+                    data={list}
                     loadMoreData={() => {}}
-                    renderRow={(rowData: SelectOptionsProps, index: number) => {
+                    renderRow={(rowData: ThirdPartyApplicationConfig, index: number) => {
                         return (
-                            <React.Fragment key={rowData.value}>
-                                <AIOnlineModelListItem item={rowData} />
+                            <React.Fragment key={rowData.Type}>
+                                <AIOnlineModelListItem item={rowData} onEdit={onEdit} onRemove={onRemove} />
                             </React.Fragment>
                         )
                     }}
@@ -179,8 +293,8 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                     page={1}
                     hasMore={false}
                     loading={spinning}
-                    defItemHeight={120}
-                    rowKey='Name'
+                    defItemHeight={36}
+                    rowKey='Type'
                     isRef={isRef}
                 />
             </YakitSpin>
@@ -188,8 +302,24 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     })
 )
 const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((props) => {
-    const {item} = props
-    return <div></div>
+    const {item, onEdit, onRemove} = props
+    const model = useCreation(() => {
+        return item.ExtraParams?.find((ele) => ele.Key === "model")?.Value
+    }, [item.ExtraParams])
+    return (
+        <div className={styles["ai-online-model-list-item"]}>
+            <div className={styles["ai-online-model-list-item-header"]}>
+                <div className={styles["ai-online-model-list-item-type"]}>{item.Type}</div>
+                <div className={styles["ai-online-model-list-item-model"]}>{model}</div>
+            </div>
+            <div className={styles["ai-online-model-list-item-edit"]}>
+                <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={() => onEdit(item)} />
+                <YakitPopconfirm title={`确定要删除模型 ${item.Type} 吗？`} onConfirm={() => onRemove(item)}>
+                    <YakitButton type='text2' icon={<OutlineTrashIcon />} className={styles["trash-icon"]} />
+                </YakitPopconfirm>
+            </div>
+        </div>
+    )
 })
 const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
     forwardRef((props, ref) => {
