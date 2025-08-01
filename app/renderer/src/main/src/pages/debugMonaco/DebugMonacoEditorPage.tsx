@@ -15,6 +15,7 @@ import {HybridScanDemo} from "@/components/playground/hybrid/HybridScanDemo"
 import {HybridScanTaskTable} from "@/components/playground/hybrid/HybridScanTaskTable"
 import {SpaceEngineOperator} from "@/components/playground/spaceengine/SpaceEngineOperator"
 import {JavaDecompilerOperator} from "@/components/playground/javadecompiler/JavaDecompilerOperator"
+import {ThirdPartyBinaryManager} from "@/components/playground/thirdPartyBinary/ThirdPartyBinaryManager"
 export interface DebugMonacoEditorPageProp {}
 
 const TAG = "DEBUG_PLAYGROUND_DEFAULT_MODE"
@@ -68,7 +69,8 @@ a=1&b=2 Content-Length: a
                             {value: "chaos-maker-rule", label: "流量生成器规则"},
                             {value: "risk-table", label: "漏洞查询规则"},
                             {value: "http-monaco-editor", label: "HTTP 数据包编辑器"},
-                            {value: "fs-tree", label: "文件系统树"}
+                            {value: "fs-tree", label: "文件系统树"},
+                            {value: "third-party-binary", label: "第三方应用管理"}
                         ]}
                         formItemStyle={{margin: 0}}
                         value={mode}
@@ -96,6 +98,8 @@ a=1&b=2 Content-Length: a
                             return <SpaceEngineOperator />
                         case "java-decompiler":
                             return <JavaDecompilerOperator />
+                        case "third-party-binary":
+                            return <ThirdPartyBinaryManager />
                     }
                     return <div>NO PLUGIN DEMO</div>
                 })()}
