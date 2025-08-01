@@ -15,6 +15,7 @@ import {HybridScanDemo} from "@/components/playground/hybrid/HybridScanDemo"
 import {HybridScanTaskTable} from "@/components/playground/hybrid/HybridScanTaskTable"
 import {SpaceEngineOperator} from "@/components/playground/spaceengine/SpaceEngineOperator"
 import {JavaDecompilerOperator} from "@/components/playground/javadecompiler/JavaDecompilerOperator"
+import {LocalAIModelManager} from "@/components/playground/localAIModelManager/LocalAIModelManager"
 export interface DebugMonacoEditorPageProp {}
 
 const TAG = "DEBUG_PLAYGROUND_DEFAULT_MODE"
@@ -61,6 +62,7 @@ a=1&b=2 Content-Length: a
                     <DemoItemSelectOne
                         label={"调试组件"}
                         data={[
+                            {value: "local-ai-model-manager", label: "本地AI大模型管理"},
                             {value: "space-engine-operator", label: "空间引擎操作台"},
                             {value: "java-decompiler", label: "Java反编译1"},
                             {value: "hybrid-scan-demo", label: "HybridScan 批量"},
@@ -68,7 +70,7 @@ a=1&b=2 Content-Length: a
                             {value: "chaos-maker-rule", label: "流量生成器规则"},
                             {value: "risk-table", label: "漏洞查询规则"},
                             {value: "http-monaco-editor", label: "HTTP 数据包编辑器"},
-                            {value: "fs-tree", label: "文件系统树"}
+                            {value: "fs-tree", label: "文件系统树"},
                         ]}
                         formItemStyle={{margin: 0}}
                         value={mode}
@@ -94,6 +96,8 @@ a=1&b=2 Content-Length: a
                             return <YakURLTree />
                         case "space-engine-operator":
                             return <SpaceEngineOperator />
+                        case "local-ai-model-manager":
+                            return <LocalAIModelManager />
                         case "java-decompiler":
                             return <JavaDecompilerOperator />
                     }

@@ -15,6 +15,7 @@ import {AIForgeListDefaultPagination} from "../defaultConstant"
 import AIAgentWelcomebg from "@/assets/aiAgent/ai-agent-welcome-bg.png"
 import AIAgentWelcomePixel from "@/assets/aiAgent/ai-agent-welcome-pixel.png"
 import styles from "./AIAgentWelcome.module.scss"
+import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 
 export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
     forwardRef((props, ref) => {
@@ -167,6 +168,7 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
                                 setQuestion={setQuestion}
                                 textareaProps={textareaProps}
                                 onSubmit={handleTriageSubmit}
+                                extraFooterRight={<AIModelSelect />}
                             />
                         </div>
 

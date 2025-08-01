@@ -8,7 +8,8 @@ export interface AIChatTextareaProps {
     loading?: boolean
     question?: string
     setQuestion?: Dispatch<SetStateAction<string>>
-    extraFooter?: ReactNode
+    extraFooterLeft?: ReactNode
+    extraFooterRight?: ReactNode
     onSubmit?: (qs: string) => void
     textareaProps?: Omit<QSInputTextareaProps, "value">
 }
