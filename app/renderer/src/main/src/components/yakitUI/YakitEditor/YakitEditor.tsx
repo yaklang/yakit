@@ -12,7 +12,7 @@ import {
 import ReactResizeDetector from "react-resize-detector"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 // 编辑器 注册
-import "@/utils/monacoSpec/theme"
+// import "@/utils/monacoSpec/theme"
 import "@/utils/monacoSpec/fuzzHTTPMonacoSpec"
 import "@/utils/monacoSpec/yakEditor"
 import "@/utils/monacoSpec/html"
@@ -85,6 +85,8 @@ import {
     sortKeysCombination
 } from "@/utils/globalShortcutKey/utils"
 import {YakitKeyBoard, YakitKeyMod} from "@/utils/globalShortcutKey/keyboard"
+import {applyYakitMonacoTheme} from "@/utils/monacoSpec/theme"
+import {useTheme} from "@/hook/useTheme"
 
 export interface CodecTypeProps {
     key?: string
@@ -196,6 +198,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
     const [nowFontsize, setNowFontsize] = useState<number>(fontSize)
+    const {theme: themeGlobal} = useTheme()
 
     const disableUnicodeDecodeRef = useRef(props.disableUnicodeDecode)
     useEffect(() => {
@@ -218,6 +221,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             }
         })
     }, [])
+
+    // 修改主题颜色
+    useEffect(() => {
+        applyYakitMonacoTheme(themeGlobal)
+    }, [themeGlobal])
 
     useUpdateEffect(() => {
         if (fontSize) {

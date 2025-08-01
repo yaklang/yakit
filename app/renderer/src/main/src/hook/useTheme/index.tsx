@@ -11,10 +11,8 @@ const ThemeContext = createContext<{
     setTheme: () => {}
 })
 
-const preTheme = await getLocalValue("theme")
-
 export const ThemeProvider = ({children}: {children: React.ReactNode}) => {
-    const [theme, setThemeState] = useState<Theme>(preTheme)
+    const [theme, setThemeState] = useState<Theme>("light") // 默认值为 light
 
     const setTheme = (next: Theme) => {
         setThemeState(next)
@@ -24,8 +22,18 @@ export const ThemeProvider = ({children}: {children: React.ReactNode}) => {
     }
 
     useEffect(() => {
-        document.documentElement.setAttribute("data-theme", theme)
-    }, [theme])
+        // 异步加载本地 theme
+        getLocalValue("theme")
+            .then((t) => {
+                const loadedTheme = (t as Theme | undefined) ?? "light"
+                setThemeState(loadedTheme)
+                document.documentElement.setAttribute("data-theme", loadedTheme)
+            })
+            .catch(() => {
+                setThemeState("light")
+                document.documentElement.setAttribute("data-theme", "light")
+            })
+    }, [])
 
     return <ThemeContext.Provider value={{theme, setTheme}}>{children}</ThemeContext.Provider>
 }

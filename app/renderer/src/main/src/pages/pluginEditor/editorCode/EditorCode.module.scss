@@ -22,7 +22,7 @@
             padding: 4px;
             display: flex;
             align-items: center;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             border-radius: 4px;
             cursor: pointer;
             svg {
@@ -30,8 +30,8 @@
                 height: 16px;
             }
             &:hover {
-                background-color: var(--yakit-background-color);
-                color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Neutral-Bg);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -44,7 +44,7 @@
         .title-style {
             flex: 1;
             overflow: hidden;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-size: 11px;
             font-weight: 400;
             line-height: 16px;
@@ -61,7 +61,7 @@
 .editor-code-tab-body {
     height: 100%;
     border-radius: 4px;
-    border: 1px solid #eaecf3;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     display: flex;
     .editor-operation-and-execution {
         height: 100%;
@@ -76,16 +76,16 @@
         display: flex;
         flex-direction: column;
         border-radius: 0px 4px 4px 0px;
-        border-left: 1px solid #eaecf3;
-        background: #f8f8f8;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg);
         .header {
             padding: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #eaecf3;
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
@@ -97,7 +97,7 @@
                     margin-right: 8px;
                     width: 1px;
                     height: 12px;
-                    background-color: #eaecf3;
+                    background-color: var(--Colors-Use-Neutral-Border);
                 }
             }
         }
@@ -128,7 +128,7 @@
                     align-items: center;
                     gap: 4px;
                     .text-style {
-                        color: #b4bbca;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         font-size: 12px;
                         font-weight: 600;
                         line-height: 16px;
@@ -137,13 +137,13 @@
                         flex: 1;
                         overflow: hidden;
                         height: 1px;
-                        border-top: 1px dashed #eaecf3;
+                        border-top: 1px dashed var(--Colors-Use-Neutral-Border);
                     }
                 }
 
                 .to-end {
                     text-align: center;
-                    color: var(--yakit-disable-text-color);
+                    color: var(--Colors-Use-Neutral-Disable);
                     font-size: 11px;
                     padding-top: 12px;
                     padding-bottom: 24px;

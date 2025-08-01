@@ -241,12 +241,16 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                             setCascaderValue({Id: item.Id, DatabasePath: item.DatabasePath})
                         }
                     }}
-                    suffixIcon={<OutlineChevrondownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                    suffixIcon={<OutlineChevrondownIcon style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />}
                 />
             </Form.Item>
             {percent > 0 && (
                 <div style={{width: 276, margin: "0 auto", paddingBottom: 14}}>
-                    <Progress percent={Math.floor((percent || 0) * 100)} />
+                    <Progress
+                        strokeColor='var(--Colors-Use-Main-Primary)'
+                        trailColor='var(--Colors-Use-Neutral-Bg)'
+                        percent={Math.floor((percent || 0) * 100)}
+                    />
                 </div>
             )}
             <div style={{textAlign: "center"}}>

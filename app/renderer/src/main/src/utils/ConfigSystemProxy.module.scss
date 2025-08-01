@@ -3,7 +3,7 @@
         .ant-form-item-explain ant-form-item-explain-connected {
             font-weight: 400;
             font-size: 14px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
         }
     }
     .config-system-proxy-heard {
@@ -15,18 +15,18 @@
             font-weight: 600;
             font-size: 14px;
             line-height: 20px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .close-icon {
             svg {
                 width: 16px;
                 height: 16px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 &:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
                 &:active {
-                    color: var(--yakit-primary-6);
+                    color: var(--Colors-Use-Main-Pressed);
                 }
             }
         }
@@ -39,16 +39,16 @@
         font-weight: 400;
         font-size: 12px;
         line-height: 16px;
-        color: var(--yakit-body-text-color);
-        background-color: var(--yakit-success-1);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        background-color: var(--Colors-Use-Success-Bg);
         span {
-            color: var(--yakit-success-5);
+            color: var(--Colors-Use-Success-Primary);
         }
     }
     .config-system-proxy-status-danger {
-        background-color: var(--yakit-danger-1);
+        background-color: var(--Colors-Use-Error-Bg-Hover);
         span {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
         }
     }
     .config-system-proxy-btns {
@@ -58,7 +58,7 @@
         gap: 8px;
     }
     .config-select-path{
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         font-size: 12px;
         cursor: pointer;
     }

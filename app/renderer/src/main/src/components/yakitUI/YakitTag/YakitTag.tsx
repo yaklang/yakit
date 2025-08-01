@@ -103,10 +103,10 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
     })
     return (
         <div className={classNames(styles["yakit-copy"], className || "")} onClick={onCopy}>
-            {(loading && <LoadingOutlined style={{color: "var(--yakit-primary-5)"}} />) || (
+            {(loading && <LoadingOutlined style={{color: "var(--Colors-Use-Main-Primary)"}} />) || (
                 <>
-                    {(isShowSure && <CheckOutlined style={{color: "var(--yakit-success-5)"}} />) || (
-                        <DocumentDuplicateSvgIcon style={{color: iconColor || "var(--yakit-primary-5)"}} />
+                    {(isShowSure && <CheckOutlined style={{color: "var(--Colors-Use-Success-Primary)"}} />) || (
+                        <DocumentDuplicateSvgIcon style={{color: iconColor || "var(--Colors-Use-Main-Primary)"}} />
                     )}
                 </>
             )}

@@ -1547,7 +1547,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                             e.stopPropagation()
                                         }}
                                     >
-                                        <div className={styles["edit-name-popover-content-title"]}>修改名称</div>
+                                        <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>修改名称</div>
                                         <YakitInput
                                             defaultValue={item.name}
                                             value={name}

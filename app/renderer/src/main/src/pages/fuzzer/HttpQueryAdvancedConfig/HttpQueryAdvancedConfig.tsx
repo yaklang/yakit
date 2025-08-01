@@ -691,6 +691,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             }}
                                         >
                                             <YakitInput
+                                                allowClear={false}
                                                 prefix='连接'
                                                 suffix='s'
                                                 size='small'
@@ -705,6 +706,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             }}
                                         >
                                             <YakitInput
+                                                allowClear={false}
                                                 prefix='响应'
                                                 suffix='s'
                                                 size='small'
@@ -764,6 +766,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                     }}
                                                 >
                                                     <YakitInput
+                                                        allowClear={false}
                                                         prefix='Min'
                                                         suffix='B'
                                                         size='small'
@@ -778,6 +781,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                     }}
                                                 >
                                                     <YakitInput
+                                                        allowClear={false}
                                                         prefix='Max'
                                                         suffix='B'
                                                         size='small'
@@ -796,6 +800,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                     }}
                                                 >
                                                     <YakitInput
+                                                        allowClear={false}
                                                         prefix='Min'
                                                         suffix='ms'
                                                         size='small'
@@ -810,6 +815,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                     }}
                                                 >
                                                     <YakitInput
+                                                        allowClear={false}
                                                         prefix='Max'
                                                         suffix='ms'
                                                         size='small'
@@ -870,6 +876,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             }}
                                         >
                                             <YakitInput
+                                                allowClear={false}
                                                 prefix='Min'
                                                 suffix='s'
                                                 size='small'
@@ -884,6 +891,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             }}
                                         >
                                             <YakitInput
+                                                allowClear={false}
                                                 prefix='Max'
                                                 suffix='s'
                                                 size='small'
@@ -1030,7 +1038,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             return {value: i, label: i}
                                         })}
                                         mode='tags'
-                                        allowClear={true}
                                         size={"small"}
                                         placeholder={"指定DNS服务器"}
                                     />
@@ -1523,7 +1530,7 @@ export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                                             <div className={styles["matchersList-item"]} key={`ID:${subIndex}`}>
                                                 <div className={styles["matchersList-item-heard"]}>
                                                     <span className={styles["item-id"]}>ID&nbsp;{subIndex}</span>
-                                                    <span>
+                                                    <span className={styles["item-label"]}>
                                                         [
                                                         {
                                                             matcherTypeList.find((e) => e.value === subItem.MatcherType)
@@ -1595,7 +1602,7 @@ export const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) 
                                         <span className={styles["item-id"]}>
                                             {extractorItem.Name || `data_${index}`}
                                         </span>
-                                        <span>
+                                        <span className={styles["item-label"]}>
                                             [{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]
                                         </span>
                                         <span className={styles["item-number"]}>{extractorItem.Groups?.length}</span>

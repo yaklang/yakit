@@ -1,7 +1,7 @@
 @use "../../plugins.scss";
 %log-body {
     padding: 12px;
-    background: var(--yakit-card-background-color);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
     height: 100%;
     overflow-y: auto;
 }
@@ -24,7 +24,7 @@
         }
     }
     .log-heard {
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 16px;
         font-style: normal;
         font-weight: 600;
@@ -41,13 +41,13 @@
     height: 24px;
     border-radius: 50%;
     background-color: transparent;
-    border: 4px solid var(--yakit-primary-3);
+    border: 4px solid var(--Colors-Use-Main-Border);
     padding: 2px;
     animation: pending 1s linear infinite;
     &-circle {
         width: 12px;
         height: 12px;
-        background-color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Primary);
         border-radius: 50%;
     }
 }

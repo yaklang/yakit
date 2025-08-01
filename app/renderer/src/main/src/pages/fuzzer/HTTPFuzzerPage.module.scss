@@ -16,15 +16,16 @@
     flex-direction: column;
     overflow: hidden;
     padding: 12px;
+    background-color: var(--Colors-Use-Neutral-Bg);
     :global {
         .ant-result-warning .ant-result-icon > .anticon {
-            color: var(--yakit-warning-5);
+            color: var(--Colors-Use-Warning-Primary);
         }
         .ant-result-error .ant-result-icon > .anticon {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
         }
         .resize-box .resize-split-line:hover {
-            border: 1px solid var(--yakit-primary-5);
+            border: 1px solid var(--Colors-Use-Main-Primary);
         }
     }
     .fuzzer-heard {
@@ -45,7 +46,7 @@
                 }
             }
             .spinning-text {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
                 gap: 8px;
             }
             .proxy-text {
@@ -62,7 +63,7 @@
                 display: flex;
                 align-items: center;
                 gap: 2px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 text-decoration: underline;
                 cursor: pointer;
                 svg {
@@ -107,7 +108,7 @@
         flex-direction: column;
         justify-content: center;
         gap: 4px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         :global {
             .ant-input-group {
@@ -136,18 +137,18 @@
 
 .chevron-icon {
     cursor: pointer;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 
     svg {
         width: 16px;
         height: 16px;
 
         &:hover {
-            color: var(--yakit-primary-4);
+            color: var(--Colors-Use-Main-Hover);
         }
 
         &:active {
-            color: var(--yakit-primary-6);
+            color: var(--Colors-Use-Main-Pressed);
         }
     }
 }
@@ -158,15 +159,15 @@
     svg {
         width: 16px;
         height: 16px;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         cursor: not-allowed;
 
         &:hover {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
 
         &:active {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }
@@ -179,7 +180,7 @@
     align-items: center;
     justify-content: center;
     &:hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
     svg {
         width: 16px;
@@ -189,12 +190,12 @@
 
 .editor-wrap-icon {
     svg {
-        color: #fff;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         &:hover {
-            color: #fff;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         &:active {
-            color: #fff;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 }
@@ -203,9 +204,9 @@
     width: 20px;
     display: flex;
     justify-content: center;
-    --button-border-color: var(--yakit-border-color);
-    --button-hover-border-color: var(--yakit-border-color);
-    --button-press-border-color: var(--yakit-border-color);
+    --button-border-color: var(--Colors-Use-Neutral-Border);
+    --button-hover-border-color: var(--Colors-Use-Neutral-Border);
+    --button-press-border-color: var(--Colors-Use-Neutral-Border);
     svg {
         width: 14px;
         height: 14px;
@@ -221,8 +222,8 @@
 }
 
 .editor-overlay-widget {
-    background-color: #f0f2f5;
-    color: var(--yakit-header-color);
+    background-color: var(--Colors-Use-Neutral-Bg);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     // padding: 4px 8px;
     font-size: 10px;
     margin-right: -14px;
@@ -244,18 +245,18 @@
 
 .payload-extract-content {
     @extend .display-column-center;
-    background-color: var(--yakit-card-background-color);
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
     flex: 1;
     height: 100%;
     justify-content: flex-start;
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     &-heard {
         @extend .display-flex-center;
         justify-content: space-between;
-        background: var(--yakit-disable-text-color);
+        background: var(--Colors-Use-Neutral-Disable);
         padding-right: 8px;
-        border-top: 1px solid #fff;
-        border-bottom: 1px solid #fff;
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         &-tab {
             @extend .display-flex-center;
             align-items: center;
@@ -263,15 +264,15 @@
                 @extend .display-flex-center;
                 padding: 4px 12px;
                 gap: 4px;
-                border-right: 1px solid #fff;
+                border-right: 1px solid var(--Colors-Use-Neutral-Border);
                 cursor: pointer;
                 &:hover {
-                    background-color: rgba(240, 241, 243, 0.5);
+                    background-color: var(--Colors-Use-Neutral-Bg-Hover)
                 }
                 .tab-icon {
                     width: 16px;
                     height: 16px;
-                    color: var(--yakit-body-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     svg {
                         width: 16px;
                         height: 16px;
@@ -279,13 +280,13 @@
                 }
             }
             &-item-active {
-                background-color: var(--yakit-primary-5);
-                color: #fff;
+                background-color: var(--Colors-Use-Main-Primary);
+                color: var(--Colors-Use-Main-On-Primary);
                 &:hover {
-                    background-color: var(--yakit-primary-4);
+                    background-color: var(--Colors-Use-Main-Hover);
                 }
                 .tab-icon {
-                    color: #fff;
+                    color: var(--Colors-Use-Main-On-Primary);
                 }
             }
         }
@@ -315,14 +316,14 @@
     align-items: center;
     justify-content: center;
     &:hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
     svg {
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         width: 14px;
         height: 14px;
         &:hover {
-            color: var(--yakit-primary-4);
+            color: var(--Colors-Use-Main-Hover);
         }
     }
 }
@@ -332,7 +333,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px 0 0 4px;
 
     .resize-card-heard {
@@ -342,12 +343,12 @@
         align-items: center;
         padding: 6px 12px;
         line-height: 16px;
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         .resize-card-heard-title {
             white-space: nowrap;
             font-weight: 500;
             font-size: 12px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .resize-card-heard-extra {
             display: flex;
@@ -370,11 +371,12 @@
         margin-top: 16px;
         width: 100%;
         border-radius: 10px;
-        border: 1px solid var(--yakit-border-color);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         overflow: hidden;
+        background-color: var(--Colors-Use-Basic-White);
         video {
             width: 100%;
-            height: 310px;
+            height: 100%;
         }
     }
 }

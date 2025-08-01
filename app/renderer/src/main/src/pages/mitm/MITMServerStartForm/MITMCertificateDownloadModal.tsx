@@ -46,11 +46,7 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
             footerExtra={
                 <div className={styles["certificate-download-modal-footer"]}>
                     在设置代理后访问：
-                    <YakitTag
-                        enableCopy
-                        copyText='http://mitm'
-                        iconColor='var(--yakit-primary-5)'
-                    />
+                    <YakitTag enableCopy copyText='http://mitm' iconColor='var(--Colors-Use-Main-Primary)' />
                     可自动下载证书
                 </div>
             }

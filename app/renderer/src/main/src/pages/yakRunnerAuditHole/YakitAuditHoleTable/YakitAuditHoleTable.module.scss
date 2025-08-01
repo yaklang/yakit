@@ -11,22 +11,22 @@
 
 $tagColor: (
     "success": (
-        color: var(--yakit-success-5)
+        color: var(--Colors-Use-Success-Primary)
     ),
     "warning": (
-        color: var(--yakit-warning-5)
+        color: var(--Colors-Use-Warning-Primary)
     ),
     "info": (
-        color: var(--yakit-primary-5)
+        color: var(--Colors-Use-Main-Primary)
     ),
     "danger": (
-        color: var(--yakit-danger-5)
+        color: var(--Colors-Use-Error-Primary)
     ),
     "serious": (
         color: var(--yakit-serious-5)
     ),
     "default": (
-        color: var(--yakit-helper-text-color)
+        color: var(--Colors-Use-Neutral-Disable)
     )
 );
 $keyColor: map-keys($tagColor);
@@ -53,13 +53,13 @@ $keyColor: map-keys($tagColor);
         }
     }
     .misstatement-icon {
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         svg {
             width: 16px;
             height: 16px;
         }
         &:hover {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary)
         }
     }
     .yakit-risk-details {
@@ -71,10 +71,10 @@ $keyColor: map-keys($tagColor);
         .yakit-risk-details-title {
             @extend %display-flex-center;
             justify-content: space-between;
-            border-left: 1px solid var(--yakit-border-color);
-            border-right: 1px solid var(--yakit-border-color);
+            border-left: 1px solid var(--Colors-Use-Neutral-Border);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
 
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
@@ -83,7 +83,7 @@ $keyColor: map-keys($tagColor);
     }
     .yakit-ssa-risk-table-cell-unread {
         // background-color: #f6544a14;
-        background-color: tools.fetch-color-transparen(var(--yakit-color-blue), 5%);
+        background-color: tools.fetch-color-transparen(var(--Colors-Use-Blue-Primary), 5%);
     }
 }
 
@@ -93,7 +93,7 @@ $keyColor: map-keys($tagColor);
     justify-content: space-between;
     padding-bottom: 8px;
 
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 12px;
     font-weight: 400;
     line-height: 16px; /* 133.333% */
@@ -103,7 +103,7 @@ $keyColor: map-keys($tagColor);
         gap: 8px 16px;
         flex-wrap: wrap;
         .table-renderTitle-text {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 16px;
             font-weight: 600;
             line-height: 24px;
@@ -123,13 +123,13 @@ $keyColor: map-keys($tagColor);
             align-items: center;
 
             .virtual-table-heard-right-text {
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 font-size: 12px;
                 margin-right: 4px;
             }
 
             .virtual-table-heard-right-number {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
                 font-size: 12px;
             }
         }
@@ -148,7 +148,7 @@ $keyColor: map-keys($tagColor);
     }
     .table-tag-icon {
         opacity: 0;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         svg {
             width: 16px;
             height: 16px;
@@ -179,7 +179,7 @@ $keyColor: map-keys($tagColor);
         border-left: 1px solid #eaecf3;
         border-bottom: 1px solid #eaecf3;
         border-right: 1px solid #eaecf3;
-        background: #f8f8f8;
+        background: var(--Colors-Use-Neutral-Bg);
         display: flex;
         flex-direction: row;
         justify-content: space-between;
@@ -207,7 +207,7 @@ $keyColor: map-keys($tagColor);
                 flex-direction: row;
                 gap: 8px;
                 .name {
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 500;
                     overflow: hidden;
@@ -233,10 +233,10 @@ $keyColor: map-keys($tagColor);
 }
 
 .disabled-open {
-    background: var(--ui-background-color);
-    color: var(--yakit-disable-text-color);
+    background: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Neutral-Disable);
     border-radius: 4px;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     height: 24px;
     padding: 3px 8px;
     font-weight: 500;
@@ -249,13 +249,13 @@ $keyColor: map-keys($tagColor);
     svg {
         width: 16px;
         height: 16px;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
     }
 }
 
 .no-more {
     font-size: 12px;
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     text-align: center;
     padding: 12px;
     width: 100%;
@@ -266,7 +266,7 @@ $keyColor: map-keys($tagColor);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     :global {
         .ant-descriptions-bordered .ant-descriptions-view > table {
             table-layout: fixed;
@@ -276,7 +276,7 @@ $keyColor: map-keys($tagColor);
         @extend %display-flex-center;
         align-items: flex-start;
         padding: 4px 12px;
-        // border-bottom: 1px solid var(--yakit-border-color);
+        // border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         .content-heard-left {
             @extend %display-flex-center;
             overflow: hidden;
@@ -301,7 +301,7 @@ $keyColor: map-keys($tagColor);
                 overflow: hidden;
                 flex-wrap: wrap;
                 .content-heard-body-title {
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 16px;
                     font-style: normal;
                     font-weight: 600;
@@ -309,7 +309,7 @@ $keyColor: map-keys($tagColor);
                 }
                 .content-heard-body-description {
                     @extend %display-flex-center;
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 400;
                     line-height: 16px;
@@ -322,7 +322,7 @@ $keyColor: map-keys($tagColor);
                         gap: 4px;
                         overflow: hidden;
                         .url {
-                            color: var(--yakit-body-text-color);
+                            color: var(--Colors-Use-Neutral-Text-1-Title);
                         }
                     }
                     .content-heard-body-time {
@@ -347,10 +347,10 @@ $keyColor: map-keys($tagColor);
 
 .disabled-open {
     min-width: 134px;
-    background: var(--ui-background-color);
-    color: var(--yakit-disable-text-color);
+    background: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Neutral-Disable);
     border-radius: 4px;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     height: 24px;
     padding: 3px 8px;
     font-weight: 500;
@@ -363,7 +363,7 @@ $keyColor: map-keys($tagColor);
     svg {
         width: 16px;
         height: 16px;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
     }
 }
 

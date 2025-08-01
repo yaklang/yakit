@@ -15,10 +15,10 @@
         margin-right: 4px;
         font-size: 12px;
         .title-headline {
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
         .title-content {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
     .cpu-spark {
@@ -43,7 +43,7 @@
         align-items: center;
     }
     .op-btn-body-hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     .icon-rotate-animation {
@@ -71,7 +71,7 @@
 }
 .ui-op-btn-wrapper:hover {
     .op-btn-body {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
 }
 
@@ -81,8 +81,8 @@
 .ui-engine-list-dropdown {
     :global {
         .ant-popover-inner {
-            border: 1px solid var(--yakit-border-color);
-            box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
             border-radius: 4px;
             .ant-popover-inner-content {
                 padding: 0;
@@ -100,12 +100,12 @@
             .engine-list-header {
                 height: 16px;
                 font-size: 12px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 display: flex;
                 align-items: center;
                 .loading-icon {
                     margin-left: 8px;
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
 
@@ -125,9 +125,9 @@
                             font-size: 12px;
                             display: flex;
                             align-items: center;
-                            color: var(--yakit-header-color);
+                            color: var(--Colors-Use-Neutral-Text-1-Title);
                             .current-ps-info {
-                                color: var(--yakit-primary-5);
+                                color: var(--Colors-Use-Main-Primary);
                             }
                         }
                     }
@@ -150,13 +150,13 @@
                 display: flex;
                 flex-direction: row;
                 justify-content: space-between;
-                border-top: 1px solid var(--yakit-border-color);
+                border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 .engine-list-footer-btn {
                     width: 48px;
                     height: 16px;
                     font-size: 12px;
                     line-height: 16px;
-                    color: var(--yakit-body-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     cursor: pointer;
                 }
             }

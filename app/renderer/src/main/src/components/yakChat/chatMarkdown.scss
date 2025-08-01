@@ -2,7 +2,7 @@
     height: auto;
     -webkit-text-size-adjust: 100%;
     margin: 0;
-    color: #24292f;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     background-color: transparent;
     font-size: 14px;
     line-height: 1.5;
@@ -70,8 +70,8 @@ pre {
 
     code {
         padding: 3px 5px;
-        background: #f5f5f5;
-        color: #222;
+        background: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         border-radius: 4px;
     }
 
@@ -81,8 +81,8 @@ pre {
 
     .hljs,
     pre {
-        background: #f0f2f5;
-        color: #85899e;
+        background: var(--Colors-Use-Basic-Background);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         border-radius: 4px;
         margin: 0;
         width: 100%;
@@ -99,7 +99,7 @@ pre {
   */
     .hljs-comment,
     .hljs-meta {
-        color: #565f89;
+        color: var(--Colors-Use-Blue-On-Primary);
     }
 
     .hljs-deletion,

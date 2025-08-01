@@ -294,12 +294,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                 </div>
 
                 <div className={styles["header-extra"]}>
-                    <YakitInput.Search
-                        size='large'
-                        allowClear={true}
-                        placeholder='请输入变量名关键词'
-                        onSearch={handleSearch}
-                    />
+                    <YakitInput.Search size='large' placeholder='请输入变量名关键词' onSearch={handleSearch} />
 
                     {!isPlugin && (
                         <YakitButton
@@ -349,7 +344,6 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                                                         {activeEditKey === infoKey ? (
                                                             <YakitInput
                                                                 ref={inputRef}
-                                                                allowClear={true}
                                                                 value={envValue}
                                                                 onChange={(e) => {
                                                                     setEnvValue(e.target.value)
@@ -430,7 +424,6 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                     <div className={styles["edit-info-item"]}>
                         <div className={styles["item-title"]}>变量值: </div>
                         <YakitInput
-                            allowClear={true}
                             value={editInfo?.Value}
                             onChange={(e) => {
                                 setEditInfo({...(editInfo || DefaultEnvInfo), Value: e.target.value})

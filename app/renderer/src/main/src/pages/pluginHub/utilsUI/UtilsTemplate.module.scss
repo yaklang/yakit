@@ -56,7 +56,7 @@
         padding: 4px;
         border-radius: 20px;
         border: 2px solid #fff;
-        background: #f0f1f3;
+        background: var(--Colors-Use-Neutral-Bg-Hover);
         position: absolute;
         top: -12px;
         right: -12px;
@@ -65,10 +65,10 @@
         svg {
             height: 12px;
             width: 12px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
         &:hover {
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
             svg {
                 color: #ffffff;
             }
@@ -121,7 +121,7 @@
     font-size: 46px;
     font-weight: 500;
     color: #ccd2de;
-    background-color: rgba(#31343f, 0.05);
+    background-color: rgba(var(--Colors-Use-Neutral-Text-1-Title), 0.05);
 }
 
 .popover-preview-list {

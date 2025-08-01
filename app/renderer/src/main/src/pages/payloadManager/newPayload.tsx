@@ -114,10 +114,10 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
             <div className={styles["hint-right-wrapper"]}>
                 <div className={styles["hint-right-download"]}>
                     <div className={styles["hint-right-title"]}>{title}</div>
-                    <div className={classNames(styles["download-progress"],"yakit-progress-wrapper")}>
+                    <div className={classNames(styles["download-progress"], "yakit-progress-wrapper")}>
                         <Progress
-                            strokeColor='#F28B44'
-                            trailColor='#F0F2F5'
+                            strokeColor='var(--Colors-Use-Main-Primary)'
+                            trailColor='var(--Colors-Use-Neutral-Bg)'
                             percent={Math.floor((streamData.Progress || 0) * 100)}
                             showInfo={false}
                         />

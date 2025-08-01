@@ -2625,7 +2625,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         }
                     >
                         <YakitSelect
-                            allowClear={true}
                             onChange={(value, option: any) => {
                                 setBugTestValue(value)
                             }}

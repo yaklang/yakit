@@ -3,8 +3,8 @@
     height: 12px;
     padding: 2px 2px 2px 10px;
     margin: 2px;
-    background: var(--yakit-disable-text-color);
-    border: 1px solid var(--yakit-disable-text-color);
+    background: var(--Colors-Use-Neutral-Disable);
+    border: 1px solid var(--Colors-Use-Neutral-Disable);
     border-radius: 10px;
     display: inline-flex;
     position: relative;
@@ -22,9 +22,9 @@
             width: 8px;
             height: 8px;
             inset: 0;
-            background-color: #fff;
+            background-color: var(--Colors-Use-Basic-Background);
             border-radius: 9px;
-            box-shadow: 0 2px 4px #00230b33;
+            box-shadow: 0 2px 4px var(--Colors-Use-Basic-Shadow);
             transition: all 0.2s ease-in-out;
             content: "";
         }
@@ -32,33 +32,34 @@
 }
 
 .yakit-proto-switch-wrapper-focus {
-    box-shadow: 0 0 2px 2px var(--yakit-background-color);
+    box-shadow: 0 0 2px 2px var(--Colors-Use-Neutral-Bg);
 }
 .yakit-proto-switch-wrapper-checked-focus {
-    box-shadow: 0 0 2px 2px var(--yakit-primary-2);
+    box-shadow: 0 0 2px 2px var(--Colors-Use-Main-Focus);
 }
 
 .yakit-proto-switch-wrapper-checked {
-    background: var(--yakit-primary-5);
-    border: 1px solid var(--yakit-primary-5);
+    background: var(--Colors-Use-Main-Primary);
+    color: var(--Colors-Use-Main-On-Primary);
+    border: 1px solid var(--Colors-Use-Main-Primary);
     .yakit-proto-switch-checked {
         transition: all 0.2s ease-in-out;
         left: calc(100% - 10px);
     }
     &:hover {
-        background: var(--yakit-primary-4);
+        background: var(--Colors-Use-Main-Hover);
     }
     &:active {
-        background: var(--yakit-primary-6);
+        background: var(--Colors-Use-Main-Pressed);
     }
     &:focus {
-        box-shadow: 0 0 2px 2px var(--yakit-primary-2);
+        box-shadow: 0 0 2px 2px var(--Colors-Use-Basic-Shadow);
     }
 }
 
 .yakit-proto-switch-wrapper-disabled {
-    background: var(--yakit-background-color);
-    border: 1px solid var(--yakit-border-color);
+    background: var(--Colors-Use-Neutral-Bg);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     cursor: not-allowed;
     .yakit-proto-switch-disabled {
         cursor: not-allowed;
@@ -67,10 +68,10 @@
         }
     }
     &:hover {
-        background: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
     }
     &:active {
-        background: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
     }
     &:focus {
         box-shadow: none;

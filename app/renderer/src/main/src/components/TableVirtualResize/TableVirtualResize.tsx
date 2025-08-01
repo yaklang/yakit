@@ -54,7 +54,7 @@ import {parseColorTag} from "./utils"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
 import {v4 as uuidv4} from "uuid"
-import { ShortcutKeyFocusType } from "@/utils/globalShortcutKey/events/global"
+import {ShortcutKeyFocusType} from "@/utils/globalShortcutKey/events/global"
 const {RangePicker} = YakitDatePicker
 
 /**
@@ -261,7 +261,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
 
     const focusIdRef = useRef<string>(`${ShortcutKeyFocusType.TableVirtual}-${uuidv4()}`)
     useShortcutKeyTrigger("tableVirtualUP*common", (focus) => {
-        if(focus?.includes(focusIdRef.current) && useUpAndDown){
+        if (focus?.includes(focusIdRef.current) && useUpAndDown) {
             if (!mouseEnter && inMouseEnterTable) return
             if (!setCurrentRow) return
             const dataLength = data.length
@@ -299,7 +299,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     })
 
     useShortcutKeyTrigger("tableVirtualDown*common", (focus) => {
-        if(focus?.includes(focusIdRef.current) && useUpAndDown){
+        if (focus?.includes(focusIdRef.current) && useUpAndDown) {
             if (!mouseEnter && inMouseEnterTable) return
             if (!setCurrentRow) return
             const dataLength = data.length
@@ -848,7 +848,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         return (
             <div className={styles["input-search"]}>
                 <YakitInput
-                    allowClear={true}
                     {...columnsItem.filterProps?.filterInputProps}
                     value={filters[filterKey]}
                     onChange={(e) => {
@@ -865,7 +864,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                             [filterKey]: val
                         })
                     }}
-                    onPressEnter={()=>{
+                    onPressEnter={() => {
                         setOpensPopover({
                             ...opensPopover,
                             [filterKey]: false
@@ -976,208 +975,212 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     })
 
     return (
-        <ShortcutKeyFocusHook style={{height:"100%"}} focusId={focusIdRef.current?[focusIdRef.current]:undefined}>
-        <div
-            className={classNames(styles["virtual-table"])}
-            ref={tableRef}
-            tabIndex={-1}
-            onMouseMove={(e) => onMouseMoveLine(e)}
-            onMouseEnter={() => {
-                setMouseEnter(true)
-            }}
-            onMouseLeave={() => {
-                setMouseEnter(false)
-            }}
-        >
-            <ReactResizeDetector
-                onResize={(w, h) => {
-                    if (!w || !h) {
-                        return
-                    }
-                    onScrollContainer()
-                    setWidth(w)
-                    setHeight(h)
+        <ShortcutKeyFocusHook style={{height: "100%"}} focusId={focusIdRef.current ? [focusIdRef.current] : undefined}>
+            <div
+                className={classNames(styles["virtual-table"])}
+                ref={tableRef}
+                tabIndex={-1}
+                onMouseMove={(e) => onMouseMoveLine(e)}
+                onMouseEnter={() => {
+                    setMouseEnter(true)
                 }}
-                handleWidth={true}
-                handleHeight={true}
-                refreshMode={"debounce"}
-                refreshRate={50}
-            />
-            {isShowTitle && (
-                <>
-                    {renderTitle ? (
-                        renderTitle
-                    ) : (
-                        <div className={classNames(styles["virtual-table-heard"])}>
-                            <div className={classNames(styles["virtual-table-heard-left"])}>
-                                {title && typeof title === "string" && (
-                                    <div className={classNames(styles["virtual-table-heard-title"])}>{title}</div>
+                onMouseLeave={() => {
+                    setMouseEnter(false)
+                }}
+            >
+                <ReactResizeDetector
+                    onResize={(w, h) => {
+                        if (!w || !h) {
+                            return
+                        }
+                        onScrollContainer()
+                        setWidth(w)
+                        setHeight(h)
+                    }}
+                    handleWidth={true}
+                    handleHeight={true}
+                    refreshMode={"debounce"}
+                    refreshRate={50}
+                />
+                {isShowTitle && (
+                    <>
+                        {renderTitle ? (
+                            renderTitle
+                        ) : (
+                            <div className={classNames(styles["virtual-table-heard"])}>
+                                <div className={classNames(styles["virtual-table-heard-left"])}>
+                                    {title && typeof title === "string" && (
+                                        <div className={classNames(styles["virtual-table-heard-title"])}>{title}</div>
+                                    )}
+                                    {title && React.isValidElement(title) && title}
+                                    {props.isShowTotal && pagination?.total >= 0 && (
+                                        <div className={styles["virtual-table-heard-right"]}>
+                                            <div className={styles["virtual-table-heard-right-item"]}>
+                                                <span className={styles["virtual-table-heard-right-text"]}>Total</span>
+                                                <span className={styles["virtual-table-heard-right-number"]}>
+                                                    {pagination?.total || 0}
+                                                </span>
+                                            </div>
+                                            <Divider type='vertical' />
+                                            <div className={styles["virtual-table-heard-right-item"]}>
+                                                <span className={styles["virtual-table-heard-right-text"]}>
+                                                    Selected
+                                                </span>
+                                                <span className={styles["virtual-table-heard-right-number"]}>
+                                                    {rowSelection?.isAll
+                                                        ? pagination?.total || 0
+                                                        : rowSelection?.selectedRowKeys?.length || 0}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                {extra && React.isValidElement(extra) && (
+                                    <div className={classNames(styles["virtual-table-heard-right"])}>{extra}</div>
                                 )}
-                                {title && React.isValidElement(title) && title}
-                                {props.isShowTotal && pagination?.total >= 0 && (
-                                    <div className={styles["virtual-table-heard-right"]}>
-                                        <div className={styles["virtual-table-heard-right-item"]}>
-                                            <span className={styles["virtual-table-heard-right-text"]}>Total</span>
-                                            <span className={styles["virtual-table-heard-right-number"]}>
-                                                {pagination?.total || 0}
-                                            </span>
-                                        </div>
-                                        <Divider type='vertical' />
-                                        <div className={styles["virtual-table-heard-right-item"]}>
-                                            <span className={styles["virtual-table-heard-right-text"]}>Selected</span>
-                                            <span className={styles["virtual-table-heard-right-number"]}>
-                                                {rowSelection?.isAll
-                                                    ? pagination?.total || 0
-                                                    : rowSelection?.selectedRowKeys?.length || 0}
-                                            </span>
-                                        </div>
+                            </div>
+                        )}
+                    </>
+                )}
+                {(width === 0 && <YakitSpin spinning={true} tip='加载中...'></YakitSpin>) || (
+                    <YakitSpin
+                        spinning={
+                            isHiddenLoadingUI ? false : loading !== undefined ? loading && pagination?.page == 1 : false
+                        }
+                    >
+                        <div
+                            className={classNames(styles["virtual-table-body"])}
+                            style={{
+                                maxHeight:
+                                    ((renderTitle || title || extra) &&
+                                        isShowTitle &&
+                                        `calc(100% - ${titleHeight ? titleHeight : 42}px)`) ||
+                                    "100%"
+                            }}
+                        >
+                            <ReactResizeDetector
+                                onResize={(w, h) => {
+                                    if (!w || !h) {
+                                        return
+                                    }
+                                    setBodyHeight(h)
+                                }}
+                                handleWidth={true}
+                                handleHeight={true}
+                                refreshMode={"debounce"}
+                                refreshRate={50}
+                            />
+                            {enableDrag && lineIndex > -1 && (
+                                <div
+                                    className={classNames(styles["drag-line"])}
+                                    style={{left: lineLeft}}
+                                    onMouseUp={(e) => onMouseUp(e)}
+                                />
+                            )}
+                            <div
+                                ref={containerRef}
+                                className={classNames(
+                                    styles["virtual-table-list-container"],
+                                    {
+                                        [styles["virtual-table-container-none-select"]]: lineIndex > -1
+                                    },
+                                    containerClassName
+                                )}
+                            >
+                                <div ref={columnsRef} className={classNames(styles["virtual-table-col"])}>
+                                    {columns.map((columnsItem, cIndex) => (
+                                        <ColumnsItemRender
+                                            key={`${columnsItem.dataKey}-title`}
+                                            columnsItem={columnsItem}
+                                            colWidth={colWidth}
+                                            scroll={scroll}
+                                            rowSelection={rowSelection as RowSelectionProps<any>}
+                                            cIndex={cIndex}
+                                            onChangeCheckbox={onChangeCheckbox}
+                                            // isAll={list.length > 0 && rowSelection?.selectedRowKeys?.length === data.length}
+                                            isAll={
+                                                rowSelection?.isAll ||
+                                                (list.length > 0 &&
+                                                    rowSelection?.selectedRowKeys?.length === data.length)
+                                            }
+                                            disableSorting={disableSorting}
+                                            sort={sort}
+                                            onSorter={onSorter}
+                                            renderSort={renderSort}
+                                            setOpensPopover={setOpensPopover}
+                                            opensPopover={opensPopover}
+                                            onChangTable={onChangTable}
+                                            renderFilterPopover={renderFilterPopover}
+                                            filters={filters}
+                                            enableDrag={enableDrag}
+                                            columns={columns}
+                                            onMouseDown={onMouseDown}
+                                            bodyHeight={bodyHeight}
+                                            setHoverLine={setHoverLine}
+                                            hoverLine={hoverLine}
+                                            size={size}
+                                        />
+                                    ))}
+                                </div>
+                                {/* <DndProvider backend={HTML5Backend}> */}
+                                <div ref={wrapperRef} className={classNames(styles["virtual-table-list"])}>
+                                    {columns.map((columnsItem, index) => (
+                                        <ColRender
+                                            colIndex={index}
+                                            currentRow={currentRow}
+                                            selectedRows={selectedRows}
+                                            key={`${columnsItem.dataKey}-${index}` || index}
+                                            columnsItem={columnsItem}
+                                            list={list}
+                                            colWidth={colWidth}
+                                            renderKey={renderKey}
+                                            isLastItem={index === columns.length - 1}
+                                            onRowClick={onRowClick}
+                                            onRowDoubleClick={onRowDoubleClick}
+                                            onRowContextMenu={(data, e, rowIndex) => {
+                                                onRowContextMenu(data, e, rowIndex)
+                                            }}
+                                            rowSelection={rowSelection as any}
+                                            onChangeCheckboxSingle={onChangeCheckboxSingle}
+                                            scroll={scroll}
+                                            setMouseEnter={onMouseEnterCell}
+                                            setMouseLeave={oMouseLeaveCell}
+                                            mouseCellId={mouseCellId}
+                                            moveRow={moveRow}
+                                            width={width}
+                                            enableDragSort={enableDragSort}
+                                            moveRowEnd={moveRowEnd}
+                                            size={size}
+                                            checkboxPropsMap={checkboxPropsMap}
+                                        />
+                                    ))}
+                                </div>
+                                {/* </DndProvider> */}
+                            </div>
+                            <div
+                                className={classNames(styles["virtual-table-list-pagination"])}
+                                style={{display: scroll.scrollBottom <= 10 ? "" : "none"}}
+                            >
+                                {loading && !(pagination?.total == data.length) && (
+                                    <div className={classNames(styles["pagination-loading"])}>
+                                        <LoadingOutlined />
+                                    </div>
+                                )}
+                                {!loading && pagination?.total == data.length && (pagination?.page || 0) > 0 && (
+                                    <div
+                                        className={classNames(styles["pagination-text"], {
+                                            [styles["pagination-text-show"]]:
+                                                scroll.scrollBottom < 10 || list.length === 0
+                                        })}
+                                    >
+                                        暂无更多数据
                                     </div>
                                 )}
                             </div>
-                            {extra && React.isValidElement(extra) && (
-                                <div className={classNames(styles["virtual-table-heard-right"])}>{extra}</div>
-                            )}
                         </div>
-                    )}
-                </>
-            )}
-            {(width === 0 && <YakitSpin spinning={true} tip='加载中...'></YakitSpin>) || (
-                <YakitSpin
-                    spinning={
-                        isHiddenLoadingUI ? false : loading !== undefined ? loading && pagination?.page == 1 : false
-                    }
-                >
-                    <div
-                        className={classNames(styles["virtual-table-body"])}
-                        style={{
-                            maxHeight:
-                                ((renderTitle || title || extra) &&
-                                    isShowTitle &&
-                                    `calc(100% - ${titleHeight ? titleHeight : 42}px)`) ||
-                                "100%"
-                        }}
-                    >
-                        <ReactResizeDetector
-                            onResize={(w, h) => {
-                                if (!w || !h) {
-                                    return
-                                }
-                                setBodyHeight(h)
-                            }}
-                            handleWidth={true}
-                            handleHeight={true}
-                            refreshMode={"debounce"}
-                            refreshRate={50}
-                        />
-                        {enableDrag && lineIndex > -1 && (
-                            <div
-                                className={classNames(styles["drag-line"])}
-                                style={{left: lineLeft}}
-                                onMouseUp={(e) => onMouseUp(e)}
-                            />
-                        )}
-                        <div
-                            ref={containerRef}
-                            className={classNames(
-                                styles["virtual-table-list-container"],
-                                {
-                                    [styles["virtual-table-container-none-select"]]: lineIndex > -1
-                                },
-                                containerClassName
-                            )}
-                        >
-                            <div ref={columnsRef} className={classNames(styles["virtual-table-col"])}>
-                                {columns.map((columnsItem, cIndex) => (
-                                    <ColumnsItemRender
-                                        key={`${columnsItem.dataKey}-title`}
-                                        columnsItem={columnsItem}
-                                        colWidth={colWidth}
-                                        scroll={scroll}
-                                        rowSelection={rowSelection as RowSelectionProps<any>}
-                                        cIndex={cIndex}
-                                        onChangeCheckbox={onChangeCheckbox}
-                                        // isAll={list.length > 0 && rowSelection?.selectedRowKeys?.length === data.length}
-                                        isAll={
-                                            rowSelection?.isAll ||
-                                            (list.length > 0 && rowSelection?.selectedRowKeys?.length === data.length)
-                                        }
-                                        disableSorting={disableSorting}
-                                        sort={sort}
-                                        onSorter={onSorter}
-                                        renderSort={renderSort}
-                                        setOpensPopover={setOpensPopover}
-                                        opensPopover={opensPopover}
-                                        onChangTable={onChangTable}
-                                        renderFilterPopover={renderFilterPopover}
-                                        filters={filters}
-                                        enableDrag={enableDrag}
-                                        columns={columns}
-                                        onMouseDown={onMouseDown}
-                                        bodyHeight={bodyHeight}
-                                        setHoverLine={setHoverLine}
-                                        hoverLine={hoverLine}
-                                        size={size}
-                                    />
-                                ))}
-                            </div>
-                            {/* <DndProvider backend={HTML5Backend}> */}
-                            <div ref={wrapperRef} className={classNames(styles["virtual-table-list"])}>
-                                {columns.map((columnsItem, index) => (
-                                    <ColRender
-                                        colIndex={index}
-                                        currentRow={currentRow}
-                                        selectedRows={selectedRows}
-                                        key={`${columnsItem.dataKey}-${index}` || index}
-                                        columnsItem={columnsItem}
-                                        list={list}
-                                        colWidth={colWidth}
-                                        renderKey={renderKey}
-                                        isLastItem={index === columns.length - 1}
-                                        onRowClick={onRowClick}
-                                        onRowDoubleClick={onRowDoubleClick}
-                                        onRowContextMenu={(data, e, rowIndex) => {
-                                            onRowContextMenu(data, e, rowIndex)
-                                        }}
-                                        rowSelection={rowSelection as any}
-                                        onChangeCheckboxSingle={onChangeCheckboxSingle}
-                                        scroll={scroll}
-                                        setMouseEnter={onMouseEnterCell}
-                                        setMouseLeave={oMouseLeaveCell}
-                                        mouseCellId={mouseCellId}
-                                        moveRow={moveRow}
-                                        width={width}
-                                        enableDragSort={enableDragSort}
-                                        moveRowEnd={moveRowEnd}
-                                        size={size}
-                                        checkboxPropsMap={checkboxPropsMap}
-                                    />
-                                ))}
-                            </div>
-                            {/* </DndProvider> */}
-                        </div>
-                        <div
-                            className={classNames(styles["virtual-table-list-pagination"])}
-                            style={{display: scroll.scrollBottom <= 10 ? "" : "none"}}
-                        >
-                            {loading && !(pagination?.total == data.length) && (
-                                <div className={classNames(styles["pagination-loading"])}>
-                                    <LoadingOutlined />
-                                </div>
-                            )}
-                            {!loading && pagination?.total == data.length && (pagination?.page || 0) > 0 && (
-                                <div
-                                    className={classNames(styles["pagination-text"], {
-                                        [styles["pagination-text-show"]]: scroll.scrollBottom < 10 || list.length === 0
-                                    })}
-                                >
-                                    暂无更多数据
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </YakitSpin>
-            )}
-        </div>
+                    </YakitSpin>
+                )}
+            </div>
         </ShortcutKeyFocusHook>
     )
 }

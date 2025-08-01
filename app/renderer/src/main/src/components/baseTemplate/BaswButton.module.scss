@@ -4,8 +4,8 @@
     font-size: 10px;
 }
 .base-tags-list-tag {
-    color: #85899e;
-    background: #f8f8f8;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    background: var(--Colors-Use-Neutral-Bg);
     border: 1px solid #eaecf3;
     border-radius: 4px;
     text-align: center;
@@ -17,8 +17,8 @@
 //     border: 1px solid #fbc6a1;
 // }
 .base-tags-list-tag:hover {
-    color: var(--yakit-primary-5);
-    border: 1px solid var(--yakit-primary-3);
+    color: var(--Colors-Use-Main-Primary);
+    border: 1px solid var(--Colors-Use-Main-Border);
 }
 
 .base-tags-small-size {

@@ -1374,9 +1374,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                             return (
                                                 <div
                                                     key={item.key}
-                                                    style={
-                                                        {...item.style}
-                                                    }
+                                                    style={{...item.style}}
                                                     className={styles["title-opt"]}
                                                 >
                                                     <div>
@@ -1501,9 +1499,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                                     return (
                                                                         <div
                                                                             key={`${i.index}-${item.key}`}
-                                                                            style={
-                                                                                {...item.style}
-                                                                            }
+                                                                            style={{...item.style}}
                                                                             className={styles["content-opt"]}
                                                                         >
                                                                             {item.render ? (
@@ -1878,11 +1874,11 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 setTimeout(() => setLoading(false), 300)
                 return
             }
-            if (isShowExternalProjectCode && !info.ExternalProjectCode){
+            if (isShowExternalProjectCode && !info.ExternalProjectCode) {
                 setTimeout(() => setLoading(false), 300)
                 return
             }
-            if (isShowExternalModule && !info.ExternalModule){
+            if (isShowExternalModule && !info.ExternalModule) {
                 setTimeout(() => setLoading(false), 300)
                 return
             }
@@ -2158,7 +2154,9 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                     dropdownClassName={styles["cascader-dropdown-body"]}
                                     open={dropShow}
                                     onDropdownVisibleChange={(open: boolean) => setDropShow(open)}
-                                    suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                                    suffixIcon={
+                                        <ChevronDownIcon style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />
+                                    }
                                 />
                             </Form.Item>
                         )}
@@ -2379,7 +2377,9 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                         }
                                     }}
                                     dropdownClassName={styles["cascader-dropdown-body"]}
-                                    suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                                    suffixIcon={
+                                        <ChevronDownIcon style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />
+                                    }
                                 />
                             </Form.Item>
                         )}
@@ -2569,8 +2569,8 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                             </div>
                             <div className={styles["download-progress"]}>
                                 <Progress
-                                    strokeColor='#F28B44'
-                                    trailColor='#F0F2F5'
+                                    strokeColor='var(--Colors-Use-Main-Primary)'
+                                    trailColor='var(--Colors-Use-Neutral-Bg)'
                                     percent={+percent.toFixed(2)}
                                     format={(p, sp) => {
                                         return <div className={styles["progress-content-style"]}>{`进度 ${p}%`}</div>

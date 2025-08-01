@@ -37,7 +37,6 @@
         flex-direction: column;
         align-items: flex-start;
         border-right: 1px solid var(--Colors-Use-Neutral-Border);
-        border-left: 1px solid var(--Colors-Use-Neutral-Border);
         background: var(--Colors-Use-Neutral-Bg-Hover);
 
         .list-item {
@@ -47,7 +46,7 @@
             align-items: flex-start;
             gap: 4px;
             cursor: pointer;
-            border-bottom: 1px solid var(--Colors-Use-Basic-Background);
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             position: relative;
             user-select: none;
             .item-title {
@@ -66,11 +65,12 @@
             }
         }
         .list-item:hover {
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            background-color: var(--Colors-Use-Neutral-Border)
         }
 
         .list-item-active {
-            background-color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-On-Primary);
+            background-color: var(--Colors-Use-Main-Primary);
             .item-title {
                 color: var(--Colors-Use-Main-On-Primary);
             }
@@ -85,7 +85,7 @@
                 content: "";
                 top: 0;
                 left: -1px;
-                background-color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Main-Primary);
             }
             &::after {
                 position: absolute;
@@ -94,37 +94,37 @@
                 content: "";
                 top: 0;
                 right: -1px;
-                background-color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Main-Primary);
             }
 
             &.list-item:hover {
-                background-color: var(--yakit-primary-4);
+                    background-color: var(--Colors-Use-Main-Hover);
                 &::before {
-                    background-color: var(--yakit-primary-4);
+                    background-color: var(--Colors-Use-Main-Hover);
                 }
                 &::after {
-                    background-color: var(--yakit-primary-4);
+                    background-color: var(--Colors-Use-Main-Hover);
                 }
             }
         }
 
         .list-item-hidden {
-            background-color: var(--yakit-primary-3);
+            background-color: var(--Colors-Use-Main-Primary);
 
             &.list-item-active::before {
-                background-color: var(--yakit-primary-3);
+                background-color: var(--Colors-Use-Main-Primary);
             }
             &.list-item-active::after {
-                background-color: var(--yakit-primary-3);
+                background-color: var(--Colors-Use-Main-Primary);
             }
 
             &.list-item-active.list-item:hover {
-                background-color: var(--yakit-primary-4);
+                background-color: var(--Colors-Use-Main-Hover);
                 &.list-item-active::before {
-                    background-color: var(--yakit-primary-4);
+                    background-color: var(--Colors-Use-Main-Hover);
                 }
                 &.list-item-active::after {
-                    background-color: var(--yakit-primary-4);
+                    background-color: var(--Colors-Use-Main-Hover);
                 }
             }
         }
@@ -300,12 +300,12 @@
                         display: flex;
                         align-items: center;
                         .required {
-                            color: var(--yakit-danger-5);
+                            color: var(--Colors-Use-Error-Primary);
                         }
                         .key-style {
                             overflow: hidden;
                             font-size: 14px;
-                            color: var(--yakit-primary-5);
+                            color: var(--Colors-Use-Main-Primary);
                             line-height: 20px;
                         }
                         .type-style {
@@ -314,7 +314,7 @@
                         .notes-icon {
                             cursor: pointer;
                             margin-left: 6px;
-                            color: var(--ui-neutral-50);
+                            color: var(--Colors-Use-Neutral-Text-4-Help-text);
                             svg {
                                 width: 16px;
                                 height: 16px;

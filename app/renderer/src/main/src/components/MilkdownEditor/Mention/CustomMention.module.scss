@@ -8,7 +8,7 @@
     font-weight: 400;
     line-height: 16px;
     letter-spacing: 0.5px;
-    background-color: var(--yakit-primary-2);
+    background-color: var(--Colors-Use-Main-Bg-Hover);
     border-radius: 4px;
     width: max-content;
     cursor: pointer;
@@ -18,7 +18,8 @@
 }
 
 .mention-custom-selected {
-    background-color: var(--yakit-primary-5);
+    background-color: var(--Colors-Use-Main-Primary);
+    color: var(--Colors-Use-Main-On-Primary);
 }
 
 .mention-custom-popover {

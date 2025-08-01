@@ -53,7 +53,6 @@ import MITMContext from "../Context/MITMContext"
 import ReactResizeDetector from "react-resize-detector"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
-import {useCampare} from "@/hook/useCompare/useCompare"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -89,7 +88,7 @@ const HitColor = {
         className: "color-bg-purple"
     },
     cyan: {
-        title: "天蓝色",
+        title: "青色",
         value: "cyan",
         className: "color-bg-cyan"
     },
@@ -466,7 +465,16 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 {
                     title: "追加 Tag",
                     dataKey: "ExtraTag",
-                    minWidth: 120
+                    minWidth: 120,
+                    render: (text, record: MITMContentReplacerRule) => (
+                        <div
+                            className={classNames({
+                                [styles["action-icon-edit-disabled"]]: record.Disabled
+                            })}
+                        >
+                            {text}
+                        </div>
+                    )
                 },
                 {
                     title: "操作",
@@ -826,7 +834,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
 
         const isAlowMoveRef = useRef<boolean>(true)
         const onMoveRow = useMemoizedFn((dragIndex: number, hoverIndex: number) => {
-            setRules((prevRules: MITMContentReplacerRule[]) =>{
+            setRules((prevRules: MITMContentReplacerRule[]) => {
                 // PS: 未屏蔽的规则仅能在未屏蔽的规则中进行拖拽 屏蔽的规则仅能在屏蔽的规则中进行拖拽
                 if (prevRules[dragIndex].Disabled !== prevRules[hoverIndex].Disabled || !isAlowMoveRef.current) {
                     if (isAlowMoveRef.current) {
@@ -835,7 +843,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     isAlowMoveRef.current = false
                     return prevRules
                 }
-                
+
                 return update(prevRules, {
                     $splice: [
                         [dragIndex, 1],

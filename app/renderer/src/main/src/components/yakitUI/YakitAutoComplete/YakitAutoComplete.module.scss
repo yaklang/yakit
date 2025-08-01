@@ -2,18 +2,18 @@
 .yakit-auto-complete-disabled {
     :global {
         .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            background-color: #f0f1f3;
-            border: 1px solid #eaecf3;
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
         }
     }
 }
 
 // ========================== middle ==========================
 .yakit-auto-complete-wrapper {
-    --yakit-box-shadow-color: var(--yakit-primary-2);
-    --yakit-border-hover-color: var(--yakit-primary-4);
-    --yakit-border-focus-color: var(--yakit-primary-5);
-    --yakit-font-color: var(--yakit-primary-5);
+    --yakit-box-shadow-color: var(--Colors-Use-Basic-Shadow);
+    --yakit-border-hover-color: var(--Colors-Use-Main-Hover);
+    --yakit-border-focus-color: var(--Colors-Use-Main-Primary);
+    --yakit-font-color: var(--Colors-Use-Main-Primary);
 
     display: inline-flex;
     width: 100%;
@@ -26,12 +26,14 @@
             height: 28px;
             padding: 6px 12px;
             border-radius: 4px;
-            border-color: var(--yakit-border-color);
+            border-color: var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Basic-Background);
         }
 
         .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
             height: 26px;
             font-size: 14px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
@@ -84,11 +86,14 @@
 
 // ========================== popup ==========================
 .yakit-auto-complete-popup {
-    --auto-complete-font-color: var(--yakit-primary-5);
-    --auto-complete-background-color: var(--yakit-primary-1);
+    --auto-complete-font-color: var(--Colors-Use-Main-Primary);
+    --auto-complete-background-color: var(--Colors-Use-Main-Bg);
 
     padding: 6px 4px;
     border-radius: 4px;
+    background: var(--Colors-Use-Basic-Background);
+    box-shadow: 0 8px 16px var(--Colors-Use-Basic-Shadow);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
 
     :global {
         .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
@@ -100,6 +105,7 @@
             border-radius: 4px;
             padding: 4px 8px;
             font-size: 14px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 }
@@ -122,9 +128,9 @@
             width: 16px;
             height: 16px;
             margin-top: 4px;
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
             &:hover {
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
             }
         }
     }

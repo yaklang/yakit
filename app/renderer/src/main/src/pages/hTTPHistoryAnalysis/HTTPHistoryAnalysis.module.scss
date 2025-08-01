@@ -6,13 +6,13 @@
 
         &-title {
             margin-right: 8px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 600;
         }
 
         &-desc {
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             font-size: 12px;
         }
     }
@@ -26,16 +26,16 @@
         display: flex;
         align-items: center;
         height: 24px;
-        border-top: 1px solid #FFFFFF;
-        background: var(--yakit-card-background-color);
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg);
 
         .footer-tab-item {
             padding: 0 16px;
             cursor: pointer;
-            border-right: 1px solid #FFFFFF;
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
 
             &:hover {
-                background-color: rgba(204, 210, 222, .5);
+                background-color: var(--Colors-Use-Neutral-Border);
             }
         }
     }
@@ -48,8 +48,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid #FFFFFF;
-        background: var(--yakit-card-background-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg);
 
         &-left {
             display: flex;
@@ -57,12 +57,12 @@
             .header-tab-item {
                 padding: 4px 16px;
                 cursor: pointer;
-                border-right: 1px solid #FFFFFF;
+                border-right: 1px solid var(--Colors-Use-Neutral-Border);
             }
 
             .tab-item-active {
-                color: #FFFFFF;
-                background-color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-On-Primary);
+                background-color: var(--Colors-Use-Main-Primary);
             }
         }
 
@@ -135,9 +135,12 @@
                 }
 
                 span.title {
-                    color: #31343F;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 16px;
                     font-weight: 600;
+                }
+                span.content{
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 }
             }
 
@@ -193,11 +196,11 @@
                 align-items: center;
                 height: 30px;
                 margin-top: 2px;
-                border-bottom: 1px solid #EAECF3;
+                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 
                 &-text {
                     padding-left: 8px;
-                    color: #31343F;
+                    color: var(--Colors-Use-Neutral-Text-2-Primary);
                     font-size: 16px;
                     font-weight: 600;
                 }
@@ -257,7 +260,7 @@
         display: inline-flex;
         align-items: center;
         cursor: pointer;
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
 
         svg {
             width: 16px;
@@ -265,11 +268,11 @@
         }
 
         &:hover {
-            color: var(--yakit-primary-4);
+            color: var(--Colors-Use-Blue-Hover);
         }
 
         &:active {
-            color: var(--yakit-primary-6);
+            color: var(--Colors-Use-Main-Pressed);
         }
     }
 }

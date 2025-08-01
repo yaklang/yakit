@@ -29,11 +29,25 @@
   <script src="./xterm-addon-fit@0.7.0/xterm-addon-fit.js"></script>
   <script>
     const { ipcRenderer } = require('electron')
+    const getLocalValue = async (k, defaultValue) => {
+      try {
+        const result = await ipcRenderer.invoke("fetch-local-cache", k)
+        return result ?? defaultValue
+      } catch {
+        return defaultValue
+      }
+    }
+
+    getLocalValue("theme", "light").then((t) => {
+      document.documentElement.setAttribute("data-theme", t)
+    })
+
     ipcRenderer.on('xterm-data', (event, data) => {
       term.write(data)
     })
 
     const getCssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
     const term = new window.Terminal({
       convertEol: true,
       theme: {
@@ -55,7 +69,7 @@
         cyan: getCssVar('--yakit-colors-Cyan-80'),
         brightCyan: getCssVar('--yakit-colors-Cyan-60'),
         white: getCssVar('--yakit-colors-Neutral-10'),
-        brightWhite: getCssVar('--yakit-colors-Neutral-0')
+        brightWhite: getCssVar('--yakit-colors-Neutral-0'),
       }
     })
     const fitAddon = new window.FitAddon.FitAddon()

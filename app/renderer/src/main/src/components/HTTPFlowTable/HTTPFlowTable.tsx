@@ -92,7 +92,12 @@ import {RemoteHistoryGV} from "@/enums/history"
 import {YakitCombinationSearch} from "../YakitCombinationSearch/YakitCombinationSearch"
 import {v4 as uuidv4} from "uuid"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
-import {filterColorTag, isCellRedSingleColor, TableCellToColorTag} from "../TableVirtualResize/utils"
+import {
+    filterColorTag,
+    getSingleColorType,
+    isCellRedSingleColor,
+    TableCellToColorTag
+} from "../TableVirtualResize/utils"
 import {randomString} from "@/utils/randomUtil"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
 import {usePageInfo} from "@/store/pageInfo"
@@ -406,9 +411,9 @@ export const StatusCodeToColor = (code: number) => {
     if (code >= 400) {
         return "var( --yakit-danger-5)"
     } else if (code < 400 && code >= 300) {
-        return "var( --yakit-warning-5)"
+        return "var( --Colors-Use-Warning-Primary)"
     } else {
-        return "var( --yakit-success-5)"
+        return "var( --Colors-Use-Success-Primary)"
     }
 }
 
@@ -416,9 +421,9 @@ export const DurationMsToColor = (code: number) => {
     if (code >= 600) {
         return "var( --yakit-danger-5)"
     } else if (code < 600 && code >= 300) {
-        return "var( --yakit-warning-5)"
+        return "var( --Colors-Use-Warning-Primary)"
     } else {
-        return "var( --yakit-success-5)"
+        return "var( --Colors-Use-Success-Primary)"
     }
 }
 
@@ -506,8 +511,7 @@ export const availableColors = [
         searchWord: TableCellToColorTag["BLUE"],
         render: (
             <div className={classNames(style["history-color-tag"])}>
-                <div className={classNames(style["tag-color-display"], "color-bg-blue")}></div>
-                蓝色
+                <div className={classNames(style["tag-color-display"], "color-bg-blue")}></div>蓝色
             </div>
         )
     },
@@ -549,13 +553,13 @@ export const availableColors = [
     },
     {
         color: "CYAN",
-        title: "天蓝色[#35D8EE]",
+        title: "青色[#35D8EE]",
         searchWord: TableCellToColorTag["CYAN"],
         className: TableRowColor("CYAN"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-cyan")}></div>
-                天蓝色
+                青色
             </div>
         )
     },
@@ -2223,11 +2227,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 fixed: "right",
                 render: (_, rowData) => {
                     if (!rowData.Hash) return <></>
+                    const colorType = getSingleColorType(rowData.cellClassName) // 获取颜色类型
                     return (
-                        <div className={style["action-btn-group"]}>
+                        <div
+                            className={classNames(style["action-btn-group"], {
+                                [style[`hover-${colorType}-row`]]: !!colorType // 添加 hover 类
+                            })}
+                        >
                             <ChromeFrameSvgIcon
                                 className={classNames(style["icon-hover"], {
-                                    [style["icon-style"]]: !isCellRedSingleColor(rowData.cellClassName)
+                                    [style["icon-style"]]: !colorType
                                 })}
                                 onClick={(e) => {
                                     e.stopPropagation()
@@ -2245,7 +2254,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
                             <ArrowCircleRightSvgIcon
                                 className={classNames(style["icon-hover"], {
-                                    [style["icon-style"]]: !isCellRedSingleColor(rowData.cellClassName)
+                                    [style["icon-style"]]: !colorType
                                 })}
                                 onClick={(e) => {
                                     e.stopPropagation()
@@ -5111,8 +5120,8 @@ export const ImportExportProgress: React.FC<ImportExportProgressProps> = React.m
             <div style={{padding: 15}} className='yakit-progress-wrapper'>
                 {importExportStream[importExportStream.length - 1]?.Percent === undefined && <div>{subTitle}</div>}
                 <Progress
-                    strokeColor='#F28B44'
-                    trailColor='#F0F2F5'
+                    strokeColor='var(--Colors-Use-Main-Primary)'
+                    trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={Math.trunc(importExportStream[importExportStream.length - 1]?.Percent * 100)}
                     format={(percent) => `${percent}%`}
                 />

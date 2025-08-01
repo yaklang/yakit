@@ -996,6 +996,8 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                     <div>下载进度</div>
                     <div className={styles["filter-opt-progress-modal"]}>
                         <Progress
+                            strokeColor='var(--Colors-Use-Main-Primary)'
+                            trailColor='var(--Colors-Use-Neutral-Bg)'
                             size='small'
                             status={!addLoading && percent !== 0 ? "exception" : undefined}
                             percent={percent}

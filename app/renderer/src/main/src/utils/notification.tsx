@@ -2,7 +2,7 @@ import {notification} from "antd"
 import {ArgsProps} from "antd/lib/notification"
 import React, {ReactNode} from "react"
 import {CheckCircleOutlineIcon, CloseCircleIcon, ExclamationOutlineIcon} from "@/assets/newIcon"
-import { CopyComponents } from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 
 export const warn = (msg: React.ReactNode) => {
     yakitNotify("warning", msg)
@@ -33,8 +33,8 @@ export const yakitFailed = (props: ArgsProps | string | React.ReactNode, isShowC
         message: ""
     }
 
-    const copyBtn= (copyStr) => (
-        <div style={{display:"flex",justifyContent:"end"}}>
+    const copyBtn = (copyStr) => (
+        <div style={{display: "flex", justifyContent: "end"}}>
             <CopyComponents copyText={copyStr} />
         </div>
     )

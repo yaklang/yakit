@@ -1,35 +1,46 @@
 // ========================== ant descriptions yakit-start ==========================
 
 .yakit-descriptions {
+    .ant-descriptions-view {
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: none;
+    }
+    .ant-descriptions-view .ant-descriptions-row{
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    }
+
     .ant-descriptions-bordered .ant-descriptions-view {
         border: 0;
     }
 
     .ant-descriptions-bordered .ant-descriptions-item-label,
     .ant-descriptions-bordered .ant-descriptions-item-content {
-        border-right: 1px solid var(--yakit-border-color);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
     }
 
     .ant-descriptions-item-label {
         padding: 12px 16px 12px 12px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
         height: 40px;
         min-width: 96px;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
     }
 
     .ant-descriptions-bordered .ant-descriptions-row {
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border) !important;
     }
 
     .ant-descriptions-bordered .ant-descriptions-item-label {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     .ant-descriptions-item-content {
         height: 40px;
         padding: 12px 16px 12px 12px;
-        background-color: var(--yakit-card-background-color);
-        color: var(--yakit-header-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
     }
 
     .ant-descriptions-bordered .ant-descriptions-item-label:last-child,
@@ -42,7 +53,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         background-color: #ffffff;
         margin-bottom: 0;
         position: sticky;
@@ -51,12 +62,12 @@
         .ant-descriptions-title {
             font-weight: 500;
             font-size: 12px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
     .descriptions-no-more {
         font-size: 12px;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         text-align: center;
         padding: 12px;
         width: 100%;

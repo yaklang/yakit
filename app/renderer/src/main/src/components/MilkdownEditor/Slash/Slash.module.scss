@@ -2,7 +2,7 @@
     position: absolute;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 8px;
     overflow: hidden;
     padding: 4px 8px;
@@ -30,7 +30,7 @@
         border-radius: 4px;
         line-height: 16px;
         &:hover {
-            background-color: var(--yakit-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
         }
         svg {
             width: 20px;

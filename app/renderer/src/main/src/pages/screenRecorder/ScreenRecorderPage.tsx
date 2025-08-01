@@ -49,7 +49,7 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
                 <div className={styles["not-installed-empty"]}>
                     <YakitEmpty
                         image={<img src={screcorderEmpty} alt='' />}
-                        imageStyle={{height: 200,margin: 'auto',marginBottom: 24}}
+                        imageStyle={{height: 200, margin: "auto", marginBottom: 24}}
                         title={<div style={{fontSize: 14}}>未安装录屏</div>}
                         description='点击“安装录屏”，录屏工具安装成功后即可开始录屏'
                     />
@@ -69,7 +69,7 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
             <YakitHint
                 visible={installVisible}
                 title='录屏工具安装中...'
-                heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
+                heardIcon={<SolidCloudDownloadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
                 onCancel={() => {
                     setInstallVisible(false)
                 }}
@@ -155,8 +155,8 @@ export const InstallFFmpeg: React.FC<InstallFFmpegProp> = (props) => {
         <>
             <div className={styles["download-progress"]}>
                 <Progress
-                    strokeColor='#F28B44'
-                    trailColor='#F0F2F5'
+                    strokeColor='var(--Colors-Use-Main-Primary)'
+                    trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={percent}
                     format={(percent) => `已下载 ${percent}%`}
                 />

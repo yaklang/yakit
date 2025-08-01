@@ -10,12 +10,12 @@ milkdown-image-inline > .image-inline {
 }
 
 milkdown-image-inline.selected > .image-inline {
-    outline: 2px solid var(--yakit-primary-3);
+    outline: 2px solid var(--Colors-Use-Main-Border);
     vertical-align: bottom;
 }
 
 milkdown-image-inline.selected > .empty-image-inline {
-    outline: 2px solid var(--yakit-primary-3);
+    outline: 2px solid var(--Colors-Use-Main-Border);
 }
 
 milkdown-image-inline > .empty-image-inline {
@@ -30,7 +30,7 @@ milkdown-image-inline > .empty-image-inline .image-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 
 milkdown-image-inline > .empty-image-inline .image-icon svg {
@@ -39,7 +39,7 @@ milkdown-image-inline > .empty-image-inline .image-icon svg {
 }
 
 milkdown-image-inline > .empty-image-inline .link-importer .placeholder {
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 12px;
 }
 
@@ -51,7 +51,7 @@ milkdown-image-inline > .empty-image-inline .link-importer .link-input-area {
 
 milkdown-image-inline > .empty-image-inline .link-importer .placeholder .uploader {
     gap: 8px;
-    color: var(--yakit-primary-3);
+    color: var(--Colors-Use-Main-Border);
     justify-content: center;
     transition: color 0.2s;
 }
@@ -61,7 +61,7 @@ milkdown-image-inline > .empty-image-inline .link-importer.focus .placeholder .u
 }
 
 milkdown-image-inline > .empty-image-inline .link-importer .placeholder .uploader:hover {
-    color: var(var(--yakit-primary-3));
+    color: var(var(--Colors-Use-Main-Border));
 }
 
 milkdown-image-inline > .empty-image-inline .link-importer .placeholder .text {
@@ -69,7 +69,7 @@ milkdown-image-inline > .empty-image-inline .link-importer .placeholder .text {
 }
 
 milkdown-image-inline > .empty-image-inline .confirm {
-    background: var(--yakit-body-text-color);
+    background: var(--Colors-Use-Neutral-Text-1-Title);
     color: antiquewhite;
     line-height: 28px;
     padding: 0 12px;

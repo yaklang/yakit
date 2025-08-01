@@ -10,7 +10,7 @@
 .tree-expand-icon {
     width: 16px;
     height: 16px;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 
     display: flex;
     padding: 2px 0;
@@ -29,11 +29,11 @@
         @extend %display-flex-center;
         justify-content: space-between;
         padding: 12px 16px;
-        border-bottom: 1px solid var(--yakit-border-color);
-        background: #fff;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Basic-Background);
         overflow: hidden;
         &-title {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
 
             font-size: 16px;
             font-style: normal;
@@ -76,13 +76,13 @@
             font-weight: 600;
             padding: 0;
             &::placeholder {
-                color: var(--yakit-disable-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
             }
         }
         .notepad-heard-subTitle {
             @extend %display-flex-center;
             gap: 4px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
 
             font-size: 12px;
             font-style: normal;
@@ -101,11 +101,11 @@
         }
         .ant-popover-inner-content {
             padding: 0;
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             border-radius: 8px;
         }
         .ant-popover-arrow-content {
-            background-color: var(--yakit-card-background-color) !important;
+            background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
         }
     }
 }
@@ -135,6 +135,15 @@
                 background-color: initial;
             }
         }
+        .ant-tree-treenode-leaf-last{
+            &:hover {
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
+                border-radius: 4px;
+                svg {
+                    color: var(--Colors-Use-Main-Primary);
+                }
+            }
+        }
     }
     .notepad-tab-content {
         flex: 1;
@@ -153,14 +162,14 @@
             height: 26px;
             width: 100%;
             &:hover {
-                background-color: #f8f8f8;
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
                 svg {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
         .tree-node-title {
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-style: normal;
             font-weight: 400;

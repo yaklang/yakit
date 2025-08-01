@@ -9,7 +9,7 @@
 
 .yakit-risk-details-content {
     overflow-y: auto;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     :global {
         .ant-descriptions-bordered .ant-descriptions-view > table {
             table-layout: fixed;
@@ -19,7 +19,7 @@
         @extend %display-flex-center;
         align-items: flex-start;
         padding: 12px;
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         .content-heard-left {
             @extend %display-flex-center;
             overflow: hidden;
@@ -44,7 +44,7 @@
                 overflow: hidden;
                 flex-wrap: wrap;
                 .content-heard-body-title {
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 16px;
                     font-style: normal;
                     font-weight: 600;
@@ -52,7 +52,7 @@
                 }
                 .content-heard-body-description {
                     @extend %display-flex-center;
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 400;
                     line-height: 16px;
@@ -65,7 +65,7 @@
                         gap: 4px;
                         overflow: hidden;
                         .url {
-                            color: var(--yakit-body-text-color);
+                            color: var(--Colors-Use-Neutral-Text-1-Title);
                         }
                     }
                     .content-heard-body-time {
@@ -100,7 +100,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     :global {
         .ant-descriptions-bordered .ant-descriptions-view > table {
             table-layout: fixed;
@@ -110,7 +110,7 @@
         @extend %display-flex-center;
         align-items: flex-start;
         padding: 12px;
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         .content-heard-left {
             @extend %display-flex-center;
             overflow: hidden;
@@ -135,7 +135,7 @@
                 overflow: hidden;
                 flex-wrap: wrap;
                 .content-heard-body-title {
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 16px;
                     font-style: normal;
                     font-weight: 600;
@@ -143,7 +143,7 @@
                 }
                 .content-heard-body-description {
                     @extend %display-flex-center;
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 400;
                     line-height: 16px;
@@ -176,7 +176,7 @@
         border-left: 1px solid #eaecf3;
         border-bottom: 1px solid #eaecf3;
         border-right: 1px solid #eaecf3;
-        background: #f8f8f8;
+        background: var(--Colors-Use-Neutral-Bg);
         display: flex;
         flex-direction: row;
         justify-content: space-between;
@@ -204,7 +204,7 @@
                 flex-direction: row;
                 gap: 8px;
                 .name {
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 500;
                     overflow: hidden;
@@ -231,7 +231,7 @@
 
 .no-more {
     font-size: 12px;
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     text-align: center;
     padding: 12px;
     width: 100%;

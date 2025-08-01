@@ -847,8 +847,8 @@ export const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React
                 <span className='content-ellipsis'>{name}</span>
             </div>
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={Math.trunc(percent * 100)}
                 format={(percent) => `${percent}%`}
             />

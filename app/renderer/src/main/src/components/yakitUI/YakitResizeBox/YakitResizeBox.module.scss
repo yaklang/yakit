@@ -4,12 +4,13 @@
     display: flex;
     position: relative;
     overflow: hidden;
+    background-color: var(--Colors-Use-Basic-Background);
     .resize-split-line {
         display: flex;
         align-items: center;
         justify-content: center;
         .resize-split-line-in {
-            background-color: var(--yakit-background-color);
+            background-color: var(--Colors-Use-Neutral-Border);
         }
         .resize-split-line-in-hide{
             background-color: transparent;
@@ -38,7 +39,7 @@
 
     .resize-split-line:hover {
         .resize-split-line-in, .resize-split-line-in-hide {
-            background-color: var(--yakit-primary-4);
+            background-color: var(--Colors-Use-Main-Hover);
         }
         .resize-split-line-in-ver{
             height: 2px;
@@ -68,7 +69,7 @@
         left: 0;
         height: 100%;
         width: 2px;
-        background-color: var(--yakit-primary-4);
+        background-color: var(--Colors-Use-Main-Hover);
     }
     .resize-line-ver {
         left: 0;
@@ -76,6 +77,6 @@
         top: 0;
         width: 100%;
         height: 2px;
-        background-color: var(--yakit-primary-4);
+        background-color: var(--Colors-Use-Main-Hover);
     }
 }

@@ -59,10 +59,10 @@
             word-break: break-all;
             font-size: 14px;
             line-height: 20px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .plugin-message-error {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
         }
     }
 }
@@ -76,7 +76,7 @@
     border-radius: 8px;
     background: linear-gradient(90deg, rgba(136, 99, 247, 0.1) 0%, rgba(247, 170, 99, 0.1) 100%);
     .title-style {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         line-height: 16px;
     }
@@ -88,7 +88,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-size: 12px;
             line-height: 20px;
             .content-order {
@@ -100,7 +100,7 @@
                 align-items: center;
                 border-radius: 8px;
                 background: rgba(136, 99, 247, 0.2);
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 10px;
             }
         }

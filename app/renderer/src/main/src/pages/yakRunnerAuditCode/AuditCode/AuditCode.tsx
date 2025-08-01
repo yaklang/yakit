@@ -1060,8 +1060,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     {auditExecuting ? (
                         <div className={styles["extra"]}>
                             <Progress
-                                strokeColor='#F28B44'
-                                trailColor='#F0F2F5'
+                                strokeColor='var(--Colors-Use-Main-Primary)'
+                                trailColor='var(--Colors-Use-Neutral-Bg)'
                                 percent={Math.floor((resultInfo?.progress || 0) * 100)}
                             />
                         </div>
@@ -1853,11 +1853,11 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
         }
     }, [streamInfo])
 
-    useEffect(()=>{
-        if(initForm){
+    useEffect(() => {
+        if (initForm) {
             form.setFieldsValue({...initForm})
         }
-    },[initForm])
+    }, [initForm])
     return (
         <>
             <YakitModal
@@ -2434,9 +2434,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             setParams({...params, Keyword: e.target.value})
                         }}
                         onSearch={() => {
-                            setTimeout(()=>{
+                            setTimeout(() => {
                                 update(true)
-                            },100)
+                            }, 100)
                         }}
                     />
                     <YakitPopconfirm

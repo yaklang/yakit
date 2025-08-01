@@ -16,7 +16,7 @@
     word-wrap: break-word;
     white-space: break-spaces;
 
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 14px;
     font-weight: 400;
     line-height: 24px;
@@ -26,20 +26,21 @@
     code {
         border-radius: 4px;
         padding: 2px 6px;
-        background: var(--yakit-card-background-color);
-        border: 1px solid var(--yakit-border-color);
-        color: var(--yakit-body-text-color);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         display: inline-flex;
         align-items: center;
         font-size: 12px;
         white-space: normal;
     }
     mark {
-        background-color: var(--yakit-primary-2);
+        background-color: var(--Colors-Use-Main-Bg);
         padding: 0 2px;
     }
     mark.highlight-pulse {
-        background-color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Primary);
+        color: var(--Colors-Use-Main-On-Primary);
     }
 
     /* 基础高亮 */
@@ -55,7 +56,7 @@
     }
 
     .ProseMirror-selectednode {
-        background-color: var(--yakit-primary-2);
+        background-color: var(--Colors-Use-Main-Focus);
         border-radius: 4px;
     }
 
@@ -63,7 +64,7 @@
         outline: 0;
     }
     ::selection {
-        background-color: var(--yakit-primary-2);
-        color: var(--yakit-header-color);
+        background-color: var(--Colors-Use-Main-Focus);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 }

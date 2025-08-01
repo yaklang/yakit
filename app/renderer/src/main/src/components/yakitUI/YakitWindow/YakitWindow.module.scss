@@ -73,7 +73,7 @@
     align-items: center;
     border-radius: 4px 4px 0px 0px;
     border-bottom: 1px solid #eaecf3;
-    background: #f8f8f8;
+    background: var(--Colors-Use-Neutral-Bg);
     cursor: pointer;
     .header-left {
         margin-right: 4px;
@@ -83,7 +83,7 @@
         align-items: center;
         gap: 8px;
         .title-wrapper {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 600;
             line-height: 20px;
@@ -123,7 +123,7 @@
     justify-content: space-between;
     align-items: center;
     border-top: 1px solid #eaecf3;
-    background: #f8f8f8;
+    background: var(--Colors-Use-Neutral-Bg);
     .btn-group {
         display: flex;
         justify-content: flex-end;
@@ -144,6 +144,7 @@
         .ant-popover-title {
             border-bottom: 0;
             min-width: unset;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-popover-inner-content {
             padding-top: 0;

@@ -428,18 +428,26 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                                     <Tooltip
                                                                         placement='bottom'
                                                                         title={
-                                                                            <div style={{color: "#fff"}}>
+                                                                            <div
+                                                                                style={{
+                                                                                    color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                                                                                }}
+                                                                            >
                                                                                 在自己的服务器安装 yak 核心引擎，执行{" "}
                                                                                 <YakitCopyText
                                                                                     showText={
                                                                                         "yak bridge --secret [your-pass]"
                                                                                     }
-                                                                                    wrapStyle={{color: "#fff"}}
+                                                                                    wrapStyle={{
+                                                                                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                                                                                    }}
                                                                                 />{" "}
                                                                                 启动 Yak Bridge 公网服务{" "}
                                                                                 <Divider type={"vertical"} />
                                                                                 <Typography.Text
-                                                                                    style={{color: "#fff"}}
+                                                                                    style={{
+                                                                                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                                                                                    }}
                                                                                 >
                                                                                     yak version {`>=`} v1.0.11-sp9
                                                                                 </Typography.Text>
@@ -452,7 +460,6 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                             }
                                                         >
                                                             <YakitInput
-                                                                allowClear={true}
                                                                 value={addrParams.BridgeParam.Addr}
                                                                 onChange={(e) => {
                                                                     addrParams.BridgeParam.Addr = e.target.value
@@ -462,7 +469,6 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                         </Form.Item>
                                                         <Form.Item label='密码'>
                                                             <YakitInput
-                                                                allowClear={true}
                                                                 value={addrParams.BridgeParam.Secret}
                                                                 onChange={(e) => {
                                                                     addrParams.BridgeParam.Secret = e.target.value
@@ -482,7 +488,6 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                         }
                                                     >
                                                         <YakitInput
-                                                            allowClear={true}
                                                             value={addrParams.ReverseHost}
                                                             onChange={(e) =>
                                                                 setAddrParams({
@@ -960,11 +965,9 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                     const diplay = (selectedOptions || []).map((item: any) => item.Label).join(" / ")
                                     return <>{diplay}</>
                                 }}
-                                
                             />
                         ) : (
                             <YakitSelect
-                                allowClear={true}
                                 placeholder='请选择恶意类'
                                 optionLabelProp='NameVerbose'
                                 value={params.Class}
@@ -1032,7 +1035,6 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                             >
                                 {(item.Type === FormParamsType.String || item.Type === FormParamsType.Base64Bytes) && (
                                     <YakitInput
-                                        allowClear={true}
                                         placeholder={
                                             item.Type === FormParamsType.Base64Bytes
                                                 ? "填写内容需Base64编码"
@@ -1354,9 +1356,9 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
             />
             <YakitSpin spinning={loading}>
                 {type === "hex" ? (
-                    <YakitEditor readOnly={true} value={code} type="http"/>
+                    <YakitEditor readOnly={true} value={code} type='http' />
                 ) : (
-                    <YakitEditor readOnly={true} value={code} type="http"/>
+                    <YakitEditor readOnly={true} value={code} type='http' />
                 )}
             </YakitSpin>
         </YakitCard>

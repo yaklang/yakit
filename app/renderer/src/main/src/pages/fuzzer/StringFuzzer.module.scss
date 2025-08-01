@@ -2,12 +2,12 @@
     display: flex;
     .stringFuzzer-left {
         width: 30%;
-        border-right: 1px solid var(--yakit-border-color);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         .stringFuzzer-search {
             padding: 8px;
             padding-bottom: 0;
             .search-icon {
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 svg {
                     width: 12px;
                     height: 12px;
@@ -26,15 +26,16 @@
                 justify-content: space-between;
                 align-items: center;
                 height: 35px;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 &:not(:first-child) {
-                    border-top: 1px solid var(--yakit-border-color);
+                    border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 }
                 &:last-child {
-                    border-bottom: 1px solid var(--yakit-border-color);
+                    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
                 }
                 &:hover {
                     border-color: transparent;
-                    background-color: var(--yakit-card-background-color);
+                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
                     & + .stringFuzzer-list-item {
                         border-top-color: transparent;
                     }
@@ -49,10 +50,10 @@
                     padding: 8px;
                     cursor: pointer;
                     white-space: nowrap;
-                    color: var(--yakit-helper-text-color);
+                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
                     .list-opt-btn {
                         &:hover {
-                            color: var(--yakit-primary-5);
+                            color: var(--Colors-Use-Main-Primary);
                         }
                         &:first-of-type {
                             margin-right: 8px;
@@ -112,22 +113,22 @@
             font-size: 16px;
         }
         &-example {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
         &-desc {
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             word-wrap: break-word;
         }
         th,
         td {
             text-align: left;
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
         }
         th {
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
         }
         tr:hover {
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
         }
     }
 }

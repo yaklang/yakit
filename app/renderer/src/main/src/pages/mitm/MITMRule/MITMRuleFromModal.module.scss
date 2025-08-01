@@ -5,7 +5,7 @@
         cursor: pointer;
         width: 24px;
         &:hover {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }
@@ -29,15 +29,15 @@
         // padding: 4px 6px 4px 8px;
         margin-right: 0;
         display: flex;
-        background: var(--yakit-card-background-color);
-        border: 1px solid var(--yakit-border-color);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
         font-size: 12px;
         align-items: center;
 
         .yakit-editor-regexp-value {
             word-break: break-all;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             overflow: hidden;
             text-overflow: ellipsis;
             // display: -webkit-box;
@@ -51,18 +51,18 @@
             display: inline-flex;
             align-items: center;
             height: 22px;
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
 
             svg {
                 width: 16px;
                 height: 16px;
 
                 &:hover {
-                    color: var(--yakit-primary-4);
+                    color: var(--Colors-Use-Main-Hover);
                 }
 
                 &:active {
-                    color: var(--yakit-primary-6);
+                    color: var(--Colors-Use-Main-Pressed);
                 }
             }
         }
@@ -86,7 +86,7 @@
             display: flex;
             font-weight: 400;
             font-size: 12px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             align-items: center;
             height: 24px;
             user-select: none;
@@ -96,25 +96,25 @@
                 cursor: pointer;
 
                 &:hover {
-                    color: var(--yakit-primary-4);
+                    color: var(--Colors-Use-Main-Hover);
                 }
 
                 &:active {
-                    color: var(--yakit-primary-6);
+                    color: var(--Colors-Use-Main-Pressed);
                 }
             }
 
             .save-btn {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
                 width: 24px;
                 cursor: pointer;
 
                 &:hover {
-                    color: var(--yakit-primary-4);
+                    color: var(--Colors-Use-Main-Hover);
                 }
 
                 &:active {
-                    color: var(--yakit-primary-6);
+                    color: var(--Colors-Use-Main-Pressed);
                 }
             }
         }
@@ -135,18 +135,18 @@
         }
 
         .extra-tip {
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             font-weight: 400;
 
             .number {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
                 margin: 0 4px;
             }
         }
     }
 
     .http-tags {
-        border: 1px solid var(--yakit-border-color);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
         padding: 4px;
         padding-bottom: 0;

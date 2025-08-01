@@ -55,7 +55,7 @@
                         line-height: 24px;
                     }
                     .sub-title {
-                        color: #85899e;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 16px;
@@ -104,7 +104,7 @@
                         }
                     }
                     .title {
-                        color: #85899e;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 16px;
@@ -162,7 +162,7 @@
                         gap: 8px;
                         align-items: center;
                         .icon {
-                            color: #85899e;
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
                             height: 18px;
                             svg {
                                 height: 18px;
@@ -170,7 +170,7 @@
                             }
                         }
                         .date {
-                            color: #85899e;
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
                             font-size: 12px;
                             font-weight: 400;
                             line-height: 16px;
@@ -255,7 +255,7 @@
                     flex-direction: column;
                     gap: 4px;
                     border-radius: 4px;
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
                     .show {
                         display: flex;
                         flex-direction: row;
@@ -268,7 +268,7 @@
                         }
                     }
                     .title {
-                        color: #85899e;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 16px;
@@ -369,6 +369,6 @@
 .type-keep {
     .icon,
     .content {
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 }

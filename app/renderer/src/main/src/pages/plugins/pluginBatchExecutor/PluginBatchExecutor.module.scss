@@ -9,7 +9,7 @@
         .plugin-tab {
             width: 24px;
             height: 100%;
-            background: #f0f1f3;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
             &-item {
                 padding: 12px 4px;
                 cursor: pointer;
@@ -20,19 +20,19 @@
 
                 text-orientation: sideways-right;
                 writing-mode: vertical-rl;
-                border-top: 1px solid #fff;
+                border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 &:hover {
-                    background: rgba(204, 210, 222, 0.5);
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                 }
                 &-active {
-                    color: #ffffff;
-                    background-color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-On-Primary);
+                    background-color: var(--Colors-Use-Main-Primary);
                     &:hover {
-                        background-color: var(--yakit-primary-4);
+                        background-color: var(--Colors-Use-Main-Hover);
                     }
                 }
                 &-unshowCont {
-                    background-color: var(--yakit-primary-3);
+                    background-color: var(--Colors-Use-Main-Border);
                 }
             }
         }
@@ -54,7 +54,7 @@
     .divider-style {
         width: 1px;
         height: 12px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }
 .plugin-batch-execute-form-wrapper {
@@ -105,7 +105,7 @@
 
 .to-end {
     text-align: center;
-    color: var(--yakit-disable-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     font-size: 11px;
     padding-top: 12px;
     padding-bottom: 24px;
@@ -125,11 +125,11 @@
         flex: 1;
         overflow: hidden;
         max-width: 300px;
-        border-right: 1px solid var(--yakit-border-color);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         padding: 12px;
         gap: 8px;
         .log-heard {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 600;
             line-height: 16px;
@@ -149,34 +149,34 @@
     @extend %display-flex-center;
     gap: 4px;
     .status-text {
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 400;
         line-height: 16px;
     }
     .icon-success {
         @extend %svg;
-        color: var(--yakit-success-5);
+        color: var(--Colors-Use-Success-Primary);
     }
     .icon-primary {
         @extend %svg;
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         animation: spin 1s infinite linear;
     }
     .icon-helper {
         @extend %svg;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
     }
     .icon-danger {
         @extend %svg;
-        color: var(--yakit-danger-5);
+        color: var(--Colors-Use-Error-Primary);
     }
     .icon-question {
         @extend %svg;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         cursor: pointer;
         &:hover {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }

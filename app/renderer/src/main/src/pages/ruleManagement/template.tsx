@@ -349,12 +349,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
                 </div>
 
                 <div className={styles["list-search-and-add"]}>
-                    <YakitInput.Search
-                        size='large'
-                        allowClear={true}
-                        placeholder='请输入组名'
-                        onSearch={handleSearch}
-                    />
+                    <YakitInput.Search size='large' placeholder='请输入组名' onSearch={handleSearch} />
 
                     {/* 新建规则组输入框 */}
                     <YakitInput
@@ -395,7 +390,6 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
                                             {activeEdit ? (
                                                 <YakitInput
                                                     ref={editInputRef}
-                                                    allowClear={true}
                                                     showCount
                                                     maxLength={50}
                                                     value={editName}
@@ -1667,7 +1661,6 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
                                 maxLength={50}
                                 prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                                 value={search}
-                                allowClear={true}
                                 onChange={(e) => {
                                     const val = e.target.value.trim()
                                     setSearch(val)
@@ -2319,8 +2312,8 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
                 <span className={styles["text"]}>规则{type === "upload" ? "上传" : "下载"}</span>
             </div>
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={Math.trunc(stream[0]?.Progress * 100)}
                 format={(percent) => `进度 ${percent}%`}
             />
@@ -2511,12 +2504,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                         ) : (
                             <>
                                 <div className={styles["list-search-and-add"]}>
-                                    <YakitInput.Search
-                                        size='large'
-                                        allowClear={true}
-                                        placeholder='请输入组名'
-                                        onSearch={handleSearch}
-                                    />
+                                    <YakitInput.Search size='large' placeholder='请输入组名' onSearch={handleSearch} />
                                 </div>
 
                                 <div className={styles["list-container"]}>

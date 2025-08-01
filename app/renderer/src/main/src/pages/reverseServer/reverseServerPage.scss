@@ -2,6 +2,7 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
+    background-color: var(--Colors-Use-Basic-Background);
 
     .reverse-server-page-head {
         width: 100%;
@@ -105,6 +106,7 @@
                     width: 100%;
                     display: flex;
                     align-items: center;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
             }
 

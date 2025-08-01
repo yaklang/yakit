@@ -51,13 +51,13 @@
     justify-content: center;
     align-items: center;
     height: 20px;
-    background: #f0f1f3;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
     border-width: 1px 1px 1px 0px;
     border-style: solid;
     border-color: #eaecf3;
     border-radius: 0px 4px 4px 0px;
     font-size: 11px;
-    color: #31343f;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     cursor: pointer;
     z-index: 99;
   }

@@ -610,8 +610,8 @@ export const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props
         <Space direction={"vertical"}>
             <div className={classNames(styles["download-progress"], "yakit-progress-wrapper")}>
                 <Progress
-                    strokeColor='#F28B44'
-                    trailColor='#F0F2F5'
+                    strokeColor='var(--Colors-Use-Main-Primary)'
+                    trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={percent}
                     format={(percent) => `已下载 ${percent}%`}
                 />

@@ -10,15 +10,24 @@
 @use "../theme/componentsTheme/pagination.scss";
 @use "../theme/componentsTheme/slider.scss";
 @use "../theme/componentsTheme/progress.scss";
+@use "../theme/componentsTheme/menu.scss";
+@use  "../theme/componentsTheme/PageHeader.scss";
+@use  "../theme/componentsTheme/card.scss";
+@use  "../theme/componentsTheme/result.scss";
+@use  "../theme/componentsTheme/alert.scss";
+@use  "../theme/componentsTheme/divider.scss";
+@use  "../theme/componentsTheme/typography.scss";
 
+// typography
 body {
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    background-color: var(--Colors-Use-Neutral-Bg);
 }
 
 a {
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
     &:hover {
-        color: var(--yakit-primary-4);
+        color: var(--Colors-Use-Main-Hover);
     }
 }
 

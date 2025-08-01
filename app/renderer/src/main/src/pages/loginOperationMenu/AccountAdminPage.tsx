@@ -84,11 +84,9 @@ export const AccountAdminPage: React.FC<AccountAdminPageProp> = (props) => {
             <YakitCard
                 className={styles["card"]}
                 headStyle={{
-                    background: "#fff",
                     height: 32,
                     minHeight: 32,
                     boxSizing: "content-box",
-                    borderBottom: "1px solid var(--yakit-border-color)",
                     paddingLeft: 0,
                     paddingRight: 0
                 }}
@@ -511,11 +509,9 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
         <YakitCard
             className={styles["card"]}
             headStyle={{
-                background: "#fff",
                 height: 32,
                 minHeight: 32,
                 boxSizing: "content-box",
-                borderBottom: "1px solid var(--yakit-border-color)",
                 paddingLeft: 0
             }}
             bodyStyle={{padding: 12, paddingLeft: 0, width: "100%", height: "calc(100% - 32px)"}}
@@ -767,7 +763,7 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = (props) =>
         <div style={{margin: 24}}>
             <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
                 <Form.Item name='name' label='部门名称' rules={[{required: true, message: "该项为必填"}]}>
-                    <YakitInput placeholder='请输入部门名称' allowClear />
+                    <YakitInput placeholder='请输入部门名称' />
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
                     <YakitButton style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
@@ -844,7 +840,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
             title: "用户名",
             dataKey: "user_name",
             render: (text, record) => (
-                <div className={styles['userNameWrapper']}>
+                <div className={styles["userNameWrapper"]}>
                     {judgeAvatar(record)}
                     <span style={{marginLeft: 10}}>{text}</span>
                 </div>
@@ -1009,10 +1005,10 @@ const AccountList: React.FC<AccountListProps> = (props) => {
                     title: "账号信息",
                     content: (
                         <div style={{padding: 15}}>
-                            <div>
+                            <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
                                 用户名：<span>{user_name}</span>
                             </div>
-                            <div>
+                            <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
                                 密码：<span>{password}</span>
                             </div>
                             <div style={{textAlign: "center", marginTop: 10}}>
@@ -1505,10 +1501,10 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                         title: "账号信息",
                         content: (
                             <div style={{padding: 15}}>
-                                <div>
+                                <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
                                     用户名：<span>{user_name}</span>
                                 </div>
-                                <div>
+                                <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
                                     密码：<span>{password}</span>
                                 </div>
                                 <div style={{textAlign: "center", marginTop: 10}}>
@@ -1536,7 +1532,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
     return (
         <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
             <Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
-                <YakitInput placeholder='请输入用户名' allowClear />
+                <YakitInput placeholder='请输入用户名' />
             </Form.Item>
             <Form.Item name='department' label='组织架构' rules={[{required: true, message: "该项为必填"}]}>
                 <YakitCascader options={depData} loadData={loadData} placeholder='请选择组织架构' changeOnSelect />

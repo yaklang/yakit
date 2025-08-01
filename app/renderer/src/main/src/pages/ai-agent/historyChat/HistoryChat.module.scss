@@ -4,7 +4,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    background-color: #ffffff;
+    background-color: var(--Colors-Use-Basic-Background);
 
     .header-wrapper {
         padding: 8px 12px 0 12px;
@@ -21,7 +21,7 @@
                 align-items: center;
                 gap: 4px;
 
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 font-size: 12px;
                 font-weight: 500;
             }
@@ -32,7 +32,7 @@
                 svg {
                     width: 16px;
                     height: 16px;
-                    color: #868c97;
+                    color: var(--Colors-Use-Neutral-Disable);
                 }
             }
         }
@@ -73,13 +73,13 @@
                 svg {
                     width: 16px;
                     height: 16px;
-                    color: #85899e;
+                    color: var(--Colors-Use-Neutral-Disable);
                 }
             }
             .info-title {
                 flex: 1;
                 overflow: hidden;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-2-Primary);
                 font-size: 12px;
                 font-weight: 600;
                 line-height: 16px;
@@ -91,43 +91,43 @@
             gap: 4px;
             .del-icon {
                 svg {
-                    color: #eb493f;
+                    color: var(--Colors-Use-Error-Primary);
                 }
             }
         }
     }
     .history-item:hover {
-        border-color: #f8f8f8;
-        background: #f8f8f8;
+        border-color: var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
         .item-extra {
             display: flex;
         }
     }
     .history-item-active {
-        border-color: #fbc6a1;
-        background: rgba(242, 139, 68, 0.06);
+        border-color: var(--Colors-Use-Main-Border);
+        background: var(--Colors-Use-Main-Bg);
         .item-info {
             .item-icon {
                 svg {
-                    color: #f28b44;
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
             .info-title {
-                color: #f28b44;
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
     .history-item:hover.history-item-active {
-        border-color: #fbc6a1;
-        background: rgba(242, 139, 68, 0.06);
+background: var(--Colors-Use-Main-Bg);
+        border-color: var(--Colors-Use-Main-Border);
         .item-info {
             .item-icon {
                 svg {
-                    color: #f28b44;
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
             .info-title {
-                color: #f28b44;
+                    color: var(--Colors-Use-Main-Primary);
             }
         }
     }

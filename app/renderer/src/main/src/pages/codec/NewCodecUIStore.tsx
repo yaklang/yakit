@@ -53,7 +53,8 @@ export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
     return (
         <div
             className={classNames(styles["new-codec-input-ui"], {
-                [styles["new-codec-left-border-input-ui"]]: direction === "left"
+                [styles["new-codec-left-border-input-ui"]]: direction === "left",
+                [styles["new-codec-title-input-ui"]]: title
             })}
             onClick={onFocusBox}
         >
@@ -72,6 +73,7 @@ export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
                         onFocus={onFocus}
                         onBlur={onBlur}
                         ref={inputRef}
+                        allowClear={false}
                         placeholder='请输入...'
                         {...restProps}
                     />
@@ -118,33 +120,35 @@ export const NewCodecTextAreaUI: React.FC<NewCodecTextAreaUIProps> = (props) => 
     })
     return (
         <div
-        className={classNames(styles["new-codec-textarea-ui"], {
-            [styles["new-codec-left-border-textarea-ui"]]: direction === "left"
-        })}
-        onClick={onFocusBox}
-    >
-        <div
-            className={classNames(styles["main"], {
-                [styles["main-left-focus"]]: direction === "left"
+            className={classNames(styles["new-codec-textarea-ui"], {
+                [styles["new-codec-left-border-textarea-ui"]]: direction === "left"
             })}
+            onClick={onFocusBox}
         >
-            <div className={styles["header"]}>
-                <div className={styles["title"]}>{title}</div>
-                {require && <div className={styles["icon"]}>*</div>}
+            <div
+                className={classNames(styles["main"], {
+                    [styles["main-left-focus"]]: direction === "left"
+                })}
+            >
+                <div className={styles["header"]}>
+                    <div className={styles["title"]}>{title}</div>
+                    {require && <div className={styles["icon"]}>*</div>}
+                </div>
+                <div className={styles["content"]}>
+                    <YakitInput.TextArea
+                        style={{height: 60, maxHeight: 120}}
+                        onFocus={onFocus}
+                        onBlur={onBlur}
+                        ref={inputRef}
+                        placeholder='请输入...'
+                        {...restProps}
+                    />
+                </div>
             </div>
-            <div className={styles["content"]}>
-                <YakitInput.TextArea 
-                    style={{height:60,maxHeight:120}}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
-                    ref={inputRef}
-                    placeholder='请输入...'
-                    {...restProps}/>
-            </div>
+            {extra && <div className={styles["extra"]}>{extra}</div>}
+            {isFocus && <div className={styles["line"]} />}
         </div>
-        {extra && <div className={styles["extra"]}>{extra}</div>}
-        {isFocus && <div className={styles['line']}/>}
-    </div>)
+    )
 }
 
 export interface NewCodecCheckUIProps {

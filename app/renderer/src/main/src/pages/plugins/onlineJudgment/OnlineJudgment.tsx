@@ -6,6 +6,7 @@ import {useNetwork, useMemoizedFn} from "ahooks"
 import React, {forwardRef, useState, useImperativeHandle, useEffect, useMemo} from "react"
 import {OnlineJudgmentProps, OnlineResponseStatusProps} from "./OnlineJudgmentType"
 import Online from "@/assets/online.png"
+import DarkOnline from "@/assets/darkOnline.png"
 import Server from "@/assets/server.png"
 import NoPermissions from "@/assets/no_permissions.png"
 
@@ -14,6 +15,7 @@ import {yakitNotify} from "@/utils/notification"
 import styles from "./OnlineJudgment.module.scss"
 import Login from "@/pages/Login"
 import {useStore} from "@/store"
+import {useTheme} from "@/hook/useTheme"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -24,6 +26,11 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
         const [initLoading, setInitLoading] = useState<boolean>(true)
         const [loading, setLoading] = useState<boolean>(true)
         const [loginShow, setLoginShow] = useState<boolean>(false)
+        const {theme} = useTheme()
+
+        const targetNetworkImg = useMemo(() => {
+            return theme === "dark" ? DarkOnline : Online
+        }, [theme])
 
         const [onlineResponseStatus, setOnlineResponseStatus] = useState<OnlineResponseStatusProps>({
             code: 200,
@@ -157,7 +164,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                     return (
                         <>
                             <YakitEmpty
-                                image={<img src={Online} alt='' />}
+                                image={<img src={targetNetworkImg} alt='' />}
                                 imageStyle={{width: 300, height: 210, marginBottom: 16}}
                                 title='请检查私有域配置与网络连接'
                                 description='连网后才可访问 Yakit 插件商店'
@@ -190,7 +197,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                     props.children
                 ) : (
                     <YakitSpin spinning={loading}>
-                        <div className={styles["online-network"]}>{errorNode}</div> 
+                        <div className={styles["online-network"]}>{errorNode}</div>
                     </YakitSpin>
                 )}
 

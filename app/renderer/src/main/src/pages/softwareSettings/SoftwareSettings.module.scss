@@ -9,8 +9,8 @@
 
         .left-wrapper {
             height: 100%;
-            background: var(--yakit-card-background-color);
-            border-right: 1px solid var(--yakit-border-color);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -70,25 +70,25 @@
                         }
                     }
                     .list-opt {
-                        color: var(--yakit-body-text-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         :global {
                             .ant-typography {
-                                color: var(--yakit-body-text-color);
+                                color: var(--Colors-Use-Neutral-Text-1-Title);
                             }
                         }
                     }
                     .list-opt:hover {
-                        background: var(--yakit-background-color);
+                        background: var(--Colors-Use-Neutral-Bg);
                     }
                     .list-opt-selected {
-                        background: var(--yakit-primary-1);
+                        background: var(--Colors-Use-Main-Bg);
                         .opt-title {
-                            color: var(--yakit-primary-5);
+                            color: var(--Colors-Use-Main-Primary);
                         }
                         .opt-notes {
                             :global {
                                 .ant-typography {
-                                    color: var(--yakit-primary-3);
+                                    color: var(--Colors-Use-Main-Border);
                                 }
                             }
                         }

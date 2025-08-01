@@ -381,7 +381,6 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                                 return {value: i, label: i}
                             })}
                             mode='tags'
-                            allowClear={true}
                             placeholder={"例如 1.1.1.1"}
                         />
                     </Form.Item>
@@ -566,9 +565,18 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         certs={certs}
                         setCerts={setCerts}
                     />
-                    <MITMFiltersModal filterType="filter" visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={false} />
+                    <MITMFiltersModal
+                        filterType='filter'
+                        visible={filtersVisible}
+                        setVisible={setFiltersVisible}
+                        isStartMITM={false}
+                    />
                     <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
-                    <MITMCertificateDownloadModal visible={downloadGMVisible} setVisible={setDownloadGMVisible} isGM={true} />
+                    <MITMCertificateDownloadModal
+                        visible={downloadGMVisible}
+                        setVisible={setDownloadGMVisible}
+                        isGM={true}
+                    />
                 </React.Suspense>
             </YakitDrawer>
         )

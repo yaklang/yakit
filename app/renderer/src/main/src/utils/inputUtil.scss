@@ -10,3 +10,10 @@
     border-radius: 4px !important;
   }
 }
+:global {
+    .ant-form-item-explain ant-form-item-explain-connected {
+        font-weight: 400;
+        font-size: 14px;
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    }
+}

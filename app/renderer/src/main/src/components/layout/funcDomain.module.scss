@@ -9,7 +9,7 @@
             padding: 10px 0;
             .divider-style {
                 height: 100%;
-                border-left: 1px solid var(--yakit-border-color);
+                border-left: 1px solid var(--Colors-Use-Neutral-Border);
             }
         }
         .state-setting-wrapper {
@@ -18,7 +18,7 @@
         .divider-wrapper {
             width: 1px;
             height: 100%;
-            border-left: 1px solid var(--yakit-border-color);
+            border-left: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .user-wrapper {
             box-sizing: border-box;
@@ -42,7 +42,7 @@
             }
         }
         .user-wrapper:hover {
-            background-color: var(--yakit-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
         }
         .user-wrapper-dynamic {
             padding: 3px 4px;
@@ -75,9 +75,9 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: #ffffff66;
+        background-color: var(--Colors-Use-Neutral-Bg);
         .icon-hover-style {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
             font-size: 20px;
         }
     }
@@ -91,7 +91,7 @@
         align-items: center;
     }
     .op-btn-body-hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     .size-style {
@@ -101,10 +101,10 @@
         }
     }
     .icon-style {
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
     .icon-hover-style {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .wrench-icon {
         svg {
@@ -128,10 +128,10 @@
 }
 .ui-op-btn-wrapper:hover {
     .icon-style {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .op-btn-body {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
 }
 
@@ -141,8 +141,8 @@
 .ui-op-setting-dropdown {
     :global {
         .ant-popover-inner {
-            border: 1px solid var(--yakit-border-color);
-            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
             border-radius: 4px;
             .ant-popover-inner-content {
                 padding: 6px 4px 8px 4px;
@@ -154,8 +154,8 @@
 .ui-op-plus-dropdown {
     :global {
         .ant-popover-inner {
-            border: 1px solid var(--yakit-border-color);
-            box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
             border-radius: 4px;
             .ant-popover-inner-content {
                 padding: 0;
@@ -174,14 +174,14 @@
                 margin: 16px 16px 0 16px;
                 height: 38px;
                 padding: 4px;
-                background: var(--yakit-background-color);
-                border: 1px solid var(--yakit-border-color);
+                background: var(--Colors-Use-Neutral-Bg);
+                border: 1px solid var(--Colors-Use-Neutral-Border);
                 border-radius: 6px;
                 .notice-tabs-body {
                     display: flex;
                     font-weight: 500;
                     font-size: 12px;
-                    color: var(--yakit-header-color) f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title) f;
 
                     .tabs-opt {
                         width: 50%;
@@ -194,20 +194,20 @@
                             .ant-badge {
                                 font-weight: 500;
                                 font-size: 12px;
-                                color: var(--yakit-header-color) f;
+                                color: var(--Colors-Use-Neutral-Text-1-Title) f;
                             }
                         }
                     }
                     .tabs-opt-selected {
-                        background: var(--yakit-neutral10-color);
-                        box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
+                        background: var(--Colors-Use-Neutral-Bg);
+                        box-shadow: 0px 2px 4px var(--Colors-Use-Basic-Shadow);
                         border-radius: 4px;
-                        color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Main-Primary);
                         :global {
                             .ant-badge {
                                 font-weight: 500;
                                 font-size: 12px;
-                                color: var(--yakit-primary-5);
+                                color: var(--Colors-Use-Main-Primary);
                             }
                         }
                     }
@@ -222,7 +222,7 @@
                 height: 36px;
                 font-size: 12px;
                 .switch-title {
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
                 .message-title {
                 }
@@ -261,18 +261,18 @@
                         gap: 8px;
 
                         font-size: 12px;
-                        color: var(--yakit-body-text-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         line-height: 20px;
                         cursor: pointer;
 
                         .icon-style {
-                            color: var(--yakit-helper-text-color);
+                            color: var(--Colors-Use-Neutral-Disable);
                         }
                     }
                     .content-style:hover {
-                        color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Main-Primary);
                         .icon-style {
-                            color: var(--yakit-primary-5);
+                            color: var(--Colors-Use-Main-Primary);
                         }
                     }
                 }
@@ -291,13 +291,13 @@
                 display: flex;
                 flex-direction: row;
                 justify-content: space-between;
-                border-top: 1px solid var(--yakit-border-color);
+                border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 .notice-footer-btn {
                     width: 72px;
                     height: 16px;
                     font-size: 12px;
                     line-height: 16px;
-                    color: var(--yakit-body-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     cursor: pointer;
                 }
             }
@@ -310,7 +310,7 @@
                 height: 16px;
                 font-size: 12px;
                 line-height: 16px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             .risk-info {
                 margin: 16px 0;
@@ -326,7 +326,7 @@
                     line-height: 20px;
                     font-weight: 500;
                     font-size: 12px;
-                    color: var(--yakit-header-color) f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title) f;
                     cursor: pointer;
 
                     .opt-icon-style {
@@ -346,19 +346,19 @@
                     }
                     .opt-high-icon {
                         background: rgba(246, 84, 74, 0.08);
-                        color: var(--yakit-danger-5);
+                        color: var(--Colors-Use-Error-Primary);
                     }
                     .opt-middle-icon {
                         background: rgba(255, 213, 131, 0.08);
-                        color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Main-Primary);
                     }
                     .opt-low-icon {
                         background: rgba(255, 213, 131, 0.08);
-                        color: var(--yakit-warning-5);
+                        color: var(--Colors-Use-Warning-Primary);
                     }
                     .opt-info-icon {
                         background: rgba(86, 201, 145, 0.08);
-                        color: var(--yakit-success-5);
+                        color: var(--Colors-Use-Success-Primary);
                     }
                 }
             }
@@ -368,17 +368,17 @@
                 display: flex;
                 flex-direction: row;
                 justify-content: space-between;
-                border-top: 1px solid var(--yakit-border-color);
+                border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 .risk-footer-btn {
                     width: 48px;
                     height: 16px;
                     font-size: 12px;
                     line-height: 16px;
-                    color: var(--yakit-body-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     cursor: pointer;
                 }
                 .risk-footer-btn:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
@@ -388,8 +388,8 @@
 .version-update-wrapper {
     box-sizing: border-box;
     width: 100%;
-    background: var(--yakit-neutral10-color);
-    border: 1px solid var(--yakit-border-color);
+    background: var(--Colors-Use-Basic-Background);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px;
 
     .update-header-wrapper {
@@ -399,7 +399,7 @@
         display: flex;
         justify-content: space-between;
         padding: 8px;
-        background: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
         border-radius: 4px 4px 0px 0px;
         .header-info {
             display: flex;
@@ -408,17 +408,18 @@
                 width: 28px;
                 height: 28px;
                 border-radius: 50%;
-                background: var(--yakit-primary-5);
+                background: var(--Colors-Use-Main-Primary);
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                color: var(--Colors-Use-Main-On-Primary);
             }
             .update-title {
                 height: 16px;
                 font-weight: 600;
                 font-size: 12px;
                 line-height: 16px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -428,13 +429,13 @@
                 font-weight: 600;
                 font-size: 12px;
                 line-height: 28px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             .update-time {
                 height: 12px;
                 font-size: 11px;
                 line-height: 12px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -447,11 +448,11 @@
             align-items: center;
             gap: 10px;
             font-size: 12px;
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
 
             .more-version-btn {
                 cursor: pointer;
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
 
             .edit-func {
@@ -464,7 +465,7 @@
                     svg {
                         width: 16px;
                         height: 16px;
-                        color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Main-Primary);
                     }
                 }
             }
@@ -474,13 +475,14 @@
     .update-content-wrapper {
         width: 100%;
         padding: 16px 6px 16px 16px;
-
+        background: var(--Colors-Use-Basic-Background);
         @media screen and (max-height: 590px) {
             .update-content {
                 max-height: 90px;
                 font-size: 12px;
                 line-height: 18px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 overflow: auto;
             }
         }
@@ -489,7 +491,7 @@
                 max-height: 114px;
                 font-size: 12px;
                 line-height: 18px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 overflow: auto;
             }
         }
@@ -498,7 +500,7 @@
                 max-height: 234px;
                 font-size: 12px;
                 line-height: 18px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 overflow: auto;
             }
         }
@@ -508,7 +510,7 @@
                 max-height: 66px;
                 font-size: 12px;
                 line-height: 18px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 overflow: auto;
             }
         }
@@ -517,7 +519,7 @@
                 max-height: 114px;
                 font-size: 12px;
                 line-height: 18px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 overflow: auto;
             }
         }
@@ -526,7 +528,7 @@
                 max-height: 186px;
                 font-size: 12px;
                 line-height: 18px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 overflow: auto;
             }
         }
@@ -536,31 +538,31 @@
         }
 
         .empty-content {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
         }
 
         .current-version {
             height: 16px;
             font-size: 12px;
             line-height: 16px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }
 .version-has-update {
-    border: 1px solid var(--yakit-primary-3);
+    border: 1px solid var(--Colors-Use-Main-Border);
     .update-header-wrapper {
-        background: var(--yakit-primary-2);
+        background: var(--Colors-Use-Main-Focus);
         .header-info {
             .update-title {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
             .update-time {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
         .header-btn {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
             .update-btn {
                 height: 28px;
                 display: flex;
@@ -584,7 +586,7 @@
             width: 28px;
             height: 28px;
             border-radius: 50%;
-            background: var(--yakit-primary-2);
+            background: var(--Colors-Use-Main-Focus);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -594,13 +596,13 @@
                 height: 16px;
                 font-size: 12px;
                 line-height: 16px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 .accent-content {
                     font-weight: 600;
                     cursor: pointer;
                 }
                 .accent-content:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
             .content-commit {
@@ -608,14 +610,14 @@
                 max-height: 32px;
                 font-size: 12px;
                 line-height: 16px;
-                color: var(--yakit-header-color) f;
+                color: var(--Colors-Use-Neutral-Text-1-Title) f;
             }
             .content-time {
                 margin-top: 2px;
                 height: 12px;
                 font-size: 11px;
                 line-height: 12px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
             }
         }
     }
@@ -623,8 +625,8 @@
 
 :global {
     .user-dropdown-menu-box {
-        border: 1px solid #eaecf3;
-        box-shadow: 0px 2px 4px rgb(133 137 158 / 20%);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        box-shadow: 0px 2px 4px var(--Colors-Use-Basic-Shadow);
         border-radius: 4px;
         .ant-dropdown-menu {
             padding: 0;
@@ -632,13 +634,13 @@
                 padding: 0;
                 .ant-dropdown-menu-title-content:not(:has(div)) {
                     padding: 6px 24px;
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     margin: 0 4px;
                     border-radius: 4px;
                     &:hover {
-                        color: #fff;
-                        background-color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Main-On-Primary);
+                        background-color: var(--Colors-Use-Main-Primary);
                     }
                 }
             }
@@ -649,12 +651,12 @@
 .judge-avatar {
     display: flex;
     flex-direction: row;
-    // border: 1px solid var(--yakit-primary-5);
+    // border: 1px solid var(--Colors-Use-Main-Primary);
     // border-radius: 14px;
     cursor: pointer;
     &-avatar {
-        background-color: var(--yakit-primary-5);
-        color: #ffffff;
+        background-color: var(--Colors-Use-Main-Primary);
+        color: var(--Colors-Use-Basic-White);
         position: relative;
         top: -2px;
         left: 2px;
@@ -663,24 +665,23 @@
         font-weight: 400;
         font-size: 11px;
         line-height: 20px;
-        // color: #FFFFFF;
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         margin-left: 4px;
         padding-right: 6px;
     }
 }
 .judge-avatar-connect {
-    border: 1px solid var(--yakit-primary-5);
+    border: 1px solid var(--Colors-Use-Main-Primary);
     border-radius: 14px;
 }
 .judge-avatar-active {
-    background-color: var(--yakit-primary-5);
+    background-color: var(--Colors-Use-Main-Primary);
     &-avatar {
-        background-color: #ffffff;
-        color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Basic-Background);
+        color: var(--Colors-Use-Main-On-Primary);
     }
     &-text {
-        color: #ffffff;
+        color: var(--Colors-Use-Main-On-Primary);
     }
 }
 
@@ -690,20 +691,20 @@
     flex: 1;
     .shortcut-keys {
         font-size: 12px;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
     }
     &:hover {
-        color: #ffffff;
+        // color: var(--Colors-Use-Main-Primary);
         .shortcut-keys {
-            color: #ffffff;
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }
 
 .stop-screen-menu-item {
-    color: var(--yakit-danger-5);
+    color: var(--Colors-Use-Error-Primary);
     &:hover {
-        color: #ffffff;
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 
@@ -738,7 +739,7 @@
             }
 
             .search-icon {
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 svg {
                     height: 16px;
                     width: 16px;
@@ -754,13 +755,13 @@
             display: flex;
             align-items: center;
             font-size: 12px;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             cursor: pointer;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             span.active {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }

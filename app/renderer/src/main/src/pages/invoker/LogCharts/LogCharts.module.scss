@@ -10,14 +10,14 @@
 .graph-xAxis-list {
     @extend %display-flex-center;
     gap: 12px 20px;
-    border-bottom: 1px solid var(--yakit-border-color);
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     padding-bottom: 8px;
     flex-wrap: wrap;
     .graph-xAxis-list-item {
         @extend %display-flex-center;
         align-items: flex-start;
         gap: 8px;
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         line-height: 16px;
         cursor: pointer;
         opacity: 0.3;
@@ -34,7 +34,7 @@
     }
 
     .circle-text-bg {
-        background-color: var(--ui-text-color);
+        background-color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 }
 %charts {

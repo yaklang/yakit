@@ -392,7 +392,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
         <YakitHint
             visible={visible}
             title={`${getReleaseEditionName()} 云端插件下载中...`}
-            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             onCancel={() => {
                 StopAllPlugin()
                 setVisible(false)
@@ -402,8 +402,8 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
             mask={false}
         >
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={percent}
                 format={(percent) => `已下载 ${percent}%`}
             />
@@ -424,7 +424,7 @@ export interface IRifyApplySyntaxFlowRuleUpdateProps {
  * IRify一键更新规则
  */
 export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUpdateProps> = React.memo((props) => {
-    const {visible,setVisible} = props
+    const {visible, setVisible} = props
     const taskToken = useMemo(() => randomString(40), [])
     const [percent, setPercent] = useState<number>(0)
     useEffect(() => {
@@ -476,7 +476,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
         <YakitHint
             visible={visible}
             title={`${getReleaseEditionName()} 规则更新中...`}
-            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             onCancel={() => {
                 StopAllRule()
                 setVisible(false)
@@ -486,8 +486,8 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
             mask={false}
         >
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={percent}
                 format={(percent) => `已更新 ${percent}%`}
             />
@@ -1118,9 +1118,9 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                                     onEditInputBlur(item, newName)
                                     setEditGroup("")
                                 }}
-                                onPressEnter={()=>{
+                                onPressEnter={() => {
                                     onEditInputBlur(item, newName)
-                                    setEditGroup("") 
+                                    setEditGroup("")
                                 }}
                                 autoFocus={true}
                                 value={newName}

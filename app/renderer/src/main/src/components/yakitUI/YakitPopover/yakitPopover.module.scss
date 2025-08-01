@@ -3,6 +3,11 @@
         .ant-popover-title{
             padding: 8px 12px 8px 12px;
             line-height: 16px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        }
+        .ant-popover-inner-content{
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 }
@@ -12,8 +17,8 @@
             bottom: 1px;
 
             .ant-popover-arrow-content {
-                border: 1px solid #eaecf3 !important;
-                background-color: #fff;
+                border: 1px solid var(--Colors-Use-Neutral-Border);
+                background-color: var(--Colors-Use-Basic-Background);
             }
 
             .ant-popover-arrow-content::before {
@@ -29,8 +34,8 @@
             right: 1px;
 
             .ant-popover-arrow-content {
-                border: 1px solid #eaecf3 !important;
-                background-color: #fff;
+                border: 1px solid var(--Colors-Use-Neutral-Border);
+                background-color: var(--Colors-Use-Basic-Background);
             }
 
             .ant-popover-arrow-content::before {
@@ -46,8 +51,8 @@
             left: 1px;
 
             .ant-popover-arrow-content {
-                border: 1px solid #eaecf3 !important;
-                background-color: #fff;
+                border: 1px solid var(--Colors-Use-Neutral-Border);
+                background-color: var(--Colors-Use-Basic-Background);
             }
 
             .ant-popover-arrow-content::before {
@@ -63,8 +68,8 @@
             top: 1px;
 
             .ant-popover-arrow-content {
-                border: 1px solid #eaecf3 !important;
-                background-color: #fff;
+                border: 1px solid var(--Colors-Use-Neutral-Border);
+                background-color: var(--Colors-Use-Basic-Background);
             }
 
             .ant-popover-arrow-content::before {

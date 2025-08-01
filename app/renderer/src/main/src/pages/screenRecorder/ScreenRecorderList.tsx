@@ -327,7 +327,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                     }, 1000)
                                 }}
                                 type='primary'
-                                colors="danger"
+                                colors='danger'
                                 size='large'
                             >
                                 <StopIcon />
@@ -369,7 +369,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                         initialValues={{
                             DisableMouse: true, // 鼠标捕捉
                             Framerate: "7", // 帧率
-                            CoefficientPTS: 1,
+                            CoefficientPTS: 1
                         }}
                         onFinish={(v) => {
                             const newValue = {
@@ -402,13 +402,10 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 disabled={screenRecorderInfo.isRecording}
                             />
                         </Form.Item>
-                        <Form.Item
-                            label='倍速'
-                            name='CoefficientPTS'
-                        >
+                        <Form.Item label='倍速' name='CoefficientPTS'>
                             <YakitSelect
                                 options={CoefficientPTSData}
-                                style={{ width: 120 }}
+                                style={{width: 120}}
                                 size='small'
                                 disabled={screenRecorderInfo.isRecording}
                             />
@@ -423,7 +420,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                     ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
                                 }}
                                 type='primary'
-                                colors="danger"
+                                colors='danger'
                             >
                                 <StopIcon />
                                 停止录屏
@@ -499,7 +496,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                             onSelect={({key}) => onMenuSelect(key)}
                                         />
                                     }
-                                    trigger="click"
+                                    trigger='click'
                                     overlayClassName={classNames(styles["popover-remove"])}
                                 >
                                     <YakitButton
@@ -521,11 +518,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                     批量删除
                                 </YakitButton>
                             )}
-                            <YakitButton
-                                type='outline1'
-                                colors="danger"
-                                onClick={() => setDelShow(true)}
-                            >
+                            <YakitButton type='outline1' colors='danger' onClick={() => setDelShow(true)}>
                                 清空
                             </YakitButton>
                         </div>

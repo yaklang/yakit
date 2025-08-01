@@ -5,6 +5,7 @@
     :global {
         .ant-tree .ant-tree-treenode {
             padding-bottom: 0;
+            background-color: var(--Colors-Use-Basic-Background);
         }
         .ant-tree-switcher {
             display: none;
@@ -33,7 +34,7 @@
             width: 6px !important;
         }
         .ant-tree-list-scrollbar-thumb{
-            background: #c1c1c1 !important;
+            background: var(--Colors-Use-Basic-Background) !important;
         }
     }
 
@@ -53,7 +54,7 @@
     position: relative;
     height: 22px;
     text-align: center;
-    color: var(--yakit-disable-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     font-size: 11px;
     line-height: 22px;
 }
@@ -75,7 +76,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             transition: transform 0.3s;
         }
         &.expanded {

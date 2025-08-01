@@ -8,9 +8,18 @@
     display: flex;
     align-items: center;
     word-break: break-all;
+    background: var(--Colors-Use-Neutral-Text-1-Title);
+    border: 1px solid var(--Colors-Use-Neutral-Text-1-Title);
+    color: var(--Colors-Use-Basic-Background);
+    box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
 }
 
 .ant-tooltip-arrow {
     width: 16px;
     height: 16px;
+    &-content{
+        &::before {
+            background: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+    }
 }

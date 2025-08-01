@@ -444,7 +444,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                       style={{
                                           color:
                                               !isCellRedSingleColor(rowData.cellClassName) && text.startsWith("1.00")
-                                                  ? "var(--yakit-success-5)"
+                                                  ? "var(--Colors-Use-Success-Primary)"
                                                   : undefined
                                       }}
                                   >

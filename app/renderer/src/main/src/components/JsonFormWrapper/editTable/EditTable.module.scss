@@ -4,13 +4,13 @@
     align-items: center;
 }
 .check-circle-icon {
-    color: var(--yakit-success-5);
+    color: var(--Colors-Use-Success-Primary);
 }
 .input-textarea {
     :global {
         .ant-input-suffix {
             &:hover {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -32,27 +32,27 @@
             padding: 8px 16px;
         }
         .ant-table-thead > tr > th {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-style: normal;
             font-weight: 500;
             line-height: 16px;
-            background: #f8f8f8;
+            background: var(--Colors-Use-Neutral-Bg);
         }
         .ant-table-thead > tr > th,
         .ant-table-tbody > tr > td {
-            border-bottom: 1px solid #eaecf3;
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > thead > tr > th,
         .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > tbody > tr > td {
-            border-right: 1px solid #eaecf3;
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .ant-table-tbody > tr.ant-table-row {
             vertical-align: top;
         }
         .ant-table-tbody > tr.ant-table-row:hover > td,
         .ant-table-tbody > tr > td.ant-table-cell-row-hover {
-            background: var(--yakit-card-background-color);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
         }
         .ant-table-filter-trigger:hover {
             color: transparent;

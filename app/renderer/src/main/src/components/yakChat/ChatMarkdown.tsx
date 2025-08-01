@@ -95,7 +95,11 @@ function PreCode(props: {children?: React.ReactNode}) {
 
     return (
         <pre ref={ref}>
-            <CopyComponents className='copy-code-button' copyText={copyStr || ""} iconColor={"#85899e"} />
+            <CopyComponents
+                className='copy-code-button'
+                copyText={copyStr || ""}
+                iconColor={"var(--Colors-Use-Neutral-Text-1-Title)"}
+            />
 
             {props.children}
         </pre>

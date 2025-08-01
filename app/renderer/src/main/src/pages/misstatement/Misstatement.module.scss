@@ -21,22 +21,22 @@
 
 $tagColor: (
     "success": (
-        color: var(--yakit-success-5)
+        color: var(--Colors-Use-Success-Primary)
     ),
     "warning": (
-        color: var(--yakit-warning-5)
+        color: var(--Colors-Use-Warning-Primary)
     ),
     "info": (
-        color: var(--yakit-primary-5)
+        color: var(--Colors-Use-Main-Primary)
     ),
     "danger": (
-        color: var(--yakit-danger-5)
+        color: var(--Colors-Use-Error-Primary)
     ),
     "serious": (
         color: var(--yakit-serious-5)
     ),
     "default": (
-        color: var(--yakit-helper-text-color)
+        color: var(--Colors-Use-Neutral-Disable)
     )
 );
 $keyColor: map-keys($tagColor);
@@ -60,7 +60,7 @@ $keyColor: map-keys($tagColor);
         .#{$name}-heard-title {
             justify-content: space-between;
             align-items: center;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 500;
             font-style: normal;
@@ -88,7 +88,7 @@ $keyColor: map-keys($tagColor);
                 display: flex;
                 gap: 8px;
                 .renderTitle-text {
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 16px;
                     font-weight: 600;
                     line-height: 24px;
@@ -103,13 +103,13 @@ $keyColor: map-keys($tagColor);
                         align-items: center;
 
                         .virtual-table-heard-right-text {
-                            color: var(--yakit-helper-text-color);
+                            color: var(--Colors-Use-Neutral-Disable);
                             font-size: 12px;
                             margin-right: 4px;
                         }
 
                         .virtual-table-heard-right-number {
-                            color: var(--yakit-primary-5);
+                            color: var(--Colors-Use-Main-Primary);
                             font-size: 12px;
                         }
                     }
@@ -164,7 +164,7 @@ $keyColor: map-keys($tagColor);
         width 0.2s ease,
         opacity 0.2s ease;
     opacity: 1;
-    border-right: 1px solid var(--yakit-border-color);
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
 
     @extend %flex-column;
     flex-shrink: 0;
@@ -181,8 +181,8 @@ $keyColor: map-keys($tagColor);
         justify-content: space-between;
         height: 44px;
         padding: 16px 12px 12px;
-        color: var(--yakit-header-color);
-        border-bottom: 1px solid var(--yakit-border-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         font-size: 12px;
         line-height: 16px;
 
@@ -226,16 +226,16 @@ $keyColor: map-keys($tagColor);
 
             cursor: pointer;
             &:hover {
-                background-color: var(--yakit-background-color);
+                background-color: var(--Colors-Use-Neutral-Bg);
             }
             .misstatement-list-item-label {
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px; /* 133.333% */
             }
             .misstatement-list-item-value {
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px; /* 133.333% */
@@ -244,7 +244,7 @@ $keyColor: map-keys($tagColor);
         .misstatement-list-item-active {
             .misstatement-list-item-label,
             .misstatement-list-item-value {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -253,6 +253,6 @@ $keyColor: map-keys($tagColor);
     padding-top: 24px;
     padding-bottom: 12px;
     text-align: center;
-    color: var(--yakit-disable-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     font-size: 11px;
 }

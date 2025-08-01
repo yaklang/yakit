@@ -428,7 +428,7 @@ export const PluginLogMergeDetail: React.FC<PluginLogMergeDetailProps> = memo((p
                         >
                             <div
                                 className={styles["baseinfo-body"]}
-                                style={{background: "var(--yakit-card-background-color)"}}
+                                style={{background: "var(--Colors-Use-Neutral-Bg-Hover)"}}
                             >
                                 <PluginBaseInfoForm data={oldBase.current} allDisabled={true} />
                             </div>

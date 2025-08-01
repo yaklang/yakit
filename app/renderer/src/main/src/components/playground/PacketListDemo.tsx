@@ -6,6 +6,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {Form} from "antd"
 import HexEditor from "react-hex-editor"
+import oneDarkPro from "react-hex-editor/themes/oneDarkPro"
 import {AutoCard} from "@/components/AutoCard"
 import {DemoItemSwitch} from "@/demoComponents/itemSwitch/ItemSwitch"
 import {DemoPacketTable} from "@/components/playground/traffic/DemoPacketTable"
@@ -17,6 +18,7 @@ import type {DataNode as TreeNode} from "antd/es/tree"
 import YakitTree from "@/components/yakitUI/YakitTree/YakitTree"
 import styles from "./PacketListDemo.module.scss"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
+import {useTheme} from "@/hook/useTheme"
 const DirectoryTree = Tree.DirectoryTree
 const MemoTooltip = Tooltip || React.memo(Tooltip)
 export interface PacketListProp {
@@ -52,6 +54,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
 
     const [treeHeight, setTreeHeight] = useState<number>(0)
     const TreeBoxRef = useRef<any>()
+    const {theme} = useTheme()
 
     const selectIdRef = useRef<number>()
     const [show, setShow] = useState<boolean>(false)
@@ -61,6 +64,10 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
             setTreeHeight(TreeBoxRef.current.offsetHeight)
         }
     }, [TreeBoxRef.current])
+
+    const targetHexTheme = useMemo(() => {
+        return theme === "dark" ? {hexEditor: oneDarkPro} : undefined
+    }, [theme])
 
     const handleSetValue = React.useCallback(
         (offset, value) => {
@@ -264,6 +271,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                                         showColumnLabels={true}
                                         showRowLabels={true}
                                         highlightColumn={true}
+                                        theme={targetHexTheme}
                                     />
                                 </div>
                             }

@@ -4,7 +4,7 @@
     height: 100%;
     .screen-recorder-heard {
         padding: 4px 0px 12px;
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         display: flex;
         justify-content: space-between;
         .heard-title {
@@ -16,14 +16,14 @@
                 font-weight: 600;
                 font-size: 16px;
                 line-height: 24px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 word-break: keep-all;
             }
             .heard-subTitle-text {
                 font-weight: 400;
                 font-size: 12px;
                 line-height: 16px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
             }
         }
         .heard-extra {
@@ -32,11 +32,11 @@
             justify-content: flex-end;
             min-width: 635px;
             .refresh-icon {
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 margin-left: 16px;
                 cursor: pointer;
                 &:hover {
-                    color: var(--yakit-primary-4);
+                    color: var(--Colors-Use-Main-Hover);
                 }
             }
         }
@@ -59,11 +59,11 @@
                     font-weight: 400;
                     font-size: 12px;
                     line-height: 16px;
-                    color: var(--yakit-helper-text-color);
+                    color: var(--Colors-Use-Neutral-Disable);
 
                     .title-number {
                         margin-left: 4px;
-                        color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Main-Primary);
                     }
                 }
             }
@@ -88,13 +88,13 @@
             .list-item {
                 padding: 8px;
                 height: 96px;
-                border-top: 1px solid var(--yakit-border-color);
+                border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 display: flex;
                 flex-direction: row;
                 align-items: center;
                 gap: 24px;
                 &:hover {
-                    background: var(--yakit-card-background-color);
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                     border-radius: 8px;
                     border-top-color: transparent;
                     .list-item-cover .list-item-cover-hover {
@@ -144,17 +144,17 @@
                         font-weight: 600;
                         font-size: 14px;
                         line-height: 20px;
-                        color: var(--yakit-header-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         cursor: pointer;
                         &:hover {
-                            color: var(--yakit-primary-4);
+                            color: var(--Colors-Use-Main-Hover);
                         }
                     }
                     .list-item-notes {
                         font-weight: 400;
                         font-size: 12px;
                         line-height: 16px;
-                        color: var(--yakit-helper-text-color);
+                        color: var(--Colors-Use-Neutral-Disable);
 
                         overflow: hidden;
                         text-overflow: ellipsis;
@@ -166,7 +166,7 @@
                     .list-item-extra {
                         display: flex;
                         align-items: center;
-                        color: var(--yakit-body-text-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-weight: 400;
                         font-size: 12px;
                         margin-top: 8px;
@@ -181,7 +181,7 @@
                             white-space: nowrap;
                         }
                         .list-item-filename {
-                            color: var(--yakit-primary-5);
+                            color: var(--Colors-Use-Main-Primary);
                             cursor: pointer;
                             display: flex;
                             align-items: center;
@@ -195,19 +195,20 @@
                     padding: 6px 0px;
                     // gap: 12px;
                     height: 28px;
-                    color: var(--yakit-body-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     flex: 1;
                     justify-content: flex-end;
                     svg {
                         cursor: pointer;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         &:hover {
-                            color: var(--yakit-primary-4);
+                            color: var(--Colors-Use-Main-Primary);
                         }
                     }
                     .icon-trash {
-                        color: var(--yakit-danger-5);
+                        color: var(--Colors-Use-Error-Primary);
                         svg:hover {
-                            color: var(--yakit-danger-4);
+                            color: var(--Colors-Use-Error-Border);
                         }
                     }
                     // span + span::before {
@@ -232,7 +233,7 @@
         font-weight: 600;
         font-size: 16px;
         line-height: 24px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         margin-bottom: 8px;
         text-align: center;
     }

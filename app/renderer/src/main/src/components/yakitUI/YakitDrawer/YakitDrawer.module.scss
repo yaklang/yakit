@@ -1,22 +1,40 @@
 .yakit-drawer {
     :global {
+        .ant-drawer-content-wrapper {
+            box-shadow: var(--Colors-Use-Basic-Shadow) 0px -2px 4px  !important;
+        }
+        .ant-drawer-content{
+            box-shadow: -2px 0px 0px 0px var(--Colors-Use-Basic-Shadow);
+            background-color: var(--Colors-Use-Basic-Background);
+        }
         .ant-drawer-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
             padding: 8px 16px;
             height: 40px;
-            border-bottom: 1px solid var(--yakit-border-color);
-            color: var(--yakit-header-color);
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             border-radius: 0;
+            border-left: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
         }
         .ant-drawer-title{
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            .yakit-button-outline2{
+                &:hover{
+                    border-color: var(--Colors-Use-Main-Primary);
+                }
+            }
         }
         .ant-drawer-close {
             margin-right: 8px;
             padding: 0;
+        }
+        .ant-drawer-body{
+            background: var(--Colors-Use-Basic-Background);
+            border-left: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+            box-shadow: 0 -2px 4px 0 var(--Colors-Use-Basic-Shadow);
         }
     }
 }
@@ -24,15 +42,15 @@
 .yakit-drawer-bottom {
     :global {
         .ant-drawer-header {
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
         }
     }
 }
 
 .yakit-drawer-icon {
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
     &:hover {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .yakit-drawer-remove-icon {
         svg {

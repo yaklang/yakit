@@ -12,6 +12,7 @@ import "./yakitLib.scss"
 import "./assets/global.scss"
 import {useEffect, useState} from "react"
 import ChildNewApp from "./ChildNewApp"
+import {ThemeProvider} from "./hook/useTheme"
 
 window.MonacoEnvironment = {
     getWorkerUrl: function (moduleId, label) {
@@ -82,7 +83,9 @@ if (window.location.search.includes("window=child")) {
 ReactDOM.render(
     // <React.StrictMode>
     <DndProvider backend={HTML5Backend}>
-        <App />
+        <ThemeProvider>
+            <App />
+        </ThemeProvider>
     </DndProvider>,
     // </React.StrictMode>,
     document.getElementById("root")

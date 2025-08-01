@@ -7,12 +7,12 @@
             align-items: center;
             height: 16px;
             font-size: 12px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             .divider-wrapper {
                 margin: 0 8px;
                 width: 1px;
                 height: 12px;
-                border-left: 1px solid var(--yakit-border-color);
+                border-left: 1px solid var(--Colors-Use-Neutral-Border);
             }
         }
 
@@ -20,7 +20,7 @@
             margin-top: 8px;
             font-size: 14px;
             line-height: 20px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .hint-right-update-content {
             box-sizing: border-box;
@@ -34,13 +34,13 @@
             padding: 12px;
             gap: 6px;
 
-            background: var(--yakit-neutral10-color);
-            border: 1px solid var(--yakit-border-color);
+            background: var(--Colors-Use-Neutral-Bg);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             border-radius: 4px;
 
             font-size: 12px;
             line-height: 18px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 

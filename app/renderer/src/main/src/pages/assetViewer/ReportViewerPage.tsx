@@ -190,11 +190,9 @@ const ReportList: React.FC<ReportListProp> = (props) => {
         <YakitCard
             className={styles["card"]}
             headStyle={{
-                background: "#fff",
                 height: 32,
                 minHeight: 32,
                 boxSizing: "content-box",
-                borderBottom: "1px solid var(--yakit-border-color)",
                 paddingLeft: 0
             }}
             bodyStyle={{padding: 12, paddingLeft: 0, width: "100%", height: "calc(100% - 32px)"}}
@@ -260,7 +258,10 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                                         height: 32,
                                         minHeight: 32,
                                         boxSizing: "content-box",
-                                        borderBottom: selectReportId == item.Id ? "1px solid #fff" : undefined
+                                        borderBottom:
+                                            selectReportId == item.Id
+                                                ? "1px solid var(--Colors-Use-Neutral-Border)"
+                                                : undefined
                                     }}
                                     bodyClassName={styles["list-item-body"]}
                                     bodyStyle={{
@@ -277,7 +278,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                                     extra={<YakitTag>{formatTimestamp(item.PublishedAt)}</YakitTag>}
                                     style={{
                                         backgroundColor:
-                                            selectReportId == item.Id ? "var(--yakit-primary-2)" : undefined
+                                            selectReportId == item.Id ? "var(--Colors-Use-Main-Focus)" : undefined
                                     }}
                                 >
                                     <Tooltip title='点击选中后，可删除'>
@@ -497,11 +498,9 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     <YakitCard
                         className={styles["card"]}
                         headStyle={{
-                            background: "#fff",
                             height: 32,
                             minHeight: 32,
                             boxSizing: "content-box",
-                            borderBottom: "1px solid var(--yakit-border-color)",
                             paddingLeft: 0,
                             paddingRight: 0
                         }}
