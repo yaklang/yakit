@@ -19,7 +19,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
     const {setJudgeLicense, setJudgeLogin} = props
     // License
     // const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
-    const [activateLicense, setActivateLicense] = useState<boolean>(true)
+    const [activateLicense, setActivateLicense] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(true)
     const [licensePageLoading, setLicensePageLoading] = useState<boolean>(false)
     useEffect(() => {
