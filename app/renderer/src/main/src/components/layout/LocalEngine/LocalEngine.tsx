@@ -257,7 +257,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const restoreEngine = useMemoizedFn(async () => {
             ipcRenderer
                 .invoke("RestoreEngineAndPlugin", {})
-                .finally(() => {
+                .then(() => {
                     info("解压内置引擎成功")
                     ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
                         onCancelUpdateYak(true)
