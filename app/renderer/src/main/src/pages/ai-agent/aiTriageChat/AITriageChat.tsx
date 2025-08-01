@@ -28,6 +28,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 import classNames from "classnames"
 import styles from "./AITriageChat.module.scss"
+import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 
 const AITriageChat: React.FC<AITriageChatProps> = memo(
     forwardRef((props, ref) => {
@@ -309,6 +310,7 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                                 setQuestion={setQuestion}
                                 textareaProps={textareaProps}
                                 onSubmit={handleTriageSend}
+                                extraFooterRight={<AIModelSelect disabled={isExecuting} />}
                             />
                         </div>
 

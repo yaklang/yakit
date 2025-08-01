@@ -7,9 +7,13 @@ import {
     IsLlamaServerReadyResponse,
     IsLocalModelReadyRequest,
     IsLocalModelReadyResponse,
+    LocalModelConfig,
     StartLocalModelRequest
 } from "../type/aiChat"
 import omit from "lodash/omit"
+import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
+import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -114,5 +118,43 @@ export const grpcCancelStartLocalModel: APIFunc<string, null> = (token, hiddenEr
                 if (!hiddenError) yakitNotify("error", "grpcCancelStartLocalModel 失败:" + err)
                 reject(err)
             })
+    })
+}
+
+/**获取线上和本地的AI模型 */
+export const getAIModelList: APINoRequestFunc<YakitSelectProps["options"]> = (hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let onlineModels: ThirdPartyApplicationConfig[] = []
+            let localModels: LocalModelConfig[] = []
+            const config = await apiGetGlobalNetworkConfig()
+            if (!!config) {
+                onlineModels = config.AppConfigs || []
+            }
+            const isReady = await grpcIsLlamaServerReady()
+            if (isReady.Ok) {
+                const localModelsRes = await grpcGetSupportedLocalModels()
+                if (!!localModelsRes) localModels = localModelsRes.Models || []
+            } else {
+                yakitNotify("error", `${isReady.Reason}`)
+            }
+            const result: YakitSelectProps["options"] = []
+            onlineModels.forEach((model) => {
+                result.push({
+                    value: model.Type,
+                    label: model.Type
+                })
+            })
+            localModels.forEach((model) => {
+                result.push({
+                    value: model.Name,
+                    label: model.Name
+                })
+            })
+            resolve(result)
+        } catch (error) {
+            if (!hiddenError) yakitNotify("error", "getAIModelList 失败:" + error)
+            reject(error)
+        }
     })
 }

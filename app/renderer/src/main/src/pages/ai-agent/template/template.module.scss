@@ -51,6 +51,14 @@ textarea.qs-input-textarea {
         flex: 1;
         overflow: hidden;
     }
+    .footer-right {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex: 1;
+        overflow: hidden;
+    }
 }
 
 .round-btn {
