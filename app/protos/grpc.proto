@@ -7266,6 +7266,7 @@ message MITMV2Request{
   bool EnableProxyAuth = 12;
   repeated string DnsServers = 13;
   repeated KVPair hosts = 14;
+  repeated KVPair HostsMapping = 46;
 
   // max content-length
   int64 MaxContentLength = 15;
