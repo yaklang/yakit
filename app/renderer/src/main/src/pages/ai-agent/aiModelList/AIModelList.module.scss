@@ -40,11 +40,7 @@
         @extend %display-column;
         gap: 4px;
         padding: 6px 6px;
-        cursor: pointer;
         border-radius: 4px;
-        &:hover {
-            background: var(--Colors-Use-Neutral-Bg-Hover);
-        }
     }
     &-item {
         @extend %display-flex-center;
@@ -90,7 +86,6 @@
         @extend %display-column;
         gap: 4px;
         padding: 12px;
-        cursor: pointer;
         border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         &:nth-last-child(1) {
             border-bottom-color: transparent;

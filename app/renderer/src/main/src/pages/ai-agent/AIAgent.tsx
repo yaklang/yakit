@@ -35,6 +35,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // 当前展示对话
     const [activeChat, setActiveChat] = useState<AIChatInfo>()
 
+    // 当前展示AI模型
+    const [activeAIModel, setAIActiveAIModel, getAIActiveAIModel] = useGetSetState<string>("")
+
     // 缓存全局配置数据
     useUpdateEffect(() => {
         setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(getSetting()))
@@ -50,9 +53,10 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             triages: triages,
             activeTriage: activeTriage,
             chats: chats,
-            activeChat: activeChat
+            activeChat: activeChat,
+            activeAIModel: activeAIModel
         }
-    }, [setting, triages, activeTriage, chats, activeChat])
+    }, [setting, triages, activeTriage, chats, activeChat, activeAIModel])
     const dispatcher: AIAgentContextDispatcher = useMemo(() => {
         return {
             getSetting: getSetting,
@@ -62,7 +66,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             setActiveTriage: setActiveTriage,
             setChats: setChats,
             getChats: getChats,
-            setActiveChat: setActiveChat
+            getAIActiveAIModel: getAIActiveAIModel,
+            setAIActiveAIModel: setAIActiveAIModel
         }
     }, [])
 
