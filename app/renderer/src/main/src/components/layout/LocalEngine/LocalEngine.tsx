@@ -230,7 +230,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     }
 
                     if (isResetBuiltInReason.current && !!buildInYak.current) {
-                        setShowYak(true)
+                        restoreEngine()
                         return
                     }
 
@@ -251,6 +251,21 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 setLog((old) => old.concat([`错误: ${error}`]))
                 setYakitStatus("checkError")
             }
+        })
+
+        /** 立即更新成内置引擎 */
+        const restoreEngine = useMemoizedFn(async () => {
+            ipcRenderer
+                .invoke("RestoreEngineAndPlugin", {})
+                .finally(() => {
+                    info("解压内置引擎成功")
+                    ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
+                        onCancelUpdateYak(true)
+                    })
+                })
+                .catch((e) => {
+                    failed(`恢复引擎失败：${e}`)
+                })
         })
 
         /**
