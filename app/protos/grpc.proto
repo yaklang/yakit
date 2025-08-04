@@ -327,6 +327,11 @@ service Yak {
   // 迁移旧的payload
   rpc MigratePayloads(Empty) returns (stream SavePayloadProgress);
 
+  rpc ExportPayload(ExportPayloadRequest) returns (stream GetAllPayloadResponse);
+  rpc UploadPayloadToOnline(UploadPayloadToOnlineRequest) returns (stream DownloadProgress);
+  rpc DownloadPayload(DownloadPayloadRequest) returns (stream DownloadProgress);
+
+
   // 自动生成补全
   rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
   rpc GetYakVMBuildInMethodCompletion(GetYakVMBuildInMethodCompletionRequest) returns (GetYakVMBuildInMethodCompletionResponse);
@@ -457,7 +462,7 @@ service Yak {
   rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
   rpc QueryReport(QueryReportRequest) returns (Report);
   rpc DeleteReport(DeleteReportRequest) returns (Empty);
-  rpc QueryAvailableReportFrom(Empty) returns (Fields); // no implement 
+  rpc QueryAvailableReportFrom(Empty) returns (Fields); // no implement
 
   rpc DownloadReport(DownloadReportRequest) returns (Empty);
 
@@ -896,6 +901,9 @@ service Yak {
   rpc UninstallThirdPartyBinary(UninstallThirdPartyBinaryRequest) returns (GeneralResponse);
   rpc IsThirdPartyBinaryReady(IsThirdPartyBinaryReadyRequest) returns (IsThirdPartyBinaryReadyResponse);
   rpc StartThirdPartyBinary(StartThirdPartyBinaryRequest) returns (stream ExecResult);
+
+  // 插件执行跟踪双向流服务
+  rpc PluginTrace(stream PluginTraceRequest) returns (stream PluginTraceResponse);
 }
 
 message ThirdPartyBinary {
@@ -2753,6 +2761,29 @@ message SavePayloadProgress {
   string Speed = 8;// 速度
   string RestDurationVerbose = 9;// 剩余时间
   string Message = 10;
+}
+
+message ExportPayloadRequest {
+  string Group = 1;
+  string SavePath = 2;
+}
+
+message UploadPayloadToOnlineRequest {
+  string Token = 1;
+  string Group = 2;
+  string Folder = 3;
+}
+
+message DownloadPayloadRequest {
+  string Token = 1;
+  string Group = 2;
+  string Folder = 3;
+}
+
+message DownloadProgress {
+  double Progress = 1;
+  string Message = 2;
+  string MessageType = 3;
 }
 
 message DeletePluginByUserIDRequest {
@@ -7080,6 +7111,7 @@ message UploadHotPatchTemplateToOnlineRequest {
 message DownloadHotPatchTemplateRequest {
   string Name = 1;
   string Type = 2; // fuzzer/mitm/httpflow-analyze
+  string Token = 3;
 }
 message ExportHTTPFlowStreamRequest {
   QueryHTTPFlowRequest Filter = 1;
@@ -7266,6 +7298,7 @@ message MITMV2Request{
   bool EnableProxyAuth = 12;
   repeated string DnsServers = 13;
   repeated KVPair hosts = 14;
+  repeated KVPair HostsMapping = 46;
 
   // max content-length
   int64 MaxContentLength = 15;
@@ -7411,4 +7444,47 @@ message QueryMITMReplacerRulesRequest{
 
 message QueryMITMReplacerRulesResponse{
   MITMContentReplacers Rules = 1;
+}
+
+// 插件执行跟踪相关消息定义
+message PluginExecutionTrace {
+  string TraceID = 1;
+  string PluginID = 2;
+  string HookName = 3;
+  string Status = 4; // "pending", "running", "completed", "failed", "cancelled"
+  int64 StartTime = 5;
+  int64 EndTime = 6;
+  bytes ExecutionArgs = 7; // JSON encoded arguments
+  string ErrorMessage = 8;
+  int64 DurationMs = 9;
+  string RuntimeId = 10;
+}
+
+message PluginTraceRequest {
+  // 控制字段
+  string ControlMode = 1; // "start_stream", "stop_stream", "cancel_trace", "set_tracing"
+  // 取消特定Trace
+  string TraceID = 2;
+  // Tracing开关 打开PluginTrace流不代表启用了插件Trace
+  bool EnableTracing = 3;
+}
+
+message PluginTraceResponse {
+  // 响应类型
+  string ResponseType = 1; // "trace_update", "control_result"
+  // 跟踪列表
+  repeated PluginExecutionTrace Traces = 2;
+  // 控制操作结果
+  bool Success = 3;
+  string Message = 4;
+  // 统计信息
+  PluginTraceStats Stats = 5;
+}
+
+message PluginTraceStats {
+  int64 TotalTraces = 1;
+  int64 RunningTraces = 2;
+  int64 CompletedTraces = 3;
+  int64 FailedTraces = 4;
+  int64 CancelledTraces = 5;
 }
