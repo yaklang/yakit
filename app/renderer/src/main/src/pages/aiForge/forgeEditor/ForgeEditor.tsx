@@ -300,7 +300,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
         setConfigTypeActiveTab(bool ? "code" : "prompt")
         setAdvanceMode(bool)
     })
-    const [configTypeActiveTab, setConfigTypeActiveTab] = useState<"prompt" | "code">("code")
+    const [configTypeActiveTab, setConfigTypeActiveTab] = useState<"prompt" | "code">("prompt")
 
     const configHeadUI = useMemo(() => {
         if (type === "yak") return null

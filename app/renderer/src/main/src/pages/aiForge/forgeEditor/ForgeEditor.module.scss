@@ -400,7 +400,7 @@
             align-items: center;
             gap: 4px;
             .text-style {
-                color: #b4bbca;
+                color: var(--Colors-Use-Neutral-Disable);
                 font-size: 12px;
                 font-weight: 600;
                 line-height: 16px;
@@ -409,7 +409,7 @@
                 flex: 1;
                 overflow: hidden;
                 height: 1px;
-                border-top: 1px dashed #eaecf3;
+                border-top: 1px dashed var(--Colors-Use-Neutral-Border);
             }
         }
 
