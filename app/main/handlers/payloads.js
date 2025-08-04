@@ -197,6 +197,14 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamPayloadMap, token)
     })
 
+    // 用于上传
+    const streamPayloadToOnlineMap = new Map()
+    ipcMain.handle("cancel-UploadPayloadToOnline", handlerHelper.cancelHandler(streamPayloadToOnlineMap))
+    ipcMain.handle("UploadPayloadToOnline", async (e, params, token) => {
+        let stream = getClient().UploadPayloadToOnline(params)
+        handlerHelper.registerHandler(win, stream, streamPayloadToOnlineMap, token)
+    })
+
 
     // 用于去重
     const streamRemoveDuplicateMap = new Map()

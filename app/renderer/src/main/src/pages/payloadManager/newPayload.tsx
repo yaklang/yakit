@@ -84,6 +84,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {isEnpriTrace} from "@/utils/envfile"
 import {NewPayloadOnlineList} from "./NewPayloadOnlineList"
+import {UserInfoProps, useStore} from "@/store"
 const {ipcRenderer} = window.require("electron")
 
 interface UploadStatusInfoProps {
@@ -882,6 +883,8 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
     const [exportVisible, setExportVisible] = useState<boolean>(false)
     const [exportType, setExportType] = useState<ExportTypeProps>()
 
+    const userInfo = useStore((s) => s.userInfo)
+
     useUpdateEffect(() => {
         onUpdateAllPayloadGroup(data)
     }, [JSON.stringify(data)])
@@ -1549,6 +1552,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                                                                 isDragging={snapshot.isDragging}
                                                                                 exportData={exportData}
                                                                                 setExportData={setExportData}
+                                                                                userInfo={userInfo}
                                                                             />
                                                                         ) : (
                                                                             // 渲染文件组件
@@ -1566,6 +1570,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                                                                 isDragging={snapshot.isDragging}
                                                                                 exportData={exportData}
                                                                                 setExportData={setExportData}
+                                                                                userInfo={userInfo}
                                                                             />
                                                                         )}
                                                                     </div>
@@ -1677,6 +1682,7 @@ interface FolderComponentProps {
     onSetFloderChecked?: (id: string[]) => void
     exportData?: string[]
     setExportData?: (ids: React.SetStateAction<string[]>) => void
+    userInfo?: UserInfoProps
 }
 export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     const {
@@ -1700,7 +1706,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         floderChecked = [],
         onSetFloderChecked = () => {},
         exportData = [],
-        setExportData
+        setExportData,
+        userInfo
     } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
@@ -1710,6 +1717,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     const getAllFolderName = useMemoizedFn(() => {
         return data.filter((item) => item.type === "Folder").map((item) => item.name)
     })
+
+    const [uploadVisible, setUploadVisible] = useState<boolean>(false)
 
     const setFolderNameById = useMemoizedFn(() => {
         // 文件夹只会存在第一层 不用递归遍历
@@ -1818,6 +1827,11 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     const allCheckIds = useMemo(() => {
         return getDataBaseIds(folder.node || [])
     }, [folder.node])
+
+    // 上传
+    const onUpload = useMemoizedFn(() => {
+        setUploadVisible(true)
+    })
 
     return (
         <>
@@ -1963,7 +1977,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                         <OutlineUploadIcon />
                                                         <div className={styles["menu-name"]}>上传</div>
                                                     </div>
-                                                )
+                                                ),
+                                                disabled: !userInfo?.isLogin
                                             },
                                             {
                                                 type: "divider"
@@ -2014,6 +2029,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                     setEditInput(true)
                                                     break
                                                 case "upload":
+                                                    onUpload()
                                                     break
                                                 case "delete":
                                                     setDeleteVisible(true)
@@ -2130,6 +2146,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                             endBorder={(folder.node?.length || 0) - 1 === index}
                                                             exportData={exportData}
                                                             setExportData={setExportData}
+                                                            userInfo={userInfo}
                                                         />
                                                     </div>
                                                 )}
@@ -2145,6 +2162,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
             {deleteVisible && (
                 <DeleteConfirm visible={deleteVisible} setVisible={setDeleteVisible} onFinish={onDeleteFolder} />
             )}
+            {uploadVisible && <UploadByGrpc group={""} folder={folder.name} setUploadVisible={setUploadVisible} />}
         </>
     )
 }
@@ -2231,6 +2249,7 @@ interface FileComponentProps {
     onCheckedItem?: (id: string[]) => void
     exportData?: string[]
     setExportData?: (ids: React.SetStateAction<string[]>) => void
+    userInfo?: UserInfoProps
 }
 
 export const FileComponent: React.FC<FileComponentProps> = (props) => {
@@ -2252,7 +2271,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         checkedItem = [],
         onCheckedItem = () => {},
         exportData = [],
-        setExportData
+        setExportData,
+        userInfo
     } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(file.isCreate === true)
@@ -2275,6 +2295,9 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
 
     // delete
     const [deleteVisible, setDeleteVisible] = useState<boolean>(false)
+
+    // upload
+    const [uploadVisible, setUploadVisible] = useState<boolean>(false)
 
     // 根据Id修改文件名
     const setFileById = useMemoizedFn((id: string, newName: string) => {
@@ -2410,6 +2433,11 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         setExportType("file")
     })
 
+    // 上传
+    const onUpload = useMemoizedFn(() => {
+        setUploadVisible(true)
+    })
+
     // 转为数据库存储
     const onGroupToDatabase = useMemoizedFn(() => {
         ipcRenderer.invoke(
@@ -2506,7 +2534,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                               <OutlineUploadIcon />
                               <div className={styles["menu-name"]}>上传</div>
                           </div>
-                      )
+                      ),
+                      disabled: !userInfo?.isLogin
                   },
                   {
                       type: "divider"
@@ -2566,7 +2595,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                               <OutlineUploadIcon />
                               <div className={styles["menu-name"]}>上传</div>
                           </div>
-                      )
+                      ),
+                      disabled: !userInfo?.isLogin
                   },
                   {
                       type: "divider"
@@ -2582,7 +2612,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                       type: "danger"
                   }
               ]
-    }, [])
+    }, [userInfo?.isLogin])
 
     // 右键展开菜单
     const handleRightClick = useMemoizedFn((e) => {
@@ -2749,6 +2779,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                     onGroupToDatabase()
                                                     break
                                                 case "upload":
+                                                    onUpload()
                                                     break
                                                 case "delete":
                                                     setDeleteVisible(true)
@@ -2814,6 +2845,9 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                     setExportVisible={setExportVisible}
                     exportType={exportType}
                 />
+            )}
+            {uploadVisible && (
+                <UploadByGrpc group={file.name} folder={folder || ""} setUploadVisible={setUploadVisible} />
             )}
         </>
     )
@@ -3608,6 +3642,111 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
                 cancelRun={() => {
                     cancelExportFile()
                     setExportVisible(false)
+                }}
+                logInfo={[]}
+                showDownloadDetail={false}
+            />
+        </YakitModal>
+    )
+}
+
+interface UploadByGrpcProps {
+    group: string
+    folder: string
+    setUploadVisible: (v: boolean) => void
+}
+// 上传
+export const UploadByGrpc: React.FC<UploadByGrpcProps> = (props) => {
+    const {group, folder, setUploadVisible} = props
+    const userInfo = useStore((s) => s.userInfo)
+    // 导出token
+    const [exportToken, setExportToken] = useState(randomString(20))
+    // export-show
+    const [exportStreamData, setExportStreamData] = useState<SavePayloadProgress>({
+        Progress: 0,
+        Message: "",
+        CostDurationVerbose: "",
+        RestDurationVerbose: "",
+        Speed: "0"
+    })
+    // 导出路径
+    const exportPathRef = useRef<string>()
+    // 是否显示modal
+    const [showModal, setShowModal] = useState<boolean>(false)
+
+    useEffect(() => {
+        onUploadFileFun()
+    }, [])
+
+    // 上传任务
+    const onUploadFileFun = useMemoizedFn(() => {
+        ipcRenderer.invoke(
+            "UploadPayloadToOnline",
+            {
+                Token: userInfo.token,
+                Group: group,
+                Folder: folder
+            },
+            exportToken
+        )
+        setShowModal(true)
+    })
+    // 取消上传任务
+    const cancelExportFile = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-UploadPayloadToOnline", exportToken)
+    })
+
+    const onExportStreamData = useThrottleFn(
+        (data) => {
+            setExportStreamData({...exportStreamData, Progress: data.Progress})
+        },
+        {wait: 500}
+    ).run
+
+    // 监听上传任务
+    useEffect(() => {
+        ipcRenderer.on(`${exportToken}-data`, async (e: any, data: GetAllPayloadFromFileResponse) => {
+            if (data) {
+                try {
+                    onExportStreamData(data)
+                } catch (error) {}
+            }
+        })
+        ipcRenderer.on(`${exportToken}-error`, (e: any, error: any) => {
+            failed(`[ExportFile] error:  ${error}`)
+        })
+        ipcRenderer.on(`${exportToken}-end`, (e: any, data: any) => {
+            info("[ExportFile] finished")
+            setShowModal(false)
+            setUploadVisible(false)
+            exportPathRef.current && openABSFileLocated(exportPathRef.current)
+        })
+        return () => {
+            ipcRenderer.invoke("cancel-UploadPayloadToOnline", exportToken)
+            ipcRenderer.removeAllListeners(`${exportToken}-data`)
+            ipcRenderer.removeAllListeners(`${exportToken}-error`)
+            ipcRenderer.removeAllListeners(`${exportToken}-end`)
+        }
+    }, [])
+    return (
+        <YakitModal
+            centered
+            getContainer={document.getElementById("new-payload") || document.body}
+            visible={showModal}
+            title={null}
+            footer={null}
+            width={520}
+            type='white'
+            closable={false}
+            hiddenHeader={true}
+            bodyStyle={{padding: 0}}
+        >
+            <UploadStatusInfo
+                title={"上传中，请耐心等待..."}
+                streamData={exportStreamData}
+                cancelRun={() => {
+                    cancelExportFile()
+                    setUploadVisible(false)
                 }}
                 logInfo={[]}
                 showDownloadDetail={false}
