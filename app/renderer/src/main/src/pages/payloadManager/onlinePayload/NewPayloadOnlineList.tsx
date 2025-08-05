@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {API} from "@/services/swagger/resposeType"
-import styles from "./NewPayload.module.scss"
+import styles from "../NewPayload.module.scss"
 import {UserInfoProps, useStore} from "@/store"
 import {isEnpriTrace} from "@/utils/envfile"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -13,11 +13,11 @@ import {
     OutlinePencilaltIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {useMemoizedFn} from "ahooks"
+import {useControllableValue, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import NoPermissions from "@/assets/no_permissions.png"
-import Login from "../Login"
+import Login from "../../Login"
 import {
     SolidChevrondownIcon,
     SolidChevronrightIcon,
@@ -28,12 +28,21 @@ import {
     SolidFolderopenIcon
 } from "@/assets/icon/solid"
 import classNames from "classnames"
-import {DataItem, DeleteConfirm, findFoldersById, isIncludeSpecial} from "./newPayload"
+import {
+    DataItem,
+    DeleteConfirm,
+    findFoldersById,
+    findItemByGroup,
+    isIncludeSpecial,
+    UploadOrDownloadByPayloadGrpc
+} from "../newPayload"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {setClipboardText} from "@/utils/clipboard"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {failed, success, warn} from "@/utils/notification"
+import {apiDeleteOnlinePayloadList, apiGetOnlinePayloadGroup, apiRenameOnlinePayload} from "../utils"
+import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineFolderComponentProps {
@@ -46,15 +55,27 @@ interface OnlineFolderComponentProps {
     notExpandArr: string[]
     setNotExpandArr: (v: string[]) => void
     setContentType: (v?: "editor" | "table") => void
+    setShowType: (v: "local" | "online") => void
 }
 
 export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (props) => {
-    const {folder, selectItem, setSelectItem, data, setData, notExpandArr, setNotExpandArr, setContentType} = props
+    const {
+        folder,
+        selectItem,
+        setSelectItem,
+        data,
+        setData,
+        notExpandArr,
+        setNotExpandArr,
+        setContentType,
+        setShowType
+    } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
     const [inputName, setInputName] = useState<string>(folder.name)
     // delete
     const [deleteVisible, setDeleteVisible] = useState<boolean>(false)
+    const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const getAllFolderName = useMemoizedFn(() => {
         return data.filter((item) => item.type === "Folder").map((item) => item.name)
     })
@@ -74,39 +95,19 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
         const allFolderName = getAllFolderName()
         const pass: boolean = !isIncludeSpecial(inputName)
         if (inputName.length > 0 && !allFolderName.includes(inputName) && pass) {
-            // 新建
-            if (folder.isCreate) {
-                ipcRenderer
-                    .invoke("CreatePayloadFolder", {
-                        Name: inputName
-                    })
-                    .then(() => {
-                        success("新建文件夹成功")
-                        setInputName(inputName)
-                        setFolderNameById()
-                    })
-                    .catch((e: any) => {
-                        failed(`新建文件夹失败：${e}`)
-                        setData(data.filter((item) => !item.isCreate))
-                    })
-            }
-            // 编辑
-            else {
-                ipcRenderer
-                    .invoke("RenamePayloadFolder", {
-                        Name: folder.name,
-                        NewName: inputName
-                    })
-                    .then(() => {
-                        success("修改成功")
-                        setInputName(inputName)
-                        setFolderNameById()
-                    })
-                    .catch((e: any) => {
-                        setInputName(folder.name)
-                        failed(`编辑失败：${e}`)
-                    })
-            }
+            apiRenameOnlinePayload({
+                name: folder.name,
+                newName: inputName
+            })
+                .then(() => {
+                    success("修改成功")
+                    setInputName(inputName)
+                    setFolderNameById()
+                })
+                .catch((e: any) => {
+                    setInputName(folder.name)
+                    failed(`编辑失败：${e}`)
+                })
         } else {
             !pass && warn("名称不允许出现/*,")
             // 创建时为空则不创建
@@ -137,16 +138,16 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
 
     // 删除文件夹
     const onDeleteFolder = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("DeletePayloadByFolder", {
-                Name: folder.name
-            })
+        apiDeleteOnlinePayloadList({
+            name: folder.name
+        })
             .then(() => {
                 success("删除成功")
                 onDeleteFolderById(folder.id)
                 setDeleteVisible(false)
             })
             .catch((e: any) => {
+                setDeleteVisible(false)
                 failed(`删除失败：${e}`)
             })
     })
@@ -275,6 +276,7 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
                                                 setEditInput(true)
                                                 break
                                             case "download":
+                                                setDownloadVisible(true)
                                                 break
                                             case "delete":
                                                 setDeleteVisible(true)
@@ -307,18 +309,19 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
                     <>
                         {Array.isArray(folder.node) &&
                             folder.node.map((file, index) => (
-                                <>
-                                    {/* 渲染文件组件 */}
-                                    <OnlineFileComponent
-                                        file={file}
-                                        selectItem={selectItem}
-                                        setSelectItem={setSelectItem}
-                                        data={data}
-                                        setData={setData}
-                                        isInside={true}
-                                        endBorder={(folder.node?.length || 0) - 1 === index}
-                                    />
-                                </>
+                                <OnlineFileComponent
+                                    key={file.id}
+                                    file={file}
+                                    folder={folder.name}
+                                    selectItem={selectItem}
+                                    setSelectItem={setSelectItem}
+                                    data={data}
+                                    setData={setData}
+                                    isInside={true}
+                                    endBorder={(folder.node?.length || 0) - 1 === index}
+                                    setContentType={setContentType}
+                                    setShowType={setShowType}
+                                />
                             ))}
                     </>
                 )}
@@ -327,12 +330,25 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
             {deleteVisible && (
                 <DeleteConfirm visible={deleteVisible} setVisible={setDeleteVisible} onFinish={onDeleteFolder} />
             )}
+
+            {downloadVisible && (
+                <UploadOrDownloadByPayloadGrpc
+                    group={""}
+                    folder={folder.name}
+                    setUploadOrDownloadVisible={setDownloadVisible}
+                    type='download'
+                    finished={() => {
+                        emiter.emit("refreshListEvent")
+                    }}
+                />
+            )}
         </>
     )
 }
 
 interface OnlineFileComponentProps {
     file: DataItem
+    folder?: string
     selectItem?: string
     setSelectItem: (id: string) => void
     data: DataItem[]
@@ -341,14 +357,28 @@ interface OnlineFileComponentProps {
     isInside?: boolean
     // 是否在其底部显示border
     endBorder?: boolean
+    setContentType: (v?: "editor" | "table") => void
+    setShowType: (v: "local" | "online") => void
 }
 export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) => {
-    const {file, selectItem, setSelectItem, data, setData, isInside = true, endBorder} = props
+    const {
+        file,
+        folder,
+        selectItem,
+        setSelectItem,
+        data,
+        setData,
+        isInside = true,
+        endBorder,
+        setContentType,
+        setShowType
+    } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [inputName, setInputName] = useState<string>(file.name)
     const [isEditInput, setEditInput] = useState<boolean>(file.isCreate === true)
     // delete
     const [deleteVisible, setDeleteVisible] = useState<boolean>(false)
+    const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     // 根据Id修改文件名
     const setFileById = useMemoizedFn((id: string, newName: string) => {
         const copyData: DataItem[] = JSON.parse(JSON.stringify(data))
@@ -401,41 +431,65 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
         const allFileName = getAllFileName()
         const pass: boolean = !isIncludeSpecial(inputName)
         if (inputName.length > 0 && !allFileName.includes(inputName) && pass) {
-            // ipcRenderer
-            //     .invoke("RenamePayloadGroup", {
-            //         Name: file.name,
-            //         NewName: inputName
-            //     })
-            //     .then(() => {
-            //         success("修改成功")
-            //         setInputName(inputName)
-            //         setFileById(file.id, inputName)
-            //     })
-            //     .catch((e: any) => {
-            //         setInputName(file.name)
-            //         failed(`编辑失败：${e}`)
-            //     })
+            apiRenameOnlinePayload({
+                name: file.name,
+                newName: inputName
+            })
+                .then(() => {
+                    success("修改成功")
+                    setInputName(inputName)
+                    setFileById(file.id, inputName)
+                })
+                .catch((e: any) => {
+                    setInputName(file.name)
+                    failed(`编辑失败：${e}`)
+                })
         } else {
             file.name !== inputName && allFileName.includes(inputName) && warn("名称重复，编辑失败")
             !pass && warn("名称不允许出现/*,")
             setInputName(file.name)
         }
     })
+    // 根据Id删除文件
+    const onDeletePayloadById = useMemoizedFn((id: string) => {
+        const copyData: DataItem[] = JSON.parse(JSON.stringify(data))
+        const selectData = findFoldersById(copyData, id)
+        if (selectData) {
+            if (selectData.type === "Folder") {
+                let node = selectData.node?.filter((item) => item.id !== id)
+                const newData = copyData.map((item) => {
+                    if (item.id === selectData.id && node) {
+                        return {...item, node}
+                    } else if (item.id === selectData.id && node === undefined) {
+                        delete item.node
+                        return item
+                    }
+                    return item
+                })
+                setData(newData)
+                let results = selectData.node?.find((item) => item.id === selectItem)
+                if (results) setContentType(undefined)
+            } else {
+                const newData = copyData.filter((item) => item.id !== id)
+                setData(newData)
+
+                if (selectItem === id) setContentType(undefined)
+            }
+        }
+    })
+
     // 删除Payload
     const onDeletePayload = useMemoizedFn(() => {
-        // ipcRenderer
-        //     .invoke("DeletePayloadByGroup", {
-        //         Group: file.name
-        //     })
-        //     .then(() => {
-        //         success("删除成功")
-        //         onDeletePayloadById(file.id)
-        //         setDeleteVisible(false)
-        //     })
-        //     .catch((e: any) => {
-        //         setDeleteVisible(false)
-        //         failed(`删除失败：${e}`)
-        //     })
+        apiDeleteOnlinePayloadList({group: file.name})
+            .then(() => {
+                success("删除成功")
+                onDeletePayloadById(file.id)
+                setDeleteVisible(false)
+            })
+            .catch((e: any) => {
+                setDeleteVisible(false)
+                failed(`删除失败：${e}`)
+            })
     })
     const fileMenuData = useMemo(() => {
         // 此处数据库导出为csv 文件导出为txt
@@ -486,7 +540,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
     // 右键展开菜单
     const handleRightClick = useMemoizedFn((e) => {
         e.preventDefault()
-
+        setShowType("online")
         setSelectItem(file.id)
         setMenuOpen(true)
     })
@@ -524,6 +578,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
                         })}
                         onClick={() => {
                             setSelectItem(file.id)
+                            setShowType("online")
                         }}
                         onContextMenu={handleRightClick}
                     >
@@ -560,6 +615,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
                                                 setEditInput(true)
                                                 break
                                             case "download":
+                                                setDownloadVisible(true)
                                                 break
                                             case "delete":
                                                 setDeleteVisible(true)
@@ -590,19 +646,41 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
             {deleteVisible && (
                 <DeleteConfirm visible={deleteVisible} setVisible={setDeleteVisible} onFinish={onDeletePayload} />
             )}
+
+            {downloadVisible && (
+                <UploadOrDownloadByPayloadGrpc
+                    group={file.name}
+                    folder={folder || ""}
+                    setUploadOrDownloadVisible={setDownloadVisible}
+                    type='download'
+                    finished={() => {
+                        emiter.emit("refreshListEvent")
+                    }}
+                />
+            )}
         </>
     )
 }
 
 interface OnlinePayloadGroupListProps {
     userInfo: UserInfoProps
+    onQueryGroup: () => void
+    data: DataItem[]
+    setData: (v: DataItem[]) => void
+    selectItem?: string
+    setSelectItem: (id: string) => void
+    setContentType: (v?: "editor" | "table") => void
+    loading: boolean
+    setShowType: (v: "local" | "online") => void
 }
 
 export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (props) => {
-    const {userInfo} = props
-    const [loading, setLoading] = useState<boolean>(false)
-    const [data, setData] = useState<API.FlowRuleGroupDetail[]>([])
+    const {userInfo, onQueryGroup, data, setData, selectItem, setSelectItem, setContentType, loading, setShowType} =
+        props
+
     const [loginShow, setLoginShow] = useState<boolean>(false)
+    // 用于记录不展开的文件夹(默认展开)
+    const [notExpandArr, setNotExpandArr] = useState<string[]>([])
     const onLogin = useMemoizedFn(() => {
         setLoginShow(true)
     })
@@ -616,6 +694,12 @@ export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (pr
             return false
         }
     }, [userInfo])
+
+    useEffect(() => {
+        if (isLoadList) {
+            onQueryGroup()
+        }
+    }, [isLoadList])
     return (
         <div className={styles["new-payload-group-list"]}>
             {isLoadList ? (
@@ -625,7 +709,45 @@ export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (pr
                             <YakitEmpty title='暂无数据' />
                         </YakitSpin>
                     ) : (
-                        <></>
+                        <div className={styles["online-payload-group-list"]}>
+                            {data.map((item, index) => {
+                                return (
+                                    <>
+                                        {/* 渲染你的文件夹或文件组件 */}
+                                        {/* 使用 item.type 来区分文件夹和文件 */}
+                                        {item.type === "Folder" ? (
+                                            // 渲染文件夹组件
+                                            <OnlineFolderComponent
+                                                key={index}
+                                                folder={item}
+                                                selectItem={selectItem}
+                                                setSelectItem={setSelectItem}
+                                                data={data}
+                                                setData={setData}
+                                                notExpandArr={notExpandArr}
+                                                setNotExpandArr={setNotExpandArr}
+                                                setContentType={setContentType}
+                                                setShowType={setShowType}
+                                            />
+                                        ) : (
+                                            // 渲染文件组件
+                                            <OnlineFileComponent
+                                                key={index}
+                                                file={item}
+                                                selectItem={selectItem}
+                                                setSelectItem={setSelectItem}
+                                                data={data}
+                                                setData={setData}
+                                                setContentType={setContentType}
+                                                setShowType={setShowType}
+                                                // isInside={!fileOutside}
+                                            />
+                                        )}
+                                    </>
+                                )
+                            })}
+                            <div className={styles["to-end"]}>已经到底啦～</div>
+                        </div>
                     )}
                 </>
             ) : (
@@ -646,41 +768,122 @@ export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (pr
     )
 }
 
-export interface NewPayloadOnlineListProps {}
+// 将后端结构数据捏成渲染数组
+const onlineNodesToDataFun = (nodes: API.PayloadGroupNode[]) => {
+    return nodes.map((item) => {
+        const {type, name, nodes} = item
+        let obj = {
+            ...item,
+            id: `${type}-${name}`
+        } as DataItem
+        if (nodes && nodes.length > 0) {
+            return {
+                ...obj,
+                node: nodes.map((itemIn) => ({
+                    ...itemIn,
+                    id: `${itemIn.type}-${itemIn.name}`
+                }))
+            }
+        }
+        return obj
+    })
+}
+
+export interface NewPayloadOnlineListProps {
+    setGroup: (v: string) => void
+    setFolder: (v: string) => void
+    setContentType: (v?: "editor" | "table") => void
+    showType: "local" | "online"
+    setShowType: (v: "local" | "online") => void
+}
 export const NewPayloadOnlineList: React.FC<NewPayloadOnlineListProps> = (props) => {
+    const {setContentType, showType, setShowType} = props
+
+    // table/editor 筛选条件
+    const [selectItem, setSelectItem] = useState<string>()
+    const [group, setGroup] = useControllableValue<string>({
+        defaultValue: "",
+        valuePropName: "group",
+        trigger: "setGroup"
+    })
+    const [folder, setFolder] = useControllableValue<string>({
+        defaultValue: "",
+        valuePropName: "folder",
+        trigger: "setFolder"
+    })
+    const [data, setData] = useState<DataItem[]>([])
+    const [loading, setLoading] = useState<boolean>(false)
     const userInfo = useStore((s) => s.userInfo)
+
+    useUpdateEffect(() => {
+        if (showType !== "online") {
+            setSelectItem(undefined)
+        }
+    }, [showType])
+
     const eeIsLogin = useMemo(() => {
         return isEnpriTrace() && userInfo.isLogin && userInfo.token
     }, [userInfo])
+
+    const reset = useMemoizedFn(() => {
+        setContentType(undefined)
+        setSelectItem(undefined)
+        setGroup("")
+        setFolder("")
+    })
+
+    const onQueryGroup = useMemoizedFn(() => {
+        setLoading(true)
+        apiGetOnlinePayloadGroup()
+            .then((res) => {
+                console.log("查询线上payload分组信息：", res)
+                let newData: DataItem[] = onlineNodesToDataFun(res.nodes || []) as DataItem[]
+                setData(newData)
+            })
+            .catch((e: any) => {
+                failed(`获取线上字典列表失败：${e}`)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 100)
+            })
+    })
+
+    const onRefreshListEvent = useMemoizedFn(() => {
+        onQueryGroup()
+    })
+
+    useEffect(() => {
+        emiter.on("refreshOnlineListEvent", onRefreshListEvent)
+        return () => {
+            emiter.off("refreshOnlineListEvent", onRefreshListEvent)
+        }
+    }, [])
+
     return (
-        <div className={styles["new-payload-online-list"]}>
-            <div className={styles["online-group-header"]}>
-                <span className={styles["online-group-desc"]}>
-                    线上规则
-                    {eeIsLogin ? "（下载即可使用）" : "（登录即可下载使用）"}
-                </span>
-                {eeIsLogin && (
-                    <YakitButton
-                        type='text'
-                        icon={<OutlineClouddownloadIcon />}
-                        onClick={() => {
-                            // isDownloadOnlineRuleGroupRef.current = true
-                            // infoRef.current = {
-                            //     type: "download",
-                            //     title: "下载提示",
-                            //     content: "如果规则id相同则会直接覆盖，是否确认下载"
-                            // }
-                            // setInfoVisible(true)
-                        }}
-                        style={{padding: 0}}
-                    >
-                        一键下载
-                    </YakitButton>
-                )}
+        <>
+            <div className={styles["new-payload-online-list"]}>
+                <div className={styles["online-group-header"]}>
+                    <span className={styles["online-group-desc"]}>
+                        线上规则
+                        {eeIsLogin ? "（下载即可使用）" : "（登录即可下载使用）"}
+                    </span>
+                </div>
+                <div className={styles["group-list"]}>
+                    <OnlinePayloadGroupList
+                        loading={loading}
+                        userInfo={userInfo}
+                        onQueryGroup={onQueryGroup}
+                        data={data}
+                        setData={setData}
+                        selectItem={selectItem}
+                        setSelectItem={setSelectItem}
+                        setContentType={setContentType}
+                        setShowType={setShowType}
+                    />
+                </div>
             </div>
-            <div className={styles["group-list"]}>
-                <OnlinePayloadGroupList userInfo={userInfo} />
-            </div>
-        </div>
+        </>
     )
 }

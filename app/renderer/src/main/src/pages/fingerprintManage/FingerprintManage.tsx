@@ -44,7 +44,7 @@ import {
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 import {genDefaultPagination} from "../invoker/schema"
-import {EditingObjProps} from "../payloadManager/newPayloadTable"
+import {EditingObjProps} from "../payloadManager/PayloadLocalTable"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"

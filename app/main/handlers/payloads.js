@@ -190,11 +190,11 @@ module.exports = (win, getClient) => {
         let stream = getClient().ExportAllPayload(params)
         handlerHelper.registerHandler(win, stream, streamAllPayloadMap, token)
     })
-    const streamPayloadMap = new Map()
-    ipcMain.handle("cancel-ExportPayload", handlerHelper.cancelHandler(streamPayloadMap))
-    ipcMain.handle("ExportPayload", async (e, params, token) => {
-        let stream = getClient().ExportPayload(params)
-        handlerHelper.registerHandler(win, stream, streamPayloadMap, token)
+    const streamPayloadBatchMap = new Map()
+    ipcMain.handle("cancel-ExportPayloadBatch", handlerHelper.cancelHandler(streamPayloadBatchMap))
+    ipcMain.handle("ExportPayloadBatch", async (e, params, token) => {
+        let stream = getClient().ExportPayloadBatch(params)
+        handlerHelper.registerHandler(win, stream, streamPayloadBatchMap, token)
     })
 
     // 用于上传
@@ -205,6 +205,13 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamPayloadToOnlineMap, token)
     })
 
+    // 用于下载
+    const streamDownloadPayloadMap = new Map()
+    ipcMain.handle("cancel-DownloadPayload", handlerHelper.cancelHandler(streamDownloadPayloadMap))
+    ipcMain.handle("DownloadPayload", async (e, params, token) => {
+        let stream = getClient().DownloadPayload(params)
+        handlerHelper.registerHandler(win, stream, streamDownloadPayloadMap, token)
+    })
 
     // 用于去重
     const streamRemoveDuplicateMap = new Map()

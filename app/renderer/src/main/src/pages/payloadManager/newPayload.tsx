@@ -62,7 +62,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import Dragger from "antd/lib/upload/Dragger"
 import {v4 as uuidv4} from "uuid"
-import {DeletePayloadProps, NewPayloadTable, Payload, QueryPayloadParams} from "./newPayloadTable"
+import {DeletePayloadProps, NewPayloadTable, Payload, QueryPayloadParams} from "./PayloadLocalTable"
 import {PaginationSchema, QueryGeneralResponse} from "../invoker/schema"
 import {randomString} from "@/utils/randomUtil"
 import _isEqual from "lodash/isEqual"
@@ -83,7 +83,7 @@ import {setClipboardText} from "@/utils/clipboard"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {isEnpriTrace} from "@/utils/envfile"
-import {NewPayloadOnlineList} from "./NewPayloadOnlineList"
+import {NewPayloadOnlineList} from "./onlinePayload/NewPayloadOnlineList"
 import {UserInfoProps, useStore} from "@/store"
 const {ipcRenderer} = window.require("electron")
 
@@ -693,7 +693,7 @@ const cloneItemStyle = (draggableStyle) => {
 }
 
 // 根据Group获取此项
-const findItemByGroup = (items: DataItem[], group: string): DataItem | null => {
+export const findItemByGroup = (items: DataItem[], group: string): DataItem | null => {
     for (const item of items) {
         if (item.name === group && item.type !== "Folder") {
             return item
@@ -844,6 +844,7 @@ export interface NewPayloadLocalListProps {
     onCheckedItem?: (id: string[]) => void
     floderChecked?: string[]
     onSetFloderChecked?: (id: string[]) => void
+    setShowType?: (v: "local" | "online") => void
 }
 
 export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) => {
@@ -864,7 +865,8 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
         checkedItem = [],
         onCheckedItem = () => {},
         floderChecked = [],
-        onSetFloderChecked = () => {}
+        onSetFloderChecked = () => {},
+        setShowType
     } = props
 
     const [dropType, setDropType] = useState<string>(droppable)
@@ -1553,6 +1555,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                                                                 exportData={exportData}
                                                                                 setExportData={setExportData}
                                                                                 userInfo={userInfo}
+                                                                                setShowType={setShowType}
                                                                             />
                                                                         ) : (
                                                                             // 渲染文件组件
@@ -1571,6 +1574,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                                                                 exportData={exportData}
                                                                                 setExportData={setExportData}
                                                                                 userInfo={userInfo}
+                                                                                setShowType={setShowType}
                                                                             />
                                                                         )}
                                                                     </div>
@@ -1591,7 +1595,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                 </YakitSpin>
             </div>
             {exportVisible && (
-                <ExportByGrpc
+                <ExportByPayloadGrpc
                     group={exportData.join(",")}
                     setExportVisible={setExportVisible}
                     exportType={exportType}
@@ -1683,6 +1687,7 @@ interface FolderComponentProps {
     exportData?: string[]
     setExportData?: (ids: React.SetStateAction<string[]>) => void
     userInfo?: UserInfoProps
+    setShowType?: (v: "local" | "online") => void
 }
 export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     const {
@@ -1707,7 +1712,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         onSetFloderChecked = () => {},
         exportData = [],
         setExportData,
-        userInfo
+        userInfo,
+        setShowType
     } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
@@ -1812,6 +1818,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 setExportData && setExportData([])
             })
             .catch((e: any) => {
+                setDeleteVisible(false)
                 failed(`删除失败：${e}`)
             })
     })
@@ -1899,7 +1906,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                         onContextMenu={handleRightClick}
                     >
                         <div className={styles["folder-header"]}>
-                            <YakitCheckbox
+                            {!onlyInsert && <YakitCheckbox
                                 checked={
                                     allCheckIds.length > 0 &&
                                     allCheckIds.every((element) => exportData.includes(element))
@@ -1916,7 +1923,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                     }
                                 }}
                                 onClick={(e) => e.stopPropagation()}
-                            />
+                            />}
                             <div className={styles["is-fold-icon"]}>
                                 {!notExpandArr.includes(folder.id) ? (
                                     <SolidChevrondownIcon />
@@ -2079,6 +2086,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                 endBorder={(folder.node?.length || 0) - 1 === index}
                                 checkedItem={checkedItem}
                                 onCheckedItem={onCheckedItem}
+                                setShowType={setShowType}
                             />
                         ))}
                 </>
@@ -2147,6 +2155,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                             exportData={exportData}
                                                             setExportData={setExportData}
                                                             userInfo={userInfo}
+                                                            setShowType={setShowType}
                                                         />
                                                     </div>
                                                 )}
@@ -2162,7 +2171,16 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
             {deleteVisible && (
                 <DeleteConfirm visible={deleteVisible} setVisible={setDeleteVisible} onFinish={onDeleteFolder} />
             )}
-            {uploadVisible && <UploadByGrpc group={""} folder={folder.name} setUploadVisible={setUploadVisible} />}
+            {uploadVisible && (
+                <UploadOrDownloadByPayloadGrpc
+                    group={""}
+                    folder={folder.name}
+                    setUploadOrDownloadVisible={setUploadVisible}
+                    finished={()=>{
+                        emiter.emit("refreshOnlineListEvent")
+                    }}
+                />
+            )}
         </>
     )
 }
@@ -2250,6 +2268,7 @@ interface FileComponentProps {
     exportData?: string[]
     setExportData?: (ids: React.SetStateAction<string[]>) => void
     userInfo?: UserInfoProps
+    setShowType?: (v: "local" | "online") => void
 }
 
 export const FileComponent: React.FC<FileComponentProps> = (props) => {
@@ -2272,7 +2291,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         onCheckedItem = () => {},
         exportData = [],
         setExportData,
-        userInfo
+        userInfo,
+        setShowType
     } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(file.isCreate === true)
@@ -2619,6 +2639,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         e.preventDefault()
         if (!onlyInsert) {
             setSelectItem(file.id)
+            setShowType && setShowType("local")
             setMenuOpen(true)
         }
     })
@@ -2678,6 +2699,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                             [styles["file-end-border"]]: endBorder
                         })}
                         onClick={() => {
+                            setShowType && setShowType("local")
                             setSelectItem(file.id)
                         }}
                         onContextMenu={handleRightClick}
@@ -2839,7 +2861,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 <DeleteConfirm visible={deleteVisible} setVisible={setDeleteVisible} onFinish={onDeletePayload} />
             )}
             {exportVisible && (
-                <ExportByGrpc
+                <ExportByPayloadGrpc
                     group={file.name}
                     folder={folder || ""}
                     setExportVisible={setExportVisible}
@@ -2847,7 +2869,14 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 />
             )}
             {uploadVisible && (
-                <UploadByGrpc group={file.name} folder={folder || ""} setUploadVisible={setUploadVisible} />
+                <UploadOrDownloadByPayloadGrpc
+                    group={file.name}
+                    folder={folder || ""}
+                    setUploadOrDownloadVisible={setUploadVisible}
+                    finished={()=>{
+                        emiter.emit("refreshOnlineListEvent")
+                    }}
+                />
             )}
         </>
     )
@@ -2922,10 +2951,6 @@ interface PayloadContentProps {
 interface PayloadFileDataProps {
     Data: Uint8Array
     IsBigFile: boolean
-}
-
-interface GetAllPayloadFromFileResponse {
-    Progress: number
 }
 
 type ExportTypeProps = "csv" | "file" | "all"
@@ -3477,7 +3502,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                 />
             </YakitModal>
             {exportVisible && (
-                <ExportByGrpc
+                <ExportByPayloadGrpc
                     group={group}
                     folder={folder}
                     setExportVisible={setExportVisible}
@@ -3488,14 +3513,14 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
     )
 }
 
-interface ExportByGrpcProps {
+interface ExportByPayloadGrpcProps {
     group: string
     folder?: string
     setExportVisible: (v: boolean) => void
     exportType?: ExportTypeProps
 }
 // 导出
-export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
+export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) => {
     const {group, folder, setExportVisible, exportType} = props
     // 导出token
     const [exportToken, setExportToken] = useState(randomString(20))
@@ -3523,7 +3548,7 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
         let exportObj = {
             file: "ExportAllPayloadFromFile",
             csv: "ExportAllPayload",
-            all: "ExportPayload"
+            all: "ExportPayloadBatch"
         }
         return exportObj[exportType]
     }, [exportType])
@@ -3535,7 +3560,7 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
         let cancelExportObj = {
             file: "cancel-ExportAllPayloadFromFile",
             csv: "cancel-ExportAllPayload",
-            all: "cancel-ExportPayload"
+            all: "cancel-ExportPayloadBatch"
         }
         return cancelExportObj[exportType]
     }, [exportType])
@@ -3600,7 +3625,7 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
 
     // 监听导出任务
     useEffect(() => {
-        ipcRenderer.on(`${exportToken}-data`, async (e: any, data: GetAllPayloadFromFileResponse) => {
+        ipcRenderer.on(`${exportToken}-data`, async (e: any, data: SavePayloadProgress) => {
             if (data) {
                 try {
                     onExportStreamData(data)
@@ -3650,14 +3675,16 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
     )
 }
 
-interface UploadByGrpcProps {
+interface UploadOrDownloadByPayloadGrpcProps {
     group: string
     folder: string
-    setUploadVisible: (v: boolean) => void
+    setUploadOrDownloadVisible: (v: boolean) => void
+    type?: "upload" | "download"
+    finished?:()=>void
 }
-// 上传
-export const UploadByGrpc: React.FC<UploadByGrpcProps> = (props) => {
-    const {group, folder, setUploadVisible} = props
+// 上传与下载(默认上传)
+export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGrpcProps> = (props) => {
+    const {group, folder, setUploadOrDownloadVisible, type = "upload",finished} = props
     const userInfo = useStore((s) => s.userInfo)
     // 导出token
     const [exportToken, setExportToken] = useState(randomString(20))
@@ -3669,8 +3696,7 @@ export const UploadByGrpc: React.FC<UploadByGrpcProps> = (props) => {
         RestDurationVerbose: "",
         Speed: "0"
     })
-    // 导出路径
-    const exportPathRef = useRef<string>()
+    const logInfoRef = useRef<string[]>([])
     // 是否显示modal
     const [showModal, setShowModal] = useState<boolean>(false)
 
@@ -3680,8 +3706,14 @@ export const UploadByGrpc: React.FC<UploadByGrpcProps> = (props) => {
 
     // 上传任务
     const onUploadFileFun = useMemoizedFn(() => {
+        console.log("onUploadFileFun---", type === "upload" ? "UploadPayloadToOnline" : "DownloadPayload", {
+            Token: userInfo.token,
+            Group: group,
+            Folder: folder
+        })
+
         ipcRenderer.invoke(
-            "UploadPayloadToOnline",
+            type === "upload" ? "UploadPayloadToOnline" : "DownloadPayload",
             {
                 Token: userInfo.token,
                 Group: group,
@@ -3693,7 +3725,7 @@ export const UploadByGrpc: React.FC<UploadByGrpcProps> = (props) => {
     })
     // 取消上传任务
     const cancelExportFile = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-UploadPayloadToOnline", exportToken)
+        ipcRenderer.invoke(type === "upload" ? "cancel-UploadPayloadToOnline" : "cancel-DownloadPayload", exportToken)
     })
 
     const onExportStreamData = useThrottleFn(
@@ -3705,24 +3737,31 @@ export const UploadByGrpc: React.FC<UploadByGrpcProps> = (props) => {
 
     // 监听上传任务
     useEffect(() => {
-        ipcRenderer.on(`${exportToken}-data`, async (e: any, data: GetAllPayloadFromFileResponse) => {
+        ipcRenderer.on(`${exportToken}-data`, async (e: any, data: SavePayloadProgress) => {
             if (data) {
                 try {
+                    if (data.Message.length > 0) {
+                        logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+                    }
                     onExportStreamData(data)
                 } catch (error) {}
             }
         })
         ipcRenderer.on(`${exportToken}-error`, (e: any, error: any) => {
-            failed(`[ExportFile] error:  ${error}`)
+            failed(`${type === "upload" ? "[UploadFile]" : "[DownloadFile]"} error:  ${error}`)
         })
         ipcRenderer.on(`${exportToken}-end`, (e: any, data: any) => {
-            info("[ExportFile] finished")
+            info(`${type === "upload" ? "[UploadFile]" : "[DownloadFile]"} finished`)
             setShowModal(false)
-            setUploadVisible(false)
-            exportPathRef.current && openABSFileLocated(exportPathRef.current)
+            setUploadOrDownloadVisible(false)
+            finished && finished()
+            logInfoRef.current = []
         })
         return () => {
-            ipcRenderer.invoke("cancel-UploadPayloadToOnline", exportToken)
+            ipcRenderer.invoke(
+                type === "upload" ? "cancel-UploadPayloadToOnline" : "cancel-DownloadPayload",
+                exportToken
+            )
             ipcRenderer.removeAllListeners(`${exportToken}-data`)
             ipcRenderer.removeAllListeners(`${exportToken}-error`)
             ipcRenderer.removeAllListeners(`${exportToken}-end`)
@@ -3742,13 +3781,13 @@ export const UploadByGrpc: React.FC<UploadByGrpcProps> = (props) => {
             bodyStyle={{padding: 0}}
         >
             <UploadStatusInfo
-                title={"上传中，请耐心等待..."}
+                title={`${type === "upload" ? "上传" : "下载"}中，请耐心等待...`}
                 streamData={exportStreamData}
                 cancelRun={() => {
                     cancelExportFile()
-                    setUploadVisible(false)
+                    setUploadOrDownloadVisible(false)
                 }}
-                logInfo={[]}
+                logInfo={logInfoRef.current}
                 showDownloadDetail={false}
             />
         </YakitModal>
@@ -3796,11 +3835,22 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
     // 用于比较顺序是否改变
     const cacheNodesRef = useRef<PayloadGroupNodeProps[]>([])
 
+    // 当前展示的是本地还是线上
+    const [showType, setShowType] = useState<"local" | "online">("local")
+
+    useUpdateEffect(() => {
+            if (showType !== "local") {
+                setSelectItem(undefined)
+            }
+        }, [showType])
+
     const onQueryGroup = (obj?: {Group: string; Folder: string}) => {
         setListLoading(true)
         ipcRenderer
             .invoke("GetAllPayloadGroup")
             .then((res: {Nodes: PayloadGroupNodeProps[]}) => {
+                console.log("onQueryGroup---",res);
+                
                 cacheNodesRef.current = res.Nodes
                 let newData: DataItem[] = nodesToDataFun(res.Nodes)
                 setData(newData)
@@ -3813,6 +3863,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                         setGroup(Group)
                         setFolder(Folder)
                         setContentType(item.type === "DataBase" ? "table" : "editor")
+                        setShowType("local")
                         setSelectItem(item.id)
                     }
                 }
@@ -3849,6 +3900,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                             setGroup(obj.Group)
                             setFolder(obj.Folder)
                             setContentType(obj.ContentType)
+                            setShowType("local")
                             setSelectItem(obj.Id)
                         }
                     } else {
@@ -3993,9 +4045,18 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                             codePath={codePath}
                             selectItem={selectItem}
                             setSelectItem={setSelectItem}
+                            setShowType={setShowType}
                         />
                     }
-                    secondNode={<NewPayloadOnlineList />}
+                    secondNode={
+                        <NewPayloadOnlineList
+                            setGroup={setGroup}
+                            setFolder={setFolder}
+                            setContentType={setContentType}
+                            showType={showType}
+                            setShowType={setShowType}
+                        />
+                    }
                     {...ResizeBoxProps}
                 />
             </div>
