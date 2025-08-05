@@ -6,6 +6,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevronleftIcon} from "@/assets/icon/outline"
 import {useMemoizedFn} from "ahooks"
 import {AITriageChatContent} from "../../aiTriageChat/AITriageChat"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 
 const AIChatRightSide: React.FC<AIChatRightSideProps> = React.memo((props) => {
     const {expand, setExpand, systemOutputs} = props
@@ -44,17 +45,21 @@ const AIChatRightSide: React.FC<AIChatRightSideProps> = React.memo((props) => {
                 />
             </div>
 
-            <div className={styles["system-outInput-list"]} ref={outInputListRef}>
-                {systemOutputs.map((item) => (
-                    <AITriageChatContent
-                        key={item.nodeId + item.timestamp}
-                        isAnswer={item.type === "ai"}
-                        loading={false}
-                        content={item.data}
-                        contentClassName={styles["content-wrapper"]}
-                    />
-                ))}
-            </div>
+            {systemOutputs.length > 0 ? (
+                <div className={styles["system-outInput-list"]} ref={outInputListRef}>
+                    {systemOutputs.map((item) => (
+                        <AITriageChatContent
+                            key={item.nodeId + item.timestamp}
+                            isAnswer={item.type === "ai"}
+                            loading={false}
+                            content={item.data}
+                            contentClassName={styles["content-wrapper"]}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <YakitEmpty style={{marginTop: "20%"}} title='暂无数据' description='' />
+            )}
         </div>
     )
 })

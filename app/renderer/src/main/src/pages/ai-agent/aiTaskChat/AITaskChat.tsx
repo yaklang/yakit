@@ -1,4 +1,4 @@
-import React, {forwardRef, memo, useImperativeHandle, useMemo, useRef, useState} from "react"
+import React, {forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {AITaskChatProps} from "./type"
 import useAIAgentStore from "../useContext/useStore"
 import useAIAgentDispatcher from "../useContext/useDispatcher"
@@ -46,7 +46,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             []
         )
 
-        const {setting} = useAIAgentStore()
+        const {setting, activeChat} = useAIAgentStore()
         const {setChats, setActiveChat} = useAIAgentDispatcher()
 
         const [taskChat, setTaskChat, getTaskChat] = useGetSetState<AIChatInfo>()
@@ -197,6 +197,12 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             onEnd: handleChatingEnd,
             setCoordinatorId
         })
+
+        useEffect(() => {
+            if (activeChat?.id !== events.fetchToken()) {
+                events.handleReset()
+            }
+        }, [activeChat])
         const handleGetExecuting = useMemoizedFn(() => {
             return execute
         })
