@@ -203,6 +203,9 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                 events.handleReset()
             }
         }, [activeChat])
+        useEffect(() => {
+            setRightExpand(systemOutputs.length > 0)
+        }, [systemOutputs.length])
         const handleGetExecuting = useMemoizedFn(() => {
             return execute
         })
