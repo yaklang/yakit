@@ -47,6 +47,7 @@ export interface AITriageChatContentProps {
     isAnswer?: boolean
     loading?: boolean
     content: string
+    contentClassName?: string
 }
 
 export interface AITriageChatContentForgesProps {

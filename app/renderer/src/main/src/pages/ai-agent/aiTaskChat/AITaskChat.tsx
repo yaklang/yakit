@@ -29,6 +29,8 @@ import classNames from "classnames"
 import styles from "./AITaskChat.module.scss"
 import {formatTimeYMD} from "@/utils/timeUtil"
 
+const AIChatRightSide = React.lazy(() => import("./AIChatRightSide/AIChatRightSide"))
+
 const AITaskChat: React.FC<AITaskChatProps> = memo(
     forwardRef((props, ref) => {
         const {onBack} = props
@@ -65,6 +67,10 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
 
         // #region chat-左侧侧边栏
         const [leftExpand, setLeftExpand] = useState(true)
+        // #endregion
+
+        // #region chat-右侧侧边栏
+        const [rightExpand, setRightExpand] = useState<boolean>(false)
         // #endregion
 
         // #region chat-审阅相关数据和逻辑
@@ -170,7 +176,19 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
         })
 
         const [
-            {execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream, card},
+            {
+                execute,
+                pressure,
+                firstCost,
+                totalCost,
+                consumption,
+                logs,
+                plan,
+                streams,
+                activeStream,
+                card,
+                systemOutputs
+            },
             events
         ] = useChatData({
             onReview: handleShowReview,
@@ -279,7 +297,8 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                     plans: events.fetchPlanTree(),
                     taskList: cloneDeep(plan),
                     logs: cloneDeep(logs),
-                    streams: cloneDeep(streams)
+                    streams: cloneDeep(streams),
+                    systemOutputs: cloneDeep(systemOutputs)
                 }
 
                 setChats &&
@@ -367,6 +386,10 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             if (taskChat && taskChat.answer && taskChat.answer.logs) return taskChat.answer.logs
             return logs
         }, [taskChat, logs])
+        const uiSystemOutput = useMemo(() => {
+            if (taskChat && taskChat.answer && taskChat.answer.systemOutputs) return taskChat.answer.systemOutputs
+            return systemOutputs
+        }, [taskChat, systemOutputs])
         // #endregion
 
         // #region chat-左侧任务栏定位到右侧回答栏模块
@@ -531,6 +554,29 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                         onReExe={handleReExecute}
                                         onNewChat={handleBack}
                                     />
+                                </div>
+                            </div>
+
+                            <div
+                                className={classNames(styles["content-right-side"], {
+                                    [styles["content-right-side-hidden"]]: !rightExpand
+                                })}
+                            >
+                                <React.Suspense fallback={<div>Loading...</div>}>
+                                    <AIChatRightSide
+                                        systemOutputs={uiSystemOutput}
+                                        expand={rightExpand}
+                                        setExpand={setRightExpand}
+                                    />
+                                </React.Suspense>
+                                <div className={styles["open-wrapper"]} onClick={() => setRightExpand(true)}>
+                                    <YakitButton
+                                        type='outline2'
+                                        className={styles["side-header-btn"]}
+                                        icon={<OutlineChevrondownIcon />}
+                                        size='small'
+                                    />
+                                    <div className={styles["text"]}>系统输出</div>
                                 </div>
                             </div>
                         </div>

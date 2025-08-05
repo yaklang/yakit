@@ -11,6 +11,56 @@
     overflow: hidden;
     background: var(--Colors-Use-Neutral-Bg);
 }
+@mixin content-side($type) {
+    .content-#{$type}-side {
+        width: 257px;
+        height: 100%;
+        display: flex;
+        @if $type == "left" {
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+            transition:
+                border-right 0.3s ease-in-out,
+                width 0.3s ease-in-out;
+        } @else {
+            justify-content: space-between;
+            border-left: 1px solid var(--Colors-Use-Neutral-Border);
+            transition:
+                border-left 0.3s ease-in-out,
+                width 0.3s ease-in-out;
+        }
+        .open-wrapper {
+            width: 0;
+            height: 100%;
+            overflow: hidden;
+            opacity: 0;
+        }
+    }
+    .content-#{$type}-side-hidden {
+        overflow: hidden;
+        width: 30px;
+        .open-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            opacity: 1;
+            padding: 8px 4px 4px;
+            cursor: pointer;
+            .text {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 16px;
+                text-align: center;
+            }
+            .side-header-btn {
+                border-radius: 50%;
+                background: var(--Colors-Use-Basic-Background);
+            }
+        }
+    }
+}
 .task-chat-executing {
     width: 100%;
     height: 100%;
@@ -104,49 +154,7 @@
         flex: 1;
         overflow: hidden;
         display: flex;
-        .content-left-side {
-            width: 257px;
-            height: 100%;
-            border-right: 1px solid var(--Colors-Use-Neutral-Border);
-            transition:
-                border-right 0.3s ease-in-out,
-                width 0.3s ease-in-out;
-            display: flex;
-            .open-wrapper {
-                width: 0;
-                height: 100%;
-                overflow: hidden;
-                opacity: 0;
-            }
-        }
-        .content-left-side-hidden {
-            overflow: hidden;
-            width: 30px;
-            border-right: 0;
-            .open-wrapper {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 4px;
-                opacity: 1;
-                border-right: 1px solid var(--Colors-Use-Neutral-Border);
-                padding: 8px 4px 4px;
-                cursor: pointer;
-                .text {
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
-                    font-size: 12px;
-                    font-weight: 500;
-                    line-height: 16px;
-                    text-align: center;
-                }
-                .side-header-btn {
-                    border-radius: 50%;
-                    background: var(--Colors-Use-Basic-Background);
-                }
-            }
-        }
-
+        @include content-side("left");
         .content-list {
             flex: 1;
             overflow: hidden;
@@ -191,6 +199,7 @@
                 z-index: 9;
             }
         }
+        @include content-side("right");
     }
 }
 

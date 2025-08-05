@@ -159,6 +159,7 @@ export interface AIChatStreams {
     /**工具相关输出数据聚合 */
     toolAggregation?: AIChatMessage.AIToolData
 }
+
 /** UI-chat 信息 */
 export interface AIChatInfo {
     /** 唯一标识 */
@@ -181,6 +182,7 @@ export interface AIChatInfo {
         taskList: AIChatMessage.PlanTask[]
         logs: AIChatMessage.Log[]
         streams: Record<string, AIChatStreams[]>
+        systemOutputs: AIChatMessage.AIChatSystemOutput[]
     }
 }
 /**QueryAIEvent 接口请求 */
@@ -372,6 +374,14 @@ export declare namespace AIChatMessage {
     export interface AICardMessage extends StreamResult.Message {}
     export interface AICacheCard extends HoldGRPCStreamProps.CacheCard {}
     export interface AIInfoCard extends HoldGRPCStreamProps.InfoCards {}
+
+    /** UI 渲染, 系统输出相关信息 */
+    export interface AIChatSystemOutput {
+        nodeId: string
+        timestamp: number
+        data: string
+        type: "ai" | "user"
+    }
 }
 // #endregion
 
