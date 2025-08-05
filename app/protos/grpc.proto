@@ -890,22 +890,15 @@ service Yak {
   rpc StartLocalModel(StartLocalModelRequest) returns (stream ExecResult);
   rpc DownloadLocalModel(DownloadLocalModelRequest) returns (stream ExecResult);
   rpc GetSupportedLocalModels(Empty) returns (GetSupportedLocalModelsResponse);
+  rpc AddLocalModel(AddLocalModelRequest) returns (GeneralResponse);
+  rpc DeleteLocalModel(DeleteLocalModelRequest) returns (GeneralResponse);
+  rpc UpdateLocalModel(UpdateLocalModelRequest) returns (GeneralResponse);
+  rpc GetAllStartedLocalModels(Empty) returns (GetAllStartedLocalModelsResponse);
 
   rpc IsSearchVectorDatabaseReady(IsSearchVectorDatabaseReadyRequest) returns (IsSearchVectorDatabaseReadyResponse);
   rpc InitSearchVectorDatabase(InitSearchVectorDatabaseRequest) returns (stream ExecResult);
   rpc GetAllVectorStoreCollections(Empty) returns (GetAllVectorStoreCollectionsResponse);
   rpc DeleteSearchVectorDatabase(DeleteSearchVectorDatabaseRequest) returns (GeneralResponse);
-
-  // Knowledge Base
-  rpc GetKnowledgeBaseNameList(Empty) returns(GetKnowledgeBaseNameListResponse);
-  rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns(GeneralResponse);
-  rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns(GeneralResponse);
-  rpc UpdateKnowledgeBase(UpdateKnowledgeBaseRequest) returns(GeneralResponse);
-
-  rpc DeleteKnowledgeBaseEntry(DeleteKnowledgeBaseEntryRequest) returns(GeneralResponse);
-  rpc CreateKnowledgeBaseEntry(CreateKnowledgeBaseEntryRequest) returns(GeneralResponse);
-  rpc UpdateKnowledgeBaseEntry(UpdateKnowledgeBaseEntryRequest) returns(GeneralResponse);
-  rpc SearchKnowledgeBaseEntry(SearchKnowledgeBaseEntryRequest) returns(SearchKnowledgeBaseEntryResponse);
 
   // 第三方应用管理
   rpc ListThirdPartyBinary(Empty) returns (ListThirdPartyBinaryResponse);
@@ -930,6 +923,29 @@ service Yak {
 
   rpc BuildVectorIndexForKnowledgeBase(BuildVectorIndexForKnowledgeBaseRequest) returns(GeneralResponse);
   rpc BuildVectorIndexForKnowledgeBaseEntry(BuildVectorIndexForKnowledgeBaseEntryRequest) returns(GeneralResponse);
+}
+
+message GetAllStartedLocalModelsResponse {
+  repeated string ModelNames = 1;
+}
+
+message UpdateLocalModelRequest {
+  string Name = 1;
+  string ModelType = 2;
+  string Description = 3;
+  string Path = 4;
+}
+
+message AddLocalModelRequest {
+  string Name = 1;
+  string ModelType = 2;
+  string Description = 3;
+  string Path = 4;
+}
+
+message DeleteLocalModelRequest {
+  string Name = 1;
+  string DeleteSourceFile = 2;
 }
 
 message ThirdPartyBinary {
@@ -7420,6 +7436,9 @@ message LocalModelConfig {
   string DownloadURL = 4;
   string Description = 5;
   int32 DefaultPort = 6;
+  bool IsLocal = 7;
+  bool IsReady = 8;
+  string Path = 9;
 }
 
 message GetSupportedLocalModelsResponse {
