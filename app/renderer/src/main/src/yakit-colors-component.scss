@@ -65,13 +65,12 @@
         @if $color-name == Main {
             #{$prefix}Hover: var(--yakit-colors-#{$color-name}-50);
             #{$prefix}Primary: var(--yakit-colors-#{$color-name}-60);
-            #{$prefix}On-Primary: var(--yakit-colors-#{$color-name}-100);
         } @else {
             #{$prefix}Hover: var(--yakit-colors-#{$color-name}-60);
             #{$prefix}Primary: var(--yakit-colors-#{$color-name}-70);
-            #{$prefix}On-Primary: var(--yakit-colors-#{$color-name}-10);
         }
         #{$prefix}Pressed: var(--yakit-colors-#{$color-name}-80);
+        #{$prefix}On-Primary: var(--yakit-colors-#{$color-name}-100);
     }
 }
 
@@ -84,11 +83,13 @@
         #{$prefix}Bg-Hover: var(--yakit-colors-#{$color-name}-30);
         #{$prefix}Border: var(--yakit-colors-#{$color-name}-40);
         #{$prefix}Primary: var(--yakit-colors-#{$color-name}-60);
+        #{$prefix}On-Primary: var(--yakit-colors-#{$color-name}-10);
     } @else if $mode == dark {
         #{$prefix}Bg: var(--yakit-colors-#{$color-name}-20);
         #{$prefix}Bg-Hover: var(--yakit-colors-#{$color-name}-30);
         #{$prefix}Border: var(--yakit-colors-#{$color-name}-40);
         #{$prefix}Primary: var(--yakit-colors-#{$color-name}-70);
+        #{$prefix}On-Primary: var(--yakit-colors-#{$color-name}-100);
     }
 }
 

@@ -34,11 +34,13 @@ $keyColor: map-keys($colors);
 
     .tab-menu-sub-group-name-#{"" + $name} {
         background-color: map-get($currentColor, "backgroundColor");
+        color: map-get($currentColor, "textColor");
 
     }
 
     .tab-menu-sub-group-number-#{"" + $name} {
         color: map-get($currentColor, "backgroundColor");
+        background-color: map-get($currentColor, "textColor");
     }
 }
 
@@ -304,7 +306,6 @@ $keyColor: map-keys($colors);
                     padding: 4px 6px;
                     border-radius: 4px 0 0 4px;
                     min-width: 16px;
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     line-height: 16px;
                     font-weight: 600;
                     cursor: pointer;
@@ -316,13 +317,11 @@ $keyColor: map-keys($colors);
                     .tab-menu-sub-group-number {
                         border-radius: 8px;
                         padding: 2px 6px;
-                        background-color: var(--Colors-Use-Basic-Background);
                         height: 16px;
                         display: flex;
                         align-items: center;
                         width: 18px;
                         justify-content: center;
-                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                 }
 
