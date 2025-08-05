@@ -12,7 +12,7 @@
 }
 
 .icon-style {
-    color: var(--Colors-Use-Neutral-Text-1-Title);
+    color: var(--Colors-Use-Main-On-Primary);
     svg {
         width: 20px;
         height: 20px;
@@ -77,7 +77,7 @@
             line-height: 20px;
             font-weight: 600;
             font-size: 14px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            color: var(--Colors-Use-Main-On-Primary);
         }
         .header-hint {
             height: 20px;
@@ -89,7 +89,7 @@
                 font-weight: 400;
                 font-size: 12px;
                 line-height: 16px;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
+                color: var(--Colors-Use-Main-On-Primary);
             }
         }
     }
