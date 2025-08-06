@@ -11,23 +11,26 @@ import {
 } from "./AIModelListType"
 import styles from "./AIModelList.module.scss"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitRadioButtonsProps} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {
     grpcCancelStartLocalModel,
+    grpcDeleteLocalModel,
     grpcGetSupportedLocalModels,
     grpcIsLlamaServerReady,
-    grpcIsLocalModelReady
+    grpcIsLocalModelReady,
+    reorderApplicationConfig
 } from "./utils"
 import {LocalModelConfig} from "../type/aiChat"
-import {Tooltip} from "antd"
+import {Divider, Tooltip} from "antd"
 import {yakitNotify} from "@/utils/notification"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
+    OutlineAtomIcon,
     OutlineClouddownloadIcon,
     OutlineDotsverticalIcon,
     OutlinePencilaltIcon,
@@ -50,6 +53,9 @@ import {AddAIModel} from "./addAIModel/AddAIModel"
 import NewThirdPartyApplicationConfig from "@/components/configNetwork/NewThirdPartyApplicationConfig"
 import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig, ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {DragDropContext, Droppable, Draggable} from "@hello-pangea/dnd"
+import {SolidDragsortIcon} from "@/assets/icon/solid"
+import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -77,7 +83,7 @@ const setAIOnlineModal = (params: {
         closable: true,
         maskClosable: false,
         content: (
-            <div style={{margin: 24, marginRight: 45}}>
+            <>
                 <NewThirdPartyApplicationConfig
                     isOnlyShowAiType={true}
                     formValues={formValues}
@@ -94,8 +100,6 @@ const setAIOnlineModal = (params: {
                             }
                         }
                         const params: GlobalNetworkConfig = {...config, AppConfigs: existedResult}
-
-                        console.log("apiSetGlobalNetworkConfig", params, config, data)
                         apiSetGlobalNetworkConfig(params).then(() => {
                             onSuccess()
                             m.destroy()
@@ -103,7 +107,7 @@ const setAIOnlineModal = (params: {
                     }}
                     onCancel={() => m.destroy()}
                 />
-            </div>
+            </>
         )
     })
 }
@@ -137,6 +141,8 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
 
     const onlineRef = useRef<AIOnlineModelListRefProps>(null)
     const localRef = useRef<AILocalModelListRefProps>(null)
+
+    const onlineConfigRef = useRef<GlobalNetworkConfig>()
 
     const onToolQueryTypeChange = useMemoizedFn((e) => {
         setModelType(e.target.value as AIModelType)
@@ -176,7 +182,14 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
         const m = showYakitModal({
             title: "添加本地模型",
             width: "50%",
-            content: <AddAIModel onCancel={() => m.destroy()} />,
+            content: (
+                <AddAIModel
+                    onCancel={() => {
+                        m.destroy()
+                        localRef.current?.onRefresh()
+                    }}
+                />
+            ),
             footer: null
         })
     })
@@ -190,6 +203,25 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
             })
         })
     })
+    const onClear = useMemoizedFn(() => {
+        switch (modelType) {
+            case "online":
+                onClearOnline()
+                break
+            case "local":
+                onClearLocal()
+                break
+            default:
+                break
+        }
+    })
+    const onClearOnline = useMemoizedFn(() => {
+        if (!onlineConfigRef.current) return
+        apiSetGlobalNetworkConfig({...onlineConfigRef.current, AppConfigs: []}).then(() => {
+            onlineRef.current?.onRefresh()
+        })
+    })
+    const onClearLocal = useMemoizedFn(() => {})
     return (
         <div className={styles["ai-model-list-wrapper"]}>
             <div className={styles["ai-model-list-header"]}>
@@ -204,9 +236,15 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
                     <div className={styles["ai-model-list-total"]}>{total}</div>
                 </div>
                 <div className={styles["ai-model-list-header-right"]}>
-                    <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={onRefresh} />
-                    <YakitButton type='text' icon={<OutlinePlusIcon />} onClick={onAdd}>
-                        添加模型
+                    <Tooltip title='添加'>
+                        <YakitButton type='text2' icon={<OutlinePlusIcon />} onClick={onAdd} />
+                    </Tooltip>
+                    <Tooltip title='刷新'>
+                        <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefresh} />
+                    </Tooltip>
+                    <Divider type='vertical' />
+                    <YakitButton type='text' danger onClick={onClear}>
+                        清空
                     </YakitButton>
                 </div>
             </div>
@@ -225,7 +263,6 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     forwardRef((props, ref) => {
         const {setOnlineTotal} = props
         const [spinning, setSpinning] = useState<boolean>(false)
-        const [isRef, setIsRef] = useState<boolean>(false)
         const [list, setList] = useState<ThirdPartyApplicationConfig[]>([])
         const configRef = useRef<GlobalNetworkConfig>()
         const onlineListRef = useRef<HTMLDivElement>(null)
@@ -254,7 +291,6 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                 .finally(() => {
                     setTimeout(() => {
                         setSpinning(false)
-                        setIsRef((v) => !v)
                     }, 200)
                 })
         })
@@ -276,27 +312,67 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                 getList()
             })
         })
+        /**
+         * @description: 拖拽结束后的计算
+         */
+        const onDragEnd = useMemoizedFn((result) => {
+            if (!configRef.current) return
+            if (!result.destination) {
+                return
+            }
+            if (result.source.droppableId === "droppable1" && result.destination.droppableId === "droppable1") {
+                const newList: ThirdPartyApplicationConfig[] = reorderApplicationConfig(
+                    list,
+                    result.source.index,
+                    result.destination.index
+                )
+                setList(newList)
+                updateOrder(newList)
+            }
+        })
+        const updateOrder = useDebounceFn(
+            (newList) => {
+                if (!configRef.current) return
+                apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: newList})
+            },
+            {wait: 500}
+        ).run
         return (
-            <YakitSpin spinning={spinning} ref={onlineListRef}>
-                <RollingLoadList<ThirdPartyApplicationConfig>
-                    data={list}
-                    loadMoreData={() => {}}
-                    renderRow={(rowData: ThirdPartyApplicationConfig, index: number) => {
-                        return (
-                            <React.Fragment key={rowData.Type}>
-                                <AIOnlineModelListItem item={rowData} onEdit={onEdit} onRemove={onRemove} />
-                            </React.Fragment>
-                        )
-                    }}
-                    classNameRow={styles["ai-online-model-list-row"]}
-                    classNameList={styles["ai-online-model-list"]}
-                    page={1}
-                    hasMore={false}
-                    loading={spinning}
-                    defItemHeight={36}
-                    rowKey='Type'
-                    isRef={isRef}
-                />
+            <YakitSpin spinning={spinning}>
+                <div ref={onlineListRef} className={styles["ai-online-model-list"]}>
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <Droppable droppableId='droppable1'>
+                            {(provided, snapshot) => (
+                                <div {...provided.droppableProps} ref={provided.innerRef}>
+                                    {list.map((rowData, index) => (
+                                        <Draggable key={rowData.Type} draggableId={rowData.Type} index={index}>
+                                            {(provided, snapshot) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                    style={provided.draggableProps.style}
+                                                    className={classNames(styles["ai-online-model-list-row"], {
+                                                        [styles["ai-online-model-list-row-isDragging"]]:
+                                                            snapshot.isDragging
+                                                    })}
+                                                >
+                                                    <SolidDragsortIcon className={styles["drag-sort-icon"]} />
+                                                    <AIOnlineModelListItem
+                                                        item={rowData}
+                                                        onEdit={onEdit}
+                                                        onRemove={onRemove}
+                                                    />
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
+                </div>
             </YakitSpin>
         )
     })
@@ -310,7 +386,11 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
         <div className={styles["ai-online-model-list-item"]}>
             <div className={styles["ai-online-model-list-item-header"]}>
                 <div className={styles["ai-online-model-list-item-type"]}>{item.Type}</div>
-                <div className={styles["ai-online-model-list-item-model"]}>{model}</div>
+
+                <div className={styles["ai-online-model-list-item-model"]}>
+                    <OutlineAtomIcon className={styles["atom-icon"]} />
+                    <span className={styles["ai-online-model-list-item-model-text"]}>{model}</span>
+                </div>
             </div>
             <div className={styles["ai-online-model-list-item-edit"]}>
                 <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={() => onEdit(item)} />
@@ -335,7 +415,6 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
             ref,
             () => ({
                 onRefresh: () => {
-                    console.log("Refreshing local model list...")
                     init()
                 }
             }),
@@ -366,7 +445,6 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
             setSpinning(true)
             grpcGetSupportedLocalModels()
                 .then((response) => {
-                    console.log("response", response)
                     setLocalTotal(response?.Models?.length || 0)
                     setSupportedModels(response?.Models || [])
                 })
@@ -388,9 +466,6 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
                             m.destroy()
                             init()
                         }}
-                        onClose={() => {
-                            m.destroy()
-                        }}
                     />
                 ),
                 footer: null
@@ -407,7 +482,7 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
                     renderRow={(rowData: LocalModelConfig, index: number) => {
                         return (
                             <React.Fragment key={rowData.Name}>
-                                <AILocalModelListItem item={rowData} />
+                                <AILocalModelListItem item={rowData} onRefresh={init} />
                             </React.Fragment>
                         )
                     }}
@@ -465,17 +540,18 @@ const localModelMenu: YakitMenuItemType[] = [
     }
 ]
 const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((props) => {
-    const {item} = props
-    const [isReady, setIsReady] = useState<boolean>(false)
+    const {item, onRefresh} = props
+    const [isReady, setIsReady] = useState<boolean>(item.IsReady || false)
     const [isRunning, setIsRunning] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
+
     const tokenRef = useRef(randomString(60))
     useEffect(() => {
         const token = tokenRef.current
         ipcRenderer.on(`${token}-error`, (e, error) => {
             yakitNotify("error", `[StartLocalModel] error: ${error}`)
         })
-        getModelReady()
+        // getModelReady()
         return () => {
             grpcCancelStartLocalModel(token)
             ipcRenderer.removeAllListeners(`${token}-error`)
@@ -512,6 +588,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
     const onDown = useMemoizedFn(() => {
         const m = showYakitModal({
             title: "下载模型",
+            subTitle: item.Name,
             width: "50%",
             content: (
                 <DownloadLlamaServerModelPrompt
@@ -540,14 +617,29 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
     })
     const onEdit = useMemoizedFn(() => {
         const m = showYakitModal({
-            title: "添加本地模型",
+            title: "修改本地模型",
             width: "50%",
-            content: <AddAIModel onCancel={() => m.destroy()} />,
+            content: (
+                <AddAIModel
+                    defaultValues={{
+                        Name: item.Name,
+                        ModelType: item.Type,
+                        Path: item.Path || "",
+                        Description: item.Description || ""
+                    }}
+                    onCancel={() => {
+                        onRefresh()
+                        m.destroy()
+                    }}
+                />
+            ),
             footer: null
         })
     })
     const onDelete = useMemoizedFn(() => {
-        yakitNotify("info", "删除功能暂未实现")
+        grpcDeleteLocalModel({Name: item.Name}).then(() => {
+            onRefresh()
+        })
     })
     const number = useCreation(() => {
         const length = tagColors.length

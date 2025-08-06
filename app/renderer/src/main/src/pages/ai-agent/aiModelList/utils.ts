@@ -1,14 +1,19 @@
 import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {
+    AddLocalModelRequest,
+    DeleteLocalModelRequest,
     DownloadLocalModelRequest,
+    GetAllStartedLocalModelsResponse,
     GetSupportedLocalModelsResponse,
     InstallLlamaServerRequest,
     IsLlamaServerReadyResponse,
     IsLocalModelReadyRequest,
     IsLocalModelReadyResponse,
     LocalModelConfig,
-    StartLocalModelRequest
+    ReadyResponse,
+    StartLocalModelRequest,
+    UpdateLocalModelRequest
 } from "../type/aiChat"
 import omit from "lodash/omit"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
@@ -121,22 +126,19 @@ export const grpcCancelStartLocalModel: APIFunc<string, null> = (token, hiddenEr
     })
 }
 
-/**获取线上和本地的AI模型 */
+/**获取线上和本地已启动的AI模型 */
 export const getAIModelList: APINoRequestFunc<YakitSelectProps["options"]> = (hiddenError) => {
     return new Promise(async (resolve, reject) => {
         try {
             let onlineModels: ThirdPartyApplicationConfig[] = []
-            let localModels: LocalModelConfig[] = []
+            let localModels: string[] = []
             const config = await apiGetGlobalNetworkConfig()
             if (!!config) {
                 onlineModels = config.AppConfigs || []
             }
-            const isReady = await grpcIsLlamaServerReady()
-            if (isReady.Ok) {
-                const localModelsRes = await grpcGetSupportedLocalModels()
-                if (!!localModelsRes) localModels = localModelsRes.Models || []
-            } else {
-                yakitNotify("error", `${isReady.Reason}`)
+            const localModelsRes = await grpcGetAllStartedLocalModels()
+            if (!!localModelsRes) {
+                localModels = localModelsRes.ModelNames || []
             }
             const result: YakitSelectProps["options"] = []
             onlineModels.forEach((model) => {
@@ -147,8 +149,8 @@ export const getAIModelList: APINoRequestFunc<YakitSelectProps["options"]> = (hi
             })
             localModels.forEach((model) => {
                 result.push({
-                    value: model.Name,
-                    label: model.Name
+                    value: model,
+                    label: model
                 })
             })
             resolve(result)
@@ -157,4 +159,62 @@ export const getAIModelList: APINoRequestFunc<YakitSelectProps["options"]> = (hi
             reject(error)
         }
     })
+}
+
+/**新增本地AI Model */
+export const grpcAddLocalModel: APIFunc<AddLocalModelRequest, ReadyResponse> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("AddLocalModel", params)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcAddLocalModel 失败:" + err)
+                reject(err)
+            })
+    })
+}
+
+/**删除本地AI Model */
+export const grpcDeleteLocalModel: APIFunc<DeleteLocalModelRequest, null> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("DeleteLocalModel", params)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcDeleteLocalModel 失败:" + err)
+                reject(err)
+            })
+    })
+}
+/**更新本地AI Model */
+export const grpcUpdateLocalModel: APIFunc<UpdateLocalModelRequest, null> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("UpdateLocalModel", params)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcUpdateLocalModel 失败:" + err)
+                reject(err)
+            })
+    })
+}
+/**获取所有启动的chat模型列表 */
+export const grpcGetAllStartedLocalModels: APINoRequestFunc<GetAllStartedLocalModelsResponse> = (hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("GetAllStartedLocalModels")
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcGetAllStartedLocalModels 失败:" + err)
+                reject(err)
+            })
+    })
+}
+
+/**ai 线上列表排序 */
+export const reorderApplicationConfig = (list: ThirdPartyApplicationConfig[], startIndex: number, endIndex: number) => {
+    const result = [...list]
+    const [removed] = result.splice(startIndex, 1)
+    result.splice(endIndex, 0, removed)
+    return result
 }
