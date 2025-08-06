@@ -61,7 +61,7 @@
 }
 
 .yakit-collapse-no-active-bg {
-    & > :global(.ant-collapse-item) {
+     :global(.ant-collapse-item) {
         &:global(.ant-collapse-item-active) {
             background: transparent;
         }
