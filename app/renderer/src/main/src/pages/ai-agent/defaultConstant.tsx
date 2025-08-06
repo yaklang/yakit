@@ -5,7 +5,20 @@ import {OutlineCogIcon, OutlineSparklesIcon, OutlineTemplateIcon, OutlineWrenchI
 import {AIChatMessage} from "./type/aiChat"
 import {YakitSideTabProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {genDefaultPagination, PaginationSchema} from "../invoker/schema"
-import { YakitTagColor } from "@/components/yakitUI/YakitTag/YakitTagType"
+import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
+import {
+    ChatGLMIcon,
+    ComateIcon,
+    DeepSeekIcon,
+    GeminiIcon,
+    MoonshotIcon,
+    OllamaIcon,
+    OpenAIIcon,
+    OpenRouterIcon,
+    SiliconFlowIcon,
+    TongyiIcon,
+    YakIcon
+} from "./aiModelList/icon"
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
@@ -16,7 +29,7 @@ export const AIAgentTabList: {key: AIAgentTab; title: string; icon: ReactNode}[]
     {key: "setting", title: "配置", icon: <OutlineCogIcon />},
     {key: "forgeName", title: "模板", icon: <OutlineTemplateIcon />},
     {key: "tool", title: "工具", icon: <OutlineWrenchIcon />},
-    {key: "AIModel", title: "AI模型", icon: <OutlineWrenchIcon />},
+    {key: "AIModel", title: "AI模型", icon: <OutlineWrenchIcon />}
 ]
 
 /** ai-agent 聊天全局配置参数默认值 */
@@ -90,7 +103,6 @@ export const AIForgeListDefaultPagination: PaginationSchema = {
     OrderBy: "id"
 }
 
-
 export const tagColors: YakitTagColor[] = [
     "blue",
     "bluePurple",
@@ -102,3 +114,21 @@ export const tagColors: YakitTagColor[] = [
     "warning",
     "yellow"
 ]
+
+export const AIOnlineModelIconMap: Record<string, ReactNode> = {
+    openai: <OpenAIIcon />,
+    chatglm: <ChatGLMIcon />,
+    moonshot: <MoonshotIcon />,
+    tongyi: <TongyiIcon />,
+    comate: <ComateIcon />,
+    deepseek: <DeepSeekIcon />,
+    siliconflow: <SiliconFlowIcon />,
+    ollama: <OllamaIcon />,
+    openrouter: <OpenRouterIcon />,
+    gemini: <GeminiIcon />,
+    "yaklang-writer": <YakIcon />,
+    "yaklang-rag": <YakIcon />,
+    "yaklang-com-search": <YakIcon />,
+    "yakit-plugin-search": <YakIcon />,
+    aibalance: <YakIcon />
+}

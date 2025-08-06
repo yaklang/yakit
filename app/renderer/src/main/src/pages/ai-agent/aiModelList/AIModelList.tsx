@@ -45,7 +45,7 @@ import {
 } from "./installLlamaServerModelPrompt/InstallLlamaServerModelPrompt"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {tagColors} from "../defaultConstant"
+import {AIOnlineModelIconMap, tagColors} from "../defaultConstant"
 import {randomString} from "@/utils/randomUtil"
 import {AIStartModelForm} from "./aiStartModelForm/AIStartModelForm"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
@@ -385,6 +385,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
     return (
         <div className={styles["ai-online-model-list-item"]}>
             <div className={styles["ai-online-model-list-item-header"]}>
+                {AIOnlineModelIconMap[item.Type]}
                 <div className={styles["ai-online-model-list-item-type"]}>{item.Type}</div>
 
                 <div className={styles["ai-online-model-list-item-model"]}>
