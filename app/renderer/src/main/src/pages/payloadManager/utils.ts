@@ -1,7 +1,6 @@
 import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {yakitNotify} from "@/utils/notification"
 
 /**
  * @description 查询线上payload列表
@@ -18,7 +17,6 @@ export const apiGetOnlinePayloadList: APIFunc<API.PayloadRequest, API.PayloadRes
             })
                 .then(resolve)
                 .catch((err) => {
-                    yakitNotify("error", "查询线上payload列表失败：" + err)
                     reject(err)
                 })
         } catch (error) {
@@ -42,7 +40,6 @@ export const apiDeleteOnlinePayloadList: APIFunc<API.DeletePayloadRequest, API.A
             })
                 .then(resolve)
                 .catch((err) => {
-                    yakitNotify("error", "删除线上payload失败：" + err)
                     reject(err)
                 })
         } catch (error) {
@@ -65,7 +62,6 @@ export const apiGetOnlinePayloadGroup: APINoRequestFunc< API.PayloadGroupRespons
             })
                 .then(resolve)
                 .catch((err) => {
-                    yakitNotify("error", "查询线上payload分组信息失败：" + err)
                     reject(err)
                 })
         } catch (error) {
@@ -96,7 +92,6 @@ export const apiGetOnlinePayloadFile: APIFunc<OnlinePayloadFileProps, API.Payloa
             })
                 .then(resolve)
                 .catch((err) => {
-                    yakitNotify("error", "查询线上payload文件内容失败：" + err)
                     reject(err)
                 })
         } catch (error) {
@@ -120,7 +115,6 @@ export const apiUpdateOnlinePayload: APIFunc<API.UpdatePayloadRequest, API.Actio
             })
                 .then(resolve)
                 .catch((err) => {
-                    yakitNotify("error", "编辑线上payload文件内容失败：" + err)
                     reject(err)
                 })
         } catch (error) {
@@ -148,7 +142,6 @@ export const apiUpdateOnlinePayloadFile: APIFunc<UpdateOnlinePayloadFileProps, A
             })
                 .then(resolve)
                 .catch((err) => {
-                    yakitNotify("error", "修改线上payload文件内容失败：" + err)
                     reject(err)
                 })
         } catch (error) {
@@ -162,21 +155,16 @@ export const apiUpdateOnlinePayloadFile: APIFunc<UpdateOnlinePayloadFileProps, A
  * @param query
  * @returns
  */
-interface RenameOnlinePayloadProps {
-    name: string
-    newName: string
-}
-export const apiRenameOnlinePayload: APIFunc<RenameOnlinePayloadProps, API.ActionSucceeded> = (query) => {
+export const apiRenameOnlinePayload: APIFunc<API.RenamePayloadRequest, API.ActionSucceeded> = (query) => {
     return new Promise((resolve, reject) => {
         try {
-            NetWorkApi<RenameOnlinePayloadProps, API.ActionSucceeded>({
+            NetWorkApi<API.RenamePayloadRequest, API.ActionSucceeded>({
                 method: "post",
                 url: "rename/payload",
                 data: query
             })
                 .then(resolve)
                 .catch((err) => {
-                    yakitNotify("error", "重命名失败：" + err)
                     reject(err)
                 })
         } catch (error) {

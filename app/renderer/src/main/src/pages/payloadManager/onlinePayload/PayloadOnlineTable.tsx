@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import { useMemoizedFn} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import styles from "../PayloadLocalTable.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
@@ -20,6 +20,7 @@ import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../..
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setClipboardText} from "@/utils/clipboard"
+import {API} from "@/services/swagger/resposeType"
 const {ipcRenderer} = window.require("electron")
 
 interface EditableCellProps {
@@ -27,9 +28,9 @@ interface EditableCellProps {
     editable: boolean
     selected: boolean
     children: React.ReactNode
-    dataIndex: keyof Payload
-    record: Payload
-    handleSave: (record: Payload, newRecord: Payload) => void
+    dataIndex: keyof API.PayloadDetail
+    record: API.PayloadDetail
+    handleSave: (record: API.PayloadDetail, newRecord: API.PayloadDetail) => void
 }
 
 const EditableCell: React.FC<EditableCellProps> = ({
@@ -102,7 +103,7 @@ const judgeNum = (num) => {
 }
 interface PayloadAddEditFormProps {
     onClose: () => void
-    record: Payload
+    record: API.PayloadDetail
     onUpdatePayload: (updatePayload: UpdatePayloadProps) => Promise<unknown>
 }
 
@@ -122,15 +123,15 @@ export const PayloadAddEditForm: React.FC<PayloadAddEditFormProps> = (props) => 
     useEffect(() => {
         if (record) {
             setEditParams({
-                Content: record.Content,
-                HitCount: record.HitCount
+                Content: record.content,
+                HitCount: record.hitCount
             })
         }
     }, [])
 
     const onFinish = useMemoizedFn(async () => {
         if (editParams.Content.length > 0 && judgeNum(editParams.HitCount)) {
-            const result = await onUpdatePayload({Id: record.Id, Data: {...record, ...editParams}})
+            const result = await onUpdatePayload({id: record.id, data: {...record, ...editParams}})
             if (result) {
                 onClose()
             }
@@ -211,50 +212,36 @@ export interface QueryPayloadParams extends QueryGeneralRequest {
     Keyword: string
 }
 
-export interface Payload {
-    Content: string
-    ContentBytes: Uint8Array
-    Group: string
-    HitCount: number
-    Id: number
-    IsFile: boolean
-}
-
 export interface UpdatePayloadProps {
-    Id: number
-    Data: Payload
+    id: number
+    data: API.PayloadDetail
 }
 
-export interface DeletePayloadProps {
-    Id?: number
-    Ids?: number[]
+export interface DeleteOnlinePayloadProps {
+    id?: number
+    ids?: number[]
 }
 
 export interface EditingObjProps {
     // 操作的行id
-    Id: number
+    id: number
     // 操作的列
     dataIndex: string
 }
 
-export interface NewPayloadTableProps {
-    onCopyToOtherPayload?: (v: number) => void
-    onMoveToOtherPayload?: (v: number) => void
+export interface NewPayloadOnlineTableProps {
     selectPayloadArr: number[]
     setSelectPayloadArr: (v: number[]) => void
-    onDeletePayload?: (v: DeletePayloadProps) => void
+    onDeletePayload?: (v: DeleteOnlinePayloadProps) => void
     onQueryPayload: (page?: number, limit?: number) => void
-    pagination?: PaginationSchema
+    pagination?: API.PageMeta
     params: QueryPayloadParams
     setParams: (v: QueryPayloadParams) => void
-    response: QueryGeneralResponse<Payload> | undefined
-    setResponse: (v: QueryGeneralResponse<Payload>) => void
-    onlyInsert?: boolean
+    response: API.PayloadResponse | undefined
+    setResponse: (v: API.PayloadResponse) => void
 }
-export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
+export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (props) => {
     const {
-        onCopyToOtherPayload,
-        onMoveToOtherPayload,
         selectPayloadArr,
         setSelectPayloadArr,
         onDeletePayload,
@@ -263,8 +250,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         params,
         response,
         setResponse,
-        setParams,
-        onlyInsert
+        setParams
     } = props
     // 编辑
     const [editingObj, setEditingObj] = useState<EditingObjProps>()
@@ -290,15 +276,15 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         {
             title: () => (
                 <div className={styles["order"]}>
-                    {(response?.Data || []).length > 0 && (
+                    {(response?.data || []).length > 0 && (
                         <YakitCheckbox
                             indeterminate={
-                                selectPayloadArr.length > 0 && selectPayloadArr.length !== response?.Data.length
+                                selectPayloadArr.length > 0 && selectPayloadArr.length !== response?.data.length
                             }
-                            checked={selectPayloadArr.length === response?.Data.length}
+                            checked={selectPayloadArr.length === response?.data.length}
                             onChange={(e) => {
                                 if (e.target.checked) {
-                                    setSelectPayloadArr((response?.Data || []).map((item) => item.Id))
+                                    setSelectPayloadArr((response?.data || []).map((item) => item.id))
                                 } else {
                                     setSelectPayloadArr([])
                                 }
@@ -311,19 +297,19 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             dataIndex: "index",
             width: 88,
             render: (text, record, index) => {
-                const limit = pagination?.Limit || params.Pagination.Limit
-                const page = (pagination?.Page || params.Pagination.Page) - 1
+                const limit = pagination?.limit || params.Pagination.Limit
+                const page = (pagination?.page || params.Pagination.Page) - 1
                 const order: number = limit * page + index + 1
-                const {Id} = record as Payload
+                const {id} = record as API.PayloadDetail
                 return (
                     <div className={styles["order"]}>
                         <YakitCheckbox
-                            checked={selectPayloadArr.includes(Id)}
+                            checked={selectPayloadArr.includes(id)}
                             onChange={(e) => {
                                 if (e.target.checked) {
-                                    setSelectPayloadArr([...selectPayloadArr, Id])
+                                    setSelectPayloadArr([...selectPayloadArr, id])
                                 } else {
-                                    const newDeletePayloadArr = selectPayloadArr.filter((item) => item !== Id)
+                                    const newDeletePayloadArr = selectPayloadArr.filter((item) => item !== id)
                                     setSelectPayloadArr([...newDeletePayloadArr])
                                 }
                             }}
@@ -336,7 +322,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         },
         {
             title: "字典内容",
-            dataIndex: "Content",
+            dataIndex: "content",
             editable: true,
             render: (text) => (
                 <div
@@ -349,7 +335,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         },
         {
             title: () => <Tooltip title={"新增命中次数字段，命中次数越高，在爆破时优先级也会越高"}>命中次数</Tooltip>,
-            dataIndex: "HitCount",
+            dataIndex: "hitCount",
             width: 102,
             editable: true,
             filterIcon: (filtered) => (
@@ -394,20 +380,20 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             dataIndex: "operation",
             width: 132,
             // @ts-ignore
-            render: (_, record: Payload) => {
+            render: (_, record: API.PayloadDetail) => {
                 return (
                     <div className={styles["table-operation"]}>
                         <OutlineDocumentduplicateIcon
                             className={styles["copy"]}
                             onClick={() => {
-                                setClipboardText(record.Content)
+                                setClipboardText(record.content)
                             }}
                         />
                         <Divider type='vertical' style={{top: 1, height: 12, margin: "0px 12px"}} />
                         <OutlineTrashIcon
                             className={styles["delete"]}
                             onClick={() => {
-                                onDeletePayload && onDeletePayload({Id: record.Id})
+                                onDeletePayload && onDeletePayload({id: record.id})
                             }}
                         />
                         <Divider type='vertical' style={{top: 1, height: 12, margin: "0px 12px"}} />
@@ -436,84 +422,6 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         }
     ]
 
-    const InsertColumns: ColumnTypes[number][] = [
-        {
-            title: "序号",
-            dataIndex: "index",
-            width: 88,
-            render: (text, record, index) => {
-                const limit = pagination?.Limit || params.Pagination.Limit
-                const page = (pagination?.Page || params.Pagination.Page) - 1
-                const order: number = limit * page + index + 1
-                const {Id} = record as Payload
-                return (
-                    <div className={styles["order"]}>
-                        {!onlyInsert && (
-                            <YakitCheckbox
-                                checked={selectPayloadArr.includes(Id)}
-                                onChange={(e) => {
-                                    if (e.target.checked) {
-                                        setSelectPayloadArr([...selectPayloadArr, Id])
-                                    } else {
-                                        const newDeletePayloadArr = selectPayloadArr.filter((item) => item !== Id)
-                                        setSelectPayloadArr([...newDeletePayloadArr])
-                                    }
-                                }}
-                            />
-                        )}
-                        <div className={styles["basic"]}>{order < 10 ? `0${order}` : `${order}`}</div>
-                    </div>
-                )
-            }
-        },
-        {
-            title: "字典内容",
-            dataIndex: "Content",
-            render: (text) => <div className={styles["basic"]}>{text}</div>
-        },
-        {
-            title: () => <Tooltip title={"新增命中次数字段，命中次数越高，在爆破时优先级也会越高"}>命中次数</Tooltip>,
-            dataIndex: "HitCount",
-            width: 102,
-            filterIcon: (filtered) => (
-                <OutlineSelectorIcon
-                    className={classNames(styles["selector-icon"], {
-                        [styles["active-selector-icon"]]: sortStatus !== undefined
-                    })}
-                />
-            ),
-            filterDropdown: ({setSelectedKeys, selectedKeys, confirm, clearFilters}) => (
-                <div className={styles["filter-box"]}>
-                    <div
-                        className={classNames(styles["filter-item"], {
-                            [styles["active-filter-item"]]: sortStatus === "asc",
-                            [styles["hover-filter-item"]]: sortStatus !== "asc"
-                        })}
-                        onClick={() => handleSort("asc")}
-                    >
-                        <div className={styles["icon"]}>
-                            <OutlineArrowupIcon />
-                        </div>
-                        <div className={styles["content"]}>升序</div>
-                    </div>
-                    <div
-                        className={classNames(styles["filter-item"], {
-                            [styles["active-filter-item"]]: sortStatus === "desc",
-                            [styles["hover-filter-item"]]: sortStatus !== "desc"
-                        })}
-                        onClick={() => handleSort("desc")}
-                    >
-                        <div className={styles["icon"]}>
-                            <OutlineArrowdownIcon />
-                        </div>
-                        <div className={styles["content"]}>降序</div>
-                    </div>
-                </div>
-            ),
-            render: (text) => <div className={styles["basic"]}>{text}</div>
-        }
-    ]
-
     const onUpdatePayload = useMemoizedFn((updatePayload: UpdatePayloadProps) => {
         return new Promise((resolve, reject) => {
             ipcRenderer
@@ -531,58 +439,59 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                     failed("更新失败：" + e)
                 })
                 .finally(() => {
-                    onQueryPayload(pagination?.Page, pagination?.Limit)
+                    onQueryPayload(pagination?.page, pagination?.limit)
                 })
         })
     })
 
-    const handleSave = (row: Payload, newRow: Payload) => {
+    const handleSave = (row: API.PayloadDetail, newRow: API.PayloadDetail) => {
         setEditingObj(undefined)
         // 此处默认修改成功 优化交互闪烁(因此如若修改失败则会闪回)
-        if (response?.Data && newRow.Content.length !== 0 && judgeNum(newRow.HitCount)) {
-            const newData = response?.Data.map((item) => {
-                if (item.Id === row.Id) {
+        if (response?.data && newRow.content.length !== 0 && judgeNum(newRow.hitCount)) {
+            const newData = response?.data.map((item) => {
+                if (item.id === row.id) {
                     return newRow
                 } else {
                     return item
                 }
             })
-            response.Data = newData
+            response.data = newData
             setResponse(response)
         }
         // 真正的更改与更新数据
         if (
-            (row.Content !== newRow.Content || row.HitCount !== newRow.HitCount) &&
-            newRow.Content.length !== 0 &&
-            judgeNum(newRow.HitCount)
+            (row.content !== newRow.content || row.hitCount !== newRow.hitCount) &&
+            newRow.content.length !== 0 &&
+            judgeNum(newRow.hitCount)
         ) {
-            onUpdatePayload({Id: row.Id, Data: {...newRow}})
+            onUpdatePayload({id: row.id, data: {...newRow}})
         }
-        if (newRow.Content.length === 0) {
+        if (newRow.content.length === 0) {
             warn("字典内容不可为空")
         }
-        if (!judgeNum(newRow.HitCount)) {
+        if (!judgeNum(newRow.hitCount)) {
             warn("字典次数内容不合规")
         }
     }
 
-    const isEditing = (record: Payload, dataIndex) =>
-        record.Id === editingObj?.Id && dataIndex === editingObj?.dataIndex
+    const isEditing = (record: API.PayloadDetail, dataIndex) =>
+        record.id === editingObj?.id && dataIndex === editingObj?.dataIndex
 
-    const isSelect = (record: Payload, dataIndex) => record.Id === selectObj?.Id && dataIndex === selectObj?.dataIndex
+    const isSelect = (record: API.PayloadDetail, dataIndex) =>
+        record.id === selectObj?.id && dataIndex === selectObj?.dataIndex
 
     const columns = defaultColumns.map((col) => {
         if (!col.editable) {
             return {
                 ...col,
-                onCell: (record: Payload) => ({
+                onCell: (record: API.PayloadDetail) => ({
                     onClick: () => setSelectObj(undefined)
                 })
             }
         }
         return {
             ...col,
-            onCell: (record: Payload) => ({
+            onCell: (record: API.PayloadDetail) => ({
                 record,
                 editable: col.editable,
                 dataIndex: col.dataIndex,
@@ -600,28 +509,26 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     })
 
     const callCountRef = useRef<number>(0)
-    const handleRowClick = (record, column) => {
-        if (record.Id === editingObj?.Id && column.dataIndex === editingObj?.dataIndex) {
+    const handleRowClick = (record: API.PayloadDetail, column) => {
+        if (record.id === editingObj?.id && column.dataIndex === editingObj?.dataIndex) {
             return
         }
-        if (record.Id !== editingObj?.Id || column.dataIndex !== editingObj?.dataIndex) {
+        if (record.id !== editingObj?.id || column.dataIndex !== editingObj?.dataIndex) {
             setEditingObj(undefined)
             setSelectObj(undefined)
         }
         callCountRef.current += 1
         if (callCountRef.current >= 2) {
             callCountRef.current = 0 // 重置计数器
-            setEditingObj({Id: record.Id, dataIndex: column.dataIndex})
+            setEditingObj({id: record.id, dataIndex: column.dataIndex})
         } else if (callCountRef.current === 1) {
             // 这里开启一个定时器，若在300ms内没有第二次点击，则重置计数器
             setTimeout(() => {
                 callCountRef.current = 0
             }, 300)
-            setSelectObj({Id: record.Id, dataIndex: column.dataIndex})
+            setSelectObj({id: record.id, dataIndex: column.dataIndex})
         }
     }
-
-    const handleRowDoubleClick = (record, column) => {}
 
     const handleRowRightClick = (record, column) => {
         // console.log("Right click:", record, column)
@@ -636,16 +543,10 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                 switch (e.key) {
                     case "edit":
                         setSelectObj(undefined)
-                        setEditingObj({Id: record.Id, dataIndex: column.dataIndex})
-                        return
-                    case "copy":
-                        onCopyToOtherPayload && onCopyToOtherPayload(record.Id)
-                        return
-                    case "move":
-                        onMoveToOtherPayload && onMoveToOtherPayload(record.Id)
+                        setEditingObj({id: record.id, dataIndex: column.dataIndex})
                         return
                     case "delete":
-                        onDeletePayload && onDeletePayload({Id: record.Id})
+                        onDeletePayload && onDeletePayload({id: record.id})
                         return
                 }
             }
@@ -655,26 +556,21 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     return (
         <div className={styles["new-payload-table"]}>
             <Table
-                rowKey={(i: Payload) => i.Id}
-                components={
-                    onlyInsert
-                        ? undefined
-                        : {
-                              body: {
-                                  cell: (props) => <EditableCell {...props} />
-                              }
-                          }
-                }
+                rowKey={(i: API.PayloadDetail) => i.id}
+                components={{
+                    body: {
+                        cell: (props) => <EditableCell {...props} />
+                    }
+                }}
                 bordered
-                dataSource={response?.Data}
-                // tableLayout="fixed"
+                dataSource={response?.data}
                 // @ts-ignore
-                columns={onlyInsert ? InsertColumns : (columns as ColumnTypes)}
+                columns={columns as ColumnTypes}
                 pagination={{
                     showQuickJumper: true,
-                    current: parseInt(`${pagination?.Page || 1}`),
-                    pageSize: parseInt(`${pagination?.Limit || 10}`), // 每页显示的条目数量
-                    total: response?.Total || 0,
+                    current: parseInt(`${pagination?.page || 1}`),
+                    pageSize: parseInt(`${pagination?.limit || 10}`), // 每页显示的条目数量
+                    total: response?.pagemeta.total || 0,
                     pageSizeOptions: ["10", "20", "30", "40"], // 指定每页显示条目数量的选项
                     showSizeChanger: true, // 是否显示切换每页条目数量的控件
                     showTotal: (i) => <span className={styles["show-total"]}>共{i}条记录</span>,
