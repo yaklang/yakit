@@ -1101,6 +1101,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             activeKey={activeKey}
                             onChange={(key) => onSwitchCollapse(key)}
                             destroyInactivePanel={true}
+                            noActiveBg
                         >
                             <MatchersPanel
                                 key='匹配器'
