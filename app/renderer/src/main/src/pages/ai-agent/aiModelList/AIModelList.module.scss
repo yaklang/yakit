@@ -22,7 +22,6 @@
         }
         .ai-model-list-header-right {
             @extend %display-flex-center;
-            gap: 4px;
         }
     }
     .ai-model-list-total {
@@ -30,23 +29,58 @@
         padding: 0px 8px;
         border-radius: 8px;
         background: var(--Colors-Use-Neutral-Bg-Hover);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         line-height: 16px;
     }
 }
 
 .ai-online-model-list {
-    padding: 0 6px;
     &-row {
-        @extend %display-column;
+        @extend %display-flex-center;
         gap: 4px;
-        padding: 6px 6px;
-        border-radius: 4px;
+        padding: 10px 12px 10px 4px;
+        height: 44px;
+        &:hover {
+            background-color: var(--Colors-Use-Neutral-Bg);
+            .drag-sort-icon {
+                opacity: 1;
+            }
+            .ai-online-model-list-item-edit {
+                display: flex;
+            }
+            .ai-online-model-list-item-model {
+                display: none;
+            }
+        }
+        .drag-sort-icon {
+            width: 16px;
+            height: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+                color: var(--Colors-Use-Neutral-Disable);
+            }
+            opacity: 0;
+        }
+    }
+    &-row-isDragging {
+        background-color: var(--Colors-Use-Neutral-Bg);
+        .drag-sort-icon {
+            opacity: 1;
+        }
+        .ai-online-model-list-item-edit {
+            display: flex;
+        }
+        .ai-online-model-list-item-model {
+            display: none;
+        }
     }
     &-item {
         @extend %display-flex-center;
         gap: 4px;
         justify-content: space-between;
         overflow: hidden;
+        flex: 1;
         &-header {
             @extend %display-flex-center;
             gap: 4px;
@@ -64,13 +98,32 @@
         }
         &-model {
             color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            white-space: nowrap;
-            text-overflow: ellipsis;
+            border-radius: 20px;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            padding: 2px 6px;
+            @extend %display-flex-center;
+            gap: 4px;
+            line-height: 16px;
+            height: 16px;
+            font-size: 11px;
             overflow: hidden;
-            word-break: break-all;
+            &-text {
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                word-break: break-all;
+            }
+            .atom-icon {
+                svg {
+                    width: 12px;
+                    height: 12px;
+                }
+            }
         }
+
         &-edit {
             @extend %display-flex-center;
+            display: none;
             gap: 4px;
         }
         .trash-icon {
@@ -126,7 +179,7 @@
             font-weight: 400;
             line-height: 16px;
             letter-spacing: 0.5px;
-            height: 36px;
+            height: 32px;
             flex-shrink: 0;
 
             overflow: hidden;
