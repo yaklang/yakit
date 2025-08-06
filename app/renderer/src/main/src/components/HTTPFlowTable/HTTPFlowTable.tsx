@@ -1020,10 +1020,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             urlPath.length > 0 ||
             fileSuffix.length > 0 ||
             searchContentType?.length > 0 ||
-            excludeKeywords.length > 0 || 
+            excludeKeywords.length > 0 ||
             statusCode?.length > 0
         )
-    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords,statusCode])
+    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords, statusCode])
     const onGetOtherPageAdvancedSearchData = useMemoizedFn((str: string) => {
         try {
             const value = JSON.parse(str)
@@ -3615,14 +3615,27 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         refreshTabsContRef.current = true
     })
     const onResetRefresh = useMemoizedFn(() => {
-        setParams({...resetParams})
+        setParams((prev) => {
+            if (isEqual(prev, resetParams)) {
+                updateData()
+                return prev
+            }
+            return {...resetParams}
+        })
         resetAllFun()
     })
     /**@description 导入重置查询条件并刷新 */
     const onImportResetRefresh = useMemoizedFn(() => {
-        setParams({
+        const newParams = {
             ...resetParams,
             SourceType: ""
+        }
+        setParams((prev) => {
+            if (isEqual(prev, newParams)) {
+                updateData()
+                return prev
+            }
+            return newParams
         })
         resetAllFun()
     })
@@ -4348,7 +4361,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     visible={drawerFormVisible}
                     setVisible={setDrawerFormVisible}
                     onSave={(filters) => {
-                        const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords,statusCode} = filters
+                        const {
+                            filterMode,
+                            hostName,
+                            urlPath,
+                            fileSuffix,
+                            searchContentType,
+                            excludeKeywords,
+                            statusCode
+                        } = filters
                         setFilterMode(filterMode)
                         setHostName(hostName)
                         setUrlPath(urlPath)
@@ -4965,7 +4986,7 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
         )
     })
     return (
-        <div className={style['http-history-search-wrapper']}>
+        <div className={style["http-history-search-wrapper"]}>
             {showPopoverSearch ? (
                 <YakitPopover
                     overlayClassName={style["http-history-search-drop-down-popover"]}
