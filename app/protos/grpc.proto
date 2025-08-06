@@ -894,6 +894,7 @@ service Yak {
   rpc DeleteLocalModel(DeleteLocalModelRequest) returns (GeneralResponse);
   rpc UpdateLocalModel(UpdateLocalModelRequest) returns (GeneralResponse);
   rpc GetAllStartedLocalModels(Empty) returns (GetAllStartedLocalModelsResponse);
+  rpc ClearAllModels(ClearAllModelsRequest) returns (GeneralResponse);
 
   rpc IsSearchVectorDatabaseReady(IsSearchVectorDatabaseReadyRequest) returns (IsSearchVectorDatabaseReadyResponse);
   rpc InitSearchVectorDatabase(InitSearchVectorDatabaseRequest) returns (stream ExecResult);
@@ -929,6 +930,10 @@ message GetAllStartedLocalModelsResponse {
   repeated string ModelNames = 1;
 }
 
+message ClearAllModelsRequest {
+  bool DeleteSourceFile = 1;
+}
+
 message UpdateLocalModelRequest {
   string Name = 1;
   string ModelType = 2;
@@ -945,7 +950,7 @@ message AddLocalModelRequest {
 
 message DeleteLocalModelRequest {
   string Name = 1;
-  string DeleteSourceFile = 2;
+  bool DeleteSourceFile = 2;
 }
 
 message ThirdPartyBinary {
