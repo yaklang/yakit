@@ -64,7 +64,6 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                 if (res.Ok) {
                     setAvailable(true)
                 } else {
-                    failed(res.Reason)
                     setAvailable(false)
                 }
             })
