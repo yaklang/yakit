@@ -53,7 +53,7 @@
         cursor: pointer;
         svg {
             width: 16px;
-            color: var(--Colors-Use-Neutral-Disable);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
         margin-left: 12px;
     }
@@ -71,7 +71,7 @@
 
     .history-icon-def {
         svg {
-            color: var(--Colors-Use-Neutral-Disable);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     .history-icon-light {
@@ -86,7 +86,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: var(--Colors-Use-Neutral-Disable);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
 }
