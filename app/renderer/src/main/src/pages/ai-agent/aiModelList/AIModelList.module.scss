@@ -88,6 +88,10 @@
             font-size: 14px;
             color: var(--Colors-Use-Neutral-Text-1-Title);
             line-height: 16px;
+            svg {
+                width: 24px;
+                height: 24px;
+            }
         }
         &-type {
             font-weight: 500;
