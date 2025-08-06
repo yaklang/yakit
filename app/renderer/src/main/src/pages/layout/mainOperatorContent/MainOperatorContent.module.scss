@@ -281,8 +281,6 @@ $keyColor: map-keys($colors);
             align-items: center;
             position: relative;
             height: 32px;
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
-
             max-width: calc(100% - 32px);
             overflow-y: hidden;
             overflow-x: auto;
