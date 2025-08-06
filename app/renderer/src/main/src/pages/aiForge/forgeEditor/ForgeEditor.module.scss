@@ -39,36 +39,138 @@
     display: flex;
 }
 
-// ----- editor info -----
-.forge-editor-info {
+// ----- editor right -----
+.forge-editor-right {
+    flex: 1;
     height: 100%;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--Colors-Use-Neutral-Border);
-    background: var(--Colors-Use-Basic-Background);
-    transition:
-        width 0.2s ease,
-        opacity 0.2s ease;
-}
-.forge-editor-info-show {
-    opacity: 1;
-    width: 360px;
-}
-.forge-editor-info-hidden {
-    width: 0;
-    opacity: 0;
+    background: var(--Colors-Use-Neutral-Bg);
 }
 
-.editor-info-header {
-    width: 100%;
-    min-height: 48px;
-    padding: 6px 12px;
+.right-header {
+    padding: 12px 12px 8px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-    .info-header-title {
+    .header-left {
+        display: flex;
+        align-items: center;
+        .left-title {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px;
+        }
+    }
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            .switch-title {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 11px;
+                font-weight: 400;
+                line-height: 14px;
+                letter-spacing: 0.5px;
+            }
+        }
+    }
+}
+
+.right-body {
+    flex: 1;
+    width: 100%;
+    overflow: hidden;
+}
+.right-pane {
+    width: 100%;
+    height: 100%;
+}
+.right-pane-hidden {
+    display: none;
+}
+
+.right-pane-code-and-params {
+    border-top: 1px solid var(--Colors-Use-Neutral-Border);
+}
+// #endregion
+
+// #region AIForgeEditorInfoForm
+.ai-forge-editor-info-form {
+    min-width: 28px;
+    height: 100%;
+    overflow: hidden;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Basic-Background);
+    display: flex;
+    .editor-info-form {
+        width: 360px;
+        height: 100%;
+        opacity: 1;
+        transition:
+            width 0.2s ease,
+            opacity 0.2s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    .editor-side-bar {
+        width: 0px;
+        height: 100%;
+        opacity: 0;
+        transition:
+            width 0.2s ease,
+            opacity 0.2s ease;
+        display: flex;
+        flex-direction: column;
+    }
+}
+.ai-forge-editor-info-hidden {
+    .editor-info-form {
+        width: 0px;
+        opacity: 0;
+    }
+    .editor-side-bar {
+        width: 28px;
+        opacity: 1;
+    }
+}
+
+.editor-info-form-header {
+    padding: 8px 12px 4px 12px;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 4px;
+    cursor: pointer;
+    .expand-btn {
+        border-radius: 50%;
+    }
+    .header-title {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+        letter-spacing: 0.5px;
+    }
+}
+.editor-side-bar-header {
+    padding: 8px 4px 4px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    .expand-btn {
+        border-radius: 50%;
+    }
+    .header-title {
+        text-align: center;
         color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 500;
@@ -76,12 +178,12 @@
     }
 }
 
-.editor-info-form-wrapper {
+.editor-info-form-body {
     flex: 1;
-    padding: 20px 12px 12px 12px;
+    padding: 8px 12px 12px 12px;
     overflow: hidden auto;
 }
-.editor-info-form {
+.form-container {
     :global {
         .form-item-required {
             margin: 0 4px;
@@ -182,126 +284,101 @@
         font-weight: 600;
     }
 }
+// #endregion
 
-// ----- editor code -----
-.forge-editor-code {
-    flex: 1;
-    height: 100%;
-    overflow: hidden;
+// #region PromptAndActiveTextarea
+.prompt-and-action-textarea {
+    padding: 4px 12px 6px 12px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-}
-.editor-code-header {
-    padding: 12px 12px 8px 12px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    .code-header-radio {
-        border: 1px solid var(--Colors-Use-Main-Border);
-        background: var(--Colors-Use-Main-Border);
-        border-radius: 4px;
-        cursor: pointer;
-        color: var(--Colors-Use-Main-On-Primary);
-        font-size: 12px;
-        font-weight: 600;
-        line-height: 22px;
-        padding: 0 15px;
-    }
-}
-
-.editor-code-container {
-    padding: 0 12px 12px 12px;
-    flex: 1;
-    overflow: hidden;
-}
-
-.editor-code-tab-panel {
-    height: 100%;
-    border-radius: 4px;
-    border: 1px solid var(--Colors-Use-Neutral-Border);
-    display: flex;
-    .code-tab-panel-left {
-        height: 100%;
-        flex: 1;
-        border-radius: 4px 0px 0px 4px;
-        overflow: hidden;
-
-        .panel-left-prompt-action {
-            padding: 0 12px 12px 12px;
-            overflow: hidden auto;
-            .prompt-action-item {
-                display: flex;
-                flex-direction: column;
-                gap: 2px;
-                .item-header {
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
-                    font-size: 14px;
-                    .prompt-icon {
-                        cursor: pointer;
-                        svg {
-                            width: 16px;
-                            height: 16px;
-                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                        }
-                    }
-                }
-            }
-            .prompt-action-item + .prompt-action-item {
-                margin-top: 12px;
+    border-radius: 4px 4px 0 0;
+    background: var(--Colors-Use-Basic-Background);
+    .textarea-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        .header-title {
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+            letter-spacing: 0.5px;
+        }
+        .header-hint-icon {
+            cursor: pointer;
+            svg {
+                width: 16px;
+                height: 16px;
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
             }
         }
     }
-
-    .code-tab-panel-right {
-        width: 301px;
-        height: 100%;
-        border-radius: 0px 4px 4px 0px;
-        border-left: 1px solid var(--Colors-Use-Neutral-Border);
-        background: #f8f8f8;
+    .textarea-body {
+        max-height: 120px !important;
     }
 }
-.code-tab-panel-show {
-    width: 100%;
-    height: 100%;
-}
-.code-tab-panel-hidden {
-    display: none;
+
+.prompt-and-action-textarea-focus {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border-bottom: 1.5px solid var(--Colors-Use-Main-Primary);
 }
 
-.form-info-icon-tooltip {
+.textarea-hint-icon-tooltip {
     padding-bottom: 2px;
 }
 // #endregion
 
-// #region AIForgeEditorPreviewParams
-.ai-forge-editor-preview-params {
+// #region AIForgeEditorPromptAndAction
+.ai-forge-editor-prompt-and-action {
     height: 100%;
+    padding: 8px 12px;
     display: flex;
     flex-direction: column;
-    .preview-params-header {
+    gap: 8px;
+    overflow: hidden auto;
+}
+// #endregion
+
+// #region AIForgeEditorCodeAndParams
+.ai-forge-editor-code-and-params {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+}
+.editor-code-wrapper {
+    flex: 1;
+    overflow: hidden;
+}
+.editor-params-preview-wrapper {
+    width: 301px;
+    height: 100%;
+    border-left: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Basic-Background);
+    display: flex;
+    flex-direction: column;
+
+    .params-preview-header {
         padding: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        .header-title {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px;
+        }
 
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        font-size: 12px;
-        font-weight: 500;
-        line-height: 16px;
         .header-extra {
             display: flex;
             justify-content: flex-end;
             align-items: center;
         }
     }
-    .preview-params-container {
+    .params-preview-container {
         flex: 1;
-        padding-top: 8px;
         overflow: hidden auto;
 
         :global {
@@ -323,7 +400,7 @@
             align-items: center;
             gap: 4px;
             .text-style {
-                color: #b4bbca;
+                color: var(--Colors-Use-Neutral-Disable);
                 font-size: 12px;
                 font-weight: 600;
                 line-height: 16px;
@@ -332,7 +409,7 @@
                 flex: 1;
                 overflow: hidden;
                 height: 1px;
-                border-top: 1px dashed #eaecf3;
+                border-top: 1px dashed var(--Colors-Use-Neutral-Border);
             }
         }
 
@@ -340,7 +417,7 @@
             text-align: center;
             color: var(--Colors-Use-Neutral-Disable);
             font-size: 11px;
-            padding-top: 12px;
+            padding-top: 24px;
             padding-bottom: 24px;
         }
     }

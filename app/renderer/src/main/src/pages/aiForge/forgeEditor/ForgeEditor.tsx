@@ -1,17 +1,36 @@
-import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {AIForgeEditorPreviewParamsProps, ConfigTypeForgePromptAction, EditorAIForge, ForgeEditorProps} from "./type"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import React, {
+    ChangeEventHandler,
+    forwardRef,
+    memo,
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useRef,
+    useState
+} from "react"
+import {
+    AIForgeEditorCodeAndParamsProps,
+    AIForgeEditorInfoFormProps,
+    AIForgeEditorInfoFormRef,
+    AIForgeEditorPromptAndActionProps,
+    ConfigTypeForgePromptAction,
+    EditorAIForge,
+    ForgeEditorProps,
+    PromptAndActiveTextareaProps
+} from "./type"
+import {useControllableValue, useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
-    OutlineCloseIcon,
+    OutlineChevrondownIcon,
+    OutlineChevronrightIcon,
     OutlineExitIcon,
     OutlineIdentificationIcon,
     OutlineInformationcircleIcon,
-    OutlineOpenIcon,
+    OutlineRefreshIcon,
     OutlineTagIcon
 } from "@/assets/icon/outline"
-import {SolidStopIcon} from "@/assets/icon/solid"
+import {SolidStoreIcon} from "@/assets/icon/solid"
 import {Form, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -21,10 +40,8 @@ import {
     DefaultForgeTypeList,
     DefaultForgeYakToCode
 } from "../defaultConstant"
-import {AIForge, GetAIToolListRequest, QueryAIForgeRequest} from "@/pages/ai-agent/type/aiChat"
+import {AIForge, GetAIToolListRequest} from "@/pages/ai-agent/type/aiChat"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {ExtraParamsNodeByType} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
@@ -36,11 +53,14 @@ import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {yakitNotify} from "@/utils/notification"
-import {grpcCreateAIForge, grpcQueryAIForge, grpcUpdateAIForge} from "@/pages/ai-agent/grpc"
+import {grpcCreateAIForge, grpcGetAIForge, grpcUpdateAIForge} from "@/pages/ai-agent/grpc"
 import emiter from "@/utils/eventBus/eventBus"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import {AIForgeListDefaultPagination} from "@/pages/ai-agent/defaultConstant"
 import {grpcGetAIToolList} from "@/pages/ai-agent/aiToolList/utils"
+import {QSInputTextarea} from "@/pages/ai-agent/template/template"
+import {TextAreaRef} from "antd/lib/input/TextArea"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 import classNames from "classnames"
 import styles from "./ForgeEditor.module.scss"
@@ -59,31 +79,25 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
 
     useEffect(() => {
         if (isModify) {
-            handleFetchCacheID()
+            handleModifyInit()
         }
     }, [isModify])
     // #endregion
 
-    // #region forge-基础信息编辑框 展开/收起
-    const [expand, setExpand] = useState(true)
-    const [hiddenVisible, setHiddenVisible] = useState(false)
-    const handleHidden = useMemoizedFn(() => {
-        setExpand(false)
-        setHiddenVisible(false)
-    })
-    const [expandVisible, setExpandVisible] = useState(false)
-    const handleExpand = useMemoizedFn(() => {
-        setExpand(true)
-        setExpandVisible(false)
-    })
-    // #endregion
-
-    // #region forge模板全局数据和全局功能
-    /** 当前展示的 forge 数据(新建下已保存|编辑和编辑下已保存后的 forge 数据) */
+    // #region forge模板全局数据和全局功能 全局数据和全局功能方法
+    /** 储存着已有ID的数据(包括编辑获取和新建保存后的数据) */
     const forgeData = useRef<AIForge>()
 
-    // 获取缓存中的编辑模板的ID
-    const handleFetchCacheID = useMemoizedFn(() => {
+    const [fetchDataLoading, setFetchDataLoading] = useState(false)
+    const setDelayCancelFetchDataLoading = useMemoizedFn(() => {
+        setTimeout(() => {
+            setFetchDataLoading(false)
+        }, 200)
+    })
+    // 编辑页面，初始化编辑数据功能
+    const handleModifyInit = useMemoizedFn(() => {
+        setFetchDataLoading(true)
+
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
             YakitRoute.ModifyAIForge,
             YakitRoute.ModifyAIForge
@@ -99,176 +113,147 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
             }
             updatePagesDataCacheById(YakitRoute.ModifyAIForge, {...newCurrentItem})
             if (!id) {
-                yakitNotify("error", `编辑的模板数据异常: id('${id}'), 请关闭页面重试`)
+                yakitNotify("error", `尝试编辑的模板异常(ID: ${id}), 请关闭页面重试`)
                 return
             }
-            console.log("handleFetchCacheID", id)
+            console.log("handleModifyInit-fetchCacheID", id)
 
-            handleFetchInfo(id)
+            grpcGetAIForge(id)
+                .then((res) => {
+                    if (!res) {
+                        yakitNotify("error", `未获取到待编辑模板的详情, 请关闭页面重试`)
+                        setDelayCancelFetchDataLoading()
+                        return
+                    }
+                    console.log("grpcGetAIForge-res", res)
+                    forgeData.current = cloneDeep(res)
+                    try {
+                        if (infoFormRef.current) {
+                            infoFormRef.current.resetFormValues()
+                            infoFormRef.current.setFormValues({
+                                ForgeType: forgeData.current.ForgeType || "yak",
+                                ForgeName: forgeData.current.ForgeName || "",
+                                Description: forgeData.current.Description || "",
+                                Tag: forgeData.current.Tag || [],
+                                ToolNames: forgeData.current.ToolNames || [],
+                                ToolKeywords: forgeData.current.ToolKeywords || []
+                            })
+                        }
+                        setPromptAction({
+                            Action: forgeData.current.Action || "",
+                            InitPrompt: forgeData.current.InitPrompt || "",
+                            PersistentPrompt: forgeData.current.PersistentPrompt || "",
+                            PlanPrompt: forgeData.current.PlanPrompt || "",
+                            ResultPrompt: forgeData.current.ResultPrompt || ""
+                        })
+                        handleChangeContent(
+                            forgeData.current.ForgeType === "config"
+                                ? forgeData.current.ForgeContent || forgeData.current.Params || ""
+                                : forgeData.current.ForgeContent || ""
+                        )
+                    } catch (error) {}
+                    setDelayCancelFetchDataLoading()
+                })
+                .catch(() => {
+                    yakitNotify("error", `未获取到待编辑模板的详情, 请关闭页面重试`)
+                    setDelayCancelFetchDataLoading()
+                })
         }
-    })
-
-    const [fetchLoading, setFetchLoading] = useState(false)
-    const setDelayCancelFetchLoading = useMemoizedFn(() => {
-        setTimeout(() => {
-            setFetchLoading(false)
-        }, 200)
-    })
-
-    const handleFetchInfo = useMemoizedFn((id: number) => {
-        if (fetchLoading) return
-        setFetchLoading(true)
-
-        const request: QueryAIForgeRequest = {
-            Pagination: {...AIForgeListDefaultPagination},
-            Filter: {Id: id}
-        }
-
-        grpcQueryAIForge(request)
-            .then((res) => {
-                const {Data} = res
-                console.log("forgeEditor-res", res)
-
-                if (!Data || !Data[0]) {
-                    setDelayCancelFetchLoading()
-                    yakitNotify("error", `未获取到模板数据, 请关闭页面重试`)
-                    return
-                }
-                forgeData.current = cloneDeep(Data[0])
-                // 成功的话, loading 状态应该由 setShow 方法改变
-                handleSetShowData()
-            })
-            .catch(() => {
-                setDelayCancelFetchLoading()
-            })
-    })
-
-    // 设置编辑展示的数据内容
-    const handleSetShowData = useMemoizedFn(() => {
-        if (!forgeData.current) {
-            setDelayCancelFetchLoading()
-            yakitNotify("error", `未获取到模板数据, 请关闭页面重试`)
-            return
-        }
-
-        if (form) {
-            form.resetFields()
-            form.setFieldsValue({
-                ForgeType: forgeData.current.ForgeType || "yak",
-                ForgeName: forgeData.current.ForgeName || "",
-                Description: forgeData.current.Description || "",
-                Tag: forgeData.current.Tag || [],
-                ToolNames: forgeData.current.ToolNames || [],
-                ToolKeywords: forgeData.current.ToolKeywords || []
-            })
-            setPromptAction({
-                Action: forgeData.current.Action || "",
-                InitPrompt: forgeData.current.InitPrompt || "",
-                PersistentPrompt: forgeData.current.PersistentPrompt || "",
-                PlanPrompt: forgeData.current.PlanPrompt || "",
-                ResultPrompt: forgeData.current.ResultPrompt || ""
-            })
-
-            setContent(
-                forgeData.current.ForgeType === "config"
-                    ? forgeData.current.ForgeContent || forgeData.current.Params || ""
-                    : forgeData.current.ForgeContent || ""
-            )
-            setTriggerParseContent((old) => !old)
-        }
-        setDelayCancelFetchLoading()
     })
 
     const [saveLoading, setSaveLoading] = useState(false)
-
-    /** 保存功能 */
+    // 保存功能
     const handleSave = useMemoizedFn(() => {
         return new Promise<void>(async (resolve, reject) => {
             if (saveLoading) {
                 reject()
                 return
             }
+
             setSaveLoading(true)
 
             try {
-                const formData: EditorAIForge = await handleFetchFormData()
-                formData.ForgeContent = content || ""
-                if (formData.ForgeType === "config") {
-                    formData.InitPrompt = promptAction.InitPrompt ?? ""
-                    formData.PersistentPrompt = promptAction.PersistentPrompt ?? ""
-                    formData.PlanPrompt = promptAction.PlanPrompt ?? ""
-                    formData.ResultPrompt = promptAction.ResultPrompt ?? ""
-                    formData.Action = promptAction.Action ?? ""
-                }
-                if (formData.ForgeType === "yak") {
-                    formData.ToolNames = undefined
-                    formData.ToolKeywords = undefined
-                }
-
-                // 解析参数UI数据
-                if (content) {
-                    const codeInfo = await onCodeToInfo({type: "yak", code: content || ""}, true)
-                    if (codeInfo) {
-                        const params = codeInfo.CliParameter || []
-                        formData.ParamsUIConfig = params.length === 0 ? undefined : JSON.stringify(params ?? [])
+                if (infoFormRef.current) {
+                    const formData = await infoFormRef.current.getFormValues()
+                    if (!formData) {
+                        reject()
+                        return
                     }
-                } else {
-                    formData.ParamsUIConfig = ""
-                }
+                    formData.ForgeContent = content || ""
+                    if (formData.ForgeType === "config") {
+                        formData.InitPrompt = promptAction.InitPrompt ?? ""
+                        formData.PersistentPrompt = promptAction.PersistentPrompt ?? ""
+                        formData.PlanPrompt = promptAction.PlanPrompt ?? ""
+                        formData.ResultPrompt = promptAction.ResultPrompt ?? ""
+                        formData.Action = promptAction.Action ?? ""
+                    }
+                    if (formData.ForgeType === "yak") {
+                        formData.ToolNames = undefined
+                        formData.ToolKeywords = undefined
+                    }
 
-                // 生成最终需要保存的数据
-                const requestData: AIForge = {...(forgeData.current || {}), ...formData} as AIForge
-                requestData.Params = undefined
+                    // 解析参数UI数据
+                    if (content) {
+                        const codeInfo = await onCodeToInfo({type: "yak", code: content || ""}, true)
+                        if (codeInfo) {
+                            const params = codeInfo.CliParameter || []
+                            formData.ParamsUIConfig = params.length === 0 ? undefined : JSON.stringify(params ?? [])
+                        } else {
+                            formData.ParamsUIConfig = undefined
+                        }
+                    } else {
+                        formData.ParamsUIConfig = undefined
+                    }
 
-                const apiFunc = requestData.Id ? grpcUpdateAIForge : grpcCreateAIForge
-                console.log("apiFunc", requestData, "\n", requestData.Id ? "grpcUpdateAIForge" : "grpcCreateAIForge")
-                apiFunc(requestData)
-                    .then(async () => {
-                        try {
+                    // 生成最终需要保存的数据
+                    const requestData: AIForge = {...(forgeData.current || {}), ...formData} as AIForge
+                    // 清除无用字段里的内容
+                    requestData.Params = undefined
+
+                    const apiFunc = requestData.Id ? grpcUpdateAIForge : grpcCreateAIForge
+                    console.log(
+                        "apiFunc",
+                        requestData,
+                        "\n",
+                        requestData.Id ? "grpcUpdateAIForge" : "grpcCreateAIForge"
+                    )
+                    apiFunc(requestData)
+                        .then(async (res) => {
                             let resInfo: AIForge = cloneDeep(requestData)
                             if (!resInfo.Id) {
-                                const info = await grpcQueryAIForge({
-                                    Pagination: {...AIForgeListDefaultPagination},
-                                    Filter: {ForgeName: requestData.ForgeName}
-                                })
-                                if (info && info.Data && info.Data[0]) {
-                                    resInfo = cloneDeep(info.Data[0])
-                                } else {
-                                    yakitNotify("error", "模板创建成功, 但获取数据异常，请关闭页面后重试")
+                                const resID = Number(res?.CreateID) || 0
+                                if (resID) resInfo.Id = resID
+                                else {
+                                    yakitNotify("error", `新建模板异常, 创建并未生成唯一ID号`)
                                     reject()
                                     return
                                 }
                             }
-                            console.log("resInfo1", resInfo)
-
                             forgeData.current = cloneDeep(resInfo)
-                            console.log("resInfo2", forgeData.current)
+                            console.log("latest-forge-data", forgeData.current)
                             emiter.emit("onTriggerRefreshForgeList", `${resInfo.Id}`)
                             yakitNotify("success", "保存成功")
                             resolve()
-                        } catch (error) {
-                            yakitNotify("error", "模板创建成功, 但获取数据异常，请关闭页面后重试")
+                        })
+                        .catch(() => {
                             reject()
-                        }
-                    })
-                    .catch(() => {
-                        reject()
-                    })
-                    .finally(() => {
-                        setTimeout(() => {
-                            setSaveLoading(false)
-                        }, 300)
-                    })
+                        })
+                } else {
+                    yakitNotify("error", "未获取到模板信息表单，请关闭页面重试")
+                    console.error("handleSave", `获取不到 form 实例, 请检查代码逻辑`)
+                    reject()
+                    return
+                }
             } catch (error) {
                 reject()
+            } finally {
                 setTimeout(() => {
                     setSaveLoading(false)
                 }, 200)
             }
         })
     })
-
-    /** 保存并执行功能 */
+    // 保存并执行功能
     const handleSaveAndRun = useMemoizedFn(() => {
         handleSave()
             .then(() => {
@@ -292,128 +277,74 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
     // #endregion
 
     // #region forge 基础信息相关逻辑
-    const [form] = Form.useForm()
-
-    /** forge-类型 */
-    const type = Form.useWatch("ForgeType", form)
-    /** 是否是简易模板类型 */
-    const isTypeToConfig = useMemo(() => {
-        return type === "config"
-    }, [type])
-
-    // 改变模板类型时触发源码改变
-    const handleTypeChange = useMemoizedFn((type: AIForge["ForgeType"]) => {
-        if (type === "yak") {
-            setContent(DefaultForgeYakToCode)
-        } else {
-            setContent(DefaultForgeConfigToCode)
-        }
-        setTriggerParseContent((old) => !old)
-    })
-
-    // 获取表单数据
-    const handleFetchFormData: () => Promise<EditorAIForge> = useMemoizedFn(() => {
-        return new Promise((resolve, reject) => {
-            if (!form) {
-                yakitNotify("error", "获取表单数据异常，请关闭后重试")
-                reject()
-                return
-            }
-            form.validateFields()
-                .then(() => {
-                    const data = form.getFieldsValue()
-                    const info: EditorAIForge = {
-                        ForgeType: data.ForgeType ?? "yak",
-                        ForgeName: data.ForgeName ?? "",
-                        Description: data.Description ?? undefined,
-                        Tag: data.Tag ?? [],
-                        ToolNames: data.ToolNames ?? [],
-                        ToolKeywords: data.ToolKeywords ?? []
-                    }
-                    if (!info.ForgeType || !info.ForgeName) {
-                        yakitNotify("error", "模板类型和模板名称不能为空")
-                        reject()
-                        return
-                    }
-                    resolve(info)
-                })
-                .catch(() => {
-                    if (!expand) setExpand(true)
-                    reject()
-                })
-        })
-    })
-
-    const [tools, setTools] = useState<{label: string; value: string}[]>([])
-    const [fetchToolLoading, setFetchToolLoading] = useState(false)
-    const handleFetchTools = useMemoizedFn(async (search?: string) => {
-        setFetchToolLoading(true)
-        const request: GetAIToolListRequest = {
-            Pagination: {
-                ...AIForgeListDefaultPagination,
-                OrderBy: "created_at",
-                Limit: 50
-            },
-            Query: search || "",
-            ToolName: "",
-            OnlyFavorites: false
-        }
-        try {
-            const res = await grpcGetAIToolList(request)
-            if (res?.Tools) {
-                setTools(res.Tools.map((item) => ({label: item.Name, value: item.Name})))
-            }
-        } catch (error) {
-        } finally {
-            setTimeout(() => {
-                setFetchToolLoading(false)
-            }, 300)
-        }
-    })
-    const handleSearchTool = useDebounceFn(
-        (search?: string) => {
-            handleFetchTools(search)
-        },
-        {wait: 300}
-    ).run
-
-    useEffect(() => {
-        handleFetchTools()
-    }, [])
-
+    const infoFormRef = useRef<AIForgeEditorInfoFormRef>(null)
+    const [type, setType] = useState<AIForge["ForgeType"]>("yak")
     // #endregion
 
     // #region forge prompt和源码信息相关逻辑
-    const [configTypeActiveTab, setConfigTypeActiveTab] = useState<"prompt" | "params">("prompt")
-    // 是否展示编辑器元素
-    const isShowCode = useMemo(() => {
-        if (!isTypeToConfig) return true
-        return configTypeActiveTab === "params"
-    }, [isTypeToConfig, configTypeActiveTab])
-
-    /** 当前模板类行的展示 tagUI */
-    const forgeTypeTag = useMemo(() => {
-        const find = DefaultForgeTypeList.find((item) => item.key === type)
-        if (!find) return null
-
-        if (find.key === "yak") {
-            return <YakitTag color={find.color as YakitTagColor}>{find.name}</YakitTag>
-        }
-        if (find.key === "config") {
-            return <YakitTag color={find.color as YakitTagColor}>{find.name}</YakitTag>
-        }
-        return null
-    }, [type])
-
     // 简易模板下的 promopt 信息和 action 信息
     const [promptAction, setPromptAction] = useState<ConfigTypeForgePromptAction>({})
-    const handleChangePromptAction = useMemoizedFn((key: keyof ConfigTypeForgePromptAction, value: string) => {
-        setPromptAction((old) => ({...old, [key]: value}))
-    })
 
     // yak 模板下的源码或者简易模板下的参数代码
     const [content, setContent] = useState(DefaultForgeYakToCode)
     const [triggerParseContent, setTriggerParseContent] = useState(false)
+    const handleChangeContent = useMemoizedFn((value: string) => {
+        setContent(value)
+        setTriggerParseContent((old) => !old)
+    })
+    // #endregion
+
+    // #region 简易模式下的右侧 Head-UI
+    const [advanceMode, setAdvanceMode] = useState(false)
+    const handleChangeAdvanceMode = useMemoizedFn((bool: boolean) => {
+        setConfigTypeActiveTab(bool ? "code" : "prompt")
+        setAdvanceMode(bool)
+    })
+    const [configTypeActiveTab, setConfigTypeActiveTab] = useState<"prompt" | "code">("prompt")
+
+    const configHeadUI = useMemo(() => {
+        if (type === "yak") return null
+
+        return (
+            <div className={styles["right-header"]}>
+                <div className={styles["header-left"]}>
+                    {advanceMode ? (
+                        <YakitRadioButtons
+                            buttonStyle='solid'
+                            value={configTypeActiveTab}
+                            options={[
+                                {value: "code", label: "源码"},
+                                {value: "prompt", label: "Prompt"}
+                            ]}
+                            onChange={(e) => setConfigTypeActiveTab(e.target.value)}
+                        />
+                    ) : (
+                        <div className={styles["left-title"]}>Prompt</div>
+                    )}
+                </div>
+
+                <div className={styles["header-right"]}>
+                    <div className={styles["switch-wrapper"]}>
+                        <YakitSwitch size='small' checked={advanceMode} onChange={handleChangeAdvanceMode} />
+                        <div>高级模式</div>
+                    </div>
+                </div>
+            </div>
+        )
+    }, [type, advanceMode, configTypeActiveTab])
+
+    const isShowCode = useMemo(() => {
+        if (type === "yak") return true
+        return configTypeActiveTab === "code"
+    }, [type, configTypeActiveTab])
+    const isShowCodeBorderTop = useMemo(() => {
+        if (type === "yak") return false
+        return configTypeActiveTab === "code"
+    }, [type, configTypeActiveTab])
+    const isShowPrompt = useMemo(() => {
+        if (type === "yak") return false
+        return configTypeActiveTab === "prompt"
+    }, [type, configTypeActiveTab])
     // #endregion
 
     // #region 注册关闭页面时的触发事件
@@ -432,18 +363,14 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
     // 是否保存并打开触发编辑的模板信息
     const handleSaveAndOpen = useMemoizedFn(async (isSave?: boolean) => {
         try {
-            if (isSave) {
-                await handleSave()
-            }
+            if (isSave) await handleSave()
             if (modalRef.current) modalRef.current.destroy()
-            handleFetchCacheID()
+            handleModifyInit()
         } catch (error) {}
     })
     const {setSubscribeClose, removeSubscribeClose} = useSubscribeClose()
     // 二次提示框的实例
     const modalRef = useRef<any>(null)
-    // 二次提示框的操作类型
-    const modalTypeRef = useRef<string>("close")
     useEffect(() => {
         if (isModify) {
             setSubscribeClose(YakitRoute.ModifyAIForge, {
@@ -455,7 +382,6 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                         maskClosable: false,
                         onOk: (m) => {
                             modalRef.current = m
-                            modalTypeRef.current = "close"
                             handleSaveAndExit(true)
                         },
                         onCancel: () => {
@@ -471,7 +397,6 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                         maskClosable: false,
                         onOk: (m) => {
                             modalRef.current = m
-                            modalTypeRef.current = "reset"
                             handleSaveAndOpen(true)
                         },
                         onCancel: () => {
@@ -494,7 +419,6 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                         maskClosable: false,
                         onOk: (m) => {
                             modalRef.current = m
-                            modalTypeRef.current = "close"
                             handleSaveAndExit()
                         },
                         onCancel: () => {
@@ -512,7 +436,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
 
     return (
         <div className={styles["forge-editor"]}>
-            <YakitSpin spinning={fetchLoading}>
+            <YakitSpin spinning={fetchDataLoading}>
                 <div className={styles["forge-editor-wrapper"]}>
                     <div className={styles["forge-editor-header"]}>
                         <div className={styles["header-title"]}>{isModify ? "编辑模板" : "新建模板"}</div>
@@ -526,298 +450,45 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                             >
                                 保存并执行
                             </YakitButton>
-                            <YakitButton loading={saveLoading} icon={<SolidStopIcon />} onClick={handleSave}>
+                            <YakitButton loading={saveLoading} icon={<SolidStoreIcon />} onClick={handleSave}>
                                 保存
                             </YakitButton>
                         </div>
                     </div>
 
                     <div className={styles["forge-editor-body"]}>
-                        <div
-                            className={classNames(styles["forge-editor-info"], {
-                                [styles["forge-editor-info-show"]]: expand,
-                                [styles["forge-editor-info-hidden"]]: !expand
-                            })}
-                        >
-                            <div className={styles["editor-info-header"]}>
-                                <div className={styles["info-header-title"]}>基础信息</div>
+                        <AIForgeEditorInfoForm ref={infoFormRef} setType={setType} setContent={handleChangeContent} />
 
-                                <Tooltip
-                                    title='收起基础信息'
-                                    visible={hiddenVisible}
-                                    onVisibleChange={setHiddenVisible}
+                        <div className={styles["forge-editor-right"]}>
+                            {configHeadUI}
+
+                            <div className={styles["right-body"]}>
+                                <div
+                                    tabIndex={isShowCode ? 1 : -1}
+                                    className={classNames(styles["right-pane"], {
+                                        [styles["right-pane-hidden"]]: !isShowCode
+                                    })}
                                 >
-                                    <YakitButton type='text2' icon={<OutlineCloseIcon />} onClick={handleHidden} />
-                                </Tooltip>
-                            </div>
-
-                            <div className={styles["editor-info-form-wrapper"]}>
-                                <Form
-                                    className={styles["editor-info-form"]}
-                                    form={form}
-                                    layout='vertical'
-                                    initialValues={{ForgeType: "yak"}}
-                                >
-                                    <Form.Item
-                                        label={
-                                            <>
-                                                模板类型<span className='form-item-required'>*</span>:
-                                            </>
+                                    <AIForgeEditorCodeAndParams
+                                        className={
+                                            isShowCodeBorderTop ? styles["right-pane-code-and-params"] : undefined
                                         }
-                                        name='ForgeType'
-                                        rules={[{required: true, message: "模板类型必填"}]}
-                                    >
-                                        <YakitSelect
-                                            wrapperClassName={styles["forge-type-select"]}
-                                            dropdownClassName={styles["forge-type-select-dropdown"]}
-                                            onChange={handleTypeChange}
-                                        >
-                                            {DefaultForgeTypeList.map((item, index) => {
-                                                return (
-                                                    <YakitSelect.Option key={item.key}>
-                                                        <div
-                                                            key={item.key}
-                                                            className={styles["forge-type-select-option"]}
-                                                        >
-                                                            <div className={styles["header-icon"]}>{item.icon}</div>
-                                                            <div className={styles["type-content"]}>{item.name}</div>
-                                                        </div>
-                                                    </YakitSelect.Option>
-                                                )
-                                            })}
-                                        </YakitSelect>
-                                    </Form.Item>
-
-                                    <Form.Item
-                                        label={
-                                            <>
-                                                模板名称<span className='form-item-required'>*</span>:
-                                            </>
-                                        }
-                                        name='ForgeName'
-                                        required={true}
-                                        rules={[
-                                            {
-                                                validator: async (_, value) => {
-                                                    if (!value || !value.trim())
-                                                        return Promise.reject(new Error("模板名称必填"))
-                                                    if (value.trim().length > 100)
-                                                        return Promise.reject(new Error("名称最长100位"))
-                                                }
-                                            }
-                                        ]}
-                                    >
-                                        <YakitInput
-                                            wrapperClassName={styles["item-input"]}
-                                            placeholder='请输入...'
-                                            size='large'
-                                            prefix={<OutlineIdentificationIcon />}
-                                            maxLength={100}
-                                        />
-                                    </Form.Item>
-
-                                    <Form.Item
-                                        label={
-                                            <>
-                                                描述<span className='form-item-required'>*</span>:
-                                            </>
-                                        }
-                                        name='Description'
-                                        required={true}
-                                        rules={[
-                                            {
-                                                validator: async (_, value) => {
-                                                    if (!value || !value.trim())
-                                                        return Promise.reject(new Error("描述必填"))
-                                                    // if (value.trim().length > 100)
-                                                    //     return Promise.reject(new Error("描述最长100位"))
-                                                }
-                                            }
-                                        ]}
-                                    >
-                                        <YakitInput.TextArea rows={2} placeholder='请输入...' />
-                                    </Form.Item>
-
-                                    <Form.Item
-                                        label={
-                                            <>
-                                                Tag<span className='form-item-required'>*</span>:
-                                            </>
-                                        }
-                                    >
-                                        <Form.Item noStyle name='Tag' rules={[{required: true, message: "Tag必填"}]}>
-                                            <YakitSelect
-                                                wrapperClassName={styles["item-select"]}
-                                                mode='tags'
-                                                allowClear
-                                                size='large'
-                                            >
-                                                {AIForgeBuiltInTag.map((item) => {
-                                                    return (
-                                                        <YakitSelect.Option key={item} value={item}>
-                                                            {item}
-                                                        </YakitSelect.Option>
-                                                    )
-                                                })}
-                                            </YakitSelect>
-                                        </Form.Item>
-                                        <div className={styles["item-select-prefix-icon"]}>
-                                            <OutlineTagIcon />
-                                        </div>
-                                    </Form.Item>
-
-                                    {isTypeToConfig && (
-                                        <>
-                                            <Form.Item name='ToolNames' label='工具名称'>
-                                                <YakitSelect
-                                                    mode='multiple'
-                                                    allowClear
-                                                    size='large'
-                                                    showSearch={true}
-                                                    filterOption={false}
-                                                    options={tools}
-                                                    notFoundContent={fetchToolLoading ? "搜索中..." : "无匹配结果"}
-                                                    onSearch={handleSearchTool}
-                                                ></YakitSelect>
-                                            </Form.Item>
-
-                                            <Form.Item name='ToolKeywords' label='工具关键词'>
-                                                <YakitSelect mode='tags' allowClear size='large'></YakitSelect>
-                                            </Form.Item>
-                                        </>
-                                    )}
-                                </Form>
-                            </div>
-                        </div>
-
-                        <div className={styles["forge-editor-code"]}>
-                            <div className={styles["editor-code-header"]}>
-                                {!expand && (
-                                    <Tooltip
-                                        placement='topLeft'
-                                        title='展开基础信息'
-                                        visible={expandVisible}
-                                        onVisibleChange={setExpandVisible}
-                                    >
-                                        <YakitButton type='text2' icon={<OutlineOpenIcon />} onClick={handleExpand} />
-                                    </Tooltip>
-                                )}
-
-                                {isTypeToConfig ? (
-                                    <YakitRadioButtons
-                                        buttonStyle='solid'
-                                        value={configTypeActiveTab}
-                                        options={[
-                                            {value: "prompt", label: "Prompt"},
-                                            {value: "params", label: " 执行参数"}
-                                        ]}
-                                        onChange={(e) => setConfigTypeActiveTab(e.target.value)}
+                                        content={content}
+                                        setContent={handleChangeContent}
+                                        triggerParse={triggerParseContent}
                                     />
-                                ) : (
-                                    <div className={styles["code-header-radio"]}>源码</div>
-                                )}
+                                </div>
 
-                                {forgeTypeTag}
-                            </div>
-
-                            <div className={styles["editor-code-container"]}>
-                                <div className={styles["editor-code-tab-panel"]}>
-                                    <div className={styles["code-tab-panel-left"]}>
-                                        <div
-                                            tabIndex={!isShowCode ? -1 : 1}
-                                            className={classNames(
-                                                styles["panel-left-prompt-action"],
-                                                styles["code-tab-panel-show"],
-                                                {
-                                                    [styles["code-tab-panel-hidden"]]: isShowCode
-                                                }
-                                            )}
-                                        >
-                                            <div className={styles["prompt-action-item"]}>
-                                                <div className={styles["item-header"]}>初始 Prompt</div>
-                                                <YakitInput.TextArea
-                                                    rows={3}
-                                                    placeholder='请输入...'
-                                                    value={promptAction.InitPrompt}
-                                                    onChange={(e) =>
-                                                        handleChangePromptAction("InitPrompt", e.target.value)
-                                                    }
-                                                />
-                                            </div>
-
-                                            <div className={styles["prompt-action-item"]}>
-                                                <div className={styles["item-header"]}>计划 Prompt</div>
-                                                <YakitInput.TextArea
-                                                    rows={3}
-                                                    placeholder='请输入...'
-                                                    value={promptAction.PlanPrompt}
-                                                    onChange={(e) =>
-                                                        handleChangePromptAction("PlanPrompt", e.target.value)
-                                                    }
-                                                />
-                                            </div>
-
-                                            <div className={styles["prompt-action-item"]}>
-                                                <div className={styles["item-header"]}>持久记忆 Prompt</div>
-                                                <YakitInput.TextArea
-                                                    rows={3}
-                                                    placeholder='请输入...'
-                                                    value={promptAction.PersistentPrompt}
-                                                    onChange={(e) =>
-                                                        handleChangePromptAction("PersistentPrompt", e.target.value)
-                                                    }
-                                                />
-                                            </div>
-
-                                            <div className={styles["prompt-action-item"]}>
-                                                <div className={styles["item-header"]}>结果 Prompt</div>
-                                                <YakitInput.TextArea
-                                                    rows={3}
-                                                    placeholder='请输入...'
-                                                    value={promptAction.ResultPrompt}
-                                                    onChange={(e) =>
-                                                        handleChangePromptAction("ResultPrompt", e.target.value)
-                                                    }
-                                                />
-                                            </div>
-
-                                            <div className={styles["prompt-action-item"]}>
-                                                <div className={styles["item-header"]}>
-                                                    结果提取
-                                                    <Tooltip
-                                                        overlayClassName={styles["form-info-icon-tooltip"]}
-                                                        title={`用于指定需提取的 action 名称，应与“结果 Prompt”中定义的 action 保持一致。系统会根据此配置\n从 AI 的输出结果中自动提取对应的结构化数据，作为生成总结报告、\n构建数据结构或驱动后续任务的依据。支持多个 action，多个 action之间通过英文逗号分隔。`}
-                                                    >
-                                                        <OutlineInformationcircleIcon
-                                                            className={styles["prompt-icon"]}
-                                                        />
-                                                    </Tooltip>
-                                                </div>
-                                                <YakitInput.TextArea
-                                                    rows={3}
-                                                    placeholder='请输入...'
-                                                    value={promptAction.Action}
-                                                    onChange={(e) => handleChangePromptAction("Action", e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div
-                                            tabIndex={isShowCode ? -1 : 1}
-                                            className={classNames(styles["code-tab-panel-show"], {
-                                                [styles["code-tab-panel-hidden"]]: !isShowCode
-                                            })}
-                                        >
-                                            <YakitEditor type={"yak"} value={content} setValue={setContent} />
-                                        </div>
-                                    </div>
-
-                                    <div className={styles["code-tab-panel-right"]}>
-                                        <AIForgeEditorPreviewParams
-                                            content={content}
-                                            triggerParse={triggerParseContent}
-                                        />
-                                    </div>
+                                <div
+                                    tabIndex={isShowPrompt ? 1 : -1}
+                                    className={classNames(styles["right-pane"], {
+                                        [styles["right-pane-hidden"]]: !isShowPrompt
+                                    })}
+                                >
+                                    <AIForgeEditorPromptAndAction
+                                        promptAction={promptAction}
+                                        setPromptAction={setPromptAction}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -830,8 +501,403 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
 
 export default ForgeEditor
 
-const AIForgeEditorPreviewParams: React.FC<AIForgeEditorPreviewParamsProps> = memo((props) => {
-    const {content, triggerParse} = props
+/** @name 基础信息表单 */
+const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
+    forwardRef((props, ref) => {
+        const {setType, setContent} = props
+
+        useImperativeHandle(
+            ref,
+            () => ({
+                setFormValues: handleSetFormValues,
+                resetFormValues: handleResetFormValues,
+                getFormValues: handleGetFormValues
+            }),
+            []
+        )
+
+        const [expand, setExpand] = useState(true)
+        const handleChangeExpand = useMemoizedFn(() => {
+            setExpand((old) => !old)
+        })
+
+        const [form] = Form.useForm()
+
+        const handleSetFormValues = useMemoizedFn((values: any) => {
+            const data = cloneDeep(values)
+            if (form) {
+                form.setFieldsValue(data)
+            } else {
+                console.error("handleSetFormValues", `获取不到 form 实例, 请检查代码逻辑`)
+            }
+        })
+        const handleResetFormValues = useMemoizedFn(() => {
+            if (form) {
+                form.resetFields()
+            } else {
+                console.error("handleResetFormValues", `获取不到 form 实例, 请检查代码逻辑`)
+            }
+        })
+        const handleGetFormValues = useMemoizedFn(() => {
+            return new Promise<EditorAIForge | null>(async (resolve, reject) => {
+                try {
+                    if (!form) {
+                        yakitNotify("error", "获取不到表单实例数据, 请关闭页面后重试")
+                        resolve(null)
+                    }
+
+                    await form.validateFields()
+                    const formData = form.getFieldsValue()
+                    const info: EditorAIForge = {
+                        ForgeType: formData.ForgeType ?? "",
+                        ForgeName: formData.ForgeName ?? "",
+                        Description: formData.Description ?? undefined,
+                        Tag: formData.Tag ?? [],
+                        ToolNames: formData.ToolNames ?? [],
+                        ToolKeywords: formData.ToolKeywords ?? []
+                    }
+                    if (!info.ForgeType || !info.ForgeName) {
+                        yakitNotify("error", "类型和名称不能为空")
+                        resolve(null)
+                        return
+                    }
+                    resolve(info)
+                } catch (error) {
+                    if (!expand) setExpand(true)
+                    resolve(null)
+                }
+            })
+        })
+
+        /** forge-类型 */
+        const type = Form.useWatch("ForgeType", form)
+        useUpdateEffect(() => {
+            setType(type)
+        }, [type])
+        /** 是否是简易模板类型 */
+        const isTypeToConfig = useMemo(() => {
+            return type === "config"
+        }, [type])
+
+        const handleTypeChange = useMemoizedFn((type: AIForge["ForgeType"]) => {
+            if (type === "yak") {
+                setContent(DefaultForgeYakToCode)
+            } else {
+                setContent(DefaultForgeConfigToCode)
+            }
+        })
+
+        // #region tools
+        const [tools, setTools] = useState<{label: string; value: string}[]>([])
+        const [fetchToolLoading, setFetchToolLoading] = useState(false)
+        const handleFetchTools = useMemoizedFn(async (search?: string) => {
+            setFetchToolLoading(true)
+            const request: GetAIToolListRequest = {
+                Pagination: {
+                    ...AIForgeListDefaultPagination,
+                    OrderBy: "created_at",
+                    Limit: 50
+                },
+                Query: search || "",
+                ToolName: "",
+                OnlyFavorites: false
+            }
+            try {
+                const res = await grpcGetAIToolList(request)
+                if (res?.Tools) {
+                    setTools(res.Tools.map((item) => ({label: item.Name, value: item.Name})))
+                }
+            } catch (error) {
+            } finally {
+                setTimeout(() => {
+                    setFetchToolLoading(false)
+                }, 300)
+            }
+        })
+        const handleSearchTool = useDebounceFn(
+            (search?: string) => {
+                handleFetchTools(search)
+            },
+            {wait: 300}
+        ).run
+
+        useEffect(() => {
+            handleFetchTools()
+        }, [])
+        // #endregion
+
+        return (
+            <div
+                className={classNames(styles["ai-forge-editor-info-form"], {
+                    [styles["ai-forge-editor-info-hidden"]]: !expand
+                })}
+            >
+                <div className={styles["editor-info-form"]}>
+                    <div className={styles["editor-info-form-header"]} onClick={handleChangeExpand}>
+                        <YakitButton
+                            type='outline2'
+                            size='small'
+                            className={styles["expand-btn"]}
+                            icon={<OutlineChevronrightIcon />}
+                        />
+
+                        <div className={styles["header-title"]}>基础信息</div>
+                    </div>
+
+                    <div className={styles["editor-info-form-body"]}>
+                        <Form
+                            className={styles["form-container"]}
+                            form={form}
+                            layout='vertical'
+                            initialValues={{ForgeType: "yak"}}
+                        >
+                            <Form.Item
+                                label={
+                                    <>
+                                        模板类型<span className='form-item-required'>*</span>:
+                                    </>
+                                }
+                                name='ForgeType'
+                                rules={[{required: true, message: "模板类型必填"}]}
+                            >
+                                <YakitSelect
+                                    wrapperClassName={styles["forge-type-select"]}
+                                    dropdownClassName={styles["forge-type-select-dropdown"]}
+                                    onChange={handleTypeChange}
+                                >
+                                    {DefaultForgeTypeList.map((item, index) => {
+                                        return (
+                                            <YakitSelect.Option key={item.key}>
+                                                <div key={item.key} className={styles["forge-type-select-option"]}>
+                                                    <div className={styles["header-icon"]}>{item.icon}</div>
+                                                    <div className={styles["type-content"]}>{item.name}</div>
+                                                </div>
+                                            </YakitSelect.Option>
+                                        )
+                                    })}
+                                </YakitSelect>
+                            </Form.Item>
+
+                            <Form.Item
+                                label={
+                                    <>
+                                        模板名称<span className='form-item-required'>*</span>:
+                                    </>
+                                }
+                                name='ForgeName'
+                                required={true}
+                                rules={[
+                                    {
+                                        validator: async (_, value) => {
+                                            if (!value || !value.trim())
+                                                return Promise.reject(new Error("模板名称必填"))
+                                            if (value.trim().length > 100)
+                                                return Promise.reject(new Error("名称最长100位"))
+                                        }
+                                    }
+                                ]}
+                            >
+                                <YakitInput
+                                    wrapperClassName={styles["item-input"]}
+                                    placeholder='请输入...'
+                                    size='large'
+                                    prefix={<OutlineIdentificationIcon />}
+                                    maxLength={100}
+                                />
+                            </Form.Item>
+
+                            <Form.Item
+                                label={
+                                    <>
+                                        描述<span className='form-item-required'>*</span>:
+                                    </>
+                                }
+                                name='Description'
+                                required={true}
+                                rules={[
+                                    {
+                                        validator: async (_, value) => {
+                                            if (!value || !value.trim()) return Promise.reject(new Error("描述必填"))
+                                            // if (value.trim().length > 100)
+                                            //     return Promise.reject(new Error("描述最长100位"))
+                                        }
+                                    }
+                                ]}
+                            >
+                                <YakitInput.TextArea rows={2} placeholder='请输入...' />
+                            </Form.Item>
+
+                            <Form.Item
+                                label={
+                                    <>
+                                        Tag<span className='form-item-required'>*</span>:
+                                    </>
+                                }
+                            >
+                                <Form.Item noStyle name='Tag' rules={[{required: true, message: "Tag必填"}]}>
+                                    <YakitSelect
+                                        wrapperClassName={styles["item-select"]}
+                                        mode='tags'
+                                        allowClear
+                                        size='large'
+                                    >
+                                        {AIForgeBuiltInTag.map((item) => {
+                                            return (
+                                                <YakitSelect.Option key={item} value={item}>
+                                                    {item}
+                                                </YakitSelect.Option>
+                                            )
+                                        })}
+                                    </YakitSelect>
+                                </Form.Item>
+                                <div className={styles["item-select-prefix-icon"]}>
+                                    <OutlineTagIcon />
+                                </div>
+                            </Form.Item>
+
+                            {isTypeToConfig && (
+                                <>
+                                    <Form.Item name='ToolNames' label='工具名称'>
+                                        <YakitSelect
+                                            mode='multiple'
+                                            allowClear
+                                            size='large'
+                                            showSearch={true}
+                                            filterOption={false}
+                                            options={tools}
+                                            notFoundContent={fetchToolLoading ? "搜索中..." : "无匹配结果"}
+                                            onSearch={handleSearchTool}
+                                        ></YakitSelect>
+                                    </Form.Item>
+
+                                    <Form.Item name='ToolKeywords' label='工具关键词'>
+                                        <YakitSelect mode='tags' allowClear size='large'></YakitSelect>
+                                    </Form.Item>
+                                </>
+                            )}
+                        </Form>
+                    </div>
+                </div>
+
+                <div className={styles["editor-side-bar"]}>
+                    <div className={styles["editor-side-bar-header"]} onClick={handleChangeExpand}>
+                        <YakitButton
+                            type='outline2'
+                            size='small'
+                            className={styles["expand-btn"]}
+                            icon={<OutlineChevrondownIcon />}
+                        />
+                        <div className={styles["header-title"]}>基础信息</div>
+                    </div>
+                </div>
+            </div>
+        )
+    })
+)
+
+/** @name prompt和action内容的输入框 */
+const PromptAndActiveTextarea: React.FC<PromptAndActiveTextareaProps> = memo((props) => {
+    const {title, hint, placeholder} = props
+
+    const textareaRef = useRef<TextAreaRef>(null)
+    const [focus, setFocus] = useState(false)
+    const handleWrapperFocus = useMemoizedFn(() => {
+        if (textareaRef && textareaRef.current) {
+            textareaRef.current.focus()
+        }
+        setFocus(true)
+    })
+    const handleBlur = useMemoizedFn(() => {
+        setFocus(false)
+    })
+
+    const [question, setQuestion] = useControllableValue<string>(props, {
+        defaultValue: ""
+    })
+    const handleTextareaChange: ChangeEventHandler<HTMLTextAreaElement> = useMemoizedFn((e) => {
+        const content = e.target.value
+        setQuestion(content)
+    })
+
+    return (
+        <div
+            className={classNames(styles["prompt-and-action-textarea"], {
+                [styles["prompt-and-action-textarea-focus"]]: focus
+            })}
+            onClick={handleWrapperFocus}
+        >
+            <div className={styles["textarea-header"]}>
+                <div className={styles["header-title"]}>{title}</div>
+                <Tooltip overlayClassName={styles["textarea-hint-icon-tooltip"]} title={hint}>
+                    {!!hint && <OutlineInformationcircleIcon className={styles["header-hint-icon"]} />}
+                </Tooltip>
+            </div>
+
+            <QSInputTextarea
+                ref={textareaRef}
+                className={classNames(styles["textarea-body"])}
+                placeholder={placeholder ?? "请输入..."}
+                value={question}
+                onBlur={handleBlur}
+                onChange={handleTextareaChange}
+            />
+        </div>
+    )
+})
+
+/** @name prompt和action展示 */
+const AIForgeEditorPromptAndAction: React.FC<AIForgeEditorPromptAndActionProps> = memo((props) => {
+    const [promptAction, setPromptAction] = useControllableValue<ConfigTypeForgePromptAction>(props, {
+        defaultValue: {},
+        valuePropName: "promptAction",
+        trigger: "setPromptAction"
+    })
+    const handleChangePromptAction = useMemoizedFn((key: keyof ConfigTypeForgePromptAction, value: string) => {
+        setPromptAction((old) => ({...old, [key]: value}))
+    })
+
+    return (
+        <div className={styles["ai-forge-editor-prompt-and-action"]}>
+            <PromptAndActiveTextarea
+                title='初始'
+                value={promptAction.InitPrompt ?? ""}
+                onChange={(value) => handleChangePromptAction("InitPrompt", value)}
+            />
+            <PromptAndActiveTextarea
+                title='计划'
+                value={promptAction.PlanPrompt ?? ""}
+                onChange={(value) => handleChangePromptAction("PlanPrompt", value)}
+            />
+            <PromptAndActiveTextarea
+                title='持久记忆'
+                value={promptAction.PersistentPrompt ?? ""}
+                onChange={(value) => handleChangePromptAction("PersistentPrompt", value)}
+            />
+            <PromptAndActiveTextarea
+                title='结果'
+                value={promptAction.ResultPrompt ?? ""}
+                onChange={(value) => handleChangePromptAction("ResultPrompt", value)}
+            />
+            <PromptAndActiveTextarea
+                title='结果提取'
+                hint={`用于指定需提取的 action 名称，应与“结果 Prompt”中定义的 action 保持一致。系统会根据此配置\n从 AI 的输出结果中自动提取对应的结构化数据，作为生成总结报告、\n构建数据结构或驱动后续任务的依据。支持多个 action，多个 action之间通过英文逗号分隔。`}
+                placeholder='要提取多个字段则逗号分隔输入多个字段名...'
+                value={promptAction.Action ?? ""}
+                onChange={(value) => handleChangePromptAction("Action", value)}
+            />
+        </div>
+    )
+})
+
+/** @name 源码和参数展示 */
+const AIForgeEditorCodeAndParams: React.FC<AIForgeEditorCodeAndParamsProps> = memo((props) => {
+    const {triggerParse, className} = props
+
+    const [content, setContent] = useControllableValue<string>(props, {
+        defaultValue: "",
+        valuePropName: "content",
+        trigger: "setContent"
+    })
 
     useEffect(() => {
         handleFetchParams()
@@ -901,48 +967,54 @@ const AIForgeEditorPreviewParams: React.FC<AIForgeEditorPreviewParamsProps> = me
     // #endregion
 
     return (
-        <div className={styles["ai-forge-editor-preview-params"]}>
-            <div className={styles["preview-params-header"]}>
-                参数预览
-                <div className={styles["header-extra"]}>
-                    <YakitButton type='text' loading={fetchParamsLoading} onClick={() => handleFetchParams()}>
-                        获取参数
-                    </YakitButton>
-                    <div className={styles["divider-style"]}></div>
-                </div>
+        <div className={classNames(styles["ai-forge-editor-code-and-params"], className)}>
+            <div className={styles["editor-code-wrapper"]}>
+                <YakitEditor type={"yak"} value={content} setValue={setContent} />
             </div>
 
-            <div className={styles["preview-params-container"]}>
-                <Form
-                    form={form}
-                    onFinish={() => {}}
-                    size='small'
-                    labelCol={{span: 8}}
-                    wrapperCol={{span: 16}}
-                    labelWrap={true}
-                    validateMessages={{
-                        /* eslint-disable no-template-curly-in-string */
-                        required: "${label} 是必填字段"
-                    }}
-                >
-                    <div className={styles["custom-params-wrapper"]}>
-                        <ExecuteEnterNodeByPluginParams
-                            paramsList={requiredParams}
-                            pluginType={"yak"}
-                            isExecuting={false}
-                        />
+            <div className={styles["editor-params-preview-wrapper"]}>
+                <div className={styles["params-preview-header"]}>
+                    <div className={styles["header-title"]}>参数预览</div>
+                    <div className={styles["header-extra"]}>
+                        <YakitButton type='text' loading={fetchParamsLoading} onClick={handleFetchParams}>
+                            获取参数
+                            <OutlineRefreshIcon />
+                        </YakitButton>
                     </div>
+                </div>
 
-                    {groupParams.length !== 0 && (
-                        <div className={styles["additional-params-divider"]}>
-                            <div className={styles["text-style"]}>额外参数 (非必填)</div>
-                            <div className={styles["divider-style"]}></div>
+                <div className={styles["params-preview-container"]}>
+                    <Form
+                        form={form}
+                        onFinish={() => {}}
+                        size='small'
+                        labelCol={{span: 8}}
+                        wrapperCol={{span: 16}}
+                        labelWrap={true}
+                        validateMessages={{
+                            /* eslint-disable no-template-curly-in-string */
+                            required: "${label} 是必填字段"
+                        }}
+                    >
+                        <div className={styles["custom-params-wrapper"]}>
+                            <ExecuteEnterNodeByPluginParams
+                                paramsList={requiredParams}
+                                pluginType={"yak"}
+                                isExecuting={false}
+                            />
                         </div>
-                    )}
-                    <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={"yak"} />
 
-                    <div className={styles["to-end"]}>已经到底啦～</div>
-                </Form>
+                        {groupParams.length !== 0 && (
+                            <div className={styles["additional-params-divider"]}>
+                                <div className={styles["text-style"]}>额外参数 (非必填)</div>
+                                <div className={styles["divider-style"]}></div>
+                            </div>
+                        )}
+                        <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={"yak"} />
+
+                        <div className={styles["to-end"]}>已经到底啦～</div>
+                    </Form>
+                </div>
             </div>
         </div>
     )
