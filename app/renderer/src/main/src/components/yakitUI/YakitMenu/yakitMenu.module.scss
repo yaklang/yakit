@@ -192,7 +192,7 @@
     .ant-#{$kind}menu-item.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child,
     .ant-#{$kind}menu-item.ant-#{$kind}menu-item-selected.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child {
         color: var(--Colors-Use-Main-On-Primary);
-        background-color: var(--menu-active-background);
+        background-color: var(--Colors-Use-Main-Primary);
         span.anticon {
             color: var(--Colors-Use-Main-On-Primary);
         }
@@ -278,7 +278,7 @@
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-active,
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-open.ant-#{$kind}menu-submenu-active,
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-open.ant-#{$kind}menu-submenu-active.ant-#{$kind}menu-submenu-selected {
-        background-color: var(--menu-active-background);
+        background-color: var(--Colors-Use-Main-Primary);
         span.anticon {
             color: var(--Colors-Use-Main-On-Primary);
         }
