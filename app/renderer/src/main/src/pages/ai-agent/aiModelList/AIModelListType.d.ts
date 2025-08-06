@@ -25,6 +25,7 @@ export interface AILocalModelListRefProps {
 }
 export interface AILocalModelListItemProps {
     item: LocalModelConfig
+    onRefresh: () => void
 }
 export interface AIOnlineModelListItemProps {
     item: ThirdPartyApplicationConfig

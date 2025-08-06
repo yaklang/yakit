@@ -1269,30 +1269,28 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         <div className={styles["ai-describe"]}>
                                             请选择AI类型进行APIKey配置，如配置多个，可在全局配置中配置使用优先级
                                         </div>
-                                        <div style={{margin: 24, marginRight: 45}}>
-                                            <NewThirdPartyApplicationConfig
-                                                isOnlyShowAiType={true}
-                                                onAdd={(e) => {
-                                                    let existed = false
-                                                    const existedResult = (obj.AppConfigs || []).map((i) => {
-                                                        if (i.Type === e.Type) {
-                                                            existed = true
-                                                            return {...i, ...e}
-                                                        }
-                                                        return {...i}
-                                                    })
-                                                    if (!existed) {
-                                                        existedResult.push(e)
+                                        <NewThirdPartyApplicationConfig
+                                            isOnlyShowAiType={true}
+                                            onAdd={(e) => {
+                                                let existed = false
+                                                const existedResult = (obj.AppConfigs || []).map((i) => {
+                                                    if (i.Type === e.Type) {
+                                                        existed = true
+                                                        return {...i, ...e}
                                                     }
-                                                    const params = {...obj, AppConfigs: existedResult}
-                                                    apiSetGlobalNetworkConfig(params).then(() => {
-                                                        openAIByChatCS({...val})
-                                                        m.destroy()
-                                                    })
-                                                }}
-                                                onCancel={() => m.destroy()}
-                                            />
-                                        </div>
+                                                    return {...i}
+                                                })
+                                                if (!existed) {
+                                                    existedResult.push(e)
+                                                }
+                                                const params = {...obj, AppConfigs: existedResult}
+                                                apiSetGlobalNetworkConfig(params).then(() => {
+                                                    openAIByChatCS({...val})
+                                                    m.destroy()
+                                                })
+                                            }}
+                                            onCancel={() => m.destroy()}
+                                        />
                                     </>
                                 )
                             })

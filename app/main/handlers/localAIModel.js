@@ -75,4 +75,63 @@ module.exports = (win, getClient) => {
         return await asyncGetSupportedLocalModels(params)
     })
 
+    const asyncAddLocalModel = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().AddLocalModel(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("AddLocalModel", async (e, params) => {
+        return await asyncAddLocalModel(params)
+    })
+
+    const asyncDeleteLocalModel = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteLocalModel(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteLocalModel", async (e, params) => {
+        return await asyncDeleteLocalModel(params)
+    })
+
+    const asyncUpdateLocalModel = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteLocalModel(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("UpdateLocalModel", async (e, params) => {
+        return await asyncUpdateLocalModel(params)
+    })
+
+    const asyncGetAllStartedLocalModels = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllStartedLocalModels(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAllStartedLocalModels", async (e, params) => {
+        return await asyncGetAllStartedLocalModels(params)
+    })
 }
