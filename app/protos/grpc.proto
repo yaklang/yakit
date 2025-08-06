@@ -888,6 +888,7 @@ service Yak {
   rpc DeleteLocalModel(DeleteLocalModelRequest) returns (GeneralResponse);
   rpc UpdateLocalModel(UpdateLocalModelRequest) returns (GeneralResponse);
   rpc GetAllStartedLocalModels(Empty) returns (GetAllStartedLocalModelsResponse);
+  rpc ClearAllModels(ClearAllModelsRequest) returns (GeneralResponse);
 
   rpc IsSearchVectorDatabaseReady(IsSearchVectorDatabaseReadyRequest) returns (IsSearchVectorDatabaseReadyResponse);
   rpc InitSearchVectorDatabase(InitSearchVectorDatabaseRequest) returns (stream ExecResult);
@@ -903,10 +904,28 @@ service Yak {
 
   // 插件执行跟踪双向流服务
   rpc PluginTrace(stream PluginTraceRequest) returns (stream PluginTraceResponse);
+
+  // Knowledge Base
+  rpc GetKnowledgeBaseNameList(Empty) returns(GetKnowledgeBaseNameListResponse);
+  rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns(GeneralResponse);
+  rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns(GeneralResponse);
+  rpc UpdateKnowledgeBase(UpdateKnowledgeBaseRequest) returns(GeneralResponse);
+
+  rpc DeleteKnowledgeBaseEntry(DeleteKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc CreateKnowledgeBaseEntry(CreateKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc UpdateKnowledgeBaseEntry(UpdateKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc SearchKnowledgeBaseEntry(SearchKnowledgeBaseEntryRequest) returns(SearchKnowledgeBaseEntryResponse);
+
+  rpc BuildVectorIndexForKnowledgeBase(BuildVectorIndexForKnowledgeBaseRequest) returns(GeneralResponse);
+  rpc BuildVectorIndexForKnowledgeBaseEntry(BuildVectorIndexForKnowledgeBaseEntryRequest) returns(GeneralResponse);
 }
 
 message GetAllStartedLocalModelsResponse {
   repeated string ModelNames = 1;
+}
+
+message ClearAllModelsRequest {
+  bool DeleteSourceFile = 1;
 }
 
 message UpdateLocalModelRequest {
@@ -925,7 +944,7 @@ message AddLocalModelRequest {
 
 message DeleteLocalModelRequest {
   string Name = 1;
-  string DeleteSourceFile = 2;
+  bool DeleteSourceFile = 2;
 }
 
 message ThirdPartyBinary {
@@ -962,6 +981,114 @@ message IsThirdPartyBinaryReadyResponse {
 message StartThirdPartyBinaryRequest {
   string Name = 1;
   repeated string Args = 2;
+}
+
+message BuildVectorIndexForKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseEntryId = 1;
+
+  string BaseUrl = 2;
+  string ApiKey = 3;
+  string Proxy = 4;
+
+  string ModelName = 5;
+  int32 Dimension = 6;
+  int32 M = 7;
+  float Ml = 8;
+  int32 EfSearch = 9;
+  int32 EfConstruct = 10;
+  string DistanceFuncType = 11;
+}
+
+message BuildVectorIndexForKnowledgeBaseRequest {
+  int64 KnowledgeBaseId = 1;
+
+  string BaseUrl = 2;
+  string ApiKey = 3;
+  string Proxy = 4;
+
+  string ModelName = 5;
+  int32 Dimension = 6;
+  int32 M = 7;
+  float Ml = 8;
+  int32 EfSearch = 9;
+  int32 EfConstruct = 10;
+  string DistanceFuncType = 11;
+}
+
+message GetKnowledgeBaseNameListResponse {
+  repeated string KnowledgeBaseNames = 1;
+}
+
+message CreateKnowledgeBaseRequest {
+  string KnowledgeBaseName = 1;
+  string KnowledgeBaseDescription = 2;
+  string KnowledgeBaseType = 3;
+}
+
+message UpdateKnowledgeBaseRequest {
+  int64 KnowledgeBaseId = 1;
+  string KnowledgeBaseName = 2;
+  string KnowledgeBaseDescription = 3;
+  string KnowledgeBaseType = 4;
+}
+
+message DeleteKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseEntryId = 1;
+}
+
+message SearchKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseId = 1;
+  string Keyword = 2;
+  Paging Pagination = 3;
+}
+
+message SearchKnowledgeBaseEntryResponse {
+  repeated KnowledgeBaseEntry KnowledgeBaseEntries = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message CreateKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseID = 1;
+  string KnowledgeTitle = 2;
+  string KnowledgeType = 3;
+  int32 ImportanceScore = 4;
+  repeated string Keywords = 5;
+  string KnowledgeDetails = 6;
+  string Summary = 7;
+  int32 SourcePage = 8;
+  repeated string PotentialQuestions = 9;
+  repeated float PotentialQuestionsVector = 10;
+}
+
+message UpdateKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseEntryID = 2;
+  string KnowledgeTitle = 3;
+  string KnowledgeType = 4;
+  int32 ImportanceScore = 5;
+  repeated string Keywords = 6;
+  string KnowledgeDetails = 7;
+  string Summary = 8;
+  int32 SourcePage = 9;
+  repeated string PotentialQuestions = 10;
+}
+
+message KnowledgeBaseEntry {
+  int64 ID = 1;
+  int64 KnowledgeBaseId = 2;
+  string KnowledgeTitle = 3;
+  string KnowledgeType = 4;
+  int32 ImportanceScore = 5;
+  repeated string Keywords = 6;
+  string KnowledgeDetails = 7;
+  string Summary = 8;
+  int32 SourcePage = 9;
+  repeated string PotentialQuestions = 10;
+  repeated float PotentialQuestionsVector = 11;
+}
+
+message DeleteKnowledgeBaseRequest {
+  int64 KnowledgeBaseId = 1;
 }
 
 message DeleteSearchVectorDatabaseRequest {
