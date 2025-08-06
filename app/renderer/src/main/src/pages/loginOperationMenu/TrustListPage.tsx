@@ -346,7 +346,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 }
                 data={response.data}
                 enableDrag={false}
-                renderKey='id'
+                renderKey='appid'
                 columns={columns}
                 useUpAndDown
                 pagination={{
