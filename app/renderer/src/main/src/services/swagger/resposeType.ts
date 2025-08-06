@@ -543,6 +543,14 @@ export declare namespace API {
     programName: string;
     syntaxFlowVariable: string;
   }
+  export interface RenamePayloadRequest {
+    /**
+     * 修改文件夹名 folder 修改文件名 group
+     */
+    type: string;
+    name: string;
+    newName: string;
+  }
   export interface RemoteTunnelResponse {
     server: string;
     secret: string;
@@ -1073,7 +1081,7 @@ export declare namespace API {
     folder: string;
     hitCount: number;
     isFile: boolean;
-    contentBytes?: string;
+    fileContent?: string;
     hash?: string;
   }
   export interface ParentComment {

@@ -34,6 +34,7 @@ import {
     findFoldersById,
     findItemByGroup,
     isIncludeSpecial,
+    isPayloadOperator,
     UploadOrDownloadByPayloadGrpc
 } from "../newPayload"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
@@ -55,7 +56,8 @@ interface OnlineFolderComponentProps {
     notExpandArr: string[]
     setNotExpandArr: (v: string[]) => void
     setContentType: (v?: "editor" | "table") => void
-    setShowType: (v: "local" | "online") => void
+    showType: "online" | "local"
+    userInfo: UserInfoProps
 }
 
 export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (props) => {
@@ -68,7 +70,8 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
         notExpandArr,
         setNotExpandArr,
         setContentType,
-        setShowType
+        showType,
+        userInfo
     } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
@@ -96,6 +99,7 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
         const pass: boolean = !isIncludeSpecial(inputName)
         if (inputName.length > 0 && !allFolderName.includes(inputName) && pass) {
             apiRenameOnlinePayload({
+                type: "folder",
                 name: folder.name,
                 newName: inputName
             })
@@ -130,7 +134,7 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
         setData(newData)
         // 如果删除的包含选中项 则重新选择
         const sourceFolders = findFoldersById(data, id)
-        if (sourceFolders && sourceFolders?.node) {
+        if (sourceFolders && sourceFolders?.node && showType === "online") {
             let results = sourceFolders.node.find((item) => item.id === selectItem)
             if (results) setContentType(undefined)
         }
@@ -240,7 +244,8 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
                                                     <OutlinePencilaltIcon />
                                                     <div className={styles["menu-name"]}>重命名</div>
                                                 </div>
-                                            )
+                                            ),
+                                            disabled: !isPayloadOperator(userInfo)
                                         },
                                         {
                                             key: "download",
@@ -262,7 +267,8 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
                                                     <div className={styles["menu-name"]}>删除</div>
                                                 </div>
                                             ),
-                                            type: "danger"
+                                            type: "danger",
+                                            disabled: !isPayloadOperator(userInfo)
                                         }
                                     ],
                                     onClick: ({key}) => {
@@ -320,7 +326,8 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
                                     isInside={true}
                                     endBorder={(folder.node?.length || 0) - 1 === index}
                                     setContentType={setContentType}
-                                    setShowType={setShowType}
+                                    showType={showType}
+                                    userInfo={userInfo}
                                 />
                             ))}
                     </>
@@ -358,7 +365,8 @@ interface OnlineFileComponentProps {
     // 是否在其底部显示border
     endBorder?: boolean
     setContentType: (v?: "editor" | "table") => void
-    setShowType: (v: "local" | "online") => void
+    showType: "online" | "local"
+    userInfo: UserInfoProps
 }
 export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) => {
     const {
@@ -371,7 +379,8 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
         isInside = true,
         endBorder,
         setContentType,
-        setShowType
+        showType,
+        userInfo
     } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [inputName, setInputName] = useState<string>(file.name)
@@ -432,6 +441,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
         const pass: boolean = !isIncludeSpecial(inputName)
         if (inputName.length > 0 && !allFileName.includes(inputName) && pass) {
             apiRenameOnlinePayload({
+                type: "group",
                 name: file.name,
                 newName: inputName
             })
@@ -468,12 +478,12 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
                 })
                 setData(newData)
                 let results = selectData.node?.find((item) => item.id === selectItem)
-                if (results) setContentType(undefined)
+                if (results && showType === "online") setContentType(undefined)
             } else {
                 const newData = copyData.filter((item) => item.id !== id)
                 setData(newData)
 
-                if (selectItem === id) setContentType(undefined)
+                if (selectItem === id && showType === "online") setContentType(undefined)
             }
         }
     })
@@ -510,7 +520,8 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
                         <OutlinePencilaltIcon />
                         <div className={styles["menu-name"]}>重命名</div>
                     </div>
-                )
+                ),
+                disabled: !isPayloadOperator(userInfo)
             },
             {
                 key: "download",
@@ -532,15 +543,15 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
                         <div className={styles["menu-name"]}>删除</div>
                     </div>
                 ),
-                type: "danger"
+                type: "danger",
+                disabled: !isPayloadOperator(userInfo)
             }
         ]
-    }, [])
+    }, [userInfo])
 
     // 右键展开菜单
     const handleRightClick = useMemoizedFn((e) => {
         e.preventDefault()
-        setShowType("online")
         setSelectItem(file.id)
         setMenuOpen(true)
     })
@@ -578,7 +589,6 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
                         })}
                         onClick={() => {
                             setSelectItem(file.id)
-                            setShowType("online")
                         }}
                         onContextMenu={handleRightClick}
                     >
@@ -602,6 +612,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
                             })}
                             onClick={(e) => e.stopPropagation()}
                         >
+                            <div className={styles["file-count"]}>{file.type === "DataBase" ? file.number : ""}</div>
                             <YakitDropdownMenu
                                 menu={{
                                     data: fileMenuData as YakitMenuItemProps[],
@@ -671,12 +682,11 @@ interface OnlinePayloadGroupListProps {
     setSelectItem: (id: string) => void
     setContentType: (v?: "editor" | "table") => void
     loading: boolean
-    setShowType: (v: "local" | "online") => void
+    showType: "online" | "local"
 }
 
 export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (props) => {
-    const {userInfo, onQueryGroup, data, setData, selectItem, setSelectItem, setContentType, loading, setShowType} =
-        props
+    const {userInfo, onQueryGroup, data, setData, selectItem, setSelectItem, setContentType, loading, showType} = props
 
     const [loginShow, setLoginShow] = useState<boolean>(false)
     // 用于记录不展开的文件夹(默认展开)
@@ -700,6 +710,7 @@ export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (pr
             onQueryGroup()
         }
     }, [isLoadList])
+    
     return (
         <div className={styles["new-payload-group-list"]}>
             {isLoadList ? (
@@ -718,7 +729,7 @@ export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (pr
                                         {item.type === "Folder" ? (
                                             // 渲染文件夹组件
                                             <OnlineFolderComponent
-                                                key={index}
+                                                key={item.id}
                                                 folder={item}
                                                 selectItem={selectItem}
                                                 setSelectItem={setSelectItem}
@@ -727,19 +738,21 @@ export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (pr
                                                 notExpandArr={notExpandArr}
                                                 setNotExpandArr={setNotExpandArr}
                                                 setContentType={setContentType}
-                                                setShowType={setShowType}
+                                                showType={showType}
+                                                userInfo={userInfo}
                                             />
                                         ) : (
                                             // 渲染文件组件
                                             <OnlineFileComponent
-                                                key={index}
+                                                key={item.id}
                                                 file={item}
                                                 selectItem={selectItem}
                                                 setSelectItem={setSelectItem}
                                                 data={data}
                                                 setData={setData}
                                                 setContentType={setContentType}
-                                                setShowType={setShowType}
+                                                showType={showType}
+                                                userInfo={userInfo}
                                                 // isInside={!fileOutside}
                                             />
                                         )}
@@ -774,14 +787,14 @@ const onlineNodesToDataFun = (nodes: API.PayloadGroupNode[]) => {
         const {type, name, nodes} = item
         let obj = {
             ...item,
-            id: `${type}-${name}`
+            id: `${type}-${name}-online`
         } as DataItem
         if (nodes && nodes.length > 0) {
             return {
                 ...obj,
                 node: nodes.map((itemIn) => ({
                     ...itemIn,
-                    id: `${itemIn.type}-${itemIn.name}`
+                    id: `${itemIn.type}-${itemIn.name}-online`
                 }))
             }
         }
@@ -797,20 +810,10 @@ export interface NewPayloadOnlineListProps {
     setShowType: (v: "local" | "online") => void
 }
 export const NewPayloadOnlineList: React.FC<NewPayloadOnlineListProps> = (props) => {
-    const {setContentType, showType, setShowType} = props
+    const {setContentType, setGroup, setFolder, showType, setShowType} = props
 
     // table/editor 筛选条件
     const [selectItem, setSelectItem] = useState<string>()
-    const [group, setGroup] = useControllableValue<string>({
-        defaultValue: "",
-        valuePropName: "group",
-        trigger: "setGroup"
-    })
-    const [folder, setFolder] = useControllableValue<string>({
-        defaultValue: "",
-        valuePropName: "folder",
-        trigger: "setFolder"
-    })
     const [data, setData] = useState<DataItem[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const userInfo = useStore((s) => s.userInfo)
@@ -826,7 +829,7 @@ export const NewPayloadOnlineList: React.FC<NewPayloadOnlineListProps> = (props)
     }, [userInfo])
 
     const reset = useMemoizedFn(() => {
-        setContentType(undefined)
+        showType === "online" && setContentType(undefined)
         setSelectItem(undefined)
         setGroup("")
         setFolder("")
@@ -836,8 +839,8 @@ export const NewPayloadOnlineList: React.FC<NewPayloadOnlineListProps> = (props)
         setLoading(true)
         apiGetOnlinePayloadGroup()
             .then((res) => {
-                console.log("查询线上payload分组信息：", res)
                 let newData: DataItem[] = onlineNodesToDataFun(res.nodes || []) as DataItem[]
+                console.log("线上字典列表", res, newData)
                 setData(newData)
             })
             .catch((e: any) => {
@@ -861,12 +864,34 @@ export const NewPayloadOnlineList: React.FC<NewPayloadOnlineListProps> = (props)
         }
     }, [])
 
+    useEffect(() => {
+        if (selectItem) {
+            const selectData = findFoldersById(data, selectItem)
+            if (selectData) {
+                if (selectData.type === "Folder") {
+                    setFolder(selectData.name)
+                    let item = selectData.node?.filter((item) => item.id === selectItem) || []
+                    let group: string = item.length > 0 ? item[0].name : ""
+                    let type: string = item.length > 0 ? item[0].type : ""
+                    setGroup(group)
+                    setContentType(type === "DataBase" ? "table" : "editor")
+                    setShowType("online")
+                } else {
+                    setFolder("")
+                    setGroup(selectData.name)
+                    setContentType(selectData.type === "DataBase" ? "table" : "editor")
+                    setShowType("online")
+                }
+            }
+        }
+    }, [selectItem])
+
     return (
         <>
             <div className={styles["new-payload-online-list"]}>
                 <div className={styles["online-group-header"]}>
                     <span className={styles["online-group-desc"]}>
-                        线上规则
+                        线上Payload
                         {eeIsLogin ? "（下载即可使用）" : "（登录即可下载使用）"}
                     </span>
                 </div>
@@ -880,7 +905,7 @@ export const NewPayloadOnlineList: React.FC<NewPayloadOnlineListProps> = (props)
                         selectItem={selectItem}
                         setSelectItem={setSelectItem}
                         setContentType={setContentType}
-                        setShowType={setShowType}
+                        showType={showType}
                     />
                 </div>
             </div>
