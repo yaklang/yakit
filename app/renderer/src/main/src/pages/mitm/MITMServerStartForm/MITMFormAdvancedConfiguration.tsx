@@ -72,7 +72,6 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
 
         const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
-        const [downloadGMVisible, setDownloadGMVisible] = useState<boolean>(false)
         const [form] = Form.useForm()
         const enableProxyAuth = useWatch<boolean>("enableProxyAuth", form)
 
@@ -551,10 +550,6 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             <YakitButton type='text' onClick={() => setDownloadVisible(true)}>
                                 证书下载
                             </YakitButton>
-                            <Divider type='vertical' style={{margin: "0 4px"}} />
-                            <YakitButton type='text' onClick={() => setDownloadGMVisible(true)}>
-                                国密证书下载
-                            </YakitButton>
                         </div>
                     </Form.Item>
                 </Form>
@@ -572,11 +567,6 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         isStartMITM={false}
                     />
                     <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
-                    <MITMCertificateDownloadModal
-                        visible={downloadGMVisible}
-                        setVisible={setDownloadGMVisible}
-                        isGM={true}
-                    />
                 </React.Suspense>
             </YakitDrawer>
         )
