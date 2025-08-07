@@ -359,6 +359,14 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 jumpPage && ipcRenderer.invoke("open-route-page", {route: YakitRoute.Beta_ConfigNetwork})
             }
         })
+
+        const handlePluginConcurrencyBlur = () => {
+            const value = form.getFieldValue("PluginConcurrency")
+            if (value === null || value === undefined || isNaN(value) || value < 1) {
+                form.setFieldsValue({PluginConcurrency: 20})
+            }
+        }
+        
         return (
             <YakitDrawer
                 className={styles["advanced-configuration-drawer"]}
@@ -487,7 +495,12 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         <YakitSwitch size='large' />
                     </Form.Item>
                     <Form.Item label={"插件并发进程"} name='PluginConcurrency' style={{marginBottom: 12}}>
-                        <YakitInputNumber type='horizontal' size='small' />
+                        <YakitInputNumber
+                            type='horizontal'
+                            size='small'
+                            defaultValue={20}
+                            onBlur={handlePluginConcurrencyBlur}
+                        />
                     </Form.Item>
                     <Form.Item label='客户端 TLS 导入' className={styles["advanced-configuration-drawer-TLS"]}>
                         <div className={styles["drawer-TLS-item"]}>
