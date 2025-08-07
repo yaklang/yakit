@@ -658,7 +658,7 @@ $keyColor: map-keys($colors);
             .check-icon {
                 @extend .flex-align-center;
                 justify-content: center;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
+                color: var(--Colors-Use-Basic-Background);
 
                 svg {
                     width: 16px;
