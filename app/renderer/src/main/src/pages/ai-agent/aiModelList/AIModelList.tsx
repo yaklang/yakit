@@ -1,8 +1,10 @@
 import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {
+    AILocalModelListItemPromptHintProps,
     AILocalModelListItemProps,
     AILocalModelListProps,
     AILocalModelListRefProps,
+    AILocalModelListWrapperProps,
     AIModelListProps,
     AIModelType,
     AIOnlineModelListItemProps,
@@ -14,9 +16,9 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitRadioButtonsProps} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {
     grpcCancelStartLocalModel,
+    grpcClearAllModels,
     grpcDeleteLocalModel,
     grpcGetSupportedLocalModels,
     grpcIsLlamaServerReady,
@@ -31,9 +33,13 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineAtomIcon,
+    OutlineChatIcon,
     OutlineClouddownloadIcon,
     OutlineDotsverticalIcon,
+    OutlineExclamationIcon,
+    OutlineExitIcon,
     OutlinePencilaltIcon,
+    OutlinePlayIcon,
     OutlinePlusIcon,
     OutlineRefreshIcon,
     OutlineTrashIcon
@@ -41,11 +47,12 @@ import {
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
     DownloadLlamaServerModelPrompt,
+    InstallLlamaServer,
     InstallLlamaServerModelPrompt
 } from "./installLlamaServerModelPrompt/InstallLlamaServerModelPrompt"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {AIOnlineModelIconMap, tagColors} from "../defaultConstant"
+import {AIOnlineModelIconMap} from "../defaultConstant"
 import {randomString} from "@/utils/randomUtil"
 import {AIStartModelForm} from "./aiStartModelForm/AIStartModelForm"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
@@ -56,6 +63,8 @@ import {GlobalNetworkConfig, ThirdPartyApplicationConfig} from "@/components/con
 import {DragDropContext, Droppable, Draggable} from "@hello-pangea/dnd"
 import {SolidDragsortIcon} from "@/assets/icon/solid"
 import classNames from "classnames"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -139,6 +148,8 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
     const [onlineTotal, setOnlineTotal] = useState<number>(0)
     const [localTotal, setLocalTotal] = useState<number>(0)
 
+    const [removeVisible, setRemoveVisible] = useState<boolean>(false)
+
     const onlineRef = useRef<AIOnlineModelListRefProps>(null)
     const localRef = useRef<AILocalModelListRefProps>(null)
 
@@ -209,7 +220,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
                 onClearOnline()
                 break
             case "local":
-                onClearLocal()
+                setRemoveVisible(true)
                 break
             default:
                 break
@@ -221,7 +232,15 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
             onlineRef.current?.onRefresh()
         })
     })
-    const onClearLocal = useMemoizedFn(() => {})
+    const onClearLocal = useMemoizedFn(() => {
+        return grpcClearAllModels({DeleteSourceFile: false}).then(() => {
+            localRef.current?.onRefresh()
+        })
+    })
+    const onCancelRemove = useMemoizedFn(() => {
+        setRemoveVisible(false)
+        localRef.current?.onRefresh()
+    })
     return (
         <div className={styles["ai-model-list-wrapper"]}>
             <div className={styles["ai-model-list-header"]}>
@@ -252,6 +271,14 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
                 <AIOnlineModelList ref={onlineRef} setOnlineTotal={setOnlineTotal} />
             ) : (
                 <AILocalModelList ref={localRef} setLocalTotal={setLocalTotal} />
+            )}
+            {removeVisible && (
+                <AILocalModelListItemPromptHint
+                    title='清空模型'
+                    content={`确认清空模型?`}
+                    onOk={onClearLocal}
+                    onCancel={onCancelRemove}
+                />
             )}
         </div>
     )
@@ -407,11 +434,14 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
         const {setLocalTotal} = props
         const [spinning, setSpinning] = useState<boolean>(false)
         const [isRef, setIsRef] = useState<boolean>(false)
+        const [supportedModelsUser, setSupportedModelsUser] = useState<LocalModelConfig[]>([])
         const [supportedModels, setSupportedModels] = useState<LocalModelConfig[]>([])
 
         const [llamaServerReady, setLlamaServerReady] = useState<boolean>(false)
         const [llamaServerChecking, setLlamaServerChecking] = useState<boolean>(true)
+        const [visible, setVisible] = useState<boolean>(false)
 
+        const tokenRef = useRef(randomString(60))
         useImperativeHandle(
             ref,
             () => ({
@@ -446,56 +476,61 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
             setSpinning(true)
             grpcGetSupportedLocalModels()
                 .then((response) => {
+                    const userModels: LocalModelConfig[] = []
+                    const defaultModels: LocalModelConfig[] = []
                     setLocalTotal(response?.Models?.length || 0)
-                    setSupportedModels(response?.Models || [])
+                    response?.Models?.forEach((model) => {
+                        if (model.IsLocal) {
+                            userModels.push(model)
+                        } else {
+                            defaultModels.push(model)
+                        }
+                    })
+                    setSupportedModelsUser(userModels)
+                    setSupportedModels(defaultModels)
                 })
                 .finally(() => {
                     setTimeout(() => {
                         setSpinning(false)
-                        setIsRef((v) => !v)
+                        setIsRef(!isRef)
                     }, 200)
                 })
         })
+
         const installLlamaServer = useMemoizedFn(() => {
             const m = showYakitModal({
-                title: "安装模型环境",
+                title: "安装Llama服务器",
                 width: "50%",
                 maskClosable: false,
+                type: "white",
                 content: (
                     <InstallLlamaServerModelPrompt
-                        onFinished={() => {
+                        token={tokenRef.current}
+                        onStart={() => {
                             m.destroy()
-                            init()
+                            setVisible(true)
                         }}
                     />
                 ),
                 footer: null
             })
         })
+        const installFinished = useMemoizedFn(() => {
+            setVisible(false)
+            init()
+        })
+        const installCancel = useMemoizedFn(() => {
+            setVisible(false)
+        })
         const code = useCreation(() => {
             return "sudo xattr -r -d com.apple.quarantine ~/yakit-projects/projects/libs/llama-server"
         }, [])
         return llamaServerReady ? (
             <YakitSpin spinning={spinning}>
-                <RollingLoadList<LocalModelConfig>
-                    data={supportedModels}
-                    loadMoreData={() => {}}
-                    renderRow={(rowData: LocalModelConfig, index: number) => {
-                        return (
-                            <React.Fragment key={rowData.Name}>
-                                <AILocalModelListItem item={rowData} onRefresh={init} />
-                            </React.Fragment>
-                        )
-                    }}
-                    classNameRow={styles["ai-local-model-list-row"]}
-                    classNameList={styles["ai-local-model-list"]}
-                    page={1}
-                    hasMore={false}
-                    loading={spinning}
-                    defItemHeight={109}
-                    rowKey='Name'
-                    isRef={isRef}
-                />
+                {supportedModelsUser.length > 0 && (
+                    <AILocalModelListWrapper title='我添加的' list={supportedModelsUser} onRefresh={getList} />
+                )}
+                <AILocalModelListWrapper title='推荐模型' list={supportedModels} onRefresh={getList} />
             </YakitSpin>
         ) : (
             <YakitSpin spinning={llamaServerChecking}>
@@ -525,11 +560,37 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
                         </YakitButton>
                     </div>
                 </div>
+                {visible && (
+                    <InstallLlamaServer
+                        grpcInterface='InstallLlamaServer'
+                        title='LIama 服务器安装中...'
+                        token={tokenRef.current}
+                        onFinished={installFinished}
+                        onCancel={installCancel}
+                    />
+                )}
             </YakitSpin>
         )
     })
 )
-
+const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.memo((props) => {
+    const {title, list, onRefresh} = props
+    return (
+        <div className={styles["ai-local-model-list-wrapper"]}>
+            <div className={styles["ai-local-model-list-title"]}>
+                <span>{title}</span>
+                <div className={styles["ai-model-list-total"]}>{list.length}</div>
+            </div>
+            <div className={styles["ai-local-model-list"]}>
+                {list.map((rowData) => (
+                    <div className={styles["ai-local-model-list-row"]} key={rowData.Name}>
+                        <AILocalModelListItem item={rowData} onRefresh={onRefresh} />
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+})
 const localModelMenu: YakitMenuItemType[] = [
     {
         key: "edit",
@@ -544,9 +605,14 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
     const {item, onRefresh} = props
     const [isReady, setIsReady] = useState<boolean>(item.IsReady || false)
     const [isRunning, setIsRunning] = useState<boolean>(false)
-    const [visible, setVisible] = useState<boolean>(false)
 
-    const tokenRef = useRef(randomString(60))
+    const [visible, setVisible] = useState<boolean>(false)
+    const [downVisible, setDownVisible] = useState<boolean>(false)
+    const [removeVisible, setRemoveVisible] = useState<boolean>(false)
+
+    const tokenRef = useRef<string>(randomString(60))
+    const downTokenRef = useRef<string>(randomString(60))
+
     useEffect(() => {
         const token = tokenRef.current
         ipcRenderer.on(`${token}-error`, (e, error) => {
@@ -594,10 +660,11 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             content: (
                 <DownloadLlamaServerModelPrompt
                     modelName={item.Name}
-                    onFinished={() => {
+                    onStart={() => {
                         m.destroy()
-                        getModelReady()
+                        setDownVisible(true)
                     }}
+                    token={downTokenRef.current}
                 />
             ),
             footer: null
@@ -609,7 +676,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                 onEdit()
                 break
             case "delete":
-                onDelete()
+                setRemoveVisible(true)
                 break
             default:
                 break
@@ -637,35 +704,85 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             footer: null
         })
     })
-    const onDelete = useMemoizedFn(() => {
-        grpcDeleteLocalModel({Name: item.Name}).then(() => {
+    const installFinished = useMemoizedFn(() => {
+        setDownVisible(false)
+        getModelReady()
+    })
+    const installCancel = useMemoizedFn(() => {
+        setDownVisible(false)
+    })
+    const onDelete = useMemoizedFn((deleteSourceFile) => {
+        grpcDeleteLocalModel({Name: item.Name, DeleteSourceFile: deleteSourceFile}).then(() => {
             onRefresh()
+            setRemoveVisible(false)
         })
     })
-    const number = useCreation(() => {
-        const length = tagColors.length
-        return Math.floor(Math.random() * length)
-    }, [])
+    const onCancelRemove = useMemoizedFn(() => {
+        setRemoveVisible(false)
+    })
+    const typeNode = useCreation(() => {
+        switch (item.Type) {
+            case "chat":
+                return (
+                    <YakitTag size='small' color='blue' className={styles["ai-local-model-type-tag"]}>
+                        <OutlineChatIcon className={styles["type-icon"]} />
+                        Chat
+                    </YakitTag>
+                )
+            case "embedding":
+                return (
+                    <YakitTag size='small' color='purple' className={styles["ai-local-model-type-tag"]}>
+                        <OutlineExclamationIcon className={styles["type-icon"]} />
+                        embedding
+                    </YakitTag>
+                )
+            case "speech-to-text":
+                return (
+                    <YakitTag size='small' color='purple' className={styles["ai-local-model-type-tag"]}>
+                        <OutlineExclamationIcon className={styles["type-icon"]} />
+                        speech-to-text
+                    </YakitTag>
+                )
+            default:
+                return <></>
+        }
+    }, [item.Type])
     return (
         <div className={styles["ai-local-model-list-item"]}>
             <div className={styles["ai-local-model-heard"]}>
-                <div className={styles["ai-local-model-heard-name"]}>{item.Name}</div>
+                <div className={styles["ai-local-model-heard-left"]}>
+                    <div
+                        className={classNames(styles["ai-local-model-icon"], {
+                            [styles["ai-local-model-icon-ready"]]: isReady,
+                            [styles["ai-local-model-icon-running"]]: isRunning
+                        })}
+                    >
+                        <OutlineAtomIcon />
+                    </div>
+                    <div className={styles["ai-local-model-heard-left-name"]}>{item.Name}</div>
+                    {typeNode}
+                </div>
+
                 <div className={styles["ai-local-model-heard-extra"]}>
                     {!isReady ? (
-                        <YakitButton type='text' onClick={onDown}>
+                        <YakitButton type='text' onClick={onDown} icon={<OutlineClouddownloadIcon />}>
                             下载
                         </YakitButton>
                     ) : (
-                        <>
+                        <div
+                            className={classNames(styles["ai-local-model-heard-extra-btns"], {
+                                [styles["ai-local-model-heard-extra-btns-hover"]]: visible
+                            })}
+                        >
                             {isRunning ? (
                                 <YakitPopconfirm title={`确定要停止模型 ${item.Name} 吗？`} onConfirm={onStop}>
-                                    <YakitButton type='text' size='small' colors='danger'>
+                                    <YakitButton type='text' size='small' colors='danger' icon={<OutlineExitIcon />}>
                                         停止
                                     </YakitButton>
                                 </YakitPopconfirm>
                             ) : (
-                                <YakitButton type='text' onClick={onStart}>
-                                    启动
+                                <YakitButton type='text' onClick={onStart} icon={<OutlinePlayIcon />}>
+                                    启用
                                 </YakitButton>
                             )}
                             <YakitDropdownMenu
@@ -680,18 +797,77 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                                     onVisibleChange: setVisible
                                 }}
                             >
-                                <YakitButton size='small' icon={<OutlineDotsverticalIcon />} />
+                                <YakitButton
+                                    isActive={visible}
+                                    type='text2'
+                                    size='small'
+                                    icon={<OutlineDotsverticalIcon />}
+                                />
                             </YakitDropdownMenu>
-                        </>
+                        </div>
                     )}
                 </div>
             </div>
             <div className={styles["ai-local-model-description"]}>{item.Description}</div>
-            <div>
-                <YakitTag size='small' className={styles["ai-local-model-type-tag"]} color={tagColors[number]}>
-                    {item.Type}
-                </YakitTag>
-            </div>
+            {isRunning && (
+                <div className={styles["ai-local-model-footer"]}>
+                    <YakitTag size='small' className={styles["ai-local-model-type-tag"]} color='green'>
+                        已启用
+                    </YakitTag>
+                    <div>IP/端口: 127.0.0.1:{item.DefaultPort}</div>
+                </div>
+            )}
+            {downVisible && (
+                <InstallLlamaServer
+                    grpcInterface='DownloadLocalModel'
+                    title={`模型 ${item.Name} 下载中...`}
+                    token={downTokenRef.current}
+                    onFinished={installFinished}
+                    onCancel={installCancel}
+                />
+            )}
+            {removeVisible && (
+                <AILocalModelListItemPromptHint
+                    title='删除模型'
+                    content={`确认删除模型${item.Name}?`}
+                    onOk={onDelete}
+                    onCancel={onCancelRemove}
+                />
+            )}
         </div>
+    )
+})
+
+const AILocalModelListItemPromptHint: React.FC<AILocalModelListItemPromptHintProps> = React.memo((props) => {
+    const {title, content, onOk, onCancel} = props
+    const [checked, setChecked] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(false)
+
+    const handleOK = useMemoizedFn(() => {
+        setLoading(true)
+        onOk(checked).finally(() => {
+            setTimeout(() => {
+                setLoading(false)
+            }, 200)
+        })
+    })
+    const handleCancel = useMemoizedFn(() => {
+        onCancel()
+    })
+
+    return (
+        <YakitHint
+            visible={true}
+            title={title}
+            content={content}
+            okButtonProps={{loading}}
+            onOk={handleOK}
+            onCancel={handleCancel}
+            footerExtra={
+                <YakitCheckbox checked={checked} onChange={(e) => setChecked(e.target.checked)}>
+                    是否删除源文件
+                </YakitCheckbox>
+            }
+        />
     )
 })

@@ -2,6 +2,7 @@ import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {
     AddLocalModelRequest,
+    ClearAllModelsRequest,
     DeleteLocalModelRequest,
     DownloadLocalModelRequest,
     GetAllStartedLocalModelsResponse,
@@ -10,8 +11,7 @@ import {
     IsLlamaServerReadyResponse,
     IsLocalModelReadyRequest,
     IsLocalModelReadyResponse,
-    LocalModelConfig,
-    ReadyResponse,
+    GeneralResponse,
     StartLocalModelRequest,
     UpdateLocalModelRequest
 } from "../type/aiChat"
@@ -79,6 +79,18 @@ export const grpcCancelInstallLlamaServer: APIFunc<string, null> = (token, hidde
             .then(resolve)
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", "grpcCancelInstallLlamaServer 失败:" + err)
+                reject(err)
+            })
+    })
+}
+
+export const grpcCancelDownloadLocalModel: APIFunc<string, null> = (token, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("cancel-DownloadLocalModel", token)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcCancelDownloadLocalModel 失败:" + err)
                 reject(err)
             })
     })
@@ -162,7 +174,7 @@ export const getAIModelList: APINoRequestFunc<YakitSelectProps["options"]> = (hi
 }
 
 /**新增本地AI Model */
-export const grpcAddLocalModel: APIFunc<AddLocalModelRequest, ReadyResponse> = (params, hiddenError) => {
+export const grpcAddLocalModel: APIFunc<AddLocalModelRequest, GeneralResponse> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("AddLocalModel", params)
@@ -177,6 +189,7 @@ export const grpcAddLocalModel: APIFunc<AddLocalModelRequest, ReadyResponse> = (
 /**删除本地AI Model */
 export const grpcDeleteLocalModel: APIFunc<DeleteLocalModelRequest, null> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
+        console.log("DeleteLocalModel", params)
         ipcRenderer
             .invoke("DeleteLocalModel", params)
             .then(resolve)
@@ -217,4 +230,17 @@ export const reorderApplicationConfig = (list: ThirdPartyApplicationConfig[], st
     const [removed] = result.splice(startIndex, 1)
     result.splice(endIndex, 0, removed)
     return result
+}
+
+/**清空本地ai model */
+export const grpcClearAllModels: APIFunc<ClearAllModelsRequest, GeneralResponse> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("ClearAllModels", params)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcClearAllModels 失败:" + err)
+                reject(err)
+            })
+    })
 }

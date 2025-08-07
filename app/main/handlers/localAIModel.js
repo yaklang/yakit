@@ -134,4 +134,19 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetAllStartedLocalModels", async (e, params) => {
         return await asyncGetAllStartedLocalModels(params)
     })
+
+    const asyncClearAllModels = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ClearAllModels(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ClearAllModels", async (e, params) => {
+        return await asyncClearAllModels(params)
+    })
 }

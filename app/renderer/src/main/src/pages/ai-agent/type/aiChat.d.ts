@@ -470,7 +470,7 @@ export interface ToggleAIToolFavoriteResponse {
 }
 //#endregion
 //#region  ai model
-interface ReadyResponse {
+export interface GeneralResponse {
     Ok: boolean
     Reason: string
 }
@@ -481,11 +481,14 @@ export interface LocalModelConfig {
     DownloadURL: string
     Description: string
     DefaultPort: number
+    IsReady: boolean
+    IsLocal: boolean
+    Path: string
 }
 export interface GetSupportedLocalModelsResponse {
     Models: LocalModelConfig[]
 }
-export interface IsLlamaServerReadyResponse extends ReadyResponse {}
+export interface IsLlamaServerReadyResponse extends GeneralResponse {}
 export interface InstallLlamaServerRequest {
     Proxy: string
     token: string
@@ -498,11 +501,32 @@ export interface DownloadLocalModelRequest {
 export interface IsLocalModelReadyRequest {
     ModelName: string
 }
-export interface IsLocalModelReadyResponse extends ReadyResponse {}
+export interface IsLocalModelReadyResponse extends GeneralResponse {}
 export interface StartLocalModelRequest {
     token: string
     ModelName: string
     Host: string
     Port: number
+}
+
+export interface AddLocalModelRequest {
+    Name: string
+    ModelType: string
+    Description: string
+    Path: string
+}
+
+export interface DeleteLocalModelRequest {
+    Name: string
+    DeleteSourceFile: boolean
+}
+
+export interface UpdateLocalModelRequest extends AddLocalModelRequest {}
+
+export interface GetAllStartedLocalModelsResponse {
+    ModelNames: string[]
+}
+export interface ClearAllModelsRequest {
+    DeleteSourceFile: boolean
 }
 //#endregion

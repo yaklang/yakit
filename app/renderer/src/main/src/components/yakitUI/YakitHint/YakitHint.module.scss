@@ -59,7 +59,7 @@
     .container-wrapper {
         width: 100%;
         display: flex;
-        gap: 16px;
+        gap: 14px;
         position: relative;
 
         .container-draggle {
@@ -93,15 +93,22 @@
             overflow: hidden;
 
             .right-title {
+                padding-left: 2px;
                 height: 24px;
                 font-weight: 600;
                 font-size: 16px;
                 line-height: 24px;
                 color: var(--Colors-Use-Neutral-Text-1-Title);
+
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                word-break: break-all;
             }
 
             .right-content {
                 margin-top: 8px;
+                padding-left: 2px;
 
                 .default-content {
                     font-size: 14px;
@@ -114,7 +121,7 @@
                 margin-top: 24px;
                 display: flex;
                 justify-content: space-between;
-
+                padding-left: 2px;
                 // .btn-extra {
                 // }
 

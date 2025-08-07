@@ -32,3 +32,16 @@ export interface AIOnlineModelListItemProps {
     onRemove: (item: ThirdPartyApplicationConfig) => void
     onEdit: (item: ThirdPartyApplicationConfig) => void
 }
+
+export interface AILocalModelListItemPromptHintProps {
+    title: string
+    content: string
+    onOk: (b: boolean) => Promise
+    onCancel: () => void
+}
+
+export interface AILocalModelListWrapperProps {
+    title: string
+    list:LocalModelConfig[]
+    onRefresh: () => void
+}
