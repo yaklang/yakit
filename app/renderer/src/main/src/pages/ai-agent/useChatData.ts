@@ -81,6 +81,8 @@ function useChatData(params?: UseChatDataParams) {
     const [streams, setStreams] = useState<Record<string, AIChatStreams[]>>({})
     const [card, setCard] = useState<AIChatMessage.AIInfoCard[]>([])
 
+    const [systemOutputs, setSystemOutputs] = useState<AIChatMessage.AIChatSystemOutput[]>([])
+
     // CoordinatorId
     const coordinatorId = useRef<{cache: string; sent: string}>({cache: "", sent: ""})
     // card
@@ -199,6 +201,31 @@ function useChatData(params?: UseChatDataParams) {
     )
     // #endregion
 
+    //#region 处理系统输出
+    const onHandleSystemOutput = useMemoizedFn(
+        (params: {nodeID: string; timestamp: number; ipcContent: string; ipcStreamDelta: string}) => {
+            const {nodeID, timestamp, ipcContent, ipcStreamDelta} = params
+            setSystemOutputs((old) => {
+                const newOutput = cloneDeep(old)
+                const streamInfo = newOutput.find((item) => item.nodeId === nodeID && item.timestamp === timestamp)
+                const text = ipcContent + ipcStreamDelta
+                if (streamInfo) {
+                    streamInfo.data += text
+                } else {
+                    const info: AIChatMessage.AIChatSystemOutput = {
+                        nodeId: nodeID,
+                        timestamp: timestamp,
+                        data: text,
+                        type: "ai"
+                    }
+                    newOutput.push(info)
+                }
+                return newOutput
+            })
+        }
+    )
+    //#endregion
+
     // #region review事件相关方法
     /** 不跳过 release 的 review 类型 */
     const noSkipReviewReleaseTypes = useRef<string[]>(["require_user_interactive"])
@@ -305,6 +332,8 @@ function useChatData(params?: UseChatDataParams) {
         onSetCoordinatorId("")
         setCard([])
         cardKVPair.current = new Map()
+
+        setSystemOutputs([])
     })
 
     const onStart = useMemoizedFn((token: string, params: AIInputEvent) => {
@@ -521,7 +550,12 @@ function useChatData(params?: UseChatDataParams) {
                     onCloseByErrorTaskIndexData(res)
                     return
                 }
-                handleUpdateStream({type, nodeID, timestamp, taskIndex, ipcContent, ipcStreamDelta})
+
+                if (!!taskIndex) {
+                    handleUpdateStream({type, nodeID, timestamp, taskIndex, ipcContent, ipcStreamDelta})
+                } else {
+                    onHandleSystemOutput({nodeID, timestamp, ipcContent, ipcStreamDelta})
+                }
 
                 const streamId = `${taskIndex || "system"}|${nodeID}-${timestamp}`
                 handleSetClearActiveStreamTime(streamId)
@@ -821,7 +855,7 @@ function useChatData(params?: UseChatDataParams) {
     }, [])
 
     return [
-        {execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream, card},
+        {execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream, card, systemOutputs},
         {onStart, onSend, onClose, handleReset, fetchToken, fetchPlanTree}
     ] as const
 }

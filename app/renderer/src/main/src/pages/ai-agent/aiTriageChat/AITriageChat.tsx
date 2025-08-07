@@ -385,8 +385,8 @@ const AITriageChatContents: React.FC<AITriageChatContentsProps> = memo((props) =
     )
 })
 
-const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((props) => {
-    const {isAnswer, loading, content} = props
+export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((props) => {
+    const {isAnswer, loading, content,contentClassName=''} = props
 
     return (
         <div
@@ -395,7 +395,7 @@ const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((props) => 
                 [styles["triage-chat-answer"]]: !!isAnswer
             })}
         >
-            <div className={styles["content-wrapper"]}>
+            <div className={classNames(styles["content-wrapper"], contentClassName)}>
                 {content}
                 {loading && <YakitSpin wrapperClassName={styles["loading-wrapper"]} spinning={true} />}
             </div>
