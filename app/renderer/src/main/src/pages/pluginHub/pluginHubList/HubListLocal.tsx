@@ -1267,7 +1267,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                                 style={{
                                                     color: addGroupVisible
                                                         ? "var(--Colors-Use-Main-Primary)"
-                                                        : "var(--Colors-Use-Neutral-Disable)"
+                                                        : "var(--Colors-Use-Neutral-Text-1-Title)"
                                                 }}
                                             >
                                                 添加分组
