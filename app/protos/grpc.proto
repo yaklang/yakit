@@ -926,8 +926,14 @@ service Yak {
   rpc BuildVectorIndexForKnowledgeBaseEntry(BuildVectorIndexForKnowledgeBaseEntryRequest) returns(GeneralResponse);
 }
 
+message StartedLocalModelInfo {
+  string Name = 1;
+  string ModelType = 2;
+  string Host = 3;
+  int32 Port = 4;
+}
 message GetAllStartedLocalModelsResponse {
-  repeated string ModelNames = 1;
+  repeated StartedLocalModelInfo Models = 1;
 }
 
 message ClearAllModelsRequest {
