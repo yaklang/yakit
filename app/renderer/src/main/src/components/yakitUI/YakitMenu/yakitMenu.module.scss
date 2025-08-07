@@ -191,10 +191,10 @@
     }
     .ant-#{$kind}menu-item.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child,
     .ant-#{$kind}menu-item.ant-#{$kind}menu-item-selected.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child {
-        color: var(--Colors-Use-Main-On-Primary);
-        background-color: var(--Colors-Use-Main-Primary);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        background-color: var(--menu-active-background);
         span.anticon {
-            color: var(--Colors-Use-Main-On-Primary);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .keys-style {
             color: var(--menu-active-icon-color);
@@ -278,15 +278,15 @@
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-active,
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-open.ant-#{$kind}menu-submenu-active,
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-open.ant-#{$kind}menu-submenu-active.ant-#{$kind}menu-submenu-selected {
-        background-color: var(--Colors-Use-Main-Primary);
+        background-color: var(--menu-active-background);
         span.anticon {
-            color: var(--Colors-Use-Main-On-Primary);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .keys-style {
             color: var(--Colors-Use-Main-On-Primary);
         }
         .ant-#{$kind}menu-submenu-title {
-            color: var(--Colors-Use-Main-On-Primary);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-#{$kind}menu-submenu-title:hover {
             background-color: unset;
