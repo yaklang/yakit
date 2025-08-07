@@ -662,7 +662,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                             width: "600px",
                                             centered: true,
                                             content: (
-                                                <div style={{padding: 15}}>
+                                                <div style={{padding: 15,color:'var(--Colors-Use-Neutral-Text-1-Title)'}}>
                                                     请按照以下步骤进行操作：
                                                     <br />
                                                     <br />
