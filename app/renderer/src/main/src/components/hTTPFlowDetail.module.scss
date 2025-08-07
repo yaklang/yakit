@@ -198,8 +198,8 @@
             background: var(--Colors-Use-Neutral-Bg-Hover);
         }
         .ant-table-filter-trigger:hover {
-            color: transparent;
-            background: transparent;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
         }
         // 分页相关
         .ant-pagination-item-active {
