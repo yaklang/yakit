@@ -164,7 +164,7 @@ interface ExtraMITMServerV2 {
     /**禁用初始页 */
     DisableCACertPage: boolean
     DisableWebsocketCompression: boolean
-    PluginConcurrentProcess: number
+    PluginConcurrency: number
 }
 /**转 mitm v1版本grpc参数 */
 export const convertMITMStartCallV1 = (oldData: MITMStartCallRequest): MITMStartCallRequestV1 => {
@@ -195,7 +195,7 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
                   FilterWebsocket: value.extra.filterWebsocket,
                   DisableCACertPage: value.extra.disableCACertPage,
                   DisableWebsocketCompression: value.extra.DisableWebsocketCompression,
-                  PluginConcurrentProcess: value.extra.PluginConcurrentProcess,
+                  PluginConcurrency: value.extra.PluginConcurrency,
               }
     }
     return data

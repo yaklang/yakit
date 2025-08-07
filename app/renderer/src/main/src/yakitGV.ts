@@ -103,7 +103,7 @@ export enum RemoteGV {
     /**@name 启用webSocket压缩 */
     MITMDisableWebsocketCompression = "mitm_disable_Websocket_Compression",
     /**@name 插件并发进程 */
-    MITMPluginConcurrentProcess = "mitm_Plugin_Concurrent_Process",
+    MITMPluginConcurrency = "mitm_Plugin_Concurrent_Process",
     /**@name 漏洞管理页面中,高级查询内容的显/隐 */
     AuditHoleShow = "audit-hole-show",
     /**@name 专项漏洞左侧tabs */

@@ -7335,7 +7335,7 @@ message MITMV2Request{
   SingleManualHijackControlMessage ManualHijackMessage = 44;
 
   bool RecoverContext = 45; // recover mitm context plugin config...
-  int64 PluginConcurrency = 47; // 设置插件并发数，默认30
+  int64 PluginConcurrency = 47; // 设置插件并发数，默认20
 }
 
 message MITMV2Response {

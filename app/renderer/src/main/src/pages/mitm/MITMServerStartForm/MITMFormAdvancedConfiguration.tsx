@@ -49,7 +49,7 @@ export interface AdvancedConfigurationFromValue {
     filterWebsocket: boolean
     disableCACertPage: boolean
     DisableWebsocketCompression: boolean
-    PluginConcurrentProcess: number
+    PluginConcurrency: number
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -69,7 +69,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [filterWebsocketDef, setFilterWebsocketDef] = useState<boolean>(false)
         const [disableCACertPageDef, setDisableCACertPageDef] = useState<boolean>(false)
         const [disableWebsocketCompressionDef, setDisableWebsocketCompressionDef] = useState<boolean>(false)
-        const [pluginConcurrentProcessDef, setPluginConcurrentProcessDef] = useState<number>(20)
+        const [pluginConcurrencyDef, setPluginConcurrencyDef] = useState<number>(20)
 
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
@@ -99,7 +99,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             filterWebsocket: filterWebsocketDef,
                             disableCACertPage: disableCACertPageDef,
                             DisableWebsocketCompression: disableWebsocketCompressionDef,
-                            PluginConcurrentProcess: pluginConcurrentProcessDef
+                            PluginConcurrency: pluginConcurrencyDef
                         }
                     }
                 }
@@ -115,7 +115,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 filterWebsocketDef,
                 disableCACertPageDef,
                 disableWebsocketCompressionDef,
-                pluginConcurrentProcessDef,
+                pluginConcurrencyDef,
                 visible,
                 form
             ]
@@ -202,13 +202,13 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 form.setFieldsValue({DisableWebsocketCompression: v})
             })
             // 插件并发进程
-            getRemoteValue(RemoteGV.MITMPluginConcurrentProcess).then((e) => {
+            getRemoteValue(RemoteGV.MITMPluginConcurrency).then((e) => {
                 let v = 20
                 if (e) {
                     v = Number(e)
                 }
-                setPluginConcurrentProcessDef(v)
-                form.setFieldsValue({PluginConcurrentProcess: v})
+                setPluginConcurrencyDef(v)
+                form.setFieldsValue({PluginConcurrency: v})
             })
         }, [visible])
         /**
@@ -295,7 +295,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setRemoteValue(MITMConsts.MITMDefaultFilterWebsocket, `${params.filterWebsocket}`)
                 setRemoteValue(RemoteGV.MITMDisableCACertPage, params.disableCACertPage ? "true" : "")
                 setRemoteValue(RemoteGV.MITMDisableWebsocketCompression, params.DisableWebsocketCompression + "")
-                setRemoteValue(RemoteGV.MITMPluginConcurrentProcess, params.PluginConcurrentProcess + "")
+                setRemoteValue(RemoteGV.MITMPluginConcurrency, params.PluginConcurrency + "")
                 onSave(params)
             })
         })
@@ -309,7 +309,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 filterWebsocket: filterWebsocketDef,
                 disableCACertPage: disableCACertPageDef,
                 DisableWebsocketCompression: disableWebsocketCompressionDef,
-                PluginConcurrentProcess: pluginConcurrentProcessDef,
+                PluginConcurrency: pluginConcurrencyDef,
                 proxyUsername: proxyUsernameDef,
                 proxyPassword: proxyPasswordDef
             }
@@ -486,7 +486,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     <Form.Item label={"启用WebSocket压缩"} name='DisableWebsocketCompression' valuePropName='checked'>
                         <YakitSwitch size='large' />
                     </Form.Item>
-                    <Form.Item label={"插件并发进程"} name='PluginConcurrentProcess' style={{marginBottom: 12}}>
+                    <Form.Item label={"插件并发进程"} name='PluginConcurrency' style={{marginBottom: 12}}>
                         <YakitInputNumber type='horizontal' size='small' />
                     </Form.Item>
                     <Form.Item label='客户端 TLS 导入' className={styles["advanced-configuration-drawer-TLS"]}>
