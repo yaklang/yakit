@@ -123,7 +123,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     })
 
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
-    const [downloadGMVisible, setDownloadGMVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
     const [filterWebsocket, setFilterWebsocket] = useState<boolean>(false)
 
@@ -297,10 +296,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                         <div className={style["link-item"]} onClick={() => setDownloadVisible(true)}>
                             证书下载
                         </div>
-                        <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
-                        <div className={style["link-item"]} onClick={() => setDownloadGMVisible(true)}>
-                            国密证书下载
-                        </div>
                     </div>
                     {/*<YakitButton*/}
                     {/*    onClick={() => {*/}
@@ -356,7 +351,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     isStartMITM={true}
                 />
                 <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
-                <MITMCertificateDownloadModal visible={downloadGMVisible} setVisible={setDownloadGMVisible} isGM={true} />
             </React.Suspense>
         </div>
     )
