@@ -1,38 +1,7 @@
-@mixin progress() {
-    display: flex;
-    gap: 8px;
-    align-items: start;
-    padding: 24px;
-    .refresh-icon {
-        color: var(--Colors-Use-Warning-Hover);
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-    }
-    .download-progress {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        flex: 1;
-        .download-progress-messages {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            font-weight: 400;
-            font-size: 14px;
-            line-height: 24px;
-        }
-    }
-}
+
 
 .install-llama-server-model-prompt {
     padding: 24px;
-}
-
-.install-llama-server-model-prompt-loading {
-    @include progress();
-}
-.download-llama-server-model-prompt-loading {
-    @include progress();
 }
 
 .download-llama-server-model-prompt {
@@ -40,4 +9,21 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+}
+.button-group {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.download-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    .download-progress-messages {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 24px;
+    }
 }

@@ -27,39 +27,41 @@ export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
     const modelTypeOptions: YakitSelectProps["options"] = useCreation(() => {
         return [
             {label: "chat", value: "chat"},
-            {label: "embedding", value: "embedding"}
+            {label: "embedding", value: "embedding"},
+            {label: "speech-to-text", value: "speech-to-text"}
         ]
     }, [])
-    const handleSubmit = useMemoizedFn((value: AddLocalModelRequest) => {
-        console.log("value", value)
-        setLoading(true)
-        if (!!defaultValues?.Name) {
-            // 更新
-            grpcUpdateLocalModel(value)
-                .then(() => {
-                    onCancel()
-                })
-                .finally(() => {
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 200)
-                })
-        } else {
-            // 新增
-            grpcAddLocalModel(value)
-                .then(() => {
-                    onCancel()
-                })
-                .finally(() => {
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 200)
-                })
-        }
+    const handleSubmit = useMemoizedFn(() => {
+        form.validateFields().then((value: AddLocalModelRequest) => {
+            setLoading(true)
+            if (!!defaultValues?.Name) {
+                // 更新
+                grpcUpdateLocalModel(value)
+                    .then(() => {
+                        onCancel()
+                    })
+                    .finally(() => {
+                        setTimeout(() => {
+                            setLoading(false)
+                        }, 200)
+                    })
+            } else {
+                // 新增
+                grpcAddLocalModel(value)
+                    .then(() => {
+                        onCancel()
+                    })
+                    .finally(() => {
+                        setTimeout(() => {
+                            setLoading(false)
+                        }, 200)
+                    })
+            }
+        })
     })
     return (
-        <div className={styles["ai-start-model-form"]}>
-            <Form labelCol={{span: 6}} wrapperCol={{span: 18}} onFinish={handleSubmit}>
+        <div>
+            <Form form={form} labelCol={{span: 6}} wrapperCol={{span: 18}} className={styles["ai-start-model-form"]}>
                 <Form.Item label='模型名称' name='Name' rules={[{required: true, message: "请输入模型名称"}]}>
                     <YakitInput disabled={!!defaultValues?.Name} />
                 </Form.Item>
@@ -82,18 +84,15 @@ export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
                 <Form.Item label='模型描述' name='Description'>
                     <YakitInput.TextArea rows={3} />
                 </Form.Item>
-
-                <Form.Item colon={false} label=' '>
-                    <div className={styles["button-group"]}>
-                        <YakitButton type='outline1' size='large' onClick={onCancel}>
-                            取消
-                        </YakitButton>
-                        <YakitButton type='primary' htmlType='submit' size='large' loading={loading}>
-                            确定
-                        </YakitButton>
-                    </div>
-                </Form.Item>
             </Form>
+            <div className={styles["button-group"]}>
+                <YakitButton type='outline2' size='large' onClick={onCancel}>
+                    取消
+                </YakitButton>
+                <YakitButton type='primary' size='large' loading={loading} onClick={handleSubmit}>
+                    确定
+                </YakitButton>
+            </div>
         </div>
     )
 })
