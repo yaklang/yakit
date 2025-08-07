@@ -191,7 +191,7 @@
     }
     .ant-#{$kind}menu-item.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child,
     .ant-#{$kind}menu-item.ant-#{$kind}menu-item-selected.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
+        color:  var(--menu-active-color);
         background-color: var(--menu-active-background);
         span.anticon {
             color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -280,13 +280,13 @@
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-open.ant-#{$kind}menu-submenu-active.ant-#{$kind}menu-submenu-selected {
         background-color: var(--menu-active-background);
         span.anticon {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+           color: var(--menu-active-color);
         }
         .keys-style {
             color: var(--Colors-Use-Main-On-Primary);
         }
         .ant-#{$kind}menu-submenu-title {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            color: var(--menu-active-color);
         }
         .ant-#{$kind}menu-submenu-title:hover {
             background-color: unset;
