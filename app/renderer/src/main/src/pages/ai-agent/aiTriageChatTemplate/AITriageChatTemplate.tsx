@@ -18,6 +18,7 @@ import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPlugin
 
 import classNames from "classnames"
 import styles from "./AITriageChatTemplate.module.scss"
+import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 
 /** @name 可选择的 forge 模块选项 */
 export const AIForgeInfoOpt: React.FC<AIForgeInfoOptProps> = memo((props) => {
@@ -257,6 +258,7 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
                 </div>
 
                 <div className={styles["header-extra"]}>
+                    <AIModelSelect />
                     <YakitButton loading={loading} onClick={handleParamsSubmit}>
                         开始执行
                     </YakitButton>

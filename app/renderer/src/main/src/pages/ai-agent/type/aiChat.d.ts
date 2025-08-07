@@ -469,3 +469,40 @@ export interface ToggleAIToolFavoriteResponse {
     Message: string
 }
 //#endregion
+//#region  ai model
+interface ReadyResponse {
+    Ok: boolean
+    Reason: string
+}
+export interface LocalModelConfig {
+    Name: string
+    Type: string
+    FileName: string
+    DownloadURL: string
+    Description: string
+    DefaultPort: number
+}
+export interface GetSupportedLocalModelsResponse {
+    Models: LocalModelConfig[]
+}
+export interface IsLlamaServerReadyResponse extends ReadyResponse {}
+export interface InstallLlamaServerRequest {
+    Proxy: string
+    token: string
+}
+export interface DownloadLocalModelRequest {
+    ModelName: string
+    Proxy: string
+    token: string
+}
+export interface IsLocalModelReadyRequest {
+    ModelName: string
+}
+export interface IsLocalModelReadyResponse extends ReadyResponse {}
+export interface StartLocalModelRequest {
+    token: string
+    ModelName: string
+    Host: string
+    Port: number
+}
+//#endregion

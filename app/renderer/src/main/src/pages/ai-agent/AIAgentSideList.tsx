@@ -12,6 +12,7 @@ import styles from "./AIAgent.module.scss"
 const AIChatSetting = React.lazy(() => import("./AIChatSetting/AIChatSetting"))
 const ForgeName = React.lazy(() => import("./forgeName/ForgeName"))
 const AIToolList = React.lazy(() => import("./aiToolList/AIToolList"))
+const AIModelList = React.lazy(() => import("./aiModelList/AIModelList"))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
@@ -113,6 +114,16 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                         tabIndex={active !== "tool" ? -1 : 1}
                     >
                         <AIToolList />
+                    </div>
+                )}
+                {rendered.current.has("AIModel") && (
+                    <div
+                        className={classNames(styles["active-content"], {
+                            [styles["hidden-content"]]: active !== "AIModel"
+                        })}
+                        tabIndex={active !== "AIModel" ? -1 : 1}
+                    >
+                        <AIModelList />
                     </div>
                 )}
             </div>

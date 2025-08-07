@@ -44,7 +44,7 @@ export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<Text
  * - !!! 调整行数只能通过 className 控制，style 会被 antd 逻辑覆盖
  */
 export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
-    const {loading, extraFooter, onSubmit, textareaProps} = props
+    const {loading, extraFooterLeft, extraFooterRight, onSubmit, textareaProps} = props
 
     // icon的唯一id生成
     const iconId = useRef(uuidv4())
@@ -147,22 +147,29 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
                 <div
                     className={styles["footer-left"]}
                     onClick={(e) => {
-                        if (!!extraFooter) e.stopPropagation()
+                        if (!!extraFooterLeft) e.stopPropagation()
                     }}
                 >
-                    {extraFooter || null}
+                    {extraFooterLeft || null}
                 </div>
-
-                <YakitButton
-                    className={styles["round-btn"]}
-                    loading={loading}
-                    disabled={!isQuestion}
-                    icon={<OutlineArrowupIcon />}
+                <div
+                    className={styles["footer-right"]}
                     onClick={(e) => {
-                        e.stopPropagation()
-                        handleSubmit()
+                        if (!!extraFooterRight) e.stopPropagation()
                     }}
-                />
+                >
+                    {extraFooterRight || null}
+                    <YakitButton
+                        className={styles["round-btn"]}
+                        loading={loading}
+                        disabled={!isQuestion}
+                        icon={<OutlineArrowupIcon />}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            handleSubmit()
+                        }}
+                    />
+                </div>
             </div>
         </div>
     )
