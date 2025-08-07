@@ -60,7 +60,6 @@ import {DownloadYaklang} from "./update/DownloadYaklang"
 import {HelpDoc} from "./HelpDoc/HelpDoc"
 import {SolidCheckCircleIcon, SolidHomeIcon} from "@/assets/icon/solid"
 import {ChatCSGV} from "@/enums/chatCS"
-import {outputToPrintLog} from "./WelcomeConsoleUtil"
 import {setNowProjectDescription} from "@/pages/globalVariable"
 import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig} from "../configNetwork/ConfigNetworkPage"
@@ -76,16 +75,11 @@ import {Tooltip} from "antd"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {clearTerminalMap, getMapAllTerminalKey} from "@/pages/yakRunner/BottomEditorDetails/TerminalBox/TerminalMap"
 import {grpcFetchLatestYakVersion, grpcFetchYakInstallResult} from "@/apiUtils/grpc"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
 import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
 import {setYakitEngineMode} from "@/constants/software"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {handleFetchArchitecture, handleFetchIsDev, SystemInfo} from "@/constants/hardware"
 import {getEnginePortCacheKey} from "@/utils/localCache/engine"
-
-import classNames from "classnames"
-import styles from "./uiLayout.module.scss"
 import {
     apiSplitUpload,
     apiSystemConfig,
@@ -95,6 +89,10 @@ import {
     SplitUploadRequest
 } from "./utils"
 import moment from "moment"
+import {debugToPrintLog} from "@/utils/logCollection"
+
+import classNames from "classnames"
+import styles from "./uiLayout.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -245,13 +243,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     useEffect(() => {
         emiter.on("autoUploadProject", (data) => {
             try {
-              onGetProjects(JSON.parse(data).day)  
+                onGetProjects(JSON.parse(data).day)
             } catch (error) {}
         })
         return () => {
             emiter.off("autoUploadProject")
         }
-    },[])
+    }, [])
 
     const onGetProjects = useMemoizedFn((day) => {
         const time = moment().subtract(day, "days").startOf("day")
@@ -340,6 +338,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
      * 4、引擎是否存在
      */
     const handleFetchBaseInfo = useMemoizedFn(async (nextFunc?: () => any) => {
+        debugToPrintLog(`------ 获取系统基础信息 ------`)
         try {
             if (SystemInfo.isDev === undefined) await handleFetchIsDev()
         } catch (error) {}
@@ -360,11 +359,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** 获取上次连接引擎的模式 */
     const handleLinkEngineMode = useMemoizedFn(() => {
+        debugToPrintLog(`------ 获取上次连接引擎的模式 ------`)
         setCheckLog(["获取上次连接引擎的模式..."])
         getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
             switch (val) {
                 case "remote":
                     setCheckLog((arr) => arr.concat(["获取连接模式成功——远程模式"]))
+                    debugToPrintLog(`------ 连接引擎的模式: remote ------`)
                     setTimeout(() => {
                         handleChangeLinkMode(true)
                     }, 1000)
@@ -372,12 +373,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     return
                 case "local":
                     setCheckLog((arr) => arr.concat(["获取连接模式成功——本地模式"]))
+                    debugToPrintLog(`------ 连接引擎的模式: local ------`)
                     setTimeout(() => {
                         handleChangeLinkMode()
                     }, 1000)
                     return
                 default:
                     setCheckLog((arr) => arr.concat(["未获取到连接模式-默认(本地)模式"]))
+                    debugToPrintLog(`------ 连接引擎的模式: local ------`)
                     setTimeout(() => {
                         handleChangeLinkMode()
                     }, 1000)
@@ -397,6 +400,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         onDisconnect()
         setYakitStatus("")
         onSetEngineMode("local")
+        debugToPrintLog(`------ 启动本地引擎连接逻辑 ------`)
         handleStartLocalLink(isInitLocalLink.current)
         isInitLocalLink.current = false
     })
@@ -413,6 +417,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 setLinkLocalEngine()
             }, 1000)
         } else {
+            debugToPrintLog(`------ 启动无本地引擎逻辑 ------`)
             setCheckLog(["检查本地是否已安装引擎..."])
             setCheckLog((arr) => arr.concat(["本地未安装引擎，准备启动安装引擎弹窗"]))
             setTimeout(() => {
@@ -441,6 +446,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     })
 
+    // 软件开始进行逻辑启动
     useEffect(() => {
         setTimeout(() => {
             /**
@@ -555,6 +561,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 开始本地连接引擎
     const handleLinkLocalEngine = useMemoizedFn((port: number) => {
+        debugToPrintLog(`------ 开始启动引擎, 指定端口: ${port} ------`)
         setCheckLog([`本地普通权限引擎模式，开始启动本地引擎-端口: ${port}`])
         setCredential({
             Host: "127.0.0.1",
@@ -566,7 +573,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         })
         setYakitStatus("ready")
         onStartLinkEngine()
-        outputToPrintLog("local-start-test-engine-link-status")
     })
 
     const [remoteLinkLoading, setRemoteLinkLoading] = useState<boolean>(false)
@@ -1532,7 +1538,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [])
 
     const onReady = useMemoizedFn(() => {
-        outputToPrintLog(`连接成功-start-engineLink:${getEngineLink()}`)
+        // debugToPrintLog(`------ 进程存活，准备连接中... ------`)
         if (!getEngineLink()) {
             isEnpriTraceAgent() ? SELinkedEngine() : onLinkedEngine()
         }
@@ -1554,7 +1560,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             setKeepalive(false)
             return
         }
-        outputToPrintLog(`连接失败: ${count}次`)
+        debugToPrintLog(`[INFO] 目标引擎进程不存在: 探活失败${count}次`)
 
         setEngineLink(false)
 
@@ -1897,7 +1903,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     }
                                 />
                                 {/* 更新yakit */}
-                                <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload} intranetYakit={intranetYakit}/>
+                                <DownloadYakit
+                                    system={system}
+                                    visible={yakitDownload}
+                                    setVisible={setYakitDownload}
+                                    intranetYakit={intranetYakit}
+                                />
                             </div>
                         )}
 

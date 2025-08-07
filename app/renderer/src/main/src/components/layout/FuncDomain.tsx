@@ -120,6 +120,7 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 import {openConsoleNewWindow} from "@/utils/openWebsite"
 import useEngineConsole from "./hooks/useEngineConsole/useEngineConsole"
 import {useTheme} from "@/hook/useTheme"
+import {grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder} from "@/utils/logCollection"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -938,7 +939,8 @@ const GetUIOpSettingMenu = () => {
                 label: " 日志收集",
                 children: [
                     {label: "渲染端日志", key: "renderLog"},
-                    {label: "引擎日志", key: "engineLog"}
+                    {label: "引擎日志", key: "engineLog"},
+                    {label: "调试信息日志", key: "printLog"}
                 ]
             }
         ]
@@ -1211,10 +1213,13 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 )
                 return
             case "renderLog":
-                ipcRenderer.invoke("open-render-log")
+                grpcOpenRenderLogFolder()
                 return
             case "engineLog":
-                ipcRenderer.invoke("open-engine-log")
+                grpcOpenEngineLogFolder()
+                return
+            case "printLog":
+                grpcOpenPrintLogFolder()
                 return
             case "ai-agent":
                 emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))

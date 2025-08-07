@@ -22,6 +22,6 @@ export enum LocalGVS {
     /** @name 退出登陆是否删除账号的私密插件 */
     IsDeletePrivatePluginsOnLogout = "is-delete-private-plugins-on-logout",
 
-    /** @name 软件是否白屏崩溃过 */
+    /** @name 软件是否白屏崩溃过,在渲染端只会设置为false,在主进程触发崩溃时设置为true */
     RenderCrashScreen = "render-crash-screen"
 }

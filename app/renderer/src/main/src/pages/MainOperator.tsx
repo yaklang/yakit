@@ -45,14 +45,15 @@ import {MultipleNodeInfo} from "./layout/mainOperatorContent/MainOperatorContent
 import {WaterMark} from "@ant-design/pro-layout"
 import emiter from "@/utils/eventBus/eventBus"
 import {httpDeleteOSSResource} from "@/apiUtils/http"
-
-import "./main.scss"
-import "./GlobalClass.scss"
 import {setUpSyntaxFlowMonaco} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {MessageCenterModal} from "@/components/MessageCenter/MessageCenter"
 import {LocalGVS} from "@/enums/localGlobal"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {grpcOpenRenderLogFolder} from "@/utils/logCollection"
+
+import "./main.scss"
+import "./GlobalClass.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -243,7 +244,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     }, [])
     const handleShowRenderCrashCallback = useMemoizedFn((result: boolean) => {
         if (result) {
-            ipcRenderer.invoke("open-render-log")
+            grpcOpenRenderLogFolder()
         }
         setLocalValue(LocalGVS.RenderCrashScreen, false)
         setShowRenderCrash(false)
