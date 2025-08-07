@@ -3,59 +3,56 @@
         content: "auto";
         margin-left: 2px;
         padding: 1px 4px;
-        background-color: var(--Colors-Use-Basic-Background); /* 灰色背景 */
+        background-color: var(--yakit-colors-Neutral-40);
 
         border-radius: 3px; /* 添加圆角以使样式更好看 */
-        color: var(--Colors-Use-Neutral-Text-1-Title); /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
-        opacity: 0.3;
+         /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 
     .content-length:hover::after {
         content: "发包时自动修复，一般无需指定";
-        background-color: var(--Colors-Use-Basic-Background);
-        color: #333;
+        background-color: var(--yakit-colors-Neutral-40);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         padding: 5px;
         border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
-        opacity: 0.8;
     }
 
     .host::after {
         content: "?";
         margin-left: 2px;
         padding: 1px 4px;
-        background-color: var(--Colors-Use-Basic-Background); /* 灰色背景 */
+        background-color: var(--yakit-colors-Neutral-40);
 
-        border-radius: 3px; /* 添加圆角以使样式更好看 */
-        color: var(--Colors-Use-Neutral-Text-1-Title); /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
-        opacity: 0.3;
+        border-radius: 3px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        // opacity: 0.3;
     }
 
     .host:hover::after {
         content: '如需手动指定目标地址或 Host 碰撞，请配置"高级配置-真实Host"';
-        background-color: var(--Colors-Use-Neutral-Bg);
+        background-color: var(--yakit-colors-Neutral-40);
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
         padding: 5px;
         border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
-        opacity: 0.8;
     }
 
     .unicode-decode {
-        background-color: var(--Colors-Use-Basic-Background);
+        background-color: var(--yakit-colors-Neutral-40);
     }
 
     .unicode-decode::after {
         content: " ";
-        background-color: var(--Colors-Use-Neutral-Bg);
+        background-color: var(--yakit-colors-Neutral-40);
     }
 
     .unicode-decode-after {
         color: var(--Colors-Use-Neutral-Text-1-Title);
-        background-color: var(--Colors-Use-Basic-Background);
+        background-color: var(--yakit-colors-Neutral-40);
         padding-left: 2px;
         border-radius: 3px;
-        opacity: 0.3;
         font-weight: bold;
         cursor: none;
         user-select: none;
@@ -63,30 +60,27 @@
 
     .crlf::before {
         content: "↵";
-        background-color: var(--Colors-Use-Basic-Background);
+        background-color: var(--yakit-colors-Neutral-40);
         margin: 4px;
         padding: 1px 4px; /* 根据需要添加内边距 */
         border-radius: 3px; /* 添加圆角以使样式更好看 */
         color: var(--Colors-Use-Neutral-Text-1-Title); /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
-        opacity: 0.2;
     }
 
     .lf::before {
         content: "↓";
-        background-color: var(--Colors-Use-Basic-Background);
+        background-color: var(--yakit-colors-Neutral-40);
         margin: 4px;
         padding: 1px 4px; /* 根据需要添加内边距 */
         border-radius: 3px; /* 添加圆角以使样式更好看 */
         color: var(--Colors-Use-Neutral-Text-1-Title); /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
-        opacity: 0.2;
     }
     .hight-light-default-bg-color {
-        background-color: #c6ebd9;
+        background-color: var(--Colors-Use-Success-Focus); // 代码高亮标记背景色
         z-index: -1;
     }
     .hight-light-find-default-bg-color {
-        background-color: var(--Colors-Use-Basic-Background);
-        // border: 1px solid rgba(95, 102, 109,0.3);
+        background-color: var(--yakit-colors-Neutral-40);
         z-index: -1;
     }
     .hight-light-yak-runner-color {
@@ -105,4 +99,8 @@
     .lf::before {
         opacity: 0;
     }
+}
+
+.monaco-editor .find-widget{
+  color: var(--Colors-Use-Neutral-Text-3-Secondary) !important;
 }

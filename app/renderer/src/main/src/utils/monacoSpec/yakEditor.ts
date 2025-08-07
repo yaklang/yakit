@@ -250,11 +250,10 @@ export const setUpYaklangMonaco = () => {
         tokenizer: {
             root: [
                 // 关键字
-                [
-                    /\b(break|case|continue|default|defer|else|for|go|if|range|return|select|switch|chan|func|fn|def|var|nil|undefined|map|class|include|type|bool|true|false|string|try|catch|finally|in|elif)\b/,
-                    "keywords"
-                ],
-                [/[=<>!~?:&|+\-*\/\^%]+/, "operator"],
+                // [
+                //     /\b(break|case|continue|default|defer|else|for|go|if|range|return|select|switch|chan|func|fn|def|var|nil|undefined|map|class|include|type|bool|true|false|string|try|catch|finally|in|elif)\b/,
+                //     "keywords"
+                // ],
 
                 // f-strings
                 [/f"/, "string.quoted.double.js", "@fstring"],

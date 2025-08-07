@@ -189,6 +189,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
     }, [props.type, editor])
 
+    const inspectTokens = () => {
+        if (editor) {
+            editor?.getAction("editor.action.inspectTokens")?.run()
+        }
+    }
+
     /** @name 记录右键菜单组信息 */
     const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTop, ...DefaultMenuBottom])
     /** @name 记录右键菜单组内的快捷键对应菜单项的key值 */
@@ -1633,6 +1639,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 [styles["yakit-editor-disabled"]]: disabled
             })}
         >
+            {/* 查看 monaco 的对应代码 colors 所需 token 值*/}
+            {/* <button onClick={inspectTokens}>查看 token</button> */}
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
