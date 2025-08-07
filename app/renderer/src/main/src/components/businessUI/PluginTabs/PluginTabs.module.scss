@@ -143,6 +143,7 @@
                     border-bottom: 1px solid (--Colors-Use-Neutral-Border);
                     border-left: 0;
                     background: var(--Colors-Use-Neutral-Bg-Hover);
+                    border-color: var(--Colors-Use-Neutral-Border);
                     .ant-tabs-tab-btn {
                         color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
@@ -154,7 +155,6 @@
                 }
                 .ant-tabs-tab + .ant-tabs-tab {
                     margin-top: 4px;
-                    border-color: var(--Colors-Use-Neutral-Border);
                 }
                 // 选中
                 .ant-tabs-tab.ant-tabs-tab-active {
