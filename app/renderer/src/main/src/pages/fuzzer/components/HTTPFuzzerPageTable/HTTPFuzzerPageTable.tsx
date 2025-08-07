@@ -38,7 +38,7 @@ import {CodingPopover} from "@/components/HTTPFlowDetail"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {isCellRedSingleColor} from "@/components/TableVirtualResize/utils"
-import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
+import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -193,6 +193,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         const [scrollToIndex, setScrollToIndex] = useState<number>()
         const [alertHeight, setAlertHeight] = useState<number>(0)
+        const selectionByteCount = useSelectionByteCount(editor, 500)
 
         // useThrottleEffect(
         //     () => {
@@ -924,17 +925,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     })
             }
         })
-
-        const [selectionByteCount, setSelectionByteCount] = useState<number>(0)
-        useEffect(() => {
-            try {
-                if (editor) {
-                    getSelectionEditorByteCount(editor, (byteCount) => {
-                        setSelectionByteCount(byteCount)
-                    })
-                }
-            } catch (e) {}
-        }, [editor])
 
         const showAlertFlag = useMemo(() => {
             return (moreLimtAlertMsg || noMoreLimtAlertMsg) && data.length > 1
