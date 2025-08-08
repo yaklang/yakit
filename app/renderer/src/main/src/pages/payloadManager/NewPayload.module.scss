@@ -657,9 +657,18 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        :global {
-            .ant-checkbox-input:focus + .ant-checkbox-inner {
-                box-shadow: 0 0 2px 2px var(--Colors-Use-Main-Primary) !important;
+        .payload-checkbox {
+            :global {
+                .ant-checkbox-input:focus + .ant-checkbox-inner {
+                    box-shadow: 0 0 2px 2px var(--Colors-Use-Main-Primary) !important;
+                }
+            }
+        }
+        .payload-dark-checkbox {
+             :global {
+                .ant-checkbox-input:focus + .ant-checkbox-inner {
+                    box-shadow: 0 0 2px 2px var(--yakit-colors-Neutral-10) !important;
+                }
             }
         }
     }

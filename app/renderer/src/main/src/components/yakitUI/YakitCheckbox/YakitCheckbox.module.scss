@@ -143,6 +143,7 @@
 
             .ant-checkbox-inner {
                 background-color: var(--checkbox-border-color);
+                border-color: var(--Colors-Use-Neutral-Border) !important;
             }
         }
     }
