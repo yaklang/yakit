@@ -16,17 +16,24 @@
     }
 }
 
-.edit-table{
+.edit-table {
     :global {
-        .ant-table-placeholder{
+        .ant-table-placeholder {
             display: none;
         }
     }
 }
 
-.edit-table-box{
+.edit-table-box {
     :global {
         // table相关
+        .ant-table,
+        tbody tr :last-child {
+            background-color: var(--Colors-Use-Basic-Background);
+            .yakit-content-single-ellipsis {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
+        }
         .ant-table-thead > tr > th,
         .ant-table-tbody > tr > td {
             padding: 8px 16px;
@@ -38,6 +45,15 @@
             font-weight: 500;
             line-height: 16px;
             background: var(--Colors-Use-Neutral-Bg);
+        }
+        .ant-table.ant-table-bordered > .ant-table-container,
+        .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table,
+        .ant-table.ant-table-bordered
+            > .ant-table-container
+            > .ant-table-content
+            > table
+            .ant-table-cell-fix-right-first::after {
+            border-color: var(--Colors-Use-Neutral-Border);
         }
         .ant-table-thead > tr > th,
         .ant-table-tbody > tr > td {
