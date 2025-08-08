@@ -12,13 +12,11 @@ const {
     setLocalCache
 } = require("./localCache")
 const {asyncKillDynamicControl} = require("./handlers/dynamicControlFun")
-const {windowStatePatch, engineLog, renderLog, printLog} = require("./filePath")
-const fs = require("fs")
+const {windowStatePatch} = require("./filePath")
 const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
-const {clearFolder} = require("./toolsFunc")
 const {MenuTemplate} = require("./menu")
-const {fetchEngineLogFile, closeEngineLogFile, fetchRenderLogFile, renderLogOutputFile} = require("./logFile")
+const {renderLogOutputFile, getAllLogHandles, closeAllLogHandles, initAllLogFolders} = require("./logFile")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -115,16 +113,11 @@ const createWindow = () => {
     win.webContents.on("will-navigate", (e, url) => {
         e.preventDefault()
     })
-    // 录屏
-    // globalShortcut.register("Control+Shift+X", (e) => {
-    //     win.webContents.send("open-screenCap-modal")
-    // })
 }
 
 /**
  * set software menu
  */
-
 const menu = Menu.buildFromTemplate(MenuTemplate)
 Menu.setApplicationMenu(menu)
 
@@ -143,13 +136,6 @@ app.whenReady().then(() => {
             })
         })
 
-        // globalShortcut.register("Control+Shift+b", () => {
-        //     screenshots.startCapture()
-        //     globalShortcut.register("esc", () => {
-        //         screenshots.endCapture()
-        //         globalShortcut.unregister("esc")
-        //     })
-        // })
         globalShortcut.register("Control+Shift+q", () => {
             screenshots.endCapture()
             globalShortcut.unregister("esc")
@@ -169,25 +155,11 @@ app.whenReady().then(() => {
     }
 
     /**
-     * error-log:
+     * init-log-folders:
      * 存在则检查文件数量是否超过10个，超过则只保留最近10个文件
      * 不存在则新建文件夹
      */
-    if (fs.existsSync(engineLog)) {
-        clearFolder(engineLog, 9)
-    } else {
-        fs.mkdirSync(engineLog, {recursive: true})
-    }
-    if (fs.existsSync(renderLog)) {
-        clearFolder(renderLog, 9)
-    } else {
-        fs.mkdirSync(renderLog, {recursive: true})
-    }
-    if (fs.existsSync(printLog)) {
-        clearFolder(printLog, 9)
-    } else {
-        fs.mkdirSync(printLog, {recursive: true})
-    }
+    initAllLogFolders()
 
     // 软件退出的逻辑
     ipcMain.handle("app-exit", async (e, params) => {
@@ -220,7 +192,7 @@ app.whenReady().then(() => {
                     } else if (res.response === 1) {
                         win = null
                         clearing()
-                        closeEngineLogFile()
+                        closeAllLogHandles()
                         app.exit()
                     } else {
                         e.preventDefault()
@@ -232,7 +204,7 @@ app.whenReady().then(() => {
             await asyncKillDynamicControl()
             win = null
             clearing()
-            closeEngineLogFile()
+            closeAllLogHandles()
             app.exit()
         }
     })
@@ -247,16 +219,8 @@ app.whenReady().then(() => {
 
     try {
         registerIPC(win)
-        fetchEngineLogFile()
-        fetchRenderLogFile()
+        getAllLogHandles()
     } catch (e) {}
-
-    //
-    // // autoUpdater.autoDownload = false
-    // autoUpdater.checkForUpdates();
-    // autoUpdater.signals.updateDownloaded(info => {
-    //     console.info(info.downloadedFile)
-    // })
 
     app.on("activate", function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()

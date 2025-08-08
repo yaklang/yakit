@@ -20,6 +20,7 @@ import {
     grpcFetchSpecifiedYakVersionHash
 } from "@/apiUtils/grpc"
 import {getEnginePortCacheKey} from "@/utils/localCache/engine"
+import {debugToPrintLog} from "@/utils/logCollection"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -32,6 +33,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          * 检查本地数据库权限
          */
         const handleCheckDataBase = useMemoizedFn(() => {
+            debugToPrintLog(`------ 检查数据库权限(mac) ------`)
             setLog(["检查数据库权限是否正常(非WIN系统检查)..."])
             let isError: boolean = false
             ipcRenderer
@@ -56,6 +58,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const localPort = useRef<number>(0)
         /** 获取上次本地连接引擎的端口缓存 */
         const handleLinkEnginePort = useMemoizedFn(async (isInit: boolean) => {
+            debugToPrintLog(`------ 开始 获取本地引擎启动端口逻辑 ------`)
             let builtInVersion = ""
             try {
                 builtInVersion = await grpcFetchBuildInYakVersion(true)
@@ -72,8 +75,10 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             let continueExe = true
             try {
                 const cachePort = Number(await getLocalValue(getEnginePortCacheKey())) || 0
+                debugToPrintLog(`------ 获取到缓存本地端口: ${cachePort} | ${avaPort} | ${builtInVersion} ------`)
                 // 缓存端口和可用端口都不存在
                 if (!cachePort && !avaPort) {
+                    debugToPrintLog(`------ 获取到缓存本地端口逻辑-1 ------`)
                     continueExe = false
                     setLog([
                         `获取可用端口失败: ${err}`,
@@ -82,6 +87,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     setYakitStatus("engine-error")
                     return
                 } else if (cachePort) {
+                    debugToPrintLog(`------ 获取到缓存本地端口逻辑-2 ------`)
                     try {
                         const res = await grpcDetermineAdaptedVersionEngine(cachePort, true)
                         localPort.current = res ? cachePort : avaPort
@@ -89,6 +95,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         localPort.current = cachePort
                     }
                 } else if (avaPort) {
+                    debugToPrintLog(`------ 获取到缓存本地端口逻辑-3 ------`)
                     localPort.current = avaPort
                 }
 
@@ -102,6 +109,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     setYakitStatus("engine-error")
                 }
             } catch (error) {
+                debugToPrintLog(`------ 未获取到缓存本地端口: ${avaPort} | ${builtInVersion} ------`)
                 if (avaPort) {
                     localPort.current = avaPort
                 } else {
@@ -157,6 +165,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             getLocalValue(LocalGVS.NoAutobootLatestVersionCheck)
                 .then(async (val: boolean) => {
                     if (!val) {
+                        debugToPrintLog(`------ 开始检查软件版本更新逻辑 ------`)
                         try {
                             const promise = new Promise((_, reject) =>
                                 setTimeout(() => reject(new Error("Check engine source request timed out")), 2100)
@@ -167,10 +176,12 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                             ])
                             if (res1.status === "fulfilled") {
                                 currentYakit.current = res1.value || ""
+                                debugToPrintLog(`------ 当前软件版本: ${currentYakit.current} ------`)
                             }
                             if (res2.status === "fulfilled") {
                                 let latest = (res2.value || "") as string
                                 latestYakit.current = latest.startsWith("v") ? latest.substring(1) : latest
+                                debugToPrintLog(`------ 最新软件版本: ${latestYakit.current} ------`)
                             }
                             // 只要与线上的不一样就算需要更新，不需要进行版本号比较
                             showUpdateYakit =
@@ -179,6 +190,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                                 currentYakit.current !== latestYakit.current
                         } catch (error) {}
                     } else {
+                        debugToPrintLog(`------ 跳过检查软件版本更新逻辑 ------`)
                         setLog((old) => old.concat(["跳过检查(可在软件更新处设置启动)，开始检查引擎是否有更新..."]))
                     }
                 })
@@ -202,6 +214,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          * - 内置比本地版本高提示是否更新
          */
         const handleCheckEngineVersion = useMemoizedFn(async () => {
+            debugToPrintLog(`------ 开始检查引擎内置版本逻辑 ------`)
             setLog(["获取引擎版本号并检查更新..."])
             try {
                 const [res1, res2] = await Promise.allSettled([
@@ -213,9 +226,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 if (res2.status === "fulfilled") {
                     let buildIn = res2.value || ""
                     buildInYak.current = buildIn.startsWith("v") ? buildIn.substring(1) : buildIn
+                    debugToPrintLog(`------ 内置版本: ${buildInYak.current} ------`)
                 }
                 if (res1.status === "fulfilled") {
                     currentYak.current = (res1.value as string) || ""
+                    debugToPrintLog(`------ 当前版本: ${currentYak.current} ------`)
                     setLog((old) =>
                         old.concat([
                             currentYak.current ? `本地引擎版本——${currentYak.current}` : "未获取到本地引擎版本号"
@@ -255,6 +270,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         /** 立即更新成内置引擎 */
         const restoreEngine = useMemoizedFn(async () => {
+            debugToPrintLog(`------ 开始解压内置引擎包逻辑 ------`)
             ipcRenderer
                 .invoke("RestoreEngineAndPlugin", {})
                 .then(() => {
@@ -273,6 +289,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          * - 通过相同版本的线上hash和本地hash对比，判断是否一样
          */
         const handleCheckEngineSource = useMemoizedFn(async (version: string) => {
+            debugToPrintLog(`------ 开始校验引擎来源逻辑 ------`)
             setLog(["开始校验引擎来源..."])
             try {
                 const promise = new Promise((_, reject) =>
@@ -328,9 +345,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         /** 开始进行本地引擎连接 */
         const handleLinkLocalEnging = useMemoizedFn(() => {
             if (localPort.current === 0) {
+                debugToPrintLog(`------ 启动端口异常(port: ${localPort.current}) ------`)
                 setLog(["本地引擎-端口：0，请尝试切换端口"])
                 setYakitStatus("")
             } else {
+                debugToPrintLog(`------ 准备开始启动引擎逻辑 ------`)
                 // 开始连接本地引擎
                 onLinkEngine(localPort.current)
                 // 启动本地连接后，重置所有检查状态，并后续不会在进行检查
