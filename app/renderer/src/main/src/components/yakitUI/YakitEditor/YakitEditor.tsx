@@ -1040,11 +1040,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
 
         deltaDecorationsRef.current = () => {
+            if (!model) return
             current = model.deltaDecorations(current, generateDecorations())
         }
 
         let lastValue = model.getValue()
         editor.onDidChangeModelContent((e) => {
+            if (!model) return
             const newValue = model.getValue()
             if (newValue === lastValue) {
                 return

@@ -157,6 +157,7 @@ import {
 } from "@/utils/globalShortcutKey/events/page/httpFuzzer"
 import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
+import {updateConcurrentLoad} from "@/utils/duplex/duplex"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -678,7 +679,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const successFuzzerRef = useRef<FuzzerResponse[]>([]) // 成功的响应
     const failedFuzzerRef = useRef<FuzzerResponse[]>([]) // 失败的响应
-    const fuzzerResChartDataBufferRef = useRef<FuzzerResponse[]>([]) // 图标数据
+    const fuzzerResChartDataBufferRef = useRef<FuzzerResChartData[]>([]) // 图表数据
 
     const successFuzzer: FuzzerResponse[] = useMemo(() => {
         // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
@@ -690,6 +691,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 这样，传递给下游组件的 prop 引用会变化，触发其更新
         return [...failedFuzzerRef.current]
     }, [_failedCount])
+    const fuzzerResChartData: FuzzerResChartData[] = useMemo(() => {
+        // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
+        // 这样，传递给下游组件的 prop 引用会变化，触发其更新
+        return [...fuzzerResChartDataBufferRef.current]
+    }, [_successCount, _failedCount])
 
     /**/
 
@@ -949,6 +955,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setFirstResponse({...emptyFuzzer})
         successFuzzerRef.current = []
         failedFuzzerRef.current = []
+        updateConcurrentLoad("rps", [])
+        updateConcurrentLoad("cps", [])
         fuzzerResChartDataBufferRef.current = []
         setRedirectedResponse(undefined)
         setSuccessCount(0)
@@ -1163,7 +1171,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const tokenRef = useRef<string>(randomString(60))
     const taskIDRef = useRef<string>("")
     const runtimeIdRef = useRef<string>("")
-    // const [fuzzerResChartData, setFuzzerResChartData] = useState<string>("")
     useEffect(() => {
         const token = tokenRef.current
 
@@ -1218,7 +1225,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 // 重置extractedMap
                 reset()
             }
-            const r = {
+            let r = {
                 // 6.16
                 ...data,
                 Headers: data.Headers || [],
@@ -1232,7 +1239,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
 
             // 设置第一个 response
-            if (getFirstResponse().RequestRaw.length === 0) {
+            if (getFirstResponse().RequestRaw?.length === 0) {
                 setFirstResponse(r)
             }
 
@@ -1241,6 +1248,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 successFuzzerRef.current.push(r)
                 // 超过最大显示 展示最新数据
                 if (successFuzzerRef.current.length > fuzzerTableMaxDataRef.current) {
+                    successFuzzerRef.current[0].RequestRaw = null as unknown as Uint8Array
+                    successFuzzerRef.current[0].ResponseRaw = null as unknown as Uint8Array
+                    successFuzzerRef.current[0] = null as any
                     successFuzzerRef.current.shift()
                 }
             } else {
@@ -1254,10 +1264,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 TCPDurationMs: +r.TCPDurationMs,
                 ConnectDurationMs: +r.ConnectDurationMs,
                 DurationMs: +r.DurationMs
-            } as FuzzerResponse)
+            } as FuzzerResChartData)
             if (fuzzerResChartDataBufferRef.current.length > 5000) {
                 fuzzerResChartDataBufferRef.current.shift()
             }
+
+            r = null as unknown as FuzzerResponse
 
             if (successCount + failedCount >= 1) {
                 updateDataThrottle()
@@ -1918,7 +1930,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         visible={advancedConfigVisible}
                         onInsertYakFuzzer={onInsertYakFuzzerFun}
                         onValuesChange={onGetFormValue}
-                        defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw) || ""}
+                        defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || ""}
                         outsideShowResponseMatcherAndExtraction={
                             onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
                         }
@@ -2236,22 +2248,20 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         pageId={props.id}
                                                     />
                                                 )}
-                                                {/* <div
-                                                    style={{
-                                                        display: showSuccess === "Concurrent/Load" ? "block" : "none",
-                                                        height: "100%",
-                                                        overflowY: "auto",
-                                                        overflowX: "hidden"
-                                                    }}
-                                                >
-                                                    <FuzzerConcurrentLoad
-                                                        inViewportCurrent={inViewport && currentFuzzerPage}
-                                                        fuzzerResChartData={JSON.stringify(
-                                                            fuzzerResChartDataBufferRef.current
-                                                        )}
-                                                        loading={loading}
-                                                    />
-                                                </div> */}
+                                                {showSuccess === "Concurrent/Load" && (
+                                                    <div
+                                                        style={{
+                                                            height: "100%",
+                                                            overflowY: "auto",
+                                                            overflowX: "hidden"
+                                                        }}
+                                                    >
+                                                        <FuzzerConcurrentLoad
+                                                            inViewportCurrent={inViewport && currentFuzzerPage}
+                                                            fuzzerResChartData={fuzzerResChartData}
+                                                        />
+                                                    </div>
+                                                )}
                                             </>
                                         ) : (
                                             <Result
@@ -3143,12 +3153,12 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
             }
         ]
 
-        // if (showConcurrentAndLoad) {
-        //     options.push({
-        //         value: "Concurrent/Load",
-        //         label: "并发/负载"
-        //     })
-        // }
+        if (showConcurrentAndLoad) {
+            options.push({
+                value: "Concurrent/Load",
+                label: "并发/负载"
+            })
+        }
 
         return (
             <div className={styles["second-node-title"]}>
