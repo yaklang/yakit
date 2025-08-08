@@ -87,7 +87,7 @@ import {Divider, Tooltip} from "antd"
 import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 import styles from "./HTTPHistoryAnalysis.module.scss"
-import {getAction} from "../fuzzer/HTTPFuzzerPage"
+import {getAction, ByteCountTag} from "../fuzzer/HTTPFuzzerPage"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 const MITMRule = React.lazy(() => import("../mitm/MITMRule/MITMRule"))
 const {ipcRenderer} = window.require("electron")
@@ -944,11 +944,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                             title={
                                                                 <div className={styles["row-editor-title"]}>
                                                                     <span style={{fontSize: 12}}>Request</span>
-                                                                    {reqSelectionByteCount > 0 && (
-                                                                        <YakitTag>
-                                                                            {reqSelectionByteCount} bytes
-                                                                        </YakitTag>
-                                                                    )}
+                                                                    <ByteCountTag selectionByteCount={reqSelectionByteCount} key='httpHistoryAnalysis' />
                                                                 </div>
                                                             }
                                                             extra={
@@ -987,11 +983,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                             title={
                                                                 <div className={styles["row-editor-title"]}>
                                                                     <span style={{fontSize: 12}}>Response</span>
-                                                                    {resSelectionByteCount > 0 && (
-                                                                        <YakitTag>
-                                                                            {resSelectionByteCount} bytes
-                                                                        </YakitTag>
-                                                                    )}
+                                                                    <ByteCountTag selectionByteCount={resSelectionByteCount} key='httpHistoryAnalysis' />
                                                                 </div>
                                                             }
                                                             extra={

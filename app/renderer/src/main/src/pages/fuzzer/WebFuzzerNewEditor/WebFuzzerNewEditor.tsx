@@ -4,7 +4,7 @@ import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "../InsertFileFuzzTa
 import {monacoEditorWrite} from "../fuzzerTemplates"
 import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {execCodec} from "@/utils/encodec"
-import {copyAsUrl, showDictsAndSelect} from "../HTTPFuzzerPage"
+import {copyAsUrl, ByteCountTag, showDictsAndSelect} from "../HTTPFuzzerPage"
 import styles from "./WebFuzzerNewEditor.module.scss"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {setRemoteValue} from "@/utils/kv"
@@ -176,7 +176,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 title={
                     <span style={{fontSize: 12}}>
                         Request&nbsp;&nbsp;
-                        {selectionByteCount > 0 && <YakitTag>{selectionByteCount} bytes</YakitTag>}
+                        <ByteCountTag selectionByteCount={selectionByteCount} key='httpfuzzerRes' />
                     </span>
                 }
                 extraEnd={firstNodeExtra && firstNodeExtra()}

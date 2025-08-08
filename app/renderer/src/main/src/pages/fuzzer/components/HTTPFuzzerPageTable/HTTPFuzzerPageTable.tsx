@@ -20,7 +20,7 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
 import classNames from "classnames"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {analyzeFuzzerResponse, copyAsUrl, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
+import {analyzeFuzzerResponse, ByteCountTag, copyAsUrl, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
 import styles from "./HTTPFuzzerPageTable.module.scss"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
 import {Alert, Divider, Tooltip} from "antd"
@@ -1020,9 +1020,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                 超大响应
                                             </YakitTag>
                                         )}
-                                        {selectionByteCount > 0 && (
-                                            <YakitTag style={{marginLeft: 8}}>{selectionByteCount} bytes</YakitTag>
-                                        )}
+                                        <ByteCountTag selectionByteCount={selectionByteCount} key='httpfuzzerpagetable' style={{marginLeft: 8}}/>
                                     </div>
                                 </div>
                             }

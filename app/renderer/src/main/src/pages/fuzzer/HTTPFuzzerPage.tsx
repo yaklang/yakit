@@ -3114,7 +3114,10 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
             <>
                 {rsp.IsHTTPS && <YakitTag>{rsp.IsHTTPS ? "https" : ""}</YakitTag>}
                 {selectionByteCount ? (
-                    <YakitTag>{selectionByteCount} bytes</YakitTag>
+                    <ByteCountTag
+                        selectionByteCount={selectionByteCount || 0}
+                        key='webfuzzerOneRes'
+                    ></ByteCountTag>
                 ) : (
                     <YakitTag>
                         {rsp.BodyLength}bytes / {rsp.DurationMs}ms
@@ -3696,3 +3699,17 @@ export const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstra
         </div>
     )
 })
+
+export const ByteCountTag: React.FC<{selectionByteCount?: number; key: string; style?: CSSProperties}> = ({
+    selectionByteCount = 0,
+    key,
+    style = {}
+}) => {
+    return selectionByteCount > 0 ? (
+        <YakitTag key={key} style={style}>
+            {selectionByteCount} bytes
+        </YakitTag>
+    ) : (
+        <></>
+    )
+}
