@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useCallback} from "react"
+import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useCallback, FC} from "react"
 import {Button, Card, Col, Descriptions, Empty, PageHeader, Row, Space, Tag, Tooltip} from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
@@ -47,6 +47,7 @@ import {HighLightText} from "./yakitUI/YakitEditor/YakitEditorType"
 import {getSelectionEditorByteCount} from "./yakitUI/YakitEditor/editorUtils"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {useCampare} from "@/hook/useCompare/useCompare"
+import {useSelectionByteCount} from "./yakitUI/YakitEditor/useSelectionByteCount"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -161,44 +162,21 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     const [wsResEditor, setWsResEditor] = useState<IMonacoEditor>()
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
-    const [wsReqSelectionByteCount, setWsReqSelectionByteCount] = useState<number>(0)
-    const [wsResSelectionByteCount, setWsResSelectionByteCount] = useState<number>(0)
-    const [reqSelectionByteCount, setReqSelectionByteCount] = useState<number>(0)
-    const [resSelectionByteCount, setResSelectionByteCount] = useState<number>(0)
-    useEffect(() => {
-        try {
-            if (wsReqEditor) {
-                getSelectionEditorByteCount(wsReqEditor, (byteCount) => {
-                    setWsReqSelectionByteCount(byteCount)
-                })
-            }
-            if (wsResEditor) {
-                getSelectionEditorByteCount(wsResEditor, (byteCount) => {
-                    setWsResSelectionByteCount(byteCount)
-                })
-            }
-            if (reqEditor) {
-                getSelectionEditorByteCount(reqEditor, (byteCount) => {
-                    setReqSelectionByteCount(byteCount)
-                })
-            }
-            if (resEditor) {
-                getSelectionEditorByteCount(resEditor, (byteCount) => {
-                    setResSelectionByteCount(byteCount)
-                })
-            }
-        } catch (e) {}
-    }, [wsReqEditor, wsResEditor, reqEditor, resEditor])
+    const resByteCount = useSelectionByteCount(resEditor, 500)
+    const reqByteCount = useSelectionByteCount(reqEditor, 500)
+    const wsReqByteCount = useSelectionByteCount(wsReqEditor, 500)
+    const wsResByteCount = useSelectionByteCount(wsResEditor, 500)
+
     const reqByte = useMemo(() => {
         if (!flow) return 0
-        if (flow.IsWebsocket) return wsReqSelectionByteCount
-        return reqSelectionByteCount
-    }, [flow, wsReqSelectionByteCount, reqSelectionByteCount])
+        if (flow.IsWebsocket) return wsReqByteCount
+        return reqByteCount
+    }, [flow, wsReqByteCount, reqByteCount])
     const resByte = useMemo(() => {
         if (!flow) return 0
-        if (flow.IsWebsocket) return wsResSelectionByteCount
-        return resSelectionByteCount
-    }, [flow, wsResSelectionByteCount, resSelectionByteCount])
+        if (flow.IsWebsocket) return wsResByteCount
+        return resByteCount
+    }, [flow, wsResByteCount, resByteCount])
 
     useEffect(() => {
         setLoading(props.loading || false)
@@ -1315,22 +1293,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
-    const [reqSelectionByteCount, setReqSelectionByteCount] = useState<number>(0)
-    const [resSelectionByteCount, setResSelectionByteCount] = useState<number>(0)
-    useEffect(() => {
-        try {
-            if (reqEditor) {
-                getSelectionEditorByteCount(reqEditor, (byteCount) => {
-                    setReqSelectionByteCount(byteCount)
-                })
-            }
-            if (resEditor) {
-                getSelectionEditorByteCount(resEditor, (byteCount) => {
-                    setResSelectionByteCount(byteCount)
-                })
-            }
-        } catch (e) {}
-    }, [reqEditor, resEditor])
 
     useUpdateEffect(() => {
         setOriginResValue(fetchSsafeHTTPRequest() || "")
@@ -1680,16 +1642,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                     />
                                 )
                             }
-                            if (reqSelectionByteCount > 0) {
-                                titleEle.push(
-                                    <YakitTag
-                                        style={{marginLeft: pageType === "History" && showJumpTree ? 8 : 0}}
-                                        key='reqSelectionByteCount'
-                                    >
-                                        {reqSelectionByteCount} bytes
-                                    </YakitTag>
-                                )
-                            }
+                            titleEle.push(
+                                <ResByteCountTag editor={reqEditor} pageType={pageType} showJumpTree={showJumpTree} />
+                            )
                             return titleEle
                         })()}
                         originValue={originResValue}
@@ -1808,13 +1763,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                     </YakitTag>
                                 )
                             }
-                            if (resSelectionByteCount > 0) {
-                                titleEle.push(
-                                    <YakitTag style={{marginLeft: 8}} key='resSelectionByteCount'>
-                                        {resSelectionByteCount} bytes
-                                    </YakitTag>
-                                )
-                            }
+                            titleEle.push(
+                                <ResByteCountTag editor={resEditor} pageType={pageType} showJumpTree={showJumpTree} />
+                            )
+
                             return titleEle
                         })()}
                         contextMenu={{
@@ -2010,4 +1962,21 @@ function infoTypeVerbose(i: HTTPFlowInfoType) {
         default:
             return "-"
     }
+}
+
+type SelectByteCountProps = () => number
+
+const ResByteCountTag: FC<{editor?: IMonacoEditor; pageType?: HTTPHistorySourcePageType; showJumpTree?: boolean}> = ({
+    editor,
+    pageType,
+    showJumpTree
+}) => {
+    const resByteCount = useSelectionByteCount(editor, 500)
+    return resByteCount > 0 ? (
+        <YakitTag style={{marginLeft: pageType === "History" && showJumpTree ? 8 : 0}} key='selectionByteCount'>
+            {resByteCount} bytes
+        </YakitTag>
+    ) : (
+        <></>
+    )
 }

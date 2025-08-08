@@ -2,6 +2,7 @@ import {YakitSystem} from "@/yakitGVDefine"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import {EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType} from "./EditorMenu"
 import {YakitIMonacoEditor} from "./YakitEditorType"
+import {throttle} from "lodash"
 
 /**
  * 除meta、ctrl、alt、shift键外的keycode映射字符
@@ -137,18 +138,28 @@ export const getSelectionEditorByteCount = (
     editor: YakitIMonacoEditor,
     updateCallback: (byteCount: number) => void
 ): void => {
+    let prevByteCount = -1
+
+    const throttledCallback = throttle((byteCount: number) => {
+        updateCallback(byteCount)
+    }, 400)
+
     editor.onDidChangeCursorSelection(() => {
         const selection = editor.getSelection()
+        let byteCount = 0
+
         if (selection && !selection.isEmpty()) {
             const model = editor.getModel()
             if (model) {
                 const selectedText = model.getValueInRange(selection)
                 const encoder = new TextEncoder()
-                const byteCount = encoder.encode(selectedText).length
-                updateCallback(byteCount)
+                byteCount = encoder.encode(selectedText).length
             }
-        } else {
-            updateCallback(0)
+        }
+
+        if (byteCount !== prevByteCount) {
+            prevByteCount = byteCount
+            throttledCallback(byteCount)
         }
     })
 }
