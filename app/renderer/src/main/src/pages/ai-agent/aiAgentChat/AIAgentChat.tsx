@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useRef} from "react"
+import React, {memo, useEffect, useRef, useState} from "react"
 import {AIAgentChatProps} from "./type"
 import {AIAgentWelcome} from "../AIAgentWelcome/AIAgentWelcome"
 import {useMemoizedFn} from "ahooks"
@@ -11,6 +11,8 @@ import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIAgentStore from "../useContext/useStore"
 import {yakitNotify} from "@/utils/notification"
 import {AIAgentWelcomeRef} from "../AIAgentWelcome/type"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemoteAIAgentGV} from "@/enums/aiAgent"
 
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
@@ -80,6 +82,18 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     }, [activeChat])
     // #endregion
 
+    // #region 外部元素触发的通信事件处理
+    // 储存 replaceForgeNoPrompt 存放到缓存里值，阻止多次设置重复值
+    const replaceForgeNoPromptCache = useRef(false)
+    // 是否直接替换当前使用的forge模板，而不出现二次确认框
+    const [replaceForgeNoPrompt, setReplaceForgeNoPrompt] = useState(false)
+    const handleSetReplaceForgeNoPrompt = useMemoizedFn(() => {
+        if (replaceForgeNoPrompt && !replaceForgeNoPromptCache.current) {
+            replaceForgeNoPromptCache.current = true
+            setRemoteValue(RemoteAIAgentGV.AIAgentReplaceForgeNoPrompt, "true")
+        }
+    })
+
     /** 从别的元素上触发使用 forge 模板的功能 */
     const handleTriggerExecForge = useMemoizedFn((forge: AIForge) => {
         if (!forge || !forge.Id) {
@@ -113,17 +127,27 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     })
 
     useEffect(() => {
+        // 获取 replaceForgeNoPrompt 的缓存值
+        getRemoteValue(RemoteAIAgentGV.AIAgentReplaceForgeNoPrompt)
+            .then((res) => {
+                replaceForgeNoPromptCache.current = !!res
+                setReplaceForgeNoPrompt(!!res)
+            })
+            .catch(() => {})
+
         // ai-agent 页面左侧侧边栏向 chatUI 发送的事件
         const onEvents = (res: string) => {
             try {
                 const data = JSON.parse(res) as AIAgentTriggerEventInfo
                 if (!data.type) return
 
+                // 新开聊天对话窗
                 if (data.type === "new-chat") {
                     if (["welcome", "triage"].includes(getMode())) return
                     setMode(isTriageChatExist.current ? "triage" : "welcome")
                 }
 
+                // 替换当前使用的 forge 模板
                 if (data.type === "open-forge-form") {
                     const {value} = data.params || {}
                     handleTriggerExecForge(value)
@@ -135,19 +159,30 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             emiter.off("onServerChatEvent", onEvents)
         }
     }, [])
+    // #endregion
 
     return (
         <div className={styles["ai-agent-chat"]}>
             <div className={classNames(styles["chat-body"], {[styles["chat-hidden-body"]]: mode !== "welcome"})}>
                 <AIAgentWelcome
                     ref={welcomeRef}
+                    replaceForgeNoPrompt={replaceForgeNoPrompt}
+                    setReplaceForgeNoPrompt={setReplaceForgeNoPrompt}
+                    setCacheReplaceForgeNoPrompt={handleSetReplaceForgeNoPrompt}
                     onTriageSubmit={handleStartTriageChat}
                     onTaskSubmit={handleStartTaskChat}
                 />
             </div>
 
             <div className={classNames(styles["chat-body"], {[styles["chat-hidden-body"]]: mode !== "triage"})}>
-                <AITriageChat ref={triageChatRef} onTaskSubmit={handleStartTaskChat} onClear={handleCancelTriageChat} />
+                <AITriageChat
+                    ref={triageChatRef}
+                    replaceForgeNoPrompt={replaceForgeNoPrompt}
+                    setReplaceForgeNoPrompt={setReplaceForgeNoPrompt}
+                    setCacheReplaceForgeNoPrompt={handleSetReplaceForgeNoPrompt}
+                    onTaskSubmit={handleStartTaskChat}
+                    onClear={handleCancelTriageChat}
+                />
             </div>
 
             <div className={classNames(styles["chat-body"], {[styles["chat-hidden-body"]]: mode !== "task"})}>

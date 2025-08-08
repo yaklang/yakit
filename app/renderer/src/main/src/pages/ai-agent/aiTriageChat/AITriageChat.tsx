@@ -24,13 +24,15 @@ import {grpcGetAIForge, grpcQueryAIForge} from "../grpc"
 import {yakitNotify} from "@/utils/notification"
 import {AIChatTextareaProps} from "../template/type"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 
 import classNames from "classnames"
 import styles from "./AITriageChat.module.scss"
 
 const AITriageChat: React.FC<AITriageChatProps> = memo(
     forwardRef((props, ref) => {
-        const {onTaskSubmit, onClear} = props
+        const {replaceForgeNoPrompt, setReplaceForgeNoPrompt, setCacheReplaceForgeNoPrompt, onTaskSubmit, onClear} =
+            props
 
         useImperativeHandle(
             ref,
@@ -220,6 +222,7 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
         const replaceForge = useRef<AIForge>()
         const handleReplaceOK = useMemoizedFn(() => {
             setActiveForge(replaceForge.current)
+            setCacheReplaceForgeNoPrompt()
             handleReplaceCancel()
         })
         const handleReplaceCancel = useMemoizedFn(() => {
@@ -246,8 +249,12 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                             if (isReplace) setActiveForge(forgeInfo)
                         } else {
                             // 不同forge模板，弹出提示框是否替换
-                            replaceForge.current = {...forgeInfo}
-                            setReplaceShow(true)
+                            if (replaceForgeNoPrompt) {
+                                setActiveForge({...forgeInfo})
+                            } else {
+                                replaceForge.current = {...forgeInfo}
+                                setReplaceShow(true)
+                            }
                         }
                     }
                 })
@@ -319,6 +326,14 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                     visible={replaceShow}
                     title='警告'
                     content={"是否要替换当前使用的forge模板?"}
+                    footerExtra={
+                        <YakitCheckbox
+                            checked={replaceForgeNoPrompt}
+                            onChange={(e) => setReplaceForgeNoPrompt(e.target.checked)}
+                        >
+                            不再提醒
+                        </YakitCheckbox>
+                    }
                     okButtonText='替换'
                     onOk={handleReplaceOK}
                     cancelButtonText='取消'
@@ -386,7 +401,7 @@ const AITriageChatContents: React.FC<AITriageChatContentsProps> = memo((props) =
 })
 
 export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((props) => {
-    const {isAnswer, loading, content,contentClassName=''} = props
+    const {isAnswer, loading, content, contentClassName = ""} = props
 
     return (
         <div
