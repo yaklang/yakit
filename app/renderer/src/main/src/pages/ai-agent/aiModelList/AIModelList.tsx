@@ -68,7 +68,6 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 
-
 const setAIOnlineModal = (params: {
     config: GlobalNetworkConfig
     item?: ThirdPartyApplicationConfig
@@ -311,7 +310,6 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             setSpinning(true)
             apiGetGlobalNetworkConfig()
                 .then((res) => {
-                    console.log("apiGetGlobalNetworkConfig", res)
                     configRef.current = res
                     setList(res.AppConfigs || [])
                     setOnlineTotal(res.AppConfigs?.length || 0)
@@ -479,8 +477,8 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
                 .then((response) => {
                     const userModels: LocalModelConfig[] = []
                     const defaultModels: LocalModelConfig[] = []
-                    setLocalTotal(response?.Models?.length || 0)
-                    response?.Models?.forEach((model) => {
+                    setLocalTotal(response?.length || 0)
+                    response?.forEach((model) => {
                         if (model.IsLocal) {
                             userModels.push(model)
                         } else {
@@ -830,7 +828,9 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                     <YakitTag size='small' className={styles["ai-local-model-type-tag"]} color='green'>
                         已启用
                     </YakitTag>
-                    <div>IP/端口: 127.0.0.1:{item.DefaultPort}</div>
+                    <div>
+                        IP/端口: {item.Host || ""}:{item.DefaultPort}
+                    </div>
                 </div>
             )}
             {downVisible && (

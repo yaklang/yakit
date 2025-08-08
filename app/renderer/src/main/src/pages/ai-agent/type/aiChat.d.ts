@@ -484,6 +484,8 @@ export interface LocalModelConfig {
     IsReady: boolean
     IsLocal: boolean
     Path: string
+    /**@name 前端使用展示启动后的主机 */
+    Host?: string
 }
 export interface GetSupportedLocalModelsResponse {
     Models: LocalModelConfig[]
@@ -524,7 +526,13 @@ export interface DeleteLocalModelRequest {
 export interface UpdateLocalModelRequest extends AddLocalModelRequest {}
 
 export interface GetAllStartedLocalModelsResponse {
-    ModelNames: string[]
+    Models: StartedLocalModelInfo[]
+}
+export interface StartedLocalModelInfo {
+    Name: string
+    ModelType: string
+    Host: string
+    Port: number
 }
 export interface ClearAllModelsRequest {
     DeleteSourceFile: boolean

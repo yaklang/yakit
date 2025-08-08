@@ -6,14 +6,15 @@ import {
     DeleteLocalModelRequest,
     DownloadLocalModelRequest,
     GetAllStartedLocalModelsResponse,
-    GetSupportedLocalModelsResponse,
     InstallLlamaServerRequest,
     IsLlamaServerReadyResponse,
     IsLocalModelReadyRequest,
     IsLocalModelReadyResponse,
     GeneralResponse,
     StartLocalModelRequest,
-    UpdateLocalModelRequest
+    UpdateLocalModelRequest,
+    StartedLocalModelInfo,
+    LocalModelConfig
 } from "../type/aiChat"
 import omit from "lodash/omit"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
@@ -22,11 +23,38 @@ import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType
 
 const {ipcRenderer} = window.require("electron")
 
-export const grpcGetSupportedLocalModels: APINoRequestFunc<GetSupportedLocalModelsResponse> = (hiddenError) => {
+export const grpcGetSupportedLocalModels: APINoRequestFunc<LocalModelConfig[]> = (hiddenError) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("GetSupportedLocalModels")
-            .then(resolve)
+            .then((res) => {
+                const models = res.Models || []
+                if (models.length === 0) {
+                    resolve(models)
+                    return
+                }
+                // 获取已启动的模型列表
+                grpcGetAllStartedLocalModels(false)
+                    .then((startedRes) => {
+                        const startedModels = startedRes.Models || []
+                        if (startedModels.length === 0) {
+                            resolve(models)
+                            return
+                        }
+                        const length = models.length
+                        for (let index = 0; index < length; index++) {
+                            const element = models[index]
+                            const number = startedModels.findIndex((ele) => ele.Name === element.Name)
+                            if (number === -1) continue
+                            element.IsReady = true
+                            element.Host = startedModels[number].Host
+                        }
+                        resolve(models)
+                    })
+                    .catch(() => {
+                        resolve(models)
+                    })
+            })
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", "grpcGetSupportedLocalModels 失败:" + err)
                 reject(err)
@@ -115,7 +143,6 @@ export const grpcStartLocalModel: APIFunc<StartLocalModelRequest, null> = (param
     return new Promise((resolve, reject) => {
         const token = params.token
         const value = omit(params, "token")
-        console.log("grpcStartLocalModel", value)
         ipcRenderer
             .invoke("StartLocalModel", value, token)
             .then(resolve)
@@ -143,14 +170,14 @@ export const getAIModelList: APINoRequestFunc<YakitSelectProps["options"]> = (hi
     return new Promise(async (resolve, reject) => {
         try {
             let onlineModels: ThirdPartyApplicationConfig[] = []
-            let localModels: string[] = []
+            let localModels: StartedLocalModelInfo[] = []
             const config = await apiGetGlobalNetworkConfig()
             if (!!config) {
                 onlineModels = config.AppConfigs || []
             }
             const localModelsRes = await grpcGetAllStartedLocalModels()
             if (!!localModelsRes) {
-                localModels = localModelsRes.ModelNames || []
+                localModels = localModelsRes.Models || []
             }
             const result: YakitSelectProps["options"] = []
             onlineModels.forEach((model) => {
@@ -161,8 +188,8 @@ export const getAIModelList: APINoRequestFunc<YakitSelectProps["options"]> = (hi
             })
             localModels.forEach((model) => {
                 result.push({
-                    value: model,
-                    label: model
+                    value: model.Name,
+                    label: model.Name
                 })
             })
             resolve(result)
@@ -189,7 +216,6 @@ export const grpcAddLocalModel: APIFunc<AddLocalModelRequest, GeneralResponse> =
 /**删除本地AI Model */
 export const grpcDeleteLocalModel: APIFunc<DeleteLocalModelRequest, null> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
-        console.log("DeleteLocalModel", params)
         ipcRenderer
             .invoke("DeleteLocalModel", params)
             .then(resolve)
