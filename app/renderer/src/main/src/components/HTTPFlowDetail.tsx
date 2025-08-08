@@ -1321,12 +1321,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         try {
             if (reqEditor) {
                 getSelectionEditorByteCount(reqEditor, (byteCount) => {
-                    setReqSelectionByteCount(byteCount)
+                    // setReqSelectionByteCount(byteCount)
                 })
             }
             if (resEditor) {
                 getSelectionEditorByteCount(resEditor, (byteCount) => {
-                    setResSelectionByteCount(byteCount)
+                    // setResSelectionByteCount(byteCount)
                 })
             }
         } catch (e) {}

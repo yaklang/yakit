@@ -21,6 +21,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setClipboardText} from "@/utils/clipboard"
 import {API} from "@/services/swagger/resposeType"
+import {apiUpdateOnlinePayload} from "../utils"
 const {ipcRenderer} = window.require("electron")
 
 interface EditableCellProps {
@@ -54,9 +55,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
     const save = async () => {
         try {
             handleSave(record, {...record, [dataIndex]: value})
-        } catch (errInfo) {
-            console.log("Save failed:", errInfo)
-        }
+        } catch (errInfo) {}
     }
 
     return (
@@ -104,7 +103,7 @@ const judgeNum = (num) => {
 interface PayloadAddEditFormProps {
     onClose: () => void
     record: API.PayloadDetail
-    onUpdatePayload: (updatePayload: UpdatePayloadProps) => Promise<unknown>
+    onUpdatePayload: (updatePayload: API.UpdatePayloadRequest) => Promise<unknown>
 }
 
 interface EditParamsProps {
@@ -131,7 +130,11 @@ export const PayloadAddEditForm: React.FC<PayloadAddEditFormProps> = (props) => 
 
     const onFinish = useMemoizedFn(async () => {
         if (editParams.Content.length > 0 && judgeNum(editParams.HitCount)) {
-            const result = await onUpdatePayload({id: record.id, data: {...record, ...editParams}})
+            const result = await onUpdatePayload({
+                id: record.id,
+                content: editParams.Content,
+                hitCount: editParams.HitCount
+            })
             if (result) {
                 onClose()
             }
@@ -206,19 +209,7 @@ type EditableTableProps = Parameters<typeof Table>[0]
 
 type ColumnTypes = Exclude<EditableTableProps["columns"], undefined>
 
-export interface QueryPayloadParams extends QueryGeneralRequest {
-    Folder: string
-    Group: string
-    Keyword: string
-}
-
-export interface UpdatePayloadProps {
-    id: number
-    data: API.PayloadDetail
-}
-
 export interface DeleteOnlinePayloadProps {
-    id?: number
     ids?: number[]
 }
 
@@ -235,8 +226,8 @@ export interface NewPayloadOnlineTableProps {
     onDeletePayload?: (v: DeleteOnlinePayloadProps) => void
     onQueryPayload: (page?: number, limit?: number) => void
     pagination?: API.PageMeta
-    params: QueryPayloadParams
-    setParams: (v: QueryPayloadParams) => void
+    params: API.PayloadRequest
+    setParams: (v: API.PayloadRequest) => void
     response: API.PayloadResponse | undefined
     setResponse: (v: API.PayloadResponse) => void
 }
@@ -262,10 +253,10 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
     const handleSort = useMemoizedFn((v: "desc" | "asc") => {
         if (sortStatus === v) {
             setSortStatus(undefined)
-            setParams({...params, Pagination: {...params.Pagination, Order: "asc", OrderBy: "id"}})
+            setParams({...params,  order: "asc", order_by: "id"})
         } else {
             setSortStatus(v)
-            setParams({...params, Pagination: {...params.Pagination, Order: v, OrderBy: "hit_count"}})
+            setParams({...params,  order: v, order_by: "hit_count"})
         }
         setTimeout(() => {
             onQueryPayload()
@@ -297,8 +288,8 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
             dataIndex: "index",
             width: 88,
             render: (text, record, index) => {
-                const limit = pagination?.limit || params.Pagination.Limit
-                const page = (pagination?.page || params.Pagination.Page) - 1
+                const limit = pagination?.limit || params.limit
+                const page = (pagination?.page || params.page) - 1
                 const order: number = limit * page + index + 1
                 const {id} = record as API.PayloadDetail
                 return (
@@ -393,7 +384,7 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
                         <OutlineTrashIcon
                             className={styles["delete"]}
                             onClick={() => {
-                                onDeletePayload && onDeletePayload({id: record.id})
+                                onDeletePayload && onDeletePayload({ids: [record.id]})
                             }}
                         />
                         <Divider type='vertical' style={{top: 1, height: 12, margin: "0px 12px"}} />
@@ -422,10 +413,9 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
         }
     ]
 
-    const onUpdatePayload = useMemoizedFn((updatePayload: UpdatePayloadProps) => {
+    const onUpdatePayload = useMemoizedFn((updatePayload: API.UpdatePayloadRequest) => {
         return new Promise((resolve, reject) => {
-            ipcRenderer
-                .invoke("UpdatePayload", updatePayload)
+            apiUpdateOnlinePayload(updatePayload)
                 .then(() => {
                     success(`修改成功`)
                     resolve(true)
@@ -441,6 +431,24 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
                 .finally(() => {
                     onQueryPayload(pagination?.page, pagination?.limit)
                 })
+
+            // ipcRenderer
+            //     .invoke("UpdatePayload", updatePayload)
+            //     .then(() => {
+            //         success(`修改成功`)
+            //         resolve(true)
+            //     })
+            //     .catch((e: any) => {
+            //         resolve(false)
+            //         if (e.toString().includes("UNIQUE constraint failed: payloads.hash")) {
+            //             warn("已有相同字典内容，请修改后再保存")
+            //             return
+            //         }
+            //         failed("更新失败：" + e)
+            //     })
+            //     .finally(() => {
+            //         onQueryPayload(pagination?.page, pagination?.limit)
+            //     })
         })
     })
 
@@ -464,7 +472,7 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
             newRow.content.length !== 0 &&
             judgeNum(newRow.hitCount)
         ) {
-            onUpdatePayload({id: row.id, data: {...newRow}})
+            onUpdatePayload({id: row.id, content: newRow.content, hitCount: newRow.hitCount})
         }
         if (newRow.content.length === 0) {
             warn("字典内容不可为空")
@@ -535,8 +543,6 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
         showByRightContext({
             data: [
                 {label: "编辑", key: "edit"},
-                {label: "备份到其他字典", key: "copy"},
-                {label: "移动到其他字典", key: "move"},
                 {label: "删除", key: "delete"}
             ],
             onClick: (e) => {
@@ -546,7 +552,7 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
                         setEditingObj({id: record.id, dataIndex: column.dataIndex})
                         return
                     case "delete":
-                        onDeletePayload && onDeletePayload({id: record.id})
+                        onDeletePayload && onDeletePayload({ids: [record.id]})
                         return
                 }
             }

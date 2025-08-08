@@ -585,6 +585,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
                             [styles["file-menu"]]: menuOpen && file.id !== selectItem,
                             [styles["file-outside"]]: !isInside,
                             [styles["file-inside"]]: isInside,
+                            [styles["file-dragging"]]: !isInside,
                             [styles["file-end-border"]]: endBorder
                         })}
                         onClick={() => {
@@ -753,7 +754,7 @@ export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (pr
                                                 setContentType={setContentType}
                                                 showType={showType}
                                                 userInfo={userInfo}
-                                                // isInside={!fileOutside}
+                                                isInside={false}
                                             />
                                         )}
                                     </>
@@ -840,7 +841,6 @@ export const NewPayloadOnlineList: React.FC<NewPayloadOnlineListProps> = (props)
         apiGetOnlinePayloadGroup()
             .then((res) => {
                 let newData: DataItem[] = onlineNodesToDataFun(res.nodes || []) as DataItem[]
-                console.log("线上字典列表", res, newData)
                 setData(newData)
             })
             .catch((e: any) => {
