@@ -107,10 +107,10 @@ import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {filterColorTag} from "@/components/TableVirtualResize/utils"
 import {FuzzerConcurrentLoad, FuzzerResChartData} from "../FuzzerConcurrentLoad/FuzzerConcurrentLoad"
-import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {isEqual} from "lodash"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 const FuzzerPageSetting = React.lazy(() => import("./FuzzerPageSetting"))
@@ -1904,16 +1904,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         const secondNodeSize = useSize(secondNodeRef)
 
         const [onlyOneResEditor, setOnlyOneResEditor] = useState<IMonacoEditor>()
-        const [onlyOneResSelectionByteCount, setOnlyOneResSelectionByteCount] = useState<number>(0)
-        useEffect(() => {
-            try {
-                if (onlyOneResEditor) {
-                    getSelectionEditorByteCount(onlyOneResEditor, (byteCount) => {
-                        setOnlyOneResSelectionByteCount(byteCount)
-                    })
-                }
-            } catch (e) {}
-        }, [onlyOneResEditor])
+        const onlyOneResSelectionByteCount = useSelectionByteCount(onlyOneResEditor, 500)
 
         const successTableRef = useRef<any>()
         const requestHttpRef = useRef<string>(request)

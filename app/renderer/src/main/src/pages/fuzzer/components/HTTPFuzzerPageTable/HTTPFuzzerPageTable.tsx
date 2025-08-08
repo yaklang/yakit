@@ -20,7 +20,7 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
 import classNames from "classnames"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {analyzeFuzzerResponse, copyAsUrl, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
+import {analyzeFuzzerResponse, ByteCountTag, copyAsUrl, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
 import styles from "./HTTPFuzzerPageTable.module.scss"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
 import {Alert, Divider, Tooltip} from "antd"
@@ -38,7 +38,7 @@ import {CodingPopover} from "@/components/HTTPFlowDetail"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {isCellRedSingleColor} from "@/components/TableVirtualResize/utils"
-import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
+import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -193,6 +193,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         const [scrollToIndex, setScrollToIndex] = useState<number>()
         const [alertHeight, setAlertHeight] = useState<number>(0)
+        const selectionByteCount = useSelectionByteCount(editor, 500)
 
         // useThrottleEffect(
         //     () => {
@@ -925,17 +926,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             }
         })
 
-        const [selectionByteCount, setSelectionByteCount] = useState<number>(0)
-        useEffect(() => {
-            try {
-                if (editor) {
-                    getSelectionEditorByteCount(editor, (byteCount) => {
-                        setSelectionByteCount(byteCount)
-                    })
-                }
-            } catch (e) {}
-        }, [editor])
-
         const showAlertFlag = useMemo(() => {
             return (moreLimtAlertMsg || noMoreLimtAlertMsg) && data.length > 1
         }, [moreLimtAlertMsg, noMoreLimtAlertMsg, data])
@@ -1030,9 +1020,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                 超大响应
                                             </YakitTag>
                                         )}
-                                        {selectionByteCount > 0 && (
-                                            <YakitTag style={{marginLeft: 8}}>{selectionByteCount} bytes</YakitTag>
-                                        )}
+                                        <ByteCountTag selectionByteCount={selectionByteCount} key='httpfuzzerpagetable' style={{marginLeft: 8}}/>
                                     </div>
                                 </div>
                             }

@@ -4,7 +4,7 @@ import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "../InsertFileFuzzTa
 import {monacoEditorWrite} from "../fuzzerTemplates"
 import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {execCodec} from "@/utils/encodec"
-import {copyAsUrl, showDictsAndSelect} from "../HTTPFuzzerPage"
+import {copyAsUrl, ByteCountTag, showDictsAndSelect} from "../HTTPFuzzerPage"
 import styles from "./WebFuzzerNewEditor.module.scss"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {setRemoteValue} from "@/utils/kv"
@@ -16,7 +16,7 @@ import {setClipboardText} from "@/utils/clipboard"
 import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
+import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 const {ipcRenderer} = window.require("electron")
 
 export interface WebFuzzerNewEditorProps {
@@ -53,7 +53,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
             hex
         } = props
         const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
-        const [selectionByteCount, setSelectionByteCount] = useState<number>(0)
+        const selectionByteCount = useSelectionByteCount(reqEditor, 500)
 
         const [newRequest, setNewRequest] = useState<string>(request) // 由于传过来的request是ref 值变化并不会导致重渲染 这里拿到的request还是旧值
 
@@ -64,17 +64,6 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
             }),
             [reqEditor]
         )
-        useEffect(() => {
-            try {
-                if (reqEditor) {
-                    getSelectionEditorByteCount(reqEditor, (byteCount) => {
-                        setSelectionByteCount(byteCount)
-                    })
-                }
-            } catch (e) {
-                yakitNotify("error", "初始化 EOL CRLF 失败")
-            }
-        }, [reqEditor])
         const hotPatchTrigger = useMemoizedFn(() => {
             let m = showYakitModal({
                 title: null,
@@ -187,7 +176,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 title={
                     <span style={{fontSize: 12}}>
                         Request&nbsp;&nbsp;
-                        {selectionByteCount > 0 && <YakitTag>{selectionByteCount} bytes</YakitTag>}
+                        <ByteCountTag selectionByteCount={selectionByteCount} key='httpfuzzerRes' />
                     </span>
                 }
                 extraEnd={firstNodeExtra && firstNodeExtra()}

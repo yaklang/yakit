@@ -17,8 +17,9 @@ import {newWebsocketFuzzerTab} from "./WebsocketFuzzer"
 import {HistoryHighLightText} from "@/components/HTTPFlowDetail"
 import styles from "./HTTPFlowForWebsocketViewer.module.scss"
 import {IMonacoEditor} from "@/utils/editors"
-import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
-import { YakEditorOptionShortcutKey } from "@/utils/globalShortcutKey/events/page/yakEditor"
+import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
+import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
+import {ByteCountTag} from "../fuzzer/HTTPFuzzerPage"
 export interface HTTPFlowForWebsocketViewerProp {
     pageType?: HTTPHistorySourcePageType
     historyId?: string
@@ -34,22 +35,8 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
     const {flow, historyId, pageType, highLightText, highLightItem, highLightFindClass, showJumpTree} = props
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
-    const [reqSelectionByteCount, setReqSelectionByteCount] = useState<number>(0)
-    const [resSelectionByteCount, setResSelectionByteCount] = useState<number>(0)
-    useEffect(() => {
-        try {
-            if (reqEditor) {
-                getSelectionEditorByteCount(reqEditor, (byteCount) => {
-                    setReqSelectionByteCount(byteCount)
-                })
-            }
-            if (resEditor) {
-                getSelectionEditorByteCount(resEditor, (byteCount) => {
-                    setResSelectionByteCount(byteCount)
-                })
-            }
-        } catch (e) {}
-    }, [reqEditor, resEditor])
+    const resSelectionByteCount = useSelectionByteCount(resEditor, 500)
+    const reqSelectionByteCount = useSelectionByteCount(reqEditor, 500)
 
     const onScrollTo = useMemoizedFn(() => {
         if (historyId) {
@@ -100,11 +87,10 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                     {["History"].includes(pageType || "") && showJumpTree && (
                         <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
                     )}
-                    {mode === "request" ? (
-                        <>{reqSelectionByteCount > 0 && <YakitTag>{reqSelectionByteCount} bytes</YakitTag>}</>
-                    ) : (
-                        <>{resSelectionByteCount > 0 && <YakitTag>{resSelectionByteCount} bytes</YakitTag>}</>
-                    )}
+                    <ByteCountTag
+                        selectionByteCount={mode === "request" ? reqSelectionByteCount : resSelectionByteCount}
+                        key='websocketViewer'
+                    />
                 </div>
             }
             extra={

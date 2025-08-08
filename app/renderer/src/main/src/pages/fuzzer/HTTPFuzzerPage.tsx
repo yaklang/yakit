@@ -147,7 +147,6 @@ import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {filterColorTag} from "@/components/TableVirtualResize/utils"
 import {FuzzerConcurrentLoad, FuzzerResChartData} from "./FuzzerConcurrentLoad/FuzzerConcurrentLoad"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 import {WebFuzzerDroppedProps} from "./FuzzerSequence/FuzzerSequenceType"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
@@ -157,6 +156,7 @@ import {
     getStorageHttpFuzzerShortcutKeyEvents
 } from "@/utils/globalShortcutKey/events/page/httpFuzzer"
 import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
+import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -734,16 +734,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [pluginDebugCode, setPluginDebugCode] = useState<string>("")
 
     const [onlyOneResEditor, setOnlyOneResEditor] = useState<IMonacoEditor>()
-    const [onlyOneResSelectionByteCount, setOnlyOneResSelectionByteCount] = useState<number>(0)
-    useEffect(() => {
-        try {
-            if (onlyOneResEditor) {
-                getSelectionEditorByteCount(onlyOneResEditor, (byteCount) => {
-                    setOnlyOneResSelectionByteCount(byteCount)
-                })
-            }
-        } catch (e) {}
-    }, [onlyOneResEditor])
+    const onlyOneResSelectionByteCount = useSelectionByteCount(onlyOneResEditor, 500)
 
     useEffect(() => {
         fuzzerTableMaxDataRef.current = fuzzerTableMaxData
@@ -3123,7 +3114,10 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
             <>
                 {rsp.IsHTTPS && <YakitTag>{rsp.IsHTTPS ? "https" : ""}</YakitTag>}
                 {selectionByteCount ? (
-                    <YakitTag>{selectionByteCount} bytes</YakitTag>
+                    <ByteCountTag
+                        selectionByteCount={selectionByteCount || 0}
+                        key='webfuzzerOneRes'
+                    ></ByteCountTag>
                 ) : (
                     <YakitTag>
                         {rsp.BodyLength}bytes / {rsp.DurationMs}ms
@@ -3559,7 +3553,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     defActiveKey={activeKey}
                                     defActiveType={activeType}
                                     defActiveKeyAndOrder={activeKeyAndOrder}
-                                    pageType="webfuzzer"
+                                    pageType='webfuzzer'
                                 />
                             ) : (
                                 <></>
@@ -3705,3 +3699,17 @@ export const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstra
         </div>
     )
 })
+
+export const ByteCountTag: React.FC<{selectionByteCount?: number; key: string; style?: CSSProperties}> = ({
+    selectionByteCount = 0,
+    key,
+    style = {}
+}) => {
+    return selectionByteCount > 0 ? (
+        <YakitTag key={key} style={style}>
+            {selectionByteCount} bytes
+        </YakitTag>
+    ) : (
+        <></>
+    )
+}

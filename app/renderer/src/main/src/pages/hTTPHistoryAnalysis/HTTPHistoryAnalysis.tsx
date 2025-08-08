@@ -62,7 +62,6 @@ import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
 import {Uint8ArrayToString} from "@/utils/str"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {HTTPHistoryFilter} from "./HTTPHistory/HTTPHistoryFilter"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
@@ -88,7 +87,8 @@ import {Divider, Tooltip} from "antd"
 import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 import styles from "./HTTPHistoryAnalysis.module.scss"
-import {getAction} from "../fuzzer/HTTPFuzzerPage"
+import {getAction, ByteCountTag} from "../fuzzer/HTTPFuzzerPage"
+import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 const MITMRule = React.lazy(() => import("../mitm/MITMRule/MITMRule"))
 const {ipcRenderer} = window.require("electron")
 interface HTTPHistoryAnalysisProps {
@@ -590,8 +590,8 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const [refreshTriggerResEditor, setRefreshTriggerResEditor] = useState<boolean>(false)
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
-    const [reqSelectionByteCount, setReqSelectionByteCount] = useState<number>(0)
-    const [resSelectionByteCount, setResSelectionByteCount] = useState<number>(0)
+    const resSelectionByteCount = useSelectionByteCount(resEditor, 500)
+    const reqSelectionByteCount = useSelectionByteCount(reqEditor, 500)
 
     const beautifyCode = async (type: "req" | "res", oldCode: string) => {
         if (!oldCode) return
@@ -611,21 +611,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
             }
         }
     }
-
-    useEffect(() => {
-        try {
-            if (reqEditor) {
-                getSelectionEditorByteCount(reqEditor, (byteCount) => {
-                    setReqSelectionByteCount(byteCount)
-                })
-            }
-            if (resEditor) {
-                getSelectionEditorByteCount(resEditor, (byteCount) => {
-                    setResSelectionByteCount(byteCount)
-                })
-            }
-        } catch (e) {}
-    }, [reqEditor, resEditor])
 
     // #endregion
 
@@ -959,11 +944,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                             title={
                                                                 <div className={styles["row-editor-title"]}>
                                                                     <span style={{fontSize: 12}}>Request</span>
-                                                                    {reqSelectionByteCount > 0 && (
-                                                                        <YakitTag>
-                                                                            {reqSelectionByteCount} bytes
-                                                                        </YakitTag>
-                                                                    )}
+                                                                    <ByteCountTag selectionByteCount={reqSelectionByteCount} key='httpHistoryAnalysis' />
                                                                 </div>
                                                             }
                                                             extra={
@@ -1002,11 +983,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                             title={
                                                                 <div className={styles["row-editor-title"]}>
                                                                     <span style={{fontSize: 12}}>Response</span>
-                                                                    {resSelectionByteCount > 0 && (
-                                                                        <YakitTag>
-                                                                            {resSelectionByteCount} bytes
-                                                                        </YakitTag>
-                                                                    )}
+                                                                    <ByteCountTag selectionByteCount={resSelectionByteCount} key='httpHistoryAnalysis' />
                                                                 </div>
                                                             }
                                                             extra={
