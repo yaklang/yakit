@@ -441,7 +441,7 @@
         width: unset;
     }
     &:global(.ant-btn.ant-btn-loading::before){
-        background-color: var(--Colors-Use-Main-Hover);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
     &:global(.ant-btn .anticon) {
         display: flex;
