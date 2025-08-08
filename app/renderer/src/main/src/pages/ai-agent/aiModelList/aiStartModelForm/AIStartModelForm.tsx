@@ -17,6 +17,7 @@ export const AIStartModelForm: React.FC<AIStartModelFormProps> = React.memo((pro
     const {item, token, onSuccess} = props
     const [loading, setLoading] = useState(false)
     const hasErrorRef = useRef<boolean>(false)
+    const [form] = Form.useForm<Omit<StartLocalModelRequest, "token">>()
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {})
         ipcRenderer.on(`${token}-error`, (e, error) => {
@@ -39,17 +40,16 @@ export const AIStartModelForm: React.FC<AIStartModelFormProps> = React.memo((pro
         }
     }, [])
 
-    const handleSubmit = useMemoizedFn((value: Omit<StartLocalModelRequest, "token">) => {
-        const params: StartLocalModelRequest = {
-            ...value,
-            token
-        }
-        grpcStartLocalModel(params).then(() => {
-            setLoading(true)
+    const handleSubmit = useMemoizedFn(() => {
+        form.validateFields().then((value: Omit<StartLocalModelRequest, "token">) => {
+            const params: StartLocalModelRequest = {
+                ...value,
+                token
+            }
+            grpcStartLocalModel(params).then(() => {
+                setLoading(true)
+            })
         })
-    })
-    const onCancel = useMemoizedFn(() => {
-        grpcCancelStartLocalModel(token)
     })
     const initialValues = useCreation(() => {
         return {
@@ -59,8 +59,14 @@ export const AIStartModelForm: React.FC<AIStartModelFormProps> = React.memo((pro
         }
     }, [])
     return (
-        <div className={styles["ai-start-model-form"]}>
-            <Form labelCol={{span: 6}} wrapperCol={{span: 18}} onFinish={handleSubmit} initialValues={initialValues}>
+        <div>
+            <Form
+                form={form}
+                labelCol={{span: 6}}
+                wrapperCol={{span: 16}}
+                initialValues={initialValues}
+                className={styles["ai-start-model-form"]}
+            >
                 <Form.Item label='模型名称' name='ModelName'>
                     <YakitInput disabled />
                 </Form.Item>
@@ -72,20 +78,12 @@ export const AIStartModelForm: React.FC<AIStartModelFormProps> = React.memo((pro
                 <Form.Item label='端口' name='Port'>
                     <YakitInputNumber min={1} max={65535} />
                 </Form.Item>
-
-                <Form.Item colon={false} label=' '>
-                    <div className={styles["button-group"]}>
-                        <YakitButton type='primary' htmlType='submit' loading={loading}>
-                            启动模型
-                        </YakitButton>
-                        {loading && (
-                            <YakitButton type='outline1' onClick={onCancel}>
-                                取消
-                            </YakitButton>
-                        )}
-                    </div>
-                </Form.Item>
             </Form>
+            <div className={styles["button-group"]}>
+                <YakitButton type='primary' htmlType='submit' loading={loading} onClick={handleSubmit}>
+                    立即启动
+                </YakitButton>
+            </div>
         </div>
     )
 })
