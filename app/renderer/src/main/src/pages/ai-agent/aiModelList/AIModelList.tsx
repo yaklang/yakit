@@ -13,7 +13,7 @@ import {
 } from "./AIModelListType"
 import styles from "./AIModelList.module.scss"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitRadioButtonsProps} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {
@@ -34,6 +34,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineAtomIcon,
     OutlineChatIcon,
+    OutlineClipboardcopyIcon,
     OutlineClouddownloadIcon,
     OutlineDotsverticalIcon,
     OutlineExclamationIcon,
@@ -65,8 +66,8 @@ import {SolidDragsortIcon} from "@/assets/icon/solid"
 import classNames from "classnames"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 
-const {ipcRenderer} = window.require("electron")
 
 const setAIOnlineModal = (params: {
     config: GlobalNetworkConfig
@@ -275,7 +276,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
             {removeVisible && (
                 <AILocalModelListItemPromptHint
                     title='清空模型'
-                    content={`确认清空模型?`}
+                    content={`确认要删除所有下载和添加的模型吗？确认删除源文件则自定义添加的模型文件会被一起删除`}
                     onOk={onClearLocal}
                     onCancel={onCancelRemove}
                 />
@@ -594,11 +595,19 @@ const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.me
 const localModelMenu: YakitMenuItemType[] = [
     {
         key: "edit",
-        label: "编辑"
+        label: "编辑",
+        itemIcon: <OutlinePencilaltIcon />
+    },
+    {
+        key: "path",
+        label: "打开文件位置",
+        itemIcon: <OutlineClipboardcopyIcon />
     },
     {
         key: "delete",
-        label: "删除"
+        label: "删除",
+        type: "danger",
+        itemIcon: <OutlineTrashIcon />
     }
 ]
 const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((props) => {
@@ -609,21 +618,20 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
     const [visible, setVisible] = useState<boolean>(false)
     const [downVisible, setDownVisible] = useState<boolean>(false)
     const [removeVisible, setRemoveVisible] = useState<boolean>(false)
+    const [stopVisible, setStopVisible] = useState<boolean>(false)
 
     const tokenRef = useRef<string>(randomString(60))
     const downTokenRef = useRef<string>(randomString(60))
 
     useEffect(() => {
         const token = tokenRef.current
-        ipcRenderer.on(`${token}-error`, (e, error) => {
-            yakitNotify("error", `[StartLocalModel] error: ${error}`)
-        })
-        // getModelReady()
         return () => {
             grpcCancelStartLocalModel(token)
-            ipcRenderer.removeAllListeners(`${token}-error`)
         }
     }, [])
+    useUpdateEffect(() => {
+        setIsReady(item.IsReady || false)
+    }, [item.IsReady])
     const getModelReady = useMemoizedFn(() => {
         grpcIsLocalModelReady({
             ModelName: item.Name
@@ -678,6 +686,9 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             case "delete":
                 setRemoveVisible(true)
                 break
+            case "path":
+                if (item.Path) onOpenLocalFileByPath(item.Path)
+                break
             default:
                 break
         }
@@ -712,7 +723,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
         setDownVisible(false)
     })
     const onDelete = useMemoizedFn((deleteSourceFile) => {
-        grpcDeleteLocalModel({Name: item.Name, DeleteSourceFile: deleteSourceFile}).then(() => {
+        return grpcDeleteLocalModel({Name: item.Name, DeleteSourceFile: deleteSourceFile}).then(() => {
             onRefresh()
             setRemoveVisible(false)
         })
@@ -771,13 +782,18 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                     ) : (
                         <div
                             className={classNames(styles["ai-local-model-heard-extra-btns"], {
-                                [styles["ai-local-model-heard-extra-btns-hover"]]: visible
+                                [styles["ai-local-model-heard-extra-btns-hover"]]: visible || stopVisible
                             })}
                         >
                             {isRunning ? (
-                                <YakitPopconfirm title={`确定要停止模型 ${item.Name} 吗？`} onConfirm={onStop}>
-                                    <YakitButton type='text' size='small' colors='danger' icon={<OutlineExitIcon />}>
-                                        停止
+                                <YakitPopconfirm
+                                    title={`确定要停用模型 ${item.Name} 吗？`}
+                                    onConfirm={onStop}
+                                    visible={stopVisible}
+                                    onVisibleChange={setStopVisible}
+                                >
+                                    <YakitButton type='text' colors='danger' icon={<OutlineExitIcon />}>
+                                        停用
                                     </YakitButton>
                                 </YakitPopconfirm>
                             ) : (
@@ -829,7 +845,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             {removeVisible && (
                 <AILocalModelListItemPromptHint
                     title='删除模型'
-                    content={`确认删除模型${item.Name}?`}
+                    content={`确认删除模型${item.Name}吗？确认删除源文件则自定义添加的模型文件会被一起删除`}
                     onOk={onDelete}
                     onCancel={onCancelRemove}
                 />
