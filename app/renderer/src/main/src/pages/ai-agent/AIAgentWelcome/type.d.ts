@@ -1,4 +1,4 @@
-import {ForwardedRef} from "react"
+import {Dispatch, ForwardedRef, SetStateAction} from "react"
 import {AIStartParams} from "../type/aiChat"
 
 export interface AIAgentWelcomeRef {
@@ -8,6 +8,9 @@ export interface AIAgentWelcomeRef {
 
 export interface AIAgentWelcomeProps {
     ref?: ForwardedRef<AIAgentWelcomeRef>
+    replaceForgeNoPrompt: boolean
+    setReplaceForgeNoPrompt: Dispatch<SetStateAction<boolean>>
+    setCacheReplaceForgeNoPrompt: () => void
     onTriageSubmit: (question: string) => void
     onTaskSubmit: (request: AIStartParams) => void
 }

@@ -9,6 +9,7 @@ import {AIChatTextareaProps} from "../template/type"
 import {yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 
 // import classNames from "classnames"
 import AIAgentWelcomebg from "@/assets/aiAgent/ai-agent-welcome-bg.png"
@@ -17,7 +18,13 @@ import styles from "./AIAgentWelcome.module.scss"
 
 export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
     forwardRef((props, ref) => {
-        const {onTriageSubmit, onTaskSubmit} = props
+        const {
+            replaceForgeNoPrompt,
+            setReplaceForgeNoPrompt,
+            setCacheReplaceForgeNoPrompt,
+            onTriageSubmit,
+            onTaskSubmit
+        } = props
 
         useImperativeHandle(
             ref,
@@ -72,7 +79,8 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
         const [replaceShow, setReplaceShow] = useState(false)
         const replaceForge = useRef<AIForge>()
         const handleReplaceOK = useMemoizedFn(() => {
-            setActiveForge(replaceForge.current)
+            setActiveForge(cloneDeep(replaceForge.current))
+            setCacheReplaceForgeNoPrompt()
             handleReplaceCancel()
         })
         const handleReplaceCancel = useMemoizedFn(() => {
@@ -100,8 +108,12 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
                             if (isReplace) setActiveForge(forgeInfo)
                         } else {
                             // 不同forge模板，弹出提示框是否替换
-                            replaceForge.current = {...forgeInfo}
-                            setReplaceShow(true)
+                            if (replaceForgeNoPrompt) {
+                                setActiveForge({...forgeInfo})
+                            } else {
+                                replaceForge.current = {...forgeInfo}
+                                setReplaceShow(true)
+                            }
                         }
                     }
                 })
@@ -184,6 +196,14 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
                     visible={replaceShow}
                     title='警告'
                     content={"是否要替换当前使用的forge模板?"}
+                    footerExtra={
+                        <YakitCheckbox
+                            checked={replaceForgeNoPrompt}
+                            onChange={(e) => setReplaceForgeNoPrompt(e.target.checked)}
+                        >
+                            不再提醒
+                        </YakitCheckbox>
+                    }
                     okButtonText='替换'
                     onOk={handleReplaceOK}
                     cancelButtonText='取消'
