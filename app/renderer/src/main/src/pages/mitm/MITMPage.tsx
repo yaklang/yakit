@@ -448,6 +448,7 @@ export interface ExtraMITMServerProps {
     /**禁用初始页 */
     disableCACertPage: boolean
     DisableWebsocketCompression: boolean
+    PluginConcurrency: number
 }
 
 interface MITMServerProps {
