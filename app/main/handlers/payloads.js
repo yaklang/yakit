@@ -1,6 +1,6 @@
 const {ipcMain} = require("electron")
 const fs = require("fs")
-const path = require("path")
+const {payloadDir} = require("../filePath")
 module.exports = (win, getClient) => {
     const asyncQueryPayload = (params) => {
         return new Promise((resolve, reject) => {
@@ -315,5 +315,22 @@ module.exports = (win, getClient) => {
     // 校验版本
     ipcMain.handle("YakVersionAtLeast", async (e, params) => {
         return await asyncYakVersionAtLeast(params)
+    })
+
+    const asyncExportMultiplePayloads = (params) => {
+        return new Promise((resolve, reject) => {
+            try {
+                if (!fs.existsSync(payloadDir)) {
+                    fs.mkdirSync(payloadDir, {recursive: true})
+                }
+                resolve(payloadDir)
+            } catch (error) {
+                reject(error)
+            }
+        })
+    }
+    // payload批量导出 默认在路径"yakit-projects payloads"下
+    ipcMain.handle("ExportMultiplePayloads", async (e, params) => {
+        return await asyncExportMultiplePayloads(params)
     })
 }

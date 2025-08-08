@@ -72,7 +72,7 @@ import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakEditor} from "@/utils/editors"
-import {openABSFileLocated} from "@/utils/openWebsite"
+import {openABSFile, openABSFileLocated} from "@/utils/openWebsite"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -93,6 +93,7 @@ import {
 } from "./utils"
 import {DeleteOnlinePayloadProps, NewPayloadOnlineTable} from "./onlinePayload/PayloadOnlineTable"
 import {API} from "@/services/swagger/resposeType"
+import {useTheme} from "@/hook/useTheme"
 const {ipcRenderer} = window.require("electron")
 
 // 是否为Payload操作员
@@ -795,7 +796,7 @@ const nodesToDataFun = (nodes: PayloadGroupNodeProps[]) => {
 const getDataBaseIds = (data: DataItem[]): string[] => {
     let ids: string[] = []
     for (const item of data) {
-        if (item.type === "DataBase" || item.type === "File") {
+        if (item.type === "DataBase") {
             ids.push(item.name)
         } else if (item.type === "Folder" && item.node) {
             const foundInNode = getDataBaseIds(item.node)
@@ -2310,6 +2311,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         userInfo,
         showType
     } = props
+    const {theme} = useTheme()
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(file.isCreate === true)
     const [inputName, setInputName] = useState<string>(file.name)
@@ -2722,6 +2724,10 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                             {!onlyInsert && (
                                 <>
                                     <YakitCheckbox
+                                        className={classNames(styles["payload-checkbox"], {
+                                            [styles["payload-dark-checkbox"]]:
+                                                file.id !== selectItem && theme === "dark"
+                                        })}
                                         checked={exportData.includes(file.name)}
                                         disabled={getDataBaseIds([file]).length === 0}
                                         onChange={(e) => {
@@ -3542,7 +3548,10 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
         keyword: "",
         folder: "",
         group: "",
-        page: 1, limit: 20, order: "asc", order_by: "id"
+        page: 1,
+        limit: 20,
+        order: "asc",
+        order_by: "id"
     })
     const [response, setResponse] = useState<API.PayloadResponse>()
     const pagination: API.PageMeta | undefined = response?.pagemeta
@@ -3641,7 +3650,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
             order: "desc",
             order_by: "updated_at"
         }
-        
+
         apiGetOnlinePayloadList(obj)
             .then((data) => {
                 setResponse(data)
@@ -3858,26 +3867,34 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
 
     // 导出任务
     const onExportFileFun = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件夹",
-                properties: ["openDirectory"]
-            })
-            .then((data: any) => {
-                if (data.filePaths.length) {
-                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    if (exportType === "all") {
-                        exportPathRef.current = absolutePath
-                        ipcRenderer.invoke(
-                            getExportGrpc,
-                            {
-                                Group: group,
-                                SavePath: absolutePath
-                            },
-                            exportToken
-                        )
-                        setShowModal(true)
-                    } else {
+        if (exportType === "all") {
+            ipcRenderer
+                .invoke("ExportMultiplePayloads")
+                .then((defaultPath) => {
+                    exportPathRef.current = defaultPath
+                    ipcRenderer.invoke(
+                        getExportGrpc,
+                        {
+                            Group: group,
+                            SavePath: defaultPath
+                        },
+                        exportToken
+                    )
+                    setShowModal(true)
+                })
+                .catch((e: any) => {
+                    failed(`批量导出失败：${e}`)
+                })
+        } else {
+            ipcRenderer
+                .invoke("openDialog", {
+                    title: "请选择文件夹",
+                    properties: ["openDirectory"]
+                })
+                .then((data) => {
+                    if (data.filePaths.length) {
+                        let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+
                         ipcRenderer
                             .invoke("pathJoin", {
                                 dir: absolutePath,
@@ -3896,11 +3913,11 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
                                 )
                                 setShowModal(true)
                             })
+                    } else {
+                        setExportVisible(false)
                     }
-                } else {
-                    setExportVisible(false)
-                }
-            })
+                })
+        }
     })
     // 取消导出任务
     const cancelExportFile = useMemoizedFn(() => {
@@ -3930,7 +3947,9 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
             info("[ExportFile] finished")
             setShowModal(false)
             setExportVisible(false)
-            exportPathRef.current && openABSFileLocated(exportPathRef.current)
+            if (exportPathRef.current) {
+                exportType === "all" ? openABSFile(exportPathRef.current) : openABSFileLocated(exportPathRef.current)
+            }
         })
         return () => {
             ipcRenderer.invoke(getCancleExportGrpc, exportToken)
