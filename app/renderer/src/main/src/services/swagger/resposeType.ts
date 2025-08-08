@@ -162,6 +162,7 @@ export declare namespace API {
   export interface UpdatePayloadRequest {
     content: string;
     id: number;
+    hitCount?: number;
   }
   export interface TouristUsedDetailResponse extends Paging {
     data: TouristUsedDetail[];

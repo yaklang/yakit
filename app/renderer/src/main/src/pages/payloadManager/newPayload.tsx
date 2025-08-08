@@ -85,7 +85,12 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {isEnpriTrace} from "@/utils/envfile"
 import {NewPayloadOnlineList} from "./onlinePayload/NewPayloadOnlineList"
 import {UserInfoProps, useStore} from "@/store"
-import {apiGetOnlinePayloadFile, apiGetOnlinePayloadList, apiUpdateOnlinePayloadFile} from "./utils"
+import {
+    apiDeleteOnlinePayloadList,
+    apiGetOnlinePayloadFile,
+    apiGetOnlinePayloadList,
+    apiUpdateOnlinePayloadFile
+} from "./utils"
 import {DeleteOnlinePayloadProps, NewPayloadOnlineTable} from "./onlinePayload/PayloadOnlineTable"
 import {API} from "@/services/swagger/resposeType"
 const {ipcRenderer} = window.require("electron")
@@ -1342,6 +1347,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                         onClick={() => {
                                             if (exportData.length === 0) {
                                                 warn("请选择导出内容")
+                                                return
                                             }
                                             setExportType("all")
                                             setExportVisible(true)
@@ -3532,11 +3538,11 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
     const [payloadFileData, setPayloadFileData] = useState<PayloadFileDataProps>()
 
     const [selectPayloadArr, setSelectPayloadArr] = useState<number[]>([])
-    const [params, setParams, getParams] = useGetState<QueryPayloadParams>({
-        Keyword: "",
-        Folder: "",
-        Group: "",
-        Pagination: {Page: 1, Limit: 20, Order: "asc", OrderBy: "id"}
+    const [params, setParams, getParams] = useGetState<API.PayloadRequest>({
+        keyword: "",
+        folder: "",
+        group: "",
+        page: 1, limit: 20, order: "asc", order_by: "id"
     })
     const [response, setResponse] = useState<API.PayloadResponse>()
     const pagination: API.PageMeta | undefined = response?.pagemeta
@@ -3603,8 +3609,6 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                 setEditorValue(res.data || "")
             })
             .catch((e: any) => {
-                console.log(e)
-
                 failed(`编辑器数据获取失败：${e}`)
             })
             .finally(() => {
@@ -3630,23 +3634,20 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
     const onQueryPayload = useMemoizedFn((page?: number, limit?: number, isNoRefreshList?: boolean) => {
         const obj: API.PayloadRequest = {
             ...getParams(),
-            ...getParams().Pagination,
             group,
             folder,
-
-            page: page || getParams().Pagination.Page,
-            limit: limit || getParams().Pagination.Limit,
+            page: page || getParams().page,
+            limit: limit || getParams().limit,
             order: "desc",
             order_by: "updated_at"
         }
+        
         apiGetOnlinePayloadList(obj)
             .then((data) => {
-                console.log("apiGetOnlinePayloadList---", data)
-
                 setResponse(data)
                 if (!isNoRefreshList) {
                     // 通知刷新列表
-                    emiter.emit("refreshListEvent")
+                    emiter.emit("refreshOnlineListEvent")
                 }
             })
             .catch((e: any) => {
@@ -3655,8 +3656,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
     })
 
     const onDeletePayload = useMemoizedFn((deletePayload: DeleteOnlinePayloadProps) => {
-        ipcRenderer
-            .invoke("DeletePayload", deletePayload)
+        apiDeleteOnlinePayloadList(deletePayload)
             .then(() => {
                 let page = pagination?.page
                 // 如为当页全部删除回到第一页
@@ -3696,9 +3696,9 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                     <div className={styles["extra"]}>
                         <YakitInput.Search
                             placeholder='请输入关键词搜索'
-                            value={params.Keyword}
+                            value={params.keyword}
                             onChange={(e) => {
-                                setParams({...params, Keyword: e.target.value})
+                                setParams({...params, keyword: e.target.value})
                             }}
                             style={{maxWidth: 200}}
                             onSearch={() => {
@@ -3997,12 +3997,6 @@ export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGr
 
     // 上传任务
     const onUploadFileFun = useMemoizedFn(() => {
-        console.log("onUploadFileFun---", type === "upload" ? "UploadPayloadToOnline" : "DownloadPayload", {
-            Token: userInfo.token,
-            Group: group,
-            Folder: folder
-        })
-
         ipcRenderer.invoke(
             type === "upload" ? "UploadPayloadToOnline" : "DownloadPayload",
             {

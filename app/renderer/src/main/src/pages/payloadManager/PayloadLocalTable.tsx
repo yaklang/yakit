@@ -53,9 +53,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
     const save = async () => {
         try {
             handleSave(record, {...record, [dataIndex]: value})
-        } catch (errInfo) {
-            console.log("Save failed:", errInfo)
-        }
+        } catch (errInfo) {}
     }
 
     return (
