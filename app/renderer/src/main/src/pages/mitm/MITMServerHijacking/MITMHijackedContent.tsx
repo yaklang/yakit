@@ -717,102 +717,110 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         return (
             <>
                 {/* 手动劫持 */}
-                <div style={{display: autoForward === "manual" ? "block" : "none", width: "100%"}}>
-                    {mitmVersion === MITMVersion.V2 ? (
-                        <div className={styles["mitm-v2-hijacked-manual-heard-extra"]}>
-                            <div className={styles["mitm-v2-hijacked-manual-heard-extra-left"]}>
-                                <TableTotalAndSelectNumber
-                                    total={manualTableTotal}
-                                    selectNum={manualTableSelectNumber}
-                                />
-                            </div>
-                            <div className={styles["mitm-v2-hijacked-manual-heard-extra-right"]}>
-                                <div className={styles["mitm-v2-switch"]}>
-                                    <YakitCheckbox checked={isOnlyLookResponse} onChange={onHijackResponse} />
-                                    <Tooltip
-                                        overlayClassName='plugins-tooltip'
-                                        title='勾选以后会默认放行所有请求，劫持对应响应'
-                                        placement='top'
-                                    >
-                                        <span className={styles["mitm-v2-switch-label"]}>只看响应</span>
-                                    </Tooltip>
+                {autoForward === "manual" && (
+                    <div style={{width: "100%"}}>
+                        {mitmVersion === MITMVersion.V2 ? (
+                            <div className={styles["mitm-v2-hijacked-manual-heard-extra"]}>
+                                <div className={styles["mitm-v2-hijacked-manual-heard-extra-left"]}>
+                                    <TableTotalAndSelectNumber
+                                        total={manualTableTotal}
+                                        selectNum={manualTableSelectNumber}
+                                    />
                                 </div>
-                                <YakitPopover
-                                    overlayClassName={styles["mitm-v2-hijacked-manual-drop-down-popover"]}
-                                    content={
-                                        <YakitMenu
-                                            width={150}
-                                            selectedKeys={[]}
-                                            data={[
-                                                {
-                                                    key: "batch-submit-data",
-                                                    label: "批量放行"
-                                                },
-                                                {
-                                                    key: "batch-discard-data",
-                                                    label: "批量丢弃"
-                                                },
-                                                {
-                                                    key: "batch-hijacking-response",
-                                                    label: "批量劫持响应"
-                                                }
-                                            ]}
-                                            onClick={onMITMManualBatchOperate}
-                                        />
-                                    }
-                                    trigger='click'
-                                    placement='bottomLeft'
-                                    visible={mitmV2PopoverVisible}
-                                    onVisibleChange={setMITMV2PopoverVisible}
-                                >
-                                    <YakitButton
-                                        type='outline2'
-                                        disabled={!manualTableSelectNumber}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                        }}
+                                <div className={styles["mitm-v2-hijacked-manual-heard-extra-right"]}>
+                                    <div className={styles["mitm-v2-switch"]}>
+                                        <YakitCheckbox checked={isOnlyLookResponse} onChange={onHijackResponse} />
+                                        <Tooltip
+                                            overlayClassName='plugins-tooltip'
+                                            title='勾选以后会默认放行所有请求，劫持对应响应'
+                                            placement='top'
+                                        >
+                                            <span className={styles["mitm-v2-switch-label"]}>只看响应</span>
+                                        </Tooltip>
+                                    </div>
+                                    <YakitPopover
+                                        overlayClassName={styles["mitm-v2-hijacked-manual-drop-down-popover"]}
+                                        content={
+                                            <YakitMenu
+                                                width={150}
+                                                selectedKeys={[]}
+                                                data={[
+                                                    {
+                                                        key: "batch-submit-data",
+                                                        label: "批量放行"
+                                                    },
+                                                    {
+                                                        key: "batch-discard-data",
+                                                        label: "批量丢弃"
+                                                    },
+                                                    {
+                                                        key: "batch-hijacking-response",
+                                                        label: "批量劫持响应"
+                                                    }
+                                                ]}
+                                                onClick={onMITMManualBatchOperate}
+                                            />
+                                        }
+                                        trigger='click'
+                                        placement='bottomLeft'
+                                        visible={mitmV2PopoverVisible}
+                                        onVisibleChange={setMITMV2PopoverVisible}
                                     >
-                                        批量操作
-                                        <ChevronDownIcon />
-                                    </YakitButton>
-                                </YakitPopover>
-                                <YakitButton onClick={onSubmitAll}>全部放行</YakitButton>
-                                <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefreshManual} />
+                                        <YakitButton
+                                            type='outline2'
+                                            disabled={!manualTableSelectNumber}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
+                                        >
+                                            批量操作
+                                            <ChevronDownIcon />
+                                        </YakitButton>
+                                    </YakitPopover>
+                                    <YakitButton onClick={onSubmitAll}>全部放行</YakitButton>
+                                    <YakitButton
+                                        type='outline1'
+                                        icon={<OutlineRefreshIcon />}
+                                        onClick={onRefreshManual}
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    ) : (
-                        <MITMManualHeardExtra
-                            urlInfo={urlInfo}
-                            ipInfo={ipInfo}
-                            status={status}
-                            currentIsWebsocket={currentIsWebsocket}
-                            currentIsForResponse={currentIsForResponse}
-                            hijackResponseType={hijackResponseType}
-                            traceInfo={traceInfo}
-                            setHijackResponseType={onSetHijackResponseType}
-                            onDiscardRequest={onDiscardRequest}
-                            onSubmitData={forward}
-                            width={width}
-                            calloutColor={calloutColor}
-                            onSetCalloutColor={setCalloutColor}
-                            beautifyTriggerRefresh={beautifyTriggerRefresh}
-                            onSetBeautifyTrigger={onSetBeautifyTrigger}
-                        />
-                    )}
-                </div>
+                        ) : (
+                            <MITMManualHeardExtra
+                                urlInfo={urlInfo}
+                                ipInfo={ipInfo}
+                                status={status}
+                                currentIsWebsocket={currentIsWebsocket}
+                                currentIsForResponse={currentIsForResponse}
+                                hijackResponseType={hijackResponseType}
+                                traceInfo={traceInfo}
+                                setHijackResponseType={onSetHijackResponseType}
+                                onDiscardRequest={onDiscardRequest}
+                                onSubmitData={forward}
+                                width={width}
+                                calloutColor={calloutColor}
+                                onSetCalloutColor={setCalloutColor}
+                                beautifyTriggerRefresh={beautifyTriggerRefresh}
+                                onSetBeautifyTrigger={onSetBeautifyTrigger}
+                            />
+                        )}
+                    </div>
+                )}
 
                 {/* 自动放行 */}
-                <div style={{display: autoForward === "log" ? "block" : "none", width: "100%"}}>
-                    <MITMLogHeardExtra
-                        sourceType={sourceType}
-                        onSetSourceType={setSourceType}
-                        setShowPluginHistoryList={setShowPluginHistoryList}
-                        setTempShowPluginHistory={setTempShowPluginHistory}
-                        tableTotal={tableTotal}
-                        tableSelectNum={tableSelectNum}
-                        hasNewData={hasNewData}
-                    />
-                </div>
+                {autoForward === "log" && (
+                    <div style={{width: "100%"}}>
+                        <MITMLogHeardExtra
+                            sourceType={sourceType}
+                            onSetSourceType={setSourceType}
+                            setShowPluginHistoryList={setShowPluginHistoryList}
+                            setTempShowPluginHistory={setTempShowPluginHistory}
+                            tableTotal={tableTotal}
+                            tableSelectNum={tableSelectNum}
+                            hasNewData={hasNewData}
+                        />
+                    </div>
+                )}
             </>
         )
     })
@@ -898,14 +906,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         }}
                     />
                 </div>
-
-                {/* 被动日志 */}
-                <div
-                    style={{display: autoForward === "passive" ? "block" : "none"}}
-                    className={styles["mitm-hijacked-passive-content"]}
-                >
-                    <MITMPluginLogViewer messages={logs} status={statusCards} />
-                </div>
             </>
         )
     })
@@ -986,6 +986,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 </div>
             </div>
             {onRenderContent()}
+            {/* 被动日志 */}
+            {autoForward === "passive" && (
+                <div className={styles["mitm-hijacked-passive-content"]}>
+                    <MITMPluginLogViewer messages={logs} status={statusCards} />
+                </div>
+            )}
         </div>
     )
 })
