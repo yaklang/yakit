@@ -1,7 +1,8 @@
+import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {StreamResult, HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {KVPair} from "@/models/kv"
 import {ExecResult, PaginationSchema} from "@/pages/invoker/schema"
-
+import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 // #region AI-(Task|Triage)
 export interface McpConfig {
     Type: string
@@ -467,5 +468,78 @@ export interface ToggleAIToolFavoriteRequest {
 export interface ToggleAIToolFavoriteResponse {
     IsFavorite: boolean
     Message: string
+}
+//#endregion
+//#region  ai model
+export interface GeneralResponse {
+    Ok: boolean
+    Reason: string
+}
+export interface LocalModelConfig {
+    Name: string
+    Type: string
+    FileName: string
+    DownloadURL: string
+    Description: string
+    DefaultPort: number
+    IsReady: boolean
+    IsLocal: boolean
+    Path: string
+    /**@name 前端使用展示启动后的主机 */
+    Host?: string
+}
+export interface GetSupportedLocalModelsResponse {
+    Models: LocalModelConfig[]
+}
+export interface IsLlamaServerReadyResponse extends GeneralResponse {}
+export interface InstallLlamaServerRequest {
+    Proxy: string
+    token: string
+}
+export interface DownloadLocalModelRequest {
+    ModelName: string
+    Proxy: string
+    token: string
+}
+export interface IsLocalModelReadyRequest {
+    ModelName: string
+}
+export interface IsLocalModelReadyResponse extends GeneralResponse {}
+export interface StartLocalModelRequest {
+    token: string
+    ModelName: string
+    Host: string
+    Port: number
+}
+
+export interface AddLocalModelRequest {
+    Name: string
+    ModelType: string
+    Description: string
+    Path: string
+}
+
+export interface DeleteLocalModelRequest {
+    Name: string
+    DeleteSourceFile: boolean
+}
+
+export interface UpdateLocalModelRequest extends AddLocalModelRequest {}
+
+export interface GetAllStartedLocalModelsResponse {
+    Models: StartedLocalModelInfo[]
+}
+export interface StartedLocalModelInfo {
+    Name: string
+    ModelType: string
+    Host: string
+    Port: number
+}
+export interface ClearAllModelsRequest {
+    DeleteSourceFile: boolean
+}
+export interface GetAIModelListResponse {
+    onlineModels: ThirdPartyApplicationConfig[]
+    localModels: StartedLocalModelInfo[]
 }
 //#endregion

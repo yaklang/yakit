@@ -1,0 +1,18 @@
+.ai-start-model-form {
+    padding: 24px 24px 8px 24px;
+    :global {
+        .ant-form {
+            flex: 1;
+        }
+    }
+}
+.button-group {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: 0 0 4px 4px;
+    border-top: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Neutral-Bg);
+}

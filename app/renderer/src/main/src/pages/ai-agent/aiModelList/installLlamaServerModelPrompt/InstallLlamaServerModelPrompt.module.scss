@@ -1,0 +1,29 @@
+
+
+.install-llama-server-model-prompt {
+    padding: 24px;
+}
+
+.download-llama-server-model-prompt {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.button-group {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.download-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    .download-progress-messages {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 24px;
+    }
+}
