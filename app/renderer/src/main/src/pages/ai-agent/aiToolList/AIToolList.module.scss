@@ -14,8 +14,13 @@
     overflow: hidden;
     .ai-tool-list-header {
         @extend %display-flex-center;
+        justify-content: space-between;
         gap: 4px;
         padding: 8px 12px 0;
+        .ai-tool-list-header-left {
+            @extend %display-flex-center;
+            gap: 4px;
+        }
     }
     .ai-tool-list-total {
         height: 16px;
