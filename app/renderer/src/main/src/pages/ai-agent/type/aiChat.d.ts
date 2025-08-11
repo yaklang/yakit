@@ -1,7 +1,8 @@
+import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {StreamResult, HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {KVPair} from "@/models/kv"
 import {ExecResult, PaginationSchema} from "@/pages/invoker/schema"
-
+import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 // #region AI-(Task|Triage)
 export interface McpConfig {
     Type: string
@@ -536,5 +537,9 @@ export interface StartedLocalModelInfo {
 }
 export interface ClearAllModelsRequest {
     DeleteSourceFile: boolean
+}
+export interface GetAIModelListResponse {
+    onlineModels: ThirdPartyApplicationConfig[]
+    localModels: StartedLocalModelInfo[]
 }
 //#endregion

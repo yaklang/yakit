@@ -169,7 +169,7 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
                                 setQuestion={setQuestion}
                                 textareaProps={textareaProps}
                                 onSubmit={handleTriageSubmit}
-                                extraFooterRight={<AIModelSelect />}
+                                extraFooterLeft={<AIModelSelect />}
                             />
                         </div>
 

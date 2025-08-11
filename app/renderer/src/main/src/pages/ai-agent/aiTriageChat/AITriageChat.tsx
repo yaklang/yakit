@@ -306,7 +306,7 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                                 setQuestion={setQuestion}
                                 textareaProps={textareaProps}
                                 onSubmit={handleTriageSend}
-                                extraFooterRight={<AIModelSelect disabled={isExecuting} />}
+                                extraFooterLeft={<AIModelSelect disabled={isExecuting} />}
                             />
                         </div>
 

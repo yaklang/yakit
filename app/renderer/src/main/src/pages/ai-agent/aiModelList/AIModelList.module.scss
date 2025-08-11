@@ -189,20 +189,6 @@
                             height: 12px;
                         }
                     }
-                    .ai-local-model-icon {
-                        @extend %display-flex-center;
-                        justify-content: center;
-                        flex-shrink: 0;
-                        width: 24px;
-                        height: 24px;
-                        border-radius: 50%;
-                        background-color: var(--Colors-Use-Lake-blue-Primary);
-                        color: var(--Colors-Use-Lake-blue-On-Primary);
-                        svg {
-                            width: 18px;
-                            height: 18px;
-                        }
-                    }
                 }
                 &-extra {
                     @extend %display-flex-center;
@@ -267,3 +253,29 @@
         justify-content: center;
     }
 }
+/**************** ai-local-model-icon start ****************/
+.ai-local-model-icon {
+    @extend %display-flex-center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--Colors-Use-Lake-blue-Primary);
+    color: var(--Colors-Use-Lake-blue-On-Primary);
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.ai-local-model-icon-ready {
+    background-color: var(--Colors-Use-Neutral-Text-1-Title);
+    color: var(--Colors-Use-Basic-Background);
+}
+.ai-local-model-icon-running {
+    background-color: var(--Colors-Use-Success-Primary);
+    color: var(--Colors-Use-Success-On-Primary);
+}
+
+/**************** ai-local-model-icon end ****************/

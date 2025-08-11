@@ -14,12 +14,12 @@ import {
     StartLocalModelRequest,
     UpdateLocalModelRequest,
     StartedLocalModelInfo,
-    LocalModelConfig
+    LocalModelConfig,
+    GetAIModelListResponse
 } from "../type/aiChat"
 import omit from "lodash/omit"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
-import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -166,7 +166,7 @@ export const grpcCancelStartLocalModel: APIFunc<string, null> = (token, hiddenEr
 }
 
 /**获取线上和本地已启动的AI模型 */
-export const getAIModelList: APINoRequestFunc<YakitSelectProps["options"]> = (hiddenError) => {
+export const getAIModelList: APINoRequestFunc<GetAIModelListResponse> = (hiddenError) => {
     return new Promise(async (resolve, reject) => {
         try {
             let onlineModels: ThirdPartyApplicationConfig[] = []
@@ -179,20 +179,7 @@ export const getAIModelList: APINoRequestFunc<YakitSelectProps["options"]> = (hi
             if (!!localModelsRes) {
                 localModels = localModelsRes.Models || []
             }
-            const result: YakitSelectProps["options"] = []
-            onlineModels.forEach((model) => {
-                result.push({
-                    value: model.Type,
-                    label: model.Type
-                })
-            })
-            localModels.forEach((model) => {
-                result.push({
-                    value: model.Name,
-                    label: model.Name
-                })
-            })
-            resolve(result)
+            resolve({onlineModels, localModels})
         } catch (error) {
             if (!hiddenError) yakitNotify("error", "getAIModelList 失败:" + error)
             reject(error)

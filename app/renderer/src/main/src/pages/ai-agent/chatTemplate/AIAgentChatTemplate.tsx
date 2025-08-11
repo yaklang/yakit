@@ -679,7 +679,7 @@ export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) 
 
                     {!execute && (
                         <>
-                            <AIModelSelect radius={true} />
+                            <AIModelSelect />
                             {!!showReExe && (
                                 <YakitButton
                                     className={styles["rounded-text-icon-btn"]}
