@@ -17,6 +17,8 @@ import {showByRightContext} from "../YakitMenu/showByRightContext"
 import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
 import {getClipboardText, setClipboardText} from "@/utils/clipboard"
+import {useXTermOptions} from "@/hook/useXTermOptions/useXTermOptions"
+import {useCampare} from "@/hook/useCompare/useCompare"
 
 export interface YakitXtermRefProps {
     terminal: Terminal
@@ -118,39 +120,11 @@ interface IProps {
      */
     customKeyEventHandler?(event: KeyboardEvent): boolean
 }
-const defaultOptions = {
+export const defaultTerminalOptions = {
     fontFamily: '"Courier New", Courier, monospace',
-    convertEol: true,
-    theme: {
-        foreground: "#e5c7a9",
-        background: "#31343F",
-        cursor: "#f6f7ec",
-
-        black: "#121418",
-        brightBlack: "#675f54",
-
-        red: "#c94234",
-        brightRed: "#ff645a",
-
-        green: "#85c54c",
-        brightGreen: "#98e036",
-
-        yellow: "#f5ae2e",
-        brightYellow: "#e0d561",
-
-        blue: "#1398b9",
-        brightBlue: "#5fdaff",
-
-        magenta: "#d0633d",
-        brightMagenta: "#ff9269",
-
-        cyan: "#509552",
-        brightCyan: "#84f088",
-
-        white: "#e5c6aa",
-        brightWhite: "#f6f7ec"
-    }
+    convertEol: true
 }
+
 export const TERMINAL_KEYBOARD_Map = {
     KeyV: {
         code: "KeyV",
@@ -183,7 +157,7 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
     const terminalDivRef = useRef<HTMLDivElement>(null)
     const terminalRef = useRef<Terminal>(
         new Terminal({
-            ...defaultOptions,
+            ...defaultTerminalOptions,
             ...options
         })
     )
@@ -201,6 +175,10 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
         }),
         []
     )
+
+    useXTermOptions({
+        getTerminal: () => terminalRef.current
+    })
 
     useEffect(() => {
         if (!systemRef.current) {

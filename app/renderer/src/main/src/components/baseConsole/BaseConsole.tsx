@@ -12,44 +12,12 @@ import ReactResizeDetector from "react-resize-detector"
 import {useEngineConsoleStore} from "../../store/baseConsole"
 import {YakitSystem} from "@/yakitGVDefine"
 import {setClipboardText} from "@/utils/clipboard"
+import {useXTermOptions} from "@/hook/useXTermOptions/useXTermOptions"
 
 const {ipcRenderer} = window.require("electron")
 
 export interface EngineConsoleProp {
     isMini: boolean
-}
-
-export const defaultXTermOptions = {
-    convertEol: true,
-    theme: {
-        foreground: "#536870",
-        background: "#E8E9E8",
-        cursor: "#536870",
-
-        black: "#002831",
-        brightBlack: "#001e27",
-
-        red: "#d11c24",
-        brightRed: "#bd3613",
-
-        green: "#738a05",
-        brightGreen: "#475b62",
-
-        yellow: "#a57706",
-        brightYellow: "#536870",
-
-        blue: "#2176c7",
-        brightBlue: "#708284",
-
-        magenta: "#c61c6f",
-        brightMagenta: "#5956ba",
-
-        cyan: "#259286",
-        brightCyan: "#819090",
-
-        white: "#eae3cb",
-        brightWhite: "#fcf4dc"
-    }
 }
 
 export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
@@ -64,6 +32,10 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
             consoleLogRef.current = ""
         }
     }, [consoleLog])
+
+    const terminalOptions = useXTermOptions({
+        getTerminal: () => xtermRef.current?.terminal
+    })
 
     useEffect(() => {
         if (!xtermRef) {
@@ -147,7 +119,12 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <XTerm ref={xtermRef} customKeyEventHandler={onCopy} options={defaultXTermOptions} />
+            <XTerm
+                ref={xtermRef}
+                customKeyEventHandler={onCopy}
+                options={terminalOptions}
+                className={styles["baseConsole"]}
+            />
         </div>
     )
 }

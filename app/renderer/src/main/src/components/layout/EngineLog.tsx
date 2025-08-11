@@ -5,7 +5,8 @@ import {EngineLogCloseSvgIcon} from "./icons"
 import ReactResizeDetector from "react-resize-detector"
 
 import styles from "./EngineLog.module.scss"
-import { getReleaseEditionName } from "@/utils/envfile"
+import {getReleaseEditionName} from "@/utils/envfile"
+import {useXTermOptions} from "@/hook/useXTermOptions/useXTermOptions"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -18,6 +19,10 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
     const {visible, setVisible} = props
 
     const xtermRef = useRef<any>(null)
+    const terminalOptions = useXTermOptions({
+        getTerminal: () => xtermRef.current?.terminal,
+        delay: 200
+    })
 
     /** 日志输出 */
     const writeToConsole = (i: string) => {
@@ -26,7 +31,9 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
     }
 
     useEffect(() => {
-        if (xtermRef && visible) xtermClear(xtermRef)
+        if (xtermRef && visible) {
+            xtermClear(xtermRef)
+        }
     }, [visible])
 
     useEffect(() => {
@@ -74,41 +81,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
                     refreshMode={"debounce"}
                     refreshRate={50}
                 />
-                <XTerm
-                    ref={xtermRef}
-                    options={{
-                        convertEol: true,
-                        theme: {
-                            foreground: "#e5c7a9",
-                            background: "#292520",
-                            cursor: "#f6f7ec",
-
-                            black: "#121418",
-                            brightBlack: "#675f54",
-
-                            red: "#c94234",
-                            brightRed: "#ff645a",
-
-                            green: "#85c54c",
-                            brightGreen: "#98e036",
-
-                            yellow: "#f5ae2e",
-                            brightYellow: "#e0d561",
-
-                            blue: "#1398b9",
-                            brightBlue: "#5fdaff",
-
-                            magenta: "#d0633d",
-                            brightMagenta: "#ff9269",
-
-                            cyan: "#509552",
-                            brightCyan: "#84f088",
-
-                            white: "#e5c6aa",
-                            brightWhite: "#f6f7ec"
-                        }
-                    }}
-                />
+                <XTerm ref={xtermRef} options={terminalOptions} />
             </div>
         </div>
     )
