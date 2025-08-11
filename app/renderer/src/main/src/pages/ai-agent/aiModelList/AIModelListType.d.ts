@@ -1,6 +1,7 @@
 import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
 import {LocalModelConfig} from "../type/aiChat"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
 
 export interface AIModelListProps {}
 
@@ -32,7 +33,11 @@ export interface AIOnlineModelListItemProps {
     onRemove: (item: ThirdPartyApplicationConfig) => void
     onEdit: (item: ThirdPartyApplicationConfig) => void
 }
-
+export interface OutlineAtomIconByStatusProps {
+    isReady?: boolean
+    isRunning?: boolean
+    iconClassName?: string
+}
 export interface AILocalModelListItemPromptHintProps {
     title: string
     content: string
@@ -42,6 +47,6 @@ export interface AILocalModelListItemPromptHintProps {
 
 export interface AILocalModelListWrapperProps {
     title: string
-    list:LocalModelConfig[]
+    list: LocalModelConfig[]
     onRefresh: () => void
 }

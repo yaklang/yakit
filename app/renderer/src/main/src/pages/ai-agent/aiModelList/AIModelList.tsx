@@ -9,7 +9,8 @@ import {
     AIModelType,
     AIOnlineModelListItemProps,
     AIOnlineModelListProps,
-    AIOnlineModelListRefProps
+    AIOnlineModelListRefProps,
+    OutlineAtomIconByStatusProps
 } from "./AIModelListType"
 import styles from "./AIModelList.module.scss"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -760,14 +761,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
         <div className={styles["ai-local-model-list-item"]}>
             <div className={styles["ai-local-model-heard"]}>
                 <div className={styles["ai-local-model-heard-left"]}>
-                    <div
-                        className={classNames(styles["ai-local-model-icon"], {
-                            [styles["ai-local-model-icon-ready"]]: isReady,
-                            [styles["ai-local-model-icon-running"]]: isRunning
-                        })}
-                    >
-                        <OutlineAtomIcon />
-                    </div>
+                    <OutlineAtomIconByStatus isReady={isReady} isRunning={isRunning} />
                     <div className={styles["ai-local-model-heard-left-name"]}>{item.Name}</div>
                     {typeNode}
                 </div>
@@ -853,7 +847,23 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
         </div>
     )
 })
-
+export const OutlineAtomIconByStatus: React.FC<OutlineAtomIconByStatusProps> = React.memo((props) => {
+    const {isReady, isRunning, iconClassName} = props
+    return (
+        <div
+            className={classNames(
+                styles["ai-local-model-icon"],
+                {
+                    [styles["ai-local-model-icon-ready"]]: isReady,
+                    [styles["ai-local-model-icon-running"]]: isRunning
+                },
+                iconClassName
+            )}
+        >
+            <OutlineAtomIcon />
+        </div>
+    )
+})
 const AILocalModelListItemPromptHint: React.FC<AILocalModelListItemPromptHintProps> = React.memo((props) => {
     const {title, content, onOk, onCancel} = props
     const [checked, setChecked] = useState<boolean>(false)
