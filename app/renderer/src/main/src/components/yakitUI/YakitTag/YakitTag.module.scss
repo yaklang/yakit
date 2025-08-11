@@ -83,7 +83,7 @@
 }
 
 .yakit-tag-info {
-    background: var(--Colors-Use-Orange-Bg-Hover);
+    background: var(--Colors-Use-Orange-Bg);
     border: 1px solid var(--Colors-Use-Orange-Border);
     color: var(--Colors-Use-Orange-Primary);
     svg {
@@ -201,8 +201,8 @@
         }
 
         .ant-tag-checkable-checked {
-            background: var(--Colors-Use-Main-Bg-Hover);
-            color: var(--Colors-Use-Main-Primary);
+            background: var(--Colors-Use-Main-Primary);
+            color: var(--Colors-Use-Main-On-Primary);
         }
 
         .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
