@@ -7,6 +7,7 @@ export interface PluginTraceRequest {
 }
 type TraceStatus = "pending" | "running" | "completed" | "failed" | "cancelled"
 export interface PluginExecutionTrace {
+    Index: number
     TraceID: string
     PluginID: string
     HookName: string
@@ -52,6 +53,7 @@ export interface PluginTraceProps {
     tracing: boolean
     stopLoading: boolean
     readonly startPluginTrace: () => void
+    readonly resetPluginTrace: () => void
     readonly stopPluginTrace: () => void
     readonly cancelPluginTraceById: (this: any, traceID: any) => void
     readonly pluginTraceStats: () => PluginTraceStats

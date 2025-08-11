@@ -720,6 +720,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                         tracing={puginTraceData.tracing}
                         stopLoading={puginTraceData.stopLoading}
                         startPluginTrace={pluginTraceActions.startPluginTrace}
+                        resetPluginTrace={pluginTraceActions.resetPluginTrace}
                         stopPluginTrace={pluginTraceActions.stopPluginTrace}
                         cancelPluginTraceById={pluginTraceActions.cancelPluginTraceById}
                         pluginTraceStats={pluginTraceActions.pluginTraceStats}

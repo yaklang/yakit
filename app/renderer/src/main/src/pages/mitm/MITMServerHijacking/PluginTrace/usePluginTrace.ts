@@ -22,6 +22,7 @@ function usePluginTrace(params: PluginTraceParams) {
     })
     const tracesRef = useRef<PluginExecutionTrace[]>([])
     const cancelTracesIdRef = useRef<string[]>([])
+    const resetRef = useRef<boolean>(false)
 
     useEffect(() => {
         ipcRenderer.on("mitm-plugin-trace-start-success", () => {
@@ -66,6 +67,7 @@ function usePluginTrace(params: PluginTraceParams) {
         })
 
         ipcRenderer.on("mitm-plugin-trace-update", (event, data) => {
+            console.log(data.Traces.length)
             if (data.Traces.length > 0) {
                 let newTraces = tracesRef.current.slice()
                 data.Traces.forEach((trace: PluginExecutionTrace) => {
@@ -106,11 +108,13 @@ function usePluginTrace(params: PluginTraceParams) {
                     return b.StartTime - a.StartTime // 其他情况按时间倒序
                 })
 
-                tracesRef.current = sortedTraces
+                tracesRef.current = sortedTraces.map((item, i) => ({...item, Index: i + 1}))
             } else {
                 tracesRef.current = []
             }
-            pluginTraceRefFun().syncTracesToState()
+            if (!resetRef.current) {
+                pluginTraceRefFun().syncTracesToState()
+            }
         })
 
         ipcRenderer.on("mitm-plugin-trace-end", () => {
@@ -144,6 +148,22 @@ function usePluginTrace(params: PluginTraceParams) {
         }).catch(() => {})
     })
 
+    const resetPluginTrace = useMemoizedFn(() => {
+        resetRef.current = true
+        pluginTraceStatsRef.current = {
+            TotalTraces: 0,
+            RunningTraces: 0,
+            FailedTraces: 0,
+            CompletedTraces: 0,
+            CancelledTraces: 0
+        }
+        tracesRef.current = []
+        cancelTracesIdRef.current = []
+        setTimeout(() => {
+            resetRef.current = false
+        }, 1000)
+    })
+
     const stopPluginTrace = useMemoizedFn(() => {
         setStopLoading(true)
         grpcStopPluginTrace().catch(() => {})
@@ -175,12 +195,13 @@ function usePluginTrace(params: PluginTraceParams) {
     const actions = useCreation(
         () => ({
             startPluginTrace,
+            resetPluginTrace,
             stopPluginTrace,
             cancelPluginTraceById,
             pluginTraceStats,
             pluginTraceList
         }),
-        [startPluginTrace, stopPluginTrace, cancelPluginTraceById, pluginTraceStats, pluginTraceList]
+        [startPluginTrace, resetPluginTrace, stopPluginTrace, cancelPluginTraceById, pluginTraceStats, pluginTraceList]
     )
 
     return [state, actions] as const

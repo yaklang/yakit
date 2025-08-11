@@ -65,6 +65,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
             tracing,
             stopLoading,
             startPluginTrace,
+            resetPluginTrace,
             stopPluginTrace,
             cancelPluginTraceById,
             pluginTraceStats,
@@ -92,6 +93,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
         })
         const [tableLoading, setTableLoading] = useState<boolean>(false)
         const [showList, setShowList] = useState<PluginExecutionTrace[]>([])
+        const [scrollToIndex, setScrollToIndex] = useState<number | string>()
         const [refresh, setRefresh] = useState<boolean>(true)
         const [selectCurTrace, setSelectCurTrace] = useState<PluginExecutionTrace>()
         const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
@@ -140,6 +142,13 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
 
         const refreshFlush = useMemoizedFn(() => {
             setIsRefreshPluginTraces((prev) => !prev)
+        })
+
+        const onResetPluginTrace = useMemoizedFn(() => {
+            cancelTraces()
+            resetPluginTrace()
+            setShowList([])
+            refreshAndScrollNow()
         })
 
         const lastRatioRef = useRef<{firstRatio: string; secondRatio: string}>({
@@ -217,6 +226,12 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
 
         const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
             const columnArr: ColumnsTypeProps[] = [
+                {
+                    title: "序号",
+                    width: 96,
+                    fixed: "left",
+                    dataKey: "Index"
+                },
                 {
                     title: "插件名称",
                     width: 200,
@@ -420,6 +435,19 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
             {wait: 200, leading: true}
         ).run
 
+        const onPositioning = useMemoizedFn((traceID: string) => {
+            let scrollToIndex: number | undefined = undefined
+            showList.forEach((item, index) => {
+                if (item.TraceID === traceID) {
+                    scrollToIndex = index
+                }
+            })
+            if (scrollToIndex !== undefined) {
+                // 加随机值触发更新渲染执行表格跳转方法
+                setScrollToIndex(scrollToIndex + "_" + Math.random())
+            }
+        })
+
         return (
             <div className={styles["plugin-trace"]}>
                 {isInitTrace ? (
@@ -504,6 +532,14 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
                                                                 type='outline1'
                                                                 colors='danger'
                                                                 size='small'
+                                                                onClick={onResetPluginTrace}
+                                                            >
+                                                                重置
+                                                            </YakitButton>
+                                                            <YakitButton
+                                                                type='outline1'
+                                                                colors='danger'
+                                                                size='small'
                                                                 loading={stopLoading}
                                                                 onClick={stopPluginTrace}
                                                             >
@@ -513,7 +549,6 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
                                                                 type='text2'
                                                                 icon={<OutlineRefreshIcon />}
                                                                 onClick={refreshAndScrollNow}
-                                                                style={{marginLeft: 8}}
                                                             />
                                                         </div>
                                                     ) : (
@@ -547,6 +582,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
                                         useUpAndDown
                                         inMouseEnterTable
                                         onSetCurrentRow={onSetCurrentRow}
+                                        scrollToIndex={scrollToIndex}
                                     ></TableVirtualResize>
                                 </div>
                             </div>
@@ -577,6 +613,30 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
                                                     className={styles["content-heard-body-description"]}
                                                     style={{flexWrap: "wrap"}}
                                                 >
+                                                    <YakitTag
+                                                        color='yellow'
+                                                        onClick={() => {
+                                                            if (!selectCurTrace?.TraceID) {
+                                                                yakitNotify("info", "列表未找到，暂无法定位")
+                                                                return
+                                                            }
+
+                                                            if (selectCurTrace?.Status === "completed") {
+                                                                yakitNotify(
+                                                                    "info",
+                                                                    selectCurTrace?.TraceID +
+                                                                        "：状态已执行完成，已自动从列表移除，暂无法定位"
+                                                                )
+                                                                return
+                                                            }
+
+                                                            onPositioning(selectCurTrace?.TraceID)
+                                                        }}
+                                                        style={{cursor: "pointer"}}
+                                                    >
+                                                        ID: {selectCurTrace?.Index}
+                                                    </YakitTag>
+                                                    <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
                                                     <span className={styles["content-heard-body-time"]}>
                                                         开始时间:
                                                         {!!selectCurTrace?.StartTime
