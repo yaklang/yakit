@@ -115,6 +115,7 @@ export const DemoLayout: React.FC<any> = (p) => {
                     label='多选下拉框'
                     help='这里是帮助信息'
                     placeholder='请选择'
+                    allowClear={true}
                     data={[
                         {label: "1", value: "1"},
                         {label: "2", value: "2"},
@@ -184,6 +185,7 @@ export const DemoLayout: React.FC<any> = (p) => {
                     label='文本域'
                     help='这里是帮助信息'
                     placeholder='提示信息'
+                    allowClear={true}
                     autoSize={{minRows: 1, maxRows: 3}}
                 />
                 <DemoItemAutoComplete
@@ -193,6 +195,7 @@ export const DemoLayout: React.FC<any> = (p) => {
                     label='提示输入框'
                     help='这里是帮助信息'
                     placeholder='提示信息'
+                    allowClear={true}
                     autoComplete={["真的加的1", "真的加的2", "真的加的3", "真的加的4"]}
                 />
                 <DemoItemInputInteger

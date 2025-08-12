@@ -273,6 +273,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                 <div className={styles["header-second"]}>
                     <YakitInput
                         prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
+                        allowClear
                         placeholder='请输入关键词搜索'
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}

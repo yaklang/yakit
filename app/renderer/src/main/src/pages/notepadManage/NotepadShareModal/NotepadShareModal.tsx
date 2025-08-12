@@ -255,6 +255,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                             onSearch={onSetSearchValue}
                             searchValue={searchValue}
                             onClear={onClear}
+                            allowClear
                             notFoundContent={loading ? <YakitSpin size='small' /> : "暂无数据"}
                             onChange={onChange}
                             labelInValue

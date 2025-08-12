@@ -91,6 +91,7 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
         <div className={styles["document-collect"]}>
             <div className={styles["tree-top-wrap"]}>
                 <YakitInput.Search
+                    allowClear
                     wrapperStyle={{width: "calc(100% - 40px)", marginBottom: 15}}
                     placeholder={"请输入文件名或函数进行搜索"}
                     onChange={onSearchChange}

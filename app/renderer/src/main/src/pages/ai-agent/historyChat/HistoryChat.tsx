@@ -103,6 +103,7 @@ export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
                     <YakitInput
                         prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                         placeholder='请输入关键词搜索'
+                        allowClear
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />

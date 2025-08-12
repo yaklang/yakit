@@ -244,6 +244,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                                 rules={[{required: true, message: ""}]}
                             >
                                 <YakitInput
+                                    allowClear
                                     value={params.BridgeParam.Addr}
                                     onChange={(e) => {
                                         params.BridgeParam.Addr = e.target.value
@@ -253,6 +254,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                             </Form.Item>
                             <Form.Item label='密码' name={["BridgeParam", "Secret"]}>
                                 <YakitInput
+                                    allowClear
                                     value={params.BridgeParam.Secret}
                                     onChange={(e) => {
                                         params.BridgeParam.Secret = e.target.value
@@ -265,6 +267,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                     {!params.IsRemote && (
                         <Form.Item label='反连地址' name='ReverseHost' rules={[{required: true, message: ""}]}>
                             <YakitInput
+                                allowClear
                                 value={params.ReverseHost}
                                 onChange={(e) => setValue({...params, ReverseHost: e.target.value})}
                             />

@@ -224,7 +224,7 @@ export const EditChatNameModal: React.FC<EditChatNameModalProps> = memo((props) 
         >
             <Form form={form} labelCol={{span: 6}} wrapperCol={{span: 18}}>
                 <Form.Item label='对话框标题' name='name' rules={[{required: true, message: "请输入对话框标题"}]}>
-                    <YakitInput showCount maxLength={50} />
+                    <YakitInput showCount maxLength={50} allowClear />
                 </Form.Item>
             </Form>
         </YakitModal>

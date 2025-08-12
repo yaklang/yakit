@@ -366,7 +366,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 form.setFieldsValue({PluginConcurrency: 20})
             }
         }
-        
+
         return (
             <YakitDrawer
                 className={styles["advanced-configuration-drawer"]}
@@ -404,6 +404,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
                                 return {value: i, label: i}
                             })}
+                            allowClear
                             mode='tags'
                             placeholder={"例如 1.1.1.1"}
                         />

@@ -354,6 +354,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
                     {/* 新建规则组输入框 */}
                     <YakitInput
                         ref={addInputRef}
+                        allowClear
                         wrapperClassName={activeAdd ? styles["show-add-input"] : styles["hidden-add-input"]}
                         showCount
                         maxLength={50}
@@ -393,6 +394,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
                                                     showCount
                                                     maxLength={50}
                                                     value={editName}
+                                                    allowClear
                                                     onChange={(e) => {
                                                         setEditName(e.target.value)
                                                     }}
@@ -1661,6 +1663,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
                                 maxLength={50}
                                 prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                                 value={search}
+                                allowClear
                                 onChange={(e) => {
                                     const val = e.target.value.trim()
                                     setSearch(val)
@@ -2504,7 +2507,12 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                         ) : (
                             <>
                                 <div className={styles["list-search-and-add"]}>
-                                    <YakitInput.Search size='large' placeholder='请输入组名' onSearch={handleSearch} />
+                                    <YakitInput.Search
+                                        size='large'
+                                        placeholder='请输入组名'
+                                        onSearch={handleSearch}
+                                        allowClear
+                                    />
                                 </div>
 
                                 <div className={styles["list-container"]}>

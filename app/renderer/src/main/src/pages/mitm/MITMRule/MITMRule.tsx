@@ -996,6 +996,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 <YakitInput.Search
                     size='small'
                     placeholder='请输入关键字搜索'
+                    allowClear
                     style={{maxWidth: 200}}
                     value={valueSearch}
                     onChange={(e) => {
