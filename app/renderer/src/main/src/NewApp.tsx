@@ -297,7 +297,7 @@ function NewApp() {
             }
             // 自动上传项目
             if (autoUploadProject.isOpen && userInfo.isLogin) {
-                emiter.emit("autoUploadProject", JSON.stringify(autoUploadProject.day))
+                emiter.emit("autoUploadProject", JSON.stringify(autoUploadProject))
             }
         } else {
             aboutLoginUpload(token)

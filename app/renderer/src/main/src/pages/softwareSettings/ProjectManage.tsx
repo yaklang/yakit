@@ -57,8 +57,9 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {AutoTextarea} from "../fuzzer/components/AutoTextarea/AutoTextarea"
 import {isCommunityEdition, isEnpriTrace, isIRify} from "@/utils/envfile"
 import {setClipboardText} from "@/utils/clipboard"
-import {useEeSystemConfig} from "@/store"
+import {useEeSystemConfig, useStore} from "@/store"
 import {API} from "@/services/swagger/resposeType"
+import { apiSystemConfig } from "@/components/layout/utils"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -601,6 +602,32 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             </div>
         )
     })
+    const {userInfo} = useStore()
+    useEffect(() => {
+        if (!isEnpriTrace()) return
+        // 登录根据配置参数判断是否自动上传项目
+        // 退出登录不需要去中止正在上传的项目；线上接口会抛错；因为循环跑接口，所以抛错信息很能很多(已告知产品)
+        if (userInfo.isLogin) {
+            apiSystemConfig().then((config) => {
+                const data = config.data || []
+                let autoUploadProject = {
+                    isOpen: false,
+                    day: 10
+                }
+                const item = data.find((ele) => ele.configName === "autoUploadProject")
+                if (item) {
+                    autoUploadProject = {
+                        isOpen: item.isOpen,
+                        day: !Number.isNaN(+item.content) ? +item.content : 10
+                    }
+                }
+                //自动上传项目
+                if (autoUploadProject.isOpen && userInfo.isLogin) {
+                    emiter.emit("autoUploadProject", JSON.stringify(autoUploadProject))
+                }
+            })
+        }
+    }, [userInfo.isLogin])
 
     useEffect(() => {
         emiter.on("onGetProjectInfo", getProjectInfo)
