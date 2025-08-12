@@ -375,7 +375,9 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.AI_Agent,
     YakitRoute.Ssa_Result_Diff,
     YakitRoute.AddAIForge,
-    YakitRoute.ModifyAIForge
+    YakitRoute.ModifyAIForge,
+    YakitRoute.AddAITool,
+    YakitRoute.ModifyAITool
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
