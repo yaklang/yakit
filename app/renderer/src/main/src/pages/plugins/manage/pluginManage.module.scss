@@ -533,3 +533,18 @@
         }
     }
 }
+
+.syncToEE {
+    &-title {
+        padding: 8px 16px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+    }
+    &-footer {
+        display: flex;
+        justify-content: end;
+        gap: 8px;
+        width: 100%;
+        padding: 0 8px 8px 8px;
+    }
+}

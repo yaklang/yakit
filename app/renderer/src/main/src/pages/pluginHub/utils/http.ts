@@ -1,4 +1,4 @@
-import {APIFunc} from "@/apiUtils/type"
+import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {HTTPRequestParameters} from "@/types/http-api"
@@ -225,6 +225,23 @@ export const httpDeleteComment: APIFunc<number, API.ActionSucceeded> = (request,
             .then(resolve)
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", "删除评论失败:" + err)
+                reject(err)
+            })
+    })
+}
+
+/**
+ * @name 插件同步到企业版
+ */
+export const httpUploadPluginToEE: APINoRequestFunc<API.ActionSucceeded> = (hiddenError) => {
+    return new Promise((resolve, reject) => {
+        NetWorkApi<unknown, API.ActionSucceeded>({
+            method: "post",
+            url: "plugin/sync/company"
+        })
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "插件插件同步到企业版失败:" + err)
                 reject(err)
             })
     })

@@ -2,7 +2,7 @@ import React, {memo, useEffect, useMemo, useReducer, useRef, useState} from "rea
 import {PluginsContainer, PluginsLayout, statusTag} from "../baseTemplate"
 import {
     AuthorImg,
-    FuncBtn,
+    FuncBtnIcon,
     FuncFilterPopover,
     FuncSearch,
     GridLayoutOpt,
@@ -16,6 +16,7 @@ import {
     OutlineClouddownloadIcon,
     OutlineClouduploadIcon,
     OutlineDotshorizontalIcon,
+    OutlinePaperairplaneIcon,
     OutlinePencilaltIcon,
     OutlinePluscircleIcon,
     OutlineRefreshIcon,
@@ -90,6 +91,7 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {randomString} from "@/utils/randomUtil"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {SolidClouduploadIcon} from "@/assets/icon/solid"
+import {httpUploadPluginToEE} from "@/pages/pluginHub/utils/http"
 
 const {ipcRenderer} = window.require("electron")
 interface PluginManageProps {}
@@ -1003,6 +1005,46 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     }, [])
     /** ---------- 上传插件 end ---------- */
 
+    /** ---------- 同步插件到企业版 start ---------- */
+    const [syncToEELoading, setSyncToEELoading] = useState<boolean>(false)
+    const sureSyncPluginToEE = (m) => {
+        setSyncToEELoading(true)
+        httpUploadPluginToEE()
+            .then((res) => {
+                if (res.ok) {
+                    onRefListAndTotalAndGroup()
+                    yakitNotify("success", "同步插件到企业版成功")
+                    m.destroy()
+                }
+            })
+            .catch(() => {})
+            .finally(() => {
+                setSyncToEELoading(false)
+            })
+    }
+    const onSyncPluginToEE = useMemoizedFn(() => {
+        const m = showYakitModal({
+            title: "插件同步",
+            type: "white",
+            maskClosable: false,
+            content: (
+                <div className={styles["syncToEE"]}>
+                    <div className={styles["syncToEE-title"]}>确定将社区版全部插件同步到企业版？</div>
+                    <div className={styles["syncToEE-footer"]}>
+                        <YakitButton type='outline2' onClick={() => m.destroy()}>
+                            取消
+                        </YakitButton>
+                        <YakitButton type='primary' loading={syncToEELoading} onClick={() => sureSyncPluginToEE(m)}>
+                            确定
+                        </YakitButton>
+                    </div>
+                </div>
+            ),
+            footer: null
+        })
+    })
+    /** ---------- 同步插件到企业版 end ---------- */
+
     return (
         <div ref={layoutRef} className={styles["plugin-manage-layout"]}>
             {!!plugin && (
@@ -1036,9 +1078,18 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         <FuncSearch maxWidth={1000} value={searchs} onSearch={onKeywordAndUser} onChange={setSearchs} />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
+                            {admin.ee && (
+                                <FuncBtnIcon
+                                    icon={<OutlinePaperairplaneIcon />}
+                                    type='outline2'
+                                    size='large'
+                                    name={"同步插件到企业版"}
+                                    onClick={onSyncPluginToEE}
+                                    disabled={initTotal === 0}
+                                />
+                            )}
                             {admin.isAdmin && (
-                                <FuncBtn
-                                    maxWidth={1150}
+                                <FuncBtnIcon
                                     icon={<OutlinePencilaltIcon />}
                                     disabled={selectNum === 0 && !allCheck}
                                     type='outline2'
@@ -1047,8 +1098,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     onClick={onShowModifyAuthor}
                                 />
                             )}
-                            <FuncBtn
-                                maxWidth={1150}
+                            <FuncBtnIcon
                                 icon={<OutlineClouddownloadIcon />}
                                 type='outline2'
                                 size='large'
@@ -1058,8 +1108,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 disabled={initTotal === 0}
                             />
                             {admin.isAdmin && (
-                                <FuncBtn
-                                    maxWidth={1150}
+                                <FuncBtnIcon
                                     icon={<OutlineSaveIcon />}
                                     type='outline2'
                                     size='large'
@@ -1133,8 +1182,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                         placement: "bottom"
                                     }}
                                 >
-                                    <FuncBtn
-                                        maxWidth={1150}
+                                    <FuncBtnIcon
                                         icon={<OutlineClouduploadIcon />}
                                         type='outline2'
                                         size='large'
@@ -1144,8 +1192,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 </YakitDropdownMenu>
                             )}
                             {admin.isAdmin && (
-                                <FuncBtn
-                                    maxWidth={1150}
+                                <FuncBtnIcon
                                     icon={<OutlineTrashIcon />}
                                     type='outline2'
                                     size='large'
