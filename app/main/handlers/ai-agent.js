@@ -179,6 +179,38 @@ module.exports = (win, getClient) => {
         return await asyncGetAIToolList(param)
     })
 
+    const asyncDeleteAITool = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteAITool(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    /**获取工具列表 */
+    ipcMain.handle("DeleteAITool", async (e, param) => {
+        return await asyncDeleteAITool(param)
+    })
+
+    const asyncSaveAITool = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SaveAITool(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    /**新增工具 */
+    ipcMain.handle("SaveAITool", async (e, param) => {
+        return await asyncSaveAITool(param)
+    })
+
     const asyncToggleAIToolFavorite = (params) => {
         return new Promise((resolve, reject) => {
             getClient().ToggleAIToolFavorite(params, (err, data) => {
@@ -191,9 +223,24 @@ module.exports = (win, getClient) => {
         })
     }
 
-    /**获取工具列表 */
+    /**收藏 */
     ipcMain.handle("ToggleAIToolFavorite", async (e, param) => {
         return await asyncToggleAIToolFavorite(param)
+    })
+
+    const asyncAIToolGenerateMetadata = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().AIToolGenerateMetadata(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("AIToolGenerateMetadata", async (e, param) => {
+        return await asyncAIToolGenerateMetadata(param)
     })
     //#endregion
 }

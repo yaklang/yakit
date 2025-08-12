@@ -3,7 +3,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {AIToolListItemProps, AIToolListProps, ToolQueryType} from "./AIToolListType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
-import {grpcGetAIToolList, grpcToggleAIToolFavorite} from "./utils"
+import {grpcDeleteAITool, grpcGetAIToolList, grpcToggleAIToolFavorite} from "./utils"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
@@ -28,6 +28,8 @@ import {setClipboardText} from "@/utils/clipboard"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {tagColors} from "../defaultConstant"
+import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
+import {yakitNotify} from "@/utils/notification"
 
 const toolTypeOptions = [
     {
@@ -143,7 +145,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
                         options={toolTypeOptions}
                         onChange={onToolQueryTypeChange}
                     />
-                    <div className={styles["ai-tool-list-total"]}>{response.Total}</div>
+                    <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
                 </div>
                 <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIForge} />
             </div>
@@ -162,7 +164,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
                     renderRow={(rowData: AITool, index: number) => {
                         return (
                             <React.Fragment key={rowData.Name}>
-                                <AIToolListItem item={rowData} onSetData={onSetData} />
+                                <AIToolListItem item={rowData} onSetData={onSetData} onRefresh={getList} />
                             </React.Fragment>
                         )
                     }}
@@ -183,7 +185,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
 export default AIToolList
 
 const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
-    const {item, onSetData} = props
+    const {item, onSetData, onRefresh} = props
     const [visible, setVisible] = useState<boolean>(false)
     const onFavorite = useMemoizedFn(() => {
         // e.stopPropagation()
@@ -238,14 +240,31 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                 setClipboardText(item.Name)
                 break
             case "delete":
-                // 删除
+                onRemove()
                 break
             default:
                 break
         }
     })
+    const onRemove = useMemoizedFn(() => {
+        grpcDeleteAITool({ToolNames: [item.Name]}).then(() => {
+            onRefresh()
+            yakitNotify("success", "删除成功")
+        })
+    })
     const onEdit = useMemoizedFn((e) => {
         e.stopPropagation()
+        if (!item.Name) {
+            yakitNotify("error", `该模板 ID('${item.Name}') 异常, 无法编辑`)
+            return
+        }
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.ModifyAITool,
+                params: {name: item.Name, source: YakitRoute.AI_Agent}
+            })
+        )
     })
     return (
         <>

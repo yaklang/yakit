@@ -87,8 +87,8 @@ export interface AIForgeEditorPageInfoProps {
 }
 
 export interface AIToolEditorPageInfoProps {
-    /** 编辑时使用，为 ai tool id */
-    id: number
+    /** 编辑时使用，相当于 ai tool 的key */
+    name: string
     source: YakitRoute
 }
 
