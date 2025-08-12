@@ -67,7 +67,6 @@ function usePluginTrace(params: PluginTraceParams) {
         })
 
         ipcRenderer.on("mitm-plugin-trace-update", (event, data) => {
-            console.log(data.Traces.length)
             if (data.Traces.length > 0) {
                 let newTraces = tracesRef.current.slice()
                 data.Traces.forEach((trace: PluginExecutionTrace) => {
@@ -150,18 +149,11 @@ function usePluginTrace(params: PluginTraceParams) {
 
     const resetPluginTrace = useMemoizedFn(() => {
         resetRef.current = true
-        pluginTraceStatsRef.current = {
-            TotalTraces: 0,
-            RunningTraces: 0,
-            FailedTraces: 0,
-            CompletedTraces: 0,
-            CancelledTraces: 0
-        }
         tracesRef.current = []
         cancelTracesIdRef.current = []
         setTimeout(() => {
             resetRef.current = false
-        }, 1000)
+        }, 500)
     })
 
     const stopPluginTrace = useMemoizedFn(() => {
