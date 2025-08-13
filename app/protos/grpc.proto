@@ -6702,6 +6702,11 @@ message SyntaxFlowScanTask {
   int64 WarningCount = 19;
   int64 CriticalCount = 20;
   int64 HighCount = 21;
+  int64 NewInfoCount = 22;
+  int64 NewLowCount = 23;
+  int64 NewWarningCount = 24;
+  int64 NewCriticalCount = 25;
+  int64 NewHighCount = 26;
 }
 
 message DeleteSyntaxFlowScanTaskRequest{
