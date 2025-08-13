@@ -1,3 +1,4 @@
+import {YakitInputSearchProps} from "../yakitUI/YakitInput/YakitInputType"
 import {YakitSelectProps} from "../yakitUI/YakitSelect/YakitSelectType"
 interface OptionProps {
     label: string
