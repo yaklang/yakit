@@ -1085,7 +1085,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     size='large'
                                     name={"同步插件到企业版"}
                                     onClick={onSyncPluginToEE}
-                                    disabled={initTotal === 0}
                                 />
                             )}
                             {admin.isAdmin && (
