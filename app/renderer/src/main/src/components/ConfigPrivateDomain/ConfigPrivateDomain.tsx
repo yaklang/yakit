@@ -321,7 +321,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 )}
                 {enterpriseLogin && (
                     <Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
-                        <YakitInput placeholder='请输入你的用户名' />
+                        <YakitInput placeholder='请输入你的用户名' allowClear />
                     </Form.Item>
                 )}
                 {enterpriseLogin && (
@@ -330,7 +330,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         label='密码'
                         rules={[{required: true, message: "该项为必填"}, ...judgePass()]}
                     >
-                        <YakitInput.Password placeholder='请输入你的密码' />
+                        <YakitInput.Password placeholder='请输入你的密码' allowClear />
                     </Form.Item>
                 )}
                 {enterpriseLogin ? (

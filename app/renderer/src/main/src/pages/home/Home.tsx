@@ -1231,7 +1231,7 @@ const Home: React.FC<HomeProp> = (props) => {
                             </div>
                             可通过搜索快速查找软件功能
                             <div className={styles["tools-search-wrapper"]}>
-                                <YakitInput.Search onSearch={(value) => setSearchToolVal(value)} />
+                                <YakitInput.Search onSearch={(value) => setSearchToolVal(value)} allowClear />
                             </div>
                             <div className={styles["tools-list-wrapper"]}>
                                 {renderToolsList.length ? (

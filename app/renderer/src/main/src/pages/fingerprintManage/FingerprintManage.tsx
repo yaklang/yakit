@@ -577,6 +577,7 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
                                                     {activeEdit ? (
                                                         <YakitInput
                                                             ref={editInputRef}
+                                                            allowClear
                                                             showCount
                                                             maxLength={50}
                                                             value={editName}
@@ -1023,6 +1024,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                     <div className={styles["header-extra"]}>
                         <YakitInput.Search
                             placeholder='请输入关键词搜索'
+                            allowClear
                             onSearch={(val) => {
                                 onSetFilter((prev) => {
                                     return {...prev, Keyword: val.trim()}
@@ -1334,6 +1336,7 @@ const FingerprintFormModal: React.FC<FingerprintFormModalProps> = (props) => {
                     <YakitSelect
                         mode='tags'
                         placeholder='请选择分组'
+                        allowClear
                         options={groups}
                         searchValue={groupSearch}
                         onSearch={handleGroupSearchChange}
@@ -1743,6 +1746,7 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
                             <YakitInput
                                 placeholder='输入关键字...'
                                 maxLength={50}
+                                allowClear
                                 prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                                 value={search}
                                 onChange={(e) => {

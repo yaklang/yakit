@@ -4975,12 +4975,12 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
                     }
                 ]}
                 inputSearchModuleTypeProps={{
-                    size: "small",
+                    size: "middle",
                     value: searchVal,
                     onChange: onInputUpadte,
                     onSearch: onSearch,
-                    onBlur: handleSearchBlur,
-                    wrapperClassName: style["inputSearchModule"]
+                    onBlur: handleSearchBlur
+                    // wrapperClassName: style["inputSearchModule"]
                 }}
             ></YakitCombinationSearch>
         )

@@ -545,6 +545,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                     wrapperStyle={{marginBottom: 15, width: "calc(100% - 40px)"}}
                     placeholder={searchPlaceholder}
                     onChange={onSearchChange}
+                    allowClear
                     onSearch={onSearchTree}
                     value={searchValue}
                 />

@@ -855,6 +855,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
                 <YakitInput.Search
                     wrapperStyle={{width: "calc(100% - 40px)"}}
                     onSearch={(value) => setSearchProcessVal(value)}
+                    allowClear
                 />
                 <YakitButton type='text2' icon={<RefreshIcon />} onClick={refreshProcess} />
             </div>

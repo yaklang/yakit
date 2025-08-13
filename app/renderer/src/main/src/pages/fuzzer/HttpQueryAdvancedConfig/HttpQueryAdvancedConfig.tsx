@@ -479,7 +479,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 }
                                 name='actualHost'
                             >
-                                <YakitInput placeholder='请输入...' size='small' />
+                                <YakitInput placeholder='请输入...' size='small' allowClear />
                             </Form.Item>
                             <Form.Item
                                 label={
@@ -1034,6 +1034,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             >
                                 <Form.Item label='DNS服务器' name='dnsServers'>
                                     <YakitSelect
+                                        allowClear
                                         options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
                                             return {value: i, label: i}
                                         })}

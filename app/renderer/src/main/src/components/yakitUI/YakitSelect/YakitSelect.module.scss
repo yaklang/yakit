@@ -40,6 +40,9 @@
             background: var(--Colors-Use-Basic-Background);
             .anticon-close-circle{
                 color: var(--Colors-Use-Neutral-Border);
+                svg{
+                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                }
             }
         }
 

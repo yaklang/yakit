@@ -54,6 +54,7 @@ export const SelectItem: React.FC<SelectItemProps> = (props) => {
                 <YakitSelect
                     value={props.value}
                     loading={loading}
+                    allowClear
                     disabled={loading || props.disable}
                     onChange={(value: any) => {
                         if (value) {

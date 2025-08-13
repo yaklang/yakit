@@ -154,6 +154,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
                     dropdownMatchSelectWidth={400}
                     disabled={!!props.disable}
                     placeholder={props.placeholder}
+                    allowClear={true}
                     value={props.value}
                     onChange={(e) => props.setValue && props.setValue(e)}
                     options={(props.autoComplete || []).map((i) => {
@@ -299,6 +300,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                         disabled={!!props.disable}
                         placeholder={props.placeholder}
                         size={"middle"}
+                        allowClear={true}
                         value={props.value}
                         onChange={(e) => props.setValue && props.setValue(e.target.value)}
                     />
@@ -313,6 +315,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                                         <Col span={6}>
                                             <Input
                                                 placeholder={"Key"}
+                                                allowClear={true}
                                                 value={items[index].key}
                                                 onChange={(e) => {
                                                     const key = e.target.value
@@ -327,6 +330,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                                                     <OneLine>
                                                         <YakitSelect
                                                             style={{width: "100%"}}
+                                                            allowClear={true}
                                                             autoClearSearchValue={true}
                                                             placeholder={"参数使用 | 分割数组"}
                                                             dropdownMatchSelectWidth={200}
@@ -352,6 +356,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                                                 <>
                                                     <Input
                                                         placeholder={"Value"}
+                                                        allowClear={true}
                                                         value={items[index].value}
                                                         onChange={(e) => {
                                                             const value = e.target.value
@@ -587,6 +592,7 @@ export const ManyMultiSelectForString: React.FC<MultiSelectForStringProps> = (p)
             <YakitSelect
                 disabled={p.disabled}
                 style={{width: "200"}}
+                allowClear={true}
                 autoClearSearchValue={true}
                 dropdownMatchSelectWidth={200}
                 mode={p.mode || "multiple"}
@@ -705,8 +711,8 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
                                     p.hint
                                 ) : (
                                     <div>
-                                        可将文件拖入框内或
-                                        <span style={{color: "var(--Colors-Use-Main-Primary"}}>点击此处</span>上传
+                                        可将文件拖入框内或<span style={{color: "var(--yakit-primary-5"}}>点击此处</span>
+                                        上传
                                     </div>
                                 )
                             }
@@ -725,8 +731,8 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
                                     p.hint
                                 ) : (
                                     <div>
-                                        可将文件拖入框内或
-                                        <span style={{color: "var(--Colors-Use-Main-Primary"}}>点击此处</span>上传
+                                        可将文件拖入框内或<span style={{color: "var(--yakit-primary-5"}}>点击此处</span>
+                                        上传
                                     </div>
                                 )
                             }

@@ -530,7 +530,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                     {documentType === 1 ? (
                         <>
                             <div className={styles["temp-example-search-wrapper"]}>
-                                <YakitInput.Search onSearch={(value) => setSearchTempExampleVal(value)} />
+                                <YakitInput.Search onSearch={(value) => setSearchTempExampleVal(value)} allowClear />
                             </div>
                             <div className={styles["temp-example-list-wrapper"]}>
                                 {renderTempExampleList.length ? (
@@ -561,7 +561,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                     ) : (
                         <>
                             <div className={styles["temp-example-search-wrapper"]}>
-                                <YakitInput.Search onSearch={(value) => setSearchQaDocumentVal(value)} />
+                                <YakitInput.Search onSearch={(value) => setSearchQaDocumentVal(value)} allowClear />
                             </div>
                             <div className={styles["document-list-wrapper"]}>
                                 {renderQaDocumentList.length ? (

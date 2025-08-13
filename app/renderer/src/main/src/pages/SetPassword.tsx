@@ -81,14 +81,14 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
                     <YakitInput.Password placeholder='请输入你的旧密码' allowClear />
                 </Form.Item>
                 <Form.Item name='pwd' label='新密码' rules={[{required: true, message: "该项为必填"}, ...judgePass()]}>
-                    <YakitInput.Password placeholder='请输入你的新密码' />
+                    <YakitInput.Password placeholder='请输入你的新密码' allowClear />
                 </Form.Item>
                 <Form.Item
                     name='confirm_pwd'
                     label='确认密码'
                     rules={[{required: true, message: "该项为必填"}, ...judgePass()]}
                 >
-                    <YakitInput.Password placeholder='请确认你的密码' />
+                    <YakitInput.Password placeholder='请确认你的密码' allowClear />
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
                     <YakitButton type='primary' htmlType='submit' loading={loading}>

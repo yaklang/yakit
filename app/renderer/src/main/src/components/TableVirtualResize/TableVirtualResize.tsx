@@ -848,6 +848,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         return (
             <div className={styles["input-search"]}>
                 <YakitInput
+                    allowClear={true}
                     {...columnsItem.filterProps?.filterInputProps}
                     value={filters[filterKey]}
                     onChange={(e) => {

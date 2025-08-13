@@ -460,6 +460,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                             }
                                                         >
                                                             <YakitInput
+                                                                allowClear
                                                                 value={addrParams.BridgeParam.Addr}
                                                                 onChange={(e) => {
                                                                     addrParams.BridgeParam.Addr = e.target.value
@@ -469,6 +470,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                         </Form.Item>
                                                         <Form.Item label='密码'>
                                                             <YakitInput
+                                                                allowClear
                                                                 value={addrParams.BridgeParam.Secret}
                                                                 onChange={(e) => {
                                                                     addrParams.BridgeParam.Secret = e.target.value
@@ -488,6 +490,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                         }
                                                     >
                                                         <YakitInput
+                                                            allowClear
                                                             value={addrParams.ReverseHost}
                                                             onChange={(e) =>
                                                                 setAddrParams({
@@ -968,6 +971,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                             />
                         ) : (
                             <YakitSelect
+                                allowClear
                                 placeholder='请选择恶意类'
                                 optionLabelProp='NameVerbose'
                                 value={params.Class}
@@ -1035,6 +1039,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                             >
                                 {(item.Type === FormParamsType.String || item.Type === FormParamsType.Base64Bytes) && (
                                     <YakitInput
+                                        allowClear
                                         placeholder={
                                             item.Type === FormParamsType.Base64Bytes
                                                 ? "填写内容需Base64编码"

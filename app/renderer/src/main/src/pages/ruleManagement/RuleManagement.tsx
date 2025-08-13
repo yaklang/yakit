@@ -946,6 +946,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
                                             <div className={styles["header-extra"]}>
                                                 <YakitInput.Search
+                                                    allowClear
                                                     size='large'
                                                     placeholder='请输入关键词搜索'
                                                     onSearch={handleSearch}
@@ -1098,6 +1099,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                             <div className={styles["header-extra"]}>
                                                 <YakitInput.Search
                                                     size='large'
+                                                    allowClear
                                                     placeholder='请输入关键词搜索'
                                                     onSearch={handleOnlineSearch}
                                                 />
