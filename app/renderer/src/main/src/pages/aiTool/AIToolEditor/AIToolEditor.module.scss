@@ -278,11 +278,24 @@
             align-items: center;
             gap: 4px;
             .text-style {
-                color: var(--Colors-Use-Neutral-Disable);
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 font-size: 12px;
                 font-weight: 600;
                 line-height: 16px;
             }
+            .divider-horizontal-style {
+                flex: 1;
+                overflow: hidden;
+                height: 1px;
+                border-top: 1px dashed var(--Colors-Use-Neutral-Border);
+            }
+        }
+        .to-end {
+            text-align: center;
+            color: var(--Colors-Use-Neutral-Disable);
+            font-size: 11px;
+            padding-top: 12px;
+            padding-bottom: 24px;
         }
     }
 }
