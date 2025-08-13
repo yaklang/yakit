@@ -218,20 +218,24 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     }, [info.isFolder])
 
     const iconImage = useMemo(() => {
-        if (info.isBottom) {
-            return ""
-        }
-        if (isFolder) {
-            // 特殊树的可展开结构并不想展示文件夹
-            if (info.icon !== "_fd_default") {
-                return KeyToIcon[info.icon].iconPath
-            } else if (isExpanded) {
-                return KeyToIcon[FolderDefaultExpanded].iconPath
-            } else {
-                return KeyToIcon[FolderDefault].iconPath
+        try {
+            if (info.isBottom) {
+                return ""
             }
-        } else {
-            return KeyToIcon[info.icon].iconPath
+            if (isFolder) {
+                // 特殊树的可展开结构并不想展示文件夹
+                if (info.icon !== "_fd_default") {
+                    return KeyToIcon[info.icon].iconPath
+                } else if (isExpanded) {
+                    return KeyToIcon[FolderDefaultExpanded].iconPath
+                } else {
+                    return KeyToIcon[FolderDefault].iconPath
+                }
+            } else {
+                return KeyToIcon[info.icon].iconPath
+            }
+        } catch (error) {
+            return ""
         }
     }, [info.icon, isFolder, isExpanded, info.isBottom])
 
