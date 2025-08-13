@@ -16,6 +16,10 @@ import {CacheDataHistoryProps, YakitOptionTypeProps, onGetRemoteValuesBase, onSe
 import {setRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
 import {OutlineCheckIcon, OutlineXIcon} from "@/assets/icon/outline"
+import EmptyPng from "@/components/yakitUI/YakitEmpty/EmptyPng.png"
+import DarkEmptyPng from "@/components/yakitUI/YakitEmpty/DarkEmptyPng.png"
+import {useTheme} from "@/hook/useTheme"
+
 const {Option, OptGroup} = Select
 
 /**
@@ -38,6 +42,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     }: YakitSelectProps<OptionType>,
     ref: React.Ref<YakitBaseSelectRef>
 ) => {
+    const {theme} = useTheme()
     const selectRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(selectRef)
     // 鼠标移入项 用于判断是否显示 ×
@@ -63,6 +68,15 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         }),
         [cacheHistoryData, props.value]
     )
+
+    const emptyImageTarget = useMemo(() => {
+        if (theme === "dark") {
+            return DarkEmptyPng
+        } else {
+            return EmptyPng
+        }
+    }, [theme])
+
     /**@description 缓存 cacheHistoryDataKey 对应的数据 */
     const onSetRemoteValues = useMemoizedFn((newValue: string[]) => {
         if (!cacheHistoryDataKey) return
@@ -299,6 +313,12 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                     setShow(open)
                     if (props.onDropdownVisibleChange) props.onDropdownVisibleChange(open)
                 }}
+                notFoundContent={
+                    <div className={classNames("yakit-select-notFound")}>
+                        <img src={emptyImageTarget} alt='' style={{width: 88}} />
+                        <div className={classNames("yakit-select-content")}>暂无数据</div>
+                    </div>
+                }
             >
                 {props.children}
             </Select>

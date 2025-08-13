@@ -37,7 +37,7 @@
 
         .ant-select-clear {
             right: 12px;
-            background: var(--Colors-Use-Basic-Background);
+            background: transparent;
             .anticon-close-circle{
                 color: var(--Colors-Use-Neutral-Border);
             }
@@ -127,6 +127,15 @@
             background: var(--Colors-Use-Main-Bg);
         }
 
+        .yakit-select-notFound{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            .yakit-select-content{
+                color: var(--Colors-Use-Neutral-Disable);
+            }
+        }
         // ------------ 滚动条 ----------
         .rc-virtual-list-scrollbar-thumb {
             background: var(--Colors-Use-Neutral-Text-3-Secondary) !important;

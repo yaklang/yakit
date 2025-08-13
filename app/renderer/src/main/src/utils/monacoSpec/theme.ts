@@ -142,6 +142,23 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
                 token: "number.float.yak",
                 foreground: vars["--yakit-colors-Green-80"]
             },
+            {
+                token: "string.key.json",
+                foreground: vars["--yakit-colors-Error-80"]
+            },
+            {
+                token: "string.value.json",
+                foreground: vars["--yakit-colors-Blue-80"]
+            },
+            {
+                token: "keyword.json",
+                foreground: vars["--yakit-colors-Blue-80"],
+                fontStyle: "blod"
+            },
+            {
+                token: "number.json",
+                foreground: vars["--yakit-colors-Green-80"]
+            },
 
             // ------------------------------------------
 

@@ -51,13 +51,13 @@
             .echart-detail-item-title {
                 font-weight: bold;
                 font-size: 14px;
-                color: rgb(70, 70, 70);
+                color: var(--Colors-Use-Neutral-Text-3-Secondary)
             }
             .echart-detail-item-content {
                 font-size: 12px;
                 padding: 2px 0 0 0px;
                 margin-top: 4px;
-                color: #666666;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 line-height: 22px;
             }
         }

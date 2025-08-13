@@ -234,6 +234,7 @@ export const ReportMergeTable: React.FC<ReportTableProp> = (props) => {
     return (
         <div>
             <Table
+                className={classNames(styles["risk-table"])}
                 tableLayout='fixed'
                 bordered={true}
                 columns={columns}
@@ -300,6 +301,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
     return (
         <div>
             <Table
+                className={classNames(styles["risk-table"])}
                 tableLayout='fixed'
                 bordered={true}
                 columns={columns}
