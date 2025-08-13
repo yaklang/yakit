@@ -1,13 +1,9 @@
-import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
-import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
-import styles from "./newPayloadTable.module.scss"
+import React, {useEffect, useMemo, useRef, useState} from "react"
+import { useMemoizedFn} from "ahooks"
+import styles from "./PayloadLocalTable.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
-import type {InputRef} from "antd"
 import {Divider, Form, Space, Table, Tooltip} from "antd"
-import type {FormInstance} from "antd/es/form"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
@@ -19,12 +15,10 @@ import {
     OutlineSelectorIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {setClipboardText} from "@/utils/clipboard"
 const {ipcRenderer} = window.require("electron")
 
@@ -59,9 +53,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
     const save = async () => {
         try {
             handleSave(record, {...record, [dataIndex]: value})
-        } catch (errInfo) {
-            console.log("Save failed:", errInfo)
-        }
+        } catch (errInfo) {}
     }
 
     return (

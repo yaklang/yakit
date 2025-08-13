@@ -183,7 +183,7 @@
             .table-box {
                 height: 100%;
                 width: 100%;
-                overflow-x: hidden;
+                overflow-x: auto;
                 overflow-y: scroll;
             }
         }
@@ -192,8 +192,8 @@
 .new-payload-list {
     height: 100%;
     width: 100%;
-    border-right: 1px solid var(--Colors-Use-Neutral-Border);
-    background: var(--Colors-Use-Basic-Background);
+    // border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    // background: var(--Colors-Use-Basic-Background);
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -226,22 +226,31 @@
             }
         }
     }
-    .content {
-        flex: 1;
-        overflow: auto;
-        .drag-list {
-            padding: 0px 12px;
-            height: 100%;
-            .to-end {
-                text-align: center;
-                color: var(--Colors-Use-Neutral-Disable);
-                font-size: 11px;
-                line-height: 14px;
-                padding-top: 24px;
-                padding-bottom: 24px;
+    .extra {
+        .option {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+        }
+    }
+    .spin-box {
+        overflow: hidden;
+        .content {
+            flex: 1;
+            overflow: hidden;
+            .drag-list {
+                padding: 0px 12px;
+                height: 100%;
+                overflow: auto;
+                .checkbox-wrapper {
+                    border: 1px solid transparent;
+                    padding: 10px 8px;
+                }
             }
         }
     }
+
     /* 隐藏滚动条 */
     .content::-webkit-scrollbar {
         width: 0;
@@ -367,7 +376,7 @@
         .card-box {
             width: 100%;
             border-radius: 4px;
-            background-color:  var(--Colors-Use-Neutral-Bg);
+            background-color: var(--Colors-Use-Neutral-Bg);
             border: 1px solid var(--Colors-Use-Neutral-Border);
             overflow: hidden;
             .card-heard {
@@ -448,7 +457,7 @@
                 position: relative;
                 .link-icon {
                     display: flex;
-                    color:var(--Colors-Use-Neutral-Text-3-Secondary);
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     svg {
                         width: 16px;
                         height: 16px;
@@ -529,7 +538,7 @@
 .file-dragging {
     border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 }
-.file-end-border{
+.file-end-border {
     border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 }
 .file-active {
@@ -648,6 +657,20 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        .payload-checkbox {
+            :global {
+                .ant-checkbox-input:focus + .ant-checkbox-inner {
+                    box-shadow: 0 0 2px 2px var(--Colors-Use-Main-Primary) !important;
+                }
+            }
+        }
+        .payload-dark-checkbox {
+             :global {
+                .ant-checkbox-input:focus + .ant-checkbox-inner {
+                    box-shadow: 0 0 2px 2px var(--yakit-colors-Neutral-10) !important;
+                }
+            }
+        }
     }
     .extra {
         .file-count {
@@ -758,6 +781,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    overflow: hidden;
     .folder-header {
         display: flex;
         flex-direction: row;
@@ -784,6 +808,11 @@
             line-height: 16px;
             flex: 1;
             overflow: hidden;
+        }
+        :global {
+            .ant-checkbox-input:focus + .ant-checkbox-inner {
+                box-shadow: 0 0 2px 2px var(--Colors-Use-Main-Bg) !important;
+            }
         }
     }
     .extra {
@@ -970,5 +999,57 @@
             font-weight: 400;
             line-height: 20px;
         }
+    }
+}
+
+.new-payload-online-list {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .online-group-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 0 12px 6px;
+        .online-group-desc {
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        }
+    }
+    .group-list {
+        flex: 1;
+        overflow: hidden;
+    }
+}
+
+.new-payload-group-list {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+}
+
+.to-end {
+    text-align: center;
+    color: var(--Colors-Use-Neutral-Disable);
+    font-size: 11px;
+    line-height: 14px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+}
+
+.online-payload-group-list {
+    width: 100%;
+    height: 100%;
+    padding: 0px 12px;
+    overflow: auto;
+    .folder {
+        cursor: pointer;
+    }
+    .file {
+        cursor: pointer;
     }
 }

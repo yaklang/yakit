@@ -6,32 +6,34 @@ import {YakEditor} from "@/utils/editors"
 import {CaCertData} from "../MITMServerHijacking/MITMServerHijacking"
 import {useMemoizedFn} from "ahooks"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
+import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 
 const {ipcRenderer} = window.require("electron")
 
 interface MITMCertificateDownloadModalProps {
     visible: boolean
     setVisible: (b: boolean) => void
-    isGM?: boolean // 是否为国密证书
 }
 export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModalProps> = React.memo((props) => {
-    const {visible, setVisible, isGM = false} = props
+    const {visible, setVisible} = props
+    const [isGMState, setIsGMState] = useState<boolean>(false) // 是否为国密证书
     const [caCerts, setCaCerts] = useState<CaCertData>({
         CaCerts: new Uint8Array(),
         LocalFile: ""
     })
     useEffect(() => {
-        const apiName = isGM ? "DownloadMITMGMCert" : "DownloadMITMCert"
+        const apiName = isGMState ? "DownloadMITMGMCert" : "DownloadMITMCert"
         ipcRenderer.invoke(apiName, {}).then((data: CaCertData) => {
             setCaCerts(data)
         })
-    }, [isGM])
+    }, [isGMState])
     /**
      * @description 下载证书
      */
     const onDown = useMemoizedFn(() => {
         if (!caCerts.CaCerts) return
-        const fileName = isGM ? "yakit国密证书.crt.pem" : "yakit证书.crt.pem"
+        const fileName = isGMState ? "yakit国密证书.crt.pem" : "yakit证书.crt.pem"
         saveABSFileToOpen(fileName, caCerts.CaCerts)
     })
     return (
@@ -39,7 +41,7 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
             visible={visible}
             onCancel={() => setVisible(false)}
             closable={true}
-            title={isGM ? '下载国密 SSL/TLS 证书以劫持 HTTPS' : '下载 SSL/TLS 证书以劫持 HTTPS'}
+            title={"下载证书以劫持 HTTPS"}
             width={720}
             className={styles["mitm-certificate-download-modal"]}
             okText='下载到本地并打开'
@@ -51,11 +53,36 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
                 </div>
             }
             onOk={() => onDown()}
-            bodyStyle={{padding: 0}}
+            bodyStyle={{padding: 8}}
         >
-            <div className={styles["certificate-download-modal-body"]}>
-                <YakEditor bytes={true} valueBytes={caCerts.CaCerts} />
-            </div>
+            <YakitCard
+                title={
+                    <YakitRadioButtons
+                        buttonStyle='solid'
+                        options={[
+                            {
+                                value: false,
+                                label: "SSL/TLS证书"
+                            },
+                            {
+                                value: true,
+                                label: "国密SSL/TLS证书"
+                            }
+                        ]}
+                        value={isGMState}
+                        onChange={(e) => {
+                            setIsGMState(e.target.value)
+                        }}
+                    />
+                }
+                style={{borderRadius: 4}}
+                headStyle={{height: 36}}
+                bodyStyle={{padding: 0}}
+            >
+                <div className={styles["certificate-download-modal-body"]}>
+                    <YakEditor bytes={true} valueBytes={caCerts.CaCerts} />
+                </div>
+            </YakitCard>
         </YakitModal>
     )
 })
