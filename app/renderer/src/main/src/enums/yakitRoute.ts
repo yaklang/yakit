@@ -86,6 +86,8 @@ export enum YakitRoute {
     YakRunner_Audit_Code = "yakrunner-audit-code",
     // YakRunner项目管理
     YakRunner_Project_Manager = "yakrunner-project-manager",
+    // YakRunner扫描历史
+    YakRunner_ScanHistory = "yakrunner_scanHistory",
     /** 规则管理 */
     Rule_Management = "rule-management",
     /**笔记本管理 */
