@@ -292,7 +292,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                 const codeInfo = await onCodeToInfo({type: "yak", code: content || ""}, hiddenError)
                 if (codeInfo) {
                     setParams([...codeInfo.CliParameter])
-                    handleInitFormValue(codeInfo)
+                    handleInitFormValue(codeInfo.CliParameter)
                 }
             } catch (error) {
             } finally {
@@ -545,13 +545,16 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                                                 />
                                             </div>
 
-                                            {groupParams.length !== 0 && (
+                                            {!!groupParams.length && (
                                                 <div className={styles["additional-params-divider"]}>
                                                     <div className={styles["text-style"]}>额外参数 (非必填)</div>
-                                                    <div className={styles["divider-style"]}></div>
+                                                    <div className={styles["divider-horizontal-style"]}></div>
                                                 </div>
                                             )}
                                             <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={"yak"} />
+                                            {(!!requiredParams.length || !!groupParams.length) && (
+                                                <div className={styles["to-end"]}>已经到底啦～</div>
+                                            )}
                                         </Form>
                                     </div>
                                 </div>
