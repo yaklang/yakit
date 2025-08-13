@@ -701,6 +701,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.YakRunner_Project_Manager:
                 addProjectManager()
                 break
+            case YakitRoute.YakRunner_ScanHistory:
+                addScanHistory()
+                break
             case YakitRoute.MITMHacker:
                 addMITMHacker(params)
                 break
@@ -726,6 +729,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             emiter.emit("onRefreshProjectManager")
         }
         openMenuPage({route: YakitRoute.YakRunner_Project_Manager})
+    })
+
+    const addScanHistory = useMemoizedFn(() => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_ScanHistory).length
+        if (isExist) {
+            // emiter.emit("onRefreshProjectManager")
+        }
+        openMenuPage({route: YakitRoute.YakRunner_ScanHistory})
     })
 
     const addShortcutKey = useMemoizedFn((data: ShortcutKeyPageName) => {

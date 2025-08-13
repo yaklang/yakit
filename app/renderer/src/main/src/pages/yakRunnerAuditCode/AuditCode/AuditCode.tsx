@@ -58,8 +58,10 @@ import {
     OutlineArrowcirclerightIcon,
     OutlineBugIcon,
     OutlineChevronrightIcon,
+    OutlineClockIcon,
     OutlineDeprecatedIcon,
     OutlineDocumentduplicateIcon,
+    OutlineDotshorizontalIcon,
     OutlineEyeIcon,
     OutlinePencilaltIcon,
     OutlineRefreshIcon,
@@ -2361,41 +2363,76 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 }}
                             />
                         </Tooltip>
-                        <Tooltip title={"编辑"}>
+                        <Tooltip title={"扫描历史"}>
                             <YakitButton
                                 type='text'
-                                icon={<OutlinePencilaltIcon />}
+                                icon={<OutlineClockIcon />}
                                 onClick={() => {
-                                    const m = showYakitModal({
-                                        title: "编辑",
-                                        width: 448,
-                                        type: "white",
-                                        footer: null,
-                                        centered: true,
-                                        content: (
-                                            <ProjectManagerEditForm
-                                                record={record}
-                                                setData={setData}
-                                                onClose={() => m.destroy()}
-                                            />
-                                        )
-                                    })
+                                    emiter.emit(
+                                        "openPage",
+                                        JSON.stringify({
+                                            route: YakitRoute.YakRunner_ScanHistory
+                                        })
+                                    )
                                 }}
                             />
                         </Tooltip>
                         <Divider type={"vertical"} style={{margin: 0}} />
-                        <YakitPopconfirm
-                            title={`确定删除${record.Name}`}
-                            onConfirm={() =>
-                                onDelete({
-                                    Filter: {
-                                        Ids: [parseInt(record.Id + "")]
+                        <YakitDropdownMenu
+                            menu={{
+                                width: 40,
+                                data: [
+                                    {
+                                        key: "edit",
+                                        label: (
+                                            <YakitButton
+                                                type='text'
+                                                icon={<OutlinePencilaltIcon />}
+                                                onClick={() => {
+                                                    const m = showYakitModal({
+                                                        title: "编辑",
+                                                        width: 448,
+                                                        type: "white",
+                                                        footer: null,
+                                                        centered: true,
+                                                        content: (
+                                                            <ProjectManagerEditForm
+                                                                record={record}
+                                                                setData={setData}
+                                                                onClose={() => m.destroy()}
+                                                            />
+                                                        )
+                                                    })
+                                                }}
+                                            />
+                                        )
+                                    },
+                                    {
+                                        key: "del",
+                                        label: (
+                                            <YakitPopconfirm
+                                                title={`确定删除${record.Name}`}
+                                                onConfirm={() =>
+                                                    onDelete({
+                                                        Filter: {
+                                                            Ids: [parseInt(record.Id + "")]
+                                                        }
+                                                    })
+                                                }
+                                            >
+                                                <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
+                                            </YakitPopconfirm>
+                                        )
                                     }
-                                })
-                            }
+                                ]
+                            }}
+                            dropdown={{
+                                trigger: ["click"],
+                                placement: "bottom"
+                            }}
                         >
-                            <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
-                        </YakitPopconfirm>
+                            <YakitButton type='text' icon={<OutlineDotshorizontalIcon />} />
+                        </YakitDropdownMenu>
                     </div>
                 )
             }
