@@ -843,16 +843,39 @@ export const EchartsOption: React.FC<EchartsOptionProps> = (props) => {
         // @ts-ignore
         const myChart = echarts.init(chartRef.current)
         try {
+            let setOption = cloneDeep(optionRef.current) as any
             if (name === "nightingale-rose") {
-                let setOption = cloneDeep(optionRef.current) as any
                 setOption.series[0].label.formatter = (params) => {
-                    return params.name + '\n' + (params.data.realPercent||0.0).toFixed(2) + '%'; 
+                    return params.name + "\n" + (params.data.realPercent || 0.0).toFixed(2) + "%"
                 }
                 setOption.tooltip.formatter = (params) => {
                     return `${params.name} : ${params.data.realValue}`
                 }
-                optionRef.current = setOption
             }
+            if (name === "bar-graph") {
+                setOption.tooltip.formatter = (params) => {
+                    let result = params[0].axisValue + "<br/>"
+                    let total = 0
+                    params.forEach(function (item) {
+                        if (item.value > 0) {
+                            let count = Math.round(item.value * item.data.realTotal)
+                            total += count
+                            result +=
+                                item.marker +
+                                " " +
+                                item.seriesName +
+                                ": " +
+                                count +
+                                " (" +
+                                (item.value * 100).toFixed(1) +
+                                "%)<br/>"
+                        }
+                    })
+                    if (total > 0) result += "总计: " + total + "<br/>"
+                    return result
+                }
+            }
+            optionRef.current = setOption
             myChart.setOption(optionRef.current)
         } catch (error) {}
 
