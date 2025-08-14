@@ -10,8 +10,6 @@ import {success} from "@/utils/notification"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {setClipboardText} from "@/utils/clipboard"
 
-const {ipcRenderer} = window.require("electron")
-
 /**
  * 更新说明
  * 1、关闭按钮增加hover主题色
@@ -28,7 +26,7 @@ const {ipcRenderer} = window.require("electron")
  * @param {e} onAfterCopy 复制后的回调
  */
 export const YakitTag: React.FC<YakitTagProps> = (props) => {
-    const {color, size, disable, className, enableCopy, iconColor, copyText, ...restProps} = props
+    const {color, size, disable, className, enableCopy, iconColor, copyText, border, fullRadius, ...restProps} = props
     const onAfterCopy = useMemoizedFn((e) => {
         if (props.onAfterCopy) props.onAfterCopy(e)
     })
@@ -47,6 +45,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
                 {
                     [styles["yakit-tag-small"]]: size === "small",
                     [styles["yakit-tag-large"]]: size === "large",
+                    [styles["yakit-tag-default-color"]]: !color,
                     [styles["yakit-tag-danger"]]: color === "danger",
                     [styles["yakit-tag-info"]]: color === "info",
                     [styles["yakit-tag-success"]]: color === "success" || color === "green",
@@ -58,7 +57,8 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
                     [styles["yakit-tag-cyan"]]: color === "cyan",
                     [styles["yakit-tag-bluePurple"]]: color === "bluePurple",
                     [styles["yakit-tag-white"]]: color === "white",
-                    [styles["yakit-tag-disable"]]: !!disable
+                    [styles["yakit-tag-border"]]: border !== false,
+                    [styles["yakit-tag-fullRadius"]]: !!fullRadius
                 },
                 className
             )}
