@@ -3,7 +3,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {QuestionMarkCircleIcon, RefreshIcon} from "@/assets/newIcon"
-import {Space, Tooltip} from "antd"
+import {Pagination, Space, Tooltip} from "antd"
 import {OutlineTrashIcon} from "@/assets/icon/outline"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
@@ -312,6 +312,24 @@ const ReportList: React.FC<ReportListProp> = (props) => {
     )
 }
 
+// 根据阈值切割报告 用于分页显示 性能优化项
+const truncateArrayBySize = (arr: ReportItem[], maxSizeKB: number): ReportItem[][] => {
+    const maxSizeBytes = maxSizeKB * 1024
+    let currentChunkSize = 0
+    const result: ReportItem[][] = [[]]
+    for (const item of arr) {
+        const itemSize = new Blob([JSON.stringify(item)]).size
+        if (currentChunkSize + itemSize > maxSizeBytes) {
+            result.push([])
+            currentChunkSize = 0
+        }
+        result[result.length - 1].push(item)
+        currentChunkSize += itemSize
+    }
+
+    return result
+}
+
 interface ReportViewerProp {
     reportId?: number
 }
@@ -328,6 +346,8 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         Title: "-"
     })
     const isEchartsToImg = useRef<boolean>(true)
+    const [allReportItems, setAllReportItems] = useState<ReportItem[][]>([])
+    const [current, setCurrent] = useState<number>(1)
     const [reportItems, setReportItems] = useState<ReportItem[]>([])
     const divRef = useRef<HTMLDivElement>(null)
     const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
@@ -359,7 +379,9 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         try {
             const items = report.JsonRaw && report.JsonRaw !== "-" && (JSON.parse(report.JsonRaw) as ReportItem[])
             if (!!items && items.length > 0) {
-                setReportItems(items)
+                const newReportItems = truncateArrayBySize(items, 300) // 每页300KB
+                setAllReportItems(newReportItems)
+                setReportItems(newReportItems[0])
             }
         } catch (e) {
             yakitNotify("error", `Parse Report[${props.reportId}]'s items failed`)
@@ -473,8 +495,11 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             })
         }
         // word报告不要附录 table添加边框 移除南丁格尔玫瑰图点击详情(图像中已含)
-        const wordStr: string = contentHTML.outerHTML
-            .substring(0, contentHTML.outerHTML.indexOf("附录："))
+        let wordStr: string = contentHTML.outerHTML
+        if(wordStr.includes("附录：")){
+            wordStr = wordStr.substring(0, contentHTML.outerHTML.indexOf("附录："))
+        }
+        wordStr = wordStr
             .replace(/<table(.*?)>/g, '<table$1 border="1">')
             .replace(/<th(.*?)>/g, '<th$1 style="width: 10%">')
             .replace(/<div[^>]*id=("nightingle-rose-title"|"nightingle-rose-content")[^>]*>[\s\S]*?<\/div>/g, "")
@@ -485,6 +510,12 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             `${report.Title}.doc`
         )
         setWordDownloadLoading(false)
+    }
+
+    const onChangePagination = (page: number) => {
+        isEchartsToImg.current = true
+        setReportItems(allReportItems[page - 1] || [])
+        setCurrent(page)
     }
 
     return (
@@ -587,6 +618,18 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                                 ))}
                             </Space>
                         </div>
+                        {allReportItems.length > 1 && (
+                            <div className={styles["pagination"]}>
+                                <Pagination
+                                    size='small'
+                                    total={allReportItems.length}
+                                    current={current}
+                                    pageSize={1}
+                                    showTotal={(total) => `共 ${total} 页`}
+                                    onChange={onChangePagination}
+                                />
+                            </div>
+                        )}
                     </YakitCard>
                 </YakitSpin>
             )}
@@ -671,7 +714,7 @@ const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
                                 return <VerticalOptionBar content={content} />
                             // echarts任意图表
                             case "e-chart":
-                                return <EchartsOption content={content}/>
+                                return <EchartsOption content={content} />
                             case "year-cve":
                                 return <StackedVerticalBar content={content} />
                             case "card":
