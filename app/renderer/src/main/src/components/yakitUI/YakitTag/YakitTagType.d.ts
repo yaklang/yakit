@@ -37,6 +37,10 @@ export interface YakitTagProps extends Omit<TagProps, "color"> {
     onAfterCopy?: (e: MouseEvent) => void
     copyText?: string
     iconColor?: string
+    /**是否全圆角 */
+    fullRadius?: boolean
+    /**是否有边框 */
+    border?: boolean
 }
 /**
  * @description: 复制文字
