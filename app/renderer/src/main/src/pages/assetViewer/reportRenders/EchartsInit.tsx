@@ -1,9 +1,11 @@
-import React, {useEffect, useLayoutEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useLayoutEffect, useRef, useState} from "react"
 import * as echarts from "echarts"
+import {EChartsOption} from "echarts"
 import styles from "./EchartsInit.module.scss"
 import classNames from "classnames"
 import {useSize} from "ahooks"
 import {useTheme} from "@/hook/useTheme"
+import cloneDeep from "lodash/cloneDeep"
 
 interface VerticalOptionBarProps {
     content: any
@@ -820,6 +822,74 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
             )}
         </>
     )
+}
+
+interface EchartsOptionProps {
+    content: {
+        type: "e-chart"
+        name: "nightingale-rose" | "bar-graph"
+        option: EChartsOption
+    }
+}
+
+// echarts任意图表(后端传入option控制)
+export const EchartsOption: React.FC<EchartsOptionProps> = (props) => {
+    const {option, name} = props.content
+    const ref = useRef(null)
+    const size = useSize(ref)
+    const chartRef = useRef(null)
+    const optionRef = useRef<EChartsOption>(option)
+    useEffect(() => {
+        // @ts-ignore
+        const myChart = echarts.init(chartRef.current)
+        try {
+            if (name === "nightingale-rose") {
+                let setOption = cloneDeep(optionRef.current) as any
+                setOption.series[0].label.formatter = (params) => {
+                    return params.name + '\n' + (params.data.realPercent||0.0).toFixed(2) + '%'; 
+                }
+                setOption.tooltip.formatter = (params) => {
+                    return `${params.name} : ${params.data.realValue}`
+                }
+                optionRef.current = setOption
+            }
+            myChart.setOption(optionRef.current)
+        } catch (error) {}
+
+        return () => {
+            myChart.dispose()
+        }
+    }, [size?.width])
+
+    // 下载word报告时用于适配
+    const echartType = useMemo(() => {
+        switch (name) {
+            case "bar-graph":
+                return "vertical-bar"
+            default:
+                return name
+        }
+    }, [name])
+
+    // 样式适配
+    const chartStyle = useMemo(() => {
+        switch (name) {
+            case "bar-graph":
+                return styles["echart-item-vertical-bar"]
+            case "nightingale-rose":
+                return styles["echart-item-nightingle-rose"]
+        }
+    }, [name])
+
+    return (
+        <div className={styles["echarts-box"]} ref={ref} data-type='echarts-box' echart-type={echartType}>
+            <div className={classNames(styles["echart-item"], styles[chartStyle])} ref={chartRef}></div>
+        </div>
+    )
+}
+interface EchartsCardProps {
+    dataTitle: string
+    dataSource: any[]
 }
 
 // 卡片 (为了生成word样式-改成标签内样式)
