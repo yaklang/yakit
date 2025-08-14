@@ -1,8 +1,10 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import * as echarts from "echarts"
+import {EChartsOption} from "echarts"
 import styles from "./EchartsInit.module.scss"
 import classNames from "classnames"
-import { useSize } from "ahooks"
+import {useSize} from "ahooks"
+import cloneDeep from "lodash/cloneDeep"
 
 interface VerticalOptionBarProps {
     content: any
@@ -10,8 +12,8 @@ interface VerticalOptionBarProps {
 
 export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
     const {content} = props
-    const ref = useRef(null);
-    const size = useSize(ref);
+    const ref = useRef(null)
+    const size = useSize(ref)
     const chartRef = useRef(null)
     const optionRef = useRef<any>({
         title: {
@@ -116,7 +118,7 @@ export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="vertical-bar">
+        <div className={styles["echarts-box"]} ref={ref} data-type='echarts-box' echart-type='vertical-bar'>
             <div className={classNames(styles["echart-item"], styles["echart-item-vertical-bar"])} ref={chartRef}></div>
         </div>
     )
@@ -125,8 +127,8 @@ export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
 // 堆叠柱状图
 export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
     const {content} = props
-    const ref = useRef(null);
-    const size = useSize(ref);
+    const ref = useRef(null)
+    const size = useSize(ref)
     const chartRef = useRef(null)
     const optionRef = useRef<any>({
         title: {
@@ -267,7 +269,7 @@ export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="stacked-vertical-bar">
+        <div className={styles["echarts-box"]} ref={ref} data-type='echarts-box' echart-type='stacked-vertical-bar'>
             <div
                 className={classNames(styles["echart-item"], styles["echart-item-stacked-vertical-bar"])}
                 ref={chartRef}
@@ -283,8 +285,8 @@ interface HollowPieProps {
 // 空心圆环
 export const HollowPie: React.FC<HollowPieProps> = (props) => {
     const {data, title} = props
-    const ref = useRef(null);
-    const size = useSize(ref);
+    const ref = useRef(null)
+    const size = useSize(ref)
     const newData = data.filter((item) => item.direction != "center" && item.value !== 0)
     const centerData = data.filter((item) => item.direction === "center") || [{name: "资产", value: 0}]
     const chartRef = useRef(null)
@@ -408,7 +410,7 @@ export const HollowPie: React.FC<HollowPieProps> = (props) => {
             }
         }
         optionRef.current.series[0].data = newData || []
-        optionRef.current.series[0].color = (newData || []).map((item)=>item.color);
+        optionRef.current.series[0].color = (newData || []).map((item) => item.color)
         optionRef.current.title.text = centerData[0].name
         optionRef.current.graphic[0].style.text = title || ""
         optionRef.current.title.subtext = [`{text|${centerData[0].value}}{small|台}`]
@@ -420,15 +422,28 @@ export const HollowPie: React.FC<HollowPieProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={classNames(styles["echarts-box"],styles["echarts-box-hollow-pie"])} ref={ref} 
-        data-type="echarts-box" echart-type="hollow-pie">
+        <div
+            className={classNames(styles["echarts-box"], styles["echarts-box-hollow-pie"])}
+            ref={ref}
+            data-type='echarts-box'
+            echart-type='hollow-pie'
+        >
             <div className={classNames(styles["echart-item"], styles["echart-item-hollow-pie"])} ref={chartRef}></div>
         </div>
     )
 }
 
+interface ContentDataProp {
+    key: string
+    value: number
+    key_verbose?: string
+    color?: string
+    detail?: string
+    isHide?: boolean
+}
+
 interface ContentProp {
-    data: any[]
+    data: ContentDataProp[]
     name: string
     name_verbose: string
     reason: string
@@ -442,8 +457,8 @@ interface MultiPieProps {
 // 多层饼环
 export const MultiPie: React.FC<MultiPieProps> = (props) => {
     const {name_verbose, name, data} = props.content
-    const ref = useRef(null);
-    const size = useSize(ref);
+    const ref = useRef(null)
+    const size = useSize(ref)
     const chartRef = useRef(null)
     const optionRef = useRef<any>({
         title: {
@@ -596,7 +611,7 @@ export const MultiPie: React.FC<MultiPieProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="multi-pie">
+        <div className={styles["echarts-box"]} ref={ref} data-type='echarts-box' echart-type='multi-pie'>
             <div className={classNames(styles["echart-item"], styles["echart-item-multi-pie"])} ref={chartRef}></div>
         </div>
     )
@@ -612,8 +627,8 @@ interface DetailsProps {
 // 南丁格尔玫瑰图
 export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
     const {name_verbose, name, data} = props.content
-    const ref = useRef(null);
-    const size = useSize(ref);
+    const ref = useRef(null)
+    const size = useSize(ref)
     const [details, setDetails] = useState<DetailsProps>()
     const chartRef = useRef(null)
     const optionRef = useRef<any>({
@@ -702,7 +717,7 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
             }
 
             const value = cacheSource
-                .map((item: any) => {
+                .map((item: ContentDataProp) => {
                     if (item?.isHide) {
                         return {
                             value: 0,
@@ -721,7 +736,10 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
                         return {
                             value: item.value,
                             name: item.key_verbose || item.key,
-                            content: str
+                            content: str,
+                            itemStyle: {
+                                color: item?.color
+                            }
                         }
                     }
                 })
@@ -762,7 +780,7 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
     return (
         <>
             {Array.isArray(data) && (
-                <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="nightingle-rose">
+                <div className={styles["echarts-box"]} ref={ref} data-type='echarts-box' echart-type='nightingle-rose'>
                     <div
                         className={classNames(styles["echart-item"], styles["echart-item-nightingle-rose"])}
                         ref={chartRef}
@@ -770,8 +788,12 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
                     {details && (
                         <div className={styles["echart-detail"]}>
                             <div className={styles["echart-detail-item"]}>
-                                <div className={styles["echart-detail-item-title"]} id="nightingle-rose-title">{details.name}</div>
-                                <div className={styles["echart-detail-item-content"]} id="nightingle-rose-content">{details.content}</div>
+                                <div className={styles["echart-detail-item-title"]} id='nightingle-rose-title'>
+                                    {details.name}
+                                </div>
+                                <div className={styles["echart-detail-item-content"]} id='nightingle-rose-content'>
+                                    {details.content}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -781,6 +803,69 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
     )
 }
 
+interface EchartsOptionProps {
+    content: {
+        type: "e-chart"
+        name: "nightingale-rose" | "bar-graph"
+        option: EChartsOption
+    }
+}
+
+// echarts任意图表(后端传入option控制)
+export const EchartsOption: React.FC<EchartsOptionProps> = (props) => {
+    const {option, name} = props.content
+    const ref = useRef(null)
+    const size = useSize(ref)
+    const chartRef = useRef(null)
+    const optionRef = useRef<EChartsOption>(option)
+    useEffect(() => {
+        // @ts-ignore
+        const myChart = echarts.init(chartRef.current)
+        try {
+            if (name === "nightingale-rose") {
+                let setOption = cloneDeep(optionRef.current) as any
+                setOption.series[0].label.formatter = (params) => {
+                    return params.name + '\n' + (params.data.realPercent||0.0).toFixed(2) + '%'; 
+                }
+                setOption.tooltip.formatter = (params) => {
+                    return `${params.name} : ${params.data.realValue}`
+                }
+                optionRef.current = setOption
+            }
+            myChart.setOption(optionRef.current)
+        } catch (error) {}
+
+        return () => {
+            myChart.dispose()
+        }
+    }, [size?.width])
+
+    // 下载word报告时用于适配
+    const echartType = useMemo(() => {
+        switch (name) {
+            case "bar-graph":
+                return "vertical-bar"
+            default:
+                return name
+        }
+    }, [name])
+
+    // 样式适配
+    const chartStyle = useMemo(() => {
+        switch (name) {
+            case "bar-graph":
+                return styles["echart-item-vertical-bar"]
+            case "nightingale-rose":
+                return styles["echart-item-nightingle-rose"]
+        }
+    }, [name])
+
+    return (
+        <div className={styles["echarts-box"]} ref={ref} data-type='echarts-box' echart-type={echartType}>
+            <div className={classNames(styles["echart-item"], styles[chartStyle])} ref={chartRef}></div>
+        </div>
+    )
+}
 interface EchartsCardProps {
     dataTitle: string
     dataSource: any[]
@@ -791,13 +876,23 @@ export const EchartsCard: React.FC<EchartsCardProps> = (props) => {
     const {dataTitle, dataSource} = props
     return (
         <>
-            <div style={{fontSize:18,padding:"10px 0",fontWeight:"bold",color:"rgb(70, 70, 70)"}}>{dataTitle}</div>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
+            <div style={{fontSize: 18, padding: "10px 0", fontWeight: "bold", color: "rgb(70, 70, 70)"}}>
+                {dataTitle}
+            </div>
+            <div style={{display: "flex", justifyContent: "space-between", marginBottom: 12}}>
                 {dataSource.map((item: any) => {
                     return (
-                        <div style={{height:66,width:"46%",padding:10,border:"1px solid #cbcbcb",boxSizing:"content-box"}}>
-                            <div style={{color:"#666"}}>{item.key_verbose || item.key}</div>
-                            <div style={{marginTop:10,fontSize:24}}>{item.value}</div>
+                        <div
+                            style={{
+                                height: 66,
+                                width: "46%",
+                                padding: 10,
+                                border: "1px solid #cbcbcb",
+                                boxSizing: "content-box"
+                            }}
+                        >
+                            <div style={{color: "#666"}}>{item.key_verbose || item.key}</div>
+                            <div style={{marginTop: 10, fontSize: 24}}>{item.value}</div>
                         </div>
                     )
                 })}
