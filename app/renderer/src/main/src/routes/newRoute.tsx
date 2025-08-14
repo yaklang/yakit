@@ -132,7 +132,8 @@ import {
     SimpleDetectPageInfoProps,
     SpaceEnginePageInfoProps,
     WebsocketFuzzerPageInfoProps,
-    AIForgeEditorPageInfoProps
+    AIForgeEditorPageInfoProps,
+    YakRunnerScanHistoryPageInfoProps
 } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
@@ -382,7 +383,8 @@ export const NoScrollRoutes: YakitRoute[] = [
     YakitRoute.Mod_Brute,
     YakitRoute.YakScript,
     YakitRoute.AI_Agent,
-    YakitRoute.ShortcutKey
+    YakitRoute.ShortcutKey,
+    YakitRoute.YakRunner_ScanHistory
 ]
 /** 一级tab固定展示tab  */
 export const defaultFixedTabs: YakitRoute[] = [
@@ -490,6 +492,9 @@ export interface ComponentParams {
 
     /** 编辑 forge 模板 */
     modifyAIForgePageInfo?: AIForgeEditorPageInfoProps
+
+    /** 扫描历史页面 */
+    yakRunnerScanHistoryPageInfo?: YakRunnerScanHistoryPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
     return function WithPage(props) {

@@ -2368,7 +2368,10 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                     emiter.emit(
                                         "openPage",
                                         JSON.stringify({
-                                            route: YakitRoute.YakRunner_ScanHistory
+                                            route: YakitRoute.YakRunner_ScanHistory,
+                                            params: {
+                                                Programs: [record.Name]
+                                            }
                                         })
                                     )
                                 }}
