@@ -5,8 +5,8 @@ $black-background-color: #171717;
 // 混合比例和方向
 $yakit-light-mix-steps: (
     10: (92%, light),
-    20: (80%, light),
-    30: (70%, light),
+    20: (88%, light),
+    30: (80%, light),
     40: (55%, light),
     50: (25%, light),
     60: (10%, light),
@@ -55,6 +55,12 @@ $yakit-theme-colors: (
 @function get-mix-percent($name, $mode, $level, $default-percent) {
     @if $name == Neutral and $mode == dark and $level == 10 {
         @return 88%;
+    }
+    @if $name == Neutral and $mode == light and $level == 20 {
+        @return 80%;
+    }
+    @if $name == Neutral and $mode == light and $level == 30 {
+        @return 70%;
     }
     @return $default-percent;
 }
