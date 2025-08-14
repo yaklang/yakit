@@ -31,7 +31,8 @@
                     svg {
                         width: 16px;
                         height: 16px;
-                        transform: rotate(180deg)
+                        transform: rotate(180deg);
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     }
 
                     &:hover {
