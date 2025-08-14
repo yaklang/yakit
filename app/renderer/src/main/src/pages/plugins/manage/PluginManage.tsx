@@ -1012,8 +1012,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         httpUploadPluginToEE()
             .then((res) => {
                 if (res.ok) {
-                    onRefListAndTotalAndGroup()
-                    yakitNotify("success", "同步插件到企业版成功")
+                    yakitNotify("info", "插件正在同步中，请稍后")
+                    setTimeout(() => {
+                        onRefListAndTotalAndGroup()
+                    }, 3000)
                     m.destroy()
                 }
             })
