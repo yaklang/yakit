@@ -4,7 +4,7 @@
     height: 100%;
     overflow: hidden auto;
     padding: 56px 16.7% 0;
-    background: var(--Colors-Use-Neutral-Bg-Hover);
+    background: var(--Colors-Use-Neutral-Bg);
 
     .remote-yaklang-engine-body {
         .remote-title {
@@ -84,7 +84,7 @@
         .rmeote-divider {
             width: 100%;
             margin: 24px 0;
-            border-top: 1px solid var(--Colors-Use-Neutral-Bg);
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
         }
 
         .remote-info {

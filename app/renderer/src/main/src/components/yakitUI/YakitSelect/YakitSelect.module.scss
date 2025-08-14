@@ -121,7 +121,7 @@
         }
         .ant-select-item:not(.ant-select-item-option-grouped) {
             padding: 4px 8px;
-            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
@@ -311,6 +311,10 @@
         }
         .ant-select-selection-overflow {
             min-height: 16px;
+        }
+
+        .ant-select-selection-placeholder{
+            color: var(--Colors-Use-Neutral-Disable);
         }
 
         .ant-select-selection-overflow-item {

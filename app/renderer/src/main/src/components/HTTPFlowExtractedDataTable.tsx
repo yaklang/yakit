@@ -246,7 +246,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             },
             filterDropdown: ({confirm}) => {
                 return (
-                    <div style={{paddingTop: 5}}>
+                    <div className={styles["filter-dropdown"]}>
                         <MultipleSelect
                             filterProps={{
                                 filterSearch: true,

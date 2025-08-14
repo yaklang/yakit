@@ -1068,6 +1068,12 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         )
     }
 
+    // 控制添加分组按钮显示颜色
+    const addGroupBtnColor = useMemo(() => {
+        if (!selectList.length && !allChecked ) return "var(--Colors-Use-Neutral-Disable)"
+        return "var(--Colors-Use-Main-Primary)" 
+    }, [allChecked, selectList.length])
+
     return (
         <div className={styles["plugin-hub-tab-list"]}>
             <YakitSpin
@@ -1265,9 +1271,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                                 type={"text"}
                                                 icon={<OutlinePluscircleIcon />}
                                                 style={{
-                                                    color: addGroupVisible
-                                                        ? "var(--Colors-Use-Main-Primary)"
-                                                        : "var(--Colors-Use-Neutral-Disable)"
+                                                    color: addGroupBtnColor
                                                 }}
                                             >
                                                 添加分组

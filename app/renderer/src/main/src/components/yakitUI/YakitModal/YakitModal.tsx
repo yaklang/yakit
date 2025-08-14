@@ -94,7 +94,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
                         )}
                         {closable && (
                             <YakitButton
-                                type='text2'
+                                type='text'
                                 size={size === "large" ? "large" : "middle"}
                                 icon={!!closeIcon ? closeIcon : <OutlineXIcon />}
                                 onClick={onCancel}
