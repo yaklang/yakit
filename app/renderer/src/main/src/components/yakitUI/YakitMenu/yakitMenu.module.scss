@@ -10,9 +10,10 @@
     --menu-color: #{fetch-color($type, "color-5")};
     --menu-icon-color: #{fetch-color($type, "color-5")};
     --menu-background: var(--Colors-Use-Basic-Background);
+    // TODO：该处不确定取值
     --menu-active-color: var(--Colors-Use-Basic-Background);
     --menu-active-icon-color: var(--Colors-Use-Basic-Background);
-    --menu-active-background: #{fetch-color($type, "color-5")};
+    --menu-active-background: #{fetch-color($type, "color-6")};
     @include generateMenuSelect($type);
 }
 // 专门给menu-item用的
@@ -20,7 +21,8 @@
     --menu-color: #{fetch-color($type, "color-5")};
     --menu-icon-color: #{fetch-color($type, "color-5")};
     --menu-background: var(--Colors-Use-Basic-Background);
-    --menu-active-color: #{fetch-color($type, "color-5")};
+    // TODO：该处不确定取值
+    --menu-active-color: #{var(--Colors-Use-Neutral-Disable)};
     --menu-active-icon-color: #{fetch-color($type, "color-5")};
     --menu-active-background: var(--Colors-Use-Neutral-Bg);
     @include generateMenuSelect($type);
@@ -31,6 +33,7 @@
     --menu-color: #{var(--Colors-Use-Neutral-Disable)};
     --menu-icon-color: #{var(--Colors-Use-Neutral-Disable)};
     --menu-background: var(--Colors-Use-Basic-Background);
+    // TODO：该处不确定取值
     --menu-active-color: #{var(--Colors-Use-Neutral-Disable)};
     --menu-active-icon-color: #{var(--Colors-Use-Neutral-Disable)};
     --menu-active-background: var(--Colors-Use-Neutral-Bg);
@@ -44,6 +47,7 @@
     --menu-color: var(--Colors-Use-Neutral-Text-1-Title);
     --menu-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
     --menu-background: var(--Colors-Use-Basic-Background);
+    // TODO：该处不确定取值
     --menu-active-color: var(--Colors-Use-Neutral-Text-1-Title);
     --menu-active-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
     --menu-active-background: var(--Colors-Use-Basic-Background);
@@ -56,7 +60,8 @@
     --menu-color: #{fetch-color($type, "color-5")};
     --menu-icon-color: #{fetch-color($type, "color-5")};
     --menu-background: var(--Colors-Use-Basic-Background);
-    --menu-active-color: var(--Colors-Use-Neutral-Text-1-Title);   //var(--Colors-Use-Basic-Background)
+    // TODO：该处不确定取值
+    --menu-active-color: var(--Colors-Use-Neutral-Text-1-Title);
     --menu-active-icon-color: #{fetch-color($type, "color-5")};
     --menu-active-background: var(--Colors-Use-Main-Focus);
     @include generateMenuSelect($type);
@@ -67,7 +72,7 @@
     --menu-color: var(--Colors-Use-Neutral-Text-1-Title);
     --menu-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
     --menu-background: var(--Colors-Use-Basic-Background);
-    --menu-active-color: var(--Colors-Use-Basic-Background);
+    --menu-active-color: #{fetch-color("primary", "color-7")};
     --menu-active-icon-color: var(--Colors-Use-Basic-Background);
     --menu-active-background: #{fetch-color("primary", "color-5")};
     @include generateMenuSelect();
@@ -140,7 +145,7 @@
 .yakit-menu-div-wrapper {
     display: inline-block;
     :global {
-        .ant-dropdown-menu{
+        .ant-dropdown-menu {
             padding: 4px;
         }
         .ant-popover-inner-content {
@@ -191,7 +196,7 @@
     }
     .ant-#{$kind}menu-item.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child,
     .ant-#{$kind}menu-item.ant-#{$kind}menu-item-selected.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child {
-        color:  var(--menu-active-color);
+        color: var(--menu-active-color);
         background-color: var(--menu-active-background);
         span.anticon {
             color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -280,7 +285,7 @@
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-open.ant-#{$kind}menu-submenu-active.ant-#{$kind}menu-submenu-selected {
         background-color: var(--menu-active-background);
         span.anticon {
-           color: var(--menu-active-color);
+            color: var(--menu-active-color);
         }
         .keys-style {
             color: var(--Colors-Use-Main-On-Primary);

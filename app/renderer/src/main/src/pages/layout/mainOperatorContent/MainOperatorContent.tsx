@@ -5418,7 +5418,9 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
                             }}
                             key={color}
                         >
-                            {group.color === color && <CheckIcon className={styles["check-icon"]} />}
+                            {group.color === color && (
+                                <CheckIcon className={classNames(styles["check-icon"], `color-text-${color}`)} />
+                            )}
                         </div>
                     ))}
                 </div>

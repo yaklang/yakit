@@ -657,7 +657,7 @@ $keyColor: map-keys($colors);
             .check-icon {
                 @extend .flex-align-center;
                 justify-content: center;
-                color: var(--Colors-Use-Basic-Background);
+                // color: var(--Colors-Use-Basic-Background);
 
                 svg {
                     width: 16px;
