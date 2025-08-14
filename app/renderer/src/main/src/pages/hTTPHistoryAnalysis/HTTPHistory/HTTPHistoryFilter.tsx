@@ -111,6 +111,8 @@ interface HTTPHistoryFilterProps {
     onSetSelectedHttpFlowIds: (ids: string[]) => void
     onSetHTTPFlowFilter: (filterStr: string) => void
     refreshHttpTable?: boolean
+    isResetSelect?: boolean
+    onSetIsResetSelect?: React.Dispatch<React.SetStateAction<boolean>>
     downstreamProxy: string
     toWebFuzzer?: boolean
     runtimeId?: string[]
@@ -123,6 +125,8 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         onSetSelectedHttpFlowIds,
         onSetHTTPFlowFilter,
         refreshHttpTable,
+        isResetSelect,
+        onSetIsResetSelect,
         downstreamProxy,
         toWebFuzzer,
         runtimeId,
@@ -336,6 +340,8 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             onSetClickedHttpFlow={onSetClickedHttpFlow}
                             onSetFirstHttpFlow={onSetFirstHttpFlow}
                             refresh={refreshHttpTable}
+                            isResetSelect={isResetSelect}
+                            onSetIsResetSelect={onSetIsResetSelect}
                             downstreamProxy={downstreamProxy}
                             inMouseEnterTable={true}
                             toWebFuzzer={toWebFuzzer}
@@ -381,6 +387,8 @@ interface HTTPFlowTableProps {
     onSetClickedHttpFlow?: (flow?: HTTPFlow) => void
     onSetFirstHttpFlow?: (flow?: HTTPFlow) => void
     refresh?: boolean
+    isResetSelect?: boolean
+    onSetIsResetSelect?: React.Dispatch<React.SetStateAction<boolean>>
     downstreamProxy?: string
     inMouseEnterTable?: boolean
     toWebFuzzer?: boolean
@@ -397,6 +405,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         onSetClickedHttpFlow,
         onSetFirstHttpFlow,
         refresh,
+        isResetSelect = true,
+        onSetIsResetSelect,
         downstreamProxy = "",
         inMouseEnterTable = false,
         toWebFuzzer = false,
@@ -2140,7 +2150,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
                 if (isInit) {
                     setIsRefresh((prev) => !prev)
-                    resetSelected()
+                    if (isResetSelect) {
+                        resetSelected()
+                    } else {
+                        onSetIsResetSelect && onSetIsResetSelect(true)
+                    }
                 } else {
                     if (isAllSelect) {
                         setSelectedRowKeys(d.map((item) => item.Id + ""))
