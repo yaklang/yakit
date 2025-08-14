@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounce, useDebounceFn, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {ActiveProps, OpenedFileProps, RiskTreeProps, RuleTreeProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
@@ -51,6 +51,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import moment from "moment"
+import {useCampare} from "@/hook/useCompare/useCompare"
 
 const GlobalFilterFunction = React.lazy(() => import("../GlobalFilterFunction/GlobalFilterFunction"))
 
@@ -293,6 +294,10 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         }
         setActive(type)
     })
+    useEffect(() => {
+        const activeKey = pageInfo?.leftTabActive || "all"
+        onSetActive(activeKey as ActiveProps)
+    }, [pageInfo?.leftTabActive])
 
     const getActiveName = useMemoizedFn((type: ActiveProps) => {
         switch (type) {
@@ -352,37 +357,51 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         }
     }, [isShowCompare])
 
-    const getRiskSelectList = useMemoizedFn(async () => {
-        try {
-            if (projectName) {
-                // 经与后端协商 由于跳转后需选中此Select 因此不采用分页，更改为一次性拉取100条
-                const res = await grpcFetchAuditCodeRiskOrRuleList(projectName)
-                const newOptions = res.Data.map((item) => {
-                    return {
-                        label: (
-                            <span>
-                                {formatTimestamp(item.CreatedAt)}
-                                <YakitTag style={{marginLeft: 4}} size='small' color='info'>
-                                    {item.RiskCount}
-                                </YakitTag>
-                            </span>
-                        ),
-                        value: item.TaskId,
-                        CreatedAt: item.CreatedAt
-                    }
-                })
-                setOptions([{label: "全部", value: ""}, ...newOptions])
-            }
-        } catch (error) {}
-    })
+    const getRiskSelectList = useDebounceFn(
+        useMemoizedFn(async () => {
+            try {
+                if (projectName) {
+                    // 经与后端协商 由于跳转后需选中此Select 因此不采用分页，更改为一次性拉取100条
+                    const res = await grpcFetchAuditCodeRiskOrRuleList(projectName)
+                    const newOptions = res.Data.map((item) => {
+                        return {
+                            label: (
+                                <span>
+                                    {formatTimestamp(item.CreatedAt)}
+                                    <YakitTag style={{marginLeft: 4}} size='small' color='info'>
+                                        {item.RiskCount}
+                                    </YakitTag>
+                                </span>
+                            ),
+                            value: item.TaskId,
+                            CreatedAt: item.CreatedAt
+                        }
+                    })
+                    setOptions([{label: "全部", value: ""}, ...newOptions])
+                    setTimeout(() => {
+                        if (pageInfo && pageInfo.isShowCompare) {
+                            setShowCompare(true)
+                        }
+                    }, 200)
+                }
+            } catch (error) {}
+        }),
+        {wait: 300}
+    ).run
+
     useEffect(() => {
         setShowCompare(false)
         getRiskSelectList()
     }, [projectName])
 
     useEffect(() => {
-        if (pageInfo && pageInfo.runtimeId) {
-            setCheckItem(pageInfo.runtimeId)
+        if (pageInfo) {
+            if (pageInfo.runtimeId) {
+                setCheckItem(pageInfo.runtimeId)
+            }
+            if (pageInfo.refreshRiskOrRuleList) {
+                getRiskSelectList()
+            }
         }
     }, [pageInfo])
 

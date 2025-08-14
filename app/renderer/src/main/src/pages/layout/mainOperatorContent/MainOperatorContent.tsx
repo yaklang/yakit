@@ -122,7 +122,8 @@ import {
     saveFuzzerCache,
     usePageInfo,
     AIForgeEditorPageInfoProps,
-    AIToolEditorPageInfoProps
+    AIToolEditorPageInfoProps,
+    YakRunnerScanHistoryPageInfoProps
 } from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
@@ -702,7 +703,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 addProjectManager()
                 break
             case YakitRoute.YakRunner_ScanHistory:
-                addScanHistory()
+                addScanHistory(params)
                 break
             case YakitRoute.MITMHacker:
                 addMITMHacker(params)
@@ -731,12 +732,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage({route: YakitRoute.YakRunner_Project_Manager})
     })
 
-    const addScanHistory = useMemoizedFn(() => {
+    const addScanHistory = useMemoizedFn((data: YakRunnerScanHistoryPageInfoProps) => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_ScanHistory).length
-        if (isExist) {
-            // emiter.emit("onRefreshProjectManager")
+        if (isExist && data) {
+            emiter.emit("onYakRunnerScanHistoryPageInfo", JSON.stringify(data))
         }
-        openMenuPage({route: YakitRoute.YakRunner_ScanHistory})
+        openMenuPage(
+            {route: YakitRoute.YakRunner_ScanHistory},
+            {
+                pageParams: {
+                    yakRunnerScanHistoryPageInfo: {
+                        ...data
+                    }
+                }
+            }
+        )
     })
 
     const addShortcutKey = useMemoizedFn((data: ShortcutKeyPageName) => {
@@ -1669,6 +1679,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.ModifyAITool:
                 onSetModifyAIToolData(singleUpdateNode, 1)
                 break
+            case YakitRoute.YakRunner_ScanHistory:
+                onSetYakRunnerScanHistory(singleUpdateNode, 1)
+                break
             default:
                 break
         }
@@ -1779,6 +1792,30 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             routeKey: YakitRoute.ModifyAITool
         }
         setPagesData(YakitRoute.ModifyAITool, pageNodeInfo)
+    })
+
+    const onSetYakRunnerScanHistory = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.YakRunner_ScanHistory,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                yakRunnerScanHistory: node.pageParams?.yakRunnerScanHistoryPageInfo
+                    ? {
+                          ...node.pageParams.yakRunnerScanHistoryPageInfo
+                      }
+                    : undefined
+            },
+            sortFieId: order
+        }
+        let pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [newPageNode],
+            routeKey: YakitRoute.YakRunner_ScanHistory
+        }
+        setPagesData(YakitRoute.YakRunner_ScanHistory, pageNodeInfo)
     })
     const onBatchExecutorPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
         const newPageNode: PageNodeItemProps = {
