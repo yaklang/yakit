@@ -81,7 +81,7 @@
             line-height: 20px;
             font-weight: 600;
             font-size: 14px;
-            color: var(--Colors-Use-Error-On-Primary);
+            color: var(--global-state-text-color);
         }
         .header-hint {
             height: 20px;
@@ -93,7 +93,7 @@
                 font-weight: 400;
                 font-size: 12px;
                 line-height: 16px;
-                color: var(--Colors-Use-Error-On-Primary);
+                color: var(--global-state-text-color);
             }
         }
     }

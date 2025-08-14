@@ -115,7 +115,7 @@
 }
 
 @mixin generateOutline1($type) {
-     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
+    --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: transparent;
     color: fetch-color($type, "color-5");
@@ -160,7 +160,7 @@
 }
 
 @mixin generateOutline2($type) {
-     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
+    --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: var(--Colors-Use-Basic-Background);
     color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -233,7 +233,7 @@
 }
 
 @mixin generateText($type) {
-     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
+    --antd-wave-shadow-color: transparent;
 
     background: transparent;
     color: fetch-color($type, "color-5");
@@ -278,7 +278,7 @@
 }
 
 @mixin generateText2($type) {
-     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
+    --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: transparent;
     color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -440,7 +440,7 @@
     &:global(.ant-btn-icon-only) {
         width: unset;
     }
-    &:global(.ant-btn.ant-btn-loading::before){
+    &:global(.ant-btn.ant-btn-loading::before) {
         background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
     &:global(.ant-btn .anticon) {
