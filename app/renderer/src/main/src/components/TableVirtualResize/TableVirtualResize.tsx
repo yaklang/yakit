@@ -127,6 +127,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         isRefresh,
         disableSorting,
         query,
+        requireSort,
         currentSelectItem,
         onSetCurrentRow,
         onMoveRow,
@@ -773,7 +774,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         } else if (s.order === "asc") {
             newOrder = "desc"
         } else if (s.order === "desc") {
-            newOrder = "none"
+            if (requireSort) {
+                newOrder = "asc" 
+            } else {
+                newOrder = "none"
+            }
         } else {
             newOrder = "asc"
         }
