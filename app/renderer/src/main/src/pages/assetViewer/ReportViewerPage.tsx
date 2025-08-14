@@ -35,6 +35,7 @@ import {PieGraph} from "../graph/PieGraph"
 import {BarGraph} from "../graph/BarGraph"
 import {
     EchartsCard,
+    EchartsOption,
     HollowPie,
     MultiPie,
     NightingleRose,
@@ -671,6 +672,9 @@ const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
                             case "general":
                                 // kv图展示柱状图
                                 return <VerticalOptionBar content={content} />
+                            // echarts任意图表
+                            case "e-chart":
+                                return <EchartsOption content={content}/>
                             case "year-cve":
                                 return <StackedVerticalBar content={content} />
                             case "card":
