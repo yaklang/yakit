@@ -136,6 +136,7 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {FileDefault, FileSuffix, KeyToIcon} from "../../yakRunner/FileTree/icon"
 import {RiskTree} from "../RunnerFileTree/RunnerFileTree"
+import {FuncFilterPopover} from "@/pages/plugins/funcTemplate"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -2378,7 +2379,30 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             />
                         </Tooltip>
                         <Divider type={"vertical"} style={{margin: 0}} />
-                        <YakitDropdownMenu
+                        <FuncFilterPopover
+                            icon={<OutlineDotshorizontalIcon />}
+                            button={{type: "text2"}}
+                            menu={{
+                                type: "primary",
+                                data: [
+                                    {
+                                        key: "edit",
+                                        label: "编辑",
+                                        itemIcon: <OutlinePencilaltIcon />,
+                                        type: undefined
+                                    },
+                                    {
+                                        key: "del",
+                                        label: "删除",
+                                        itemIcon: <OutlineTrashIcon />,
+                                        type: "danger"
+                                    }
+                                ],
+                                onClick: ({key}) => handleOperates(key, record)
+                            }}
+                            placement='bottomRight'
+                        />
+                        {/* <YakitDropdownMenu
                             menu={{
                                 width: 40,
                                 data: [
@@ -2432,12 +2456,31 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             }}
                         >
                             <YakitButton type='text' icon={<OutlineDotshorizontalIcon />} />
-                        </YakitDropdownMenu>
+                        </YakitDropdownMenu> */}
                     </div>
                 )
             }
         }
     ]
+
+    const handleOperates = (type: string, record) => {
+        if (type === "del") {
+            onDelete({
+                Filter: {
+                    Ids: [parseInt(record.Id + "")]
+                }
+            })
+        } else if (type === "edit") {
+            const m = showYakitModal({
+                title: "编辑",
+                width: 448,
+                type: "white",
+                footer: null,
+                centered: true,
+                content: <ProjectManagerEditForm record={record} setData={setData} onClose={() => m.destroy()} />
+            })
+        }
+    }
 
     const loadMoreData = useMemoizedFn(() => {
         if (data.length > 0) {
