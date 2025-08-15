@@ -112,6 +112,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
     const [pageInfo, setPageInfo] = useState<HTTPHistoryAnalysisPageInfo>(initPageInfo())
 
     const [refreshHttpTable, setRefreshHttpTable] = useState<boolean>(false)
+    const [isResetSelect, setIsResetSelect] = useState<boolean>(true)
     const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
     const [clickedHttpFlow, setClickedHttpFlow] = useState<HTTPFlow>()
     const [firstHttpFlow, setFirstHttpFlow] = useState<HTTPFlow>()
@@ -229,6 +230,8 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                             onSetSelectedHttpFlowIds={setSelectedHttpFlowIds}
                             onSetHTTPFlowFilter={onSetHTTPFlowFilter}
                             refreshHttpTable={refreshHttpTable}
+                            isResetSelect={isResetSelect}
+                            onSetIsResetSelect={setIsResetSelect}
                             downstreamProxy={downstreamProxy}
                             toWebFuzzer={pageInfo.webFuzzer}
                             runtimeId={pageInfo.runtimeId}
@@ -246,6 +249,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                                 onSetCurBottomTab={setCurBottomTab}
                                 onSetOpenBottomTabsFlag={setOpenBottomTabsFlag}
                                 onSetRefreshHttpTable={setRefreshHttpTable}
+                                onSetIsResetSelect={setIsResetSelect}
                                 hTTPFlowFilter={hTTPFlowFilter}
                                 httpFlowIds={httpFlowIds}
                                 clickHttpFlow={memoClickedHttpFlow}
@@ -307,6 +311,7 @@ interface AnalysisMainProps {
     onSetCurBottomTab: (tab?: TabKeys) => void
     onSetOpenBottomTabsFlag: (flag: boolean) => void
     onSetRefreshHttpTable: React.Dispatch<React.SetStateAction<boolean>>
+    onSetIsResetSelect: React.Dispatch<React.SetStateAction<boolean>>
     hTTPFlowFilter?: YakQueryHTTPFlowRequest
     httpFlowIds: number[]
     clickHttpFlow?: HTTPFlow
@@ -320,6 +325,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         onSetCurBottomTab,
         onSetOpenBottomTabsFlag,
         onSetRefreshHttpTable,
+        onSetIsResetSelect,
         hTTPFlowFilter,
         httpFlowIds,
         clickHttpFlow,
@@ -634,12 +640,20 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                         setExecuteStatus("error")
                     } else {
                         setExecuteStatus("finished")
+                        refreshHttpTableHasMatchersList()
                     }
                 }
             }, 300)
         },
         onError: () => {
             setExecuteStatus("error")
+        }
+    })
+
+    const refreshHttpTableHasMatchersList = useMemoizedFn(() => {
+        if (sourceType === "database" && matchersList.length) {
+            onSetIsResetSelect(false)
+            onSetRefreshHttpTable((prev) => !prev)
         }
     })
 
@@ -742,11 +756,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
             }
         }
     }, [isExit, executeStatus])
-    useEffect(() => {
-        if (executeStatus === "finished") {
-            onSetRefreshHttpTable((prev) => !prev)
-        }
-    }, [executeStatus])
 
     useUpdateEffect(() => {
         if (inViewport && executeStatus === "default") {
@@ -944,7 +953,10 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                             title={
                                                                 <div className={styles["row-editor-title"]}>
                                                                     <span style={{fontSize: 12}}>Request</span>
-                                                                    <ByteCountTag selectionByteCount={reqSelectionByteCount} key='httpHistoryAnalysis' />
+                                                                    <ByteCountTag
+                                                                        selectionByteCount={reqSelectionByteCount}
+                                                                        key='httpHistoryAnalysis'
+                                                                    />
                                                                 </div>
                                                             }
                                                             extra={
@@ -983,7 +995,10 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                             title={
                                                                 <div className={styles["row-editor-title"]}>
                                                                     <span style={{fontSize: 12}}>Response</span>
-                                                                    <ByteCountTag selectionByteCount={resSelectionByteCount} key='httpHistoryAnalysis' />
+                                                                    <ByteCountTag
+                                                                        selectionByteCount={resSelectionByteCount}
+                                                                        key='httpHistoryAnalysis'
+                                                                    />
                                                                 </div>
                                                             }
                                                             extra={
