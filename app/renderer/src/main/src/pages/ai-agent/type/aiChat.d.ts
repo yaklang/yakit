@@ -468,4 +468,23 @@ export interface ToggleAIToolFavoriteResponse {
     IsFavorite: boolean
     Message: string
 }
+export interface SaveAIToolRequest {
+    Name: string
+    Description: string
+    Content: string
+    ToolPath: string
+    Keywords: string[]
+}
+export interface DeleteAIToolRequest {
+    ToolNames: string[]
+}
+export interface AIToolGenerateMetadataRequest {
+    ToolName: string
+    Content: string
+}
+export interface AIToolGenerateMetadataResponse {
+    Name: string
+    Description: string
+    Keywords: string[]
+}
 //#endregion

@@ -110,5 +110,9 @@ export enum YakitRoute {
     // 新建 Forge
     AddAIForge = "add-ai-forge",
     // 编辑 Forge
-    ModifyAIForge = "modify-ai-forge"
+    ModifyAIForge = "modify-ai-forge",
+    /**AI 工具新增 */
+    AddAITool = "add-ai-tool",
+    /**AI 工具编辑 */
+    ModifyAITool = "modify-ai-tool"
 }

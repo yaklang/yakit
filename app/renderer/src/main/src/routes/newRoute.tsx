@@ -132,7 +132,8 @@ import {
     SimpleDetectPageInfoProps,
     SpaceEnginePageInfoProps,
     WebsocketFuzzerPageInfoProps,
-    AIForgeEditorPageInfoProps
+    AIForgeEditorPageInfoProps,
+    AIToolEditorPageInfoProps
 } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
@@ -175,6 +176,7 @@ const NotepadManage = React.lazy(() => import("@/pages/notepadManage/notepadMana
 const FingerprintManage = React.lazy(() => import("@/pages/fingerprintManage/FingerprintManage"))
 const SsaResDiff = React.lazy(() => import("@/pages/ssaResDiff/SsaResDiff"))
 const ForgeEditor = React.lazy(() => import("@/pages/aiForge/forgeEditor/ForgeEditor"))
+const AIToolEditor = React.lazy(() => import("@/pages/aiTool/AIToolEditor/AIToolEditor"))
 
 /**
  * @description 页面路由对应的页面信息
@@ -273,7 +275,9 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "ai-agent": {label: "AIAgent"},
     "ssa-result-diff": {label: "ssa-result-diff"},
     "add-ai-forge": {label: "新建 Forge"},
-    "modify-ai-forge": {label: "编辑 Forge"}
+    "modify-ai-forge": {label: "编辑 Forge"},
+    "add-ai-tool": {label: "新建 Tool"},
+    "modify-ai-tool": {label: "编辑 Tool"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -321,7 +325,9 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.AI_Agent,
     YakitRoute.Ssa_Result_Diff,
     YakitRoute.AddAIForge,
-    YakitRoute.ModifyAIForge
+    YakitRoute.ModifyAIForge,
+    YakitRoute.AddAITool,
+    YakitRoute.ModifyAITool
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -369,7 +375,9 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.AI_Agent,
     YakitRoute.Ssa_Result_Diff,
     YakitRoute.AddAIForge,
-    YakitRoute.ModifyAIForge
+    YakitRoute.ModifyAIForge,
+    YakitRoute.AddAITool,
+    YakitRoute.ModifyAITool
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -486,6 +494,9 @@ export interface ComponentParams {
 
     /** 编辑 forge 模板 */
     modifyAIForgePageInfo?: AIForgeEditorPageInfoProps
+
+    /** 编辑 ai tool 页面 */
+    modifyAIToolPageInfo?: AIToolEditorPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
     return function WithPage(props) {
@@ -721,6 +732,12 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <ForgeEditor />
         case YakitRoute.ModifyAIForge:
             return <ForgeEditor isModify={true} />
+
+        case YakitRoute.AddAITool:
+            return <AIToolEditor pageId={params?.id || ""} />
+        case YakitRoute.ModifyAITool:
+            return <AIToolEditor pageId={params?.id || ""} isModify={true} />
+
         default:
             return <div />
     }
