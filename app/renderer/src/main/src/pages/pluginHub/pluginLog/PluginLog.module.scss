@@ -176,19 +176,19 @@
 // ---------- 插件日志各种类型对应样式 ----------
 .plugin-log-type-info {
     --plugin-log-type-background: var(--Colors-Use-Neutral-Bg-Hover);
-    --plugin-log-type-content: #85899e;
+    --plugin-log-type-content: var(--Colors-Use-Neutral-Text-4-Help-text);
 }
 .plugin-log-type-success {
-    --plugin-log-type-background: color-mix(in srgb, #56c991 20%, #ffffff);
-    --plugin-log-type-content: #56c991;
+    --plugin-log-type-background: var(--Colors-Use-Green-Bg-Hover);
+    --plugin-log-type-content: var(--Colors-Use-Green-Primary);
 }
 .plugin-log-type-failed {
-    --plugin-log-type-background: color-mix(in srgb, #f4736b 20%, #ffffff);
-    --plugin-log-type-content: #f4736b;
+    --plugin-log-type-background: var(--Colors-Use-Error-Bg-Hover);
+    --plugin-log-type-content: var(--Colors-Use-Error-Primary);
 }
 .plugin-log-type-comment {
-    --plugin-log-type-background: color-mix(in srgb, #4a94f8 20%, #ffffff);
-    --plugin-log-type-content: #4a94f8;
+    --plugin-log-type-background: var(--Colors-Use-Blue-Bg-Hover);
+    --plugin-log-type-content: var(--Colors-Use-Blue-Primary);
 }
 
 // ---------- PluginLogOpt ----------
@@ -203,9 +203,9 @@
     position: relative;
     .arrow-icon {
         position: absolute;
-        right: -9px;
-
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        right: -10px;
+        color: var(--plugin-log-type-background);
+        z-index: 9;
     }
     .icon-wrapper {
         width: 24px;
@@ -272,7 +272,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: var(--Colors-Use-Neutral-Bg);
+       background: var(--plugin-log-type-background);
 
         .header-content {
             flex: 1;
@@ -299,7 +299,7 @@
             }
             .log-content {
                 white-space: nowrap;
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                color: var(--plugin-log-type-content);
             }
             .log-content + .reply-name {
                 margin-left: 6px;

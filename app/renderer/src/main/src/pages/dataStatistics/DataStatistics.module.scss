@@ -7,7 +7,7 @@
     .left-box {
         width: 40%;
         border-radius: 8px;
-        border: 1px solid #eaecf3;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         padding: 16px 20px;
         overflow: hidden;
         .user-box {
@@ -137,7 +137,7 @@
         .v-line {
             height: 1px;
             width: 100%;
-            background-color: #eaecf3;
+            background-color: var(--Colors-Use-Neutral-Border);
             margin: 20px 0;
         }
         .pie-charts-box {
@@ -221,7 +221,7 @@
         .user-active-time {
             height: 60%;
             border-radius: 8px;
-            border: 1px solid #eaecf3;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             padding: 16px 20px;
             display: flex;
             flex-direction: column;
@@ -290,7 +290,7 @@
         .user-rise {
             height: 40%;
             border-radius: 8px;
-            border: 1px solid #eaecf3;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             padding: 16px 20px;
             .header {
                 display: flex;

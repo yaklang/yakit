@@ -165,7 +165,6 @@ $keyColor: map-keys($colors);
             grid-gap: 16px;
             gap: 16px;
             color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            background: var(--Colors-Use-Neutral-Bg);
             cursor: pointer;
             // flex: 1 1;
             word-break: keep-all;
@@ -281,8 +280,6 @@ $keyColor: map-keys($colors);
             align-items: center;
             position: relative;
             height: 32px;
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
-
             max-width: calc(100% - 32px);
             overflow-y: hidden;
             overflow-x: auto;
@@ -556,7 +553,7 @@ $keyColor: map-keys($colors);
         position: absolute;
         bottom: -1px;
         left: 0;
-        background-color: var(--Colors-Use-Neutral-Border);
+        background-color: var(--Colors-Use-Basic-Background);
         z-index: 2;
     }
 }
@@ -660,7 +657,7 @@ $keyColor: map-keys($colors);
             .check-icon {
                 @extend .flex-align-center;
                 justify-content: center;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
+                // color: var(--Colors-Use-Basic-Background);
 
                 svg {
                     width: 16px;

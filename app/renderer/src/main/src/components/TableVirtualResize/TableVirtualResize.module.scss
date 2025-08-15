@@ -292,9 +292,8 @@
                     color: var(--Colors-Use-Neutral-Disable);
                     background-color: var(--Colors-Use-Neutral-Bg-Hover);
                 }
-                .virtual-table-row-cell-disabled:hover{
+                .virtual-table-row-cell-disabled:hover {
                     color: var(--Colors-Use-Neutral-Disable) !important;
-
                 }
 
                 .virtual-table-row-cell-border-right-0 {
@@ -385,7 +384,7 @@
                 .virtual-table-active-row {
                     border-bottom: 1px solid var(--Colors-Use-Main-Primary) !important;
                     border-top: 1px solid var(--Colors-Use-Main-Primary) !important;
-                    background-color: var(--Colors-Use-Main-Focus);
+                    background-color: var(--Colors-Use-Main-Bg);
                     color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
                 .virtual-table-active-row.virtual-table-hover-row {
@@ -542,12 +541,12 @@
         .ant-popover-inner-content {
             padding: 0;
         }
-        .ant-popover-arrow-content{
+        .ant-popover-arrow-content {
             border: 1px solid var(--Colors-Use-Neutral-Border);
             background-color: var(--Colors-Use-Basic-Background);
         }
-        .ant-popover-arrow-content::before{
-            background: none
+        .ant-popover-arrow-content::before {
+            background: none;
         }
 
         .ant-popover-inner {

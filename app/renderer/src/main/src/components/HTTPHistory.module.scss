@@ -31,7 +31,8 @@
                     svg {
                         width: 16px;
                         height: 16px;
-                        transform: rotate(180deg)
+                        transform: rotate(180deg);
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     }
 
                     &:hover {
@@ -43,6 +44,9 @@
                         background-color: var(--Colors-Use-Main-Primary);
                         &:hover {
                             background-color: var(--Colors-Use-Main-Hover);
+                        }
+                        svg {
+                            color: var(--Colors-Use-Main-On-Primary);
                         }
                     }
 

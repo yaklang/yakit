@@ -76,7 +76,7 @@
     }
     .yakit-proto-checkbox-focus:not(.yakit-checkbox-disabled) {
         border-color: var(--Colors-Use-Main-Primary);
-        box-shadow: 0 0 2px 2px var(--Colors-Use-Basic-Shadow);
+        box-shadow: 0 0 2px 2px var(--Colors-Use-Main-Focus);
     }
     .yakit-checkbox-checked:not(.yakit-checkbox-disabled) {
         background: var(--Colors-Use-Main-Primary);

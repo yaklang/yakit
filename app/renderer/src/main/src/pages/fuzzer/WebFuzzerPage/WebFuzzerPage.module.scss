@@ -12,7 +12,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
         &-item {
             @extend .display-column-center;
@@ -37,7 +37,7 @@
             }
         }
         &-item-advanced-config-unShow {
-            background-color: var(--Colors-Use-Main-Primary);
+            background-color: var(--Colors-Use-Main-Border);
         }
         &-label {
             font-weight: 600;

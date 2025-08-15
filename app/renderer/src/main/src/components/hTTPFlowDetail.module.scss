@@ -4,10 +4,10 @@
     }
 }
 
-.flow-detail-tabs{
-    :global{
-        .ant-tabs-top > .ant-tabs-nav::before{
-            border-bottom: none !important
+.flow-detail-tabs {
+    :global {
+        .ant-tabs-top > .ant-tabs-nav::before {
+            border-bottom: none !important;
         }
     }
 }
@@ -95,13 +95,13 @@
                 }
             }
         }
-        .fold-icon:hover{
+        .fold-icon:hover {
             background-color: var(--Colors-Use-Neutral-Bg);
-            color: var(--Colors-Use-Main-Primary);;
+            color: var(--Colors-Use-Main-Primary);
         }
     }
-    :global{
-        .ant-empty{
+    :global {
+        .ant-empty {
             overflow: auto;
             padding-bottom: 12px;
         }
@@ -132,9 +132,9 @@
             }
         }
     }
-    .fold-icon:hover{
+    .fold-icon:hover {
         background-color: var(--Colors-Use-Neutral-Bg);
-        color: var(--Colors-Use-Main-Primary);;
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 .http-history-fold-border-box {
@@ -175,13 +175,14 @@
             line-height: 16px;
             background: var(--Colors-Use-Neutral-Bg);
         }
-        .ant-table.ant-table-bordered > .ant-table-container{
+        .ant-table.ant-table-bordered > .ant-table-container {
             border-color: var(--Colors-Use-Neutral-Border);
         }
-        .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table, .ant-table.ant-table-bordered > .ant-table-container > .ant-table-header > table{
+        .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table,
+        .ant-table.ant-table-bordered > .ant-table-container > .ant-table-header > table {
             border-color: var(--Colors-Use-Neutral-Border);
         }
-        .ant-table-tbody{
+        .ant-table-tbody {
             background-color: var(--Colors-Use-Basic-Background);
         }
         .ant-table-thead > tr > th,
@@ -198,8 +199,8 @@
             background: var(--Colors-Use-Neutral-Bg-Hover);
         }
         .ant-table-filter-trigger:hover {
-            color: transparent;
-            background: transparent;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
         }
         // 分页相关
         .ant-pagination-item-active {
@@ -211,8 +212,8 @@
         .ant-pagination-item:hover a {
             color: var(--Colors-Use-Main-Primary);
         }
-        .ant-pagination-prev:hover .ant-pagination-item-link,
-        .ant-pagination-next:hover .ant-pagination-item-link {
+        .ant-pagination-prev:not(.ant-pagination-disabled):hover .ant-pagination-item-link,
+        .ant-pagination-next:not(.ant-pagination-disabled):hover .ant-pagination-item-link {
             color: var(--Colors-Use-Main-Primary);
             border-color: var(--Colors-Use-Main-Border);
         }
@@ -238,7 +239,8 @@
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
             background-color: rgba(242, 139, 68, 0.1);
         }
-        a.ant-typography-ellipsis-single-line, span.ant-typography-ellipsis-single-line{
+        a.ant-typography-ellipsis-single-line,
+        span.ant-typography-ellipsis-single-line {
             color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
@@ -254,7 +256,7 @@
 
     .position-icon {
         cursor: pointer;
-        color: var(--Colors-Use-Neutral-Disable);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         svg {
             width: 16px;
             height: 16px;
@@ -344,4 +346,10 @@
     .fuzzable-param-list-tag {
         max-width: 100%;
     }
+}
+
+.filter-dropdown {
+    padding-top: 5px;
+    background-color: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }

@@ -81,7 +81,6 @@ export interface TableVirtualResizeProps<T> {
     inMouseEnterTable?: boolean
     containerClassName?: string
     isRightClickBatchOperate?: boolean
-
     /** 是否隐藏表格初始渲染时的 loadingUI */
     isHiddenLoadingUI?: boolean
 

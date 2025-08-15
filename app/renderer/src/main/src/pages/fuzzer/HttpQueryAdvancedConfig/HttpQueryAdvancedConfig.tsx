@@ -935,7 +935,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <Form.Item label='重试次数' name='maxRetryTimes'>
                                     <YakitInputNumber type='horizontal' size='small' min={0} />
                                 </Form.Item>
-                                <YakitCollapse activeKey={retryActive} destroyInactivePanel={true} bordered={false}>
+                                <YakitCollapse activeKey={retryActive} destroyInactivePanel={true} >
                                     <YakitPanel
                                         header={
                                             <Form.Item name='retry' noStyle valuePropName='checked'>
@@ -1102,6 +1102,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             activeKey={activeKey}
                             onChange={(key) => onSwitchCollapse(key)}
                             destroyInactivePanel={true}
+                            className={styles['rule-collapse']}
                         >
                             <MatchersPanel
                                 key='匹配器'
