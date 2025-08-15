@@ -208,9 +208,6 @@ ${obj.CurrentDir}`
                         <YakitCVXterm
                             maxHeight={0}
                             ref={xtermRef}
-                            options={{
-                                convertEol: true
-                            }}
                             isWrite={false}
                             onData={(data) => {
                                 if (data.replace(/[\x7F]/g, "").length > 0) {

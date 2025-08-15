@@ -6,6 +6,8 @@ import {ExecResult} from "@/pages/invoker/schema"
 import {useEngineConsoleStore} from "@/store/baseConsole"
 import {useMemoizedFn} from "ahooks"
 import {setClipboardText} from "@/utils/clipboard"
+import {useTheme} from "@/hook/useTheme"
+import {getXtermTheme} from "@/hook/useXTermOptions/useXTermOptions"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -16,6 +18,7 @@ export const changeClickEngineConsoleFlag = (flag: boolean) => {
 export let engineConsoleWindowHash = ""
 interface useEngineConsoleHooks {}
 export default function useEngineConsole(props: useEngineConsoleHooks) {
+    const {theme: themeGlobal} = useTheme()
     const [engineConsoleToken, setEngineConsoleToken] = useState<string>("")
     const {consoleLog, setConsoleInfo} = useEngineConsoleStore()
     const consoleLogRef = useRef<string>(consoleLog)
@@ -24,11 +27,22 @@ export default function useEngineConsole(props: useEngineConsoleHooks) {
     }, [consoleLog])
 
     useEffect(() => {
+        if (engineConsoleWindowHash) {
+            ipcRenderer.send("forward-xterm-theme", {
+                xtermThemeVars: getXtermTheme()
+            })
+        }
+    }, [themeGlobal])
+
+    useEffect(() => {
         ipcRenderer.on("engineConsole-window-hash", (event, {hash}) => {
             clickEngineConsoleFlag = false
             engineConsoleWindowHash = hash
             // hash存在则证明引擎新窗口已打开
             if (hash) {
+                ipcRenderer.send("forward-xterm-theme", {
+                    xtermThemeVars: getXtermTheme()
+                })
                 // 此处历史记录为使用 EngineConsole 组件产生的历史记录
                 if (consoleLogRef.current.length) {
                     ipcRenderer.send("forward-xterm-data", consoleLogRef.current)

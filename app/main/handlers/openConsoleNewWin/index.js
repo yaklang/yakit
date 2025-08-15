@@ -12,6 +12,13 @@ module.exports = {
             }
         })
 
+        // 监听主窗口发送过来的主题色变量
+        ipcMain.on("forward-xterm-theme", (event, data) => {
+            if (childWindow && !childWindow.isDestroyed()) {
+                childWindow.webContents.send("xterm-theme", data)
+            }
+        })
+
         // 监听主窗口关闭子窗口
         ipcMain.on("close-console-new-window", () => {
             if (childWindow && !childWindow.isDestroyed()) {

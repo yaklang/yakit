@@ -256,7 +256,6 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         <YakitCVXterm
                             ref={xtermRef}
                             options={{
-                                convertEol: true,
                                 rows: 12
                             }}
                             // onResize={(r) => {

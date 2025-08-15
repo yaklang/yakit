@@ -720,7 +720,7 @@ export {applyYakitMonacoTheme}
 /**
  * 提取所有 --Colors-Use- 变量
  */
-const getAllYakitColorVars = (): Record<string, string> => {
+export const getAllYakitColorVars = (): Record<string, string> => {
     const style = getComputedStyle(document.documentElement)
     const seen = new Set<string>()
     const result: Record<string, string> = {}

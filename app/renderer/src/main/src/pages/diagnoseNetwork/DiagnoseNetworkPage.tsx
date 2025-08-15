@@ -9,7 +9,6 @@ import {debugYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm
 import {useGetState, useMemoizedFn} from "ahooks"
 import {AutoSpin} from "@/components/AutoSpin"
 import {XTerm} from "xterm-for-react"
-import {defaultXTermOptions} from "@/components/baseConsole/BaseConsole"
 import {writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
 import ReactResizeDetector from "react-resize-detector"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -18,6 +17,7 @@ import {CloseCircleIcon} from "@/assets/newIcon"
 import {DiagnoseNetworkDNSForm} from "@/pages/diagnoseNetwork/DiagnoseNetworkDNSForm"
 import {TracerouteForm} from "@/pages/diagnoseNetwork/TracerouteForm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {useXTermOptions} from "@/hook/useXTermOptions/useXTermOptions"
 
 export interface DiagnoseNetworkPageProp {}
 
@@ -37,7 +37,11 @@ export const DiagnoseNetworkPage: React.FC<DiagnoseNetworkPageProp> = (props) =>
     const [loading, setLoading] = useState(false)
     const [preHop, setPreHop, GetPreHop] = useGetState(0)
     const [preIp, setPreIp, GetPreIp] = useGetState("")
-    const xtermRef = useRef(null)
+    const xtermRef = useRef<any>(null)
+
+    const terminalOptions = useXTermOptions({
+        getTerminal: () => xtermRef.current?.terminal
+    })
 
     const submit = useMemoizedFn((params: DiagnoseNetworkParams) => {
         ipcRenderer.invoke("DiagnoseNetwork", params, token).then(() => {
@@ -191,7 +195,7 @@ export const DiagnoseNetworkPage: React.FC<DiagnoseNetworkPageProp> = (props) =>
                     </div>
                 }
                 secondNode={
-                    <div style={{height: "100%"}}>
+                    <div style={{height: "100%", backgroundColor: "var(--Colors-Use-Neutral-Bg-Hover)"}}>
                         <ReactResizeDetector
                             onResize={(width, height) => {
                                 if (!width || !height) return
@@ -205,7 +209,7 @@ export const DiagnoseNetworkPage: React.FC<DiagnoseNetworkPageProp> = (props) =>
                             refreshMode={"debounce"}
                             refreshRate={50}
                         />
-                        <XTerm ref={xtermRef} options={defaultXTermOptions} />
+                        <XTerm ref={xtermRef} options={terminalOptions} />
                     </div>
                 }
             />

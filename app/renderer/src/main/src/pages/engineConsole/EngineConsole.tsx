@@ -1,5 +1,4 @@
 import React, {useEffect, useRef} from "react"
-import {AutoCard} from "@/components/AutoCard"
 import {randomString} from "@/utils/randomUtil"
 import {failed, info} from "@/utils/notification"
 import {ExecResult} from "@/pages/invoker/schema"
@@ -7,6 +6,7 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {writeXTerm, xtermFit} from "@/utils/xtermUtils"
 import {XTerm} from "xterm-for-react"
 import ReactResizeDetector from "react-resize-detector"
+import {useXTermOptions} from "@/hook/useXTermOptions/useXTermOptions"
 
 export interface EngineConsoleProp {}
 
@@ -14,6 +14,10 @@ const {ipcRenderer} = window.require("electron")
 
 export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     const xtermRef = useRef<any>(null)
+
+    const terminalOptions = useXTermOptions({
+        getTerminal: () => xtermRef.current?.terminal
+    })
 
     useEffect(() => {
         if (!xtermRef) {
@@ -48,7 +52,14 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     }, [xtermRef])
 
     return (
-        <div style={{width: "100%", height: "100%", overflow: "hidden",background:"rgb(232,233,232)"}}>
+        <div
+            style={{
+                width: "100%",
+                height: "100%",
+                overflow: "hidden",
+                background: "var(--Colors-Use-Neutral-Bg-Hover)"
+            }}
+        >
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
@@ -64,40 +75,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
             />
             <XTerm
                 ref={xtermRef}
-                options={{
-                    convertEol: true,
-                    // rows: 12,
-                    // cols: 104,
-                    theme: {
-                        foreground: "#536870",
-                        background: "#E8E9E8",
-                        cursor: "#536870",
-
-                        black: "#002831",
-                        brightBlack: "#001e27",
-
-                        red: "#d11c24",
-                        brightRed: "#bd3613",
-
-                        green: "#738a05",
-                        brightGreen: "#475b62",
-
-                        yellow: "#a57706",
-                        brightYellow: "#536870",
-
-                        blue: "#2176c7",
-                        brightBlue: "#708284",
-
-                        magenta: "#c61c6f",
-                        brightMagenta: "#5956ba",
-
-                        cyan: "#259286",
-                        brightCyan: "#819090",
-
-                        white: "#eae3cb",
-                        brightWhite: "#fcf4dc"
-                    }
-                }}
+                options={terminalOptions}
                 // onResize={(r) => {
                 //     xtermFit(xtermRef, 120, 18)
                 // }}
