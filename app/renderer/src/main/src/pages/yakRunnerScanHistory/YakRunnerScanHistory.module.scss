@@ -1,0 +1,87 @@
+.YakRunnerScanHistory {
+  padding: 8px;
+  height: calc(100% - 34px);
+
+  .YakRunnerScanHistory-table-title {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .risk-tag-wrapper {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+
+    .risk-tag {
+      display: flex;
+      margin-right: 4px;
+      border-radius: 4px;
+      font-size: 12px;
+      flex-shrink: 0;
+
+      .risk-text {
+        padding: 2px 6px;
+      }
+
+      .risk-num {
+        padding: 2px 6px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+    }
+
+    .info {
+      border: 1px solid var(--Colors-Use-Orange-Border);
+
+      .risk-text {
+        border-radius: 4px 0 0 4px;
+        color: var(--Colors-Use-Orange-Primary);
+        border-right: 1px solid var(--Colors-Use-Orange-Border);
+        background-color: var(--Colors-Use-Orange-Bg-Hover);
+      }
+    }
+
+    .critical {
+      border: 1px solid var(--Colors-Use-Error-Border);
+
+      .risk-text {
+        border-radius: 4px 0 0 4px;
+        color: var(--Colors-Use-Status-Serious);
+        border-right: 1px solid var(--Colors-Use-Error-Border);
+        background-color: var(--Colors-Use-Error-Bg-Hover);
+      }
+    }
+
+    .high {
+      border: 1px solid var(--Colors-Use-Error-Border);
+
+      .risk-text {
+        color: var(--Colors-Use-Error-Primary);
+        border-radius: 4px 0 0 4px;
+        border-right: 1px solid var(--Colors-Use-Error-Border);
+        background-color: var(--Colors-Use-Error-Bg-Hover);
+      }
+    }
+
+    .warning {
+      border: 1px solid var(--Colors-Use-Warning-Border);
+
+      .risk-text {
+        border-radius: 4px 0 0 4px;
+        color: var(--Colors-Use-Warning-Primary);
+        border-right: 1px solid var(--Colors-Use-Warning-Border);
+        background-color: var(--Colors-Use-Warning-Bg-Hover);
+      }
+    }
+
+    .low {
+      border: 1px solid var(--Colors-Use-Yellow-Border);
+
+      .risk-text {
+        border-radius: 4px 0 0 4px;
+        color: var(--Colors-Use-Yellow-Primary);
+        border-right: 1px solid var(--Colors-Use-Yellow-Border);
+        background-color: var(--Colors-Use-Yellow-Bg);
+      }
+    }
+  }
+}
