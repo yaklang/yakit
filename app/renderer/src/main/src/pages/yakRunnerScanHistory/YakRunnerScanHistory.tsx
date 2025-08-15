@@ -83,6 +83,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
             Order: "desc"
         },
         Filter: {
+            Kind: ["scan"],
             Programs: []
         },
         ShowDiffRisk: true
