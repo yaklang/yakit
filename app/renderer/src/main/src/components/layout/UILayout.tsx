@@ -82,11 +82,11 @@ import {handleFetchArchitecture, handleFetchIsDev, SystemInfo} from "@/constants
 import {getEnginePortCacheKey} from "@/utils/localCache/engine"
 import {
     apiSplitUpload,
-    apiSystemConfig,
     ExportProjectRequest,
     grpcExportProject,
     grpcGetProjects,
-    SplitUploadRequest
+    SplitUploadRequest,
+    useUploadInfoByEnpriTrace
 } from "./utils"
 import moment from "moment"
 import {debugToPrintLog} from "@/utils/logCollection"
@@ -214,30 +214,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     )
     //#region 企业版登录成功后根据配置信息看是否需要自动上传项目
     const projectListRef = useRef<ProjectDescription[]>([])
+    const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
     useEffect(() => {
-        if (!isEnpriTrace()) return
         // 登录根据配置参数判断是否自动上传项目
-        // 退出登录不需要去中止正在上传的项目；线上接口会抛错；因为循环跑接口，所以抛错信息很能很多(已告知产品)
-        if (userInfo.isLogin) {
-            apiSystemConfig().then((config) => {
-                const data = config.data || []
-                let autoUploadProject = {
-                    isOpen: false,
-                    day: 10
-                }
-                const item = data.find((ele) => ele.configName === "autoUploadProject")
-                if (item) {
-                    autoUploadProject = {
-                        isOpen: item.isOpen,
-                        day: !Number.isNaN(+item.content) ? +item.content : 10
-                    }
-                }
-                //自动上传项目
-                if (autoUploadProject.isOpen) {
-                    onGetProjects(autoUploadProject.day)
-                }
-            })
-        }
+        uploadProjectEvent.startUpload({
+            isAutoUploadProject: true
+        })
     }, [userInfo.isLogin])
 
     useEffect(() => {

@@ -10,6 +10,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import { apiSystemConfig } from "@/components/layout/utils"
 export interface SystemConfigProps {}
 export const SystemConfig: React.FC<SystemConfigProps> = (props) => {
     const [form] = Form.useForm()
@@ -17,10 +18,7 @@ export const SystemConfig: React.FC<SystemConfigProps> = (props) => {
     const isCustomizeWatermarkWatch = Form.useWatch("isCustomizeWatermark", form)
 
     useEffect(() => {
-        NetWorkApi<any, API.SystemConfigResponse>({
-            method: "get",
-            url: "system/config"
-        }).then((res) => {
+        apiSystemConfig().then((res) => {
             const data = res.data || []
             if (data.length) {
                 const initVal = {}

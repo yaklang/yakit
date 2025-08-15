@@ -3,7 +3,7 @@ import {AutoComplete, Button, Form, Input, Select, Tooltip} from "antd"
 import "./ConfigPrivateDomain.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success, yakitFailed} from "@/utils/notification"
-import {loginOut, aboutLoginUpload, loginHTTPFlowsToOnline} from "@/utils/login"
+import {loginOut} from "@/utils/login"
 import {useDebounceFn, useMemoizedFn, useGetState} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useEeSystemConfig, useStore} from "@/store"
@@ -18,6 +18,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitAutoCompleteRefProps} from "../yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
 import {getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace} from "@/utils/envfile"
+import { apiSystemConfig, useUploadInfoByEnpriTrace } from "../layout/utils"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -70,7 +71,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         } catch (error) {}
     }
     // 企业登录
-    const {setEeSystemConfig} = useEeSystemConfig()
+    const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
     const loginUser = useMemoizedFn(() => {
         const {user_name, pwd} = getFormValue()
         NetWorkApi<API.UrmLoginRequest, API.UserData>({
@@ -103,34 +104,9 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         success("企业登录成功")
                         onClose && onClose()
                         onSuccee && onSuccee()
-                        if (isEnpriTrace()) {
-                            NetWorkApi<any, API.SystemConfigResponse>({
-                                method: "get",
-                                url: "system/config"
-                            })
-                                .then((config) => {
-                                    const data = config.data || []
-                                    setEeSystemConfig([...data])
-                                    let syncData = false
-                                    data.forEach((item) => {
-                                        if (item.configName === "syncData") {
-                                            syncData = item.isOpen
-                                        }
-                                    })
-
-                                    // 企业版同步各账号的流量数据、漏洞数据等到Web端
-                                    if (syncData) {
-                                        aboutLoginUpload(res.token)
-                                        loginHTTPFlowsToOnline(res.token)
-                                    }
-                                })
-                                .catch(() => {
-                                    setEeSystemConfig([])
-                                })
-                        } else {
-                            aboutLoginUpload(res.token)
-                            loginHTTPFlowsToOnline(res.token)
-                        }
+                        uploadProjectEvent.startUpload({
+                            isUploadSyncData:true
+                        })
                     }
                     // 首次登录强制修改密码
                     if (!res.loginTime) {
@@ -181,18 +157,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
                 }
 
-                if (!enterpriseLogin && isEnpriTrace()) {
-                    NetWorkApi<any, API.SystemConfigResponse>({
-                        method: "get",
-                        url: "system/config"
-                    })
-                        .then((config) => {
-                            const data = config.data || []
-                            setEeSystemConfig([...data])
-                        })
-                        .catch(() => {
-                            setEeSystemConfig([])
-                        })
+                if (!enterpriseLogin) {
+                    uploadProjectEvent.startUpload({})
                 }
             })
             .catch((e: any) => {

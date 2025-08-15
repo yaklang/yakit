@@ -5,8 +5,8 @@ import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "./ut
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
-import {useEeSystemConfig, useGoogleChromePluginPath, useStore, yakitDynamicStatus} from "./store"
-import {aboutLoginUpload, loginHTTPFlowsToOnline, refreshToken} from "./utils/login"
+import {useGoogleChromePluginPath, useStore, yakitDynamicStatus} from "./store"
+import {refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
 import {getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isEnpriTrace, isIRify} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
@@ -21,7 +21,7 @@ import {handleFetchSystemInfo} from "./constants/hardware"
 import {closeWebSocket, startWebSocket} from "./utils/webSocket/webSocket"
 import {startShortcutKeyMonitor, stopShortcutKeyMonitor} from "./utils/globalShortcutKey/utils"
 import {getStorageGlobalShortcutKeyEvents} from "./utils/globalShortcutKey/events/global"
-import emiter from "./utils/eventBus/eventBus"
+import { useUploadInfoByEnpriTrace } from "./components/layout/utils"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
@@ -120,24 +120,6 @@ function NewApp() {
         testYak()
     }
 
-    // 获取企业版配置信息
-    const {eeSystemConfig, setEeSystemConfig} = useEeSystemConfig()
-    const initSystemConfig = useMemoizedFn(() => {
-        if (isEnpriTrace()) {
-            NetWorkApi<any, API.SystemConfigResponse>({
-                method: "get",
-                url: "system/config"
-            })
-                .then((config) => {
-                    const data = config.data || []
-                    setEeSystemConfig([...data])
-                })
-                .catch(() => {
-                    setEeSystemConfig([])
-                })
-        }
-    })
-
     /** 定时器 */
     const timeRef = useRef<NodeJS.Timeout>()
     const testYak = () => {
@@ -150,7 +132,6 @@ function NewApp() {
                         setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({BaseUrl: data.BaseUrl}))
                         refreshLogin()
                         timeRef.current = setTimeout(() => {
-                            initSystemConfig()
                             if (timeRef.current) clearTimeout(timeRef.current)
                         }, 200)
                     })
@@ -169,7 +150,6 @@ function NewApp() {
                         setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
                         refreshLogin()
                         timeRef.current = setTimeout(() => {
-                            initSystemConfig()
                             if (timeRef.current) clearTimeout(timeRef.current)
                         }, 200)
                     })
@@ -244,6 +224,7 @@ function NewApp() {
 
     // 退出时 确保渲染进程各类事项已经处理完毕
     const {dynamicStatus} = yakitDynamicStatus()
+    const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
     useEffect(() => {
         ipcRenderer.on("close-windows-renderer", async (e, res: any) => {
             // 如果关闭按钮有其他的弹窗 则不显示 showMessageBox
@@ -264,7 +245,10 @@ function NewApp() {
         ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
             const {token} = userInfo
             if (token && token.length > 0) {
-                isSyncData(token)
+                uploadProjectEvent.startUpload({
+                    isAutoUploadProject: true,
+                    isUploadSyncData: true
+                })
             }
         })
         return () => {
@@ -273,37 +257,6 @@ function NewApp() {
         }
     }, [dynamicStatus.isDynamicStatus, userInfo])
 
-    const isSyncData = useMemoizedFn((token) => {
-        if (isEnpriTrace()) {
-            let syncData = false
-            let autoUploadProject = {
-                isOpen: false,
-                day: 10
-            }
-            eeSystemConfig.forEach((item) => {
-                if (item.configName === "syncData") {
-                    syncData = item.isOpen
-                }
-                if (item.configName === "autoUploadProject") {
-                    autoUploadProject = {
-                        isOpen: item.isOpen,
-                        day: !Number.isNaN(+item.content) ? +item.content : 10
-                    }
-                }
-            })
-            if (syncData) {
-                aboutLoginUpload(token)
-                loginHTTPFlowsToOnline(token)
-            }
-            // 自动上传项目
-            if (autoUploadProject.isOpen && userInfo.isLogin) {
-                emiter.emit("autoUploadProject", JSON.stringify(autoUploadProject))
-            }
-        } else {
-            aboutLoginUpload(token)
-            loginHTTPFlowsToOnline(token)
-        }
-    })
 
     useEffect(() => {
         // 登录账号时 连接 WebSocket 服务器
