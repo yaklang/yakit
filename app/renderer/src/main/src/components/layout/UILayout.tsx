@@ -233,7 +233,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     }
                 }
                 //自动上传项目
-                if (autoUploadProject.isOpen && userInfo.isLogin) {
+                if (autoUploadProject.isOpen) {
                     onGetProjects(autoUploadProject.day)
                 }
             })

@@ -622,7 +622,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     }
                 }
                 //自动上传项目
-                if (autoUploadProject.isOpen && userInfo.isLogin) {
+                if (autoUploadProject.isOpen) {
                     emiter.emit("autoUploadProject", JSON.stringify(autoUploadProject))
                 }
             })
