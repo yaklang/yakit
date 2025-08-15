@@ -34,6 +34,7 @@
     }
     .card {
         border: none;
+        background-color: var(--Colors-Use-Basic-Background);
         &-title {
             display: flex;
             align-items: center;
@@ -63,7 +64,7 @@
     }
     .report-viewer {
         position: relative;
-        background-color: var(--Colors-Use-Basic-White);
+        background-color: var(--Colors-Use-Basic-Background);
         height: 100%;
         .report-empty {
             position: absolute;
