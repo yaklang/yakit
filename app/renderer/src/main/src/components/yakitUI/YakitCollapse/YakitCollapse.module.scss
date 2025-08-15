@@ -60,14 +60,6 @@
     }
 }
 
-.yakit-collapse-no-active-bg {
-     :global(.ant-collapse-item) {
-        &:global(.ant-collapse-item-active) {
-            background: transparent;
-        }
-    }
-}
-
 .yakit-collapse-bordered {
     & > :global(.ant-collapse-item) {
         margin-bottom: 0px;

@@ -12,8 +12,7 @@ const {Panel} = Collapse
  * @augments  继承antd的 CollapseProps 默认属性
  */
 const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
-    const {expandIcon, bordered,noActiveBg, className = "", ...restProps} = props
-
+    const {expandIcon, bordered,className = "", ...restProps} = props
     return (
         <Collapse
             {...restProps}
@@ -22,7 +21,6 @@ const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
                 {
                     [styles["yakit-collapse-bordered-hidden"]]: bordered === false,
                     [styles["yakit-collapse-bordered"]]: bordered !== false,
-                    [styles["yakit-collapse-no-active-bg"]]: noActiveBg
                 },
                 className
             )}

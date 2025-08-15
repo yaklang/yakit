@@ -28,7 +28,7 @@
     :global {
         // table相关
         .ant-table,
-        tbody tr :last-child {
+        tbody tr ,.ant-table-cell-fix-right {
             background-color: var(--Colors-Use-Basic-Background);
             .yakit-content-single-ellipsis {
                 color: var(--Colors-Use-Neutral-Text-1-Title);

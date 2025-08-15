@@ -114,7 +114,7 @@ export const VariableList: React.FC<VariableListProps> = React.forwardRef(
                                 activeKey={variableActiveKey}
                                 onChange={onSetActiveKey}
                                 className={classNames(styles["variable-list"], collapseWrapperClassName)}
-                                bordered={false}
+                                // bordered={false}
                             >
                                 {fields.map(({key, name}, i) => (
                                     <YakitPanel

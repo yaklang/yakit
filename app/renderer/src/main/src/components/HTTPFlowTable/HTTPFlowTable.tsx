@@ -1141,24 +1141,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (filter["ContentType"]) {
                 filter["SearchContentType"] = filter["ContentType"].join(",")
             }
+            setParams((prev) => ({
+                ...prev,
+                ...filter,
+                Tags: [...tagsFilter],
+                bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
+            }))
             if (sort.orderBy === "DurationMs") {
                 sort.orderBy = "duration"
             }
             sortRef.current = sort
-
-            setParams((prev) => {
-                const next = {
-                    ...prev,
-                    ...filter,
-                    Tags: [...tagsFilter],
-                    bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
-                }
-                if (isEqual(prev, next)) {
-                    updateData()
-                    return prev
-                }
-                return next
-            })
         },
         {wait: 500}
     ).run
@@ -4333,7 +4325,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     isReset={isReset}
                     isRefresh={isRefresh}
                     renderKey='Id'
-                    requireSort
                     data={realData}
                     rowSelection={{
                         isAll: isAllSelect,

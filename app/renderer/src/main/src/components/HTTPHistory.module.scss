@@ -45,6 +45,9 @@
                         &:hover {
                             background-color: var(--Colors-Use-Main-Hover);
                         }
+                        svg {
+                            color: var(--Colors-Use-Main-On-Primary);
+                        }
                     }
 
                     &-unshowCont {
