@@ -749,17 +749,21 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     }, [info.isFolder])
 
     const iconImage = useMemo(() => {
-        if (info.isBottom) {
-            return ""
-        }
-        if (isFolder) {
-            if (isExpanded) {
-                return KeyToIcon[FolderDefaultExpanded].iconPath
-            } else {
-                return KeyToIcon[FolderDefault].iconPath
+        try {
+            if (info.isBottom) {
+                return ""
             }
-        } else {
-            return KeyToIcon[info.icon].iconPath
+            if (isFolder) {
+                if (isExpanded) {
+                    return KeyToIcon[FolderDefaultExpanded].iconPath
+                } else {
+                    return KeyToIcon[FolderDefault].iconPath
+                }
+            } else {
+                return KeyToIcon[info.icon].iconPath
+            }
+        } catch (error) {
+            return ""
         }
     }, [info.icon, isFolder, isExpanded, info.isBottom])
 
