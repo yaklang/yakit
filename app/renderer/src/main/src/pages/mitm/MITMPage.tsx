@@ -5,6 +5,7 @@ import React, {
     useContext,
     useEffect,
     useImperativeHandle,
+    useMemo,
     useRef,
     useState
 } from "react"
@@ -764,6 +765,14 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         }
     }, [inViewport])
 
+    const setTotalFun = useMemoizedFn((t) => {
+        setTotal(t)
+        getAllSatisfyScript(t)
+    })
+
+    const hasParamsCheckListMemo = useSortedArrayMemo(hasParamsCheckList)
+    const noParamsCheckListMemo = useSortedArrayMemo(noParamsCheckList)
+    
     const onRenderFirstNode = useMemoizedFn(() => {
         switch (status) {
             case "idle":
@@ -857,8 +866,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                 isHasParams={false}
                                 onSubmitYakScriptId={onSubmitYakScriptId}
                                 status={status}
-                                hasParamsCheckList={hasParamsCheckList}
-                                noParamsCheckList={noParamsCheckList}
+                                hasParamsCheckList={hasParamsCheckListMemo}
+                                noParamsCheckList={noParamsCheckListMemo}
                                 setNoParamsCheckList={(list) => {
                                     if (list.length === 0) {
                                         setEnableInitialPlugin(false)
@@ -903,8 +912,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         setFieldKeywords={setFieldKeywords}
                         onSubmitYakScriptId={onSubmitYakScriptId}
                         status={status}
-                        hasParamsCheckList={hasParamsCheckList}
-                        noParamsCheckList={noParamsCheckList}
+                        hasParamsCheckList={hasParamsCheckListMemo}
+                        noParamsCheckList={noParamsCheckListMemo}
                         setHasParamsCheckList={setHasParamsCheckList}
                         setNoParamsCheckList={setNoParamsCheckList}
                         isFullScreen={isFullScreenFirstNode}
@@ -913,10 +922,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         onSelectAll={onSelectAll}
                         setIsSelectAll={setIsSelectAll}
                         total={total}
-                        setTotal={(t) => {
-                            setTotal(t)
-                            getAllSatisfyScript(t)
-                        }}
+                        setTotal={setTotalFun}
                         groupNames={groupNames}
                         setGroupNames={setGroupNames}
                         onSetOpenTabsFlag={setOpenTabsFlag}
@@ -998,7 +1004,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             firstNode={() => <div className={style["mitm-server-start-pre-first"]}>{onRenderFirstNode()}</div>}
             lineStyle={{display: isFullScreenFirstNode ? "none" : ""}}
             firstMinSize={openTabsFlag ? "400px" : "24px"}
-            secondMinSize={720}
+            secondMinSize={500}
             secondNode={() => (
                 <div
                     className={style["mitm-server-start-pre-second"]}
@@ -1358,3 +1364,12 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         </>
     )
 })
+
+function useSortedArrayMemo<T extends string | number>(
+    arr: T[],
+    compareFn: (a: T, b: T) => number = (a, b) => String(a).localeCompare(String(b))
+) {
+    return useMemo(() => {
+        return [...arr].sort(compareFn)
+    }, [JSON.stringify([...arr].sort(compareFn))])
+}

@@ -188,7 +188,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
         describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
     },
     "mitm-hijack": {
-        label: "MITM 交互式劫持 v2",
+        label: "MITM 交互式劫持",
         describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
     },
     httpFuzzer: {
@@ -570,7 +570,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     switch (routeKey) {
         case YakitRoute.NewHome:
             return <>{isIRify() ? <IRifyHome /> : <Home />}</>
-        case YakitRoute.HTTPHacker:
+        case YakitRoute.HTTPHacker: // 废弃
             return (
                 <Suspense fallback={<PageLoading />}>
                     <HTTPHacker />

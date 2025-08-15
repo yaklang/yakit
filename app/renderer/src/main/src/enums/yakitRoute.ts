@@ -2,7 +2,7 @@
 export enum YakitRoute {
     /** 首页 */
     NewHome = "new-home",
-    /** 手动渗透 */
+    /** 手动渗透 废弃*/
     HTTPHacker = "httpHacker",
     /**mitm v2 */
     MITMHacker = "mitm-hijack",

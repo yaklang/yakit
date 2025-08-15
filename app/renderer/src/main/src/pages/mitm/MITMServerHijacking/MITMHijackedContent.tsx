@@ -898,14 +898,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         }}
                     />
                 </div>
-
-                {/* 被动日志 */}
-                <div
-                    style={{display: autoForward === "passive" ? "block" : "none"}}
-                    className={styles["mitm-hijacked-passive-content"]}
-                >
-                    <MITMPluginLogViewer messages={logs} status={statusCards} />
-                </div>
             </>
         )
     })
@@ -986,6 +978,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 </div>
             </div>
             {onRenderContent()}
+            {/* 被动日志 */}
+            {autoForward === "passive" && (
+                <div className={styles["mitm-hijacked-passive-content"]}>
+                    <MITMPluginLogViewer messages={logs} status={statusCards} />
+                </div>
+            )}
         </div>
     )
 })

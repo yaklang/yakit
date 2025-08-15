@@ -439,7 +439,7 @@ export type ManualHijackListStatusType = `${ManualHijackListStatus}`
 export interface SingleManualHijackInfoMessage {
     /**前端展示使用，到达顺序 */
     arrivalOrder?: number
-    manualHijackListAction:ManualHijackListAction
+    manualHijackListAction: ManualHijackListAction
     TaskID: string
     Request: Uint8Array
     Response: Uint8Array

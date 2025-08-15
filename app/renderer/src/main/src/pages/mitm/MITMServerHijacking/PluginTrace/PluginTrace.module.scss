@@ -1,0 +1,173 @@
+.plugin-trace {
+  height: 100%;
+  border-top: 1px solid transparent;
+
+  .plugin-trace-content {
+    height: 100%;
+
+    &-list {
+      height: calc(100% - 30px);
+
+      &-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        height: 28px;
+
+        .pluginTraceStats-bar {
+          display: flex;
+          align-items: center;
+          font-size: 12px;
+          font-weight: 400;
+
+          gap: 8px;
+
+          .label {
+            white-space: nowrap;
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+          }
+
+          .label span {
+            margin-left: 4px;
+            font-weight: 500;
+          }
+
+          .totalTraces {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+          }
+
+          .runningTraces {
+            color: var(--Colors-Use-Status-Medium);
+          }
+
+          .failedTraces {
+            color: var(--Colors-Use-Status-High);
+          }
+
+          .completedTraces {
+            color: var(--Colors-Use-Status-Safe);
+          }
+
+          .cancelledTraces {
+            color: var(--Colors-Use-Neutral-Disable);
+          }
+
+          .divider {
+            color: var(--Colors-Use-Neutral-Border);
+          }
+        }
+
+        &-right-stop {
+          display: flex;
+          align-items: center;
+          flex-wrap: nowrap;
+          gap: 8px;
+        }
+      }
+
+      .table-traceStatus-tag {
+        margin-right: 0;
+      }
+    }
+  }
+
+  .plugin-trace-details-content {
+    overflow-y: auto;
+    height: 100%;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+
+    :global {
+      .ant-descriptions-bordered .ant-descriptions-view>table {
+        table-layout: fixed;
+      }
+    }
+
+    .content-heard {
+      display: flex;
+      align-items: center;
+      align-items: flex-start;
+      padding: 4px 12px;
+
+      .content-heard-left {
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+
+        .content-heard-body {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          overflow: hidden;
+
+          gap: 8px;
+
+          .content-heard-body-title {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 16px;
+            font-weight: 600;
+            font-style: normal;
+            line-height: 24px;
+          }
+
+          .content-heard-body-description {
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+
+            .url-info {
+              display: flex;
+              align-items: center;
+              overflow: hidden;
+
+              gap: 4px;
+
+              .url {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+              }
+            }
+
+            .content-heard-body-time {
+              display: flex;
+              align-items: center;
+
+              flex-shrink: 0;
+              gap: 16px;
+            }
+          }
+        }
+      }
+
+      .content-heard-right {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        align-items: flex-start;
+        flex: 1;
+      }
+    }
+
+    .content-resize-second {
+      .descriptions-item {
+        max-height: 300px;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+    }
+  }
+
+  .plugin-trace-details-content-no-border {
+    border: 0;
+  }
+
+  .no-more {
+    width: 100%;
+    padding: 12px;
+    text-align: center;
+    color: var(--Colors-Use-Neutral-Disable);
+    font-size: 12px;
+  }
+}

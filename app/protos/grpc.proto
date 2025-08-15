@@ -894,6 +894,8 @@ service Yak {
   rpc InitSearchVectorDatabase(InitSearchVectorDatabaseRequest) returns (stream ExecResult);
   rpc GetAllVectorStoreCollections(Empty) returns (GetAllVectorStoreCollectionsResponse);
   rpc DeleteSearchVectorDatabase(DeleteSearchVectorDatabaseRequest) returns (GeneralResponse);
+  // 插件执行跟踪双向流服务
+  rpc PluginTrace(stream PluginTraceRequest) returns (stream PluginTraceResponse);
 
   // 第三方应用管理
   rpc ListThirdPartyBinary(Empty) returns (ListThirdPartyBinaryResponse);
