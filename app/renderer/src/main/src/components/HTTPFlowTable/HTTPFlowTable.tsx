@@ -1141,12 +1141,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (filter["ContentType"]) {
                 filter["SearchContentType"] = filter["ContentType"].join(",")
             }
-            setParams((prev) => ({
-                ...prev,
-                ...filter,
-                Tags: [...tagsFilter],
-                bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
-            }))
+            setParams((prev) => {
+                const newParams = {
+                    ...prev,
+                    ...filter,
+                    Tags: [...tagsFilter],
+                    bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
+                }
+
+                if (isEqual(prev, newParams)) {
+                    setTriggerParamsWatch((old) => !old)
+                    return prev
+                }
+                return newParams
+            })
             if (sort.orderBy === "DurationMs") {
                 sort.orderBy = "duration"
             }
@@ -1466,10 +1474,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         },
         {wait: 500}
     ).run
+    const [triggerParamsWatch, setTriggerParamsWatch] = useState<boolean>(false)
     const comParams = useCampare(params)
     useUpdateEffect(() => {
         queyChangeUpdateData()
-    }, [comParams])
+    }, [comParams, triggerParamsWatch])
     // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
     const updateData = useMemoizedFn(() => {
         if (boxHeightRef.current) {
@@ -3617,7 +3626,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onResetRefresh = useMemoizedFn(() => {
         setParams((prev) => {
             if (isEqual(prev, resetParams)) {
-                updateData()
+                setTriggerParamsWatch((old) => !old)
                 return prev
             }
             return {...resetParams}
@@ -3632,7 +3641,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         setParams((prev) => {
             if (isEqual(prev, newParams)) {
-                updateData()
+                setTriggerParamsWatch((old) => !old)
                 return prev
             }
             return newParams
