@@ -83,7 +83,18 @@
             .ant-collapse-content > .ant-collapse-content-box {
                 padding: 12px 0 0;
             }
+            .ant-collapse-header{
+                border-top: transparent;
+            }
         }
+    }
+
+    .rule-collapse{
+       :global{
+        .ant-collapse-header{
+                border-top: transparent;
+            }
+       } 
     }
 
     .advanced-config-extra-formItem {
