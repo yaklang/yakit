@@ -1148,13 +1148,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     Tags: [...tagsFilter],
                     bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
                 }
-
-                if (isEqual(prev, newParams)) {
-                    setTriggerParamsWatch((old) => !old)
-                    return prev
-                }
                 return newParams
             })
+            setTriggerParamsWatch((old) => !old)
             if (sort.orderBy === "DurationMs") {
                 sort.orderBy = "duration"
             }
@@ -3624,13 +3620,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         refreshTabsContRef.current = true
     })
     const onResetRefresh = useMemoizedFn(() => {
-        setParams((prev) => {
-            if (isEqual(prev, resetParams)) {
-                setTriggerParamsWatch((old) => !old)
-                return prev
-            }
-            return {...resetParams}
-        })
+        setParams({...resetParams})
+        setTriggerParamsWatch((old) => !old)
         resetAllFun()
     })
     /**@description 导入重置查询条件并刷新 */
@@ -3639,13 +3630,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ...resetParams,
             SourceType: ""
         }
-        setParams((prev) => {
-            if (isEqual(prev, newParams)) {
-                setTriggerParamsWatch((old) => !old)
-                return prev
-            }
-            return newParams
-        })
+        setParams(newParams)
+        setTriggerParamsWatch((old) => !old)
         resetAllFun()
     })
     useUpdateEffect(() => {
