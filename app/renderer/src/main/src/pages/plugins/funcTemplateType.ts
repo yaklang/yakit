@@ -31,6 +31,10 @@ export interface FuncBtnProps extends YakitButtonProp {
     /** 切换纯图标按钮的宽度界限 */
     maxWidth?: number
 }
+export interface FuncBtnIconProps extends YakitButtonProp {
+    /** 按钮展示名称 */
+    name: string
+}
 
 export interface FuncSearchProps {
     /** 切换纯图标按钮的宽度界限 */

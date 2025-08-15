@@ -5,6 +5,7 @@ import {
     CodeScoreModuleProps,
     CodeScoreSmokingEvaluateResponseProps,
     FilterPopoverBtnProps,
+    FuncBtnIconProps,
     FuncBtnProps,
     FuncFilterPopoverProps,
     FuncSearchProps,
@@ -235,6 +236,16 @@ export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
         <YakitButton {...rest}>
             <span className={styles["title-style"]}>{name}</span>
         </YakitButton>
+    )
+})
+
+/** @name 带提示的图标按钮组件 */
+export const FuncBtnIcon: React.FC<FuncBtnIconProps> = memo((props) => {
+    const {name, ...rest} = props
+    return (
+        <Tooltip title={name} overlayClassName='plugins-tooltip'>
+            <YakitButton {...rest}></YakitButton>
+        </Tooltip>
     )
 })
 
