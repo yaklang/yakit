@@ -60,15 +60,23 @@
         .ant-input-number-handler {
             border-color: var(--input-number-border-color);
             background-color: var(--Colors-Use-Neutral-Bg);
-            span{
+            span {
                 color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
         }
-        .ant-input-number-group-addon{
+        .ant-input-number-group-addon {
             border-color: var(--input-number-border-color);
             color: var(--Colors-Use-Neutral-Text-1-Title);
             background-color: var(--Colors-Use-Neutral-Bg);
         }
+        // .ant-input-number-disabled {
+        //     background-color: var(--input-number-background-disabled-color);
+        //     cursor: not-allowed;
+        //     border-color: var(--input-number-border-disabled-color);
+        //     svg {
+        //         color: var(--input-number-icon-disabled-color);
+        //     }
+        // }
     }
 }
 .yakit-input-number-wrapper-small {
@@ -163,11 +171,11 @@
 }
 
 // ========================== disabled ==========================
-.yakit-input-number-disabled {
+.yakit-input-number-wrapper-disabled .yakit-input-number-disabled {
     background: var(--input-number-background-disabled-color);
     cursor: not-allowed;
     border-color: var(--input-number-border-disabled-color);
-
+    color: var(--Colors-Use-Neutral-Disable);
     svg {
         color: var(--input-number-icon-disabled-color);
     }

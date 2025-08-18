@@ -20,7 +20,7 @@
         .ant-input-group-addon {
             border-radius: 4px;
             border-color: var(--Colors-Use-Neutral-Border);
-            background: var(--Colors-Use-Basic-Background);
+            background: var(--Colors-Use-Neutral-Bg);
             color: var(--Colors-Use-Neutral-Text-1-Title);
             width: auto;
         }
@@ -66,6 +66,7 @@
             border-radius: 4px;
             input {
                 color: var(--Colors-Use-Neutral-Text-1-Title);
+                background-color: var(--Colors-Use-Basic-Background) !important;
             }
         }
         .ant-input-suffix{

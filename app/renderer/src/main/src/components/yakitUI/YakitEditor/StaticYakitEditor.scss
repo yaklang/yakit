@@ -104,3 +104,7 @@
 .monaco-editor .find-widget{
   color: var(--Colors-Use-Neutral-Text-3-Secondary) !important;
 }
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row:hover {
+    background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
+}

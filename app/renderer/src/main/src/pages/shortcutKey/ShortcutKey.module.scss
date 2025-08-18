@@ -139,10 +139,10 @@
             }
         }
         .list-item-active {
-            background-color: var(--Colors-Use-Main-Focus);
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            background-color: var(--Colors-Use-Main-Primary);
+            color: var(--Colors-Use-Main-On-Primary);
             &:hover {
-                background-color: var(--Colors-Use-Main-Bg-Hover);
+                background-color: var(--Colors-Use-Main-Primary);
             }
         }
     }

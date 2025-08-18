@@ -22,11 +22,11 @@
             display: flex;
             font-size: 12px;
             background-color: var(--Colors-Use-Basic-Background);
-            .ant-select-selector{
+            .ant-select-selector {
                 background-color: var(--Colors-Use-Basic-Background);
                 color: var(--Colors-Use-Neutral-Text-1-Title);
             }
-            .ant-select-arrow{
+            .ant-select-arrow {
                 color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
         }
@@ -38,9 +38,9 @@
         .ant-select-clear {
             right: 12px;
             background: transparent;
-            .anticon-close-circle{
+            .anticon-close-circle {
                 color: var(--Colors-Use-Neutral-Border);
-                svg{
+                svg {
                     color: var(--Colors-Use-Neutral-Text-4-Help-text);
                 }
             }
@@ -90,8 +90,8 @@
 
         // ========================== disabled ==========================
         .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            background: var(--select-background-disabled-color);
-            color: var(--select-font-disabled-color);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Disable);
             border-color: transparent !important;
         }
     }
@@ -130,12 +130,12 @@
             background: var(--Colors-Use-Main-Bg);
         }
 
-        .yakit-select-notFound{
+        .yakit-select-notFound {
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            .yakit-select-content{
+            .yakit-select-content {
                 color: var(--Colors-Use-Neutral-Disable);
             }
         }
@@ -264,7 +264,7 @@
         .ant-select-selection-overflow {
             min-height: 20px;
         }
-        .ant-select-selection-placeholder{
+        .ant-select-selection-placeholder {
             color: var(--Colors-Use-Neutral-Disable);
         }
 
@@ -322,7 +322,7 @@
             min-height: 16px;
         }
 
-        .ant-select-selection-placeholder{
+        .ant-select-selection-placeholder {
             color: var(--Colors-Use-Neutral-Disable);
         }
 

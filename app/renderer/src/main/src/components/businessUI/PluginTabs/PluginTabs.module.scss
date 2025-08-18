@@ -125,7 +125,7 @@
                     position: absolute;
                     top: 0;
                     left: 0;
-                    border-left: 1px solid (--Colors-Use-Neutral-Border);
+                    border-left: 1px solid var(--Colors-Use-Neutral-Border);
                     z-index: 0;
                     content: "";
                 }
@@ -324,7 +324,7 @@
                 // 选中
                 .ant-tabs-tab.ant-tabs-tab-active {
                     border: 0;
-                    background: var(--Colors-Use-Main-Hover);
+                    background: var(--Colors-Use-Main-Bg);
                     color: var(--Colors-Use-Main-On-Primary);
                     &::after {
                         content: "";
@@ -332,15 +332,15 @@
                         width: 100%;
                         bottom: -1px;
                         left: 0;
-                        border-bottom: 2px solid var(--Colors-Use-Main-Border);
+                        border-bottom: 3px solid var(--Colors-Use-Main-Primary);
                     }
                     .ant-tabs-tab-btn {
-                        color: var(--Colors-Use-Main-On-Primary);
+                        color: var(--Colors-Use-Main-Primary);
                         text-shadow: unset;
                     }
                     .anticon {
                         svg {
-                            color: var(--Colors-Use-Main-On-Primary);
+                            color: var(--Colors-Use-Main-Primary);
                         }
                     }
                 }

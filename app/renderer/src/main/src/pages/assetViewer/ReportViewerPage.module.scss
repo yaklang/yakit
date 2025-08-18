@@ -61,6 +61,13 @@
         &-body {
             height: 100%;
         }
+        &-selected {
+            background-color: red;
+            .list-item-header,
+            .list-item-body {
+                border: 1px solid var(--Colors-Use-Main-Border);
+            }
+        }
     }
     .report-viewer {
         position: relative;
@@ -78,9 +85,9 @@
             align-items: center;
             flex-direction: column;
             justify-content: center;
-            :global{
+            :global {
                 margin: 0;
-                border: none
+                border: none;
             }
         }
         .loading-wrapper {
