@@ -190,7 +190,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         loadIndexRef.current = 0
         clearMap()
         // FileTree缓存清除
-        isFirst && emiter.emit("onResetFileTree")
+        isFirst && emiter.emit("onResetFileTree", JSON.stringify({reset: false}))
     })
 
     const startMonitorFolder = useMemoizedFn((absolutePath) => {
@@ -436,7 +436,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 expandedKeys: []
             })
             // FileTree缓存清除
-            emiter.emit("onResetFileTree")
+            emiter.emit("onResetFileTree", JSON.stringify({reset: true}))
         }
     })
 

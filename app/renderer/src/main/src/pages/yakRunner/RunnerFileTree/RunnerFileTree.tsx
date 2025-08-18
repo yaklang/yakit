@@ -70,7 +70,7 @@ export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
                 selectType='folder'
                 multiple={false}
                 help=''
-                uploadFolderText="选择本地文件夹"
+                uploadFolderText='选择本地文件夹'
                 onChange={(value) => {
                     setValue(value)
                     setAbsolutePath(value)
@@ -380,7 +380,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                     setAreaInfo && setAreaInfo(newAreaInfo)
                 }
             }
-            emiter.emit("onResetFileTree", info.path)
+            emiter.emit("onResetFileTree", JSON.stringify({path: info.path}))
             emiter.emit("onRefreshFileTree")
             success(`${info.name} 删除成功`)
         } catch (error) {
@@ -420,7 +420,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                         }
                         const newAreaInfo = updateAreaFileInfoToDelete(areaInfo, info.path)
                         setAreaInfo && setAreaInfo(newAreaInfo)
-                        emiter.emit("onResetFileTree", info.path)
+                        emiter.emit("onResetFileTree", JSON.stringify({path: info.path}))
                         emiter.emit("onRefreshFileTree")
                         break
                     case "create":
@@ -464,7 +464,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                         removeMapFileDetail(info.path)
                         const newAreaInfo = updateAreaFileInfoToDelete(areaInfo, info.path)
                         setAreaInfo && setAreaInfo(newAreaInfo)
-                        emiter.emit("onResetFileTree", info.path)
+                        emiter.emit("onResetFileTree", JSON.stringify({path: info.path}))
                         emiter.emit("onRefreshFileTree")
                         break
                     case "create":

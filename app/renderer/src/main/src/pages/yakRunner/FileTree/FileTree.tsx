@@ -121,27 +121,37 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         }
     })
 
-    const onResetFileTreeFun = useMemoizedFn((path?: string) => {
-        if (path) {
-            if (foucsedKey === path) {
-                setFoucsedKey("")
-            }
-            if (copyPath.length !== 0 && copyPath.startsWith(path)) {
+    const onResetFileTreeFun = useMemoizedFn((data?: string) => {
+        try {
+            const {
+                path,
+                reset
+            }: {
+                path?: string
+                reset?: boolean
+            } = JSON.parse(data || "")
+            if (path) {
+                if (foucsedKey === path) {
+                    setFoucsedKey("")
+                }
+                if (copyPath.length !== 0 && copyPath.startsWith(path)) {
+                    setCopyPath("")
+                }
+                const newSelectedNodes = selectedNodes.filter((item) => !item.path.startsWith(path))
+                const newExpandedKeys = expandedKeys.filter((item) => !item.startsWith(path))
+                setSelectedNodes(newSelectedNodes)
+                onSaveYakRunnerLastExpanded(newExpandedKeys)
+                setExpandedKeys(newExpandedKeys)
+            } else {
+                // 全部清空
                 setCopyPath("")
+                setFoucsedKey("")
+                setSelectedNodes([])
+                reset && onSaveYakRunnerLastExpanded([])
+                // 如若上次打开时有展开项，则不应直接置为空数组
+                setExpandedKeys(reset ? [] : expandedKeys)
             }
-            const newSelectedNodes = selectedNodes.filter((item) => !item.path.startsWith(path))
-            const newExpandedKeys = expandedKeys.filter((item) => !item.startsWith(path))
-            setSelectedNodes(newSelectedNodes)
-            onSaveYakRunnerLastExpanded(newExpandedKeys)
-            setExpandedKeys(newExpandedKeys)
-        } else {
-            // 全部清空
-            setCopyPath("")
-            setFoucsedKey("")
-            setSelectedNodes([])
-            onSaveYakRunnerLastExpanded([])
-            setExpandedKeys([])
-        }
+        } catch (error) {}
     })
 
     useEffect(() => {
@@ -525,7 +535,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                     setActiveFile && setActiveFile(newActiveFile)
                     setAreaInfo && setAreaInfo(newAreaInfo)
                 }
-                emiter.emit("onResetFileTree", info.path)
+                emiter.emit("onResetFileTree", JSON.stringify({path: info.path}))
                 emiter.emit("onRefreshFileTree")
             } else {
                 setInput(false)
@@ -545,7 +555,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             if (newFolderDetail.length === 0) {
                 const fileDetail = getMapFileDetail(info.parent)
                 setMapFileDetail(info.parent, {...fileDetail, isLeaf: true})
-                emiter.emit("onResetFileTree", info.parent)
+                emiter.emit("onResetFileTree", JSON.stringify({path: info.parent}))
             }
             setMapFolderDetail(info.parent, newFolderDetail)
         }
