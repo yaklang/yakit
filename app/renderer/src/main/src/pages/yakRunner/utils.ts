@@ -860,11 +860,26 @@ export const getYakRunnerLastFolderExpanded = (): Promise<YakRunnerLastFolderExp
 }
 
 /**
+ * @name 排除掉areaInfo中的code信息,用于下次加载时重新获取
+ */
+export const excludeAreaInfoCode = (areaInfo: AreaInfoProps[]): AreaInfoProps[] => {
+    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    newAreaInfo.forEach((item, index) => {
+        item.elements.forEach((itemIn, indexIn) => {
+            itemIn.files.forEach((file, fileIndex) => {
+                delete newAreaInfo[index].elements[indexIn].files[fileIndex].code
+            })
+        })
+    })
+    return newAreaInfo
+}
+
+/**
  * @name 更改展示的分布及文件历史
  */
 export const setYakRunnerLastAreaFile = (activeFile: FileDetailInfo, areaInfo: AreaInfoProps[]) => {
-    // const newCache = JSON.stringify(cache)
-    // setRemoteValue(YakRunnerLastAreaFile, newCache)
+    const newCache = JSON.stringify({activeFile, areaInfo})
+    setRemoteValue(YakRunnerLastAreaFile, newCache)
 }
 
 /**
@@ -872,18 +887,18 @@ export const setYakRunnerLastAreaFile = (activeFile: FileDetailInfo, areaInfo: A
  */
 export const getYakRunnerLastAreaFile = (): Promise<{activeFile: FileDetailInfo; areaInfo: AreaInfoProps[]} | null> => {
     return new Promise(async (resolve, reject) => {
-        // getRemoteValue(YakRunnerLastAreaFile).then((data) => {
-        //     try {
-        //         if (!data) {
-        //             resolve(null)
-        //             return
-        //         }
-        //         const historyData: {activeFile: FileDetailInfo; areaInfo: AreaInfoProps[]} = JSON.parse(data)
-        //         resolve(historyData)
-        //     } catch (error) {
+        getRemoteValue(YakRunnerLastAreaFile).then((data) => {
+            try {
+                if (!data) {
+                    resolve(null)
+                    return
+                }
+                const historyData: {activeFile: FileDetailInfo; areaInfo: AreaInfoProps[]} = JSON.parse(data)
+                resolve(historyData)
+            } catch (error) {
                 resolve(null)
-        //     }
-        // })
+            }
+        })
     })
 }
 

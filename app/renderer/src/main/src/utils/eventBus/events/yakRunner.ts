@@ -33,6 +33,8 @@ export type YakRunnerEventProps = {
     onOperationFileTree: string
     // 通过路径打开文件
     onOpenFileByPath: string
+    // 通过缓存文件路径读取文件内容
+    onGetCodeByPathCache: string
     // 打开编译文件Modal
     onOpenAuditModal?: string
     // 刷新审计树

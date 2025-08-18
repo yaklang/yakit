@@ -1,10 +1,19 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleEffect, useThrottleFn, useUpdateEffect} from "ahooks"
+import {
+    useDebounceEffect,
+    useGetState,
+    useInViewport,
+    useMemoizedFn,
+    useThrottleEffect,
+    useThrottleFn,
+    useUpdateEffect
+} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps, FileTreeNodeProps} from "./FileTree/FileTreeType"
 import {
     addAreaFileInfo,
+    excludeAreaInfoCode,
     getCodeByPath,
     getCodeSizeByPath,
     getNameByPath,
@@ -20,6 +29,7 @@ import {
     removeAreaFileInfo,
     setAreaFileActive,
     setYakRunnerHistory,
+    setYakRunnerLastAreaFile,
     setYakRunnerLastFolderExpanded,
     updateAreaFileInfo
 } from "./utils"
@@ -286,7 +296,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const isReadingRef = useRef<boolean>(false)
     const onOpenFileByPathFun = useMemoizedFn(async (data) => {
         try {
-            const {params, isHistory, isOutside} = JSON.parse(data) as OpenFileByPathProps
+            const {params, isHistory} = JSON.parse(data) as OpenFileByPathProps
             const {path, name, parent, highLightRange} = params
 
             // 校验是否已存在 如若存在则不创建只定位
@@ -330,8 +340,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 // (性能优化 为了快速打开文件 在文件打开时不注入语法检测 再文件打开后再注入语法检测)
                 // const syntaxActiveFile = {...(await getDefaultActiveFile(scratchFile))}
                 const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, scratchFile, activeFile)
-                setAreaInfo && setAreaInfo(newAreaInfo)
-                setActiveFile && setActiveFile(newActiveFile)
+                setAreaInfo(newAreaInfo)
+                setActiveFile(newActiveFile)
 
                 if (isHistory) {
                     // 创建文件时接入历史记录
@@ -342,6 +352,61 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     }
                     setYakRunnerHistory(history)
                 }
+            }
+        } catch (error) {
+            failed(`error: ${error}`)
+        }
+    })
+
+    const onGetCodeByPathCacheFun = useMemoizedFn(async (data) => {
+        try {
+            const {params} = JSON.parse(data) as OpenFileByPathProps
+            const {path, name} = params
+            // 校验是否已存在 如若存在则赋予其code
+            const file = await judgeAreaExistFilePath(areaInfo, path)
+            if (file) {
+                const {size, isPlainText} = await getCodeSizeByPath(path)
+                if (size > MAX_FILE_SIZE_BYTES) {
+                    !isShowFileHint && setShowFileHint(true)
+                    // 如若历史文件过大 则移除展示的文件
+                    if (activeFile) {
+                        const {newAreaInfo, newActiveFile} = removeAreaFileInfo(areaInfo, activeFile)
+                        setAreaInfo && setAreaInfo(newAreaInfo)
+                        setActiveFile && setActiveFile(newActiveFile)
+                    }
+                    return
+                }
+                // 取消上一次请求
+                if (isReadingRef.current) {
+                    ipcRenderer.invoke("cancel-ReadFile")
+                }
+                isReadingRef.current = true
+                const code = await getCodeByPath(path)
+                isReadingRef.current = false
+                const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
+                const newAreaInfo = updateAreaFileInfo(
+                    areaInfo,
+                    {
+                        code,
+                        icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
+                        openTimestamp: moment().unix(),
+                        isPlainText,
+                        language: monacaLanguageType(suffix)
+                    },
+                    path
+                )
+                setAreaInfo(newAreaInfo)
+                setActiveFile(
+                    activeFile
+                        ? {
+                              ...activeFile,
+                              icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
+                              openTimestamp: moment().unix(),
+                              isPlainText,
+                              language: monacaLanguageType(suffix)
+                          }
+                        : activeFile
+                )
             }
         } catch (error) {
             failed(`error: ${error}`)
@@ -368,12 +433,15 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         emiter.on("onRefreshTree", onRefreshTreeFun)
         // 通过路径打开文件
         emiter.on("onOpenFileByPath", onOpenFileByPathFun)
+        // 通过缓存文件路径读取文件内容
+        emiter.on("onGetCodeByPathCache", onGetCodeByPathCacheFun)
         // 监听一级页面关闭事件
         emiter.on("onCloseYakRunner", onCloseYakRunnerFun)
         return () => {
             emiter.off("onOpenFileTree", onOpenFileTreeFun)
             emiter.off("onRefreshTree", onRefreshTreeFun)
             emiter.off("onOpenFileByPath", onOpenFileByPathFun)
+            emiter.off("onGetCodeByPathCache", onGetCodeByPathCacheFun)
             emiter.off("onCloseYakRunner", onCloseYakRunnerFun)
         }
     }, [])
@@ -422,13 +490,13 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     // 获取上次打开的展示分布及文件历史
-    const onGetYakRunnerLastAreaFile = useMemoizedFn(async ()=>{
-        // const historyData = await getYakRunnerLastAreaFile()
-        // if (historyData?.activeFile && historyData.areaInfo) {
-        //     setActiveFile(historyData.activeFile)
-        //     setAreaInfo(historyData.areaInfo)
-        //     setUnShow(false)
-        // }
+    const onGetYakRunnerLastAreaFile = useMemoizedFn(async () => {
+        const historyData = await getYakRunnerLastAreaFile()
+        if (historyData?.activeFile && historyData.areaInfo) {
+            setActiveFile(historyData.activeFile)
+            setAreaInfo(historyData.areaInfo)
+            setUnShow(false)
+        }
     })
 
     useEffect(() => {
@@ -468,10 +536,17 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     }, [fileTree])
 
-    useDebounceEffect(()=>{
-        // 由于更改分布信息时activeFile也会改变 因此两者埋点合并
-        // console.log("useUpdateEffect--",fileTree,areaInfo,activeFile);
-    },[activeFile],{wait: 300})
+    useDebounceEffect(
+        () => {
+            if (activeFile) {
+                // 由于更改分布信息时activeFile也会改变 因此两者埋点合并
+                let newAreaInfo = excludeAreaInfoCode(areaInfo)
+                setYakRunnerLastAreaFile(activeFile, newAreaInfo)
+            }
+        },
+        [activeFile],
+        {wait: 300}
+    )
 
     const store: YakRunnerContextStore = useMemo(() => {
         return {

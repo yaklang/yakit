@@ -599,7 +599,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                         name
                     },
                     isHistory: true,
-                    isOutside: true
                 }
                 emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
@@ -619,8 +618,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                         path: item.path,
                         name: item.name
                     },
-                    isHistory: true,
-                    isOutside: true
+                    isHistory: true
                 }
                 emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }

@@ -32,14 +32,7 @@ import {
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {YakRunnerNewFileIcon, YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "../icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {
-    useDebounceFn,
-    useLongPress,
-    useMemoizedFn,
-    useSize,
-    useThrottleFn,
-    useUpdateEffect
-} from "ahooks"
+import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect} from "ahooks"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerType"
@@ -344,7 +337,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
 
     const onRemoveFun = useMemoizedFn((info: FileDetailInfo) => {
-        const {newAreaInfo,newActiveFile} = removeAreaFileInfo(areaInfo, info)
+        const {newAreaInfo, newActiveFile} = removeAreaFileInfo(areaInfo, info)
         setActiveFile && setActiveFile(newActiveFile)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
@@ -923,7 +916,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                             </div>
                             <div
                                 className={classNames(styles["extra-icon"], {
-                                    [styles["extra-icon-dot"]]: info.isUnSave && (info.code||"").length > 0
+                                    [styles["extra-icon-dot"]]: info.isUnSave && (info.code || "").length > 0
                                 })}
                             >
                                 {/* 未保存的提示点 */}
@@ -954,7 +947,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     // 是否允许展示二进制
     const [allowBinary, setAllowBinary] = useState<boolean>(false)
-    const isDestroy = useRef<boolean>(false);
+    const isDestroy = useRef<boolean>(false)
 
     const nowPathRef = useRef<string>()
     useEffect(() => {
@@ -962,13 +955,15 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             item.elements.forEach((itemIn) => {
                 if (itemIn.id === tabsId) {
                     itemIn.files.forEach((file) => {
-                        // 仅初次进入 或(切换/更新高亮显示区域)时更新详情
+                        // 仅初次进入 或(切换/更新高亮显示区域/code变化)时更新详情
                         if (
                             file.isActive &&
                             (!editorInfo ||
                                 (editorInfo && editorInfo.path !== file.path) ||
                                 (editorInfo &&
-                                    JSON.stringify(editorInfo.highLightRange) !== JSON.stringify(file.highLightRange)))
+                                    JSON.stringify(editorInfo.highLightRange) !==
+                                        JSON.stringify(file.highLightRange)) ||
+                                editorInfo.code !== file.code)
                         ) {
                             // 更新编辑器展示项
                             nowPathRef.current = file.path
@@ -1174,6 +1169,21 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
+    useEffect(() => {
+        if (editorInfo && typeof editorInfo?.code === "undefined") {
+            // 如果没有code字段则说明是缓存打开 需加载其内容
+            const {path, name, parent} = editorInfo
+            const OpenFileByPathParams: OpenFileByPathProps = {
+                params: {
+                    path,
+                    name,
+                    parent
+                }
+            }
+            emiter.emit("onGetCodeByPathCache", JSON.stringify(OpenFileByPathParams))
+        }
+    }, [editorInfo])
+
     return (
         <div className={styles["runner-tab-pane"]}>
             {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -1233,8 +1243,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                         path,
                         name
                     },
-                    isHistory: true,
-                    isOutside: true
+                    isHistory: true
                 }
                 emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
@@ -1295,8 +1304,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                                                     path: item.path,
                                                     name: item.name
                                                 },
-                                                isHistory: true,
-                                                isOutside: true
+                                                isHistory: true
                                             }
                                             emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
                                         } else {
