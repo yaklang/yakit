@@ -97,6 +97,7 @@ const setAIOnlineModal = (params: {
                 <NewThirdPartyApplicationConfig
                     isOnlyShowAiType={true}
                     formValues={formValues}
+                    disabledType={!!formValues}
                     onAdd={(data) => {
                         if (!config) return
                         const existedResult: ThirdPartyApplicationConfig[] = config?.AppConfigs || []
