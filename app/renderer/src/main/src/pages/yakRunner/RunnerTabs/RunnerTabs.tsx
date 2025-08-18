@@ -153,7 +153,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             // 打开底部
             emiter.emit("onOpenBottomDetail", JSON.stringify({type: "output"}))
             let params: RunYakParamsProps = {
-                Script: newActiveFile.code,
+                Script: newActiveFile.code || "",
                 WorkDir: newActiveFile.parent || "",
                 ScriptPath: newActiveFile.path
             }
@@ -344,15 +344,14 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
 
     const onRemoveFun = useMemoizedFn((info: FileDetailInfo) => {
-        const newActiveFile = isResetActiveFile([info], activeFile)
-        const newAreaInfo = removeAreaFileInfo(areaInfo, info)
+        const {newAreaInfo,newActiveFile} = removeAreaFileInfo(areaInfo, info)
         setActiveFile && setActiveFile(newActiveFile)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
     // 关闭当前项
     const onRemoveCurrent = useMemoizedFn((info: FileDetailInfo) => {
-        if (info.isUnSave && info.code.length > 0) {
+        if (info.isUnSave && (info.code || "").length > 0) {
             setShowModal(true)
             setModalInfo(info)
             return
@@ -522,7 +521,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                             if (folderMap.includes(path)) {
                                 const file = await judgeAreaExistFilePath(areaInfo, path)
                                 if (file) {
-                                    cacheAreaInfo = removeAreaFileInfo(areaInfo, file)
+                                    cacheAreaInfo = removeAreaFileInfo(areaInfo, file).newAreaInfo
                                 }
                                 folderMap = folderMap.filter((item) => item !== path)
                             }
@@ -924,7 +923,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                             </div>
                             <div
                                 className={classNames(styles["extra-icon"], {
-                                    [styles["extra-icon-dot"]]: info.isUnSave && info.code.length > 0
+                                    [styles["extra-icon-dot"]]: info.isUnSave && (info.code||"").length > 0
                                 })}
                             >
                                 {/* 未保存的提示点 */}
@@ -990,7 +989,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const autoSaveCurrentFile = useDebounceFn(
         (newEditorInfo: FileDetailInfo) => {
             const {path, code} = newEditorInfo
-            grpcFetchSaveFile(path, code)
+            code && grpcFetchSaveFile(path, code)
         },
         {
             wait: 500
@@ -1140,7 +1139,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
     // 此处ref存在意义为清除ctrl + z缓存 同时更新光标位置
     useUpdateEffect(() => {
-        if (reqEditor && editorInfo) {
+        if (reqEditor && editorInfo?.code) {
             reqEditor.setValue(editorInfo.code)
             updatePosition()
         }
@@ -1410,7 +1409,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                     file.isDelete = false
                     success(`${file.name} 保存成功`)
                     // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
-                    const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
+                    const removeAreaInfo = removeAreaFileInfo(areaInfo, file).newAreaInfo
                     const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, info.path)
                     setAreaInfo && setAreaInfo(newAreaInfo)
                     setActiveFile && setActiveFile(file)

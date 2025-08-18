@@ -347,7 +347,7 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
         if (activeFile?.path === data.path) {
             setActiveFile && setActiveFile(undefined)
         }
-        const newAreaInfo = removeAreaFileInfo(areaInfo, data)
+        const {newAreaInfo} = removeAreaFileInfo(areaInfo, data)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 

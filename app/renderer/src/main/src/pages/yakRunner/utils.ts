@@ -545,9 +545,14 @@ export const updateAreaFilesPathInfo = (
  */
 export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    let newActiveFile: FileDetailInfo | undefined = undefined
+    let activeFileArr: FileDetailInfo[] = []
     newAreaInfo.forEach((item, idx) => {
         item.elements.forEach((itemIn, idxin) => {
             itemIn.files.forEach((file, fileIndex) => {
+                if (file.isActive) {
+                    activeFileArr.push(file)
+                }
                 if (file.path === info.path) {
                     // 如若仅存在一项 则删除此大项并更新布局
                     if (item.elements.length > 1 && itemIn.files.length === 1) {
@@ -566,13 +571,21 @@ export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailIn
                         if (info.isActive) {
                             newAreaInfo[idx].elements[idxin].files[fileIndex - 1 < 0 ? 0 : fileIndex - 1].isActive =
                                 true
+                            newActiveFile =
+                                newAreaInfo[idx].elements[idxin].files[fileIndex - 1 < 0 ? 0 : fileIndex - 1]
                         }
                     }
                 }
             })
         })
     })
-    return newAreaInfo
+    if (!newActiveFile && activeFileArr.length > 0) {
+        let delIndex = activeFileArr.findIndex((item) => item.path === info.path)
+        if (delIndex > -1) {
+            newActiveFile = activeFileArr[delIndex - 1 < 0 ? 0 : delIndex - 1]
+        }
+    }
+    return {newAreaInfo, newActiveFile}
 }
 
 /**
@@ -722,7 +735,10 @@ export const addAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo,
 export const getDefaultActiveFile = async (info: FileDetailInfo) => {
     let newActiveFile = info
     // 注入语法检查结果
-    if (newActiveFile.language === YaklangMonacoSpec || newActiveFile.language === SyntaxFlowMonacoSpec) {
+    if (
+        newActiveFile.code &&
+        (newActiveFile.language === YaklangMonacoSpec || newActiveFile.language === SyntaxFlowMonacoSpec)
+    ) {
         const syntaxCheck = (await onSyntaxCheck(newActiveFile.code, newActiveFile.language)) as IMonacoEditorMarker[]
         if (syntaxCheck) {
             newActiveFile = {...newActiveFile, syntaxCheck}
@@ -763,6 +779,7 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
 
 const YakRunnerOpenHistory = "YakRunnerOpenHistory"
 const YakRunnerLastFolderExpanded = "YakRunnerLastFolderExpanded"
+const YakRunnerLastAreaFile = "YakRunnerLastAreaFile"
 
 /**
  * @name 更改YakRunner历史记录
@@ -815,7 +832,7 @@ interface YakRunnerLastFolderExpandedProps {
 }
 
 /**
- * @name 更改打开的文件夹及其展开项
+ * @name 更改打开的文件夹及其展开项历史
  */
 export const setYakRunnerLastFolderExpanded = (cache: YakRunnerLastFolderExpandedProps) => {
     const newCache = JSON.stringify(cache)
@@ -823,7 +840,7 @@ export const setYakRunnerLastFolderExpanded = (cache: YakRunnerLastFolderExpande
 }
 
 /**
- * @name 获取上次打开的文件夹及其展开项
+ * @name 获取上次打开的文件夹及其展开项历史
  */
 export const getYakRunnerLastFolderExpanded = (): Promise<YakRunnerLastFolderExpandedProps | null> => {
     return new Promise(async (resolve, reject) => {
@@ -839,6 +856,34 @@ export const getYakRunnerLastFolderExpanded = (): Promise<YakRunnerLastFolderExp
                 resolve(null)
             }
         })
+    })
+}
+
+/**
+ * @name 更改展示的分布及文件历史
+ */
+export const setYakRunnerLastAreaFile = (activeFile: FileDetailInfo, areaInfo: AreaInfoProps[]) => {
+    // const newCache = JSON.stringify(cache)
+    // setRemoteValue(YakRunnerLastAreaFile, newCache)
+}
+
+/**
+ * @name 获取上次打开的展示分布及文件历史
+ */
+export const getYakRunnerLastAreaFile = (): Promise<{activeFile: FileDetailInfo; areaInfo: AreaInfoProps[]} | null> => {
+    return new Promise(async (resolve, reject) => {
+        // getRemoteValue(YakRunnerLastAreaFile).then((data) => {
+        //     try {
+        //         if (!data) {
+        //             resolve(null)
+        //             return
+        //         }
+        //         const historyData: {activeFile: FileDetailInfo; areaInfo: AreaInfoProps[]} = JSON.parse(data)
+        //         resolve(historyData)
+        //     } catch (error) {
+                resolve(null)
+        //     }
+        // })
     })
 }
 

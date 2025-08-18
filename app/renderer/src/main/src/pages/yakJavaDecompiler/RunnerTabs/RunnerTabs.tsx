@@ -277,8 +277,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
 
     const onRemoveFun = useMemoizedFn((info: FileDetailInfo) => {
-        const newActiveFile = isResetActiveFile([info], activeFile)
-        const newAreaInfo = removeAreaFileInfo(areaInfo, info)
+        const {newAreaInfo,newActiveFile} = removeAreaFileInfo(areaInfo, info)
         setActiveFile && setActiveFile(newActiveFile)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })

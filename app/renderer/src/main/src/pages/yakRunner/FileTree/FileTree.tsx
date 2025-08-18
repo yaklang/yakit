@@ -515,7 +515,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                         if (folderMap.includes(path)) {
                             const file = await judgeAreaExistFilePath(areaInfo, path)
                             if (file) {
-                                cacheAreaInfo = removeAreaFileInfo(areaInfo, file)
+                                cacheAreaInfo = removeAreaFileInfo(areaInfo, file).newAreaInfo
                             }
                             folderMap = folderMap.filter((item) => item !== path)
                         }

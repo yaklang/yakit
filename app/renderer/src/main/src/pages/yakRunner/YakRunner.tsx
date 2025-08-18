@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useGetState, useInViewport, useMemoizedFn, useThrottleEffect, useThrottleFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleEffect, useThrottleFn, useUpdateEffect} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps, FileTreeNodeProps} from "./FileTree/FileTreeType"
@@ -9,6 +9,7 @@ import {
     getCodeSizeByPath,
     getNameByPath,
     getPathParent,
+    getYakRunnerLastAreaFile,
     getYakRunnerLastFolderExpanded,
     grpcFetchCreateFile,
     grpcFetchFileTree,
@@ -411,7 +412,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [isUnShow, setUnShow] = useState<boolean>(true)
 
     // 根据历史读取上次打开的文件夹
-    const onSetUnShowFun = useMemoizedFn(async () => {
+    const onGetYakRunnerLastFolderExpanded = useMemoizedFn(async () => {
         const historyData = await getYakRunnerLastFolderExpanded()
         if (historyData?.folderPath) {
             onOpenFileTreeFun(historyData.folderPath)
@@ -419,6 +420,21 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
         emiter.emit("onDefaultExpanded", JSON.stringify(historyData?.expandedKeys || []))
     })
+
+    // 获取上次打开的展示分布及文件历史
+    const onGetYakRunnerLastAreaFile = useMemoizedFn(async ()=>{
+        // const historyData = await getYakRunnerLastAreaFile()
+        // if (historyData?.activeFile && historyData.areaInfo) {
+        //     setActiveFile(historyData.activeFile)
+        //     setAreaInfo(historyData.areaInfo)
+        //     setUnShow(false)
+        // }
+    })
+
+    useEffect(() => {
+        onGetYakRunnerLastFolderExpanded()
+        onGetYakRunnerLastAreaFile()
+    }, [])
 
     const onSaveYakRunnerLastFolder = useMemoizedFn(async (newPath) => {
         const historyData = await getYakRunnerLastFolderExpanded()
@@ -452,9 +468,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     }, [fileTree])
 
-    useEffect(() => {
-        onSetUnShowFun()
-    }, [])
+    useDebounceEffect(()=>{
+        // 由于更改分布信息时activeFile也会改变 因此两者埋点合并
+        // console.log("useUpdateEffect--",fileTree,areaInfo,activeFile);
+    },[activeFile],{wait: 300})
 
     const store: YakRunnerContextStore = useMemo(() => {
         return {
@@ -524,7 +541,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const ctrl_s = useMemoizedFn(() => {
         try {
             // 如若未保存 则
-            if (activeFile && activeFile.isUnSave && activeFile.code.length > 0) {
+            if (activeFile && activeFile.isUnSave && activeFile.code && activeFile.code.length > 0) {
                 ipcRenderer
                     .invoke("show-save-dialog", `${codePath}${codePath ? "/" : ""}${activeFile.name}`)
                     .then(async (res) => {
@@ -567,7 +584,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 file.name = result[0].name
                                 file.isDelete = false
                                 success(`${result[0].name} 保存成功`)
-                                const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
+                                const removeAreaInfo = removeAreaFileInfo(areaInfo, file).newAreaInfo
                                 const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
                                 setAreaInfo && setAreaInfo(newAreaInfo)
                                 setActiveFile && setActiveFile(file)
