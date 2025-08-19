@@ -198,6 +198,14 @@
     }
 }
 
+.pem-code-wrapper{
+    :global {
+        .ant-form-item-control-input-content {
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+        }
+    }
+}
+
 .mitm-filters-modal {
     :global {
         .ant-form-item-with-help .ant-form-item-explain {

@@ -1,0 +1,14 @@
+.customize-code-segmentation-item{
+    :global{
+        .ant-form-item-control {
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            .ant-form-item-control-input {
+                .ant-form-item-control-input-content {
+                    .yakit-editor-code{
+                        min-height: 300px;
+                    }
+                }
+            }
+        }
+    }
+}

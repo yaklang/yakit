@@ -1,7 +1,7 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {FC, useEffect, useMemo, useRef, useState} from "react"
 import {AutoCard} from "@/components/AutoCard"
 import {ManyMultiSelectForString, SwitchItem} from "@/utils/inputUtil"
-import {Divider, Form, Modal, Slider, Space, Upload} from "antd"
+import {Col, Divider, Form, Modal, Row, Slider, Space, Upload} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {yakitInfo, warn, failed, success} from "@/utils/notification"
@@ -39,6 +39,7 @@ import NewThirdPartyApplicationConfig, {GetThirdPartyAppConfigTemplateResponse} 
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 import emiter from "@/utils/eventBus/eventBus"
+import {CodeCustomize} from "./CustomizeCode"
 
 export interface ConfigNetworkPageProp {}
 
@@ -102,30 +103,32 @@ export interface ThirdPartyApplicationConfig {
     ExtraParams?: KVPair[]
 }
 
+type TenumBuffer = Buffer | Uint8Array
+
 export interface IsSetGlobalNetworkConfig {
-    Pkcs12Bytes: Uint8Array
-    Pkcs12Password?: Uint8Array
+    Pkcs12Bytes: Buffer
+    Pkcs12Password?: Buffer
 }
 
 interface ClientCertificatePem {
-    CrtPem: Uint8Array
-    KeyPem: Uint8Array
-    CaCertificates: Uint8Array[]
+    CrtPem: TenumBuffer
+    KeyPem: TenumBuffer
+    CaCertificates: TenumBuffer[]
 }
 
 interface ClientCertificatePfx {
     name: string
-    Pkcs12Bytes: Uint8Array
-    Pkcs12Password: Uint8Array
+    Pkcs12Bytes: TenumBuffer
+    Pkcs12Password: TenumBuffer
     password?: boolean
 }
 
 interface ClientCertificates {
-    CrtPem: Uint8Array
-    KeyPem: Uint8Array
-    CaCertificates: Uint8Array[]
-    Pkcs12Bytes: Uint8Array
-    Pkcs12Password: Uint8Array
+    CrtPem: TenumBuffer
+    KeyPem: TenumBuffer
+    CaCertificates: TenumBuffer[]
+    Pkcs12Bytes: TenumBuffer
+    Pkcs12Password: TenumBuffer
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -313,7 +316,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 warn("无效证书")
                 return
             }
-            const obj: ClientCertificatePem = {
+            const obj = {
                 CaCertificates: [],
                 CrtPem: new Uint8Array(),
                 KeyPem: new Uint8Array()
@@ -672,6 +675,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     第三方应用配置
                                 </Divider>
+                                <Form.Item></Form.Item>
                                 <Form.Item label={"第三方应用"}>
                                     {(params.AppConfigs || []).map((i, index) => {
                                         const extraParamsArr = i.ExtraParams || []
@@ -783,6 +787,22 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         />
                                     </div>
                                 </Form.Item>
+                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
+                                    自定义代码片段
+                                </Divider>
+
+                                <Row>
+                                    <Col span={5}>
+                                        <div className={styles["form-rule-code-customize-describe"]}>
+                                            配置后编写代码时自动补全将会提示，并且选中后可使用自己的代码片段
+                                        </div>
+                                    </Col>
+                                </Row>
+
+                                <Form.Item label='DNSLog 配置' name='code-customize'>
+                                    <CodeCustomize />
+                                </Form.Item>
+
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     其他配置
                                 </Divider>

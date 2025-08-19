@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useLayoutEffect, useMemo, useRef, useState} from "react"
 import {
     useDebounceFn,
     useGetState,
@@ -165,7 +165,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         isPositionHighLightCursor,
         fixContentType,
         originalContentType,
-        fixContentTypeHoverMessage
+        fixContentTypeHoverMessage,
+        // 此处 添加 propsTheme 字段是因为类 弹窗 / 抽屉组件是在 root 节点之外，provider包裹的入口节点就无法实时获取到theme
+        propsTheme
     } = props
 
     const isInitRef = useRef<boolean>(false)
@@ -207,6 +209,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const {theme: themeGlobal} = useTheme()
 
     const disableUnicodeDecodeRef = useRef(props.disableUnicodeDecode)
+
+    useLayoutEffect(() => {
+        applyYakitMonacoTheme(propsTheme ?? themeGlobal)
+    }, [themeGlobal, editor, propsTheme])
+
     useEffect(() => {
         // 控制编辑器失焦
         if (disabled) {
@@ -229,9 +236,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }, [])
 
     // 修改主题颜色
-    useEffect(() => {
-        applyYakitMonacoTheme(themeGlobal)
-    }, [themeGlobal])
 
     useUpdateEffect(() => {
         if (fontSize) {
