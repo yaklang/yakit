@@ -6,6 +6,9 @@ import styles from "./LocalPluginLog.module.scss"
 import {useCreation, useMemoizedFn} from "ahooks"
 import moment from "moment"
 import {
+    CompressedFileIcon,
+    EXCELIcon,
+    FolderIcon,
     LogNodeStatusCodeIcon,
     LogNodeStatusEchartsIcon,
     LogNodeStatusErrorIcon,
@@ -16,17 +19,23 @@ import {
     LogNodeStatusInfoIcon,
     LogNodeStatusMDIcon,
     LogNodeStatusSuccessIcon,
-    LogNodeStatusWarningIcon
+    LogNodeStatusWarningIcon,
+    PDFIcon,
+    PPTIcon,
+    UnknownFileIcon,
+    WordIcon
 } from "@/assets/icon/colors"
 import {SolidCalendarIcon} from "@/assets/icon/solid"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import { PluginExecuteLogFile } from "./PluginExecuteResultType"
 
-export interface LocalPluginLogList extends StreamResult.Log {}
-export interface LocalPluginLogProps {
+interface LocalPluginLogList extends StreamResult.Log {}
+interface LocalPluginLogProps {
     loading: boolean
     list: LocalPluginLogList[]
 }
+
 /**插件日志 */
 export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) => {
     const {loading, list} = props
@@ -38,15 +47,8 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
         switch (key) {
             case "file":
                 try {
-                    const fileItem = JSON.parse(item.data) as {
-                        title: string
-                        description: string
-                        path: string
-                        is_dir: boolean
-                        is_existed: boolean
-                        file_size: string
-                        dir: string
-                    }
+                    const fileItem = JSON.parse(item.data) as any//PluginExecuteLogFile.FileItem
+                    console.log("fileItem", fileItem)
                     if (fileItem.is_dir) {
                         key = "folder"
                         if (!fileItem.is_existed) {
@@ -78,15 +80,31 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
                 return <LogNodeStatusEchartsIcon />
             case "folder-error":
                 return <LogNodeStatusFolderErrorIcon />
-            case "folder":
-                return <LogNodeStatusFolderIcon />
-            case "file-error":
-                return <LogNodeStatusFileErrorIcon />
-            case "file":
-                return <LogNodeStatusFileIcon />
+            // case "folder":
+            //     return <LogNodeStatusFolderIcon />
+            // case "file-error":
+            //     return <LogNodeStatusFileErrorIcon />
+            // case "file":
+            //     return <LogNodeStatusFileIcon />
             case "markdown":
                 return <LogNodeStatusMDIcon />
 
+            case "folder":
+                return <FolderIcon />
+            case "unknown-file":
+                return <UnknownFileIcon />
+
+            case "compressed-file":
+                return <CompressedFileIcon />
+
+            case "ppt":
+                return <PPTIcon />
+            case "excel":
+                return <EXCELIcon />
+            case "pdf":
+                return <PDFIcon />
+            case "word":
+                return <WordIcon />
             default:
                 return <LogNodeStatusInfoIcon className={styles["info-icon"]} />
         }

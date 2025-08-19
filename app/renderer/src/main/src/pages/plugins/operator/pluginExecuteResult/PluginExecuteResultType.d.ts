@@ -49,3 +49,45 @@ export interface PluginExecuteCustomTableProps {
 export interface PluginExecuteCodeProps {
     content: string
 }
+
+export enum FileAction {
+    Read_Action = "READ", // 读取
+    Write_Action = "WRITE", // 写入
+    Create_Action = "CREATE", // 创建
+    Delete_Action = "DELETE", // 删除
+    Status_Action = "STATUS", // 查看元信息
+    Chmod_Action = "CHMOD", // 修改权限
+    Find_Action = "FIND" // 查找
+}
+export declare namespace PluginExecuteLogFile {
+    export interface FileItem {
+        actions: FileActionType
+        action_message: object
+
+        dir: string
+        is_dir: boolean
+        path: string
+        title: string
+    }
+
+    export type FileActionType = `${FileAction}`
+    export interface ReadFileActionMessage {
+        content: string
+        length: number
+        message: string
+        offset: number
+        unit: string
+    }
+    export interface WriteFileActionMessage {
+        content: string
+        length: number
+        message: string
+        mode: string
+    }
+    export interface CreateFileActionMessage {
+        content: string
+        length: number
+        message: string
+        mode: string
+    }
+}
