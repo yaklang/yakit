@@ -62,7 +62,8 @@ export const startupDuplexConn = () => {
     info("Server Push Enabled Already")
     ipcRenderer.on(`${id}-data`, (e, data: DuplexConnectionProps) => {
         try {
-            const obj = JSON.parse(Uint8ArrayToString(data.Data))
+            const resultData: Buffer = data.Data
+            const obj = JSON.parse(Uint8ArrayToString(resultData))
             switch (data.MessageType) {
                 // 当前引擎支持推送数据库更新(如若不支持则依然使用轮询请求)
                 case "global":
@@ -116,7 +117,7 @@ export const startupDuplexConn = () => {
 }
 
 export interface DuplexConnectionProps {
-    Data: Uint8Array
+    Data: Buffer
     MessageType: string
     Timestamp: number
 }

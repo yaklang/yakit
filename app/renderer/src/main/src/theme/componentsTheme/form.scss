@@ -53,14 +53,12 @@
     }
     &:focus {
         border-color: var(--Colors-Use-Error-Primary);
-        box-shadow: 0 0 0 2px var(--Colors-Use-Error-On-Primary);
         background: var(--Colors-Use-Basic-Background);
     }
 }
 
 .ant-input-status-error:not(.ant-input-disabled):not(.ant-input-borderless).ant-input-focused {
     border-color: var(--Colors-Use-Error-Primary);
-    box-shadow: 0 0 0 2px var(--Colors-Use-Error-On-Primary);
 }
 
 // ----------inputNumber
@@ -71,14 +69,12 @@
     }
     &:focus {
         border-color: var(--Colors-Use-Error-Primary);
-        box-shadow: 0 0 0 2px var(--Colors-Use-Error-On-Primary);
     }
 }
 .ant-input-number-status-error:not(.ant-input-number-disabled):not(
         .ant-input-number-borderless
     ).ant-input-number-focused {
     border-color: var(--Colors-Use-Error-Primary);
-    box-shadow: 0 0 0 2px var(--Colors-Use-Error-On-Primary);
 }
 
 // ----------select
@@ -103,5 +99,4 @@
 .ant-select-status-error.ant-select:not(.ant-select-disabled):not(.ant-select-customize-input).ant-select-focused
     .ant-select-selector {
     border-color: var(--Colors-Use-Error-Primary);
-    box-shadow: 0 0 0 2px var(--Colors-Use-Error-On-Primary);
 }

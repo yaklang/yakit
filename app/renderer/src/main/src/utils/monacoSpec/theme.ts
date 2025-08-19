@@ -1,4 +1,4 @@
-import {Theme} from "@/hook/useTheme"
+import type {Theme} from "@/hook/useTheme"
 import {monaco} from "react-monaco-editor"
 
 let currentAppliedTheme: Theme | null = null
@@ -13,7 +13,7 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
 
     const editorIndentGuideSetting: Record<Theme, Record<string, string>> = {
         dark: {
-            background: "#474A4F",
+            background: "#f6a317",
             activeBackground: "#f6a317",
             lineHighlightBackground: "#2A2B2D",
             scrollbarShadow: "#000000CC"
@@ -725,7 +725,10 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
             "input.foreground": vars["--Colors-Use-Neutral-Text-1-Title"],
 
             // 输入框边框
-            "input.border": vars["--Colors-Use-Neutral-Border"]
+            "input.border": vars["--Colors-Use-Neutral-Border"],
+
+            "editorSuggestWidget.highlightForeground": vars["--Colors-Use-Blue-Primary"],
+
         }
     })
 

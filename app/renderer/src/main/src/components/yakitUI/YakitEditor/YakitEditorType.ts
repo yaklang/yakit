@@ -3,6 +3,7 @@ import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import {EditorMenuItemType} from "./EditorMenu"
 import {EditorDetailInfoProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 import {Selection} from "@/pages/yakRunner/RunnerTabs/RunnerTabsType"
+import {type Theme} from "@/hook/useTheme"
 
 /** monaco-editor 相关接口 */
 export type YakitSelection = monacoEditor.Selection
@@ -30,6 +31,7 @@ export interface YakitEditorProps {
     value?: string
     /** @name 修改编辑器内容事件回调 */
     setValue?: (content: string) => any
+    onChange?:(content: string) => any 
 
     /** @name 文件类型 */
     type?: "html" | "http" | "yak" | string
@@ -91,6 +93,8 @@ export interface YakitEditorProps {
     originalContentType?: string
     fixContentTypeHoverMessage?: string
     renderValidationDecorations?: "on" | "off" | "editable"
+    // 弹窗 / 抽屉类独立在 root 节点外的盒模型，需外部传入颜色主题
+    propsTheme?: Theme
 }
 
 /**
