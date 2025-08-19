@@ -79,6 +79,14 @@ export const aboutLoginUpload = (Token: string) => {
     }
 }
 
+export interface HTTPFlowsToOnlineRequest {
+    Token: string
+    ProjectName: string
+    ProjectDescription: string
+    ExternalModule: string
+    ExternalProjectCode: string
+}
+
 // 企业/简易版 登录前时调用同步
 export const loginHTTPFlowsToOnline = (Token: string) => {
     if ((isEnpriTraceAgent() || isEnpriTrace()) && NowProjectDescription) {
@@ -91,7 +99,7 @@ export const loginHTTPFlowsToOnline = (Token: string) => {
                     ProjectDescription: Description,
                     ExternalModule,
                     ExternalProjectCode
-                })
+                } as HTTPFlowsToOnlineRequest)
                 .then((res) => {})
                 .finally(() => {})
         })

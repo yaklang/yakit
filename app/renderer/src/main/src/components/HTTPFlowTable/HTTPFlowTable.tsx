@@ -116,6 +116,10 @@ import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutK
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {isEqual} from "lodash"
 import {defalutColumnsOrder} from "@/pages/hTTPHistoryAnalysis/HTTPHistory/HTTPHistoryFilter"
+import { isEnpriTrace } from "@/utils/envfile"
+import { HTTPFlowsToOnlineRequest } from "@/utils/login"
+import { NowProjectDescription } from "@/pages/globalVariable"
+import { useStore } from "@/store"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -581,6 +585,16 @@ export interface YakQueryHTTPFlowResponse {
     Data: HTTPFlow[]
     Total: number
     Pagination: PaginationSchema
+}
+
+export interface HTTPFlowsToOnlineBatchRequest {
+    ToOnlineWhere: HTTPFlowsToOnlineRequest
+    UploadHTTPFlowsWhere: YakQueryHTTPFlowRequest
+}
+
+export interface HTTPFlowsToOnlineBatchResponse {
+    SuccessCount: number
+    FailedCount: number
 }
 
 export interface HTTPFlowsFieldGroupResponse {
@@ -3018,7 +3032,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [])
 
-    const menuData = [
+    const isShowUpload = isEnpriTrace()
+    const {userInfo} = useStore()
+    const menuData = useMemo(()=>{
+        let menu = [
         {
             key: "发送到 Web Fuzzer",
             label: "发送到 Web Fuzzer",
@@ -3342,6 +3359,25 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
     ]
+    if(isShowUpload && userInfo.isLogin){
+        menu.push(
+            {
+            key: "上传数据",
+            label: "上传数据",
+            number: 30,
+            default: true,
+            webSocket: false,
+            onClickSingle: (v) => onUploadData([v.Id]),
+            onClickBatch: (list) => {
+                const ids: string[] = list.map((ele) => ele.Id)
+                onUploadData(ids)
+            }
+        },
+        )
+    }
+    return menu
+    },[isShowUpload,userInfo.isLogin])
+
     /** 菜单自定义快捷键渲染处理事件 */
     const contextMenuKeybindingHandle = useMemoizedFn((data) => {
         const menus: any = []
@@ -3665,6 +3701,50 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             },
             footer: null
         })
+    })
+    
+    const isUploadingRef = useRef<boolean>(false)
+    /**
+     * @description 上传数据（仅在企业版中生效）
+     * @param ids 上传数据的ids
+     */
+    
+    const onUploadData = useMemoizedFn((ids: string[]) => {
+        if (isUploadingRef.current){
+            yakitNotify("warning", "上传数据中，上传完成前无法再次点击上传数据")
+            return
+        }
+        if (ids.length === 0) {
+            yakitNotify("warning", "请选择数据")
+            return
+        }
+        if(!NowProjectDescription){ 
+            yakitNotify("warning", `参数缺失`)
+            return 
+        }
+        const {ProjectName, Description, ExternalModule, ExternalProjectCode} = NowProjectDescription
+        const newIds = ids.map((id) => parseInt(id+""))
+        const query:HTTPFlowsToOnlineBatchRequest = {
+            ToOnlineWhere:{
+                Token: userInfo.token,
+                ProjectName,
+                ProjectDescription: Description,
+                ExternalModule,
+                ExternalProjectCode
+            },
+            UploadHTTPFlowsWhere: {...params, IncludeId: isAllSelect ? [] : newIds}
+        }
+        isUploadingRef.current = true
+        ipcRenderer
+            .invoke("HTTPFlowsToOnlineBatch", query)
+            .then((rsp: HTTPFlowsToOnlineBatchResponse) => {
+                yakitNotify("success", `上传成功${rsp.SuccessCount}条数据，上传失败${rsp.FailedCount}条数据`)
+            })
+            .catch((e: any) => {
+                yakitNotify("error", `query HTTP Flow failed: ${e}`)
+            }).finally(() =>
+                isUploadingRef.current = false
+            )
     })
 
     const [searchVal, setSearchVal] = useState<string>("")

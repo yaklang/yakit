@@ -1205,6 +1205,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     editorDidMount={(editor) => {
                         setReqEditor(editor)
                     }}
+                    // 因monaco版本兼容问题 如若type传入“javascript”等，则可能会抛出错误 进而影响dnd拖拽
                     type={editorInfo?.language}
                     value={editorInfo?.code || ""}
                     setValue={(content: string) => {

@@ -456,4 +456,19 @@ module.exports = (win, getClient) => {
         let stream = getClient().AnalyzeHTTPFlow(params);
         handlerHelper.registerHandler(win, stream, streamAnalyzeHTTPFlowMap, token)
     })
+
+    const asyncHTTPFlowsToOnlineBatch = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().HTTPFlowsToOnlineBatch(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("HTTPFlowsToOnlineBatch", async (e, params) => {
+        return await asyncHTTPFlowsToOnlineBatch(params)
+    })
 }
