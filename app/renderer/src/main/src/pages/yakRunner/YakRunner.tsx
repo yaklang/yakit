@@ -541,7 +541,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             if (activeFile) {
                 // 由于更改分布信息时activeFile也会改变 因此两者埋点合并
                 let newAreaInfo = excludeAreaInfoCode(areaInfo)
-                setYakRunnerLastAreaFile(activeFile, newAreaInfo)
+                let newActiveFile = cloneDeep(activeFile)
+                delete newActiveFile.code
+                setYakRunnerLastAreaFile(newActiveFile, newAreaInfo)
             }
         },
         [activeFile],

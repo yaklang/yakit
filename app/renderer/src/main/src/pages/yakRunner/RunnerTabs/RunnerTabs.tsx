@@ -1170,7 +1170,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     })
 
     useEffect(() => {
-        if (editorInfo && typeof editorInfo?.code === "undefined") {
+        if (editorInfo && typeof editorInfo?.code !== "string") {
             // 如果没有code字段则说明是缓存打开 需加载其内容
             const {path, name, parent} = editorInfo
             const OpenFileByPathParams: OpenFileByPathProps = {
@@ -1208,6 +1208,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     type={editorInfo?.language}
                     value={editorInfo?.code || ""}
                     setValue={(content: string) => {
+                        if(typeof editorInfo?.code !== "string") return
                         updateAreaInputInfo(content)
                     }}
                     highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
