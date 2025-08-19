@@ -24,9 +24,15 @@
     }
 }
 :global {
+    /* 普通 hover 行 */
+    .monaco-editor .suggest-widget .monaco-list-row:hover:not(.focused):not(.selected) {
+        background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary) !important;
+    }
+
     .crlf::before {
         content: "↵";
-        background-color: #808080; /* 灰色背景 */
+        background-color: var(--Colors-Use-Basic-Background); /* 灰色背景 */
         margin: 4px;
         padding: 2px; /* 根据需要添加内边距 */
         border-radius: 3px; /* 添加圆角以使样式更好看 */

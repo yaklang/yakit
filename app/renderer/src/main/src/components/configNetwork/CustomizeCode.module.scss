@@ -1,0 +1,43 @@
+.customizeCode_tags {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 0;
+    .code-tag-containaer{
+        cursor: pointer;
+        .code-tag-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-4px);
+            .close-icon {
+                width: 14px;
+                height: 14px;
+                box-sizing: content-box;
+                cursor: pointer;
+                padding-left: 4px;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+                &:hover {
+                    color: var(--Colors-Use-Error-Primary);
+                }
+            }
+        }
+    }
+}
+.customize-code-segmentation-item {
+    :global {
+        .ant-form-item-control {
+            .ant-form-item-control-input {
+                .ant-form-item-control-input-content {
+                    .yakit-editor-code {
+                        min-height: 300px;
+                    }
+                }
+            }
+        }
+    }
+}

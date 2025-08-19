@@ -227,7 +227,8 @@
         }
     }
     .ant-#{$kind}menu-item.ant-#{$kind}menu-item-disabled.ant-#{$kind}menu-item-only-child {
-        color: var(--Colors-Use-Neutral-Disable);
+        // 此处添加强制颜色，原因为 antd 的.ant-meun-item-disabled 类名下存在一个 !important
+        color: var(--Colors-Use-Neutral-Disable) !important;
         span.anticon {
             color: var(--Colors-Use-Neutral-Disable);
         }

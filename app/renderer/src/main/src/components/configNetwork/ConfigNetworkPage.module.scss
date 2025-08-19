@@ -128,11 +128,23 @@
             }
             &:hover {
                 .close {
-                    display: block; 
+                    display: block;
                 }
             }
         }
     }
+}
+
+.form-rule-code-customize-describe {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    position: absolute;
+    font-size: 14px;
+    font-weight: 400;
+    transform: translate(32px,10px);
+}
+
+.form-rule-code-customize-item {
+    margin-top: 38px;
 }
 
 .form-rule-body {
@@ -296,16 +308,16 @@
     }
 }
 
-.config-select-path{
+.config-select-path {
     color: var(--Colors-Use-Main-Primary);
     font-size: 12px;
     cursor: pointer;
 }
-.ai-sort-box{
+.ai-sort-box {
     width: 300px;
 }
 .ai-sort-content {
-    .ai-sort-describe{
+    .ai-sort-describe {
         color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .menu-list {

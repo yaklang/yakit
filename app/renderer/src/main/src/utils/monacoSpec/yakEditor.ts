@@ -743,7 +743,6 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
                                     endColumn: nowPosition.column
                                 })
                                 activeParameter = beforeText.match(/,/g)?.length || 0
-                                console.log(activeParameter, parameters)
                             }
                         }
 
@@ -953,7 +952,6 @@ monaco.languages.registerReferenceProvider(YaklangMonacoSpec, {
                     if (r.Ranges.length == 0) {
                         return
                     }
-                    console.log(r.Ranges)
                     resolve(
                         r.Ranges.map((v) => {
                             return {

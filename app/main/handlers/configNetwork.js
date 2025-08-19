@@ -1,4 +1,4 @@
-const { ipcMain } = require("electron")
+const {ipcMain} = require("electron")
 
 module.exports = (win, getClient) => {
     // asyncGetGlobalNetworkConfig wrapper
@@ -109,5 +109,69 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("ListAiModel", async (e, params) => {
         return await asyncListAiModel(params)
+    })
+
+    // 查询自定义代码片段
+    const asyncQuerySnippets = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QuerySnippets(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QuerySnippets", async (e, parmas) => {
+        return await asyncQuerySnippets(parmas)
+    })
+
+    // 增加自定义代码片段
+    const asyncCreateSnippet = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().CreateSnippet(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("CreateSnippet", async (_, parmas) => {
+        return await asyncCreateSnippet(parmas)
+    })
+
+    // 删除代码片段
+    const asyncDeleteSnippets = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteSnippets(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteSnippets", async (_, parmas) => {
+        return await asyncDeleteSnippets(parmas)
+    })
+
+    // 更新代码片段
+    const asyncUpdateSnippet = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpdateSnippet(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("UpdateSnippet", async (_, parmas) => {
+        return await asyncUpdateSnippet(parmas)
     })
 }

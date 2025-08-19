@@ -22,13 +22,16 @@
             color: var(--Colors-Use-Neutral-Text-1-Title);
             width: 12px;
             height: 12px;
+
             svg {
                 width: 12px;
                 height: 12px;
             }
+
             .anticon {
                 height: 12px;
             }
+
             &:hover {
                 color: var(--Colors-Use-Main-Primary);
             }
@@ -64,24 +67,30 @@
         }
     }
 }
+
 .yakit-tag-border {
     border: 1px solid;
 }
+
 .yakit-tag-fullRadius {
     border-radius: 9999px;
 }
+
 .yakit-tag-default-color {
     background: var(--Colors-Use-Neutral-Bg-Hover);
     border-color: var(--Colors-Use-Neutral-Border);
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
     svg {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 }
+
 .yakit-tag-danger {
     background: var(--Colors-Use-Error-Bg-Hover);
     border-color: var(--Colors-Use-Error-Border);
     color: var(--Colors-Use-Status-Serious);
+
     svg {
         color: var(--Colors-Use-Status-Serious);
     }
@@ -91,6 +100,7 @@
     background: var(--Colors-Use-Error-Bg-Hover);
     border-color: var(--Colors-Use-Error-Border);
     color: var(--Colors-Use-Error-Primary);
+
     svg {
         color: var(--Colors-Use-Error-Primary);
     }
@@ -101,6 +111,7 @@
     border-color: var(--Colors-Use-Orange-Border);
     border: 1px solid var(--Colors-Use-Orange-Border);
     color: var(--Colors-Use-Orange-Primary);
+
     svg {
         color: var(--Colors-Use-Orange-Primary);
     }
@@ -110,6 +121,7 @@
     background: var(--Colors-Use-Success-Bg-Hover);
     border-color: var(--Colors-Use-Success-Border);
     color: var(--Colors-Use-Success-Primary);
+
     svg {
         color: var(--Colors-Use-Success-Primary);
     }
@@ -119,6 +131,7 @@
     background: var(--Colors-Use-Warning-Bg-Hover);
     border-color: var(--Colors-Use-Warning-Border);
     color: var(--Colors-Use-Warning-Primary);
+
     svg {
         color: var(--Colors-Use-Warning-Primary);
     }
@@ -128,6 +141,7 @@
     background: var(--Colors-Use-Purple-Bg);
     border-color: var(--Colors-Use-Purple-Border);
     color: var(--Colors-Use-Purple-Primary);
+
     svg {
         color: var(--Colors-Use-Purple-Primary);
     }
@@ -137,6 +151,7 @@
     background: var(--Colors-Use-Blue-Bg);
     border-color: var(--Colors-Use-Blue-Border);
     color: var(--Colors-Use-Blue-Primary);
+
     svg {
         color: var(--Colors-Use-Blue-Primary);
     }
@@ -146,6 +161,7 @@
     background: var(--Colors-Use-Cyan-Bg);
     border-color: var(--Colors-Use-Cyan-Border);
     color: var(--Colors-Use-Cyan-Primary);
+
     svg {
         color: var(--Colors-Use-Cyan-Primary);
     }
@@ -155,6 +171,7 @@
     background: var(--Colors-Use-Magenta-Bg);
     border-color: var(--Colors-Use-Magenta-Border);
     color: var(--Colors-Use-Magenta-Primary);
+
     svg {
         color: var(--Colors-Use-Magenta-Primary);
     }
@@ -164,6 +181,7 @@
     color: var(--Colors-Use-Yellow-Primary);
     border-color: var(--Colors-Use-Yellow-Border);
     background-color: var(--Colors-Use-Yellow-Bg);
+
     svg {
         color: var(--Colors-Use-Yellow-Primary);
     }
@@ -172,6 +190,12 @@
 .yakit-tag-white {
     background: var(--Colors-Use-Neutral-Bg-Hover);
     border-color: var(--Colors-Use-Neutral-Border);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+.yakit-tag-main {
+    background: var(--Colors-Use-Main-Bg);
+    border-color: var(--Colors-Use-Main-Border);
     color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 
