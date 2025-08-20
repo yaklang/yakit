@@ -12,6 +12,7 @@ import {FiltersItemProps} from "./TableVirtualResize/TableVirtualResizeType"
 import {HistoryHighLightText} from "./HTTPFlowDetail"
 import {ColumnsType} from "antd/lib/table"
 import {useCampare} from "@/hook/useCompare/useCompare"
+import {CopyComponents} from "./yakitUI/YakitTag/YakitTag"
 const {Text} = Typography
 
 export interface HTTPFlowExtractedDataTableRefProps {
@@ -303,13 +304,16 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                 showTitle: false
             },
             render: (i: HTTPFlowExtractedData) => (
-                <Text
-                    ellipsis={{
-                        tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.Data}</div>
-                    }}
-                >
-                    {i.Data}
-                </Text>
+                <div className={styles["table-rule-content"]}>
+                    <Text
+                        ellipsis={{
+                            tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.Data}</div>
+                        }}
+                    >
+                        {i.Data}
+                    </Text>
+                    <CopyComponents copyText={i.Data} />
+                </div>
             )
         },
         {
