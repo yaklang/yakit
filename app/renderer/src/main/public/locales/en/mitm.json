@@ -1,0 +1,26 @@
+{
+  "MitmPage": {
+    "ImportLocalPlugin": {
+      "importLocalPluginSuccess": "Local plugin imported successfully",
+      "pluginSource": "Plugin Source",
+      "proxy": "Proxy",
+      "accessRepoViaProxy": "Access code repositories that are not reachable from mainland China via proxy, e.g., http://127.0.0.1:7890",
+      "localPluginPath": "Local Plugin Path",
+      "enterLocalPluginPath": "Please enter the local plugin path",
+      "password": "Password",
+      "nucleiPoCLocalPath": "Nuclei PoC Local Path",
+      "pluginID": "Plugin ID",
+      "enterPluginID": "Please enter the plugin ID(s), separated by commas or new lines...",
+      "importOnlineNuclei": "Import Online Nuclei",
+      "enterNucleiPoCLocalPath": "Please enter the Nuclei PoC local path",
+      "importLocalNuclei": "Import Local Nuclei",
+      "pluginImportSuccess": "Plugin imported successfully",
+      "pluginImportMethod": "Plugin Import Method",
+      "externalResourceWarning": "Importing external resources carries potential risks, as they may contain malicious code or payloads that could lead to data leaks or system compromise. Please carefully evaluate the necessity of introducing external resources, and ensure that the sources are trustworthy and the content is safe. If external resources are required, it is recommended to prioritize official secure versions or create your own controlled data sources. Additionally, keep your system and software up-to-date, promptly patch known vulnerabilities, and maintain routine security measures.",
+      "onlineNuclei": "Online Nuclei",
+      "localPlugin": "Local Plugin",
+      "localNuclei": "Local Nuclei",
+      "requiredField": "This field is required"
+    }
+  }
+}

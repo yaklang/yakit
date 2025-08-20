@@ -19,6 +19,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import styles from "./ExtraMenu.module.scss"
 import {isIRify} from "@/utils/envfile"
 import {NotepadMenu} from "../NotepadMenu/NotepadMenu"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 interface ExtraMenuProps {
@@ -27,13 +28,13 @@ interface ExtraMenuProps {
 
 export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
     const {onMenuSelect} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "layout"])
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
     const [loadPluginMode, setLoadPluginMode] = useState<LoadPluginMode>("giturl")
     const [importMenuShow, setImportMenuShow] = useState<boolean>(false)
     const [form] = Form.useForm()
     const [importHistoryharToken, setImportHistoryharToken] = useState<string>("")
     const [percentVisible, setPercentVisible] = useState<boolean>(false)
-
     const importMenuSelect = useMemoizedFn((type: string) => {
         switch (type) {
             case "local":
@@ -45,14 +46,14 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 setImportMenuShow(false)
                 return
             case "import-share":
-                onImportShare()
+                onImportShare(i18n)
                 setImportMenuShow(false)
                 return
             case "import-history-har":
                 form.setFieldsValue({historyharPath: ""})
 
                 const m = showYakitModal({
-                    title: "导入HAR流量数据",
+                    title: t("Layout.ExtraMenu.importHARHistoryData"),
                     width: 600,
                     content: (
                         <div style={{padding: 15}}>
@@ -61,11 +62,11 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                                     multiple={false}
                                     isShowPathNumber={false}
                                     accept='.har'
-                                    help='可将har文件拖入框内或'
+                                    help={t("YakitFormDragger.dragFileHereOr", {fileType: "HAR"})}
                                     selectType='file'
                                     formItemProps={{
                                         name: "historyharPath",
-                                        label: "导入HAR流量数据路径",
+                                        label: t("YakitFormDragger.fileDataPath", {fileType: "HAR"}),
                                         labelCol: {span: 8},
                                         wrapperCol: {span: 17}
                                     }}
@@ -77,11 +78,11 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                                     onClick={() => {
                                         const formValue = form.getFieldsValue()
                                         if (!formValue.historyharPath) {
-                                            yakitNotify("error", "请输入HAR流量数据路径")
+                                            yakitNotify("error", t("YakitFormDragger.enterFilePath", {fileType: "HAR"}))
                                             return
                                         }
                                         if (!formValue.historyharPath.endsWith(".har")) {
-                                            yakitNotify("error", "仅支持.har格式的文件")
+                                            yakitNotify("error", t("YakitFormDragger.filesOnly", {fileType: ".har"}))
                                             return
                                         }
                                         m.destroy()
@@ -103,7 +104,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                                             })
                                     }}
                                 >
-                                    导入
+                                    {t("YakitButton.import")}
                                 </YakitButton>
                             </div>
                         </div>
@@ -126,27 +127,30 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 data={[
                     {
                         key: "import-plugin",
-                        label: "导入插件",
+                        label: t("Layout.ExtraMenu.importPlugin"),
                         children: [
-                            {key: "local", label: "本地插件"},
-                            {key: "uploadId", label: "插件 ID"},
-                            {key: "giturl", label: "线上 Nuclei"},
-                            {key: "local-nuclei", label: "本地 Nuclei"}
+                            {key: "local", label: t("Layout.ExtraMenu.localPlugin")},
+                            {key: "uploadId", label: t("Layout.ExtraMenu.pluginID")},
+                            {key: "giturl", label: t("Layout.ExtraMenu.online") + " " + t("YakitRoute.Nuclei")},
+                            {
+                                key: "local-nuclei",
+                                label: t("Layout.ExtraMenu.local") + " " + t("YakitRoute.Nuclei")
+                            }
                         ]
                     },
                     {
                         key: "import-share",
-                        label: "导入分享数据"
+                        label: t("Layout.ExtraMenu.importSharedData")
                     },
                     {
                         key: "import-history-har",
-                        label: "导入HAR流量数据"
+                        label: t("Layout.ExtraMenu.importHARHistoryData")
                     }
                 ]}
                 onClick={({key}) => importMenuSelect(key)}
             />
         ),
-        []
+        [i18n.language]
     )
 
     return (
@@ -159,7 +163,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     }}
                     icon={<SolidTerminalIcon />}
                 >
-                    Yak Runner
+                    {t("YakitRoute.YakRunner")}
                 </YakitButton>
             ) : (
                 <>
@@ -178,7 +182,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                             onClick={(e) => e.preventDefault()}
                             icon={<OutlineSaveIcon />}
                         >
-                            导入资源
+                            {t("Layout.ExtraMenu.importResources")}
                         </YakitButton>
                     </YakitPopover>
                     <YakitButton
@@ -188,7 +192,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                         }}
                         icon={<SolidCodecIcon />}
                     >
-                        Codec
+                        {t("YakitRoute.Codec")}
                     </YakitButton>
                     <YakitButton
                         type='secondary2'
@@ -197,7 +201,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                         }}
                         icon={<SolidPayloadIcon />}
                     >
-                        Payload
+                        {t("YakitRoute.Payload")}
                     </YakitButton>
                     <YakitButton
                         type='secondary2'
@@ -206,7 +210,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                         }}
                         icon={<SolidTerminalIcon />}
                     >
-                        Yak Runner
+                        {t("YakitRoute.YakRunner")}
                     </YakitButton>
                     <NotepadMenu isExpand={false} onRouteMenuSelect={onMenuSelect} />
                     <ImportLocalPlugin
@@ -220,13 +224,13 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     {percentVisible && (
                         <ImportExportProgress
                             visible={percentVisible}
-                            title='导入HAR流量数据'
+                            title={t("Layout.ExtraMenu.importHARHistoryData")}
                             token={importHistoryharToken}
                             apiKey='ImportHTTPFlowStream'
                             onClose={(finish) => {
                                 setPercentVisible(false)
                                 if (finish) {
-                                    yakitNotify("success", "导入成功")
+                                    yakitNotify("success", t("YakitNotification.imported"))
                                     emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.DB_HTTPHistory}))
                                     emiter.emit("onRefreshImportHistoryTable")
                                 }

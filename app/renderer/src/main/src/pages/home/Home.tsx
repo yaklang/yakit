@@ -1,6 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState, ReactElement, CSSProperties} from "react"
 import classNames from "classnames"
-import styles from "./home.module.scss"
 import {
     PublicBlastingIcon,
     PublicBruteIcon,
@@ -57,7 +56,7 @@ import {RouteToPageProps} from "../layout/publicMenu/PublicMenu"
 import {usePluginToId} from "@/store/publicMenu"
 import {ResidentPluginName} from "@/routes/newRoute"
 import {Form, Tooltip} from "antd"
-import {useDebounceEffect, useDebounceFn, useGetState, useInViewport, useMemoizedFn, useThrottleFn} from "ahooks"
+import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleFn} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -88,6 +87,9 @@ import {PluginHubPageInfoProps} from "@/store/pageInfo"
 import {WebsiteGV} from "@/enums/website"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {toMITMHacker} from "../hacker/httpHacker"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import styles from "./home.module.scss"
+
 const {ipcRenderer} = window.require("electron")
 
 export const convertToBytes = (size: number, unit: string) => {
@@ -110,8 +112,9 @@ interface ToolInfo {
     onClick: () => void
 }
 
-export interface HomeProp {}
+interface HomeProp {}
 const Home: React.FC<HomeProp> = (props) => {
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "home"])
     const homeRef = useRef(null)
     const [inViewport] = useInViewport(homeRef)
     const {pluginToId} = usePluginToId()
@@ -132,7 +135,7 @@ const Home: React.FC<HomeProp> = (props) => {
         IsPrivileged: boolean
         Advice: string
         AdviceVerbose: string
-    }>({Advice: "unknown", AdviceVerbose: "无法获取 PCAP 支持信息", IsPrivileged: false})
+    }>({Advice: "unknown", AdviceVerbose: t("Home.pcapSupportInfoFailed"), IsPrivileged: false})
     const [system, setSystem] = useState<YakitSystem>("Darwin")
     const [pcapHintShow, setPcapHintShow] = useState<boolean>(false)
     const [pcapResult, setPcapResult] = useState<boolean>(false)
@@ -142,67 +145,67 @@ const Home: React.FC<HomeProp> = (props) => {
     const toolsList = useMemo(() => {
         return [
             {
-                label: "YakRunner",
+                label: t("YakitRoute.YakRunner"),
                 icon: <PublicToolYakScriptIcon />,
                 iconStyle: {backgroundColor: "#8863f7", padding: 1},
-                desc: "Yak语言编辑器",
+                desc: t("YakitRoute.yaklangProgramming"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.YakScript})
             },
             {
-                label: "靶场 Vulinbox",
+                label: t("Home.targetRangeVulinbox"),
                 icon: <PublicToolVulinboxIcon />,
-                desc: "Yak自带靶场",
+                desc: t("Home.built-inYakTargetRange", {name: t("YakitRoute.Yak")}),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.Beta_VulinboxManager})
             },
             {
-                label: "Payload",
+                label: t("YakitRoute.Payload"),
                 icon: <PublicToolPayloadIcon />,
-                desc: "Payload字典管理",
+                desc: t("YakitRoute.customPayload"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.PayloadManager})
             },
             {
-                label: "数据对比",
+                label: t("YakitRoute.dataCompare"),
                 icon: <PublicToolDataCompareIcon />,
-                desc: "快速识别不同数据",
+                desc: t("YakitRoute.quicklyIdentifyDifferencesInData"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.DataCompare})
             },
             {
-                label: "CVE 管理",
+                label: t("YakitRoute.cVEManagement"),
                 icon: <PublicToolCVEIcon />,
-                desc: "搜索查询CVE数据",
+                desc: t("YakitRoute.searchAndQueryCVEData"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.DB_CVE})
             },
             {
-                label: "插件仓库",
+                label: t("YakitRoute.pluginHub"),
                 icon: <PublicToolPluginHubIcon />,
                 iconStyle: {backgroundColor: "#F4736B", padding: 1},
-                desc: "海量Yakit插件一键下载",
+                desc: t("YakitRoute.massiveYakitPluginsOne-ClickDownload"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.Plugin_Hub})
             },
             {
-                label: "端口监听器",
+                label: t("YakitRoute.portListener"),
                 icon: <PublicToolShellReceiverIcon />,
-                desc: "监听端口并进行交互",
+                desc: t("YakitRoute.reverseShellTool"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.ShellReceiver})
             },
             {
-                label: "Websocket Fuzzer",
+                label: t("YakitRoute.Websocket Fuzzer"),
                 icon: <PublicToolWebsocketFuzzerIcon />,
-                desc: "对Websocket数据包进行模糊测试",
+                desc: t("YakitRoute.fuzzTestingForWebSocketPackets"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.WebsocketFuzzer})
             },
             {
-                label: "子域名收集",
+                label: t("YakitRoute.subdomainCollection"),
                 icon: <PublicToolSubDomainCollectionIcon />,
-                desc: "收集目标资产关联的子域名",
+                desc: t("Home.collectSubdomainsRelatedToTargetAssets"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () =>
                     onMenu({
@@ -212,9 +215,9 @@ const Home: React.FC<HomeProp> = (props) => {
                     })
             },
             {
-                label: "基础爬虫",
+                label: t("YakitRoute.basicCrawler"),
                 icon: <PublicToolBasicCrawlerIcon />,
-                desc: "收集目标资产的所有页面信息",
+                desc: t("Home.collectAllPageInformationOfTargetAssets"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () =>
                     onMenu({
@@ -224,91 +227,91 @@ const Home: React.FC<HomeProp> = (props) => {
                     })
             },
             {
-                label: "空间引擎",
+                label: t("YakitRoute.spaceEngine"),
                 icon: <PublicToolSpaceEngineIcon />,
-                desc: "集合多种引擎，一键收集资产信息",
+                desc: t("Home.integrateMultipleEnginesToCollectAssetInformation"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.Space_Engine})
             },
             {
-                label: "ICMP-SizeLog",
+                label: t("YakitRoute.ICMP-SizeLog"),
                 icon: <PublicToolICMPSizeLogIcon />,
-                desc: "使用 ping 携带特定长度数据包判定 ICMP反连",
+                desc: t("YakitRoute.detectICMPCallbackViaPingWithSpecificPacketSize"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.ICMPSizeLog})
             },
             {
-                label: "TCP-PortLog",
+                label: t("YakitRoute.TCP-PortLog"),
                 icon: <PublicToolTCPPortLogIcon />,
-                desc: "使用未开放的随机端口来判定 TCP 反连",
+                desc: t("YakitRoute.detectTCPCallbackViaRandomClosedPorts"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.TCPPortLog})
             },
             {
-                label: "反连服务器",
+                label: t("YakitRoute.reverseServer"),
                 icon: <PublicToolReverseServerIcon />,
-                desc: "同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连",
+                desc: t("YakitRoute.simultaneouslyProvideHTTP/RMI/HTTPSReverseConnectionsOnOnePort"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.ReverseServer_New})
             },
             {
-                label: "History",
+                label: t("YakitRoute.History"),
                 icon: <PublicToolDBHTTPHistoryIcon />,
-                desc: "查看并操作所有劫持、插件、Fuzz发出的所有历史流量",
+                desc: t("YakitRoute.viewAndManageAllHistoricalTrafficFromMITMPluginsAndFuzzing"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.DB_HTTPHistory})
             },
             {
-                label: "报告",
+                label: t("YakitRoute.report"),
                 icon: <PublicToolDBReportIcon />,
-                desc: "查看并管理扫描时生成的报告",
+                desc: t("YakitRoute.viewAndManageReportsGeneratedDuringScanning"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.DB_Report})
             },
             {
-                label: "漏洞与风险统计",
+                label: t("Home.vulnerabilityRiskStatistics"),
                 icon: <PublicToolDBRiskIcon />,
-                desc: "管理扫描出的所有漏洞和风险信息",
+                desc: t("YakitRoute.manageAllDetectedVulnerabilitiesAndRisks"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.DB_Risk})
             },
             {
-                label: "端口资产",
+                label: t("YakitRoute.portAssets"),
                 icon: <PublicToolModScanPortIcon />,
-                desc: "管理扫描出的所有端口资产",
+                desc: t("YakitRoute.manageAllDiscoveredPortAssets"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.DB_Ports})
             },
             {
-                label: "域名资产",
+                label: t("YakitRoute.domainAssets"),
                 icon: <PublicToolDBDomainIcon />,
-                desc: "管理扫描出的所有域名资产",
+                desc: t("YakitRoute.manageAllDiscoveredDomainAssets"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.DB_Domain})
             },
             {
-                label: "录屏",
+                label: t("Home.screenRecording"),
                 icon: <PublicToolScreenRecordingIcon />,
-                desc: "录制屏幕操作",
+                desc: t("Home.recordScreenActivities"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => !screenRecorderInfo.isRecording && ipcRenderer.invoke("send-open-screenCap-modal")
             },
             {
-                label: "截屏",
+                label: t("Home.screenshot"),
                 icon: <PublicToolScreenshotIcon />,
-                desc: "截取屏幕信息形成图片",
+                desc: t("Home.captureScreenIntoImage"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => ipcRenderer.invoke("activate-screenshot")
             },
             {
-                label: "录屏管理",
+                label: t("YakitRoute.recordingManagement"),
                 icon: <PublicToolScreenRecorderPageIcon />,
-                desc: "管理录屏形成的所有视频文件",
+                desc: t("YakitRoute.manageAllRecordedVideoFiles"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.ScreenRecorderPage})
             }
         ] as ToolInfo[]
-    }, [screenRecorderInfo])
+    }, [screenRecorderInfo, i18n.language, pluginToId])
     const [curProjectInfo, setCurProjectInfo] = useState<ProjectDescription>()
     const [historyData, setHistoryData] = useState<number>(0)
     const [riskLevelData, setRiskLevelData] = useState<FieldName[]>([])
@@ -472,27 +475,28 @@ const Home: React.FC<HomeProp> = (props) => {
     const handleDownMitmCert = (e) => {
         e.stopPropagation()
         const m = showYakitModal({
-            title: "生成自动安装脚本",
+            type: "white",
+            title: t("Home.generateAutoInstallScript"),
             width: "600px",
             centered: true,
             content: (
                 <div style={{padding: 15}}>
-                    请按照以下步骤进行操作：
+                    {t("Home.pleaseFollowSteps")}
                     <br />
                     <br />
-                    1. 点击确定后将会打开脚本存放的目录。
+                    1. {t("Home.openScriptDir")}
                     <br />
-                    2. 双击打开 "auto-install-cert.bat/auto-install-cert.sh" 的文件执行安装。
+                    2. {t("Home.runAutoInstallScript")}
                     <br />
-                    3. 如果安装成功，您将看到“Certificate successfully installed.”的提示。
-                    <br />
-                    <br />
-                    请确保在运行脚本之前关闭任何可能会阻止安装的应用程序。
-                    <br />
-                    安装完成后，您将能够顺利使用 MITM。
+                    3. {t("Home.installSuccessMessage")}
                     <br />
                     <br />
-                    如有任何疑问或需要进一步帮助，请随时联系我们。
+                    {t("Home.closeAppsBeforeRun")}
+                    <br />
+                    {t("Home.mitmReadyAfterInstall", {name: t("YakitRoute.MITM")})}
+                    <br />
+                    <br />
+                    {t("Home.contactForHelp")}
                 </div>
             ),
             onOk: () => {
@@ -502,7 +506,7 @@ const Home: React.FC<HomeProp> = (props) => {
                         if (p) {
                             openABSFileLocated(p)
                         } else {
-                            yakitNotify("error", "生成失败")
+                            yakitNotify("error", t("YakitNotification.generationFailed"))
                         }
                     })
                     .catch(() => {})
@@ -515,7 +519,7 @@ const Home: React.FC<HomeProp> = (props) => {
     const handleBlastingExample = (animationType: string) => {
         const m = showYakitModal({
             type: "white",
-            title: "WebFuzzer 爆破动画演示",
+            title: t("Home.webFuzzerDemo", {name: t("YakitRoute.WebFuzzer")}),
             width: 650,
             content: (
                 <BlastingAnimationAemonstration
@@ -537,12 +541,12 @@ const Home: React.FC<HomeProp> = (props) => {
             type: "white",
             title: (
                 <div className={styles["sequence-animation-pop-title"]}>
-                    WebFuzzer 序列动画演示
+                    {t("Home.webFuzzerSequenceDemo", {name: t("YakitRoute.WebFuzzer")})}
                     <div
                         className={styles["subtitle-help-wrapper"]}
                         onClick={() => ipcRenderer.invoke("open-url", WebsiteGV.WebFuzzerAddress)}
                     >
-                        <span className={styles["text-style"]}>官方帮助文档</span>
+                        <span className={styles["text-style"]}>{t("Home.officialDocs")}</span>
                         <OutlineQuestionmarkcircleIcon />
                     </div>
                 </div>
@@ -578,7 +582,7 @@ const Home: React.FC<HomeProp> = (props) => {
                 setPcapResult(true)
             })
             .catch((e) => {
-                yakitNotify("error", `提升 Pcap 用户权限失败：${e}`)
+                yakitNotify("error", t("Home.pcapPermissionFailed") + `${e}`)
             })
             .finally(() => setPcapHintLoading(false))
     })
@@ -604,11 +608,11 @@ const Home: React.FC<HomeProp> = (props) => {
     const projectName = useMemo(() => {
         if (isEnpriTraceAgent()) return getReleaseEditionName()
         if (curProjectInfo?.ProjectName === "[temporary]") {
-            return "临时项目"
+            return t("Home.temporary")
         } else {
             return curProjectInfo?.ProjectName ? curProjectInfo?.ProjectName : getReleaseEditionName()
         }
-    }, [curProjectInfo])
+    }, [curProjectInfo, i18n.language])
 
     // 更新项目数据库大小
     const updateProjectDbSize = async () => {
@@ -713,25 +717,25 @@ const Home: React.FC<HomeProp> = (props) => {
     }
     const calcMitmAndwebFuzzerMinHeight = () => {
         const screenWidth = document.body.getBoundingClientRect().width
-        if (screenWidth <= 1220) return 315
+        if (screenWidth <= 1220) return 350
         if (screenWidth <= 1920) return 400
         return 500
     }
     const calcMitmAndwebFuzzerMaxHeight = () => {
         const screenWidth = document.body.getBoundingClientRect().width
-        if (screenWidth <= 1220) return 400
+        if (screenWidth <= 1220) return 450
         if (screenWidth <= 1920) return 600
         return 650
     }
     const calcSignlejumpAndVulnerabilityMinHeight = () => {
         const screenWidth = document.body.getBoundingClientRect().width
-        if (screenWidth <= 1220) return 215
+        if (screenWidth <= 1220) return 260
         if (screenWidth <= 1920) return 275
         return 300
     }
     const calcSignlejumpAndVulnerabilityMaxHeight = () => {
         const screenWidth = document.body.getBoundingClientRect().width
-        if (screenWidth <= 1220) return 220
+        if (screenWidth <= 1220) return 275
         if (screenWidth <= 1920) return 290
         return 450
     }
@@ -788,25 +792,26 @@ const Home: React.FC<HomeProp> = (props) => {
                                 <div className={styles["home-card-header"]}>
                                     <div className={styles["home-card-header-title"]}>
                                         <PublicMitmIcon className={styles["title-icon"]} />
-                                        <span className={styles["title-text"]}>MITM 交互式劫持</span>
+                                        <span className={styles["title-text"]}>
+                                            {t("YakitRoute.MITM Interactive Hijacking")}
+                                        </span>
                                     </div>
                                     <div className={styles["home-card-header-desc"]}>
-                                        安装 SSL/TLS
-                                        证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式
+                                        {t("YakitRoute.mitmSslHijack")}
                                     </div>
                                 </div>
                                 {showMITMCertWarn && (
                                     <div className={styles["home-card-config-detection"]}>
                                         <div className={styles["config-detection-left"]}>
                                             <SolidExclamationIcon className={styles["exclamation-icon"]} />
-                                            检测到证书未配置
+                                            {t("Home.certNotConfigured")}
                                         </div>
                                         <YakitButton
                                             type='text'
                                             className={styles["config-detection-btn"]}
                                             onClick={handleDownMitmCert}
                                         >
-                                            下载安装
+                                            {t("YakitButton.downloadInstall")}
                                         </YakitButton>
                                     </div>
                                 )}
@@ -856,7 +861,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                                 }}
                                                             >
                                                                 <SolidPlayIcon className={styles["open-icon"]} />
-                                                                启动劫持
+                                                                {t("Home.hijackStart")}
                                                             </div>
                                                             <div
                                                                 className={styles["operation-btn-right"]}
@@ -884,21 +889,31 @@ const Home: React.FC<HomeProp> = (props) => {
                                                                     wrapperCol={{span: 16}}
                                                                 >
                                                                     <Form.Item
-                                                                        label={"监听主机"}
-                                                                        rules={[{required: true, message: `监听主机`}]}
+                                                                        label={t("Home.hostListen")}
+                                                                        rules={[
+                                                                            {
+                                                                                required: true,
+                                                                                message: t("Home.hostListen")
+                                                                            }
+                                                                        ]}
                                                                         name={"host"}
                                                                     >
                                                                         <YakitInput />
                                                                     </Form.Item>
                                                                     <Form.Item
-                                                                        label={"监听端口"}
-                                                                        rules={[{required: true, message: `监听端口`}]}
+                                                                        label={t("Home.portListen")}
+                                                                        rules={[
+                                                                            {
+                                                                                required: true,
+                                                                                message: t("Home.portListen")
+                                                                            }
+                                                                        ]}
                                                                         name={"port"}
                                                                     >
                                                                         <YakitInput />
                                                                     </Form.Item>
                                                                     <Form.Item
-                                                                        label='启用插件'
+                                                                        label={t("Home.pluginEnable")}
                                                                         name='enableInitialPlugin'
                                                                         valuePropName='checked'
                                                                     >
@@ -922,16 +937,16 @@ const Home: React.FC<HomeProp> = (props) => {
                                 <div className={styles["home-card-header"]}>
                                     <div className={styles["home-card-header-title"]}>
                                         <PublicWebFuzzerIcon className={styles["title-icon"]} />
-                                        <span className={styles["title-text"]}>WebFuzzer</span>
+                                        <span className={styles["title-text"]}>{t("YakitRoute.WebFuzzer")}</span>
                                     </div>
                                     <div className={styles["home-card-header-desc"]}>
-                                        通过核心模糊测试标签语法，实现了对 Burpsuite 的 Repeater 和 Intruder 的完美整合
+                                        {t("YakitRoute.fuzzBurpIntegration")}
                                     </div>
                                 </div>
                                 <div className={styles["example-blasting-wrapper"]}>
                                     <div className={styles["example-blasting-title"]}>
                                         <PublicBlastingIcon className={styles["example-blasting-icon"]} />
-                                        <span className={styles["title-text"]}>爆破示例</span>
+                                        <span className={styles["title-text"]}>{t("Home.exampleBruteforce")}</span>
                                     </div>
                                     <div className={styles["example-blasting-video-wrapper"]}>
                                         <div
@@ -941,7 +956,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                 handleBlastingExample("id")
                                             }}
                                         >
-                                            爆破 ID
+                                            {t("Home.bruteforceId")}
                                         </div>
                                         <div
                                             className={styles["example-blasting-video"]}
@@ -950,7 +965,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                 handleBlastingExample("pwd")
                                             }}
                                         >
-                                            爆破密码
+                                            {t("Home.bruteforcePassword")}
                                         </div>
                                         <div
                                             className={styles["example-blasting-video"]}
@@ -959,17 +974,17 @@ const Home: React.FC<HomeProp> = (props) => {
                                                 handleBlastingExample("count")
                                             }}
                                         >
-                                            爆破账户
+                                            {t("Home.bruteforceAccount")}
                                         </div>
                                     </div>
                                 </div>
                                 <div className={styles["sequence-animation-wrapper"]}>
                                     <div className={styles["sequence-animation-title"]}>
                                         <PublicSequenceAnimationIcon className={styles["sequence-animation-icon"]} />
-                                        <span className={styles["title-text"]}>Fuzz 序列动画演示</span>
+                                        <span className={styles["title-text"]}>{t("Home.fuzzSequenceDemo")}</span>
                                     </div>
                                     <div className={styles["sequence-animation-desc"]}>
-                                        将多个 Web Fuzzer 节点串联起来，实现更复杂的逻辑与功能
+                                        {t("Home.fuzzWebNodeChain", {name: t("YakitRoute.WebFuzzer")})}
                                     </div>
                                     <div className={styles["sequence-animation-btn-wrapper"]}>
                                         <YakitButton
@@ -978,7 +993,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                             type='outline1'
                                             onClick={handleSequenceAnimation}
                                         >
-                                            演示动画
+                                            {t("Home.animationDemo")}
                                         </YakitButton>
                                     </div>
                                 </div>
@@ -993,9 +1008,11 @@ const Home: React.FC<HomeProp> = (props) => {
                                     <div className={styles["signle-jump-item-cont"]}>
                                         <PublicPayloadGeneraterIcon className={styles["signle-jump-item-icon"]} />
                                         <div className={styles["signle-jump-item-cont-right"]}>
-                                            <div className={styles["single-jump-cont-title"]}>Yso-Java Hack</div>
+                                            <div className={styles["single-jump-cont-title"]}>
+                                                {t("YakitRoute.Yso-Java Hack")}
+                                            </div>
                                             <div className={styles["single-jump-cont-desc"]}>
-                                                配置序列化 Payload 或恶意类，测试反序列化、类加载、JNDI 漏洞利用等
+                                                {t("YakitRoute.fuzzPayLoadDeserialization")}
                                             </div>
                                         </div>
                                     </div>
@@ -1007,9 +1024,11 @@ const Home: React.FC<HomeProp> = (props) => {
                                     <div className={styles["signle-jump-item-cont"]}>
                                         <PublicDNSLogIcon />
                                         <div className={styles["signle-jump-item-cont-right"]}>
-                                            <div className={styles["single-jump-cont-title"]}>DNSLog</div>
+                                            <div className={styles["single-jump-cont-title"]}>
+                                                {t("YakitRoute.DNSLog")}
+                                            </div>
                                             <div className={styles["single-jump-cont-desc"]}>
-                                                自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中
+                                                {t("YakitRoute.subdomainAutoGenerate")}
                                             </div>
                                         </div>
                                     </div>
@@ -1021,9 +1040,11 @@ const Home: React.FC<HomeProp> = (props) => {
                                     <div className={styles["signle-jump-item-cont"]}>
                                         <PublicCodecIcon />
                                         <div className={styles["signle-jump-item-cont-right"]}>
-                                            <div className={styles["single-jump-cont-title"]}>Codec</div>
+                                            <div className={styles["single-jump-cont-title"]}>
+                                                {t("YakitRoute.Codec")}
+                                            </div>
                                             <div className={styles["single-jump-cont-desc"]}>
-                                                加解密与编码，可通过插件自定义数据处理方法
+                                                {t("Home.codecPluginCustom")}
                                             </div>
                                         </div>
                                     </div>
@@ -1036,11 +1057,9 @@ const Home: React.FC<HomeProp> = (props) => {
                                 <div className={styles["home-card-header"]}>
                                     <div className={styles["home-card-header-title"]}>
                                         <PublicCodecIcon className={styles["title-icon"]} />
-                                        <span className={styles["title-text"]}>漏洞扫描</span>
+                                        <span className={styles["title-text"]}>{t("YakitRoute.vulnScan")}</span>
                                     </div>
-                                    <div className={styles["home-card-header-desc"]}>
-                                        可自由选择需要的 POC 进行批量漏洞检测，或选择设置好的分组进行专项漏洞扫描
-                                    </div>
+                                    <div className={styles["home-card-header-desc"]}>{t("Home.vulnBatchScan")}</div>
                                 </div>
                                 <div className={styles["home-card-operation-btn-wrapper"]}>
                                     <div className={styles["operation-btn-wrapper"]} ref={scanningdropdownRef}>
@@ -1050,7 +1069,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                             onClick={handleOpenScanning}
                                         >
                                             <SolidPlayIcon className={styles["open-icon"]} />
-                                            开始扫描
+                                            {t("YakitButton.startScan")}
                                         </div>
                                         <div
                                             className={styles["operation-btn-right"]}
@@ -1068,8 +1087,11 @@ const Home: React.FC<HomeProp> = (props) => {
                                             style={{display: showScanningDropdown ? "block" : "none"}}
                                         >
                                             {[
-                                                {label: "专项漏洞检测", key: "specialVulnerabilityDetection"},
-                                                {label: "自定义检测", key: "customDetection"}
+                                                {
+                                                    label: t("YakitRoute.vulnTargetedScan"),
+                                                    key: "specialVulnerabilityDetection"
+                                                },
+                                                {label: t("Home.vulnCustomScan"), key: "customDetection"}
                                             ].map((item) => (
                                                 <div
                                                     className={classNames(styles["operation-dropdown-list-item"], {
@@ -1094,7 +1116,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                     <div className={styles["home-card-config-detection"]}>
                                         <div className={styles["config-detection-left"]}>
                                             <SolidExclamationIcon className={styles["exclamation-icon"]} />
-                                            检测到网卡权限未修复
+                                            {t("Home.netcardPermissionNotFixed")}
                                         </div>
                                         <YakitButton
                                             type='text'
@@ -1104,39 +1126,38 @@ const Home: React.FC<HomeProp> = (props) => {
                                                 setPcapHintShow(true)
                                             }}
                                         >
-                                            去修复
+                                            {t("YakitButton.actionFixNow")}
                                         </YakitButton>
                                     </div>
                                 )}
                                 <YakitHint
                                     visible={pcapHintShow}
                                     heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
-                                    title={pcapResult ? "已有网卡操作权限" : "当前引擎不具有网卡操作权限"}
+                                    title={pcapResult ? t("Home.netcardAccessGranted") : t("Home.netcardNoAccess")}
                                     width={600}
                                     content={
                                         pcapResult ? (
-                                            "网卡修复需要时间，请耐心等待"
+                                            <>{t("Home.netcardRepairWaiting")}</>
                                         ) : (
                                             <>
-                                                Linux 与 MacOS
-                                                可通过设置权限与组为用户态赋予网卡完全权限。如无法修复可以执行命令行{" "}
+                                                {t("Home.linuxMacosPermission")}{" "}
                                                 <YakitTag
                                                     enableCopy={true}
                                                     color='yellow'
                                                     copyText={`chmod +rw /dev/bpf*`}
                                                 ></YakitTag>
-                                                或者{" "}
+                                                {t("Home.or")}{" "}
                                                 <YakitTag
                                                     enableCopy={true}
                                                     color='purple'
                                                     copyText={`sudo chmod +rw /dev/bpf*`}
                                                 ></YakitTag>
-                                                可以开放网卡读写权限
+                                                {t("Home.rwPermissionAvailable")}
                                             </>
                                         )
                                     }
-                                    okButtonText='开启 PCAP 权限'
-                                    cancelButtonText={pcapResult ? "知道了～" : "稍后再说"}
+                                    okButtonText={t("Home.pcapEnablePermission")}
+                                    cancelButtonText={pcapResult ? t("YakitButton.ok") : t("YakitButton.remindMeLater")}
                                     okButtonProps={{
                                         loading: pcapHintLoading,
                                         style: pcapResult ? {display: "none"} : undefined
@@ -1151,7 +1172,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                         pcapResult ? undefined : (
                                             <Tooltip title={`${pcap.AdviceVerbose}: ${pcap.Advice}`}>
                                                 <YakitButton className={styles["btn-style"]} type='text' size='max'>
-                                                    手动修复
+                                                    {t("YakitButton.manualFix")}
                                                 </YakitButton>
                                             </Tooltip>
                                         )
@@ -1173,7 +1194,9 @@ const Home: React.FC<HomeProp> = (props) => {
                                             }
                                         >
                                             <PublicBruteIcon className={styles["tools-icon"]} />
-                                            <span className={styles["tools-text"]}>两高一弱</span>
+                                            <span className={styles["tools-text"]} title={t("Home.highHighLow")}>
+                                                {t("Home.highHighLow")}
+                                            </span>
                                         </div>
                                     )}
                                     <div
@@ -1181,14 +1204,21 @@ const Home: React.FC<HomeProp> = (props) => {
                                         onClick={() => onMenu({route: YakitRoute.Mod_ScanPort})}
                                     >
                                         <PublicScanPortIcon className={styles["tools-icon"]} />
-                                        <span className={styles["tools-text"]}>端口扫描</span>
+                                        <span className={styles["tools-text"]} title={t("YakitRoute.portScan")}>
+                                            {t("YakitRoute.portScan")}
+                                        </span>
                                     </div>
                                     <div
                                         className={styles["security-tools-item"]}
                                         onClick={() => onMenu({route: YakitRoute.Mod_Brute})}
                                     >
                                         <PublicBruteIcon className={styles["tools-icon"]} />
-                                        <span className={styles["tools-text"]}>弱口令检测</span>
+                                        <span
+                                            className={styles["tools-text"]}
+                                            title={t("YakitRoute.weakPasswordCheck")}
+                                        >
+                                            {t("YakitRoute.weakPasswordCheck")}
+                                        </span>
                                     </div>
                                     <div
                                         className={styles["security-tools-item"]}
@@ -1201,7 +1231,9 @@ const Home: React.FC<HomeProp> = (props) => {
                                         }
                                     >
                                         <PublicDirectoryScanningIcon className={styles["tools-icon"]} />
-                                        <span className={styles["tools-text"]}>目录爆破</span>
+                                        <span className={styles["tools-text"]} title={t("YakitRoute.dirBruteForce")}>
+                                            {t("YakitRoute.dirBruteForce")}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -1209,17 +1241,17 @@ const Home: React.FC<HomeProp> = (props) => {
                     </div>
                 }
                 firstRatio='90%'
-                firstMinSize='800px'
+                firstMinSize={800}
                 firstNodeStyle={{padding: 0}}
                 secondNode={
                     <div className={styles["home-page-wrapper-right"]}>
                         <div className={styles["tools-wrapper"]}>
                             <div className={styles["tools-title-wrapper"]}>
                                 <PublicPublicToolLightbulbIcon className={styles["tools-title-icon"]} />
-                                <span className={styles["tools-title-text"]}>工具箱</span>
+                                <span className={styles["tools-title-text"]}>{t("Home.toolbox")}</span>
                                 <span className={styles["tools-title-desc"]}></span>
                             </div>
-                            可通过搜索快速查找软件功能
+                            {t("Home.searchQuickFind")}
                             <div className={styles["tools-search-wrapper"]}>
                                 <YakitInput.Search onSearch={(value) => setSearchToolVal(value)} allowClear />
                             </div>
@@ -1255,7 +1287,7 @@ const Home: React.FC<HomeProp> = (props) => {
                             </div>
                             <div className={styles["data-preview-item"]}>
                                 <OutlineDatabaseIcon className={styles["data-preview-item-icon"]} />
-                                <span className={styles["data-preview-item-text"]}>项目数据库</span>
+                                <span className={styles["data-preview-item-text"]}>{t("HomeCom.projectDatabase")}</span>
                                 <div className={styles["data-preview-item-cont"]}>
                                     {!judgeMoreTenGB ? (
                                         <span className={styles["data-preview-item-size"]}>
@@ -1269,7 +1301,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                             >
                                                 {curProjectInfo?.FileSize}
                                             </span>
-                                            <Tooltip title='数据库过大，为避免影响使用，建议创建新项目。'>
+                                            <Tooltip title={t("HomeCom.databaseTooLarge")}>
                                                 <SolidExclamationIcon className={styles["database-warning-icon"]} />
                                             </Tooltip>
                                         </>
@@ -1278,7 +1310,7 @@ const Home: React.FC<HomeProp> = (props) => {
                             </div>
                             <div className={styles["data-preview-item"]}>
                                 <OutlineChartbarIcon className={styles["data-preview-item-icon"]} />
-                                <span className={styles["data-preview-item-text"]}>流量数据</span>
+                                <span className={styles["data-preview-item-text"]}>{t("Home.historyData")}</span>
                                 <div
                                     className={classNames(
                                         styles["data-preview-item-cont"],
@@ -1300,7 +1332,9 @@ const Home: React.FC<HomeProp> = (props) => {
                                     style={{alignItems: "flex-start", marginTop: 6}}
                                 >
                                     <OutlineBugIcon className={styles["data-preview-item-icon"]} />
-                                    <span className={styles["data-preview-item-text"]}>漏洞数据</span>
+                                    <span className={styles["data-preview-item-text"]}>
+                                        {t("HomeCom.vulnerabilityData")}
+                                    </span>
                                     <div className={styles["risk-tag-wrapper"]}>
                                         {riskLevelTotal("严重") ? (
                                             <div
@@ -1312,7 +1346,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                     })
                                                 }
                                             >
-                                                <div className={styles["risk-text"]}>严重</div>
+                                                <div className={styles["risk-text"]}>{t("HomeCom.critical")}</div>
                                                 <div className={styles["risk-num"]}>{riskLevelTotal("严重")}</div>
                                             </div>
                                         ) : null}
@@ -1326,7 +1360,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                     })
                                                 }
                                             >
-                                                <div className={styles["risk-text"]}>高危</div>
+                                                <div className={styles["risk-text"]}>{t("HomeCom.high")}</div>
                                                 <div className={styles["risk-num"]}>{riskLevelTotal("高危")}</div>
                                             </div>
                                         ) : null}
@@ -1340,7 +1374,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                     })
                                                 }
                                             >
-                                                <div className={styles["risk-text"]}>中危</div>
+                                                <div className={styles["risk-text"]}>{t("HomeCom.warning")}</div>
                                                 <div className={styles["risk-num"]}>{riskLevelTotal("中危")}</div>
                                             </div>
                                         ) : null}
@@ -1354,7 +1388,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                     })
                                                 }
                                             >
-                                                <div className={styles["risk-text"]}>低危</div>
+                                                <div className={styles["risk-text"]}>{t("HomeCom.low")}</div>
                                                 <div className={styles["risk-num"]}>{riskLevelTotal("低危")}</div>
                                             </div>
                                         ) : null}
@@ -1363,7 +1397,7 @@ const Home: React.FC<HomeProp> = (props) => {
                             ) : null}
                             <div className={styles["data-preview-item"]}>
                                 <OutlineModScanPortDataIcon className={styles["data-preview-item-icon"]} />
-                                <span className={styles["data-preview-item-text"]}>端口数据</span>
+                                <span className={styles["data-preview-item-text"]}>{t("Home.portData")}</span>
                                 <div
                                     className={classNames(
                                         styles["data-preview-item-cont"],
@@ -1380,7 +1414,7 @@ const Home: React.FC<HomeProp> = (props) => {
                             </div>
                             <div className={styles["data-preview-item"]}>
                                 <OutlineDesktopcomputerIcon className={styles["data-preview-item-icon"]} />
-                                <span className={styles["data-preview-item-text"]}>本地插件</span>
+                                <span className={styles["data-preview-item-text"]}>{t("Home.localPlugin")}</span>
                                 <div
                                     className={classNames(
                                         styles["data-preview-item-cont"],
@@ -1395,7 +1429,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                             style={{padding: 0}}
                                             className={styles["download-btn"]}
                                         >
-                                            一键下载
+                                            {t("YakitButton.oneClickDownload")}
                                         </YakitButton>
                                     ) : (
                                         <span

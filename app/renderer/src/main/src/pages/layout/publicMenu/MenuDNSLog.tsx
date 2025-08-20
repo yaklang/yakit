@@ -17,6 +17,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RemoteGV} from "@/yakitGV"
 import {LoadingOutlined} from "@ant-design/icons"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -38,6 +39,7 @@ export interface DnslogMenuToPage {
 }
 
 export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "layout"])
     const [token, setToken, getToken] = useGetState("")
     const [domain, setDomain, getDomain] = useGetState("")
     const [lastRecords, setLastRecords] = useState<DNSLogEvent[]>([])
@@ -286,13 +288,13 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             <div className={styles["list-info-wrapper"]}>
                 <div className={styles["list-header-wrapper"]}>
                     <div className={styles["header-body"]}>
-                        <div className={styles["title-style"]}>访问记录</div>
+                        <div className={styles["title-style"]}>{t("Layout.MenuDNSLog.accessRecords")}</div>
                         <div className={styles["sub-title-style"]}>
                             Total <span className={styles["total-style"]}>{total}</span>
                         </div>
                     </div>
                     <div className={styles["extra-header-body"]}>
-                        只看 A 记录
+                        {t("Layout.MenuDNSLog.showOnlyARecords")}
                         <YakitSwitch
                             wrapperClassName={styles["switch-style"]}
                             checked={onlyARecord}
@@ -306,10 +308,18 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
 
                 <div className={styles["list-body"]}>
                     <div className={styles["body-header"]}>
-                        <div className={classNames(styles["opt-style"], styles["opt-type"])}>类型</div>
-                        <div className={classNames(styles["opt-style"], styles["opt-ip"])}>远端IP</div>
-                        <div className={classNames(styles["opt-style"], styles["opt-time"])}>时间</div>
-                        <div className={classNames(styles["opt-style"], styles["opt-btn"])}>操作</div>
+                        <div className={classNames(styles["opt-style"], styles["opt-type"])}>
+                            {t("Layout.MenuDNSLog.type")}
+                        </div>
+                        <div className={classNames(styles["opt-style"], styles["opt-ip"])}>
+                            {t("Layout.MenuDNSLog.remoteIP")}
+                        </div>
+                        <div className={classNames(styles["opt-style"], styles["opt-time"])}>
+                            {t("Layout.MenuDNSLog.time")}
+                        </div>
+                        <div className={classNames(styles["opt-style"], styles["opt-btn"])}>
+                            {t("Layout.MenuDNSLog.acticon")}
+                        </div>
                     </div>
                     <div className={styles["body-container"]}>
                         <div className={styles["container-body"]}>
@@ -329,7 +339,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                                             className={classNames(styles["opt-style"], styles["opt-btn"])}
                                             onClick={() => onInfoDetails(item)}
                                         >
-                                            详情
+                                            {t("Layout.MenuDNSLog.detail")}
                                         </div>
                                     </div>
                                 )
@@ -339,7 +349,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                 </div>
             </div>
         )
-    }, [onlyARecord, records])
+    }, [onlyARecord, records, i18n.language, total])
 
     return (
         <div className={classNames(styles["menu-dnslog-wrapper"], {[styles["menu-dnslog-hide-wrapper"]]: isHide})}>
@@ -358,14 +368,16 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
 
             <div className={styles["dnslog-generate-host"]}>
                 <div className={!!domain ? styles["generated-wrapper"] : styles["generate-wrapper"]}>
-                    <div className={styles["title-style"]}>使用 Yakit 自带 DNSLog 反连服务</div>
+                    <div className={styles["title-style"]}>
+                        {t("Layout.MenuDNSLog.useCallbackService", {v1: t("YakitRoute.Yakit"), v2: t("YakitRoute.DNSLog")})}
+                    </div>
                     {!!domain ? (
                         <YakitButton key={"close"} danger size='small' icon={<QuitIcon />} onClick={reset}>
-                            关闭
+                            {t("YakitButton.close")}
                         </YakitButton>
                     ) : (
                         <YakitButton key={"create"} size='small' loading={tokenLoading} onClick={update}>
-                            生成域名
+                            {t("Layout.MenuDNSLog.generateDomain")}
                         </YakitButton>
                     )}
                 </div>
@@ -377,7 +389,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                 {/* 显示条件：已生成域名 & 有历史数据 & 宽度过小 */}
                 {!!domain && isHide && records.length > 0 && (
                     <YakitButton type='text' onClick={onInfoAll}>
-                        查看访问记录
+                        {t("Layout.MenuDNSLog.viewAccessRecords")}
                     </YakitButton>
                 )}
             </div>
@@ -389,20 +401,20 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                             <>
                                 {loading ? (
                                     <>
-                                        加载中&nbsp;&nbsp;
+                                        {t("Layout.MenuDNSLog.loading")}&nbsp;&nbsp;
                                         <LoadingOutlined style={{color: "var(--Colors-Use-Main-Primary)"}} />
                                     </>
                                 ) : (
                                     <>
                                         <YakitButton type='text2' onClick={getQueryDNSLogByToken}>
-                                            手动刷新
+                                            {t("YakitButton.manualRefresh")}
                                             <RefreshIcon />
                                         </YakitButton>
                                     </>
                                 )}
                             </>
                         ) : (
-                            "访问记录"
+                            <>{t("Layout.MenuDNSLog.accessRecords")}</>
                         )}
                     </div>
                     <div className={styles["icon-style"]}>
@@ -430,7 +442,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                                     className={classNames(styles["opt-style"], styles["opt-btn"])}
                                     onClick={() => onInfoDetails(item)}
                                 >
-                                    详情
+                                    {t("Layout.MenuDNSLog.detail")}
                                 </div>
                             </div>
                         )

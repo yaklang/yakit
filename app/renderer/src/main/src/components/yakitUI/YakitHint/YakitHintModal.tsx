@@ -9,6 +9,7 @@ import {YakitButton} from "../YakitButton/YakitButton"
 import classNames from "classnames"
 import styles from "./YakitHint.module.scss"
 import {Resizable} from "re-resizable"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
     const {
@@ -22,17 +23,19 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
         heardIcon,
         extraIcon,
         title,
-        content = "请写入合适的提示内容",
+        content,
         footer,
         footerExtra,
-        okButtonText = "确定",
+        okButtonText,
         okButtonProps,
         onOk,
-        cancelButtonText = "取消",
+        cancelButtonText,
         cancelButtonProps,
         onCancel,
         children
     } = props
+
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
 
     return (
         <>
@@ -77,7 +80,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
                                                 if (onCancel) onCancel()
                                             }}
                                         >
-                                            {cancelButtonText}
+                                            {cancelButtonText || t("YakitButton.cancel")}
                                         </YakitButton>
                                         <YakitButton
                                             size='max'
@@ -86,7 +89,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
                                                 if (onOk) onOk()
                                             }}
                                         >
-                                            {okButtonText}
+                                            {okButtonText || t("YakitButton.ok")}
                                         </YakitButton>
                                     </div>
                                 </div>
@@ -177,7 +180,7 @@ export const HintModal: React.FC<HintModalProps> = memo((props) => {
                     [styles["yakit-hint-modal-wrapper"]]: visible && !isResize,
                     [styles["yakit-hint-modal-resize-wrapper"]]: visible && isResize,
                     [styles["yakit-hint-modal-hidden"]]: !visible,
-                    [styles["yakit-hint-modal-resize"]]: isResize,
+                    [styles["yakit-hint-modal-resize"]]: isResize
                 },
                 wrapClassName
             )}

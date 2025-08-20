@@ -9,9 +9,12 @@ import {NotepadMenuProps} from "../HeardMenu/HeardMenuType"
 import style from "./NotepadMenu.module.scss"
 import {getNotepadNameByEdition} from "./utils"
 import {OutlineChevrondownIcon, OutlineChevronupIcon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const NotepadMenu: React.FC<NotepadMenuProps> = React.memo((props) => {
     const {isExpand, onRouteMenuSelect} = props
+    const {t, i18n} = useI18nNamespaces(["layout"])
+
     const [notepadVisible, setNotepadVisible] = useState<boolean>(false)
     const onNotepad = useMemoizedFn((item) => {
         switch (item.key) {
@@ -31,7 +34,7 @@ export const NotepadMenu: React.FC<NotepadMenuProps> = React.memo((props) => {
     })
     const name = useCreation(() => {
         return getNotepadNameByEdition()
-    }, [])
+    }, [i18n.language])
     return (
         <>
             <Dropdown
@@ -39,8 +42,8 @@ export const NotepadMenu: React.FC<NotepadMenuProps> = React.memo((props) => {
                 overlay={
                     <>
                         {[
-                            {key: "list", label: `${name}管理`},
-                            {key: "add", label: `新建${name}`}
+                            {key: "list", label: t("Layout.NotepadMenu.list", {name})},
+                            {key: "add", label: t("Layout.NotepadMenu.add", {name})}
                         ].map((item) => (
                             <div
                                 key={item.key}

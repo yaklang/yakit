@@ -1,4 +1,5 @@
 import React, {ReactNode, Suspense} from "react"
+import i18n from "@/i18n/i18n"
 import {ShellReceiver} from "../pages/reverseShellReceiver/shellReceiver"
 import {PcapXDemo} from "@/components/playground/PcapXDemo"
 import {DataCompare} from "../pages/compare/DataCompare"
@@ -186,103 +187,194 @@ const YakRunnerScanHistory = React.lazy(() => import("@/pages/yakRunnerScanHisto
  * * label-页面名称
  * * describe(非必需)-页面描述语
  */
-export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?: string}> = {
-    "new-home": {label: "首页"},
+export const YakitRouteToPageInfo: Record<
+    YakitRoute,
+    {label: string; labelUi?: string; describe?: string; describeUi?: string}
+> = {
+    "new-home": {label: "首页", labelUi: "YakitRoute.home"},
     httpHacker: {
         label: "MITM 交互式劫持",
-        describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
+        labelUi: "YakitRoute.MITM",
+        describeUi: "YakitRoute.mitmSslHijack"
     },
     "mitm-hijack": {
         label: "MITM 交互式劫持",
-        describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
+        labelUi: "YakitRoute.MITM",
+        describeUi: "YakitRoute.mitmSslHijack"
     },
     httpFuzzer: {
         label: "Web Fuzzer",
-        describe: "通过核心模糊测试标签语法，实现了对 Burpsuite 的 Repeater 和 Intruder 的完美整合"
+        labelUi: "YakitRoute.WebFuzzer",
+        describeUi: "YakitRoute.fuzzBurpIntegration"
     },
-    "websocket-fuzzer": {label: "Websocket Fuzzer"},
+    "websocket-fuzzer": {
+        label: "Websocket Fuzzer",
+        labelUi: "YakitRoute.Websocket Fuzzer",
+        describeUi: "YakitRoute.fuzzTestingForWebSocketPackets"
+    },
     codec: {
         label: "Codec",
-        describe: "可对数据进行各种处理（包括加密、解密、反序列化、Json 处理等等），还可通过插件自定义数据处理方法"
+        labelUi: "YakitRoute.Codec",
+        describeUi: "YakitRoute.dataProcessingDescription"
     },
-    dataCompare: {label: "数据对比", describe: "将数据进行对比，快速识别不同处"},
+    dataCompare: {
+        label: "数据对比",
+        labelUi: "YakitRoute.dataCompare",
+        describeUi: "YakitRoute.quicklyIdentifyDifferencesInData"
+    },
     "scan-port": {
         label: "端口/指纹扫描",
-        describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求"
+        labelUi: "YakitRoute.portAndFingerprintScan",
+        describeUi: "YakitRoute.portScanDescription"
     },
-    poc: {label: "专项漏洞检测", describe: "通过预制漏洞源码，对特定目标进行专项漏洞检测，可以自定义新增 POC 种类"},
-    "plugin-op": {label: "插件"},
-    brute: {label: "弱口令检测", describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"},
-    "plugin-hub": {label: "插件仓库"},
-    "plugin-groups": {label: "插件组管理"},
-    "batch-executor-page-ex": {label: "批量执行", describe: "自由选择需要的 POC 进行批量漏洞检测"},
-    dnslog: {label: "DNSLog", describe: "自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中"},
-    "icmp-sizelog": {label: "ICMP-SizeLog", describe: "使用 ping 携带特定长度数据包判定 ICMP 反连"},
-    "tcp-portlog": {label: "TCP-PortLog", describe: "使用未开放的随机端口来判定 TCP 反连"},
-    PayloadGenerater_New: {label: "Yso-Java Hack", describe: "配置序列化 Payload 或恶意类"},
+    poc: {
+        label: "专项漏洞检测",
+        labelUi: "YakitRoute.vulnTargetedScan",
+        describeUi: "YakitRoute.vulnerabilityDetectionDescription"
+    },
+    "plugin-op": {label: "插件", labelUi: "YakitRoute.plugin"},
+    brute: {
+        label: "弱口令检测",
+        labelUi: "YakitRoute.weakPasswordCheck",
+        describeUi: "YakitRoute.bruteForceDescription"
+    },
+    "plugin-hub": {
+        label: "插件仓库",
+        labelUi: "YakitRoute.pluginHub",
+        describeUi: "YakitRoute.massiveYakitPluginsOne-ClickDownload"
+    },
+    "batch-executor-page-ex": {
+        label: "批量执行",
+        labelUi: "YakitRoute.batchExecute",
+        describeUi: "YakitRoute.batchPOCScan"
+    },
+    dnslog: {
+        label: "DNSLog",
+        labelUi: "YakitRoute.DNSLog",
+        describeUi: "YakitRoute.subdomainAutoGenerate"
+    },
+    "icmp-sizelog": {
+        label: "ICMP-SizeLog",
+        labelUi: "YakitRoute.ICMP-SizeLog",
+        describeUi: "YakitRoute.detectICMPCallbackViaPingWithSpecificPacketSize"
+    },
+    "tcp-portlog": {
+        label: "TCP-PortLog",
+        labelUi: "YakitRoute.TCP-PortLog",
+        describeUi: "YakitRoute.detectTCPCallbackViaRandomClosedPorts"
+    },
+    PayloadGenerater_New: {
+        label: "Yso-Java Hack",
+        labelUi: "YakitRoute.Yso-Java Hack",
+        describeUi: "YakitRoute.fuzzPayLoadDeserialization"
+    },
     ReverseServer_New: {
         label: "反连服务器",
-        describe: "使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连"
+        labelUi: "YakitRoute.reverseServer",
+        describeUi: "YakitRoute.simultaneouslyProvideHTTP/RMI/HTTPSReverseConnectionsOnOnePort"
     },
     shellReceiver: {
         label: "端口监听器",
-        describe: "反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互"
+        labelUi: "YakitRoute.portListener",
+        describeUi: "YakitRoute.reverseShellTool"
     },
-    "db-http-request": {label: "History"},
-    "db-http-request-analysis": {label: "流量分析器"},
-    "db-reports-results": {label: "报告"},
-    "db-risks": {label: "漏洞"},
-    misstatement: {label: "误报记录"},
-    "db-ports": {label: "端口"},
-    "db-domains": {label: "域名"},
-    cve: {label: "CVE 管理"},
-    yakScript: {label: "Yak Runner", describe: "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类"},
+    "db-http-request": {
+        label: "History",
+        labelUi: "YakitRoute.History",
+        describeUi: "YakitRoute.viewAndManageAllHistoricalTrafficFromMITMPluginsAndFuzzing"
+    },
+    "db-http-request-analysis": {label: "流量分析器", labelUi: "YakitRoute.historyAnalyzer"},
+    "db-reports-results": {
+        label: "报告",
+        labelUi: "YakitRoute.report",
+        describeUi: "YakitRoute.viewAndManageReportsGeneratedDuringScanning"
+    },
+    "db-risks": {
+        label: "漏洞",
+        labelUi: "YakitRoute.vulnerability",
+        describeUi: "YakitRoute.manageAllDetectedVulnerabilitiesAndRisks"
+    },
+    misstatement: {label: "误报记录", labelUi: "YakitRoute.falsePositiveRecords"},
+    "db-ports": {label: "端口", labelUi: "YakitRoute.port", describeUi: "YakitRoute.manageAllDiscoveredPortAssets"},
+    "db-domains": {
+        label: "域名",
+        labelUi: "YakitRoute.domain",
+        describeUi: "YakitRoute.manageAllDiscoveredDomainAssets"
+    },
+    cve: {label: "CVE 管理", labelUi: "YakitRoute.cVEManagement", describeUi: "YakitRoute.searchAndQueryCVEData"},
+    yakScript: {
+        label: "Yak Runner",
+        labelUi: "YakitRoute.YakRunner",
+        describeUi: "YakitRoute.yaklangProgramming"
+    },
     "payload-manager": {
         label: "Payload",
-        describe: "通过上传文件、手动删改等，自定义 Payload，可在爆破和 Web Fuzzer 中进行使用"
+        labelUi: "YakitRoute.Payload",
+        describeUi: "YakitRoute.customPayload"
     },
-    "account-admin-page": {label: "用户管理"},
-    "role-admin-page": {label: "角色管理"},
-    "hole-collect-page": {label: "漏洞汇总"},
-    "license-admin-page": {label: "License管理"},
-    "trust-list-admin-page": {label: "用户管理"},
-    "plug-in-admin-page": {label: "插件权限"},
-    "control-admin-page": {label: "远程管理"},
-    "batch-executor-recover": {label: "继续任务：批量执行插件"},
-    "packet-scan-page": {label: "数据包扫描"},
-    "add-yakit-script": {label: "新建插件"},
-    "simple-detect": {label: "安全检测"},
-    "screen-recorder-page": {label: "录屏管理"},
-    "db-chaosmaker": {label: "BAS实验室"},
-    "beta-debug-monaco-editor": {label: "插件编辑器"},
-    "beta-vulinbox-manager": {label: "Vulinbox 管理器"},
-    "beta-diagnose-network": {label: "网络异常诊断"},
-    "beta-config-network": {label: "全局配置"},
-    "plugin-audit": {label: "插件管理"},
-    "**beta-debug-traffic-analize": {label: "流量分析"},
-    "beta-webshell-manager": {label: "网站管理"},
-    "beta-webshell-opt": {label: "WebShell 实例"},
-    data_statistics: {label: "数据统计"},
-    "space-engine": {label: "空间引擎"},
-    "yakrunner-code-scan": {label: "代码扫描"},
-    "yakrunner-audit-code": {label: "代码审计"},
-    "yakrunner-project-manager": {label: "项目管理"},
-    "yakrunner_scanHistory": {label: "扫描历史"},
-    "rule-management": {label: "规则管理"},
+    "account-admin-page": {label: "用户管理", labelUi: "YakitRoute.userManagement"},
+    "role-admin-page": {label: "角色管理", labelUi: "YakitRoute.roleManagement"},
+    "hole-collect-page": {label: "漏洞汇总", labelUi: "YakitRoute.vulnerabilitySummary"},
+    "license-admin-page": {label: "License管理", labelUi: "YakitRoute.licenseManagement"},
+    "trust-list-admin-page": {label: "用户管理", labelUi: "YakitRoute.userManagement"},
+    "plug-in-admin-page": {label: "插件权限", labelUi: "YakitRoute.pluginPermissions"},
+    "control-admin-page": {label: "远程管理", labelUi: "YakitRoute.remoteManagement"},
+    "batch-executor-recover": {
+        label: "继续任务：批量执行插件",
+        labelUi: "YakitRoute.continueTaskBatchExecutePlugin"
+    },
+    "packet-scan-page": {label: "数据包扫描", labelUi: "YakitRoute.packetScan"},
+    "add-yakit-script": {label: "新建插件", labelUi: "YakitRoute.createPlugin"},
+    "simple-detect": {label: "安全检测", labelUi: "YakitRoute.securityCheck"},
+    "screen-recorder-page": {
+        label: "录屏管理",
+        labelUi: "YakitRoute.recordingManagement",
+        describeUi: "YakitRoute.manageAllRecordedVideoFiles"
+    },
+    "db-chaosmaker": {label: "BAS实验室", labelUi: "YakitRoute.BASLab"},
+    "beta-debug-monaco-editor": {label: "插件编辑器", labelUi: "YakitRoute.pluginEditor"},
+    "beta-vulinbox-manager": {label: "Vulinbox 管理器", labelUi: "YakitRoute.vulinboxManager"},
+    "beta-diagnose-network": {label: "网络异常诊断", labelUi: "YakitRoute.networkDiagnosis"},
+    "beta-config-network": {label: "全局配置", labelUi: "YakitRoute.globalConfig"},
+    "plugin-audit": {label: "插件管理", labelUi: "YakitRoute.pluginManagement"},
+    "**beta-debug-traffic-analize": {label: "流量分析", labelUi: "YakitRoute.trafficAnalysis"},
+    "beta-webshell-manager": {label: "网站管理", labelUi: "YakitRoute.websiteManagement"},
+    "beta-webshell-opt": {label: "WebShell 实例", labelUi: "YakitRoute.webShellInstance"},
+    data_statistics: {label: "数据统计", labelUi: "YakitRoute.dataStatistics"},
+    "space-engine": {label: "空间引擎", labelUi: "YakitRoute.spaceEngine"},
+    "yakrunner-code-scan": {
+        label: "代码扫描",
+        labelUi: "YakitRoute.codeScan",
+        describeUi: "YakitRoute.richRuleLibrary"
+    },
+    "yakrunner-audit-code": {
+        label: "代码审计",
+        labelUi: "YakitRoute.codeAudit",
+        describeUi: "YakitRoute.auditRuleCodeAnalysis"
+    },
+    "yakrunner-project-manager": {label: "项目管理", labelUi: "YakitRoute.projectManagement"},
+    yakrunner_scanHistory: {label: "扫描历史", labelUi: "YakitRoute.scanHistory"},
+    "rule-management": {
+        label: "规则管理",
+        labelUi: "YakitRoute.ruleManagement",
+        describeUi: "YakitRoute.customAuditRules"
+    },
     "notepad-manage": {label: `${getNotepadNameByEdition()}`},
-    "modify-notepad": {label: `编辑${getNotepadNameByEdition()}`},
-    "yakrunner-audit-hole": {label: "审计漏洞"},
-    "system-config": {label: "系统配置"},
-    "yak-java-decompiler": {label: "Java 反编译"},
-    "shortcut-key": {label: "快捷键设置"},
-    "fingerprint-manage": {label: "指纹库"},
-    "ai-agent": {label: "AIAgent"},
-    "ai-re-act": {label: "AI ReAct"},
-    "ssa-result-diff": {label: "ssa-result-diff"},
-    "add-ai-forge": {label: "新建 Forge"},
-    "modify-ai-forge": {label: "编辑 Forge"},
-    "add-ai-tool": {label: "新建 Tool"},
-    "modify-ai-tool": {label: "编辑 Tool"}
+    "modify-notepad": {
+        label: i18n.language === "en" ? `Edit ${getNotepadNameByEdition()}` : `编辑${getNotepadNameByEdition()}`
+    },
+    "yakrunner-audit-hole": {label: "审计漏洞", labelUi: "YakitRoute.auditVulnerability"},
+    "system-config": {label: "系统配置", labelUi: "YakitRoute.systemConfig"},
+    "yak-java-decompiler": {label: "Java 反编译", labelUi: "YakitRoute.javaDecompile"},
+    "shortcut-key": {label: "快捷键设置", labelUi: "YakitRoute.shortcutSettings"},
+    "fingerprint-manage": {label: "指纹库", labelUi: "YakitRoute.fingerprintDatabase"},
+    "ai-agent": {label: "AIAgent", labelUi: "YakitRoute.AIAgent"},
+    "ai-re-act": {label: "AI ReAct", labelUi: "YakitRoute.AIReAct"},
+    "ssa-result-diff": {label: "ssa-result-diff", labelUi: "YakitRoute.ssa-result-diff"},
+    "add-ai-forge": {label: "新建 Forge", labelUi: "YakitRoute.createForge"},
+    "modify-ai-forge": {label: "编辑 Forge", labelUi: "YakitRoute.editForge"},
+    "add-ai-tool": {label: "新建 Tool", labelUi: "YakitRoute.createTool"},
+    "modify-ai-tool": {label: "编辑 Tool", labelUi: "YakitRoute.editTool"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -860,7 +952,9 @@ export const databaseConvertData = (data: DatabaseFirstMenuProps[]) => {
 export interface PublicRouteMenuProps {
     page: YakitRoute | undefined
     label: string
+    labelUi?: string
     describe?: string
+    describeUi?: string
     yakScriptId?: number
     yakScripName?: string
     children?: PublicRouteMenuProps[]
@@ -874,6 +968,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "代码审计",
+              labelUi: "YakitRoute.codeAudit",
               children: [
                   {
                       page: YakitRoute.YakRunner_Project_Manager,
@@ -904,6 +999,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "数据库",
+              labelUi: "YakitRoute.database",
               children: [{page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report]}]
           }
           //   {
@@ -916,6 +1012,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "渗透测试",
+              labelUi: "YakitRoute.penTest",
               children: [
                   {
                       page: YakitRoute.MITMHacker,
@@ -924,6 +1021,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                   {
                       page: undefined,
                       label: "Fuzzer",
+                      labelUi: "YakitRoute.fuzzer",
                       children: [
                           {
                               page: YakitRoute.HTTPFuzzer,
@@ -945,6 +1043,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "安全工具",
+              labelUi: "YakitRoute.securityTools",
               children: [
                   {
                       page: YakitRoute.Mod_ScanPort,
@@ -966,6 +1065,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                   {
                       page: undefined,
                       label: "爆破与未授权检测",
+                      labelUi: "YakitRoute.bruteForceAndUnauthorizedCheck",
                       children: [
                           {
                               page: YakitRoute.Mod_Brute,
@@ -984,6 +1084,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "插件",
+              labelUi: "YakitRoute.plugin",
               children: [
                   {
                       page: YakitRoute.Plugin_Hub,
@@ -998,10 +1099,12 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "反连",
+              labelUi: "YakitRoute.reverseConnection",
               children: [
                   {
                       page: undefined,
                       label: "反连触发器",
+                      labelUi: "YakitRoute.reverseTrigger",
                       children: [
                           {
                               page: YakitRoute.DNSLog,
@@ -1020,6 +1123,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                   {
                       page: undefined,
                       label: "RevHack",
+                      labelUi: "YakitRoute.revHack",
                       children: [
                           {
                               page: YakitRoute.PayloadGenerater_New,
@@ -1040,6 +1144,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "数据库",
+              labelUi: "YakitRoute.database",
               children: [
                   {
                       page: YakitRoute.DB_HTTPHistory,
@@ -1092,9 +1197,11 @@ export const PublicCommonPlugins: PublicRouteMenuProps[] = [
 export interface PrivateRouteMenuProps {
     page: YakitRoute | undefined
     label: string
+    labelUi?: string
     icon?: ReactNode
     hoverIcon?: JSX.Element
     describe?: string
+    describeUi?: string
     yakScriptId?: number
     yakScripName?: string
     children?: PrivateRouteMenuProps[]
@@ -1364,6 +1471,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "代码审计",
+              labelUi: "YakitRoute.codeAudit",
               children: [
                   PrivateAllMenus[YakitRoute.YakRunner_Project_Manager],
                   PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
@@ -1376,6 +1484,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "数据库",
+              labelUi: "YakitRoute.database",
               children: routeToChildren([YakitRoute.DB_Report])
           }
           //   {
@@ -1388,11 +1497,13 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "手工渗透",
+              labelUi: "YakitRoute.manualPenTest",
               children: routeToChildren([YakitRoute.MITMHacker, YakitRoute.HTTPFuzzer, YakitRoute.WebsocketFuzzer])
           },
           {
               page: undefined,
               label: "安全工具",
+              labelUi: "YakitRoute.securityTools",
               children: [
                   PrivateAllMenus[YakitRoute.Mod_Brute],
                   {
@@ -1426,16 +1537,19 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "专项漏洞检测",
+              labelUi: "YakitRoute.vulnTargetedScan",
               children: routeToChildren([YakitRoute.PoC])
           },
           {
               page: undefined,
               label: "插件",
+              labelUi: "YakitRoute.plugin",
               children: routeToChildren([YakitRoute.Plugin_Hub, YakitRoute.BatchExecutorPage])
           },
           {
               page: undefined,
               label: "反连",
+              labelUi: "YakitRoute.reverseConnection",
               children: routeToChildren([
                   YakitRoute.ShellReceiver,
                   YakitRoute.ReverseServer_New,
@@ -1448,11 +1562,13 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "数据处理",
+              labelUi: "YakitRoute.dataProcessing",
               children: routeToChildren([YakitRoute.Codec, YakitRoute.DataCompare])
           },
           {
               page: undefined,
               label: "数据库",
+              labelUi: "YakitRoute.database",
               children: routeToChildren([
                   YakitRoute.DB_Report,
                   YakitRoute.DB_Ports,
@@ -1478,6 +1594,7 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "安全工具",
+        labelUi: "YakitRoute.securityTools",
         children: [
             PrivateAllMenus[YakitRoute.Mod_Brute],
             {
@@ -1511,21 +1628,25 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "专项漏洞检测",
+        labelUi: "YakitRoute.vulnTargetedScan",
         children: routeToChildren([YakitRoute.PoC])
     },
     {
         page: undefined,
         label: "插件",
+        labelUi: "YakitRoute.plugin",
         children: routeToChildren([YakitRoute.Plugin_Hub, YakitRoute.BatchExecutorPage])
     },
     {
         page: undefined,
         label: "数据处理",
+        labelUi: "YakitRoute.dataProcessing",
         children: routeToChildren([YakitRoute.Codec, YakitRoute.DataCompare])
     },
     {
         page: undefined,
         label: "数据库",
+        labelUi: "YakitRoute.database",
         children: routeToChildren([
             YakitRoute.DB_Report,
             YakitRoute.DB_Ports,
@@ -1551,6 +1672,7 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "安全检测",
+        labelUi: "YakitRoute.securityCheck",
         children: [
             {
                 page: YakitRoute.SimpleDetect,
@@ -1563,6 +1685,7 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "插件",
+        labelUi: "YakitRoute.plugin",
         children: [
             {
                 page: YakitRoute.Plugin_Hub,
@@ -1581,6 +1704,7 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "数据库",
+        labelUi: "YakitRoute.database",
         children: [
             {
                 page: YakitRoute.DB_Report,

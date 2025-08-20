@@ -16,7 +16,6 @@ export enum YakitRoute {
     Plugin_OP = "plugin-op",
     Mod_Brute = "brute",
     Plugin_Hub = "plugin-hub",
-    Plugin_Groups = "plugin-groups",
     BatchExecutorPage = "batch-executor-page-ex",
     /** 反连 */
     DNSLog = "dnslog",

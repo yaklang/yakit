@@ -1,0 +1,37 @@
+{
+  "CustomizeMenu": {
+    "getMenuFailed": "获取菜单失败：",
+    "max_limit": "最多只能设置{UpperLimit}个",
+    "selectLeftMenuFirst": "请先选择左边一级菜单",
+    "primaryMenuNameCannotBeEmpty": "一级菜单名称不能为空",
+    "menuNameDuplicate": "【{repeatMenu}】名称重复，请修改",
+    "saveMenuFailed": "保存菜单失败：",
+    "updateMenuFailed": "更新菜单失败：",
+    "friendlyReminder": "温馨提示",
+    "saveMenuConfirm": "请问是否要保存菜单并关闭页面？",
+    "editCommonPlugins": "编辑常用插件",
+    "editExpertMode": "编辑专家模式",
+    "editScanMode": "编辑扫描模式",
+    "editMenuName": "修改菜单名称",
+    "emptyMenuDetected": "检测到有空菜单",
+    "emptyMenuWarning": "有{emptyMenuLength}个菜单功能为空，空菜单不会{tip}，是否仍要继续{tip}？",
+    "SecondMenu": {
+      "unnamedMenu1": "未命名1（菜单名建议 4-16 个英文字符内最佳）",
+      "deleteMenuConfirm": "是否要删除该菜单",
+      "featureAdded": "已添加功能",
+      "noFeatureAdded": "暂未未添加功能",
+      "addFeatureHint": "可通过拖拽或点击添加按钮，将功能添加至此处"
+    },
+    "FeaturesAndPlugin": {
+      "pluginStore": "插件商店",
+      "systemFunctions": "系统功能",
+      "plugin": "插件",
+      "addFunctionTip": "可通过拖拽或点击添加按钮，将功能添加至左侧菜单内"
+    },
+    "PluginLocalInfoIcon": {
+      "officialPlugin": "官方插件",
+      "privatePlugin": "私有插件",
+      "cloudPlugin": "云端插件"
+    }
+  }
+}

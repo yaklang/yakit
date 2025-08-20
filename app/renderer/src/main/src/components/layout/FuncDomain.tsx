@@ -31,6 +31,7 @@ import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "../yakitUI/Yakit
 import {
     getReleaseEditionName,
     getRemoteHttpSettingGV,
+    getRemoteI18nGV,
     isCommunityEdition,
     isEnpriTrace,
     isEnpriTraceAgent,
@@ -41,7 +42,7 @@ import {
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {LocalGV, RemoteGV} from "@/yakitGV"
-import {getLocalValue, getRemoteValue, setLocalValue} from "@/utils/kv"
+import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import {GithubSvgIcon, TerminalIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
@@ -122,6 +123,7 @@ import useEngineConsole from "./hooks/useEngineConsole/useEngineConsole"
 import {useTheme} from "@/hook/useTheme"
 import {grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder} from "@/utils/logCollection"
 import {useDownloadYakit} from "./update/DownloadYakit"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -934,6 +936,20 @@ const GetUIOpSettingMenu = () => {
                     {label: "远程", key: "remote"}
                 ]
             },
+            {
+                key: "i18nSwitching",
+                label: "语言切换",
+                children: [
+                    {
+                        key: "zh",
+                        label: "中文"
+                    },
+                    {
+                        key: "en",
+                        label: "英文"
+                    }
+                ]
+            },
             {type: "divider"},
             {
                 key: "logs",
@@ -1007,6 +1023,20 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "dark",
                     label: "暗色"
+                }
+            ]
+        },
+        {
+            key: "i18nSwitching",
+            label: "语言切换",
+            children: [
+                {
+                    key: "zh",
+                    label: "中文"
+                },
+                {
+                    key: "en",
+                    label: "英文"
                 }
             ]
         },
@@ -1237,6 +1267,11 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "dark":
                 setTheme("dark")
+                return
+            case "zh":
+            case "en":
+                i18n.changeLanguage(type)
+                setRemoteValue(getRemoteI18nGV(), type)
                 return
             default:
                 return

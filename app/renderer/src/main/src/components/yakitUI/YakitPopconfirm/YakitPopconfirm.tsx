@@ -5,6 +5,7 @@ import styles from "./YakitPopconfirm.module.scss"
 import {YakitPopconfirmProp} from "./YakitPopconfirmTypr"
 import {YakitButton} from "../YakitButton/YakitButton"
 import {useMemoizedFn} from "ahooks"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props) => {
     const {
@@ -21,6 +22,7 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
         cancelButtonProps,
         ...resePopover
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [visible, setVisible] = useState<boolean>(false)
     const onOk = useMemoizedFn((e) => {
         setVisible(false)
@@ -53,10 +55,10 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
                     {title}
                     <div className={styles["yakit-popconfirm-buttons"]}>
                         <YakitButton {...(cancelButtonProps || {})} type='outline2' onClick={onCancelClick}>
-                            {cancelText || "取消"}
+                            {cancelText || t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton {...(okButtonProps || {})} type='primary' onClick={onOk}>
-                            {okText || "确认"}
+                            {okText || t("YakitButton.ok")}
                         </YakitButton>
                     </div>
                 </div>

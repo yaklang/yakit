@@ -24,6 +24,7 @@
                 width: 276px;
                 padding: 24px 24px 32px 24px;
                 flex-direction: column;
+                justify-content: space-between;
                 align-items: center;
                 gap: 20px;
                 border-radius: 8px;
@@ -36,7 +37,6 @@
                     }
                 }
                 .content {
-                    height: 114px;
                     .title {
                         color: #000;
                         text-align: center;

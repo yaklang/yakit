@@ -1,0 +1,16 @@
+{
+  "WebFuzzer": {
+    "ShareImport": {
+      "shareNeedPassword": "该分享需要输入密码!",
+      "passwordVerifyFailed": "密码验证失败：",
+      "getShareDataFailed": "获取分享数据失败：",
+      "openWebFuzzerFailed": "打开 Web Fuzzer 失败：",
+      "saveHttpHistoryShareFailed": "储存 HttpHistory 分享数据失败：",
+      "shareId": "分享id",
+      "pleaseEnterShareId": "请输入分享id",
+      "password": "密码",
+      "pleaseEnterPassword": "请输入密码",
+      "thisFieldIsRequired": "该项为必填"
+    }
+  }
+}

@@ -24,6 +24,7 @@ import {RemoteGV} from "@/yakitGV"
 import {YakitSpin} from "../YakitSpin/YakitSpin"
 import {YakitRadioButtons} from "../YakitRadioButtons/YakitRadioButtons"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {Dragger} = Upload
 
@@ -85,7 +86,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     const {
         size,
         inputProps = {},
-        help = "可将文件拖入框内或点击此处",
+        help,
         uploadFileText,
         uploadFolderText,
         value: fileName,
@@ -102,6 +103,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         fileExtensionIsExist = false,
         showExtraHelp = ""
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const [name, setName] = useState<string>(fileName || "")
     useDebounceEffect(
@@ -115,18 +117,18 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     /**文件处理 */
     const getContent = useMemoizedFn((path: string, fileType: string) => {
         if (!path) {
-            failed("请输入路径")
+            failed(t("YakitFormDragger.enterPath"))
             return
         }
         const index = path.lastIndexOf(".")
         if (fileExtensionIsExist || !!props.accept) {
             if (selectType === "file" && index === -1) {
-                failed("请输入正确的路径")
+                failed(t("YakitFormDragger.enterValidPath"))
                 return
             }
 
             if (props.accept && !props.accept.split(",").includes(fileType)) {
-                failed(`仅支持${props.accept}格式的文件`)
+                failed(t("YakitFormDragger.onlySupportFormat", {accept: props.accept}))
                 return
             }
         }
@@ -142,7 +144,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     setContent(res)
                 })
                 .catch((err) => {
-                    failed("数据获取失败：" + err)
+                    failed(t("YakitNotification.dataFetchFailed") + err)
                     setContent("")
                 })
                 .finally(() => setTimeout(() => setUploadLoading(false), 200))
@@ -154,7 +156,9 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             case "textarea":
                 return (
                     <YakitInput.TextArea
-                        placeholder={multiple ? "路径支持手动输入,输入多个请用逗号分隔" : "路径支持手动输入"}
+                        placeholder={
+                            multiple ? t("YakitFormDragger.pathManualInput") : t("YakitFormDragger.pathManualEntry")
+                        }
                         value={fileName || name}
                         disabled={disabled}
                         {...textareaProps}
@@ -168,11 +172,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             e.stopPropagation()
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && (fileExtensionIsExist || !!props.accept)) {
-                                failed("请输入正确的路径")
+                                failed(t("YakitFormDragger.enterValidPath"))
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
-                                failed("不支持多选")
+                                failed(t("YakitFormDragger.multiSelectNotSupported"))
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -192,11 +196,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             if (!name) return
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && (fileExtensionIsExist || !!props.accept)) {
-                                failed("请输入正确的路径")
+                                failed(t("YakitFormDragger.enterValidPath"))
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
-                                failed("不支持多选")
+                                failed(t("YakitFormDragger.multiSelectNotSupported"))
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -208,7 +212,9 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             case "autoComplete":
                 return (
                     <YakitAutoComplete
-                        placeholder={multiple ? "路径支持手动输入,输入多个请用逗号分隔" : "路径支持手动输入"}
+                        placeholder={
+                            multiple ? t("YakitFormDragger.pathManualInput") : t("YakitFormDragger.pathManualEntry")
+                        }
                         value={fileName || name}
                         disabled={disabled}
                         {...autoCompleteProps}
@@ -222,11 +228,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                 e.stopPropagation()
                                 const index = name.lastIndexOf(".")
                                 if (selectType === "file" && index === -1 && (fileExtensionIsExist || !!props.accept)) {
-                                    failed("请输入正确的路径")
+                                    failed(t("YakitFormDragger.enterValidPath"))
                                     return
                                 }
                                 if (fileNumber > 1 && multiple === false) {
-                                    failed("不支持多选")
+                                    failed(t("YakitFormDragger.multiSelectNotSupported"))
                                     return
                                 }
                                 const type = name.substring(index, name.length)
@@ -246,11 +252,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             if (!name) return
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && (fileExtensionIsExist || !!props.accept)) {
-                                failed("请输入正确的路径")
+                                failed(t("YakitFormDragger.enterValidPath"))
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
-                                failed("不支持多选")
+                                failed(t("YakitFormDragger.multiSelectNotSupported"))
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -262,7 +268,9 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             default:
                 return (
                     <YakitInput
-                        placeholder={multiple ? "路径支持手动输入,输入多个请用逗号分隔" : "路径支持手动输入"}
+                        placeholder={
+                            multiple ? t("YakitFormDragger.pathManualInput") : t("YakitFormDragger.pathManualEntry")
+                        }
                         size={size}
                         value={fileName || name}
                         disabled={disabled}
@@ -277,11 +285,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             e.stopPropagation()
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && (fileExtensionIsExist || !!props.accept)) {
-                                failed("请输入正确的路径")
+                                failed(t("YakitFormDragger.enterValidPath"))
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
-                                failed("不支持多选")
+                                failed(t("YakitFormDragger.multiSelectNotSupported"))
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -301,11 +309,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             if (!name) return
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && (fileExtensionIsExist || !!props.accept)) {
-                                failed("请输入正确的路径")
+                                failed(t("YakitFormDragger.enterValidPath"))
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
-                                failed("不支持多选")
+                                failed(t("YakitFormDragger.multiSelectNotSupported"))
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -343,7 +351,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         }
         ipcRenderer
             .invoke("openDialog", {
-                title: "请选择文件夹",
+                title: t("YakitFormDragger.selectFolder"),
                 properties
             })
             .then((data: {filePaths: string[]}) => {
@@ -364,7 +372,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         }
         ipcRenderer
             .invoke("openDialog", {
-                title: "请选择文件",
+                title: t("YakitFormDragger.selectFile"),
                 properties
             })
             .then((data: {filePaths: string[]}) => {
@@ -386,7 +394,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     })
 
                     if (props.accept && !acceptFlag) {
-                        failed(`仅支持${props.accept}格式的文件`)
+                        failed(t("YakitFormDragger.onlySupportFormat", {accept: props.accept}))
                     }
 
                     // 设置名字
@@ -401,7 +409,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         let isNoFit: string[] = []
         const filesLength = files.length
         if (multiple === false && filesLength > 1) {
-            yakitNotify("error", "不支持多选")
+            yakitNotify("error", t("YakitFormDragger.multiSelectNotSupported"))
             return
         }
         for (let index = 0; index < filesLength; index++) {
@@ -415,7 +423,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             }
         }
         if (isNoFit.length > 0) {
-            yakitNotify("error", "已自动过滤不符合条件的数据")
+            yakitNotify("error", t("YakitFormDragger.autoFilteredData"))
         }
         if (filesLength > isNoFit.length && setFileName) setFileName(paths.join(","))
     })
@@ -426,7 +434,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         let isNoFit: string[] = []
         const filesLength = files.length
         if (multiple === false && filesLength > 1) {
-            yakitNotify("error", "不支持多选")
+            yakitNotify("error", t("YakitFormDragger.multiSelectNotSupported"))
             return
         }
         for (let index = 0; index < filesLength; index++) {
@@ -443,7 +451,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             }
         }
         if (isNoFit.length > 0) {
-            yakitNotify("error", "已自动过滤不符合条件的数据")
+            yakitNotify("error", t("YakitFormDragger.autoFilteredData"))
         }
         if (filesLength > isNoFit.length && setFileName) setFileName(paths.join(","))
     })
@@ -453,7 +461,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         let paths: string[] = []
         const filesLength = files.length
         if (multiple === false && filesLength > 1) {
-            yakitNotify("error", "不支持多选")
+            yakitNotify("error", t("YakitFormDragger.multiSelectNotSupported"))
             return
         }
         for (let index = 0; index < filesLength; index++) {
@@ -469,7 +477,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             const path = fileName || name
             arr = path ? path.split(",") : []
         } catch (error) {
-            yakitNotify("error", "文件路径数识别错误,请以逗号进行分割")
+            yakitNotify("error", t("YakitFormDragger.filePathCountError"))
         }
         return arr.length
     }, [fileName, name])
@@ -480,7 +488,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     {renderContent(
                         <div className={styles["form-item-help"]}>
                             <span>
-                                {help}
+                                {help || t("YakitFormDragger.dragOrClickHere")}
                                 <span
                                     className={classNames(styles["dragger-help-active"], {
                                         [styles["dragger-help-active-disabled"]]: disabled
@@ -490,12 +498,14 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                         onUploadFile()
                                     }}
                                 >
-                                    {uploadFileText || "上传文件"}
+                                    {uploadFileText || t("YakitFormDragger.uploadFile")}
                                 </span>
                             </span>
                             {isShowPathNumber && (
                                 <span>
-                                    识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
+                                    {t("YakitFormDragger.detected")}
+                                    <span className={styles["dragger-help-number"]}>{fileNumber}</span>
+                                    {t("YakitFormDragger.filesPath")}
                                 </span>
                             )}
                             {showExtraHelp}
@@ -508,7 +518,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     {renderContent(
                         <div className={styles["form-item-help"]}>
                             <span>
-                                {help}
+                                {help || t("YakitFormDragger.dragOrClickHere")}
                                 <span
                                     className={classNames(styles["dragger-help-active"], {
                                         [styles["dragger-help-active-disabled"]]: disabled
@@ -518,12 +528,14 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                         onUploadFolder()
                                     }}
                                 >
-                                    {uploadFolderText || "上传文件夹"}
+                                    {uploadFolderText || t("YakitFormDragger.uploadFolder")}
                                 </span>
                             </span>
                             {isShowPathNumber && (
                                 <span>
-                                    识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
+                                    {t("YakitFormDragger.detected")}
+                                    <span className={styles["dragger-help-number"]}>{fileNumber}</span>
+                                    {t("YakitFormDragger.filesPath")}
                                 </span>
                             )}
                             {showExtraHelp}
@@ -536,7 +548,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     {renderContent(
                         <div className={styles["form-item-help"]}>
                             <span>
-                                {help}
+                                {help || t("YakitFormDragger.dragOrClickHere")}
                                 <span
                                     className={classNames(styles["dragger-help-active"], {
                                         [styles["dragger-help-active-disabled"]]: disabled
@@ -546,7 +558,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                         onUploadFile()
                                     }}
                                 >
-                                    {uploadFileText || "上传文件"}
+                                    {uploadFileText || t("YakitFormDragger.uploadFile")}
                                 </span>
                                 <Divider type='vertical' />
                                 <span
@@ -558,13 +570,15 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                         onUploadFolder()
                                     }}
                                 >
-                                    {uploadFolderText || "上传文件夹"}
+                                    {uploadFolderText || t("YakitFormDragger.uploadFolder")}
                                 </span>
                             </span>
 
                             {isShowPathNumber && (
                                 <span>
-                                    识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
+                                    {t("YakitFormDragger.detected")}
+                                    <span className={styles["dragger-help-number"]}>{fileNumber}</span>
+                                    {t("YakitFormDragger.filesPath")}
                                 </span>
                             )}
                             {showExtraHelp}
