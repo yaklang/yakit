@@ -880,6 +880,7 @@ service Yak {
   rpc GetAIToolList(GetAIToolListRequest) returns(GetAIToolListResponse);
   rpc DeleteAITool(DeleteAIToolRequest) returns(DbOperateMessage);
   rpc SaveAITool(SaveAIToolRequest) returns(DbOperateMessage);
+  rpc UpdateAITool(UpdateAIToolRequest) returns(DbOperateMessage);
   rpc ToggleAIToolFavorite(ToggleAIToolFavoriteRequest) returns(ToggleAIToolFavoriteResponse);
   rpc AIToolGenerateMetadata(AIToolGenerateMetadataRequest) returns(AIToolGenerateMetadataResponse);
 
@@ -1186,12 +1187,24 @@ message SaveAIToolRequest {
   repeated string Keywords = 5;
 }
 
+message UpdateAIToolRequest {
+  int64 ID = 1;
+  string Name = 2;
+  string Description = 3;
+  string Content = 4;
+  string ToolPath = 5;
+  repeated string Keywords = 6;
+}
+
+
 message DeleteAIToolRequest {
   repeated string ToolNames = 1;
+  repeated int64 IDs = 2;
 }
 
 message ToggleAIToolFavoriteRequest {
   string ToolName = 1;
+  int64 ID = 2;
 }
 
 message ToggleAIToolFavoriteResponse {
@@ -1206,6 +1219,7 @@ message AITool {
   string ToolPath = 4;
   repeated string Keywords = 5;
   bool IsFavorite = 6;
+  int64 ID = 7;
 }
 
 message GetAIToolListResponse {
@@ -7460,6 +7474,13 @@ message StartLocalModelRequest {
   string ModelName = 1;
   string Host = 2;
   int32 Port = 3;
+  int32 ContextSize = 4;
+  int32 BatchSize = 5;
+  int32 Threads = 6;
+  bool Debug = 8;
+  string Pooling = 9;
+  int64 StartupTimeoutMs = 10;
+  repeated string Args = 11;
 }
 
 message DownloadLocalModelRequest {
