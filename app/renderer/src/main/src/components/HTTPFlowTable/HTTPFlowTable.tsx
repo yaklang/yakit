@@ -3735,6 +3735,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             UploadHTTPFlowsWhere: {...params, IncludeId: isAllSelect ? [] : newIds}
         }
         isUploadingRef.current = true
+        yakitNotify("info", "数据正在上传中");
         ipcRenderer
             .invoke("HTTPFlowsToOnlineBatch", query)
             .then((rsp: HTTPFlowsToOnlineBatchResponse) => {

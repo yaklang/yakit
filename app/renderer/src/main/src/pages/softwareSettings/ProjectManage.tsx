@@ -2179,7 +2179,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             >
                                 <YakitInput
                                     size='large'
-                                    placeholder='请输入项目编号'
+                                    placeholder='存在必须填写；如不存在，请填入“不存在”'
                                     className={classNames({
                                         [styles["required-form-item-wrapper"]]: isCheck && !info.ExternalProjectCode
                                     })}
@@ -2198,7 +2198,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             >
                                 <YakitInput
                                     size='large'
-                                    placeholder='请输入系统模块编号'
+                                    placeholder='请输入系统模块编号，精确到系统模块。例如：qwe202501_2345'
                                     className={classNames({
                                         [styles["required-form-item-wrapper"]]: isCheck && !info.ExternalModule
                                     })}
