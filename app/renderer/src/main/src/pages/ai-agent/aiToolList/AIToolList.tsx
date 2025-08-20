@@ -30,6 +30,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {tagColors} from "../defaultConstant"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {yakitNotify} from "@/utils/notification"
+import {AIToolEditorPageInfoProps} from "@/store/pageInfo"
 
 const toolTypeOptions = [
     {
@@ -190,7 +191,7 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
     const onFavorite = useMemoizedFn(() => {
         // e.stopPropagation()
         const params: ToggleAIToolFavoriteRequest = {
-            ToolName: item.Name
+            ID: item.ID
         }
         grpcToggleAIToolFavorite(params).then(() => {
             onSetData({
@@ -247,22 +248,22 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
         }
     })
     const onRemove = useMemoizedFn(() => {
-        grpcDeleteAITool({ToolNames: [item.Name]}).then(() => {
+        grpcDeleteAITool({IDs: [item.ID]}).then(() => {
             onRefresh()
             yakitNotify("success", "删除成功")
         })
     })
     const onEdit = useMemoizedFn((e) => {
         e.stopPropagation()
-        if (!item.Name) {
-            yakitNotify("error", `该模板 ID('${item.Name}') 异常, 无法编辑`)
+        if (!item.ID) {
+            yakitNotify("error", `该模板 ID('${item.ID}') 异常, 无法编辑`)
             return
         }
         emiter.emit(
             "openPage",
             JSON.stringify({
                 route: YakitRoute.ModifyAITool,
-                params: {name: item.Name, source: YakitRoute.AI_Agent}
+                params: {id: item.ID, source: YakitRoute.AI_Agent} as AIToolEditorPageInfoProps
             })
         )
     })

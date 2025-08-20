@@ -23,18 +23,19 @@ export const grpcGetAIToolList: APIFunc<GetAIToolListRequest, GetAIToolListRespo
     })
 }
 
-export const grpcGetAIToolByName: APIFunc<string, AITool | null> = (toolName, hiddenError) => {
+export const grpcGetAIToolById: APIFunc<number, AITool | null> = (toolId, hiddenError) => {
     return new Promise((resolve, reject) => {
-        if (!toolName) {
-            if (!hiddenError) yakitNotify("error", `获取AITool详情失败: ToolName(${toolName})数据异常`)
-            reject(new Error(`获取AITool详情失败: ToolName(${toolName})数据异常`))
+        if (!toolId) {
+            if (!hiddenError) yakitNotify("error", `获取AITool详情失败: id(${toolId})数据异常`)
+            reject(new Error(`获取AITool详情失败: id(${toolId})数据异常`))
             return
         }
         const query: GetAIToolListRequest = {
             Query: "",
-            ToolName: toolName,
+            ToolName: "",
             Pagination: genDefaultPagination(1),
-            OnlyFavorites: false
+            OnlyFavorites: false,
+            ID: toolId
         }
         ipcRenderer
             .invoke("GetAIToolList", query)

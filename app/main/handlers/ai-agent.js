@@ -211,6 +211,23 @@ module.exports = (win, getClient) => {
         return await asyncSaveAITool(param)
     })
 
+    const asyncUpdateAITool = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpdateAITool(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    /**新增工具 */
+    ipcMain.handle("UpdateAITool", async (e, param) => {
+        return await asyncUpdateAITool(param)
+    })
+
+
     const asyncToggleAIToolFavorite = (params) => {
         return new Promise((resolve, reject) => {
             getClient().ToggleAIToolFavorite(params, (err, data) => {

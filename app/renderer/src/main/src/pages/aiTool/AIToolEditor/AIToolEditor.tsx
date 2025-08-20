@@ -47,11 +47,11 @@ import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {CodeScoreModal} from "@/pages/plugins/funcTemplate"
-import {AIToolGenerateMetadataRequest, SaveAIToolRequest} from "@/pages/ai-agent/type/aiChat"
-import {grpcAIToolGenerateDescription, grpcAIToolGenerateKeywords, grpcSaveAITool} from "../utils"
+import {AIToolGenerateMetadataRequest, SaveAIToolRequest, UpdateAIToolRequest} from "@/pages/ai-agent/type/aiChat"
+import {grpcAIToolGenerateDescription, grpcAIToolGenerateKeywords, grpcSaveAITool, grpcUpdateAITool} from "../utils"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import {grpcGetAIToolByName} from "@/pages/ai-agent/aiToolList/utils"
+import {grpcGetAIToolById} from "@/pages/ai-agent/aiToolList/utils"
 
 const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
     const {isModify} = props
@@ -66,6 +66,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
     const [form] = Form.useForm()
 
     const infoFormRef = useRef<any>(null)
+    const toolIdRef = useRef<number>(0)
 
     const isShowCode = useCreation(() => {
         return activeTab === "code"
@@ -96,13 +97,13 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
             YakitRoute.ModifyAITool
         )
         if (currentItem && currentItem.pageParamsInfo.modifyAIToolPageInfo) {
-            const name = currentItem.pageParamsInfo.modifyAIToolPageInfo?.name
-            if (!name) {
-                yakitNotify("error", `尝试编辑的工具异常(ID: ${name}), 请关闭页面重试`)
+            const id = currentItem.pageParamsInfo.modifyAIToolPageInfo?.id
+            if (!id) {
+                yakitNotify("error", `尝试编辑的工具异常(ID: ${id}), 请关闭页面重试`)
                 return
             }
 
-            grpcGetAIToolByName(name, false)
+            grpcGetAIToolById(id, false)
                 .then((res) => {
                     if (!res) {
                         yakitNotify("error", `未获取到待编辑工具的详情, 请关闭页面重试`)
@@ -122,6 +123,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                                 ...formValue
                             })
                         }
+                        toolIdRef.current = res.ID || 0
                         setContent(res.Content || DefaultToolYakToCode)
                     } catch (error) {}
                 })
@@ -150,14 +152,19 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                     return
                 }
                 setSaveLoading(true)
-                const params: SaveAIToolRequest = {
+                const params: UpdateAIToolRequest = {
+                    ID: 0,
                     Name: formData.Name ?? "",
                     Description: formData.Description ?? "",
                     Content: content,
                     ToolPath: "",
                     Keywords: formData.Keywords ?? []
                 }
-                grpcSaveAITool(params)
+                if (isModify && toolIdRef.current) {
+                    params.ID = toolIdRef.current
+                }
+                const func = isModify ? grpcUpdateAITool : grpcSaveAITool
+                func(params)
                     .then(() => {
                         yakitNotify("success", "保存成功")
                         resolve()

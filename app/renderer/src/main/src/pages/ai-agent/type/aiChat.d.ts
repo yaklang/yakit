@@ -452,12 +452,14 @@ export interface AITool {
     ToolPath: string
     Keywords: string[]
     IsFavorite: boolean
+    ID: number
 }
 export interface GetAIToolListRequest {
     Query: string
     ToolName: string
     Pagination: PaginationSchema
     OnlyFavorites: boolean
+    ID?: number
 }
 export interface GetAIToolListResponse {
     Tools: AITool[]
@@ -465,7 +467,9 @@ export interface GetAIToolListResponse {
     Total: number
 }
 export interface ToggleAIToolFavoriteRequest {
-    ToolName: string
+    /**@deprecated */
+    ToolName?: string
+    ID: number
 }
 export interface ToggleAIToolFavoriteResponse {
     IsFavorite: boolean
@@ -478,8 +482,13 @@ export interface SaveAIToolRequest {
     ToolPath: string
     Keywords: string[]
 }
+export interface UpdateAIToolRequest extends SaveAIToolRequest {
+    ID: number
+}
 export interface DeleteAIToolRequest {
-    ToolNames: string[]
+    /**@deprecated */
+    ToolNames?: string
+    IDs: number[]
 }
 export interface AIToolGenerateMetadataRequest {
     ToolName: string
