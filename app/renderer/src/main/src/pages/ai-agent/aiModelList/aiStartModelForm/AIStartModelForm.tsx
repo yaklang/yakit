@@ -5,9 +5,8 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import styles from "./AIStartModelForm.module.scss"
-import {ExecResult} from "@/pages/invoker/schema"
 import {yakitNotify} from "@/utils/notification"
-import {grpcCancelStartLocalModel, grpcStartLocalModel} from "../utils"
+import {grpcStartLocalModel} from "../utils"
 import {StartLocalModelRequest} from "../../type/aiChat"
 import {AIStartModelFormProps} from "./AIStartModelFormType"
 
@@ -19,7 +18,6 @@ export const AIStartModelForm: React.FC<AIStartModelFormProps> = React.memo((pro
     const hasErrorRef = useRef<boolean>(false)
     const [form] = Form.useForm<Omit<StartLocalModelRequest, "token">>()
     useEffect(() => {
-        ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {})
         ipcRenderer.on(`${token}-error`, (e, error) => {
             yakitNotify("error", `[StartLocalModel] error: ${error}`)
             hasErrorRef.current = true
@@ -28,13 +26,11 @@ export const AIStartModelForm: React.FC<AIStartModelFormProps> = React.memo((pro
             if (!hasErrorRef.current) {
                 onSuccess()
             }
+            hasErrorRef.current = false
             setLoading(false)
-            // 模型运行结束
-            yakitNotify("info", `模型 ${item.Name} 运行结束`)
         })
         return () => {
             // 只清理事件监听器，不取消模型启动
-            ipcRenderer.removeAllListeners(`${token}-data`)
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
         }

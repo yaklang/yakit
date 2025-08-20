@@ -333,6 +333,9 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
                 data.PlanUserInteractMaxCount = 3
             }
         }
+        if (!isNil(setting?.AIService)) {
+            data.AIService = setting.AIService
+        }
     } catch (error) {}
 
     return {...data}

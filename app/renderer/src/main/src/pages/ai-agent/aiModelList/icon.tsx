@@ -170,6 +170,9 @@ const Comate = () => {
     const id = uuidv4()
     const id1 = uuidv4()
     const id2 = uuidv4()
+    const id3 = uuidv4()
+    const id4 = uuidv4()
+    const id5 = uuidv4()
     return (
         <svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'>
             <g clipPath={`url(#${id})`}>
@@ -188,7 +191,7 @@ const Comate = () => {
             </g>
             <defs>
                 <linearGradient
-                    id={id}
+                    id={id3}
                     x1='6.33765e-07'
                     y1='33'
                     x2='32'
@@ -198,11 +201,11 @@ const Comate = () => {
                     <stop stopColor='#066AF3' />
                     <stop offset='1' stopColor='#40E2FF' />
                 </linearGradient>
-                <linearGradient id={id1} x1='26.5' y1='10' x2='6' y2='22' gradientUnits='userSpaceOnUse'>
+                <linearGradient id={id4} x1='26.5' y1='10' x2='6' y2='22' gradientUnits='userSpaceOnUse'>
                     <stop stopColor='white' />
                     <stop offset='1' stopColor='white' stopOpacity='0.3' />
                 </linearGradient>
-                <clipPath id={id2}>
+                <clipPath id={id5}>
                     <rect width='32' height='32' fill='white' />
                 </clipPath>
             </defs>

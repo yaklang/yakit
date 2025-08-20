@@ -27,9 +27,6 @@ export interface AIAgentContextDispatcher {
     setChats?: Dispatch<SetStateAction<AIChatInfo[]>>
     getChats?: () => AIChatInfo[]
     setActiveChat?: Dispatch<SetStateAction<AIChatInfo | undefined>>
-
-    getAIActiveAIModel: () => string
-    setAIActiveAIModel: Dispatch<SetStateAction<string>>
 }
 
 export interface AIAgentContextValue {
@@ -59,9 +56,6 @@ export default createContext<AIAgentContextValue>({
 
         setChats: undefined,
         getChats: undefined,
-        setActiveChat: undefined,
-
-        getAIActiveAIModel: () => "",
-        setAIActiveAIModel: () => {}
+        setActiveChat: undefined
     }
 })

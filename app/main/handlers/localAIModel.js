@@ -51,6 +51,21 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamStartLocalModelMap, token)
     })
 
+    const asyncStopLocalModel = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().StopLocalModel(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("StopLocalModel", async (e, params) => {
+        return await asyncStopLocalModel(params)
+    })
+
     // DownloadLocalModel stream handler
     const streamDownloadLocalModelMap = new Map()
     ipcMain.handle("cancel-DownloadLocalModel", handlerHelper.cancelHandler(streamDownloadLocalModelMap))
@@ -107,7 +122,7 @@ module.exports = (win, getClient) => {
 
     const asyncUpdateLocalModel = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().DeleteLocalModel(params, (err, data) => {
+            getClient().UpdateLocalModel(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return

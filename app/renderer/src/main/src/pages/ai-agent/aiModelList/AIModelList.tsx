@@ -24,6 +24,7 @@ import {
     grpcGetSupportedLocalModels,
     grpcIsLlamaServerReady,
     grpcIsLocalModelReady,
+    grpcStopLocalModel,
     reorderApplicationConfig
 } from "./utils"
 import {LocalModelConfig} from "../type/aiChat"
@@ -44,7 +45,8 @@ import {
     OutlinePlayIcon,
     OutlinePlusIcon,
     OutlineRefreshIcon,
-    OutlineTrashIcon
+    OutlineTrashIcon,
+    SpeechToTextIcon
 } from "@/assets/icon/outline"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
@@ -54,7 +56,7 @@ import {
 } from "./installLlamaServerModelPrompt/InstallLlamaServerModelPrompt"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {AIOnlineModelIconMap} from "../defaultConstant"
+import {AILocalModelTypeEnum, AIOnlineModelIconMap} from "../defaultConstant"
 import {randomString} from "@/utils/randomUtil"
 import {AIStartModelForm} from "./aiStartModelForm/AIStartModelForm"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
@@ -592,28 +594,10 @@ const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.me
         </div>
     )
 })
-const localModelMenu: YakitMenuItemType[] = [
-    {
-        key: "edit",
-        label: "编辑",
-        itemIcon: <OutlinePencilaltIcon />
-    },
-    {
-        key: "path",
-        label: "打开文件位置",
-        itemIcon: <OutlineClipboardcopyIcon />
-    },
-    {
-        key: "delete",
-        label: "删除",
-        type: "danger",
-        itemIcon: <OutlineTrashIcon />
-    }
-]
+
 const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((props) => {
     const {item, onRefresh} = props
     const [isReady, setIsReady] = useState<boolean>(item.IsReady || false)
-    const [isRunning, setIsRunning] = useState<boolean>(false)
 
     const [visible, setVisible] = useState<boolean>(false)
     const [downVisible, setDownVisible] = useState<boolean>(false)
@@ -648,17 +632,23 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                     item={item}
                     token={tokenRef.current}
                     onSuccess={() => {
-                        setIsRunning(true)
+                        onRefresh()
                         m.destroy()
                     }}
                 />
             ),
-            footer: null
+            footer: null,
+            onCancel: () => {
+                onRefresh()
+                m.destroy()
+            }
         })
     })
     const onStop = useMemoizedFn(() => {
-        grpcCancelStartLocalModel(tokenRef.current)
-        setIsRunning(false)
+        grpcStopLocalModel({ModelName: item.Name}).then(() => {
+            onRefresh()
+            setStopVisible(false)
+        })
     })
     const onDown = useMemoizedFn(() => {
         const m = showYakitModal({
@@ -733,31 +723,59 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
     })
     const typeNode = useCreation(() => {
         switch (item.Type) {
-            case "chat":
+            case AILocalModelTypeEnum.AIChat:
                 return (
                     <YakitTag size='small' color='blue' className={styles["ai-local-model-type-tag"]}>
                         <OutlineChatIcon className={styles["type-icon"]} />
-                        Chat
+                        AIChat
                     </YakitTag>
                 )
-            case "embedding":
+            case AILocalModelTypeEnum.Embedding:
                 return (
                     <YakitTag size='small' color='purple' className={styles["ai-local-model-type-tag"]}>
                         <OutlineExclamationIcon className={styles["type-icon"]} />
-                        embedding
+                        Embedding
                     </YakitTag>
                 )
-            case "speech-to-text":
+            case AILocalModelTypeEnum.SpeechToText:
                 return (
-                    <YakitTag size='small' color='purple' className={styles["ai-local-model-type-tag"]}>
-                        <OutlineExclamationIcon className={styles["type-icon"]} />
-                        speech-to-text
+                    <YakitTag size='small' color='bluePurple' className={styles["ai-local-model-type-tag"]}>
+                        <SpeechToTextIcon className={styles["type-icon"]} />
+                        Speech-to-text
                     </YakitTag>
                 )
             default:
                 return <></>
         }
     }, [item.Type])
+    const isRunning = useCreation(() => {
+        return item?.Status?.Status === "running"
+    }, [item?.Status?.Status])
+    const localModelMenu: YakitMenuItemType[] = useCreation(() => {
+        let menu: YakitMenuItemType[] = [
+            {
+                key: "path",
+                label: "打开文件位置",
+                itemIcon: <OutlineClipboardcopyIcon />
+            }
+        ]
+        if (!["starting", "running", "stopping"].includes(item.Status?.Status || "")) {
+            menu = menu.concat([
+                {
+                    key: "edit",
+                    label: "编辑",
+                    itemIcon: <OutlinePencilaltIcon />
+                },
+                {
+                    key: "delete",
+                    label: "删除",
+                    type: "danger",
+                    itemIcon: <OutlineTrashIcon />
+                }
+            ])
+        }
+        return menu
+    }, [item?.Status?.Status])
     return (
         <div className={styles["ai-local-model-list-item"]}>
             <div className={styles["ai-local-model-heard"]}>
@@ -784,6 +802,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                                     onConfirm={onStop}
                                     visible={stopVisible}
                                     onVisibleChange={setStopVisible}
+                                    trigger={"click"}
                                 >
                                     <YakitButton type='text' colors='danger' icon={<OutlineExitIcon />}>
                                         停用
@@ -824,7 +843,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                         已启用
                     </YakitTag>
                     <div>
-                        IP/端口: {item.Host || ""}:{item.DefaultPort}
+                        IP/端口: {item?.Status?.Host || ""}:{item?.Status?.Port || ""}
                     </div>
                 </div>
             )}

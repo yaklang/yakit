@@ -82,6 +82,8 @@ export interface AIStartParams {
 
     /** 是否允许生成报告，默认不允许 */
     AllowGenerateReport?: boolean
+    /**选择 AI 服务 */
+    AIService?: string
 }
 
 export interface AIInputEvent {
@@ -485,9 +487,27 @@ export interface LocalModelConfig {
     IsReady: boolean
     IsLocal: boolean
     Path: string
-    /**@name 前端使用展示启动后的主机 */
-    Host?: string
+    Status: LocalModelStatus | null
 }
+
+export interface LocalModelStatus {
+    Status: "stopped" | "starting" | "running" | "stopping" | "error"
+    Host: string
+    Port: number
+    Model: string
+    ModelPath: string
+    LlamaServerPath: string
+    ContextSize: number
+    ContBatching: boolean
+    BatchSize: number
+    Threads: number
+    Detached: boolean
+    Debug: boolean
+    Pooling: string
+    StartupTimeout: number
+    Args: string[]
+}
+
 export interface GetSupportedLocalModelsResponse {
     Models: LocalModelConfig[]
 }
@@ -510,6 +530,10 @@ export interface StartLocalModelRequest {
     ModelName: string
     Host: string
     Port: number
+}
+
+export interface StopLocalModelRequest {
+    ModelName: string
 }
 
 export interface AddLocalModelRequest {

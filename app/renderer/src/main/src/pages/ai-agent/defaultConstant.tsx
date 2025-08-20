@@ -47,7 +47,8 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     EnableAISearchInternet: true,
     EnableQwenNoThinkMode: true,
     AllowPlanUserInteract: true,
-    PlanUserInteractMaxCount: 3
+    PlanUserInteractMaxCount: 3,
+    AIService: ""
 }
 
 /** mcp 自定义服务器配置类型选项 */
@@ -131,4 +132,10 @@ export const AIOnlineModelIconMap: Record<string, ReactNode> = {
     "yaklang-com-search": <YakIcon />,
     "yakit-plugin-search": <YakIcon />,
     aibalance: <YakIcon />
+}
+
+export enum AILocalModelTypeEnum {
+    AIChat = "aichat",
+    Embedding = "embedding",
+    SpeechToText = "speech-to-text"
 }

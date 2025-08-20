@@ -15,11 +15,13 @@ import {
     UpdateLocalModelRequest,
     StartedLocalModelInfo,
     LocalModelConfig,
-    GetAIModelListResponse
+    GetAIModelListResponse,
+    StopLocalModelRequest
 } from "../type/aiChat"
 import omit from "lodash/omit"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {AILocalModelTypeEnum} from "../defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -29,31 +31,7 @@ export const grpcGetSupportedLocalModels: APINoRequestFunc<LocalModelConfig[]> =
             .invoke("GetSupportedLocalModels")
             .then((res) => {
                 const models = res.Models || []
-                if (models.length === 0) {
-                    resolve(models)
-                    return
-                }
-                // 获取已启动的模型列表
-                grpcGetAllStartedLocalModels(false)
-                    .then((startedRes) => {
-                        const startedModels = startedRes.Models || []
-                        if (startedModels.length === 0) {
-                            resolve(models)
-                            return
-                        }
-                        const length = models.length
-                        for (let index = 0; index < length; index++) {
-                            const element = models[index]
-                            const number = startedModels.findIndex((ele) => ele.Name === element.Name)
-                            if (number === -1) continue
-                            element.IsReady = true
-                            element.Host = startedModels[number].Host
-                        }
-                        resolve(models)
-                    })
-                    .catch(() => {
-                        resolve(models)
-                    })
+                resolve(models)
             })
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", "grpcGetSupportedLocalModels 失败:" + err)
@@ -165,6 +143,18 @@ export const grpcCancelStartLocalModel: APIFunc<string, null> = (token, hiddenEr
     })
 }
 
+export const grpcStopLocalModel: APIFunc<StopLocalModelRequest, GeneralResponse> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("StopLocalModel", params)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcStopLocalModel 失败:" + err)
+                reject(err)
+            })
+    })
+}
+
 /**获取线上和本地已启动的AI模型 */
 export const getAIModelList: APINoRequestFunc<GetAIModelListResponse> = (hiddenError) => {
     return new Promise(async (resolve, reject) => {
@@ -177,7 +167,7 @@ export const getAIModelList: APINoRequestFunc<GetAIModelListResponse> = (hiddenE
             }
             const localModelsRes = await grpcGetAllStartedLocalModels()
             if (!!localModelsRes) {
-                localModels = localModelsRes.Models || []
+                localModels = localModelsRes.Models.filter((ele) => ele.ModelType === AILocalModelTypeEnum.AIChat) || []
             }
             resolve({onlineModels, localModels})
         } catch (error) {

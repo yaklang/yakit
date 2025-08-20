@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from "react"
-import {AddAIModelProps} from "./AddAIModelType"
 import styles from "./AddAIModel.module.scss"
 import {Form} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -10,6 +9,8 @@ import {AddLocalModelRequest} from "../../type/aiChat"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {grpcAddLocalModel, grpcUpdateLocalModel} from "../utils"
+import {AILocalModelTypeEnum} from "../../defaultConstant"
+import {AddAIModelProps} from "./AddAIModelType"
 export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
     const {onCancel, defaultValues} = props
     const [loading, setLoading] = useState<boolean>(false)
@@ -18,7 +19,7 @@ export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
         if (!!defaultValues) {
             form.setFieldsValue({
                 Name: defaultValues.Name || "",
-                ModelType: defaultValues.ModelType || "chat",
+                ModelType: defaultValues.ModelType || AILocalModelTypeEnum.AIChat,
                 Path: defaultValues.Path || "",
                 Description: defaultValues.Description || ""
             })
@@ -26,9 +27,9 @@ export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
     }, [defaultValues])
     const modelTypeOptions: YakitSelectProps["options"] = useCreation(() => {
         return [
-            {label: "chat", value: "chat"},
-            {label: "embedding", value: "embedding"},
-            {label: "speech-to-text", value: "speech-to-text"}
+            {label: "aichat", value: AILocalModelTypeEnum.AIChat},
+            {label: "embedding", value: AILocalModelTypeEnum.Embedding},
+            {label: "speech-to-text", value: AILocalModelTypeEnum.SpeechToText}
         ]
     }, [])
     const handleSubmit = useMemoizedFn(() => {
@@ -69,7 +70,7 @@ export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
                     label='模型类型'
                     name='ModelType'
                     rules={[{required: true, message: "请输入模型类型"}]}
-                    initialValue={"chat"}
+                    initialValue={AILocalModelTypeEnum.AIChat}
                 >
                     <YakitSelect options={modelTypeOptions} />
                 </Form.Item>

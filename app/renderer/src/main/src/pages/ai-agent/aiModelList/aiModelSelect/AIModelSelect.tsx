@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {AIModelSelectProps} from "./AIModelSelectType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {useClickAway, useMemoizedFn} from "ahooks"
+import {useClickAway, useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import useAIAgentDispatcher from "../../useContext/useDispatcher"
 import {getAIModelList} from "../utils"
 import styles from "./AIModelSelect.module.scss"
@@ -9,11 +9,13 @@ import classNames from "classnames"
 import {GetAIModelListResponse} from "../../type/aiChat"
 import {AIOnlineModelIconMap} from "../../defaultConstant"
 import {OutlineAtomIconByStatus} from "../AIModelList"
+import useAIAgentStore from "../../useContext/useStore"
 
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
     const {disabled} = props
     //#region AI model
-    const {setAIActiveAIModel, getAIActiveAIModel} = useAIAgentDispatcher()
+    const {setting} = useAIAgentStore()
+    const {setSetting} = useAIAgentDispatcher()
     const [open, setOpen] = useState<boolean>(false)
     const [aiModelOptions, setAIModelOptions] = useState<GetAIModelListResponse>({
         onlineModels: [],
@@ -26,31 +28,49 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     useClickAway(() => {
         setOpen(false)
     }, [selectWrapperRef])
-    const getAIModelListOption = useMemoizedFn(() => {
-        getAIModelList().then((res) => {
-            if (res && res.onlineModels.length > 0) {
-                setAIActiveAIModel((res.onlineModels[0].Type as string) || "")
-            } else if (res && res.localModels.length > 0) {
-                setAIActiveAIModel((res.localModels[0].Name as string) || "")
-            }
-            setAIModelOptions(res)
-        })
-    })
+    const getAIModelListOption = useDebounceFn(
+        useMemoizedFn(() => {
+            getAIModelList().then((res) => {
+                setAIModelOptions(res)
+                if (!setting?.AIService) {
+                    if (res && res.onlineModels.length > 0) {
+                        onSelectModel((res.onlineModels[0].Type as string) || "")
+                    } else if (res && res.localModels.length > 0) {
+                        onSelectModel((res.localModels[0].Name as string) || "")
+                    }
+                }
+            })
+        }),
+        {wait: 200, leading: true}
+    ).run
 
     const onSelectModel = useMemoizedFn((value: string) => {
-        setAIActiveAIModel(value)
+        setSetting && setSetting((old) => ({...old, AIService: value}))
     })
 
+    const onMouseEnter = useMemoizedFn((e) => {
+        setOpen(true)
+        getAIModelListOption()
+    })
+
+    const modelValue = useCreation(() => {
+        return setting?.AIService || ""
+    }, [setting])
+
+    const isHaveData = useCreation(() => {
+        return aiModelOptions.onlineModels.length > 0 || aiModelOptions.localModels.length > 0
+    }, [aiModelOptions.onlineModels.length, aiModelOptions.localModels.length])
+
     //#endregion
-    return (
+    return isHaveData ? (
         <div
             ref={selectWrapperRef}
             className={classNames(styles["ai-model-select-wrapper"])}
-            onMouseEnter={() => setOpen(true)}
+            onMouseEnter={onMouseEnter}
         >
             <YakitSelect
                 disabled={disabled}
-                value={getAIActiveAIModel()}
+                value={modelValue}
                 onSelect={onSelectModel}
                 dropdownMatchSelectWidth={false}
                 dropdownRender={(menu) => {
@@ -96,5 +116,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 )}
             </YakitSelect>
         </div>
+    ) : (
+        <></>
     )
 })
