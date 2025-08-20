@@ -98,3 +98,9 @@
         }
     }
 }
+
+.codec-menu-btn, .encode-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

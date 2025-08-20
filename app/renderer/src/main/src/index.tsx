@@ -10,7 +10,7 @@ import "./yakitUI.scss"
 import "./theme/yakit.scss"
 import "./yakitLib.scss"
 import "./assets/global.scss"
-import {useEffect, useState} from "react"
+import {Suspense, useEffect, useState} from "react"
 import ChildNewApp from "./ChildNewApp"
 import {ThemeProvider} from "./hook/useTheme"
 
@@ -83,9 +83,11 @@ if (window.location.search.includes("window=child")) {
 ReactDOM.render(
     // <React.StrictMode>
     <DndProvider backend={HTML5Backend}>
-        <ThemeProvider>
-            <App />
-        </ThemeProvider>
+        <Suspense fallback={<div>loading...</div>}>
+            <ThemeProvider>
+                <App />
+            </ThemeProvider>
+        </Suspense>
     </DndProvider>,
     // </React.StrictMode>,
     document.getElementById("root")

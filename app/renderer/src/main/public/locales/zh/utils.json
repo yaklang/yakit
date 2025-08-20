@@ -1,0 +1,11 @@
+{
+  "basic": {
+    "StartExecYakCodeModal": {
+      "executing": "正在执行："
+    },
+    "StartToExecYakScriptViewer": {
+      "executeSuccess": "执行 {verbose} 成功",
+      "executeError": "执行 {verbose} 遇到问题："
+    }
+  }
+}

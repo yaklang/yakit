@@ -16,10 +16,12 @@ export interface EnhancedCustomRouteMenuProps {
     id?: string
     page: YakitRoute | undefined
     label: string
+    labelUi?: string
     menuName: string
     icon?: ReactNode
     hoverIcon?: JSX.Element
     describe?: string
+    describeUi?: string
     yakScriptId?: number
     yakScripName?: string
     headImg?: string

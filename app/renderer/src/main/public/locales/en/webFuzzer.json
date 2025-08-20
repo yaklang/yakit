@@ -1,0 +1,16 @@
+{
+  "WebFuzzer": {
+    "ShareImport": {
+      "shareNeedPassword": "This share requires a password!",
+      "passwordVerifyFailed": "Password verification failed:",
+      "getShareDataFailed": "Failed to get shared data:",
+      "openWebFuzzerFailed": "Failed to open Web Fuzzer:",
+      "saveHttpHistoryShareFailed": "Failed to save HttpHistory share data:",
+      "shareId": "Share ID",
+      "pleaseEnterShareId": "Please enter Share ID",
+      "password": "Password",
+      "pleaseEnterPassword": "Please enter Password",
+      "thisFieldIsRequired": "This field is required"
+    }
+  }
+}

@@ -122,6 +122,7 @@ import useEngineConsole from "./hooks/useEngineConsole/useEngineConsole"
 import {useTheme} from "@/hook/useTheme"
 import {grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder} from "@/utils/logCollection"
 import {useDownloadYakit} from "./update/DownloadYakit"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -934,6 +935,20 @@ const GetUIOpSettingMenu = () => {
                     {label: "远程", key: "remote"}
                 ]
             },
+            {
+                key: "i18nSwitching",
+                label: "语言切换",
+                children: [
+                    {
+                        key: "zh",
+                        label: "中文"
+                    },
+                    {
+                        key: "en",
+                        label: "英文"
+                    }
+                ]
+            },
             {type: "divider"},
             {
                 key: "logs",
@@ -1007,6 +1022,20 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "dark",
                     label: "暗色"
+                }
+            ]
+        },
+        {
+            key: "i18nSwitching",
+            label: "语言切换",
+            children: [
+                {
+                    key: "zh",
+                    label: "中文"
+                },
+                {
+                    key: "en",
+                    label: "英文"
                 }
             ]
         },
@@ -1237,6 +1266,11 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "dark":
                 setTheme("dark")
+                return
+            case "zh":
+            case "en":
+                const newLang = i18n.language === "zh" ? "en" : "zh"
+                i18n.changeLanguage(newLang)
                 return
             default:
                 return

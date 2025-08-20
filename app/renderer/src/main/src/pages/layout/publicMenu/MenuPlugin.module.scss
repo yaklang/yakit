@@ -12,16 +12,14 @@
 
     .plugin-header {
         box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        width: 16px;
+        transform: rotate(180deg);
+        text-orientation: sideways-right;
+        writing-mode: vertical-rl;
+        padding: 2px;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        border-left: 0;
         height: 72px;
         background: var(--Colors-Use-Neutral-Bg);
-        border-width: 1px 0px 1px 1px;
-        border-style: solid;
-        border-color: var(--Colors-Use-Neutral-Border);
         border-radius: 4px 0px 0px 4px;
         font-size: 11px;
         line-height: 12px;

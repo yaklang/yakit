@@ -283,15 +283,18 @@ export const separator = "|"
 /** 将菜单数据转换成 Menu组件数据 */
 export const routeToMenu = (
     routes: EnhancedPublicRouteMenuProps[] | EnhancedPrivateRouteMenuProps[],
+    t: (key: string) => string,
     parent?: string
 ) => {
     const menus: YakitMenuItemProps[] = []
     for (let item of routes) {
         const menuItem: YakitMenuItemProps = {
-            label: item.label,
+            label: item.labelUi ? t(item.labelUi) : item.label, // 如果有 labelUi 就翻译
             key: `${routeInfoToKey(item)}${parent ? separator + parent : ""}`
         }
-        if (item.children && item.children.length > 0) menuItem.children = routeToMenu(item.children, item.label)
+        if (item.children && item.children.length > 0) {
+            menuItem.children = routeToMenu(item.children, t, item.label)
+        }
         menus.push(menuItem)
     }
     return menus

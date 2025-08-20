@@ -8,6 +8,7 @@ import {ErrorBoundary} from "react-error-boundary"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {createRoot} from "react-dom/client"
+import {useNamespace} from "@/i18n/useNamespace"
 export interface YakitModalConfirmProps extends YakitBaseModalProp {
     title?: React.ReactNode | string
     content?: React.ReactNode | string
@@ -114,6 +115,7 @@ interface YakitBaseModalProp
 }
 
 const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
+    const {t, i18n} = useNamespace(["yakitUi"])
     const [visible, setVisible] = useState<boolean>(true)
     const [loading, setLoading] = useState<boolean>(false)
 
@@ -136,7 +138,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                         }}
                         {...props.cancelButtonProps}
                     >
-                        {props.onCancelText || "取消"}
+                        {props.onCancelText || t("YakitButton.cancel")}
                     </YakitButton>
                     <YakitButton
                         onClick={(e) => {
@@ -150,7 +152,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                         loading={loading}
                         {...props.okButtonProps}
                     >
-                        {props.onOkText || "确定"}
+                        {props.onOkText || t("YakitButton.ok")}
                     </YakitButton>
                 </div>
             }
