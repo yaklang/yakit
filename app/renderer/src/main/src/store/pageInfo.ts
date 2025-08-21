@@ -580,33 +580,35 @@ export const saveFuzzerCache = debounce(
 
 /**处理WF需要缓存的数据 */
 export const getFuzzerProcessedCacheData = (pageList) => {
-    const cache = pageList.map((ele) => {
-        const advancedConfigValue =
-            ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
-        const hotPatchCode = ele.pageParamsInfo?.webFuzzerPageInfo?.hotPatchCode
-        return {
-            groupChildren: [],
-            groupId: ele.pageGroupId,
-            id: ele.pageId,
-            pageParams: {
-                actualHost: advancedConfigValue.actualHost || "",
-                id: ele.pageId,
-                isHttps: advancedConfigValue.isHttps,
-                request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
-                params: advancedConfigValue.params,
-                extractors: advancedConfigValue.extractors,
-                matchers: advancedConfigValue.matchers,
-                repeatTimes: advancedConfigValue.repeatTimes,
-                concurrent: advancedConfigValue.concurrent,
-                minDelaySeconds: advancedConfigValue.minDelaySeconds,
-                maxDelaySeconds: advancedConfigValue.maxDelaySeconds,
-                hotPatchCode: hotPatchCode
-            },
-            sortFieId: ele.sortFieId,
-            verbose: ele.pageName,
-            expand: ele.expand,
-            color: ele.color
-        }
-    })
+    const cache = Array.isArray(pageList)
+        ? pageList?.map((ele) => {
+              const advancedConfigValue =
+                  ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
+              const hotPatchCode = ele.pageParamsInfo?.webFuzzerPageInfo?.hotPatchCode
+              return {
+                  groupChildren: [],
+                  groupId: ele.pageGroupId,
+                  id: ele.pageId,
+                  pageParams: {
+                      actualHost: advancedConfigValue.actualHost || "",
+                      id: ele.pageId,
+                      isHttps: advancedConfigValue.isHttps,
+                      request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
+                      params: advancedConfigValue.params,
+                      extractors: advancedConfigValue.extractors,
+                      matchers: advancedConfigValue.matchers,
+                      repeatTimes: advancedConfigValue.repeatTimes,
+                      concurrent: advancedConfigValue.concurrent,
+                      minDelaySeconds: advancedConfigValue.minDelaySeconds,
+                      maxDelaySeconds: advancedConfigValue.maxDelaySeconds,
+                      hotPatchCode: hotPatchCode
+                  },
+                  sortFieId: ele.sortFieId,
+                  verbose: ele.pageName,
+                  expand: ele.expand,
+                  color: ele.color
+              }
+          })
+        : []
     return cache
 }

@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useCallback, FC} from "react"
+import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useCallback, FC, useContext} from "react"
 import {Button, Card, Col, Descriptions, Empty, PageHeader, Row, Space, Tag, Tooltip} from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
@@ -47,6 +47,7 @@ import {HighLightText} from "./yakitUI/YakitEditor/YakitEditorType"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {useSelectionByteCount} from "./yakitUI/YakitEditor/useSelectionByteCount"
+import {debugToPrintLog} from "@/utils/logCollection"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -89,7 +90,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     showFlod?: boolean
 }
 
-export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
+export interface FuzzerResponseToHTTPFlowDetailProps extends HTTPPacketFuzzable {
     response: FuzzerResponse
     onClosed?: () => any
     index?: number
@@ -97,44 +98,47 @@ export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
     randomChunkedData?: RandomChunkedResponse[]
 }
 
-export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDetail) => {
+export const FuzzerResponseToHTTPFlowDetail: FC<FuzzerResponseToHTTPFlowDetailProps> = (rsp) => {
     const [response, setResponse] = useState<FuzzerResponse>()
-    const [index, setIndex] = useState<number>()
+    const [index, setIndex] = useState<number>(-1)
     const [id, setId] = useState(0)
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
-        setResponse(rsp.response)
-        setIndex(rsp.index)
-    }, [rsp.response])
-
-    useEffect(() => {
-        if (!response) {
-            return
+        try {
+            setResponse((prev) => (prev !== rsp.response ? rsp.response : prev))
+            setIndex((prev) => (prev !== rsp.index && typeof rsp.index === "number" ? rsp.index : prev))
+        } catch (err) {
+            debugToPrintLog(err)
         }
-        setLoading(true)
-        ipcRenderer
-            .invoke("ConvertFuzzerResponseToHTTPFlow", {...response})
-            .then((d: HTTPFlow) => {
-                if (d.Id <= 0) {
-                    return
-                }
-                setId(d.Id)
-            })
-            .catch((e) => {
-                failed(`分析参数失败: ${e}`)
-            })
+    }, [rsp.response, rsp.index])
+
+    useUpdateEffect(() => {
+        if (response) {
+            setLoading(true)
+            ipcRenderer
+                .invoke("ConvertFuzzerResponseToHTTPFlow", {...response})
+                .then((d: HTTPFlow) => {
+                    if (d.Id > 0) {
+                        setId(d.Id)
+                    }
+                })
+                .catch((e) => {
+                    debugToPrintLog(e)
+                    failed(`分析参数失败: ${e}`)
+                })
+        }
     }, [response])
 
     const fetchInfo = (kind: number) => {
         if (index === undefined || !rsp.data || rsp.data.length === 0) return
 
         if (kind === 1) {
-            setResponse(rsp.data[index - 1])
+            setResponse(rsp.data?.[index - 1])
             setIndex(index - 1)
         }
         if (kind === 2) {
-            setResponse(rsp.data[index + 1])
+            setResponse(rsp.data?.[index + 1])
             setIndex(index + 1)
         }
     }
@@ -153,6 +157,30 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
     )
 }
 
+// monaco 选中字节数目展示
+const FlowDetailByteTag: FC<
+    Partial<{isFlow: boolean; IsWebsocket: boolean; editorExample: IMonacoEditor; wsEditorExample: IMonacoEditor}>
+> = (props) => {
+    const {isFlow, IsWebsocket, editorExample, wsEditorExample} = props
+
+    const editorByteCount = useSelectionByteCount(editorExample, 500)
+    const wsEditorByteCount = useSelectionByteCount(wsEditorExample, 500)
+
+    const targetByte = useMemo(() => {
+        if (!isFlow) return 0
+        if (IsWebsocket) return wsEditorByteCount
+        return editorByteCount
+    }, [editorByteCount, wsEditorByteCount, IsWebsocket, isFlow])
+
+    return editorByteCount > 0 ? (
+        <YakitTag style={{marginLeft: 8}} key='selectionByteCount'>
+            {targetByte} bytes
+        </YakitTag>
+    ) : (
+        <></>
+    )
+}
+
 export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     const [flow, setFlow] = useState<HTTPFlow>()
     const [loading, setLoading] = useState(false)
@@ -161,28 +189,13 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     const [wsResEditor, setWsResEditor] = useState<IMonacoEditor>()
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
-    const resByteCount = useSelectionByteCount(resEditor, 500)
-    const reqByteCount = useSelectionByteCount(reqEditor, 500)
-    const wsReqByteCount = useSelectionByteCount(wsReqEditor, 500)
-    const wsResByteCount = useSelectionByteCount(wsResEditor, 500)
-
-    const reqByte = useMemo(() => {
-        if (!flow) return 0
-        if (flow.IsWebsocket) return wsReqByteCount
-        return reqByteCount
-    }, [flow, wsReqByteCount, reqByteCount])
-    const resByte = useMemo(() => {
-        if (!flow) return 0
-        if (flow.IsWebsocket) return wsResByteCount
-        return resByteCount
-    }, [flow, wsResByteCount, resByteCount])
 
     useEffect(() => {
         setLoading(props.loading || false)
     }, [props.loading])
 
     useEffect(() => {
-        if (props.id <= 0) {
+        if (typeof props.id === "number" && props.id <= 0) {
             return
         }
         setLoading(true)
@@ -192,18 +205,22 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                 setFlow(data)
             })
             .catch((e) => {
+                debugToPrintLog(e)
                 failed(`GetHTTPFlowById[${props.id}] failed`)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
         // ipcRenderer.invoke("get-http-flow", props.hash)
-
         return () => {}
     }, [props.id])
 
-    const onCloseDetails = useMemoizedFn((e, res) => {
-        const {type, data} = res
-        if ((type === "fuzzer" || type === "websocket-fuzzer") && data.openFlag === false) return
-        if (props.onClose) props.onClose()
+    const onCloseDetails = useMemoizedFn((_, res) => {
+        try {
+            const {type, data} = res
+            if ((type === "fuzzer" || type === "websocket-fuzzer") && data.openFlag === false) return
+            if (props.onClose) props.onClose()
+        } catch (error) {
+            debugToPrintLog(error)
+        }
     })
 
     useEffect(() => {
@@ -217,7 +234,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
     // 编辑器发送到对比器
     const {compareState, setCompareLeft, setCompareRight} = useHttpFlowStore()
-    const sendCodeCompareMenuItem = (type: string) => {
+    const sendCodeCompareMenuItem = (type: "response" | "request") => {
         return {
             codeCompare: {
                 menu: [
@@ -228,26 +245,26 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             {
                                 key: "code-compare-left",
                                 label: "发送到对比器左侧",
-                                disabled: [false, true, false][compareState]
+                                disabled: [false, true, false]?.[compareState]
                             },
                             {
                                 key: "code-compare-right",
                                 label: "发送到对比器右侧",
-                                disabled: [false, false, true][compareState]
+                                disabled: [false, false, true]?.[compareState]
                             }
                         ]
                     }
                 ],
-                onRun: (editor, key) => {
+                onRun: (_, key) => {
                     if (type === "response" && flow?.Response) {
                         if (key === "code-compare-left") {
                             setCompareLeft({
-                                content: new Buffer(flow?.Response).toString("utf8"),
+                                content: new Buffer(flow?.Response ?? []).toString("utf8"),
                                 language: "http"
                             })
                         } else {
                             setCompareRight({
-                                content: new Buffer(flow?.Response).toString("utf8"),
+                                content: new Buffer(flow?.Response ?? []).toString("utf8"),
                                 language: "http"
                             })
                         }
@@ -257,12 +274,12 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     if (type === "request" && flow?.Request) {
                         if (key === "code-compare-left") {
                             setCompareLeft({
-                                content: new Buffer(flow?.Request).toString("utf8"),
+                                content: new Buffer(flow?.Request ?? []).toString("utf8"),
                                 language: "http"
                             })
                         } else {
                             setCompareRight({
-                                content: new Buffer(flow?.Request).toString("utf8"),
+                                content: new Buffer(flow?.Request ?? []).toString("utf8"),
                                 language: "http"
                             })
                         }
@@ -280,12 +297,12 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     {props.noHeader ? undefined : (
                         <PageHeader
                             title={`请求详情`}
-                            subTitle={`${props.id}${
-                                (props.payloads || []).length > 0 ? `  Payload: ${props.payloads?.join(",")}` : ""
+                            subTitle={`${props?.id ?? "-"}${
+                                (props?.payloads || []).length > 0 ? `  Payload: ${props.payloads?.join(",")}` : ""
                             }`}
                             style={{padding: 0, paddingBottom: 5}}
                             extra={
-                                props.fetchRequest ? (
+                                props?.fetchRequest && typeof props.fetchRequest === "function" ? (
                                     <Space>
                                         <Tooltip title={"上一个请求"}>
                                             <YakitButton
@@ -293,7 +310,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 disabled={!!props.isFront}
                                                 icon={<LeftOutlined />}
                                                 onClick={() => {
-                                                    props?.fetchRequest!(1)
+                                                    const fetchRequest = props.fetchRequest
+                                                    fetchRequest && fetchRequest(1)
                                                 }}
                                             ></YakitButton>
                                         </Tooltip>
@@ -303,7 +321,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 disabled={!!props.isBehind}
                                                 icon={<RightOutlined />}
                                                 onClick={() => {
-                                                    props?.fetchRequest!(2)
+                                                    const fetchRequest = props.fetchRequest
+                                                    fetchRequest && fetchRequest(2)
                                                 }}
                                             ></YakitButton>
                                         </Tooltip>
@@ -322,14 +341,14 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             className={classNames(styles["detail-header-info"], "yakit-descriptions")}
                         >
                             <Descriptions.Item key={"method"} span={1} label={"HTTP 方法"}>
-                                <YakitTag color='blue'>{flow.Method}</YakitTag>
+                                <YakitTag color='blue'>{flow?.Method}</YakitTag>
                             </Descriptions.Item>
                             <Descriptions.Item key={"url"} span={3} label={"请求 URL"}>
                                 <div style={{display: "flex"}}>
-                                    <Tooltip title={flow.Url} overlayInnerStyle={{maxHeight: 300, overflowY: "auto"}}>
-                                        <span className='content-ellipsis'>{flow.Url}</span>
+                                    <Tooltip title={flow?.Url} overlayInnerStyle={{maxHeight: 300, overflowY: "auto"}}>
+                                        <span className='content-ellipsis'>{flow?.Url}</span>
                                     </Tooltip>
-                                    <CopyComponents copyText={flow.Url} />
+                                    <CopyComponents copyText={flow?.Url} />
                                 </div>
                             </Descriptions.Item>
                             {(props?.payloads || []).length > 0 && (
@@ -338,16 +357,16 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                 </Descriptions.Item>
                             )}
                             <Descriptions.Item key={"https"} span={1} label={"HTTPS"}>
-                                <YakitTag color='blue'>{flow.IsHTTPS ? "True" : "False"}</YakitTag>
+                                <YakitTag color='blue'>{flow?.IsHTTPS ? "True" : "False"}</YakitTag>
                             </Descriptions.Item>
                             <Descriptions.Item key={"status"} span={1} label={"StatusCode"}>
-                                <YakitTag color='blue'>{flow.StatusCode}</YakitTag>
+                                <YakitTag color='blue'>{flow?.StatusCode}</YakitTag>
                             </Descriptions.Item>
                             <Descriptions.Item key={"size"} span={1} label={"Body大小"}>
-                                <YakitTag color='blue'>{flow.BodySizeVerbose}</YakitTag>
+                                <YakitTag color='blue'>{flow?.BodySizeVerbose}</YakitTag>
                             </Descriptions.Item>
                             <Descriptions.Item key={"type"} span={1} label={"Content-Type"}>
-                                <Tooltip title={flow.ContentType}>
+                                <Tooltip title={flow?.ContentType}>
                                     <YakitTag
                                         color='blue'
                                         className='content-ellipsis'
@@ -357,40 +376,48 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             lineHeight: "12px"
                                         }}
                                     >
-                                        {flow.ContentType}
+                                        {flow?.ContentType}
                                     </YakitTag>
                                 </Tooltip>
                             </Descriptions.Item>
                         </Descriptions>
                         <div style={{width: "100%", overflow: "auto"}} className={styles["flow-detail-tabs"]}>
-                            {flow.GetParams.length > 0 || flow.PostParams.length > 0 || flow.CookieParams.length > 0 ? (
+                            {flow?.GetParams.length > 0 ||
+                            flow?.PostParams.length > 0 ||
+                            flow?.CookieParams.length > 0 ? (
                                 <PluginTabs>
-                                    {flow.GetParams.length > 0 && (
+                                    {flow?.GetParams?.length > 0 && (
                                         <TabPane key={"get"} tab={"GET 参数"}>
                                             <FuzzableParamList
                                                 data={flow.GetParams}
                                                 sendToWebFuzzer={() => {
-                                                    if (props.onClose) props.onClose()
+                                                    if (props?.onClose && typeof props.onClose === "function") {
+                                                        props.onClose()
+                                                    }
                                                 }}
                                             />
                                         </TabPane>
                                     )}
-                                    {flow.PostParams.length > 0 && (
+                                    {flow?.PostParams?.length > 0 && (
                                         <TabPane key={"post"} tab={"POST 参数"}>
                                             <FuzzableParamList
-                                                data={flow.PostParams}
+                                                data={flow.PostParams ?? []}
                                                 sendToWebFuzzer={() => {
-                                                    if (props.onClose) props.onClose()
+                                                    if (props?.onClose && typeof props.onClose === "function") {
+                                                        props.onClose()
+                                                    }
                                                 }}
                                             />
                                         </TabPane>
                                     )}
-                                    {flow.CookieParams.length > 0 && (
+                                    {flow?.CookieParams?.length > 0 && (
                                         <TabPane key={"cookie"} tab={"Cookie 参数"}>
                                             <FuzzableParamList
                                                 data={flow.CookieParams}
                                                 sendToWebFuzzer={() => {
-                                                    if (props.onClose) props.onClose()
+                                                    if (props?.onClose && typeof props.onClose === "function") {
+                                                        props.onClose()
+                                                    }
                                                 }}
                                             />
                                         </TabPane>
@@ -406,26 +433,29 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                     title={
                                         <>
                                             原始 HTTP 请求
-                                            {reqByte > 0 && (
-                                                <YakitTag style={{marginLeft: 8}}>{reqByte} bytes</YakitTag>
-                                            )}
+                                            <FlowDetailByteTag
+                                                isFlow={!!flow}
+                                                IsWebsocket={flow.IsWebsocket}
+                                                editorExample={reqEditor}
+                                                wsEditorExample={wsReqEditor}
+                                            />
                                         </>
                                     }
                                     size={"small"}
                                     bodyStyle={{padding: 0}}
                                 >
                                     <div style={{height: 350}}>
-                                        {flow.IsWebsocket ? (
+                                        {flow?.IsWebsocket ? (
                                             <WebSocketEditor
                                                 flow={flow}
-                                                value={flow.RequestString}
+                                                value={flow?.RequestString ?? ""}
                                                 onSetEditor={setWsReqEditor}
                                             />
                                         ) : (
                                             <NewHTTPPacketEditor
                                                 readOnly={true}
                                                 noHeader={true}
-                                                originValue={flow.RequestString}
+                                                originValue={flow?.RequestString ?? ""}
                                                 defaultHttps={flow?.IsHTTPS}
                                                 // actions={[...actionFuzzer]}
                                                 extraEditorProps={{
@@ -434,20 +464,20 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 contextMenu={{
                                                     ...sendCodeCompareMenuItem("request")
                                                 }}
-                                                url={flow.Url}
+                                                url={flow?.Url ?? ""}
                                                 downstreamProxyStr={props.downstreamProxyStr}
-                                                downbodyParams={{Id: flow.Id, IsRequest: true}}
+                                                downbodyParams={{Id: flow?.Id, IsRequest: true}}
                                                 onEditor={(editor) => {
                                                     setReqEditor(editor)
                                                 }}
                                                 onClickOpenPacketNewWindowMenu={() => {
                                                     openPacketNewWindow({
                                                         request: {
-                                                            originValue: flow.RequestString
+                                                            originValue: flow?.RequestString ?? ""
                                                         },
                                                         response: {
-                                                            originValue: flow.ResponseString,
-                                                            originalPackage: flow.Response
+                                                            originValue: flow?.ResponseString ?? "",
+                                                            originalPackage: flow?.Response
                                                         }
                                                     })
                                                 }}
@@ -461,49 +491,52 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                     title={
                                         <>
                                             原始 HTTP 响应
-                                            {resByte > 0 && (
-                                                <YakitTag style={{marginLeft: 8}}>{resByte} bytes</YakitTag>
-                                            )}
+                                            <FlowDetailByteTag
+                                                isFlow={!!flow}
+                                                IsWebsocket={flow?.IsWebsocket}
+                                                editorExample={resEditor}
+                                                wsEditorExample={wsResEditor}
+                                            />
                                         </>
                                     }
                                     size={"small"}
                                     bodyStyle={{padding: 0}}
                                 >
                                     <div style={{height: 350}}>
-                                        {flow.IsWebsocket ? (
+                                        {flow?.IsWebsocket ? (
                                             <WebSocketEditor
                                                 flow={flow}
-                                                value={flow.ResponseString}
+                                                value={flow?.ResponseString ?? ""}
                                                 onSetEditor={setWsResEditor}
                                             />
                                         ) : (
                                             <NewHTTPPacketEditor
                                                 readOnly={true}
                                                 noHeader={true}
-                                                originValue={flow.ResponseString}
+                                                originValue={flow?.ResponseString ?? ""}
                                                 defaultHttps={flow?.IsHTTPS}
                                                 // actions={[...actionFuzzer]}
-                                                webFuzzerValue={flow.RequestString || ""}
+                                                webFuzzerValue={flow?.RequestString ?? ""}
                                                 extraEditorProps={{
                                                     isShowSelectRangeMenu: true
                                                 }}
                                                 contextMenu={{
                                                     ...sendCodeCompareMenuItem("response")
                                                 }}
-                                                url={flow.Url}
-                                                downstreamProxyStr={props.downstreamProxyStr}
-                                                downbodyParams={{Id: flow.Id, IsRequest: false}}
+                                                url={flow?.Url ?? ""}
+                                                downstreamProxyStr={props?.downstreamProxyStr ?? ""}
+                                                downbodyParams={{Id: flow?.Id, IsRequest: false}}
                                                 onEditor={(editor) => {
                                                     setResEditor(editor)
                                                 }}
                                                 onClickOpenPacketNewWindowMenu={() => {
                                                     openPacketNewWindow({
                                                         request: {
-                                                            originValue: flow.RequestString
+                                                            originValue: flow?.RequestString ?? ""
                                                         },
                                                         response: {
-                                                            originValue: flow.ResponseString,
-                                                            originalPackage: flow.Response
+                                                            originValue: flow?.ResponseString ?? "",
+                                                            originalPackage: flow?.Response
                                                         }
                                                     })
                                                 }}
@@ -1963,13 +1996,12 @@ function infoTypeVerbose(i: HTTPFlowInfoType) {
     }
 }
 
-type SelectByteCountProps = () => number
-
-const ResByteCountTag: FC<{editor?: IMonacoEditor; pageType?: HTTPHistorySourcePageType; showJumpTree?: boolean}> = ({
-    editor,
-    pageType,
-    showJumpTree
-}) => {
+const ResByteCountTag: FC<{
+    targetByte?: number
+    editor?: IMonacoEditor
+    pageType?: HTTPHistorySourcePageType
+    showJumpTree?: boolean
+}> = ({editor, pageType, showJumpTree}) => {
     const resByteCount = useSelectionByteCount(editor, 500)
     return resByteCount > 0 ? (
         <YakitTag style={{marginLeft: pageType === "History" && showJumpTree ? 8 : 0}} key='selectionByteCount'>

@@ -20,7 +20,7 @@ export const execPacketScan = (params: {
 
 export const execPacketScanFromRaw = (
     https: boolean,
-    request: Uint8Array,
+    request: Uint8Array | Buffer,
     value: {Keyword?: string; Verbose: string}
 ) => {
     const {Keyword, Verbose} = value
@@ -30,7 +30,7 @@ export const execPacketScanFromRaw = (
 export const execPacketScanWithNewTab = (params: {
     httpFlowIds: number[] | string[]
     https: boolean
-    request?: Uint8Array
+    request?: Uint8Array | Buffer
     keyword: string
     verbose: string
 }) => {
