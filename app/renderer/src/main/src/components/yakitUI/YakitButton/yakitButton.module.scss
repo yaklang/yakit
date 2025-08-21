@@ -34,30 +34,23 @@
         border-color: fetch-color($type, "color-6");
     }
     &[disabled] {
-        // border: 1px solid var(--Colors-Use-Neutral-Border);
-        // background: var(--Colors-Use-Neutral-Bg-Hover);
-        // color: var(--Colors-Use-Neutral-Disable);
         background: var(--Colors-Use-Main-Border);
         color: var(--Colors-Use-Basic-Background);
-        border: none;
+        border: var(--Colors-Use-Main-Border);
     }
     &[disabled]:hover {
-        // border: 1px solid var(--Colors-Use-Neutral-Border);
-        // background: var(--Colors-Use-Neutral-Bg-Hover);
-        // color: var(--Colors-Use-Neutral-Disable);
         background: var(--Colors-Use-Main-Border);
         color: var(--Colors-Use-Basic-Background);
-        border: none;
+        border-color: var(--Colors-Use-Main-Border);
     }
 }
 
 @mixin generateSecondary2($type) {
     --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
-    background: var(--Colors-Use-Neutral-Bg);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
     color: var(--Colors-Use-Neutral-Text-1-Title);
-    // border-color: var(--Colors-Use-Neutral-Border);
-    border: none;
+    border-color: var(--Colors-Use-Neutral-Bg-Hover);
     svg {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
@@ -90,7 +83,7 @@
     &:hover {
         background: fetch-color($type, "color-1");
         color: fetch-color($type, "color-4");
-        border-color: fetch-color($type, "color-3");
+        border-color: transparent;
         svg {
             color: fetch-color($type, "color-5");
         }

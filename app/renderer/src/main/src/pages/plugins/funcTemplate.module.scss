@@ -204,6 +204,9 @@
     &:global(.ant-dropdown) {
         box-shadow: 0px 2px 4px var(--Colors-Use-Basic-Shadow);
     }
+    :global(.ant-dropdown-menu){
+        box-shadow: none;
+    }
 }
 // -------------------- AuthorIcon & ApplicantIcon ↓↓↓ --------------------
 .author-icon-wrapper {

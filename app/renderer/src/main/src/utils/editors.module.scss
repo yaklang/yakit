@@ -32,7 +32,7 @@
 
     .crlf::before {
         content: "↵";
-        background-color: var(--Colors-Use-Basic-Background); /* 灰色背景 */
+        background-color: var(--yakit-colors-Neutral-40); /* 灰色背景 */
         margin: 4px;
         padding: 2px; /* 根据需要添加内边距 */
         border-radius: 3px; /* 添加圆角以使样式更好看 */
