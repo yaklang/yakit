@@ -29,7 +29,7 @@ export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
         return [
             {label: "aichat", value: AILocalModelTypeEnum.AIChat},
             {label: "embedding", value: AILocalModelTypeEnum.Embedding},
-            {label: "speech-to-text", value: AILocalModelTypeEnum.SpeechToText}
+            // {label: "speech-to-text", value: AILocalModelTypeEnum.SpeechToText}
         ]
     }, [])
     const handleSubmit = useMemoizedFn(() => {
