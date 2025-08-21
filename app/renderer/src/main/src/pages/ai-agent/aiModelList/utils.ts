@@ -31,6 +31,7 @@ export const grpcGetSupportedLocalModels: APINoRequestFunc<LocalModelConfig[]> =
             .invoke("GetSupportedLocalModels")
             .then((res) => {
                 const models = res.Models || []
+                console.log('GetSupportedLocalModels',models)
                 resolve(models)
             })
             .catch((err) => {

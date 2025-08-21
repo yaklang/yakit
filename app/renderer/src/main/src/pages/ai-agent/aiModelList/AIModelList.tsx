@@ -630,6 +630,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
     const [removeVisible, setRemoveVisible] = useState<boolean>(false)
     const [stopVisible, setStopVisible] = useState<boolean>(false)
 
+    const [stopLoading, setStopLoading] = useState<boolean>(false)
+
     const tokenRef = useRef<string>(randomString(60))
     const downTokenRef = useRef<string>(randomString(60))
 
@@ -671,10 +673,17 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
         })
     })
     const onStop = useMemoizedFn(() => {
-        grpcStopLocalModel({ModelName: item.Name}).then(() => {
-            onRefresh()
-            setStopVisible(false)
-        })
+        setStopLoading(true)
+        grpcStopLocalModel({ModelName: item.Name})
+            .then(() => {
+                onRefresh()
+                setStopVisible(false)
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setStopLoading(false)
+                }, 200)
+            )
     })
     const onDown = useMemoizedFn(() => {
         const m = showYakitModal({
@@ -827,9 +836,11 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                                 <YakitPopconfirm
                                     title={`确定要停用模型 ${item.Name} 吗？`}
                                     onConfirm={onStop}
+                                    onCancel={() => setStopVisible(false)}
                                     visible={stopVisible}
                                     onVisibleChange={setStopVisible}
                                     trigger={"click"}
+                                    okButtonProps={{loading: stopLoading}}
                                 >
                                     <YakitButton type='text' colors='danger' icon={<OutlineExitIcon />}>
                                         停用
