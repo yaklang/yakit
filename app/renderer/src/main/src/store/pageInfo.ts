@@ -75,6 +75,8 @@ interface PageParamsInfoProps {
     mitmHackerPageInfo?: MITMHackerPageInfoProps
     /** 编辑 ai-forge 模板页面 */
     modifyAIForgePageInfo?: AIForgeEditorPageInfoProps
+    /** 扫描历史页面 */
+    yakRunnerScanHistory?: YakRunnerScanHistoryPageInfoProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -214,6 +216,11 @@ export interface AuditCodePageInfoProps {
     CodeRange?: string
     // 漏洞/规则 树所选中的下拉列表
     runtimeId?: string
+    // 左侧tab选中
+    leftTabActive?: string
+    // 只看新增
+    isShowCompare?: boolean
+    refreshRiskOrRuleList?: boolean
 }
 
 export interface CodeScanPageInfoProps {
@@ -234,6 +241,10 @@ export interface ModifyNotepadPageInfoProps {
     keyWordInfo?: {keyWord: string; position: number; line?: number}
     /**自动带入内容 */
     content?: string
+}
+
+export interface YakRunnerScanHistoryPageInfoProps {
+    Programs: string[]
 }
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>
