@@ -49,7 +49,7 @@ import {
     isResetActiveFile,
     judgeAreaExistFilePath,
     monacaLanguageType,
-    removeAreaFileInfo,
+    removeYakRunnerAreaFileInfo,
     setYakRunnerHistory,
     updateAreaFileInfo
 } from "../utils"
@@ -337,7 +337,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
 
     const onRemoveFun = useMemoizedFn((info: FileDetailInfo) => {
-        const {newAreaInfo, newActiveFile} = removeAreaFileInfo(areaInfo, info)
+        const {newAreaInfo, newActiveFile} = removeYakRunnerAreaFileInfo(areaInfo, info)
         setActiveFile && setActiveFile(newActiveFile)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
@@ -514,7 +514,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                             if (folderMap.includes(path)) {
                                 const file = await judgeAreaExistFilePath(areaInfo, path)
                                 if (file) {
-                                    cacheAreaInfo = removeAreaFileInfo(areaInfo, file).newAreaInfo
+                                    cacheAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, file).newAreaInfo
                                 }
                                 folderMap = folderMap.filter((item) => item !== path)
                             }
@@ -1419,7 +1419,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                     file.isDelete = false
                     success(`${file.name} 保存成功`)
                     // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
-                    const removeAreaInfo = removeAreaFileInfo(areaInfo, file).newAreaInfo
+                    const removeAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, file).newAreaInfo
                     const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, info.path)
                     setAreaInfo && setAreaInfo(newAreaInfo)
                     setActiveFile && setActiveFile(file)

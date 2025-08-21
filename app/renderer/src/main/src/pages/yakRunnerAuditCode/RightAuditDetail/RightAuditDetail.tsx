@@ -3,7 +3,7 @@ import classNames from "classnames"
 import styles from "./RightAuditDetail.module.scss"
 import {useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import {StringToUint8Array} from "@/utils/str"
-import {getNameByPath, loadAuditFromYakURLRaw} from "../utils"
+import {loadAuditFromYakURLRaw} from "../utils"
 import {
     OutlineCollectionIcon,
     OutlineHandIcon,
@@ -27,6 +27,7 @@ import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
 import {clearMapResultDetail, getMapResultDetail, setMapResultDetail} from "./ResultMap"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import { getNameByPath } from "@/pages/yakRunner/utils"
 
 export interface JumpSourceDataProps {
     title: string

@@ -3032,7 +3032,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [])
 
-    const isShowUpload = isEnpriTrace()
     const {userInfo} = useStore()
     const menuData = useMemo(()=>{
         let menu = [
@@ -3359,7 +3358,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
     ]
-    if(isShowUpload && userInfo.isLogin){
+    if(isEnpriTrace() && userInfo.isLogin){
         menu.push(
             {
             key: "上传数据",
@@ -3376,7 +3375,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
     }
     return menu
-    },[isShowUpload,userInfo.isLogin])
+    },[userInfo.isLogin])
 
     /** 菜单自定义快捷键渲染处理事件 */
     const contextMenuKeybindingHandle = useMemoizedFn((data) => {

@@ -9,7 +9,7 @@ import classNames from "classnames"
 import styles from "./RunnerFileTree.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {downloadAsZip, getYakRunnerHistory, removeAreaFileInfo, setAreaFileActive, updateAreaFileInfo} from "../utils"
+import {downloadAsZip, getYakJavaDecompilerHistory, removeJavaDecompilerAreaFileInfo, setJavaDecompilerAreaFileActive, updateJavaDecompilerAreaFileInfo} from "../utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {getMapFileDetail} from "../FileTreeMap/FileMap"
 import {getMapFolderDetail} from "../FileTreeMap/ChildMap"
@@ -102,7 +102,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 const historyData: YakJavaDecompilerHistoryProps[] = JSON.parse(data)
                 setHistoryList(historyData)
             } else {
-                const list = await getYakRunnerHistory()
+                const list = await getYakJavaDecompilerHistory()
                 setHistoryList(list)
             }
         } catch (error) {}
@@ -347,7 +347,7 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
         if (activeFile?.path === data.path) {
             setActiveFile && setActiveFile(undefined)
         }
-        const {newAreaInfo} = removeAreaFileInfo(areaInfo, data)
+        const {newAreaInfo} = removeJavaDecompilerAreaFileInfo(areaInfo, data)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
@@ -355,9 +355,9 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
         // 注入语法检测 由于点击项必为激活项默认给true
         const newActiveFile = {...data, isActive: true}
         // 更改当前tabs active
-        const activeAreaInfo = setAreaFileActive(areaInfo, data.path)
+        const activeAreaInfo = setJavaDecompilerAreaFileActive(areaInfo, data.path)
         // 将新的语法检测注入areaInfo
-        const newAreaInfo = updateAreaFileInfo(activeAreaInfo, newActiveFile, newActiveFile.path)
+        const newAreaInfo = updateJavaDecompilerAreaFileInfo(activeAreaInfo, newActiveFile, newActiveFile.path)
         setAreaInfo && setAreaInfo(newAreaInfo)
         setActiveFile && setActiveFile(newActiveFile)
     })

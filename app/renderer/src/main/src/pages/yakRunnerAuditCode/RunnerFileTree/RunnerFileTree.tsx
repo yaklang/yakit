@@ -18,13 +18,12 @@ import styles from "./RunnerFileTree.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
-    getNameByPath,
     grpcFetchAuditTree,
-    grpcFetchRiskOrRuleList,
+    grpcFetchAuditCodeRiskOrRuleList,
     grpcFetchRiskOrRuleTree,
-    removeAreaFileInfo,
-    setAreaFileActive,
-    updateAreaFileInfo
+    removeAuditCodeAreaFileInfo,
+    setAuditCodeAreaFileActive,
+    updateAuditCodeAreaFileInfo
 } from "../utils"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import emiter from "@/utils/eventBus/eventBus"
@@ -358,7 +357,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         try {
             if (projectName) {
                 // 经与后端协商 由于跳转后需选中此Select 因此不采用分页，更改为一次性拉取100条
-                const res = await grpcFetchRiskOrRuleList(projectName)
+                const res = await grpcFetchAuditCodeRiskOrRuleList(projectName)
                 const newOptions = res.Data.map((item) => {
                     return {
                         label: (
@@ -667,7 +666,7 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
         if (activeFile?.path === data.path) {
             setActiveFile && setActiveFile(undefined)
         }
-        const {newAreaInfo} = removeAreaFileInfo(areaInfo, data)
+        const {newAreaInfo} = removeAuditCodeAreaFileInfo(areaInfo, data)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
@@ -675,9 +674,9 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
         // 注入漏洞汇总 由于点击项必为激活项默认给true
         const newActiveFile = {...data, isActive: true}
         // 更改当前tabs active
-        const activeAreaInfo = setAreaFileActive(areaInfo, data.path)
+        const activeAreaInfo = setAuditCodeAreaFileActive(areaInfo, data.path)
         // 将新的语法检测注入areaInfo
-        const newAreaInfo = updateAreaFileInfo(activeAreaInfo, newActiveFile, newActiveFile.path)
+        const newAreaInfo = updateAuditCodeAreaFileInfo(activeAreaInfo, newActiveFile, newActiveFile.path)
         setAreaInfo && setAreaInfo(newAreaInfo)
         setActiveFile && setActiveFile(newActiveFile)
     })

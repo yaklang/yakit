@@ -27,7 +27,7 @@ import {
     judgeAreaExistFilePath,
     judgeAreaExistFilesPath,
     loadFolderDetail,
-    removeAreaFileInfo,
+    removeYakRunnerAreaFileInfo,
     setYakRunnerLastFolderExpanded,
     updateActiveFile,
     updateAreaFileInfo,
@@ -515,7 +515,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                         if (folderMap.includes(path)) {
                             const file = await judgeAreaExistFilePath(areaInfo, path)
                             if (file) {
-                                cacheAreaInfo = removeAreaFileInfo(areaInfo, file).newAreaInfo
+                                cacheAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, file).newAreaInfo
                             }
                             folderMap = folderMap.filter((item) => item !== path)
                         }

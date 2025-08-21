@@ -52,13 +52,10 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {failed, success, warn, yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {
-    CustomPluginExecuteFormValue,
     FormExtraSettingProps
 } from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
-import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import useStore from "../hooks/useStore"
-import {getNameByPath, grpcFetchAuditTree, grpcFetchDeleteAudit, loadAuditFromYakURLRaw} from "../utils"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {loadAuditFromYakURLRaw} from "../utils"
 import {
     OutlineArrowcirclerightIcon,
     OutlineBugIcon,
@@ -131,9 +128,9 @@ import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStart
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {FileDefault, FileSuffix, KeyToIcon} from "../../yakRunner/FileTree/icon"
 import {RiskTree} from "../RunnerFileTree/RunnerFileTree"
+import { getNameByPath } from "@/pages/yakRunner/utils"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")

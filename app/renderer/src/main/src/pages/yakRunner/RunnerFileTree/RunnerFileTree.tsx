@@ -26,7 +26,7 @@ import {
     judgeAreaExistFilePath,
     judgeAreaExistFilesPath,
     loadFolderDetail,
-    removeAreaFileInfo,
+    removeYakRunnerAreaFileInfo,
     removeAreaFilesInfo,
     setAreaFileActive,
     setYakRunnerHistory,
@@ -376,7 +376,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 removeMapFileDetail(info.path)
                 const file = await judgeAreaExistFilePath(areaInfo, info.path)
                 if (file) {
-                    const {newAreaInfo} = removeAreaFileInfo(areaInfo, file)
+                    const {newAreaInfo} = removeYakRunnerAreaFileInfo(areaInfo, file)
                     setAreaInfo && setAreaInfo(newAreaInfo)
                 }
             }
@@ -744,7 +744,7 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
         if (activeFile?.path === data.path) {
             setActiveFile && setActiveFile(undefined)
         }
-        const {newAreaInfo} = removeAreaFileInfo(areaInfo, data)
+        const {newAreaInfo} = removeYakRunnerAreaFileInfo(areaInfo, data)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 

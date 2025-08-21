@@ -23,7 +23,7 @@ import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 
 const {ipcRenderer} = window.require("electron")
 
-const initFileTreeData = (list, path) => {
+export const initFileTreeData = (list: RequestYakURLResponse, path?: string | null) => {
     return list.Resources.sort((a, b) => {
         // 将 ResourceType 为 'dir' 的对象排在前面
         if (a.ResourceType === "dir" && b.ResourceType !== "dir") {
@@ -44,7 +44,7 @@ const initFileTreeData = (list, path) => {
             path: item.Path,
             isFolder: isFolder,
             icon: isFolder ? FolderDefault : suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
-            isLeaf: isLeaf
+            isLeaf
         }
     })
 }
@@ -543,7 +543,7 @@ export const updateAreaFilesPathInfo = (
 /**
  * @name 删除分栏数据里某个节点的file数据
  */
-export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
+export const removeYakRunnerAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
     let newActiveFile: FileDetailInfo | undefined = undefined
     let activeFileArr: FileDetailInfo[] = []
