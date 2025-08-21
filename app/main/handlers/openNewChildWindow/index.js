@@ -21,11 +21,61 @@ module.exports = {
             }
         })
 
+        // 监听主窗口最小化子窗口
+        ipcMain.on("minimize-childWin", () => {
+            if (childWindow && !childWindow.isDestroyed()) {
+                childWindow.minimize()
+            }
+        })
+
+        // 监听主窗口最大化子窗口
+        ipcMain.on("maximize-childWin", () => {
+            if (childWindow && !childWindow.isDestroyed()) {
+                childWindow.maximize()
+            }
+        })
+
+        // 监听主窗口还原子窗口
+        ipcMain.on("restore-childWin", () => {
+            if (childWindow && !childWindow.isDestroyed()) {
+                childWindow.restore()
+            }
+        })
+
         // 监听主窗口触发子窗口获取焦点
         ipcMain.on("onTop-childWin", () => {
             if (childWindow && !childWindow.isDestroyed()) {
                 childWindow.focus()
                 childWindow.show()
+            }
+        })
+
+        ipcMain.handle("UIOperate-childWin", (e, params) => {
+            switch (params) {
+                case "close":
+                    childWindow.close()
+                    return
+                case "min":
+                    childWindow.minimize()
+                    return
+                case "full":
+                    let isMax = childWindow.isFullScreen()
+                    if (isMax) {
+                        childWindow.setFullScreen(false)
+                        if (childWindow.isMaximized()) {
+                            setTimeout(() => {
+                                childWindow.unmaximize()
+                            }, 10)
+                        }
+                    } else childWindow.setFullScreen(true)
+                    return
+                case "max":
+                    if (childWindow.isMaximized()) childWindow.unmaximize()
+                    else childWindow.maximize()
+                    return
+
+                default:
+                    return
             }
         })
 
@@ -36,7 +86,7 @@ module.exports = {
                 height: 800,
                 minWidth: 900,
                 minHeight: 500,
-                titleBarStyle: "default", // 确保 macOS 有标题栏按钮
+                titleBarStyle: "hidden", // 确保 macOS 有标题栏按钮
                 webPreferences: {
                     preload: path.join(__dirname, "../../preload.js"),
                     nodeIntegration: true,
@@ -45,6 +95,8 @@ module.exports = {
                 },
                 show: false
             })
+
+            if (process.platform === "darwin") childWindow.setWindowButtonVisibility(false)
 
             // 通知父窗口：带上 hash
             win.send("child-window-hash", {hash: windowHash})
