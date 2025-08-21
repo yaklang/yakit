@@ -29,18 +29,13 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
-import {
-    AreaInfoProps,
-    TabFileProps,
-    YakJavaDecompilerHistoryProps
-} from "../YakJavaDecompilerType.d"
+import {AreaInfoProps, TabFileProps, YakJavaDecompilerHistoryProps} from "../YakJavaDecompilerType.d"
 import {IMonacoEditor} from "@/utils/editors"
 import {
-    getOpenFileInfo,
-    getYakRunnerHistory,
-    isResetActiveFile,
-    removeAreaFileInfo,
-    updateAreaFileInfo
+    getYakJavaDecompilerHistory,
+    isResetJavaDecompilerActiveFile,
+    removeJavaDecompilerAreaFileInfo,
+    updateJavaDecompilerAreaFileInfo
 } from "../utils"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, info, warn, success} from "@/utils/notification"
@@ -54,6 +49,7 @@ import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeTyp
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {getMapFileDetail} from "../FileTreeMap/FileMap"
 import {isAcceptEligible} from "@/components/yakitUI/YakitForm/YakitForm"
+import {getOpenFileInfo} from "@/pages/yakRunner/utils"
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     const {tabsId, wrapperClassName} = props
@@ -277,8 +273,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
 
     const onRemoveFun = useMemoizedFn((info: FileDetailInfo) => {
-        const newActiveFile = isResetActiveFile([info], activeFile)
-        const newAreaInfo = removeAreaFileInfo(areaInfo, info)
+        const {newAreaInfo, newActiveFile} = removeJavaDecompilerAreaFileInfo(areaInfo, info)
         setActiveFile && setActiveFile(newActiveFile)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
@@ -319,7 +314,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             })
         })
 
-        const newActiveFile = isResetActiveFile(closeArr, activeFile)
+        const newActiveFile = isResetJavaDecompilerActiveFile(closeArr, activeFile)
         setActiveFile && setActiveFile(newActiveFile)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
@@ -346,7 +341,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             })
         })
 
-        const newActiveFile = isResetActiveFile(closeArr, activeFile)
+        const newActiveFile = isResetJavaDecompilerActiveFile(closeArr, activeFile)
         setActiveFile && setActiveFile(newActiveFile)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
@@ -365,7 +360,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             {
                 label: "关闭所有",
                 key: "removeAll"
-            },
+            }
         ]
         if (splitDirection.length > 0) {
             let direction: YakitMenuItemType[] = splitDirection.map((item) => {
@@ -408,11 +403,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
 
     const extraDom = useMemoizedFn(() => {
-        return (
-            <div className={styles["extra-box"]}>
-                {onSplitTabBar()}
-            </div>
-        )
+        return <div className={styles["extra-box"]}>{onSplitTabBar()}</div>
     })
 
     return (
@@ -727,7 +718,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const updateAreaFun = useDebounceFn(
         (content: string) => {
             if (editorInfo?.path) {
-                const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo.path)
+                const newAreaInfo = updateJavaDecompilerAreaFileInfo(areaInfo, {code: content}, editorInfo.path)
                 // console.log("更新编辑器文件内容", newAreaInfo)
                 setAreaInfo && setAreaInfo(newAreaInfo)
             }
@@ -763,7 +754,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 newActiveFile = {...newActiveFile, selections: selectionRef.current}
             }
             setActiveFile && setActiveFile(newActiveFile)
-            const newAreaInfo = updateAreaFileInfo(areaInfo, newActiveFile, newActiveFile.path)
+            const newAreaInfo = updateJavaDecompilerAreaFileInfo(areaInfo, newActiveFile, newActiveFile.path)
             // console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
             setAreaInfo && setAreaInfo(newAreaInfo)
         },
@@ -869,12 +860,16 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const onOpenBinary = useMemoizedFn(() => {
         if (!editorInfo) return
         setAllowBinary(true)
-        const newAreaInfo = updateAreaFileInfo(areaInfo, {...editorInfo, isPlainText: true}, editorInfo.path)
+        const newAreaInfo = updateJavaDecompilerAreaFileInfo(
+            areaInfo,
+            {...editorInfo, isPlainText: true},
+            editorInfo.path
+        )
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
-       // 下载当前活动标签页的内容
-       const downloadDecompiledFile = useMemoizedFn(() => {
+    // 下载当前活动标签页的内容
+    const downloadDecompiledFile = useMemoizedFn(() => {
         if (!activeFile) {
             return
         }
@@ -923,13 +918,11 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     highLightClass='hight-light-yak-runner-color'
                     contextMenu={{
                         download: {
-                            menu: [
-                                {key: "download", label: "下载"}
-                            ],
+                            menu: [{key: "download", label: "下载"}],
                             onRun: (editor, key) => {
                                 downloadDecompiledFile()
                             }
-                        },
+                        }
                     }}
                 />
             )}
@@ -943,8 +936,10 @@ export const YakJavaDecompilerWelcomePage: React.FC<YakJavaDecompilerWelcomePage
     const [historyList, setHistoryList] = useState<YakJavaDecompilerHistoryProps[]>([])
 
     const getHistoryList = useMemoizedFn(async () => {
-        const list = await getYakRunnerHistory()
-        setHistoryList(list)
+        try {
+            const list = await getYakJavaDecompilerHistory()
+            setHistoryList(list)
+        } catch (error) {}
     })
     useEffect(() => {
         getHistoryList()

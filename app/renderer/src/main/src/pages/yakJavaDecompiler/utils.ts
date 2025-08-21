@@ -1,14 +1,7 @@
-import {failed, warn, yakitNotify} from "@/utils/notification"
-import {CodeScoreSmokingEvaluateResponseProps} from "../plugins/funcTemplateType"
+import {failed, yakitNotify} from "@/utils/notification"
 import {RequestYakURLResponse} from "../yakURLTree/data"
-import {FileNodeMapProps, FileNodeProps, FileTreeListProps} from "./FileTree/FileTreeType"
+import {FileNodeMapProps, FileNodeProps} from "./FileTree/FileTreeType"
 import {FileDefault, FileSuffix, FolderDefault} from "../yakRunner/FileTree/icon"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {
-    ConvertYakStaticAnalyzeErrorToMarker,
-    IMonacoEditorMarker,
-    YakStaticAnalyzeErrorResult
-} from "@/utils/editorMarkers"
 import {AreaInfoProps, TabFileProps, YakJavaDecompilerHistoryProps} from "./YakJavaDecompilerType"
 import cloneDeep from "lodash/cloneDeep"
 import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsType"
@@ -18,7 +11,7 @@ import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
-const initFileTreeData = (list: RequestYakURLResponse, path) => {
+const initJavaDecompilerFileTreeData = (list: RequestYakURLResponse, path) => {
     return list.Resources.filter((item) => {
         // 如果存在hide属性，则跳过
         for (let i = 0; i < item.Extra.length; i++) {
@@ -59,10 +52,10 @@ const initFileTreeData = (list: RequestYakURLResponse, path) => {
 /**
  * @name 文件树获取
  */
-export const grpcFetchFileTree: (obj: {jarPath: string; innerPath: string}) => Promise<FileNodeMapProps[]> = ({
-    jarPath,
-    innerPath
-}) => {
+export const grpcFetchJavaDecompilerFileTree: (obj: {
+    jarPath: string
+    innerPath: string
+}) => Promise<FileNodeMapProps[]> = ({jarPath, innerPath}) => {
     return new Promise(async (resolve, reject) => {
         // local
         const params = {
@@ -83,7 +76,7 @@ export const grpcFetchFileTree: (obj: {jarPath: string; innerPath: string}) => P
 
         try {
             const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            const data: FileNodeMapProps[] = initFileTreeData(res, innerPath)
+            const data: FileNodeMapProps[] = initJavaDecompilerFileTreeData(res, innerPath)
             // console.log("文件树获取---", path, res)
             resolve(data)
         } catch (error) {
@@ -95,7 +88,7 @@ export const grpcFetchFileTree: (obj: {jarPath: string; innerPath: string}) => P
 /**
  * @name 根据文件path获取其内容
  */
-export const getCodeByPath = (path: string): Promise<string> => {
+export const getJavaDecompilerCodeByPath = (path: string): Promise<string> => {
     return new Promise(async (resolve, reject) => {
         // local
         const params = {
@@ -194,55 +187,12 @@ export const downloadAsZip = (path: string, projectName: string): Promise<null> 
 }
 
 /**
- * @name 更新树数据里某个节点的children数据
- */
-export const updateFileTree: (
-    oldFileTree: FileTreeListProps[],
-    path: string,
-    updateData: FileTreeListProps[]
-) => FileTreeListProps[] = (oldFileTree, path, updateData) => {
-    if (!path) return oldFileTree
-
-    const isValid = updateData && updateData.length > 0
-
-    return oldFileTree.map((node) => {
-        if (node.path === path) {
-            return {...node, children: isValid ? updateData : undefined}
-        }
-        if (node.children && node.children.length > 0) {
-            return {
-                ...node,
-                children: updateFileTree(node.children, path, updateData)
-            }
-        }
-        return node
-    })
-}
-
-/**
- * @name 判断分栏数据里是否存在未保存文件
- */
-export const judgeAreaExistFileUnSave = (areaInfo: AreaInfoProps[]): Promise<string[]> => {
-    return new Promise(async (resolve, reject) => {
-        let unSaveArr: string[] = []
-        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-        newAreaInfo.forEach((item, index) => {
-            item.elements.forEach((itemIn, indexIn) => {
-                itemIn.files.forEach((file, fileIndex) => {
-                    if (file.isUnSave) {
-                        unSaveArr.push(file.path)
-                    }
-                })
-            })
-        })
-        resolve(unSaveArr)
-    })
-}
-
-/**
  * @name 判断分栏数据里是否存在某个节点file数据
  */
-export const judgeAreaExistFilePath = (areaInfo: AreaInfoProps[], path: string): Promise<FileDetailInfo | null> => {
+export const judgeJavaDecompilerAreaExistFilePath = (
+    areaInfo: AreaInfoProps[],
+    path: string
+): Promise<FileDetailInfo | null> => {
     return new Promise(async (resolve, reject) => {
         const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
         newAreaInfo.forEach((item, index) => {
@@ -259,30 +209,14 @@ export const judgeAreaExistFilePath = (areaInfo: AreaInfoProps[], path: string):
 }
 
 /**
- * @name 判断分栏数据里是否存在某些节点file数据
- */
-export const judgeAreaExistFilesPath = (areaInfo: AreaInfoProps[], pathArr: string[]): Promise<FileDetailInfo[]> => {
-    return new Promise(async (resolve, reject) => {
-        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-        let hasArr: FileDetailInfo[] = []
-        newAreaInfo.forEach((item, index) => {
-            item.elements.forEach((itemIn, indexIn) => {
-                itemIn.files.forEach((file, fileIndex) => {
-                    if (pathArr.includes(file.path)) {
-                        hasArr.push(file)
-                    }
-                })
-            })
-        })
-        resolve(hasArr)
-    })
-}
-
-/**
  * @name 更新分栏数据里某个节点的file数据
  */
 // 根据path更新指定内容
-export const updateAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFileDetailInfo, path: string) => {
+export const updateJavaDecompilerAreaFileInfo = (
+    areaInfo: AreaInfoProps[],
+    data: OptionalFileDetailInfo,
+    path: string
+) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
     newAreaInfo.forEach((item, index) => {
         item.elements.forEach((itemIn, indexIn) => {
@@ -300,61 +234,18 @@ export const updateAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFile
 }
 
 /**
- * @name 更新分栏数据里某些节点file数据为被删除待保存状态
- */
-export const updateAreaFileInfoToDelete = (areaInfo: AreaInfoProps[], path?: string) => {
-    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-    newAreaInfo.forEach((item, index) => {
-        item.elements.forEach((itemIn, indexIn) => {
-            itemIn.files.forEach((file, fileIndex) => {
-                if (path && (file.path === path || file.path.startsWith(path))) {
-                    newAreaInfo[index].elements[indexIn].files[fileIndex] = {
-                        ...newAreaInfo[index].elements[indexIn].files[fileIndex],
-                        isDelete: true,
-                        isUnSave: true,
-                        path: `${uuidv4()}-Delete`
-                    }
-                }
-            })
-        })
-    })
-    return newAreaInfo
-}
-
-/**
- * @name 更新分栏数据里所选节点的path与parent信息(重命名文件夹导致其内部文件path与parent发生变化)
- */
-export const updateAreaFilesPathInfo = (
-    areaInfo: AreaInfoProps[],
-    path: string[],
-    oldPath: string,
-    newPath: string
-) => {
-    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-    newAreaInfo.forEach((item, index) => {
-        item.elements.forEach((itemIn, indexIn) => {
-            itemIn.files.forEach((file, fileIndex) => {
-                if (path.includes(file.path)) {
-                    newAreaInfo[index].elements[indexIn].files[fileIndex] = {
-                        ...newAreaInfo[index].elements[indexIn].files[fileIndex],
-                        path: file.path.replace(oldPath, newPath),
-                        parent: file.parent ? file.parent.replace(oldPath, newPath) : null
-                    }
-                }
-            })
-        })
-    })
-    return newAreaInfo
-}
-
-/**
  * @name 删除分栏数据里某个节点的file数据
  */
-export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
+export const removeJavaDecompilerAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    let newActiveFile: FileDetailInfo | undefined = undefined
+    let activeFileArr: FileDetailInfo[] = []
     newAreaInfo.forEach((item, idx) => {
         item.elements.forEach((itemIn, idxin) => {
             itemIn.files.forEach((file, fileIndex) => {
+                if (file.isActive) {
+                    activeFileArr.push(file)
+                }
                 if (file.path === info.path) {
                     // 如若仅存在一项 则删除此大项并更新布局
                     if (item.elements.length > 1 && itemIn.files.length === 1) {
@@ -373,61 +264,27 @@ export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailIn
                         if (info.isActive) {
                             newAreaInfo[idx].elements[idxin].files[fileIndex - 1 < 0 ? 0 : fileIndex - 1].isActive =
                                 true
+                            newActiveFile =
+                                newAreaInfo[idx].elements[idxin].files[fileIndex - 1 < 0 ? 0 : fileIndex - 1]
                         }
                     }
                 }
             })
         })
     })
-    return newAreaInfo
-}
-
-/**
- * @name 删除分栏数据里多个节点的file数据并重新布局
- */
-export const removeAreaFilesInfo = (areaInfo: AreaInfoProps[], removePath: string[]) => {
-    // 如若有为空项则删除
-    const buildAreaInfo = (areaInfo) => {
-        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-        // 移除elements中的files层
-        newAreaInfo.forEach((item, idx) => {
-            item.elements.forEach((itemIn, idxin) => {
-                if (itemIn.files.length === 0) {
-                    newAreaInfo[idx].elements = newAreaInfo[idx].elements.filter((item) => item.id !== itemIn.id)
-                }
-            })
-        })
-        // 移除elements层
-        let indexArr: number[] = [] // 还有数据的项目
-        newAreaInfo.forEach((item, idx) => {
-            if (item.elements.length !== 0) {
-                indexArr.push(idx)
-            }
-        })
-        let resultAreaInfo: AreaInfoProps[] = []
-        indexArr.forEach((index) => {
-            resultAreaInfo.push(newAreaInfo[index])
-        })
-        return resultAreaInfo
+    if (!newActiveFile && activeFileArr.length > 0) {
+        let delIndex = activeFileArr.findIndex((item) => item.path === info.path)
+        if (delIndex > -1) {
+            newActiveFile = activeFileArr[delIndex - 1 < 0 ? 0 : delIndex - 1]
+        }
     }
-
-    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-    newAreaInfo.forEach((item, idx) => {
-        item.elements.forEach((itemIn, idxin) => {
-            itemIn.files.forEach((file, fileIndex) => {
-                if (removePath.includes(file.path)) {
-                    newAreaInfo[idx].elements[idxin].files = itemIn.files.filter((item) => item.path !== file.path)
-                }
-            })
-        })
-    })
-    return buildAreaInfo(newAreaInfo)
+    return {newAreaInfo, newActiveFile}
 }
 
 /**
  * @name 更改分栏数据里某个节点的isActive活动数据
  */
-export const setAreaFileActive = (areaInfo: AreaInfoProps[], path: string) => {
+export const setJavaDecompilerAreaFileActive = (areaInfo: AreaInfoProps[], path: string) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
     newAreaInfo.forEach((item, index) => {
         item.elements.forEach((itemIn, indexIn) => {
@@ -445,18 +302,9 @@ export const setAreaFileActive = (areaInfo: AreaInfoProps[], path: string) => {
 }
 
 /**
- * @name 更改激活展示文件
- */
-export const updateActiveFile = (activeFile: FileDetailInfo, data: OptionalFileDetailInfo, path?: string) => {
-    let newActiveFile: FileDetailInfo = cloneDeep(activeFile)
-    newActiveFile = {...newActiveFile, ...data}
-    return newActiveFile
-}
-
-/**
  * @name 更改项是否包含激活展示文件，包含则取消激活
  */
-export const isResetActiveFile = (
+export const isResetJavaDecompilerActiveFile = (
     files: FileDetailInfo[] | FileNodeProps[],
     activeFile: FileDetailInfo | undefined
 ) => {
@@ -472,7 +320,11 @@ export const isResetActiveFile = (
 /**
  * @name 新增分栏数据里某个节点的file数据
  */
-export const addAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo, activeFile?: FileDetailInfo) => {
+export const addJavaDecompilerAreaFileInfo = (
+    areaInfo: AreaInfoProps[],
+    info: FileDetailInfo,
+    activeFile?: FileDetailInfo
+) => {
     let newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
     let newActiveFile: FileDetailInfo = info
     try {
@@ -523,43 +375,13 @@ export const addAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo,
     }
 }
 
-/**
- * @name 获取打开文件的path与name
- */
-export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件",
-                properties: ["openFile"]
-            })
-            .then(async (data: {filePaths: string[]}) => {
-                const filesLength = data.filePaths.length
-                if (filesLength === 1) {
-                    const path: string = data.filePaths[0].replace(/\\/g, "\\")
-                    const name: string = await getNameByPath(path)
-                    resolve({
-                        path,
-                        name
-                    })
-                } else if (filesLength > 1) {
-                    warn("只支持单选文件")
-                }
-                resolve(null)
-            })
-            .catch(() => {
-                reject()
-            })
-    })
-}
-
 const YakDecompilerOpenHistory = "YakDecompilerOpenHistory"
 const YakDecompilerLastFolderExpanded = "YakDecompilerLastFolderExpanded"
 
 /**
  * @name 更改YakRunner历史记录
  */
-export const setYakRunnerHistory = (newHistory: YakJavaDecompilerHistoryProps) => {
+export const setYakJavaDecompilerHistory = (newHistory: YakJavaDecompilerHistoryProps) => {
     getRemoteValue(YakDecompilerOpenHistory).then((data) => {
         try {
             if (!data) {
@@ -582,9 +404,9 @@ export const setYakRunnerHistory = (newHistory: YakJavaDecompilerHistoryProps) =
 }
 
 /**
- * @name 获取YakRunner历史记录
+ * @name 获取YakJavaDecompiler历史记录
  */
-export const getYakRunnerHistory = (): Promise<YakJavaDecompilerHistoryProps[]> => {
+export const getYakJavaDecompilerHistory = (): Promise<YakJavaDecompilerHistoryProps[]> => {
     return new Promise(async (resolve, reject) => {
         getRemoteValue(YakDecompilerOpenHistory).then((data) => {
             try {
@@ -609,82 +431,7 @@ interface YakRunnerLastFolderExpandedProps {
 /**
  * @name 更改打开的文件夹及其展开项
  */
-export const setYakRunnerLastFolderExpanded = (cache: YakRunnerLastFolderExpandedProps) => {
+export const setYakDecompilerLastFolderExpanded = (cache: YakRunnerLastFolderExpandedProps) => {
     const newCache = JSON.stringify(cache)
     setRemoteValue(YakDecompilerLastFolderExpanded, newCache)
-}
-
-/**
- * @name 获取上次打开的文件夹及其展开项
- */
-export const getYakRunnerLastFolderExpanded = (): Promise<YakRunnerLastFolderExpandedProps | null> => {
-    return new Promise(async (resolve, reject) => {
-        getRemoteValue(YakDecompilerLastFolderExpanded).then((data) => {
-            try {
-                if (!data) {
-                    resolve(null)
-                    return
-                }
-                const historyData: YakRunnerLastFolderExpandedProps = JSON.parse(data)
-                resolve(historyData)
-            } catch (error) {
-                resolve(null)
-            }
-        })
-    })
-}
-
-/**
- * @name 获取上一级的路径（兼容多系统）
- */
-export const getPathParent = (filePath: string): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("pathParent", {
-                filePath
-            })
-            .then((currentPath: string) => {
-                resolve(currentPath)
-            })
-            .catch(() => {
-                resolve("")
-            })
-    })
-}
-
-/**
- * @name 获取路径上的(文件/文件夹)名（兼容多系统）
- */
-export const getNameByPath = (filePath: string): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("pathFileName", {
-                filePath
-            })
-            .then((currentName: string) => {
-                resolve(currentName)
-            })
-            .catch(() => {
-                resolve("")
-            })
-    })
-}
-
-/**
- * @name 获取相对路径（兼容多系统）
- */
-export const getRelativePath = (basePath: string, filePath: string): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("relativePathByBase", {
-                basePath,
-                filePath
-            })
-            .then((relativePath: string) => {
-                resolve(relativePath)
-            })
-            .catch(() => {
-                resolve("")
-            })
-    })
 }

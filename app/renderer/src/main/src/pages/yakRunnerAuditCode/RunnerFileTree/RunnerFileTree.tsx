@@ -18,13 +18,12 @@ import styles from "./RunnerFileTree.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
-    getNameByPath,
     grpcFetchAuditTree,
-    grpcFetchRiskOrRuleList,
+    grpcFetchAuditCodeRiskOrRuleList,
     grpcFetchRiskOrRuleTree,
-    removeAreaFileInfo,
-    setAreaFileActive,
-    updateAreaFileInfo
+    removeAuditCodeAreaFileInfo,
+    setAuditCodeAreaFileActive,
+    updateAuditCodeAreaFileInfo
 } from "../utils"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import emiter from "@/utils/eventBus/eventBus"
@@ -342,11 +341,10 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         if (options.length > 1 && isShowCompare) {
             const item = options.find((item) => item.value === checkItem) as any
             const createdAt = item.CreatedAt
-            const target = findClosestTimestamp(createdAt,options)
-            if(target){
+            const target = findClosestTimestamp(createdAt, options)
+            if (target) {
                 setCompare(target.value)
-            }
-            else{
+            } else {
                 setCompare(undefined)
             }
         } else {
@@ -358,7 +356,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         try {
             if (projectName) {
                 // 经与后端协商 由于跳转后需选中此Select 因此不采用分页，更改为一次性拉取100条
-                const res = await grpcFetchRiskOrRuleList(projectName)
+                const res = await grpcFetchAuditCodeRiskOrRuleList(projectName)
                 const newOptions = res.Data.map((item) => {
                     return {
                         label: (
@@ -390,7 +388,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
 
     useUpdateEffect(() => {
         setRuntimeID && setRuntimeID(checkItem)
-        if(checkItem === ""){
+        if (checkItem === "") {
             setShowCompare(false)
         }
     }, [checkItem])
@@ -667,7 +665,7 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
         if (activeFile?.path === data.path) {
             setActiveFile && setActiveFile(undefined)
         }
-        const newAreaInfo = removeAreaFileInfo(areaInfo, data)
+        const {newAreaInfo} = removeAuditCodeAreaFileInfo(areaInfo, data)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
@@ -675,9 +673,9 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
         // 注入漏洞汇总 由于点击项必为激活项默认给true
         const newActiveFile = {...data, isActive: true}
         // 更改当前tabs active
-        const activeAreaInfo = setAreaFileActive(areaInfo, data.path)
+        const activeAreaInfo = setAuditCodeAreaFileActive(areaInfo, data.path)
         // 将新的语法检测注入areaInfo
-        const newAreaInfo = updateAreaFileInfo(activeAreaInfo, newActiveFile, newActiveFile.path)
+        const newAreaInfo = updateAuditCodeAreaFileInfo(activeAreaInfo, newActiveFile, newActiveFile.path)
         setAreaInfo && setAreaInfo(newAreaInfo)
         setActiveFile && setActiveFile(newActiveFile)
     })
@@ -817,25 +815,34 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
     })
 
     const onInitRiskTreeFun = useMemoizedFn(async (program: string) => {
-        resetMap()
-        setFoucsedKey("")
-        setExpandedKeys([])
-        if (program.length > 0) {
-            const {res, data} = await grpcFetchRiskOrRuleTree("/", {program, type, search, task_id, result_id, compare})
-            const children: FileTreeListProps[] = []
-            let childArr: string[] = []
-            data.forEach((item) => {
-                // 注入文件结构Map
-                childArr.push(item.path)
-                // 文件Map
-                setRiskMap(item.path, item)
-                // 注入tree结构
-                children.push({path: item.path})
-            })
+        try {
+            resetMap()
+            setFoucsedKey("")
+            setExpandedKeys([])
+            if (program.length > 0) {
+                const {res, data} = await grpcFetchRiskOrRuleTree("/", {
+                    program,
+                    type,
+                    search,
+                    task_id,
+                    result_id,
+                    compare
+                })
+                const children: FileTreeListProps[] = []
+                let childArr: string[] = []
+                data.forEach((item) => {
+                    // 注入文件结构Map
+                    childArr.push(item.path)
+                    // 文件Map
+                    setRiskMap(item.path, item)
+                    // 注入tree结构
+                    children.push({path: item.path})
+                })
 
-            const newRoot = childArr.map((item) => ({path: item}))
-            if (data) setRiskTree(newRoot)
-        }
+                const newRoot = childArr.map((item) => ({path: item}))
+                if (data) setRiskTree(newRoot)
+            }
+        } catch (error) {}
     })
 
     const onLoadRiskTree = useMemoizedFn((path: string, program: string) => {

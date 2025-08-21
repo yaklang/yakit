@@ -51,14 +51,9 @@ import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {failed, success, warn, yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
-import {
-    CustomPluginExecuteFormValue,
-    FormExtraSettingProps
-} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
-import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
+import {FormExtraSettingProps} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import useStore from "../hooks/useStore"
-import {getNameByPath, grpcFetchAuditTree, grpcFetchDeleteAudit, loadAuditFromYakURLRaw} from "../utils"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {loadAuditFromYakURLRaw} from "../utils"
 import {
     OutlineArrowcirclerightIcon,
     OutlineBugIcon,
@@ -131,9 +126,9 @@ import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStart
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {FileDefault, FileSuffix, KeyToIcon} from "../../yakRunner/FileTree/icon"
 import {RiskTree} from "../RunnerFileTree/RunnerFileTree"
+import {getNameByPath} from "@/pages/yakRunner/utils"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -588,17 +583,95 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const lastValue = useRef<string>("")
     const handleAuditLoadData = useMemoizedFn((id: string) => {
         return new Promise(async (resolve, reject) => {
-            // 校验其子项是否存在
-            const childArr = getMapAuditChildDetail(id)
-            if (id === TopId) {
-                resolve("")
-                return
+            try {
+                // 校验其子项是否存在
+                const childArr = getMapAuditChildDetail(id)
+                if (id === TopId) {
+                    resolve("")
+                    return
+                }
+                if (childArr.length > 0) {
+                    setRefreshTree(!refreshTree)
+                    resolve("")
+                } else {
+                    const path = id
+                    let params: AuditYakUrlProps = {
+                        Schema: "syntaxflow",
+                        Location: projectName || "",
+                        Path: path
+                    }
+                    const body: Buffer = StringToUint8Array(lastValue.current)
+                    if (pageInfo) {
+                        const {Variable, Value, ...rest} = pageInfo
+                        params = {
+                            ...rest,
+                            Path: path
+                        }
+                    }
+                    // 沿用审计时的Query值
+                    params.Query = runQueryRef.current
+                    // 每次拿30条
+                    const result = await loadAuditFromYakURLRaw(params, body, 1, 30)
+                    if (result) {
+                        let variableIds: string[] = []
+                        result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
+                            const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
+                            let value: string = `${index}`
+                            const obj = Extra.find((item) => item.Key === "index")
+                            if (obj) {
+                                value = obj.Value
+                            }
+                            const newId = `${id}/${value}`
+                            variableIds.push(newId)
+                            setMapAuditDetail(newId, {
+                                parent: path,
+                                id: newId,
+                                name: ResourceName,
+                                ResourceType,
+                                VerboseType,
+                                Size,
+                                Extra
+                            })
+                        })
+                        let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
+                        // 如若请求数据未全部拿完 则显示加载更多
+                        if (!isEnd) {
+                            const newId = `${id}/load`
+                            setMapAuditDetail(newId, {
+                                parent: path,
+                                id: newId,
+                                name: "",
+                                ResourceType: "value",
+                                VerboseType: "",
+                                Size: 0,
+                                Extra: [],
+                                page: result.Page,
+                                hasMore: true
+                            })
+                            variableIds.push(newId)
+                        }
+
+                        setMapAuditChildDetail(path, variableIds)
+                        setTimeout(() => {
+                            setRefreshTree(!refreshTree)
+                            resolve("")
+                        }, 300)
+                    } else {
+                        reject()
+                    }
+                }
+            } catch (error) {
+                reject()
             }
-            if (childArr.length > 0) {
-                setRefreshTree(!refreshTree)
-                resolve("")
-            } else {
-                const path = id
+        })
+    })
+
+    // 树加载更多
+    const loadTreeMore = useMemoizedFn(async (node: AuditNodeProps) => {
+        try {
+            if (node.parent && node.page) {
+                const path = node.parent
+                const page = parseInt(node.page + "") + 1
                 let params: AuditYakUrlProps = {
                     Schema: "syntaxflow",
                     Location: projectName || "",
@@ -615,7 +688,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 // 沿用审计时的Query值
                 params.Query = runQueryRef.current
                 // 每次拿30条
-                const result = await loadAuditFromYakURLRaw(params, body, 1, 30)
+                const result = await loadAuditFromYakURLRaw(params, body, page, 30)
                 if (result) {
                     let variableIds: string[] = []
                     result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
@@ -625,7 +698,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         if (obj) {
                             value = obj.Value
                         }
-                        const newId = `${id}/${value}`
+                        const newId = `${path}/${value}`
                         variableIds.push(newId)
                         setMapAuditDetail(newId, {
                             parent: path,
@@ -639,8 +712,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     })
                     let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
                     // 如若请求数据未全部拿完 则显示加载更多
+                    const newId = `${path}/load`
                     if (!isEnd) {
-                        const newId = `${id}/load`
                         setMapAuditDetail(newId, {
                             parent: path,
                             id: newId,
@@ -654,88 +727,16 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         })
                         variableIds.push(newId)
                     }
-
-                    setMapAuditChildDetail(path, variableIds)
+                    // 此处为累加并移除原有加载更多项
+                    const auditChilds = getMapAuditChildDetail(path)
+                    const childs = auditChilds.filter((item) => item !== newId)
+                    setMapAuditChildDetail(path, [...childs, ...variableIds])
                     setTimeout(() => {
                         setRefreshTree(!refreshTree)
-                        resolve("")
                     }, 300)
-                } else {
-                    reject()
                 }
             }
-        })
-    })
-
-    // 树加载更多
-    const loadTreeMore = useMemoizedFn(async (node: AuditNodeProps) => {
-        if (node.parent && node.page) {
-            const path = node.parent
-            const page = parseInt(node.page + "") + 1
-            let params: AuditYakUrlProps = {
-                Schema: "syntaxflow",
-                Location: projectName || "",
-                Path: path
-            }
-            const body: Buffer = StringToUint8Array(lastValue.current)
-            if (pageInfo) {
-                const {Variable, Value, ...rest} = pageInfo
-                params = {
-                    ...rest,
-                    Path: path
-                }
-            }
-            // 沿用审计时的Query值
-            params.Query = runQueryRef.current
-            // 每次拿30条
-            const result = await loadAuditFromYakURLRaw(params, body, page, 30)
-            if (result) {
-                let variableIds: string[] = []
-                result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
-                    const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
-                    let value: string = `${index}`
-                    const obj = Extra.find((item) => item.Key === "index")
-                    if (obj) {
-                        value = obj.Value
-                    }
-                    const newId = `${path}/${value}`
-                    variableIds.push(newId)
-                    setMapAuditDetail(newId, {
-                        parent: path,
-                        id: newId,
-                        name: ResourceName,
-                        ResourceType,
-                        VerboseType,
-                        Size,
-                        Extra
-                    })
-                })
-                let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
-                // 如若请求数据未全部拿完 则显示加载更多
-                const newId = `${path}/load`
-                if (!isEnd) {
-                    setMapAuditDetail(newId, {
-                        parent: path,
-                        id: newId,
-                        name: "",
-                        ResourceType: "value",
-                        VerboseType: "",
-                        Size: 0,
-                        Extra: [],
-                        page: result.Page,
-                        hasMore: true
-                    })
-                    variableIds.push(newId)
-                }
-                // 此处为累加并移除原有加载更多项
-                const auditChilds = getMapAuditChildDetail(path)
-                const childs = auditChilds.filter((item) => item !== newId)
-                setMapAuditChildDetail(path, [...childs, ...variableIds])
-                setTimeout(() => {
-                    setRefreshTree(!refreshTree)
-                }, 300)
-            }
-        }
+        } catch (error) {}
     })
 
     const onLoadData = useMemoizedFn((node: AuditNodeProps) => {
@@ -1492,9 +1493,11 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
     // 获取参数
     const handleFetchParams = useDebounceFn(
         useMemoizedFn(async () => {
-            const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目探测"}, true)
-            setLoading(false)
-            setPlugin(newPlugin)
+            try {
+                const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目探测"}, true)
+                setLoading(false)
+                setPlugin(newPlugin)
+            } catch (error) {}
         }),
         {wait: 300}
     ).run

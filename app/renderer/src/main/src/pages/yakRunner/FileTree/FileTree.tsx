@@ -27,7 +27,7 @@ import {
     judgeAreaExistFilePath,
     judgeAreaExistFilesPath,
     loadFolderDetail,
-    removeAreaFileInfo,
+    removeYakRunnerAreaFileInfo,
     setYakRunnerLastFolderExpanded,
     updateActiveFile,
     updateAreaFileInfo,
@@ -121,27 +121,37 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         }
     })
 
-    const onResetFileTreeFun = useMemoizedFn((path?: string) => {
-        if (path) {
-            if (foucsedKey === path) {
-                setFoucsedKey("")
-            }
-            if (copyPath.length !== 0 && copyPath.startsWith(path)) {
+    const onResetFileTreeFun = useMemoizedFn((data?: string) => {
+        try {
+            const {
+                path,
+                reset
+            }: {
+                path?: string
+                reset?: boolean
+            } = JSON.parse(data || "")
+            if (path) {
+                if (foucsedKey === path) {
+                    setFoucsedKey("")
+                }
+                if (copyPath.length !== 0 && copyPath.startsWith(path)) {
+                    setCopyPath("")
+                }
+                const newSelectedNodes = selectedNodes.filter((item) => !item.path.startsWith(path))
+                const newExpandedKeys = expandedKeys.filter((item) => !item.startsWith(path))
+                setSelectedNodes(newSelectedNodes)
+                onSaveYakRunnerLastExpanded(newExpandedKeys)
+                setExpandedKeys(newExpandedKeys)
+            } else {
+                // 全部清空
                 setCopyPath("")
+                setFoucsedKey("")
+                setSelectedNodes([])
+                reset && onSaveYakRunnerLastExpanded([])
+                // 如若上次打开时有展开项，则不应直接置为空数组
+                setExpandedKeys(reset ? [] : expandedKeys)
             }
-            const newSelectedNodes = selectedNodes.filter((item) => !item.path.startsWith(path))
-            const newExpandedKeys = expandedKeys.filter((item) => !item.startsWith(path))
-            setSelectedNodes(newSelectedNodes)
-            onSaveYakRunnerLastExpanded(newExpandedKeys)
-            setExpandedKeys(newExpandedKeys)
-        } else {
-            // 全部清空
-            setCopyPath("")
-            setFoucsedKey("")
-            setSelectedNodes([])
-            onSaveYakRunnerLastExpanded([])
-            setExpandedKeys([])
-        }
+        } catch (error) {}
     })
 
     useEffect(() => {
@@ -325,9 +335,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             failed(`复制相对路径失败`)
             return
         }
-        const basePath = fileTree[0].path
-        const relativePath = await getRelativePath(basePath, info.path)
-        setClipboardText(relativePath)
+        try {
+            const basePath = fileTree[0].path
+            const relativePath = await getRelativePath(basePath, info.path)
+            setClipboardText(relativePath)
+        } catch (error) {}
     })
 
     // 粘贴
@@ -505,7 +517,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                         if (folderMap.includes(path)) {
                             const file = await judgeAreaExistFilePath(areaInfo, path)
                             if (file) {
-                                cacheAreaInfo = removeAreaFileInfo(areaInfo, file)
+                                cacheAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, file).newAreaInfo
                             }
                             folderMap = folderMap.filter((item) => item !== path)
                         }
@@ -525,7 +537,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                     setActiveFile && setActiveFile(newActiveFile)
                     setAreaInfo && setAreaInfo(newAreaInfo)
                 }
-                emiter.emit("onResetFileTree", info.path)
+                emiter.emit("onResetFileTree", JSON.stringify({path: info.path}))
                 emiter.emit("onRefreshFileTree")
             } else {
                 setInput(false)
@@ -545,7 +557,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             if (newFolderDetail.length === 0) {
                 const fileDetail = getMapFileDetail(info.parent)
                 setMapFileDetail(info.parent, {...fileDetail, isLeaf: true})
-                emiter.emit("onResetFileTree", info.parent)
+                emiter.emit("onResetFileTree", JSON.stringify({path: info.parent}))
             }
             setMapFolderDetail(info.parent, newFolderDetail)
         }
@@ -630,20 +642,24 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
 
     // 新建文件（仅文件夹有这个操作）
     const onNewFile = useMemoizedFn(async (path: string) => {
-        // 判断文件夹内文件是否加载 如若未加载则需要先行加载
-        if (!hasMapFolderDetail(path)) {
-            await loadFolderDetail(path)
-        }
-        emiter.emit("onNewFileInFileTree", path)
+        try {
+            // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+            if (!hasMapFolderDetail(path)) {
+                await loadFolderDetail(path)
+            }
+            emiter.emit("onNewFileInFileTree", path)
+        } catch (error) {}
     })
 
     // 新建文件夹
     const onNewFolder = useMemoizedFn(async (path: string) => {
-        // 判断文件夹内文件是否加载 如若未加载则需要先行加载
-        if (!hasMapFolderDetail(path)) {
-            await loadFolderDetail(path)
-        }
-        emiter.emit("onNewFolderInFileTree", path)
+        try {
+            // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+            if (!hasMapFolderDetail(path)) {
+                await loadFolderDetail(path)
+            }
+            emiter.emit("onNewFolderInFileTree", path)
+        } catch (error) {}
     })
 
     const menuData: YakitMenuItemType[] = useMemo(() => {

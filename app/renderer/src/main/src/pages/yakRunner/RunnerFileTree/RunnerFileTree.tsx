@@ -26,7 +26,7 @@ import {
     judgeAreaExistFilePath,
     judgeAreaExistFilesPath,
     loadFolderDetail,
-    removeAreaFileInfo,
+    removeYakRunnerAreaFileInfo,
     removeAreaFilesInfo,
     setAreaFileActive,
     setYakRunnerHistory,
@@ -70,7 +70,7 @@ export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
                 selectType='folder'
                 multiple={false}
                 help=''
-                uploadFolderText="选择本地文件夹"
+                uploadFolderText='选择本地文件夹'
                 onChange={(value) => {
                     setValue(value)
                     setAbsolutePath(value)
@@ -263,66 +263,70 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
     // 新建文件
     const onNewFile = useMemoizedFn(async (path: string) => {
-        const currentPath = await getPathJoin(path, `${uuidv4()}-create`)
-        if (currentPath.length === 0) return
-        const newFileNodeMap: FileNodeMapProps = {
-            parent: path,
-            name: "",
-            path: currentPath,
-            isFolder: false,
-            icon: "_f_yak",
-            isCreate: true,
-            isLeaf: true
-        }
-        setMapFileDetail(newFileNodeMap.path, newFileNodeMap)
-        const folderDetail = getMapFolderDetail(path)
-        const newFolderDetail: string[] = cloneDeep(folderDetail)
-        // 如若为空文件夹 则可点击打开
-        if (newFolderDetail.length === 0) {
-            const fileDetail = getMapFileDetail(path)
-            setMapFileDetail(path, {...fileDetail, isLeaf: false})
-        }
-        // 新增文件时其位置应处于文件夹后
-        let insert: number = 0
-        newFolderDetail.some((item, index) => {
-            const {isFolder} = getMapFileDetail(item)
-            if (isFolder) insert += 1
-            return !isFolder
-        })
-        newFolderDetail.splice(insert, 0, newFileNodeMap.path)
-        setMapFolderDetail(path, newFolderDetail)
-        // setFoucsedKey(currentPath)
-        // emiter.emit("onExpandedFileTree", path)
-        emiter.emit("onScrollToFileTree", currentPath)
-        emiter.emit("onRefreshFileTree")
+        try {
+            const currentPath = await getPathJoin(path, `${uuidv4()}-create`)
+            if (currentPath.length === 0) return
+            const newFileNodeMap: FileNodeMapProps = {
+                parent: path,
+                name: "",
+                path: currentPath,
+                isFolder: false,
+                icon: "_f_yak",
+                isCreate: true,
+                isLeaf: true
+            }
+            setMapFileDetail(newFileNodeMap.path, newFileNodeMap)
+            const folderDetail = getMapFolderDetail(path)
+            const newFolderDetail: string[] = cloneDeep(folderDetail)
+            // 如若为空文件夹 则可点击打开
+            if (newFolderDetail.length === 0) {
+                const fileDetail = getMapFileDetail(path)
+                setMapFileDetail(path, {...fileDetail, isLeaf: false})
+            }
+            // 新增文件时其位置应处于文件夹后
+            let insert: number = 0
+            newFolderDetail.some((item, index) => {
+                const {isFolder} = getMapFileDetail(item)
+                if (isFolder) insert += 1
+                return !isFolder
+            })
+            newFolderDetail.splice(insert, 0, newFileNodeMap.path)
+            setMapFolderDetail(path, newFolderDetail)
+            // setFoucsedKey(currentPath)
+            // emiter.emit("onExpandedFileTree", path)
+            emiter.emit("onScrollToFileTree", currentPath)
+            emiter.emit("onRefreshFileTree")
+        } catch (error) {}
     })
 
     // 新建文件夹
     const onNewFolder = useMemoizedFn(async (path: string) => {
-        const currentPath = await getPathJoin(path, `${uuidv4()}-create`)
-        if (currentPath.length === 0) return
-        const newFileNodeMap: FileNodeMapProps = {
-            parent: path,
-            name: "",
-            path: currentPath,
-            isFolder: true,
-            icon: "_fd_default",
-            isCreate: true,
-            isLeaf: true
-        }
-        setMapFileDetail(newFileNodeMap.path, newFileNodeMap)
-        const folderDetail = getMapFolderDetail(path)
-        // 如若为空文件夹 则可点击打开
-        if (folderDetail.length === 0) {
-            const fileDetail = getMapFileDetail(path)
-            setMapFileDetail(path, {...fileDetail, isLeaf: false})
-        }
-        setMapFolderDetail(path, [newFileNodeMap.path, ...folderDetail])
+        try {
+            const currentPath = await getPathJoin(path, `${uuidv4()}-create`)
+            if (currentPath.length === 0) return
+            const newFileNodeMap: FileNodeMapProps = {
+                parent: path,
+                name: "",
+                path: currentPath,
+                isFolder: true,
+                icon: "_fd_default",
+                isCreate: true,
+                isLeaf: true
+            }
+            setMapFileDetail(newFileNodeMap.path, newFileNodeMap)
+            const folderDetail = getMapFolderDetail(path)
+            // 如若为空文件夹 则可点击打开
+            if (folderDetail.length === 0) {
+                const fileDetail = getMapFileDetail(path)
+                setMapFileDetail(path, {...fileDetail, isLeaf: false})
+            }
+            setMapFolderDetail(path, [newFileNodeMap.path, ...folderDetail])
 
-        // setFoucsedKey(currentPath)
-        // emiter.emit("onExpandedFileTree", path)
-        emiter.emit("onScrollToFileTree", currentPath)
-        emiter.emit("onRefreshFileTree")
+            // setFoucsedKey(currentPath)
+            // emiter.emit("onExpandedFileTree", path)
+            emiter.emit("onScrollToFileTree", currentPath)
+            emiter.emit("onRefreshFileTree")
+        } catch (error) {}
     })
 
     // 删除文件/文件夹
@@ -376,11 +380,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 removeMapFileDetail(info.path)
                 const file = await judgeAreaExistFilePath(areaInfo, info.path)
                 if (file) {
-                    const newAreaInfo = removeAreaFileInfo(areaInfo, file)
+                    const {newAreaInfo} = removeYakRunnerAreaFileInfo(areaInfo, file)
                     setAreaInfo && setAreaInfo(newAreaInfo)
                 }
             }
-            emiter.emit("onResetFileTree", info.path)
+            emiter.emit("onResetFileTree", JSON.stringify({path: info.path}))
             emiter.emit("onRefreshFileTree")
             success(`${info.name} 删除成功`)
         } catch (error) {
@@ -420,29 +424,31 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                         }
                         const newAreaInfo = updateAreaFileInfoToDelete(areaInfo, info.path)
                         setAreaInfo && setAreaInfo(newAreaInfo)
-                        emiter.emit("onResetFileTree", info.path)
+                        emiter.emit("onResetFileTree", JSON.stringify({path: info.path}))
                         emiter.emit("onRefreshFileTree")
                         break
                     case "create":
-                        const parentPath = await getPathParent(Path)
-                        const folderName = await getNameByPath(Path)
-                        const newFileNodeMap: FileNodeMapProps = {
-                            parent: parentPath,
-                            name: folderName,
-                            path: Path,
-                            isFolder: true,
-                            icon: "_fd_default",
-                            isLeaf: true
-                        }
-                        setMapFileDetail(newFileNodeMap.path, newFileNodeMap)
-                        const folderDetail = getMapFolderDetail(parentPath)
-                        // 如若为空文件夹 则可点击打开
-                        if (folderDetail.length === 0) {
-                            const fileDetail = getMapFileDetail(parentPath)
-                            setMapFileDetail(parentPath, {...fileDetail, isLeaf: false})
-                        }
-                        setMapFolderDetail(parentPath, [newFileNodeMap.path, ...folderDetail])
-                        emiter.emit("onRefreshFileTree")
+                        try {
+                            const parentPath = await getPathParent(Path)
+                            const folderName = await getNameByPath(Path)
+                            const newFileNodeMap: FileNodeMapProps = {
+                                parent: parentPath,
+                                name: folderName,
+                                path: Path,
+                                isFolder: true,
+                                icon: "_fd_default",
+                                isLeaf: true
+                            }
+                            setMapFileDetail(newFileNodeMap.path, newFileNodeMap)
+                            const folderDetail = getMapFolderDetail(parentPath)
+                            // 如若为空文件夹 则可点击打开
+                            if (folderDetail.length === 0) {
+                                const fileDetail = getMapFileDetail(parentPath)
+                                setMapFileDetail(parentPath, {...fileDetail, isLeaf: false})
+                            }
+                            setMapFolderDetail(parentPath, [newFileNodeMap.path, ...folderDetail])
+                            emiter.emit("onRefreshFileTree")
+                        } catch (error) {}
                         break
                     default:
                         break
@@ -464,39 +470,42 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                         removeMapFileDetail(info.path)
                         const newAreaInfo = updateAreaFileInfoToDelete(areaInfo, info.path)
                         setAreaInfo && setAreaInfo(newAreaInfo)
-                        emiter.emit("onResetFileTree", info.path)
+                        emiter.emit("onResetFileTree", JSON.stringify({path: info.path}))
                         emiter.emit("onRefreshFileTree")
                         break
                     case "create":
-                        const parentPath = await getPathParent(Path)
-                        const fileName = await getNameByPath(Path)
-                        const suffix = fileName.indexOf(".") > -1 ? fileName.split(".").pop() : ""
-                        const newFileNodeMap: FileNodeMapProps = {
-                            parent: parentPath,
-                            name: fileName,
-                            path: Path,
-                            isFolder: false,
-                            icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
-                            isLeaf: true
-                        }
-                        setMapFileDetail(newFileNodeMap.path, newFileNodeMap)
-                        const folderDetail = getMapFolderDetail(parentPath)
-                        const newFolderDetail: string[] = cloneDeep(folderDetail)
-                        // 如若为空文件夹 则可点击打开
-                        if (newFolderDetail.length === 0) {
-                            const fileDetail = getMapFileDetail(parentPath)
-                            setMapFileDetail(parentPath, {...fileDetail, isLeaf: false})
-                        }
-                        // 新增文件时其位置应处于文件夹后
-                        let insert: number = 0
-                        newFolderDetail.some((item, index) => {
-                            const {isFolder} = getMapFileDetail(item)
-                            if (isFolder) insert += 1
-                            return !isFolder
-                        })
-                        newFolderDetail.splice(insert, 0, newFileNodeMap.path)
-                        setMapFolderDetail(parentPath, newFolderDetail)
-                        emiter.emit("onRefreshFileTree")
+                        try {
+                            const parentPath = await getPathParent(Path)
+                            const fileName = await getNameByPath(Path)
+                            const suffix = fileName.indexOf(".") > -1 ? fileName.split(".").pop() : ""
+                            const newFileNodeMap: FileNodeMapProps = {
+                                parent: parentPath,
+                                name: fileName,
+                                path: Path,
+                                isFolder: false,
+                                icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
+                                isLeaf: true
+                            }
+                            setMapFileDetail(newFileNodeMap.path, newFileNodeMap)
+                            const folderDetail = getMapFolderDetail(parentPath)
+                            const newFolderDetail: string[] = cloneDeep(folderDetail)
+                            // 如若为空文件夹 则可点击打开
+                            if (newFolderDetail.length === 0) {
+                                const fileDetail = getMapFileDetail(parentPath)
+                                setMapFileDetail(parentPath, {...fileDetail, isLeaf: false})
+                            }
+                            // 新增文件时其位置应处于文件夹后
+                            let insert: number = 0
+                            newFolderDetail.some((item, index) => {
+                                const {isFolder} = getMapFileDetail(item)
+                                if (isFolder) insert += 1
+                                return !isFolder
+                            })
+                            newFolderDetail.splice(insert, 0, newFileNodeMap.path)
+                            setMapFolderDetail(parentPath, newFolderDetail)
+                            emiter.emit("onRefreshFileTree")
+                        } catch (error) {}
+
                         break
                     default:
                         break
@@ -544,11 +553,34 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     })
 
     const createFile = useMemoizedFn(async () => {
-        // 未打开文件夹时 创建临时文件
-        if (fileTree.length === 0) {
-            addFileTab()
-        } else {
-            // 如若未选择则默认最顶层
+        try {
+            // 未打开文件夹时 创建临时文件
+            if (fileTree.length === 0) {
+                addFileTab()
+            } else {
+                // 如若未选择则默认最顶层
+                const newFoucsedKey = foucsedKey || fileTree[0].path
+                const fileDetail = getMapFileDetail(newFoucsedKey)
+                // 文件夹直接创建
+                if (fileDetail.isFolder) {
+                    // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+                    if (!hasMapFolderDetail(fileDetail.path)) {
+                        await loadFolderDetail(fileDetail.path)
+                    }
+                    onNewFile(fileDetail.path)
+                }
+                // 文件找到其上层路径创建
+                else {
+                    if (fileDetail.parent) {
+                        onNewFile(fileDetail.parent)
+                    }
+                }
+            }
+        } catch (error) {}
+    })
+
+    const createFolder = useMemoizedFn(async () => {
+        try {
             const newFoucsedKey = foucsedKey || fileTree[0].path
             const fileDetail = getMapFileDetail(newFoucsedKey)
             // 文件夹直接创建
@@ -557,34 +589,15 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 if (!hasMapFolderDetail(fileDetail.path)) {
                     await loadFolderDetail(fileDetail.path)
                 }
-                onNewFile(fileDetail.path)
+                onNewFolder(fileDetail.path)
             }
             // 文件找到其上层路径创建
             else {
                 if (fileDetail.parent) {
-                    onNewFile(fileDetail.parent)
+                    onNewFolder(fileDetail.parent)
                 }
             }
-        }
-    })
-
-    const createFolder = useMemoizedFn(async () => {
-        const newFoucsedKey = foucsedKey || fileTree[0].path
-        const fileDetail = getMapFileDetail(newFoucsedKey)
-        // 文件夹直接创建
-        if (fileDetail.isFolder) {
-            // 判断文件夹内文件是否加载 如若未加载则需要先行加载
-            if (!hasMapFolderDetail(fileDetail.path)) {
-                await loadFolderDetail(fileDetail.path)
-            }
-            onNewFolder(fileDetail.path)
-        }
-        // 文件找到其上层路径创建
-        else {
-            if (fileDetail.parent) {
-                onNewFolder(fileDetail.parent)
-            }
-        }
+        } catch (error) {}
     })
 
     // 打开文件
@@ -598,8 +611,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                         path,
                         name
                     },
-                    isHistory: true,
-                    isOutside: true
+                    isHistory: true
                 }
                 emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
@@ -619,8 +631,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                         path: item.path,
                         name: item.name
                     },
-                    isHistory: true,
-                    isOutside: true
+                    isHistory: true
                 }
                 emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
@@ -746,19 +757,21 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
         if (activeFile?.path === data.path) {
             setActiveFile && setActiveFile(undefined)
         }
-        const newAreaInfo = removeAreaFileInfo(areaInfo, data)
+        const {newAreaInfo} = removeYakRunnerAreaFileInfo(areaInfo, data)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
     const openItem = useMemoizedFn(async (data: FileDetailInfo) => {
-        // 注入语法检测 由于点击项必为激活项默认给true
-        const newActiveFile = {...(await getDefaultActiveFile(data)), isActive: true}
-        // 更改当前tabs active
-        const activeAreaInfo = setAreaFileActive(areaInfo, data.path)
-        // 将新的语法检测注入areaInfo
-        const newAreaInfo = updateAreaFileInfo(activeAreaInfo, newActiveFile, newActiveFile.path)
-        setAreaInfo && setAreaInfo(newAreaInfo)
-        setActiveFile && setActiveFile(newActiveFile)
+        try {
+            // 注入语法检测 由于点击项必为激活项默认给true
+            const newActiveFile = {...(await getDefaultActiveFile(data)), isActive: true}
+            // 更改当前tabs active
+            const activeAreaInfo = setAreaFileActive(areaInfo, data.path)
+            // 将新的语法检测注入areaInfo
+            const newAreaInfo = updateAreaFileInfo(activeAreaInfo, newActiveFile, newActiveFile.path)
+            setAreaInfo && setAreaInfo(newAreaInfo)
+            setActiveFile && setActiveFile(newActiveFile)
+        } catch (error) {}
     })
 
     const renderItem = (info: FileDetailInfo[]) => {

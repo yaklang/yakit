@@ -1,10 +1,8 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {FileTreeNodeProps, FileTreeProps, FileNodeProps} from "./FileTreeType"
-import {SystemInfo} from "@/constants/hardware"
 import {Tree} from "antd"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
-import {YakitMenuItemProps, YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {FolderDefault, FolderDefaultExpanded, KeyToIcon} from "../../yakRunner/FileTree/icon"
 import {LoadingOutlined} from "@ant-design/icons"
 
@@ -12,8 +10,6 @@ import classNames from "classnames"
 import styles from "./FileTree.module.scss"
 import {getMapFileDetail} from "../FileTreeMap/FileMap"
 import emiter from "@/utils/eventBus/eventBus"
-import {setYakRunnerLastFolderExpanded} from "../utils"
-import useStore from "../hooks/useStore"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 export const FileTree: React.FC<FileTreeProps> = memo((props) => {
@@ -51,10 +47,6 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     // 缓存tree展开项 用于关闭后打开(YakRunner移植功能目前未使用，使用时注意区分树来源)
     const onSaveYakRunnerLastExpanded = useMemoizedFn((value: string[]) => {
         return
-        // setYakRunnerLastFolderExpanded({
-        //     folderPath: fileTree.length > 0 ? fileTree[0].path : "",
-        //     expandedKeys: value
-        // })
     })
 
     const onScrollToFileTreeFun = useMemoizedFn((path) => {

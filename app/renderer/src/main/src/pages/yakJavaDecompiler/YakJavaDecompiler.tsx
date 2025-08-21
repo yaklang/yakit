@@ -25,25 +25,24 @@ import emiter from "@/utils/eventBus/eventBus"
 import {clearMapFileDetail, getMapAllFileKey, getMapFileDetail, setMapFileDetail} from "./FileTreeMap/FileMap"
 import {clearMapFolderDetail, getMapFolderDetail, hasMapFolderDetail, setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {
-    addAreaFileInfo,
-    getCodeByPath,
-    getNameByPath,
-    grpcFetchFileTree,
-    judgeAreaExistFilePath,
-    setAreaFileActive,
-    setYakRunnerHistory,
-    updateAreaFileInfo
+    addJavaDecompilerAreaFileInfo,
+    getJavaDecompilerCodeByPath,
+    grpcFetchJavaDecompilerFileTree,
+    judgeJavaDecompilerAreaExistFilePath,
+    setJavaDecompilerAreaFileActive,
+    setYakJavaDecompilerHistory,
+    updateJavaDecompilerAreaFileInfo
 } from "./utils"
 import {FileDefault, FileSuffix, FolderDefault} from "../yakRunner/FileTree/icon"
 import moment from "moment"
 import {YakURLResource} from "../yakURLTree/data"
-import { monacaLanguageType } from "../yakRunner/utils"
+import {getNameByPath, monacaLanguageType} from "../yakRunner/utils"
 const {ipcRenderer} = window.require("electron")
 export interface YakJavaDecompilerProps {}
 export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
     /** ---------- 文件树 ---------- */
     const [fileTree, setFileTree] = useState<FileTreeListProps[]>([])
-    const [projectName, setProjectName,getProjectName] = useGetState<string>()
+    const [projectName, setProjectName, getProjectName] = useGetState<string>()
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
@@ -53,13 +52,13 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
 
     const handleFetchFileList = useMemoizedFn((path, callback: (value: FileNodeMapProps[]) => any) => {
         const rootPath = getProjectName()
-        if(!rootPath) {
+        if (!rootPath) {
             callback([])
             return
         }
-        grpcFetchFileTree({
-            jarPath:rootPath,
-            innerPath:path
+        grpcFetchJavaDecompilerFileTree({
+            jarPath: rootPath,
+            innerPath: path
         })
             .then((res) => {
                 callback(res)
@@ -194,49 +193,51 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
     })
 
     const onInitTreeFun = useMemoizedFn(async (rootPath: string, isFirst: boolean = true) => {
-        // console.log("onOpenFileTreeFun", rootPath)
-        const lastFolder = await getNameByPath(rootPath)
-        setProjectName(rootPath)
-        if (rootPath.length > 0 && lastFolder.length > 0) {
-            resetMap(isFirst)
-            const node: FileNodeMapProps = {
-                parent: null,
-                name: lastFolder,
-                path: rootPath,
-                isFolder: true,
-                icon: FolderDefault
-            }
-
-            handleFetchFileList("/", (list) => {
-                // 如若打开空文件夹 则不可展开
-                if (list.length === 0) {
-                    node.isLeaf = true
+        try {
+            // console.log("onOpenFileTreeFun", rootPath)
+            const lastFolder = await getNameByPath(rootPath)
+            setProjectName(rootPath)
+            if (rootPath.length > 0 && lastFolder.length > 0) {
+                resetMap(isFirst)
+                const node: FileNodeMapProps = {
+                    parent: null,
+                    name: lastFolder,
+                    path: rootPath,
+                    isFolder: true,
+                    icon: FolderDefault
                 }
-                setMapFileDetail(rootPath, node)
-                const children: FileTreeListProps[] = []
 
-                let childArr: string[] = []
-                list.forEach((item) => {
-                    // 注入文件结构Map
-                    childArr.push(item.path)
-                    // 文件Map
-                    setMapFileDetail(item.path, item)
-                    // 注入tree结构
-                    children.push({path: item.path})
+                handleFetchFileList("/", (list) => {
+                    // 如若打开空文件夹 则不可展开
+                    if (list.length === 0) {
+                        node.isLeaf = true
+                    }
+                    setMapFileDetail(rootPath, node)
+                    const children: FileTreeListProps[] = []
+
+                    let childArr: string[] = []
+                    list.forEach((item) => {
+                        // 注入文件结构Map
+                        childArr.push(item.path)
+                        // 文件Map
+                        setMapFileDetail(item.path, item)
+                        // 注入tree结构
+                        children.push({path: item.path})
+                    })
+                    // 文件结构Map
+                    setMapFolderDetail(rootPath, childArr)
+                    if (list) setFileTree(childArr.map((path) => ({path})))
                 })
-                // 文件结构Map
-                setMapFolderDetail(rootPath, childArr)
-                if (list) setFileTree(childArr.map((path) => ({path})))
-            })
 
-            // 打开文件夹时接入历史记录
-            const history: YakJavaDecompilerHistoryProps = {
-                isFile: false,
-                name: lastFolder,
-                path: rootPath
+                // 打开文件夹时接入历史记录
+                const history: YakJavaDecompilerHistoryProps = {
+                    isFile: false,
+                    name: lastFolder,
+                    path: rootPath
+                }
+                setYakJavaDecompilerHistory(history)
             }
-            setYakRunnerHistory(history)
-        }
+        } catch (error) {}
     })
 
     // 加载文件树(初次加载)
@@ -261,14 +262,14 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
             }
             const resource = data as YakURLResource
             // 校验是否已存在 如若存在则不创建只定位
-            const file = await judgeAreaExistFilePath(areaInfo, path)
+            const file = await judgeJavaDecompilerAreaExistFilePath(areaInfo, path)
             if (file) {
                 let cacheAreaInfo = areaInfo
                 // 如若存在高亮显示 则注入
                 if (highLightRange) {
-                    cacheAreaInfo = updateAreaFileInfo(areaInfo, {...file, highLightRange}, file.path)
+                    cacheAreaInfo = updateJavaDecompilerAreaFileInfo(areaInfo, {...file, highLightRange}, file.path)
                 }
-                const newAreaInfo = setAreaFileActive(cacheAreaInfo, path)
+                const newAreaInfo = setJavaDecompilerAreaFileActive(cacheAreaInfo, path)
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile({...file, highLightRange})
             } else {
@@ -280,7 +281,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
                         innerClassList.push(kv.Value)
                     }
                 })
-                const code = await getCodeByPath(
+                const code = await getJavaDecompilerCodeByPath(
                     `javadec:///class-aifix?class=${classPath}&jar=${projectName}&innerClasses=${innerClassList.join(
                         ","
                     )}`
@@ -299,7 +300,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
                     language: monacaLanguageType(suffix),
                     highLightRange
                 }
-                const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, scratchFile, activeFile)
+                const {newAreaInfo, newActiveFile} = addJavaDecompilerAreaFileInfo(areaInfo, scratchFile, activeFile)
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile(newActiveFile)
 
@@ -310,7 +311,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
                         name,
                         path
                     }
-                    setYakRunnerHistory(history)
+                    setYakJavaDecompilerHistory(history)
                 }
             }
         } catch (error) {
@@ -318,7 +319,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
         }
     })
 
-    const onCloseDecompilerTreeFun = useMemoizedFn(()=>{
+    const onCloseDecompilerTreeFun = useMemoizedFn(() => {
         setProjectName(undefined)
         setFileTree([])
         setAreaInfo([])
@@ -334,7 +335,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
         emiter.on("onRefreshDecompilerTree", onDecompilerRefreshTreeFun)
         // 通过路径打开文件
         emiter.on("onOpenDecompilerFileByPath", onOpenDecompilerFileByPathFun)
-        
+
         return () => {
             emiter.off("onOpenDecompilerTree", onOpenDecompilerTreeFun)
             emiter.off("onCloseDecompilerTree", onCloseDecompilerTreeFun)

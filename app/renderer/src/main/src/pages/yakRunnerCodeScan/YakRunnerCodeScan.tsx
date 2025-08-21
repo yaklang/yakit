@@ -842,8 +842,10 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         // 获取参数
         const handleFetchParams = useDebounceFn(
             useMemoizedFn(async () => {
-                const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目探测"}, true)
-                setPlugin(newPlugin)
+                try {
+                    const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目探测"}, true)
+                    setPlugin(newPlugin)
+                } catch (error) {}
             }),
             {wait: 300}
         ).run

@@ -11,17 +11,13 @@ import {LoadingOutlined} from "@ant-design/icons"
 
 import classNames from "classnames"
 import styles from "./FileTree.module.scss"
-import {openABSFileLocated} from "@/utils/openWebsite"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {getMapAllFileKey, getMapFileDetail, removeMapFileDetail, setMapFileDetail} from "../FileTreeMap/FileMap"
+import {getMapFileDetail} from "../FileTreeMap/FileMap"
 import emiter from "@/utils/eventBus/eventBus"
-import {getRelativePath, setYakRunnerLastFolderExpanded} from "../utils"
+import {setYakDecompilerLastFolderExpanded} from "../utils"
 import useStore from "../hooks/useStore"
-import useDispatcher from "../hooks/useDispatcher"
-import {hasMapFolderDetail} from "../FileTreeMap/ChildMap"
-import {failed, success} from "@/utils/notification"
-import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {failed} from "@/utils/notification"
 import {setClipboardText} from "@/utils/clipboard"
+import {getRelativePath} from "@/pages/yakRunner/utils"
 
 export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     const {folderPath, data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey, expandedKeys, setExpandedKeys} =
@@ -84,7 +80,7 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
 
     // 缓存tree展开项 用于关闭后打开
     const onSaveYakRunnerLastExpanded = useMemoizedFn((value: string[]) => {
-        setYakRunnerLastFolderExpanded({
+        setYakDecompilerLastFolderExpanded({
             folderPath,
             expandedKeys: value
         })
@@ -274,9 +270,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             failed(`复制相对路径失败`)
             return
         }
-        const basePath = fileTree[0].path
-        const relativePath = await getRelativePath(basePath, info.path)
-        setClipboardText(relativePath)
+        try {
+            const basePath = fileTree[0].path
+            const relativePath = await getRelativePath(basePath, info.path)
+            setClipboardText(relativePath)
+        } catch (error) {}
     })
 
     const menuData: YakitMenuItemType[] = useMemo(() => {

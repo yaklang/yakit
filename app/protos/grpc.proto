@@ -222,6 +222,7 @@ service Yak {
   rpc ExportHTTPFlows(ExportHTTPFlowsRequest) returns(QueryHTTPFlowResponse);
   rpc HTTPFlowsToOnline(HTTPFlowsToOnlineRequest) returns (Empty);
   rpc QueryHTTPFlowsProcessNames(QueryHTTPFlowRequest) returns (QueryHTTPFlowsProcessNamesResponse);
+  rpc HTTPFlowsToOnlineBatch(HTTPFlowsToOnlineBatchRequest) returns (HTTPFlowsToOnlineBatchResponse);
 
   // 流量分析器
   rpc AnalyzeHTTPFlow(AnalyzeHTTPFlowRequest) returns (stream AnalyzeHTTPFlowResponse);
@@ -904,6 +905,20 @@ service Yak {
 
   // 插件执行跟踪双向流服务
   rpc PluginTrace(stream PluginTraceRequest) returns (stream PluginTraceResponse);
+
+  // Knowledge Base
+  rpc GetKnowledgeBaseNameList(Empty) returns(GetKnowledgeBaseNameListResponse);
+  rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns(GeneralResponse);
+  rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns(GeneralResponse);
+  rpc UpdateKnowledgeBase(UpdateKnowledgeBaseRequest) returns(GeneralResponse);
+
+  rpc DeleteKnowledgeBaseEntry(DeleteKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc CreateKnowledgeBaseEntry(CreateKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc UpdateKnowledgeBaseEntry(UpdateKnowledgeBaseEntryRequest) returns(GeneralResponse);
+  rpc SearchKnowledgeBaseEntry(SearchKnowledgeBaseEntryRequest) returns(SearchKnowledgeBaseEntryResponse);
+
+  rpc BuildVectorIndexForKnowledgeBase(BuildVectorIndexForKnowledgeBaseRequest) returns(GeneralResponse);
+  rpc BuildVectorIndexForKnowledgeBaseEntry(BuildVectorIndexForKnowledgeBaseEntryRequest) returns(GeneralResponse);
 }
 
 message ThirdPartyBinary {
@@ -940,6 +955,114 @@ message IsThirdPartyBinaryReadyResponse {
 message StartThirdPartyBinaryRequest {
   string Name = 1;
   repeated string Args = 2;
+}
+
+message BuildVectorIndexForKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseEntryId = 1;
+
+  string BaseUrl = 2;
+  string ApiKey = 3;
+  string Proxy = 4;
+
+  string ModelName = 5;
+  int32 Dimension = 6;
+  int32 M = 7;
+  float Ml = 8;
+  int32 EfSearch = 9;
+  int32 EfConstruct = 10;
+  string DistanceFuncType = 11;
+}
+
+message BuildVectorIndexForKnowledgeBaseRequest {
+  int64 KnowledgeBaseId = 1;
+
+  string BaseUrl = 2;
+  string ApiKey = 3;
+  string Proxy = 4;
+
+  string ModelName = 5;
+  int32 Dimension = 6;
+  int32 M = 7;
+  float Ml = 8;
+  int32 EfSearch = 9;
+  int32 EfConstruct = 10;
+  string DistanceFuncType = 11;
+}
+
+message GetKnowledgeBaseNameListResponse {
+  repeated string KnowledgeBaseNames = 1;
+}
+
+message CreateKnowledgeBaseRequest {
+  string KnowledgeBaseName = 1;
+  string KnowledgeBaseDescription = 2;
+  string KnowledgeBaseType = 3;
+}
+
+message UpdateKnowledgeBaseRequest {
+  int64 KnowledgeBaseId = 1;
+  string KnowledgeBaseName = 2;
+  string KnowledgeBaseDescription = 3;
+  string KnowledgeBaseType = 4;
+}
+
+message DeleteKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseEntryId = 1;
+}
+
+message SearchKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseId = 1;
+  string Keyword = 2;
+  Paging Pagination = 3;
+}
+
+message SearchKnowledgeBaseEntryResponse {
+  repeated KnowledgeBaseEntry KnowledgeBaseEntries = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message CreateKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseID = 1;
+  string KnowledgeTitle = 2;
+  string KnowledgeType = 3;
+  int32 ImportanceScore = 4;
+  repeated string Keywords = 5;
+  string KnowledgeDetails = 6;
+  string Summary = 7;
+  int32 SourcePage = 8;
+  repeated string PotentialQuestions = 9;
+  repeated float PotentialQuestionsVector = 10;
+}
+
+message UpdateKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseEntryID = 2;
+  string KnowledgeTitle = 3;
+  string KnowledgeType = 4;
+  int32 ImportanceScore = 5;
+  repeated string Keywords = 6;
+  string KnowledgeDetails = 7;
+  string Summary = 8;
+  int32 SourcePage = 9;
+  repeated string PotentialQuestions = 10;
+}
+
+message KnowledgeBaseEntry {
+  int64 ID = 1;
+  int64 KnowledgeBaseId = 2;
+  string KnowledgeTitle = 3;
+  string KnowledgeType = 4;
+  int32 ImportanceScore = 5;
+  repeated string Keywords = 6;
+  string KnowledgeDetails = 7;
+  string Summary = 8;
+  int32 SourcePage = 9;
+  repeated string PotentialQuestions = 10;
+  repeated float PotentialQuestionsVector = 11;
+}
+
+message DeleteKnowledgeBaseRequest {
+  int64 KnowledgeBaseId = 1;
 }
 
 message DeleteSearchVectorDatabaseRequest {
@@ -1068,6 +1191,9 @@ message AIInputEvent {
   bool IsSyncMessage = 6;
   string SyncType = 7;
   string SyncJsonInput = 10;
+
+  bool IsFreeInput = 11;
+  string FreeInput = 12;
 }
 
 
@@ -5199,6 +5325,8 @@ message FuzzerRequest {// last index 68
   int64 RandomChunkedMaxLength = 66;
   int64 RandomChunkedMinDelay = 67;
   int64 RandomChunkedMaxDelay = 68;
+
+  bool NoReadMultiResponse = 69;
 }
 
 message MutateMethod {
@@ -5443,6 +5571,16 @@ message HTTPFlowsToOnlineRequest {
   string ProjectDescription = 3;
   string ExternalModule = 4;
   string ExternalProjectCode = 5;
+}
+
+message HTTPFlowsToOnlineBatchRequest {
+  HTTPFlowsToOnlineRequest ToOnlineWhere = 1;
+  QueryHTTPFlowRequest UploadHTTPFlowsWhere = 2;
+}
+
+message HTTPFlowsToOnlineBatchResponse {
+    int64 SuccessCount = 1;
+    int64 FailedCount = 2;
 }
 
 message AnalyzeHTTPFlowRequest{
@@ -6702,6 +6840,11 @@ message SyntaxFlowScanTask {
   int64 WarningCount = 19;
   int64 CriticalCount = 20;
   int64 HighCount = 21;
+  int64 NewInfoCount = 22;
+  int64 NewLowCount = 23;
+  int64 NewWarningCount = 24;
+  int64 NewCriticalCount = 25;
+  int64 NewHighCount = 26;
 }
 
 message DeleteSyntaxFlowScanTaskRequest{
@@ -7367,7 +7510,7 @@ message MITMV2Request{
   SingleManualHijackControlMessage ManualHijackMessage = 44;
 
   bool RecoverContext = 45; // recover mitm context plugin config...
-  int64 PluginConcurrency = 47; // 设置插件并发数，默认20
+  int64 PluginConcurrency = 47; // 设置插件并发数，默认30
 }
 
 message MITMV2Response {

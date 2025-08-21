@@ -3,7 +3,7 @@ import classNames from "classnames"
 import styles from "./RightAuditDetail.module.scss"
 import {useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import {StringToUint8Array} from "@/utils/str"
-import {getNameByPath, loadAuditFromYakURLRaw} from "../utils"
+import {loadAuditFromYakURLRaw} from "../utils"
 import {
     OutlineCollectionIcon,
     OutlineHandIcon,
@@ -27,6 +27,7 @@ import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
 import {clearMapResultDetail, getMapResultDetail, setMapResultDetail} from "./ResultMap"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {getNameByPath} from "@/pages/yakRunner/utils"
 
 export interface JumpSourceDataProps {
     title: string
@@ -42,43 +43,45 @@ export const onJumpRunnerFile = async (
         auditRightParams: AuditEmiterYakUrlProps
     }
 ) => {
-    const {code_range, node_id} = data
-    const {url, start_line, start_column, end_line, end_column} = code_range
-    const name = await getNameByPath(url)
-    const highLightRange: Selection = {
-        startLineNumber: start_line,
-        startColumn: start_column,
-        endLineNumber: end_line,
-        endColumn: end_column
-    }
+    try {
+        const {code_range, node_id} = data
+        const {url, start_line, start_column, end_line, end_column} = code_range
+        const name = await getNameByPath(url)
+        const highLightRange: Selection = {
+            startLineNumber: start_line,
+            startColumn: start_column,
+            endLineNumber: end_line,
+            endColumn: end_column
+        }
 
-    // 携带跳转项信息
-    if (jumpData) {
-        highLightRange.source = {
-            ...jumpData,
-            node_id
+        // 携带跳转项信息
+        if (jumpData) {
+            highLightRange.source = {
+                ...jumpData,
+                node_id
+            }
         }
-    }
-    const OpenFileByPathParams: OpenFileByPathProps = {
-        params: {
-            path: url,
-            name,
-            highLightRange
+        const OpenFileByPathParams: OpenFileByPathProps = {
+            params: {
+                path: url,
+                name,
+                highLightRange
+            }
         }
-    }
-    // 定位文件树
-    emiter.emit("onCodeAuditScrollToFileTree", url)
-    // 打开文件
-    emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
-    // 纯跳转行号
-    setTimeout(() => {
-        const obj: JumpToAuditEditorProps = {
-            selections: highLightRange,
-            path: url,
-            isSelect: false
-        }
-        emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
-    }, 100)
+        // 定位文件树
+        emiter.emit("onCodeAuditScrollToFileTree", url)
+        // 打开文件
+        emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+        // 纯跳转行号
+        setTimeout(() => {
+            const obj: JumpToAuditEditorProps = {
+                selections: highLightRange,
+                path: url,
+                isSelect: false
+            }
+            emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
+        }, 100)
+    } catch (error) {}
 }
 
 interface AuditResultItemProps {
