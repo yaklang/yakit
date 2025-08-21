@@ -16,7 +16,7 @@
     flex-direction: column;
     overflow: hidden;
     padding: 12px;
-    background-color: var(--Colors-Use-Neutral-Bg);
+    background-color: var(--Colors-Use-Basic-Background);
     :global {
         .ant-result-warning .ant-result-icon > .anticon {
             color: var(--Colors-Use-Warning-Primary);
@@ -267,7 +267,7 @@
                 border-right: 1px solid var(--Colors-Use-Neutral-Border);
                 cursor: pointer;
                 &:hover {
-                    background-color: var(--Colors-Use-Neutral-Bg-Hover)
+                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
                 }
                 .tab-icon {
                     width: 16px;

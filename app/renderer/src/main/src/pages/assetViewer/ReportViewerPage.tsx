@@ -252,7 +252,9 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                         return (
                             <div onClick={() => onSetSelectReportId(item.Id)} key={item.Id}>
                                 <YakitCard
-                                    className={styles["card"]}
+                                    className={classNames(styles["card"], {
+                                        [styles["card-selected"]]: selectReportId === item.Id
+                                    })}
                                     headClassName={styles["list-item-header"]}
                                     headStyle={{
                                         height: 32,
@@ -278,7 +280,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                                     extra={<YakitTag>{formatTimestamp(item.PublishedAt)}</YakitTag>}
                                     style={{
                                         backgroundColor:
-                                            selectReportId == item.Id ? "var(--Colors-Use-Main-Focus)" : undefined
+                                            selectReportId == item.Id ? "var(--Colors-Use-Main-Bg-Hover)" : undefined
                                     }}
                                 >
                                     <Tooltip title='点击选中后，可删除'>

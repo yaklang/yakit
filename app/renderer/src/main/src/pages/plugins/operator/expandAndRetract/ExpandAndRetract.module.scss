@@ -13,7 +13,7 @@
     z-index: 12;
     &:hover {
         cursor: pointer;
-        background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        background-color: var(--Colors-Use-Neutral-Bg);
         border-bottom-color: var(--Colors-Use-Main-Border);
         .expand-and-retract-header-icon-body {
             width: 76px;
@@ -35,11 +35,11 @@
     background-color: var(--Colors-Use-Main-Bg);
 }
 .expand-and-retract-header-finished {
-    background-color: var(--Colors-Use-Neutral-Bg);
+    background-color: var(--Colors-Use-Success-Bg);
 }
 
 .expand-and-retract-header-error {
-    background-color: var(--Colors-Use-Neutral-Bg);
+    background-color: var(--Colors-Use-Error-Bg);
 }
 
 .expand-and-retract-header-icon-body {

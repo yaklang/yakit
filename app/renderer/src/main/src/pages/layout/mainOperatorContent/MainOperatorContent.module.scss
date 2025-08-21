@@ -35,7 +35,6 @@ $keyColor: map-keys($colors);
     .tab-menu-sub-group-name-#{"" + $name} {
         background-color: map-get($currentColor, "backgroundColor");
         color: map-get($currentColor, "textColor");
-
     }
 
     .tab-menu-sub-group-number-#{"" + $name} {
@@ -82,15 +81,15 @@ $keyColor: map-keys($colors);
 }
 
 .dragging {
-    background-color: var(--Colors-Use-Neutral-Border);
+    background-color: var(--Colors-Use-Basic-Background);
     border-color: var(--Colors-Use-Neutral-Border);
     &::before {
         @extend .white-link;
         bottom: -1px;
         border-width: 2px;
     }
-    &::after{
-        border-color: var(--Colors-Use-Neutral-Border)
+    &::after {
+        border-color: var(--Colors-Use-Neutral-Border);
     }
 }
 
@@ -608,7 +607,7 @@ $keyColor: map-keys($colors);
     // overflow: hidden;
     overflow-y: overlay;
     overflow-x: hidden;
-    
+
     position: relative;
     :global {
         .ant-modal-mask {

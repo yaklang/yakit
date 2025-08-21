@@ -10,7 +10,7 @@
 
 // ========================== middle ==========================
 .yakit-auto-complete-wrapper {
-    --yakit-box-shadow-color: var(--Colors-Use-Basic-Shadow);
+    --yakit-box-shadow-color: var(--Colors-Use-Main-Focus);
     --yakit-border-hover-color: var(--Colors-Use-Main-Hover);
     --yakit-border-focus-color: var(--Colors-Use-Main-Primary);
     --yakit-font-color: var(--Colors-Use-Main-Primary);
@@ -32,8 +32,12 @@
 
         .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
             height: 26px;
-            font-size: 14px;
+            font-size: 12px;
             color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+
+        .ant-select-disabled:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+            color: var(--Colors-Use-Neutral-Disable)
         }
 
         .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
@@ -47,7 +51,8 @@
         .ant-select-single .ant-select-selector .ant-select-selection-item,
         .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
             line-height: 14px;
-            color:  var(--Colors-Use-Neutral-Disable);
+            font-size: 12px;
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }

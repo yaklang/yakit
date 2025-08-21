@@ -52,7 +52,7 @@
     box-sizing: border-box;
     width: 100%;
     border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-    background: var(--Colors-Use-Basic-Background);
+    background: var(--Colors-Use-Neutral-Bg);
     box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
     border-radius: 4px;
 
@@ -106,7 +106,7 @@
                 .default-content {
                     font-size: 14px;
                     line-height: 20px;
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 }
             }
 

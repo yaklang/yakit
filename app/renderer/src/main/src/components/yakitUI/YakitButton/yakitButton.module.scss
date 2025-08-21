@@ -34,14 +34,20 @@
         border-color: fetch-color($type, "color-6");
     }
     &[disabled] {
-        border: 1px solid var(--Colors-Use-Neutral-Border);
-        background: var(--Colors-Use-Neutral-Bg-Hover);
-        color: var(--Colors-Use-Neutral-Disable);
+        // border: 1px solid var(--Colors-Use-Neutral-Border);
+        // background: var(--Colors-Use-Neutral-Bg-Hover);
+        // color: var(--Colors-Use-Neutral-Disable);
+        background: var(--Colors-Use-Main-Border);
+        color: var(--Colors-Use-Basic-Background);
+        border: none;
     }
     &[disabled]:hover {
-        border: 1px solid var(--Colors-Use-Neutral-Border);
-        background: var(--Colors-Use-Neutral-Bg-Hover);
-        color: var(--Colors-Use-Neutral-Disable);
+        // border: 1px solid var(--Colors-Use-Neutral-Border);
+        // background: var(--Colors-Use-Neutral-Bg-Hover);
+        // color: var(--Colors-Use-Neutral-Disable);
+        background: var(--Colors-Use-Main-Border);
+        color: var(--Colors-Use-Basic-Background);
+        border: none;
     }
 }
 
@@ -50,7 +56,8 @@
 
     background: var(--Colors-Use-Neutral-Bg);
     color: var(--Colors-Use-Neutral-Text-1-Title);
-    border-color: var(--Colors-Use-Neutral-Border);
+    // border-color: var(--Colors-Use-Neutral-Border);
+    border: none;
     svg {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
@@ -97,7 +104,7 @@
         }
     }
     &[disabled] {
-        background: var(--Colors-Use-Neutral-Bg);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
         color: var(--Colors-Use-Neutral-Disable);
         border-color: var(--Colors-Use-Neutral-Border);
         svg {
@@ -105,7 +112,7 @@
         }
     }
     &[disabled]:hover {
-        background: var(--Colors-Use-Neutral-Bg);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
         color: var(--Colors-Use-Neutral-Disable);
         border-color: var(--Colors-Use-Neutral-Border);
         svg {

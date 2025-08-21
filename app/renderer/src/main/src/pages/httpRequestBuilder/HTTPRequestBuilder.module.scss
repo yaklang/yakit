@@ -16,6 +16,11 @@
 
 .variable-list {
     color: var(--Colors-Use-Neutral-Bg);
+
+    &:hover{
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+
     .variable-list-panel {
         &:hover {
             .variable-list-remove {

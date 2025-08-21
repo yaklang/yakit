@@ -4,7 +4,7 @@ $colors: (
     red: (
         backgroundColor: var(--Colors-Use-Error-Primary),
         opacityBackgroundColor: var(--Colors-Use-Error-Pressed),
-        textColor: var(--yakit-colors-Error-100),
+        textColor: var(--Colors-Use-Error-On-Primary),
         fontWeight: bold
     ),
     green: (
@@ -56,9 +56,9 @@ $colors: (
         fontWeight: normal
     ),
     grey: (
-        backgroundColor: var(--Colors-Use-Neutral-Disable),
-        opacityBackgroundColor: var(--Colors-Use-Neutral-Text-4-Help-text),
-        textColor: var(--Colors-Use-Neutral-Text-1-Title),
+        backgroundColor: var(--Colors-Use-Grey-Primary),
+        opacityBackgroundColor: var(--Colors-Use-Grey-Bg-Hover),
+        textColor: var(--Colors-Use-Grey-On-Primary),
         fontWeight: normal
     )
 );
