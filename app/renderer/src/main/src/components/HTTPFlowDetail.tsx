@@ -47,6 +47,7 @@ import {HighLightText} from "./yakitUI/YakitEditor/YakitEditorType"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {useSelectionByteCount} from "./yakitUI/YakitEditor/useSelectionByteCount"
+import {debugToPrintLog} from "@/utils/logCollection"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -89,7 +90,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     showFlod?: boolean
 }
 
-export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
+export interface FuzzerResponseToHTTPFlowDetailProps extends HTTPPacketFuzzable {
     response: FuzzerResponse
     onClosed?: () => any
     index?: number
@@ -97,33 +98,36 @@ export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
     randomChunkedData?: RandomChunkedResponse[]
 }
 
-export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDetail) => {
+export const FuzzerResponseToHTTPFlowDetail: FC<FuzzerResponseToHTTPFlowDetailProps> = (rsp) => {
     const [response, setResponse] = useState<FuzzerResponse>()
     const [index, setIndex] = useState<number>()
     const [id, setId] = useState(0)
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
-        setResponse(rsp.response)
-        setIndex(rsp.index)
-    }, [rsp.response])
-
-    useEffect(() => {
-        if (!response) {
-            return
+        try {
+            setResponse((prev) => (prev !== rsp.response ? rsp.response : prev))
+            setIndex((prev) => (prev !== rsp.index ? rsp.index : prev))
+        } catch (err) {
+            debugToPrintLog(err)
         }
-        setLoading(true)
-        ipcRenderer
-            .invoke("ConvertFuzzerResponseToHTTPFlow", {...response})
-            .then((d: HTTPFlow) => {
-                if (d.Id <= 0) {
-                    return
-                }
-                setId(d.Id)
-            })
-            .catch((e) => {
-                failed(`分析参数失败: ${e}`)
-            })
+    }, [rsp.response, rsp.index])
+
+    useUpdateEffect(() => {
+        if (response) {
+            setLoading(true)
+            ipcRenderer
+                .invoke("ConvertFuzzerResponseToHTTPFlow", {...response})
+                .then((d: HTTPFlow) => {
+                    if (d.Id > 0) {
+                        setId(d.Id)
+                    }
+                })
+                .catch((e) => {
+                    debugToPrintLog(e)
+                    failed(`分析参数失败: ${e}`)
+                })
+        }
     }, [response])
 
     const fetchInfo = (kind: number) => {
