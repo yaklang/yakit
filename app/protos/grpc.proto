@@ -1231,6 +1231,7 @@ message GetAIToolListResponse {
 message GetAIToolListRequest {
   string Query = 1;
   string ToolName = 2;
+  int64 ToolID = 5;
   Paging Pagination = 3;
   bool OnlyFavorites = 4;
 }
