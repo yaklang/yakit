@@ -10,6 +10,7 @@ export type AIModelType = "online" | "local"
 export interface AIOnlineModelListProps {
     ref: React.ForwardedRef<AIOnlineModelListRefProps>
     setOnlineTotal: (total: number) => void
+    onAdd: () => void
 }
 
 export interface AIOnlineModelListRefProps {

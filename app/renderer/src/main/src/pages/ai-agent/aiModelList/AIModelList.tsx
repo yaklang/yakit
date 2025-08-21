@@ -41,9 +41,11 @@ import {
     OutlineDotsverticalIcon,
     OutlineExclamationIcon,
     OutlineExitIcon,
+    OutlineLightbulbIcon,
     OutlinePencilaltIcon,
     OutlinePlayIcon,
     OutlinePlusIcon,
+    OutlinePlussmIcon,
     OutlineRefreshIcon,
     OutlineTrashIcon,
     SpeechToTextIcon
@@ -272,7 +274,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
                 </div>
             </div>
             {modelType === "online" ? (
-                <AIOnlineModelList ref={onlineRef} setOnlineTotal={setOnlineTotal} />
+                <AIOnlineModelList ref={onlineRef} setOnlineTotal={setOnlineTotal} onAdd={onAdd} />
             ) : (
                 <AILocalModelList ref={localRef} setLocalTotal={setLocalTotal} />
             )}
@@ -292,7 +294,7 @@ export default AIModelList
 
 const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     forwardRef((props, ref) => {
-        const {setOnlineTotal} = props
+        const {setOnlineTotal, onAdd} = props
         const [spinning, setSpinning] = useState<boolean>(false)
         const [list, setList] = useState<ThirdPartyApplicationConfig[]>([])
         const configRef = useRef<GlobalNetworkConfig>()
@@ -369,40 +371,54 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         ).run
         return (
             <YakitSpin spinning={spinning}>
-                <div ref={onlineListRef} className={styles["ai-online-model-list"]}>
-                    <DragDropContext onDragEnd={onDragEnd}>
-                        <Droppable droppableId='droppable1'>
-                            {(provided, snapshot) => (
-                                <div {...provided.droppableProps} ref={provided.innerRef}>
-                                    {list.map((rowData, index) => (
-                                        <Draggable key={rowData.Type} draggableId={rowData.Type} index={index}>
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    style={provided.draggableProps.style}
-                                                    className={classNames(styles["ai-online-model-list-row"], {
-                                                        [styles["ai-online-model-list-row-isDragging"]]:
-                                                            snapshot.isDragging
-                                                    })}
-                                                >
-                                                    <SolidDragsortIcon className={styles["drag-sort-icon"]} />
-                                                    <AIOnlineModelListItem
-                                                        item={rowData}
-                                                        onEdit={onEdit}
-                                                        onRemove={onRemove}
-                                                    />
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </Droppable>
-                    </DragDropContext>
-                </div>
+                {list.length > 0 ? (
+                    <div ref={onlineListRef} className={styles["ai-online-model-list"]}>
+                        <DragDropContext onDragEnd={onDragEnd}>
+                            <Droppable droppableId='droppable1'>
+                                {(provided, snapshot) => (
+                                    <div {...provided.droppableProps} ref={provided.innerRef}>
+                                        {list.map((rowData, index) => (
+                                            <Draggable key={rowData.Type} draggableId={rowData.Type} index={index}>
+                                                {(provided, snapshot) => (
+                                                    <div
+                                                        ref={provided.innerRef}
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+                                                        style={provided.draggableProps.style}
+                                                        className={classNames(styles["ai-online-model-list-row"], {
+                                                            [styles["ai-online-model-list-row-isDragging"]]:
+                                                                snapshot.isDragging
+                                                        })}
+                                                    >
+                                                        <SolidDragsortIcon className={styles["drag-sort-icon"]} />
+                                                        <AIOnlineModelListItem
+                                                            item={rowData}
+                                                            onEdit={onEdit}
+                                                            onRemove={onRemove}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
+                    </div>
+                ) : (
+                    <div className={styles["ai-list-empty-wrapper"]}>
+                        <YakitEmpty
+                            title='暂无数据'
+                            description='通过 api 访问模型，接受 AI 信息或向 Al 发送信息，可配置多个。'
+                        />
+                        <div className={styles["ai-list-btns-wrapper"]}>
+                            <YakitButton type='outline1' icon={<OutlinePlussmIcon />} onClick={onAdd}>
+                                添加模型
+                            </YakitButton>
+                        </div>
+                    </div>
+                )}
             </YakitSpin>
         )
     })
@@ -537,30 +553,40 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
             </YakitSpin>
         ) : (
             <YakitSpin spinning={llamaServerChecking}>
-                <div className={styles["ai-local-model-notice"]}>
-                    <p>
-                        本地AI模型管理器用于管理本地AI模型,支持一键下载和安装模型,支持模型状态监控和管理。通过本地模型服务,可以实现本地化AI服务,无需依赖云端服务
-                    </p>
-                    <p>
-                        MAC 系统在下载后，需要执行
-                        <span>{code}</span>
-                        <CopyComponents copyText={code} className={styles["ai-local-model-copy"]} />
-                        命令,允许llama-server可执行。
-                    </p>
-                    <p>首次使用需要先安装模型运行环境，部分模型文件较大，请确保有足够的磁盘空间和网络带宽。</p>
-                </div>
-                <div className={styles["ai-list-empty-wrapper"]}>
-                    <YakitEmpty
-                        title='暂无数据'
-                        description='点击下方按钮进行服务器初始化,（如已经下载服务器，建议点击刷新或关掉当前页面后重新打开）'
-                    />
-                    <div className={styles["ai-list-btns-wrapper"]}>
-                        <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={init}>
-                            刷新
-                        </YakitButton>
-                        <YakitButton type='primary' icon={<OutlineClouddownloadIcon />} onClick={installLlamaServer}>
-                            安装Llama服务器
-                        </YakitButton>
+                <div className={styles["ai-local-model-empty"]}>
+                    <div className={styles["ai-local-model-notice"]}>
+                        <div className={styles["notice-title"]}>
+                            <OutlineLightbulbIcon />
+                            注意
+                        </div>
+                        <div>
+                            MAC系统在下载后，需要执行<YakitTag color='purple'>sudo xattr -r</YakitTag>
+                            <YakitTag color='purple'>-d com.apple.quarantine ~/yakit-projects</YakitTag>
+                            <YakitTag color='purple'>
+                                /projects/libs/llama-server
+                                <CopyComponents copyText={code} className={styles["copy"]} />
+                            </YakitTag>
+                            命令，允许llama-server可执行。
+                        </div>
+                        <div>首次使用需要先安装模型运行环境，部分模型文件较大，请确保有足够的磁盘空间和网络带宽。</div>
+                    </div>
+                    <div className={styles["ai-list-empty-wrapper"]}>
+                        <YakitEmpty
+                            title='暂无数据'
+                            description='本地 AI 模型管理器用于管理本地 Al 模型，支持一键下载和安装模型，支持模型状态监控和管理。通过本地模型服务，可以实现本地化 AI 服务，无需依赖云端服务。'
+                        />
+                        <div className={styles["ai-list-btns-wrapper"]}>
+                            <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={init}>
+                                刷新
+                            </YakitButton>
+                            <YakitButton
+                                type='primary'
+                                icon={<OutlineClouddownloadIcon />}
+                                onClick={installLlamaServer}
+                            >
+                                安装Llama服务器
+                            </YakitButton>
+                        </div>
                     </div>
                 </div>
                 {visible && (
@@ -759,7 +785,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                 itemIcon: <OutlineClipboardcopyIcon />
             }
         ]
-        if (!["starting", "running", "stopping"].includes(item.Status?.Status || "")) {
+        const noEdit = ["starting", "running", "stopping"].includes(item.Status?.Status || "")
+        if (item.IsLocal && !noEdit) {
             menu = menu.concat([
                 {
                     key: "edit",
@@ -775,7 +802,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             ])
         }
         return menu
-    }, [item?.Status?.Status])
+    }, [item.IsLocal, item?.Status?.Status])
     return (
         <div className={styles["ai-local-model-list-item"]}>
             <div className={styles["ai-local-model-heard"]}>
