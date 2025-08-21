@@ -21,6 +21,27 @@ module.exports = {
             }
         })
 
+        // 监听主窗口最小化子窗口
+        ipcMain.on("minimize-childWin", () => {
+            if (childWindow && !childWindow.isDestroyed()) {
+                childWindow.minimize()
+            }
+        })
+
+        // 监听主窗口最大化子窗口
+        ipcMain.on("maximize-childWin", () => {
+            if (childWindow && !childWindow.isDestroyed()) {
+                childWindow.maximize()
+            }
+        })
+
+        // 监听主窗口还原子窗口
+        ipcMain.on("restore-childWin", () => {
+            if (childWindow && !childWindow.isDestroyed()) {
+                childWindow.restore()
+            }
+        })
+
         // 监听主窗口触发子窗口获取焦点
         ipcMain.on("onTop-childWin", () => {
             if (childWindow && !childWindow.isDestroyed()) {
@@ -36,7 +57,7 @@ module.exports = {
                 height: 800,
                 minWidth: 900,
                 minHeight: 500,
-                titleBarStyle: "default", // 确保 macOS 有标题栏按钮
+                titleBarStyle: "hidden", // 确保 macOS 有标题栏按钮
                 webPreferences: {
                     preload: path.join(__dirname, "../../preload.js"),
                     nodeIntegration: true,
