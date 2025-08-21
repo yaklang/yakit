@@ -14,6 +14,8 @@ export interface YakitModalProp extends Omit<ModalProps, "cancelButtonProps" | "
     okButtonProps?: YakitButtonProp
     okType?: YakitButtonProp["type"]
 
+    onCloseX?: (e: React.MouseEvent<HTMLElement>) => void
+
     /** @name 副标题 */
     subTitle?: ReactNode
     /** @name footer组件左侧操作区域 */
@@ -49,6 +51,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         confirmLoading,
         okText = "确认",
         okType,
+        onCloseX,
         onCancel,
         onOk,
         /** 自定义新增属性 ↓↓↓ */
@@ -81,7 +84,13 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
             )}
             closable={false}
             footer={null}
-            onCancel={onCancel}
+            onCancel={(e) => {
+                if (onCloseX) {
+                    onCloseX(e)
+                } else {
+                    onCancel?.(e)
+                }
+            }}
         >
             <div className={styles["yakit-modal-body"]}>
                 {!hiddenHeader && (
@@ -97,7 +106,13 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
                                 type='text'
                                 size={size === "large" ? "large" : "middle"}
                                 icon={!!closeIcon ? closeIcon : <OutlineXIcon />}
-                                onClick={onCancel}
+                                onClick={(e) => {
+                                    if (onCloseX) {
+                                        onCloseX(e)
+                                    } else {
+                                        onCancel?.(e)
+                                    }
+                                }}
                             />
                         )}
                     </div>

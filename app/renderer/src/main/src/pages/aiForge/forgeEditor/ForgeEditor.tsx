@@ -348,11 +348,18 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
     // #endregion
 
     // #region 注册关闭页面时的触发事件
+    // 销毁保存弹窗
+    const destroySaveModal = useMemoizedFn(() => {
+        if (modalRef.current) {
+            modalRef.current.destroy()
+            modalRef.current = null
+        }
+    })
     // 保存并退出
     const handleSaveAndExit = useMemoizedFn((isModify?: boolean) => {
         handleSave()
             .then(() => {
-                if (modalRef.current) modalRef.current.destroy()
+                destroySaveModal()
                 emiter.emit(
                     "closePage",
                     JSON.stringify({route: !!isModify ? YakitRoute.ModifyAIForge : YakitRoute.AddAIForge})
@@ -364,7 +371,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
     const handleSaveAndOpen = useMemoizedFn(async (isSave?: boolean) => {
         try {
             if (isSave) await handleSave()
-            if (modalRef.current) modalRef.current.destroy()
+            destroySaveModal()
             handleModifyInit()
         } catch (error) {}
     })
@@ -378,14 +385,29 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                     return {
                         title: "模板未保存",
                         content: "是否要将模板保存?",
-                        confirmLoading: saveLoading,
                         maskClosable: false,
+                        confirmLoading: saveLoading,
+                        cancelText: "不保存",
+                        okText: "保存",
+                        footerStyle: {padding: "0 24px 24px"},
+                        footerExtra: (
+                            <YakitButton type='outline2' onClick={destroySaveModal}>
+                                取消
+                            </YakitButton>
+                        ),
+                        footer: undefined,
                         onOk: (m) => {
-                            modalRef.current = m
                             handleSaveAndExit(true)
                         },
-                        onCancel: () => {
+                        onCancel: (m) => {
+                            destroySaveModal()
                             emiter.emit("closePage", JSON.stringify({route: YakitRoute.ModifyAIForge}))
+                        },
+                        onCloseX: (m) => {
+                            destroySaveModal()
+                        },
+                        getModal: (m) => {
+                            modalRef.current = m
                         }
                     }
                 },
@@ -393,14 +415,28 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                     return {
                         title: "模板未保存",
                         content: "是否要将当前模板保存，并编辑点击的模板?",
-                        confirmLoading: saveLoading,
                         maskClosable: false,
+                        confirmLoading: saveLoading,
+                        cancelText: "不保存",
+                        okText: "保存",
+                        footerStyle: {padding: "0 24px 24px"},
+                        footerExtra: (
+                            <YakitButton type='outline2' onClick={destroySaveModal}>
+                                取消
+                            </YakitButton>
+                        ),
+                        footer: undefined,
                         onOk: (m) => {
-                            modalRef.current = m
                             handleSaveAndOpen(true)
                         },
-                        onCancel: () => {
+                        onCancel: (m) => {
                             handleSaveAndOpen()
+                        },
+                        onCloseX: (m) => {
+                            destroySaveModal()
+                        },
+                        getModal: (m) => {
+                            modalRef.current = m
                         }
                     }
                 }
