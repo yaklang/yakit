@@ -734,16 +734,22 @@ export const addAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo,
  */
 export const getDefaultActiveFile = async (info: FileDetailInfo) => {
     let newActiveFile = info
-    // 注入语法检查结果
-    if (
-        newActiveFile.code &&
-        (newActiveFile.language === YaklangMonacoSpec || newActiveFile.language === SyntaxFlowMonacoSpec)
-    ) {
-        const syntaxCheck = (await onSyntaxCheck(newActiveFile.code, newActiveFile.language)) as IMonacoEditorMarker[]
-        if (syntaxCheck) {
-            newActiveFile = {...newActiveFile, syntaxCheck}
+    try {
+        // 注入语法检查结果
+        if (
+            newActiveFile.code &&
+            (newActiveFile.language === YaklangMonacoSpec || newActiveFile.language === SyntaxFlowMonacoSpec)
+        ) {
+            const syntaxCheck = (await onSyntaxCheck(
+                newActiveFile.code,
+                newActiveFile.language
+            )) as IMonacoEditorMarker[]
+            if (syntaxCheck) {
+                newActiveFile = {...newActiveFile, syntaxCheck}
+            }
         }
-    }
+    } catch (error) {}
+
     return newActiveFile
 }
 
@@ -758,18 +764,22 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
                 properties: ["openFile"]
             })
             .then(async (data: {filePaths: string[]}) => {
-                const filesLength = data.filePaths.length
-                if (filesLength === 1) {
-                    const path: string = data.filePaths[0].replace(/\\/g, "\\")
-                    const name: string = await getNameByPath(path)
-                    resolve({
-                        path,
-                        name
-                    })
-                } else if (filesLength > 1) {
-                    warn("只支持单选文件")
+                try {
+                    const filesLength = data.filePaths.length
+                    if (filesLength === 1) {
+                        const path: string = data.filePaths[0].replace(/\\/g, "\\")
+                        const name: string = await getNameByPath(path)
+                        resolve({
+                            path,
+                            name
+                        })
+                    } else if (filesLength > 1) {
+                        warn("只支持单选文件")
+                    }
+                    resolve(null)
+                } catch (error) {
+                    reject()
                 }
-                resolve(null)
             })
             .catch(() => {
                 reject()

@@ -335,9 +335,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             failed(`复制相对路径失败`)
             return
         }
-        const basePath = fileTree[0].path
-        const relativePath = await getRelativePath(basePath, info.path)
-        setClipboardText(relativePath)
+        try {
+            const basePath = fileTree[0].path
+            const relativePath = await getRelativePath(basePath, info.path)
+            setClipboardText(relativePath)
+        } catch (error) {}
     })
 
     // 粘贴
@@ -640,20 +642,24 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
 
     // 新建文件（仅文件夹有这个操作）
     const onNewFile = useMemoizedFn(async (path: string) => {
-        // 判断文件夹内文件是否加载 如若未加载则需要先行加载
-        if (!hasMapFolderDetail(path)) {
-            await loadFolderDetail(path)
-        }
-        emiter.emit("onNewFileInFileTree", path)
+        try {
+            // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+            if (!hasMapFolderDetail(path)) {
+                await loadFolderDetail(path)
+            }
+            emiter.emit("onNewFileInFileTree", path)
+        } catch (error) {}
     })
 
     // 新建文件夹
     const onNewFolder = useMemoizedFn(async (path: string) => {
-        // 判断文件夹内文件是否加载 如若未加载则需要先行加载
-        if (!hasMapFolderDetail(path)) {
-            await loadFolderDetail(path)
-        }
-        emiter.emit("onNewFolderInFileTree", path)
+        try {
+            // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+            if (!hasMapFolderDetail(path)) {
+                await loadFolderDetail(path)
+            }
+            emiter.emit("onNewFolderInFileTree", path)
+        } catch (error) {}
     })
 
     const menuData: YakitMenuItemType[] = useMemo(() => {

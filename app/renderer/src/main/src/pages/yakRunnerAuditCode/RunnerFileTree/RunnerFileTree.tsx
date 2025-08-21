@@ -341,11 +341,10 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         if (options.length > 1 && isShowCompare) {
             const item = options.find((item) => item.value === checkItem) as any
             const createdAt = item.CreatedAt
-            const target = findClosestTimestamp(createdAt,options)
-            if(target){
+            const target = findClosestTimestamp(createdAt, options)
+            if (target) {
                 setCompare(target.value)
-            }
-            else{
+            } else {
                 setCompare(undefined)
             }
         } else {
@@ -389,7 +388,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
 
     useUpdateEffect(() => {
         setRuntimeID && setRuntimeID(checkItem)
-        if(checkItem === ""){
+        if (checkItem === "") {
             setShowCompare(false)
         }
     }, [checkItem])
@@ -816,25 +815,34 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
     })
 
     const onInitRiskTreeFun = useMemoizedFn(async (program: string) => {
-        resetMap()
-        setFoucsedKey("")
-        setExpandedKeys([])
-        if (program.length > 0) {
-            const {res, data} = await grpcFetchRiskOrRuleTree("/", {program, type, search, task_id, result_id, compare})
-            const children: FileTreeListProps[] = []
-            let childArr: string[] = []
-            data.forEach((item) => {
-                // 注入文件结构Map
-                childArr.push(item.path)
-                // 文件Map
-                setRiskMap(item.path, item)
-                // 注入tree结构
-                children.push({path: item.path})
-            })
+        try {
+            resetMap()
+            setFoucsedKey("")
+            setExpandedKeys([])
+            if (program.length > 0) {
+                const {res, data} = await grpcFetchRiskOrRuleTree("/", {
+                    program,
+                    type,
+                    search,
+                    task_id,
+                    result_id,
+                    compare
+                })
+                const children: FileTreeListProps[] = []
+                let childArr: string[] = []
+                data.forEach((item) => {
+                    // 注入文件结构Map
+                    childArr.push(item.path)
+                    // 文件Map
+                    setRiskMap(item.path, item)
+                    // 注入tree结构
+                    children.push({path: item.path})
+                })
 
-            const newRoot = childArr.map((item) => ({path: item}))
-            if (data) setRiskTree(newRoot)
-        }
+                const newRoot = childArr.map((item) => ({path: item}))
+                if (data) setRiskTree(newRoot)
+            }
+        } catch (error) {}
     })
 
     const onLoadRiskTree = useMemoizedFn((path: string, program: string) => {

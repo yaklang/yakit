@@ -17,7 +17,7 @@ import {setYakDecompilerLastFolderExpanded} from "../utils"
 import useStore from "../hooks/useStore"
 import {failed} from "@/utils/notification"
 import {setClipboardText} from "@/utils/clipboard"
-import { getRelativePath } from "@/pages/yakRunner/utils"
+import {getRelativePath} from "@/pages/yakRunner/utils"
 
 export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     const {folderPath, data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey, expandedKeys, setExpandedKeys} =
@@ -270,9 +270,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             failed(`复制相对路径失败`)
             return
         }
-        const basePath = fileTree[0].path
-        const relativePath = await getRelativePath(basePath, info.path)
-        setClipboardText(relativePath)
+        try {
+            const basePath = fileTree[0].path
+            const relativePath = await getRelativePath(basePath, info.path)
+            setClipboardText(relativePath)
+        } catch (error) {}
     })
 
     const menuData: YakitMenuItemType[] = useMemo(() => {

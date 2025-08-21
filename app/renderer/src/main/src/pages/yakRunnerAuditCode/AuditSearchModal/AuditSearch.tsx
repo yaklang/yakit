@@ -83,53 +83,55 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     }, [projectName])
 
     const getData = useMemoizedFn(async (page: number, pageSize: number = 10) => {
-        if (!resultIdRef.current) return
-        setLoading(true)
-        const params: AuditYakUrlProps = {
-            Schema: "syntaxflow",
-            Location: projectName,
-            Path: `/${activeKey}`,
-            Query: [
-                {Key: "result_id", Value: resultIdRef.current},
-                {Key: "have_range", Value: "true"}
-            ]
-        }
-        const result = await loadAuditFromYakURLRaw(params, undefined, page, pageSize)
-        if (result) {
-            const initAuditDetail = result.Resources.filter((item) => item.VerboseType !== "result_id").map(
-                (item, index) => {
-                    const {ResourceType, VerboseType, ResourceName, Size, Extra} = item
-                    let value: string = `${index}`
-                    const arr = Extra.filter((item) => item.Key === "index")
-                    if (arr.length > 0) {
-                        value = arr[0].Value
+        try {
+            if (!resultIdRef.current) return
+            setLoading(true)
+            const params: AuditYakUrlProps = {
+                Schema: "syntaxflow",
+                Location: projectName,
+                Path: `/${activeKey}`,
+                Query: [
+                    {Key: "result_id", Value: resultIdRef.current},
+                    {Key: "have_range", Value: "true"}
+                ]
+            }
+            const result = await loadAuditFromYakURLRaw(params, undefined, page, pageSize)
+            if (result) {
+                const initAuditDetail = result.Resources.filter((item) => item.VerboseType !== "result_id").map(
+                    (item, index) => {
+                        const {ResourceType, VerboseType, ResourceName, Size, Extra} = item
+                        let value: string = `${index}`
+                        const arr = Extra.filter((item) => item.Key === "index")
+                        if (arr.length > 0) {
+                            value = arr[0].Value
+                        }
+                        const newId = `/${value}`
+                        return {
+                            id: newId,
+                            name: ResourceName,
+                            ResourceType,
+                            VerboseType,
+                            Size,
+                            Extra
+                        }
                     }
-                    const newId = `/${value}`
-                    return {
-                        id: newId,
-                        name: ResourceName,
-                        ResourceType,
-                        VerboseType,
-                        Size,
-                        Extra
+                )
+                let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
+                const newAuditDetail = page === 1 ? initAuditDetail : auditDetail.concat(initAuditDetail)
+                if (isEnd) {
+                    setHasMore(false)
+                }
+                if (page === 1) {
+                    setIsRefresh(!isRefresh)
+                    if (newAuditDetail.length > 0) {
+                        setActiveInfo(newAuditDetail[0])
                     }
                 }
-            )
-            let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
-            const newAuditDetail = page === 1 ? initAuditDetail : auditDetail.concat(initAuditDetail)
-            if (isEnd) {
-                setHasMore(false)
+                setAuditDetail(newAuditDetail)
+                setCureentPage(page)
             }
-            if (page === 1) {
-                setIsRefresh(!isRefresh)
-                if (newAuditDetail.length > 0) {
-                    setActiveInfo(newAuditDetail[0])
-                }
-            }
-            setAuditDetail(newAuditDetail)
-            setCureentPage(page)
-        }
-        setLoading(false)
+            setLoading(false)
+        } catch (error) {}
     })
 
     useUpdateEffect(() => {
@@ -200,10 +202,12 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     // 获取参数
     const handleFetchParams = useDebounceFn(
         useMemoizedFn(async () => {
-            const newPlugin = await grpcFetchLocalPluginDetail({Name: "SyntaxFlow Searcher"}, true)
-            const ExtraSetting = newPlugin?.Params.find((item) => item.Field === "kind")?.ExtraSetting || ""
-            let obj = JSON.parse(ExtraSetting) as ExtraSettingProps
-            setExtraSettingData(obj.data)
+            try {
+                const newPlugin = await grpcFetchLocalPluginDetail({Name: "SyntaxFlow Searcher"}, true)
+                const ExtraSetting = newPlugin?.Params.find((item) => item.Field === "kind")?.ExtraSetting || ""
+                let obj = JSON.parse(ExtraSetting) as ExtraSettingProps
+                setExtraSettingData(obj.data)
+            } catch (error) {}
         }),
         {wait: 300}
     ).run

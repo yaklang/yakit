@@ -22,7 +22,7 @@ import {
 import {genDefaultPagination} from "../invoker/schema"
 import {APIFunc} from "@/apiUtils/type"
 import {JumpToAuditEditorProps} from "./BottomEditorDetails/BottomEditorDetailsType"
-import { getNameByPath, initFileTreeData } from "../yakRunner/utils"
+import {getNameByPath, initFileTreeData} from "../yakRunner/utils"
 const {ipcRenderer} = window.require("electron")
 
 const getLineFun = (info: YakURLResource) => {
@@ -175,13 +175,15 @@ export const grpcFetchRiskOrRuleTree: (
 /**
  * @name 漏洞文件/规则汇树筛选列表获取
  */
-export const grpcFetchAuditCodeRiskOrRuleList: (Programs: string) => Promise<QuerySyntaxFlowScanTaskResponse> = (Programs) => {
+export const grpcFetchAuditCodeRiskOrRuleList: (Programs: string) => Promise<QuerySyntaxFlowScanTaskResponse> = (
+    Programs
+) => {
     return new Promise(async (resolve, reject) => {
         const params: QuerySyntaxFlowScanTaskRequest = {
             Pagination: genDefaultPagination(100, 1),
             Filter: {
                 Programs: [Programs],
-                HaveRisk:true, 
+                HaveRisk: true
             }
         }
         try {
@@ -373,7 +375,10 @@ export const updateAuditCodeAreaFileInfo = (areaInfo: AreaInfoProps[], data: Opt
 /**
  * @name 判断分栏数据里是否存在某个节点file数据
  */
-export const judgeAuditCodeAreaExistFilePath = (areaInfo: AreaInfoProps[], path: string): Promise<FileDetailInfo | null> => {
+export const judgeAuditCodeAreaExistFilePath = (
+    areaInfo: AreaInfoProps[],
+    path: string
+): Promise<FileDetailInfo | null> => {
     return new Promise(async (resolve, reject) => {
         const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
         newAreaInfo.forEach((item, index) => {
@@ -392,7 +397,11 @@ export const judgeAuditCodeAreaExistFilePath = (areaInfo: AreaInfoProps[], path:
 /**
  * @name 新增分栏数据里某个节点的file数据
  */
-export const addAuditCodeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo, activeFile?: FileDetailInfo) => {
+export const addAuditCodeAreaFileInfo = (
+    areaInfo: AreaInfoProps[],
+    info: FileDetailInfo,
+    activeFile?: FileDetailInfo
+) => {
     let newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
     let newActiveFile: FileDetailInfo = info
     try {
@@ -527,13 +536,15 @@ export const getAuditCodeDefaultActiveFile = async (
     //     return info
     // }
     let newActiveFile = info
-    if (CodeSourceUrl.length > 0) {
-        // 注入漏洞汇总结果
-        const syntaxCheck = (await onSyntaxRisk({ProgramName, CodeSourceUrl, RuntimeID})) as SSARisk[]
-        if (syntaxCheck) {
-            newActiveFile = {...newActiveFile, syntaxCheck}
+    try {
+        if (CodeSourceUrl.length > 0) {
+            // 注入漏洞汇总结果
+            const syntaxCheck = (await onSyntaxRisk({ProgramName, CodeSourceUrl, RuntimeID})) as SSARisk[]
+            if (syntaxCheck) {
+                newActiveFile = {...newActiveFile, syntaxCheck}
+            }
         }
-    }
+    } catch (error) {}
     return newActiveFile
 }
 
