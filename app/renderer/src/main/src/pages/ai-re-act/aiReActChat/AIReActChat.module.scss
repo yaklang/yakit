@@ -1,0 +1,93 @@
+.ai-re-act-chat {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 16px;
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .header-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: 8px;
+    }
+}
+
+.chat-content {
+    flex: 1;
+    overflow: hidden auto;
+    padding: 8px 0;
+    
+    .loading-wrapper {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .messages-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+
+.message-item {
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--Colors-Use-Basic-Background);
+    
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        
+        .message-type {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--Colors-Use-Main-Primary);
+            color: var(--Colors-Use-Main-On-Primary);
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        }
+    }
+    
+    .message-content {
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        white-space: pre-wrap;
+        word-break: break-word;
+        
+        /* 对JSON格式的特殊处理 */
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+        border-radius: 4px;
+        padding: 8px;
+    }
+}
+
+.chat-input {
+    .input-actions {
+        margin-top: 8px;
+        display: flex;
+        justify-content: flex-end;
+    }
+}
