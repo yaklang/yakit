@@ -98,6 +98,8 @@ export enum YakitRoute {
     System_Config = "system-config",
     // AI-Agent
     AI_Agent = "ai-agent",
+    // AI-ReAct
+    AI_ReAct = "ai-re-act",
 
     // 快捷键设置
     ShortcutKey = "shortcut-key",
