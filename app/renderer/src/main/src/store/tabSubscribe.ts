@@ -1,7 +1,9 @@
 import {YakitModalConfirmProps} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {create} from "zustand"
 export interface YakitSecondaryConfirmProps extends Omit<YakitModalConfirmProps, "onOk"> {
+    // 确认回调函数
     onOk: (m) => void
+    // 获取YakitModalConfirm弹窗实例
     getModal?: (m) => void
 }
 

@@ -878,7 +878,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                 取消
                             </YakitButton>
                         ),
-                        footer: undefined,
                         onOk: (m) => {
                             modalTypeRef.current = "close"
                             onBtnLocalSaveAndExit()
@@ -907,7 +906,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                 取消
                             </YakitButton>
                         ),
-                        footer: undefined,
                         onOk: (m) => {
                             modalTypeRef.current = "reset"
                             onBtnLocalSaveAndExit()
