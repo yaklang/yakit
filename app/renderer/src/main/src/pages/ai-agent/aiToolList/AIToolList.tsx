@@ -3,19 +3,34 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {AIToolListItemProps, AIToolListProps, ToolQueryType} from "./AIToolListType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
-import {grpcGetAIToolList, grpcToggleAIToolFavorite} from "./utils"
+import {grpcDeleteAITool, grpcGetAIToolList, grpcToggleAIToolFavorite} from "./utils"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {SolidStarIcon, SolidToolIcon} from "@/assets/icon/solid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineStarIcon} from "@/assets/icon/outline"
+import {
+    OutlineDotsverticalIcon,
+    OutlinePencilaltIcon,
+    OutlinePlussmIcon,
+    OutlineStarIcon,
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
 import styles from "./AIToolList.module.scss"
-import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {AITool, GetAIToolListRequest, GetAIToolListResponse, ToggleAIToolFavoriteRequest} from "../type/aiChat"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {setClipboardText} from "@/utils/clipboard"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/enums/yakitRoute"
 import {tagColors} from "../defaultConstant"
+import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
+import {yakitNotify} from "@/utils/notification"
+import {AIToolEditorPageInfoProps} from "@/store/pageInfo"
 
 const toolTypeOptions = [
     {
@@ -116,17 +131,24 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
         }))
         setRecalculation((v) => !v)
     })
+    // 新建 forge 模板
+    const handleNewAIForge = useMemoizedFn(() => {
+        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AddAITool}))
+    })
     return (
         <div className={styles["ai-tool-list-wrapper"]} ref={toolListRef}>
             <div className={styles["ai-tool-list-header"]}>
-                <YakitRadioButtons
-                    size='small'
-                    buttonStyle='solid'
-                    value={toolQueryType}
-                    options={toolTypeOptions}
-                    onChange={onToolQueryTypeChange}
-                />
-                <div className={styles["ai-tool-list-total"]}>{response.Total}</div>
+                <div className={styles["ai-tool-list-header-left"]}>
+                    <YakitRadioButtons
+                        size='small'
+                        buttonStyle='solid'
+                        value={toolQueryType}
+                        options={toolTypeOptions}
+                        onChange={onToolQueryTypeChange}
+                    />
+                    <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
+                </div>
+                <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIForge} />
             </div>
             <YakitInput.Search
                 value={keyWord}
@@ -143,7 +165,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
                     renderRow={(rowData: AITool, index: number) => {
                         return (
                             <React.Fragment key={rowData.Name}>
-                                <AIToolListItem item={rowData} onSetData={onSetData} />
+                                <AIToolListItem item={rowData} onSetData={onSetData} onRefresh={getList} />
                             </React.Fragment>
                         )
                     }}
@@ -164,11 +186,12 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
 export default AIToolList
 
 const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
-    const {item, onSetData} = props
-    const onFavorite = useMemoizedFn((e) => {
-        e.stopPropagation()
+    const {item, onSetData, onRefresh} = props
+    const [visible, setVisible] = useState<boolean>(false)
+    const onFavorite = useMemoizedFn(() => {
+        // e.stopPropagation()
         const params: ToggleAIToolFavoriteRequest = {
-            ToolName: item.Name
+            ID: item.ID
         }
         grpcToggleAIToolFavorite(params).then(() => {
             onSetData({
@@ -197,6 +220,53 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
             </div>
         )
     }, [item.Keywords])
+    const toolMenu: YakitMenuItemType[] = useCreation(() => {
+        return [
+            {
+                key: "copy",
+                label: "复制",
+                itemIcon: <OutlineTrashIcon />
+            },
+            {
+                key: "delete",
+                label: "删除",
+                type: "danger",
+                itemIcon: <OutlineTrashIcon />
+            }
+        ]
+    }, [item.IsFavorite])
+    const menuSelect = useMemoizedFn((key: string) => {
+        switch (key) {
+            case "copy":
+                setClipboardText(item.Name)
+                break
+            case "delete":
+                onRemove()
+                break
+            default:
+                break
+        }
+    })
+    const onRemove = useMemoizedFn(() => {
+        grpcDeleteAITool({IDs: [item.ID]}).then(() => {
+            onRefresh()
+            yakitNotify("success", "删除成功")
+        })
+    })
+    const onEdit = useMemoizedFn((e) => {
+        e.stopPropagation()
+        if (!item.ID) {
+            yakitNotify("error", `该模板 ID('${item.ID}') 异常, 无法编辑`)
+            return
+        }
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.ModifyAITool,
+                params: {id: item.ID, source: YakitRoute.AI_Agent} as AIToolEditorPageInfoProps
+            })
+        )
+    })
     return (
         <>
             <YakitPopover
@@ -211,10 +281,6 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                             <span className={styles["ai-tool-list-item-heard-name-text"]}>{item.Name}</span>
                         </div>
                         <div className={styles["ai-tool-list-item-heard-extra"]}>
-                            <CopyComponents
-                                copyText={item.Name}
-                                iconColor='var(--Colors-Use-Neutral-Text-3-Secondary)'
-                            />
                             {item.IsFavorite ? (
                                 <YakitButton
                                     type='text2'
@@ -228,6 +294,26 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                                     onClick={onFavorite}
                                 />
                             )}
+                            <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={onEdit} />
+                            <YakitDropdownMenu
+                                menu={{
+                                    data: toolMenu,
+                                    onClick: ({key}) => menuSelect(key)
+                                }}
+                                dropdown={{
+                                    trigger: ["click", "contextMenu"],
+                                    placement: "bottomLeft",
+                                    visible: visible,
+                                    onVisibleChange: setVisible
+                                }}
+                            >
+                                <YakitButton
+                                    isActive={visible}
+                                    type='text2'
+                                    size='small'
+                                    icon={<OutlineDotsverticalIcon />}
+                                />
+                            </YakitDropdownMenu>
                         </div>
                     </div>
                     <div className={styles["ai-tool-list-item-description"]}>{item.Description}</div>

@@ -75,6 +75,8 @@ interface PageParamsInfoProps {
     mitmHackerPageInfo?: MITMHackerPageInfoProps
     /** 编辑 ai-forge 模板页面 */
     modifyAIForgePageInfo?: AIForgeEditorPageInfoProps
+    /** 编辑 ai tool 页面 */
+    modifyAIToolPageInfo?: AIToolEditorPageInfoProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -82,6 +84,11 @@ export interface AIForgeEditorPageInfoProps {
     id: number
     source: YakitRoute
     [key: string]: any
+}
+
+export interface AIToolEditorPageInfoProps {
+    id: number
+    source: YakitRoute
 }
 
 export interface AddYakitScriptPageInfoProps {

@@ -73,7 +73,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 
-const setAIOnlineModal = (params: {
+export const setAIModal = (params: {
     config: GlobalNetworkConfig
     item?: ThirdPartyApplicationConfig
     onSuccess: () => void
@@ -210,7 +210,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
     })
     const onAddOnline = useMemoizedFn(() => {
         apiGetGlobalNetworkConfig().then((obj) => {
-            setAIOnlineModal({
+            setAIModal({
                 config: obj,
                 onSuccess: () => {
                     onlineRef.current?.onRefresh()
@@ -325,7 +325,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         })
         const onEdit = useMemoizedFn((item: ThirdPartyApplicationConfig) => {
             if (!configRef.current) return
-            setAIOnlineModal({
+            setAIModal({
                 config: configRef.current,
                 item,
                 onSuccess: () => {
