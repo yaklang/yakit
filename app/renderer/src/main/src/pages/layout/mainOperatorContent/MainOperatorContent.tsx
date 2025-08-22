@@ -988,7 +988,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 judgeDataIsFuncOrSettingForConfirm(
                     modalProps["reset"],
                     (setting) => {
-                        const m = onModalSecondaryConfirm(setting, isModalVisibleRef)
+                        onModalSecondaryConfirm(setting, isModalVisibleRef)
                     },
                     () => {}
                 )
@@ -1048,7 +1048,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 judgeDataIsFuncOrSettingForConfirm(
                     modalProps["reset"],
                     (setting) => {
-                        const m = onModalSecondaryConfirm(setting, isModalVisibleRef)
+                        onModalSecondaryConfirm(setting, isModalVisibleRef)
                     },
                     () => {}
                 )
@@ -1815,7 +1815,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     judgeDataIsFuncOrSettingForConfirm(
                         modalProps["close"],
                         (setting) => {
-                            const m = onModalSecondaryConfirm(setting, isModalVisibleRef)
+                            onModalSecondaryConfirm(setting, isModalVisibleRef)
                         },
                         () => {
                             removeMenuPage(data)
