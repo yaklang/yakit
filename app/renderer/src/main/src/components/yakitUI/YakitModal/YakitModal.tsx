@@ -1,5 +1,6 @@
 import React, {CSSProperties, ReactNode, useMemo} from "react"
 import {Modal, ModalProps} from "antd"
+import {useMemoizedFn} from "ahooks"
 import {YakitButton, YakitButtonProp} from "../YakitButton/YakitButton"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
@@ -13,6 +14,8 @@ export interface YakitModalProp extends Omit<ModalProps, "cancelButtonProps" | "
     cancelButtonProps?: YakitButtonProp
     okButtonProps?: YakitButtonProp
     okType?: YakitButtonProp["type"]
+
+    onCloseX?: ModalProps["onCancel"]
 
     /** @name 副标题 */
     subTitle?: ReactNode
@@ -49,6 +52,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         confirmLoading,
         okText = "确认",
         okType,
+        onCloseX,
         onCancel,
         onOk,
         /** 自定义新增属性 ↓↓↓ */
@@ -69,6 +73,14 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         return styles["yakit-modal-small"]
     }, [size])
 
+    const onCancelX: YakitModalProp["onCancel"] = useMemoizedFn((e) => {
+        if (onCloseX) {
+            onCloseX(e)
+        } else {
+            onCancel?.(e)
+        }
+    })
+
     return (
         <Modal
             {...resetProps}
@@ -81,7 +93,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
             )}
             closable={false}
             footer={null}
-            onCancel={onCancel}
+            onCancel={onCancelX}
         >
             <div className={styles["yakit-modal-body"]}>
                 {!hiddenHeader && (
@@ -97,7 +109,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
                                 type='text'
                                 size={size === "large" ? "large" : "middle"}
                                 icon={!!closeIcon ? closeIcon : <OutlineXIcon />}
-                                onClick={onCancel}
+                                onClick={onCancelX}
                             />
                         )}
                     </div>

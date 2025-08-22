@@ -151,6 +151,9 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     props.onCancel()
                     m.destroy()
                 },
+                onCloseX: () => {
+                    m.destroy()
+                },
                 onCancel: () => {
                     props.onCancel()
                     m.destroy()

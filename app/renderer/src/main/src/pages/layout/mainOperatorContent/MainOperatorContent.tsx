@@ -5542,6 +5542,11 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?
         onOkText: "保存",
         keyboard: false,
         zIndex: 1010,
+        onCloseX: () => {
+            m.destroy()
+        },
+        footerStyle: {padding: "0 24px 24px"},
+        footer: undefined,
         ...(props || {}),
         onOk: () => {
             if (visibleRef) {
@@ -5565,5 +5570,6 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?
         },
         content: props?.content
     })
+    props?.getModal?.(m)
     return m
 }
