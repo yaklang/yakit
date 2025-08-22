@@ -241,6 +241,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
     const onClearLocal = useMemoizedFn(() => {
         return grpcClearAllModels({DeleteSourceFile: false}).then(() => {
             localRef.current?.onRefresh()
+            setRemoveVisible(false)
         })
     })
     const onCancelRemove = useMemoizedFn(() => {
