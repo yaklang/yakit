@@ -163,6 +163,7 @@ import {ShortcutKey} from "@/pages/shortcutKey/ShortcutKey"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 import {ShortcutKeyList} from "@/pages/shortcutKey/ShortcutKey"
 import {AIAgent} from "@/pages/ai-agent/AIAgent"
+import {AIReAct} from "@/pages/ai-re-act/AIReAct"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const MITMHacker = React.lazy(() => import("@/pages/mitm/MITMHacker/MITMHacker"))
@@ -271,6 +272,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "shortcut-key": {label: "快捷键设置"},
     "fingerprint-manage": {label: "指纹库"},
     "ai-agent": {label: "AIAgent"},
+    "ai-re-act": {label: "AI ReAct"},
     "ssa-result-diff": {label: "ssa-result-diff"},
     "add-ai-forge": {label: "新建 Forge"},
     "modify-ai-forge": {label: "编辑 Forge"}
@@ -711,6 +713,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakJavaDecompiler />
         case YakitRoute.AI_Agent:
             return <AIAgent />
+        case YakitRoute.AI_ReAct:
+            return <AIReAct />
         case YakitRoute.ShortcutKey:
             return <ShortcutKeyList />
         case YakitRoute.FingerprintManage:
