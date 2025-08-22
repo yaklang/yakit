@@ -15,6 +15,7 @@ export interface AIOnlineModelListProps {
 
 export interface AIOnlineModelListRefProps {
     onRefresh: () => void
+    onRemoveAll: () => void
 }
 
 export interface AILocalModelListProps {

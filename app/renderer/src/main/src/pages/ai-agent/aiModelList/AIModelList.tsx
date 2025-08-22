@@ -159,8 +159,6 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
     const onlineRef = useRef<AIOnlineModelListRefProps>(null)
     const localRef = useRef<AILocalModelListRefProps>(null)
 
-    const onlineConfigRef = useRef<GlobalNetworkConfig>()
-
     const onToolQueryTypeChange = useMemoizedFn((e) => {
         setModelType(e.target.value as AIModelType)
     })
@@ -233,10 +231,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
         }
     })
     const onClearOnline = useMemoizedFn(() => {
-        if (!onlineConfigRef.current) return
-        apiSetGlobalNetworkConfig({...onlineConfigRef.current, AppConfigs: []}).then(() => {
-            onlineRef.current?.onRefresh()
-        })
+        onlineRef.current?.onRemoveAll()
     })
     const onClearLocal = useMemoizedFn(() => {
         return grpcClearAllModels({DeleteSourceFile: false}).then(() => {
@@ -306,7 +301,8 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             () => ({
                 onRefresh: () => {
                     getList()
-                }
+                },
+                onRemoveAll: () => onRemoveAll()
             }),
             []
         )
@@ -342,6 +338,12 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             const newList = list.filter((i) => i.Type !== item.Type)
             setList(newList)
             apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: newList}).then(() => {
+                getList()
+            })
+        })
+        const onRemoveAll = useMemoizedFn(() => {
+            if (!configRef.current) return
+            apiSetGlobalNetworkConfig({...configRef.current, AppConfigs: []}).then(() => {
                 getList()
             })
         })
@@ -813,17 +815,20 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
         }
         return menu
     }, [item.IsLocal, item?.Status?.Status])
+    const isShowEnable = useCreation(() => {
+        return !isReady && !item.IsLocal
+    }, [isReady, item.IsLocal])
     return (
         <div className={styles["ai-local-model-list-item"]}>
             <div className={styles["ai-local-model-heard"]}>
                 <div className={styles["ai-local-model-heard-left"]}>
-                    <OutlineAtomIconByStatus isReady={isReady} isRunning={isRunning} />
+                    <OutlineAtomIconByStatus isReady={isShowEnable} isRunning={isRunning} />
                     <div className={styles["ai-local-model-heard-left-name"]}>{item.Name}</div>
                     {typeNode}
                 </div>
 
                 <div className={styles["ai-local-model-heard-extra"]}>
-                    {!isReady ? (
+                    {isShowEnable ? (
                         <YakitButton type='text' onClick={onDown} icon={<OutlineClouddownloadIcon />}>
                             下载
                         </YakitButton>
