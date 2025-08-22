@@ -573,6 +573,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                 </div>
                 {/* 代码评分弹窗 */}
                 <CodeScoreModal
+                    title='工具基础检测'
                     type='yak'
                     code={content || ""}
                     successHint=' '
