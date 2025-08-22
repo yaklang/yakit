@@ -379,26 +379,7 @@ const taskAnswerToIconMap: Record<string, ReactNode> = {
 }
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {scrollToTask, setScrollToTask, tasks, activeStream, streams, defaultExpand} = props
-
-    // const activeFirstTabKey = useMemo(() => {
-    //     if (!activeStream || activeStream.length === 0) return []
-    //     return [
-    //         ...new Set(
-    //             activeStream.map((item) => {
-    //                 return (item || "").split("|")[0]
-    //             })
-    //         )
-    //     ]
-    // }, [activeStream])
-    // const activeSecondTabKey = useMemo(() => {
-    //     if (!activeStream || activeStream.length === 0) return []
-    //     return activeStream.map((item) => {
-    //         const first = (item || "").split("|")[0] || ""
-    //         const second = (item || "").split("|")[1] || ""
-    //         return `${first}-${second}`
-    //     })
-    // }, [activeStream])
+    const {scrollToTask, setScrollToTask, tasks, streams, defaultExpand} = props
 
     // 任务集合
     const lists = useMemo(() => {

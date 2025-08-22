@@ -160,6 +160,22 @@ export interface AIChatStreams {
     toolAggregation?: AIChatMessage.AIToolData
 }
 
+/** 中间展示的信息数据结构(多种流信息和工具总结信息) */
+export interface AITaskChatStreamAnswer {
+    nodeID: string
+    taskIndex: string
+    timestamp: number
+    isToolResult: boolean
+    /** 任务执行过程输出数据 */
+    stream?: {
+        system: string
+        reason: string
+        stream: string
+    }
+    /** 工具相关结果数据 */
+    toolAggregation?: AIChatMessage.AIToolData
+}
+
 /** UI-chat 信息 */
 export interface AIChatInfo {
     /** 唯一标识 */
