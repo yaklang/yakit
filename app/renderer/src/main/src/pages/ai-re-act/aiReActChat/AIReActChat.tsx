@@ -1,5 +1,4 @@
 import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
-import {AIReActChatBodyProps} from "../aiReActType"
 import AIReActContext from "../useContext/AIReActContext"
 import {AIChatInfo, AIChatMessage, AIInputEvent, AIOutputEvent} from "../../ai-agent/type/aiChat"
 import {randomString} from "@/utils/randomUtil"
@@ -10,10 +9,9 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {failed} from "@/utils/notification"
 import {Divider} from "antd"
-import classNames from "classnames"
 import styles from "./AIReActChat.module.scss"
 
-const {ipcRenderer} = require("electron")
+const {ipcRenderer} = window.require("electron")
 
 export const AIReActChat: React.FC = () => {
     const {store, dispatcher} = useContext(AIReActContext)
@@ -114,7 +112,7 @@ export const AIReActChat: React.FC = () => {
                 }
             }
 
-            await ipcRenderer.invoke("start-ai-react", newToken, startParams)
+            await ipcRenderer.invoke("start-ai-re-act", newToken, startParams)
             setIsStarted(true)
             setLoading(false)
         } catch (error) {
@@ -147,7 +145,7 @@ export const AIReActChat: React.FC = () => {
             setMessages(prev => [...prev, userEvent])
 
             // 发送到服务端
-            await ipcRenderer.invoke("send-ai-react", token, chatMessage)
+            await ipcRenderer.invoke("send-ai-re-act", token, chatMessage)
             setTimeout(scrollToBottom, 100)
         } catch (error) {
             failed(`发送消息失败: ${error}`)
@@ -159,14 +157,14 @@ export const AIReActChat: React.FC = () => {
     // 停止 AI ReAct
     const handleStop = () => {
         if (token) {
-            ipcRenderer.invoke("cancel-ai-react", token)
+            ipcRenderer.invoke("cancel-ai-re-act", token)
         }
         setLoading(false)
     }
     // 重新开始
     const handleRestart = () => {
         if (token) {
-            ipcRenderer.invoke("cancel-ai-react", token)
+            ipcRenderer.invoke("cancel-ai-re-act", token)
         }
         setToken("")
         setIsStarted(false)
@@ -179,13 +177,71 @@ export const AIReActChat: React.FC = () => {
     // 新建对话
     const handleNewChat = () => {
         if (token) {
-            ipcRenderer.invoke("cancel-ai-react", token)
+            ipcRenderer.invoke("cancel-ai-re-act", token)
         }
         setToken("")
         setIsStarted(false)
         setMessages([])
         setCurrentChat(undefined)
         dispatcher.setActiveChat(undefined)
+    }
+
+    // 将字节数组转换为字符串
+    const convertContentToString = (content: any): string => {
+        if (typeof content === "string") {
+            return content
+        }
+        
+        if (typeof content === "object" && content !== null) {
+            // 如果是字节数组对象 (如 {"0": 123, "1": 34, ...})
+            if (typeof content["0"] === "number") {
+                try {
+                    // 将数字字节转换为字符串
+                    const bytes = Object.values(content) as number[]
+                    const uint8Array = new Uint8Array(bytes)
+                    const decoder = new TextDecoder('utf-8', { fatal: false })
+                    return decoder.decode(uint8Array)
+                } catch (error) {
+                    console.error("字节转换失败:", error)
+                    return JSON.stringify(content, null, 2)
+                }
+            }
+        }
+        
+        return JSON.stringify(content, null, 2)
+    }
+
+    // 渲染消息内容
+    const renderMessageContent = (event: any) => {
+        if (typeof event.Data === "string") {
+            return event.Data
+        }
+        
+        // 如果是结构化数据，检查是否有 Content 字段需要特殊处理
+        if (event.Data && typeof event.Data === "object") {
+            const data = { ...event.Data }
+            
+            // 如果有 Content 字段且是字节数组，转换为字符串
+            if (data.Content && typeof data.Content === "object" && typeof data.Content["0"] === "number") {
+                data.Content = convertContentToString(data.Content)
+            }
+            
+            return JSON.stringify(data, null, 2)
+        }
+        
+        // 直接处理事件对象
+        if (event && typeof event === "object") {
+            const eventCopy = { ...event }
+            
+            // 如果有 Content 字段且是字节数组，转换为字符串
+            if (eventCopy.Content && typeof eventCopy.Content === "object" && typeof eventCopy.Content["0"] === "number") {
+                eventCopy.Content = convertContentToString(eventCopy.Content)
+            }
+            
+            return JSON.stringify(eventCopy, null, 2)
+        }
+        
+        return JSON.stringify(event || {}, null, 2)
     }
 
     // 渲染消息
@@ -199,7 +255,7 @@ export const AIReActChat: React.FC = () => {
                     </span>
                 </div>
                 <div className={styles["message-content"]}>
-                    {typeof event.Data === "string" ? event.Data : JSON.stringify(event.Data || event, null, 2)}
+                    <pre>{renderMessageContent(event)}</pre>
                 </div>
             </div>
         )
