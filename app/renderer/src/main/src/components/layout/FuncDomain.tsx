@@ -991,6 +991,7 @@ const GetUIOpSettingMenu = () => {
                 },
                 {key: "mcp", label: "Yak Mcp"},
                 {key: "ai-agent", label: "AI Agent"},
+                {key: "ai-re-act", label: "AI ReAct"},
                 {key: "ssa-result-diff", label: "ssa-result-diff"}
             ]
         },
@@ -1223,6 +1224,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "ai-agent":
                 emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
+                return
+            case "ai-re-act":
+                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_ReAct}))
                 return
             case "ssa-result-diff":
                 emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Ssa_Result_Diff}))
