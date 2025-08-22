@@ -3,7 +3,7 @@ import {AIReActSideListProps, AIReActTab} from "./aiReActType"
 import {AIReActTabList} from "./defaultConstant"
 import AIReActContext from "./useContext/AIReActContext"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
-import {AIChatSetting} from "../ai-agent/AIChatSetting/AIChatSetting"
+import AIChatSetting from "../ai-agent/AIChatSetting/AIChatSetting"
 import {HistoryChat} from "../ai-agent/historyChat/HistoryChat"
 import classNames from "classnames"
 import styles from "./AIReAct.module.scss"
@@ -18,18 +18,14 @@ export const AIReActSideList: React.FC<AIReActSideListProps> = () => {
             case "history":
                 return (
                     <HistoryChat
-                        chats={store.chats}
-                        setChats={dispatcher.setChats}
-                        activeChat={store.activeChat}
-                        setActiveChat={dispatcher.setActiveChat}
+                        onNewChat={() => {
+                            // TODO: 实现新建对话逻辑
+                        }}
                     />
                 )
             case "setting":
                 return (
-                    <AIChatSetting
-                        setting={store.setting}
-                        setSetting={dispatcher.setSetting}
-                    />
+                    <AIChatSetting />
                 )
             default:
                 return <div>未知页面</div>
@@ -44,9 +40,13 @@ export const AIReActSideList: React.FC<AIReActSideListProps> = () => {
                 })}
             >
                 <YakitSideTab
-                    tabs={AIReActTabList}
-                    active={tab}
-                    onTabClick={(key) => {
+                    yakitTabs={AIReActTabList.map(item => ({
+                        label: item.title,
+                        value: item.key,
+                        icon: item.icon
+                    }))}
+                    activeKey={tab}
+                    onActiveKey={(key) => {
                         if (key === tab && !hidden) {
                             setHidden(true)
                         } else {
@@ -54,7 +54,7 @@ export const AIReActSideList: React.FC<AIReActSideListProps> = () => {
                             setHidden(false)
                         }
                     }}
-                    className={styles["side-list-bar"]}
+                    type="vertical"
                 />
             </div>
             
