@@ -4,7 +4,6 @@ import {useCreation, useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {useSubscribeClose} from "@/store/tabSubscribe"
-import styles from "./AIToolEditor.module.scss"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
@@ -52,6 +51,9 @@ import {grpcAIToolGenerateDescription, grpcAIToolGenerateKeywords, grpcSaveAIToo
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {grpcGetAIToolById} from "@/pages/ai-agent/aiToolList/utils"
+import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
+import {setAIModal} from "@/pages/ai-agent/aiModelList/AIModelList"
+import styles from "./AIToolEditor.module.scss"
 
 const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
     const {isModify} = props
@@ -699,7 +701,14 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                     }, 200)
                 })
         })
-        const onConfig = useMemoizedFn(() => {})
+        const onConfig = useMemoizedFn(() => {
+            apiGetGlobalNetworkConfig().then((obj) => {
+                setAIModal({
+                    config: obj,
+                    onSuccess: () => {}
+                })
+            })
+        })
         const formExtraAI = useMemoizedFn((params: {generate: () => void; loading: boolean}) => {
             const {generate, loading} = params
             return (
