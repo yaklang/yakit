@@ -276,46 +276,45 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             content: (
                 <>
                     <div className={styles["ai-describe"]}>请配置空间引擎APIKey后再进行使用</div>
-                    <div style={{margin: 24, marginRight: 45}}>
-                        <NewThirdPartyApplicationConfig
-                            formValues={{
-                                Type: initData.Type,
-                                ...extraParams
-                            }}
-                            disabledType={true}
-                            onAdd={(e) => {
-                                let existed = false
-                                const existedResult = (globalNetworkConfig.AppConfigs || []).map((i) => {
-                                    if (i.Type === e.Type) {
-                                        existed = true
-                                        return {...i, ...e}
+
+                    <NewThirdPartyApplicationConfig
+                        formValues={{
+                            Type: initData.Type,
+                            ...extraParams
+                        }}
+                        disabledType={true}
+                        onAdd={(e) => {
+                            let existed = false
+                            const existedResult = (globalNetworkConfig.AppConfigs || []).map((i) => {
+                                if (i.Type === e.Type) {
+                                    existed = true
+                                    return {...i, ...e}
+                                }
+                                return {...i}
+                            })
+                            if (!existed) {
+                                existedResult.push(e)
+                            }
+                            const editItem = existedResult.find((ele) => ele.Type === e.Type)
+                            if (editItem) {
+                                apiGetSpaceEngineAccountStatus(editItem).then((value) => {
+                                    switch (value.Status) {
+                                        case "normal":
+                                            const params = {...globalNetworkConfig, AppConfigs: existedResult}
+                                            apiSetGlobalNetworkConfig(params).then(() => {
+                                                onGetGlobalNetworkConfig()
+                                                m.destroy()
+                                            })
+                                            break
+                                        default:
+                                            yakitNotify("error", "设置引擎失败:" + value.Info || value.Status)
+                                            break
                                     }
-                                    return {...i}
                                 })
-                                if (!existed) {
-                                    existedResult.push(e)
-                                }
-                                const editItem = existedResult.find((ele) => ele.Type === e.Type)
-                                if (editItem) {
-                                    apiGetSpaceEngineAccountStatus(editItem).then((value) => {
-                                        switch (value.Status) {
-                                            case "normal":
-                                                const params = {...globalNetworkConfig, AppConfigs: existedResult}
-                                                apiSetGlobalNetworkConfig(params).then(() => {
-                                                    onGetGlobalNetworkConfig()
-                                                    m.destroy()
-                                                })
-                                                break
-                                            default:
-                                                yakitNotify("error", "设置引擎失败:" + value.Info || value.Status)
-                                                break
-                                        }
-                                    })
-                                }
-                            }}
-                            onCancel={() => m.destroy()}
-                        />
-                    </div>
+                            }
+                        }}
+                        onCancel={() => m.destroy()}
+                    />
                 </>
             )
         })

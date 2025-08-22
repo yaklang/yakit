@@ -17,6 +17,8 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
         onCancel,
         placement = "left",
         overlayClassName,
+        okButtonProps,
+        cancelButtonProps,
         ...resePopover
     } = props
     const [visible, setVisible] = useState<boolean>(false)
@@ -50,10 +52,10 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
                 <div className={styles["yakit-popconfirm-title"]}>
                     {title}
                     <div className={styles["yakit-popconfirm-buttons"]}>
-                        <YakitButton type='outline2' onClick={onCancelClick}>
+                        <YakitButton {...(cancelButtonProps || {})} type='outline2' onClick={onCancelClick}>
                             {cancelText || "取消"}
                         </YakitButton>
-                        <YakitButton type='primary' onClick={onOk}>
+                        <YakitButton {...(okButtonProps || {})} type='primary' onClick={onOk}>
                             {okText || "确认"}
                         </YakitButton>
                     </div>

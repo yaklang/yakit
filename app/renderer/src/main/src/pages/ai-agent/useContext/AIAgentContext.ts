@@ -14,6 +14,8 @@ export interface AIAgentContextStore {
     chats: AIChatInfo[]
     /** 当前展示对话 */
     activeChat?: AIChatInfo
+    /**当前会话选择的 ai 模型 */
+    activeAIModel?: string
 }
 
 export interface AIAgentContextDispatcher {
@@ -40,7 +42,9 @@ export default createContext<AIAgentContextValue>({
         activeTriage: undefined,
 
         chats: [],
-        activeChat: undefined
+        activeChat: undefined,
+
+        activeAIModel: ""
     },
     dispatcher: {
         setSetting: undefined,

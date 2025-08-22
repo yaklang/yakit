@@ -303,7 +303,6 @@
 }
 .ai-sort-box{
     width: 300px;
-    
 }
 .ai-sort-content {
     .ai-sort-describe{
@@ -376,4 +375,20 @@
     justify-content: center;
     border: 1px solid var(--Colors-Use-Neutral-Border);
     margin-bottom: 8px;
+}
+
+.config-form-wrapper {
+    .config-form {
+        padding: 24px 24px 0 24px;
+    }
+    .config-footer {
+        padding: 10px 24px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 12px;
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
+        border-radius: 0 0 4px 4px;
+        background: var(--Colors-Use-Neutral-Bg);
+    }
 }

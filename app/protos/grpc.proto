@@ -888,8 +888,15 @@ service Yak {
   rpc IsLocalModelReady(IsLocalModelReadyRequest) returns (IsLocalModelReadyResponse);
   rpc InstallLlamaServer(InstallLlamaServerRequest) returns (stream ExecResult);
   rpc StartLocalModel(StartLocalModelRequest) returns (stream ExecResult);
+  rpc StopLocalModel(StopLocalModelRequest) returns (GeneralResponse);
+
   rpc DownloadLocalModel(DownloadLocalModelRequest) returns (stream ExecResult);
   rpc GetSupportedLocalModels(Empty) returns (GetSupportedLocalModelsResponse);
+  rpc AddLocalModel(AddLocalModelRequest) returns (GeneralResponse);
+  rpc DeleteLocalModel(DeleteLocalModelRequest) returns (GeneralResponse);
+  rpc UpdateLocalModel(UpdateLocalModelRequest) returns (GeneralResponse);
+  rpc GetAllStartedLocalModels(Empty) returns (GetAllStartedLocalModelsResponse);
+  rpc ClearAllModels(ClearAllModelsRequest) returns (GeneralResponse);
 
   rpc IsSearchVectorDatabaseReady(IsSearchVectorDatabaseReadyRequest) returns (IsSearchVectorDatabaseReadyResponse);
   rpc InitSearchVectorDatabase(InitSearchVectorDatabaseRequest) returns (stream ExecResult);
@@ -919,6 +926,61 @@ service Yak {
 
   rpc BuildVectorIndexForKnowledgeBase(BuildVectorIndexForKnowledgeBaseRequest) returns(GeneralResponse);
   rpc BuildVectorIndexForKnowledgeBaseEntry(BuildVectorIndexForKnowledgeBaseEntryRequest) returns(GeneralResponse);
+}
+
+message StartedLocalModelInfo {
+  string Name = 1;
+  string ModelType = 2;
+  string Host = 3;
+  int32 Port = 4;
+}
+message GetAllStartedLocalModelsResponse {
+  repeated StartedLocalModelInfo Models = 1;
+}
+
+message ClearAllModelsRequest {
+  bool DeleteSourceFile = 1;
+}
+
+message UpdateLocalModelRequest {
+  string Name = 1;
+  string ModelType = 2;
+  string Description = 3;
+  string Path = 4;
+}
+
+message AddLocalModelRequest {
+  string Name = 1;
+  string ModelType = 2;
+  string Description = 3;
+  string Path = 4;
+}
+
+message DeleteLocalModelRequest {
+  string Name = 1;
+  bool DeleteSourceFile = 2;
+}
+
+message StopLocalModelRequest {
+  string ModelName = 1;
+}
+
+message LocalModelStatus {
+  string Status = 2;
+  string Host = 3;
+  int32 Port = 4;
+  string Model = 5;
+  string ModelPath = 6;
+  string LlamaServerPath = 7;
+  int32 ContextSize = 8;
+  bool ContBatching = 9;
+  int32 BatchSize = 10;
+  int32 Threads = 11;
+  bool Detached = 12;
+  bool Debug = 13;
+  string Pooling = 14;
+  int32 StartupTimeout = 15;
+  repeated string Args = 16;
 }
 
 message ThirdPartyBinary {
@@ -1281,6 +1343,9 @@ message AIStartParams {
   bool AllowGenerateReport = 24;
 
   int64 TaskMaxContinueCount = 25;
+
+  // 选择 AI 服务
+  string AIService = 26;
 }
 
 message AITaskFilter {
@@ -7409,6 +7474,10 @@ message LocalModelConfig {
   string DownloadURL = 4;
   string Description = 5;
   int32 DefaultPort = 6;
+  bool IsLocal = 7;
+  bool IsReady = 8;
+  string Path = 9;
+  LocalModelStatus Status = 10;
 }
 
 message GetSupportedLocalModelsResponse {

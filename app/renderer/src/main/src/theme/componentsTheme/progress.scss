@@ -19,7 +19,6 @@
         display: block;
         margin-left: 0;
         margin-top: 2px;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 }
 
@@ -29,6 +28,10 @@
 
 .ant-progress-status-success .ant-progress-text {
     color: var(--Colors-Use-Success-Primary);
+}
+
+.ant-progress-inner {
+    background-color: var(--Colors-Use-Neutral-Bg);
 }
 
 // ------------------- circle start -------------------

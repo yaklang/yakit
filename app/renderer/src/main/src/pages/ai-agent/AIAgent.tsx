@@ -61,8 +61,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             getTriages: getTriages,
             setActiveTriage: setActiveTriage,
             setChats: setChats,
-            getChats: getChats,
-            setActiveChat: setActiveChat
+            getChats: getChats
         }
     }, [])
 
