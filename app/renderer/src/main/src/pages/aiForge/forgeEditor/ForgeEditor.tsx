@@ -389,22 +389,17 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                         confirmLoading: saveLoading,
                         cancelText: "不保存",
                         okText: "保存",
-                        footerStyle: {padding: "0 24px 24px"},
                         footerExtra: (
                             <YakitButton type='outline2' onClick={destroySaveModal}>
                                 取消
                             </YakitButton>
                         ),
-                        footer: undefined,
                         onOk: (m) => {
                             handleSaveAndExit(true)
                         },
                         onCancel: (m) => {
                             destroySaveModal()
                             emiter.emit("closePage", JSON.stringify({route: YakitRoute.ModifyAIForge}))
-                        },
-                        onCloseX: (m) => {
-                            destroySaveModal()
                         },
                         getModal: (m) => {
                             modalRef.current = m
@@ -419,21 +414,16 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                         confirmLoading: saveLoading,
                         cancelText: "不保存",
                         okText: "保存",
-                        footerStyle: {padding: "0 24px 24px"},
                         footerExtra: (
                             <YakitButton type='outline2' onClick={destroySaveModal}>
                                 取消
                             </YakitButton>
                         ),
-                        footer: undefined,
                         onOk: (m) => {
                             handleSaveAndOpen(true)
                         },
                         onCancel: (m) => {
                             handleSaveAndOpen()
-                        },
-                        onCloseX: (m) => {
-                            destroySaveModal()
                         },
                         getModal: (m) => {
                             modalRef.current = m
@@ -453,12 +443,22 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                         content: "是否要将模板保存?",
                         confirmLoading: saveLoading,
                         maskClosable: false,
+                        cancelText: "不保存",
+                        okText: "保存",
+                        footerExtra: (
+                            <YakitButton type='outline2' onClick={destroySaveModal}>
+                                取消
+                            </YakitButton>
+                        ),
                         onOk: (m) => {
-                            modalRef.current = m
                             handleSaveAndExit()
                         },
                         onCancel: () => {
+                            destroySaveModal()
                             emiter.emit("closePage", JSON.stringify({route: YakitRoute.AddAIForge}))
+                        },
+                        getModal: (m) => {
+                            modalRef.current = m
                         }
                     }
                 }

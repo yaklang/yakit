@@ -989,9 +989,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     modalProps["reset"],
                     (setting) => {
                         const m = onModalSecondaryConfirm(setting, isModalVisibleRef)
-                        if (setting["getModal"]) {
-                            setting["getModal"](m)
-                        }
                     },
                     () => {}
                 )
@@ -1052,9 +1049,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     modalProps["reset"],
                     (setting) => {
                         const m = onModalSecondaryConfirm(setting, isModalVisibleRef)
-                        if (setting["getModal"]) {
-                            setting["getModal"](m)
-                        }
                     },
                     () => {}
                 )
@@ -1822,9 +1816,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         modalProps["close"],
                         (setting) => {
                             const m = onModalSecondaryConfirm(setting, isModalVisibleRef)
-                            if (setting["getModal"]) {
-                                setting["getModal"](m)
-                            }
                         },
                         () => {
                             removeMenuPage(data)
@@ -5551,6 +5542,11 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?
         onOkText: "保存",
         keyboard: false,
         zIndex: 1010,
+        onCloseX: () => {
+            m.destroy()
+        },
+        footerStyle: {padding: "0 24px 24px"},
+        footer: undefined,
         ...(props || {}),
         onOk: () => {
             if (visibleRef) {
@@ -5574,5 +5570,6 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?
         },
         content: props?.content
     })
+    props?.getModal?.(m)
     return m
 }

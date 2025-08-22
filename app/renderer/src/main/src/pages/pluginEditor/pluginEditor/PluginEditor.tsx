@@ -873,7 +873,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                         confirmLoading: localLoading,
                         cancelText: "不保存",
                         okText: "保存",
-                        footerStyle: {padding: "0 24px 24px"},
                         footerExtra: (
                             <YakitButton type='outline2' onClick={destroySaveModal}>
                                 取消
@@ -887,9 +886,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                         onCancel: (m) => {
                             destroySaveModal()
                             handleClosePage()
-                        },
-                        onCloseX: (m) => {
-                            destroySaveModal()
                         },
                         getModal: (m) => {
                             modalRef.current = m
@@ -906,7 +902,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                         confirmLoading: localLoading,
                         cancelText: "不保存",
                         okText: "保存",
-                        footerStyle: {padding: "0 24px 24px"},
                         footerExtra: (
                             <YakitButton type='outline2' onClick={destroySaveModal}>
                                 取消
@@ -920,9 +915,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                         onCancel: (m) => {
                             destroySaveModal()
                             onReset()
-                        },
-                        onCloseX: (m) => {
-                            destroySaveModal()
                         },
                         getModal: (m) => {
                             modalRef.current = m
