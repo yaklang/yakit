@@ -153,15 +153,16 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                 }
                 setSaveLoading(true)
                 const params: UpdateAIToolRequest = {
-                    ID: 0,
+                    ID: toolIdRef.current,
                     Name: formData.Name ?? "",
                     Description: formData.Description ?? "",
                     Content: content,
                     ToolPath: "",
                     Keywords: formData.Keywords ?? []
                 }
-                if (isModify && toolIdRef.current) {
-                    params.ID = toolIdRef.current
+                if (isModify && !params.ID) {
+                    reject("数据错误,编辑状态下ID不能为空")
+                    return
                 }
                 const func = isModify ? grpcUpdateAITool : grpcSaveAITool
                 func(params)
@@ -185,17 +186,13 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
     // #region 注册关闭页面时的触发事件
     // 保存并退出
     const handleSaveAndExit = useMemoizedFn(() => {
-        handleSave()
-            .then(() => {
-                if (modalRef.current) modalRef.current.destroy()
-                emiter.emit(
-                    "closePage",
-                    JSON.stringify({route: !!isModify ? YakitRoute.ModifyAITool : YakitRoute.AddAITool})
-                )
-            })
-            .catch((error) => {
-                yakitNotify("error", `保存失败: ${error}`)
-            })
+        handleSave().then(() => {
+            if (modalRef.current) modalRef.current.destroy()
+            emiter.emit(
+                "closePage",
+                JSON.stringify({route: !!isModify ? YakitRoute.ModifyAITool : YakitRoute.AddAITool})
+            )
+        })
     })
     // 是否保存并打开触发编辑的工具信息
     const handleSaveAndOpen = useMemoizedFn(async (isSave?: boolean) => {
@@ -558,7 +555,12 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                                                     <div className={styles["divider-horizontal-style"]}></div>
                                                 </div>
                                             )}
-                                            <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={"yak"} />
+                                            {groupParams.length > 0 && (
+                                                <ExtraParamsNodeByType
+                                                    extraParamsGroup={groupParams}
+                                                    pluginType={"yak"}
+                                                />
+                                            )}
                                             {(!!requiredParams.length || !!groupParams.length) && (
                                                 <div className={styles["to-end"]}>已经到底啦～</div>
                                             )}

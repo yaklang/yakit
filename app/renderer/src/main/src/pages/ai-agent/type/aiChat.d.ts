@@ -459,7 +459,7 @@ export interface GetAIToolListRequest {
     ToolName: string
     Pagination: PaginationSchema
     OnlyFavorites: boolean
-    ID?: number
+    ToolID?: number
 }
 export interface GetAIToolListResponse {
     Tools: AITool[]

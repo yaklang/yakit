@@ -35,7 +35,7 @@ export const grpcGetAIToolById: APIFunc<number, AITool | null> = (toolId, hidden
             ToolName: "",
             Pagination: genDefaultPagination(1),
             OnlyFavorites: false,
-            ID: toolId
+            ToolID: toolId
         }
         ipcRenderer
             .invoke("GetAIToolList", query)
