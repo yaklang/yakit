@@ -31,7 +31,7 @@ const TitleBar: FC = () => {
     useEffect(() => {
         const fetchIcons = async () => {
             const systemName = await ipcRenderer.invoke("fetch-system-name")
-            const isMac = systemName!== "Darwin"
+            const isMac = systemName === "Darwin"
             setIsDarwin(isMac)
             setIcons(
                 isMac
