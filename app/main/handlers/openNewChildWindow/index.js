@@ -50,6 +50,35 @@ module.exports = {
             }
         })
 
+        ipcMain.handle("UIOperate-childWin", (e, params) => {
+            switch (params) {
+                case "close":
+                    childWindow.close()
+                    return
+                case "min":
+                    childWindow.minimize()
+                    return
+                case "full":
+                    let isMax = childWindow.isFullScreen()
+                    if (isMax) {
+                        childWindow.setFullScreen(false)
+                        if (childWindow.isMaximized()) {
+                            setTimeout(() => {
+                                childWindow.unmaximize()
+                            }, 10)
+                        }
+                    } else childWindow.setFullScreen(true)
+                    return
+                case "max":
+                    if (childWindow.isMaximized()) childWindow.unmaximize()
+                    else childWindow.maximize()
+                    return
+
+                default:
+                    return
+            }
+        })
+
         ipcMain.on("open-new-child-window", (event, data) => {
             const windowHash = crypto.randomUUID()
             childWindow = new BrowserWindow({
@@ -66,6 +95,8 @@ module.exports = {
                 },
                 show: false
             })
+
+            if (process.platform === "darwin") childWindow.setWindowButtonVisibility(false)
 
             // 通知父窗口：带上 hash
             win.send("child-window-hash", {hash: windowHash})

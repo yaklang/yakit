@@ -11,6 +11,7 @@ import {
 } from "../layout/icons"
 import styles from "./index.module.scss"
 import classNames from "classnames"
+import {useMemoizedFn} from "ahooks"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -26,11 +27,11 @@ const TitleBar: FC = () => {
     const [isMaximized, setIsMaximized] = useState(false)
     const [icons, setIcons] = useState<IconSet | null>(null)
     const [isDarwin, setIsDarwin] = useState(true)
-
+    
     useEffect(() => {
         const fetchIcons = async () => {
             const systemName = await ipcRenderer.invoke("fetch-system-name")
-            const isMac = systemName === "Darwin"
+            const isMac = systemName!== "Darwin"
             setIsDarwin(isMac)
             setIcons(
                 isMac
@@ -54,9 +55,14 @@ const TitleBar: FC = () => {
     const windowActions = {
         minimize: useCallback(() => ipcRenderer.send("minimize-childWin"), []),
         maximizeRestore: useCallback(() => {
-            ipcRenderer.send(isMaximized ? "restore-childWin" : "maximize-childWin")
+            if (isDarwin) {
+                ipcRenderer.invoke("UIOperate-childWin", isMaximized ? "min" : "full")
+            } else {
+                ipcRenderer.send(isMaximized ? "restore-childWin" : "maximize-childWin")
+            }
             setIsMaximized((prev) => !prev)
-        }, [isMaximized]),
+        }, [isDarwin, isMaximized]),
+
         close: useCallback(() => ipcRenderer.send("close-childWin"), [])
     }
 
