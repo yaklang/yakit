@@ -543,6 +543,17 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     }, [fileTree])
 
+    // 计算areaInfo区域是否变化
+    const areaKey = useMemo(()=>{
+        let areaKey:string = ""
+        areaInfo.forEach((item, index) => {
+            item.elements.forEach((_, indexIn) => {
+                areaKey += `${index}-${indexIn},`
+            })
+        })
+        return areaKey
+    },[areaInfo])
+
     useDebounceEffect(
         () => {
             // 由于更改分布信息时activeFile也会改变 因此两者埋点合并
@@ -556,7 +567,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             }
             setYakRunnerLastAreaFile(newAreaInfo, newActiveFile)
         },
-        [activeFile?.path],
+        [activeFile?.path, areaKey],
         {wait: 300}
     )
 
