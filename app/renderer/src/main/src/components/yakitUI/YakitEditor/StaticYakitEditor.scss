@@ -6,7 +6,7 @@
         background-color: var(--yakit-colors-Neutral-40);
 
         border-radius: 3px; /* 添加圆角以使样式更好看 */
-         /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+        /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 
@@ -101,10 +101,30 @@
     }
 }
 
-.monaco-editor .find-widget{
-  color: var(--Colors-Use-Neutral-Text-3-Secondary) !important;
+.monaco-editor .find-widget {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary) !important;
 }
 
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row:hover {
     background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
+}
+
+.unicode-decode {
+    background-color: var(--Colors-Use-Green-Border);
+}
+
+.unicode-decode::after {
+    content: " ";
+    background-color: var(--Colors-Use-Basic-Background);
+}
+
+.unicode-decode-after {
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    background-color: var(--Colors-Use-Neutral-Border);
+    padding-left: 2px;
+    border-radius: 3px;
+    font-weight: bold;
+    cursor: none;
+    user-select: none;
+    opacity: 1 !important;
 }
