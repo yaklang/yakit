@@ -346,18 +346,12 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
 
     const onCloseFileFun = useMemoizedFn((path: string) => {
-        let isRemove: boolean = false
         tabsList.some((file) => {
             if (file.path === path) {
                 onRemoveCurrent(file)
-                isRemove = true
             }
             return file.path === path
         })
-        // 特殊情况下 如若无法找到关闭项 则全部关闭
-        if (!isRemove) {
-            emiter.emit("closePage", JSON.stringify({route: YakitRoute.YakScript}))
-        }
     })
 
     useEffect(() => {
