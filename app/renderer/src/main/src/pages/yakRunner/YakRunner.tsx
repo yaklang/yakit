@@ -408,7 +408,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     const onCloseYakRunnerFun = useMemoizedFn(async () => {
         try {
-            if(areaInfo.length === 0){
+            if (areaInfo.length === 0) {
                 emiter.emit("closePage", JSON.stringify({route: YakitRoute.YakScript}))
                 return
             }
@@ -545,18 +545,19 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     useDebounceEffect(
         () => {
+            // 由于更改分布信息时activeFile也会改变 因此两者埋点合并
+            let newAreaInfo = excludeAreaInfoCode(areaInfo)
+            let newActiveFile: FileDetailInfo | undefined = undefined
             if (activeFile) {
-                // 由于更改分布信息时activeFile也会改变 因此两者埋点合并
-                let newAreaInfo = excludeAreaInfoCode(areaInfo)
-                let newActiveFile = cloneDeep(activeFile)
-                if(!newActiveFile.isUnSave){
-                  delete newActiveFile.code  
+                newActiveFile = cloneDeep(activeFile)
+                if (!newActiveFile.isUnSave) {
+                    delete newActiveFile.code
                 }
-                setYakRunnerLastAreaFile(newActiveFile, newAreaInfo)
             }
+            setYakRunnerLastAreaFile(newAreaInfo, newActiveFile)
         },
-        [activeFile],
-        {wait: 500}
+        [activeFile?.path],
+        {wait: 300}
     )
 
     const store: YakRunnerContextStore = useMemo(() => {
@@ -693,12 +694,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     // 关闭文件
     const ctrl_w = useMemoizedFn(() => {
-        if (activeFile) {
+        if (activeFile && areaInfo.length > 0) {
             emiter.emit("onCloseFile", activeFile.path)
         } else {
-            ipcRenderer.invoke("send-close-tab", {
-                router: YakitRoute.YakScript
-            })
+            emiter.emit("closePage", JSON.stringify({route: YakitRoute.YakScript}))
         }
     })
 

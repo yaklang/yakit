@@ -579,7 +579,7 @@ export const removeYakRunnerAreaFileInfo = (areaInfo: AreaInfoProps[], info: Fil
             })
         })
     })
-    if (!newActiveFile && activeFileArr.length > 0) {
+    if (!newActiveFile && activeFileArr.length > 1) {
         let delIndex = activeFileArr.findIndex((item) => item.path === info.path)
         if (delIndex > -1) {
             newActiveFile = activeFileArr[delIndex - 1 < 0 ? 0 : delIndex - 1]
@@ -877,7 +877,7 @@ export const excludeAreaInfoCode = (areaInfo: AreaInfoProps[]): AreaInfoProps[] 
     newAreaInfo.forEach((item, index) => {
         item.elements.forEach((itemIn, indexIn) => {
             itemIn.files.forEach((file, fileIndex) => {
-                if(!file.isUnSave){
+                if (!file.isUnSave) {
                     delete newAreaInfo[index].elements[indexIn].files[fileIndex].code
                 }
             })
@@ -889,8 +889,8 @@ export const excludeAreaInfoCode = (areaInfo: AreaInfoProps[]): AreaInfoProps[] 
 /**
  * @name 更改展示的分布及文件历史
  */
-export const setYakRunnerLastAreaFile = (activeFile: FileDetailInfo, areaInfo: AreaInfoProps[]) => {
-    const newCache = JSON.stringify({activeFile, areaInfo})
+export const setYakRunnerLastAreaFile = (areaInfo: AreaInfoProps[], activeFile?: FileDetailInfo) => {
+    const newCache = JSON.stringify({areaInfo, activeFile})
     setRemoteValue(YakRunnerLastAreaFile, newCache)
 }
 
