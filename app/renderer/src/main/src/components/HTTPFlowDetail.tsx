@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useCallback, FC} from "react"
+import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useCallback, FC, useContext} from "react"
 import {Button, Card, Col, Descriptions, Empty, PageHeader, Row, Space, Tag, Tooltip} from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
@@ -48,6 +48,7 @@ import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {useSelectionByteCount} from "./yakitUI/YakitEditor/useSelectionByteCount"
 import {debugToPrintLog} from "@/utils/logCollection"
+import {error} from "console"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -107,7 +108,7 @@ export const FuzzerResponseToHTTPFlowDetail: FC<FuzzerResponseToHTTPFlowDetailPr
     useEffect(() => {
         try {
             setResponse((prev) => (prev !== rsp.response ? rsp.response : prev))
-            setIndex((prev) => (prev !== rsp.index ? rsp.index : prev))
+            setIndex((prev) => (prev !== rsp.index && typeof rsp.index === "number" ? rsp.index : prev))
         } catch (err) {
             debugToPrintLog(err)
         }
@@ -134,11 +135,11 @@ export const FuzzerResponseToHTTPFlowDetail: FC<FuzzerResponseToHTTPFlowDetailPr
         if (index === undefined || !rsp.data || rsp.data.length === 0) return
 
         if (kind === 1) {
-            setResponse(rsp.data[index - 1])
+            setResponse(rsp.data?.[index - 1])
             setIndex(index - 1)
         }
         if (kind === 2) {
-            setResponse(rsp.data[index + 1])
+            setResponse(rsp.data?.[index + 1])
             setIndex(index + 1)
         }
     }
@@ -157,6 +158,30 @@ export const FuzzerResponseToHTTPFlowDetail: FC<FuzzerResponseToHTTPFlowDetailPr
     )
 }
 
+// monaco 选中字节数目展示
+const FlowDetailByteTag: FC<
+    Partial<{isFlow: boolean; IsWebsocket: boolean; editorExample: IMonacoEditor; wsEditorExample: IMonacoEditor}>
+> = (props) => {
+    const {isFlow, IsWebsocket, editorExample, wsEditorExample} = props
+
+    const editorByteCount = useSelectionByteCount(editorExample, 500)
+    const wsEditorByteCount = useSelectionByteCount(wsEditorExample, 500)
+
+    const targetByte = useMemo(() => {
+        if (!isFlow) return 0
+        if (IsWebsocket) return wsEditorByteCount
+        return editorByteCount
+    }, [editorByteCount, wsEditorByteCount, IsWebsocket, isFlow])
+
+    return editorByteCount > 0 ? (
+        <YakitTag style={{marginLeft: 8}} key='selectionByteCount'>
+            {targetByte} bytes
+        </YakitTag>
+    ) : (
+        <></>
+    )
+}
+
 export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     const [flow, setFlow] = useState<HTTPFlow>()
     const [loading, setLoading] = useState(false)
@@ -165,28 +190,13 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     const [wsResEditor, setWsResEditor] = useState<IMonacoEditor>()
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
-    const resByteCount = useSelectionByteCount(resEditor, 500)
-    const reqByteCount = useSelectionByteCount(reqEditor, 500)
-    const wsReqByteCount = useSelectionByteCount(wsReqEditor, 500)
-    const wsResByteCount = useSelectionByteCount(wsResEditor, 500)
-
-    const reqByte = useMemo(() => {
-        if (!flow) return 0
-        if (flow.IsWebsocket) return wsReqByteCount
-        return reqByteCount
-    }, [flow, wsReqByteCount, reqByteCount])
-    const resByte = useMemo(() => {
-        if (!flow) return 0
-        if (flow.IsWebsocket) return wsResByteCount
-        return resByteCount
-    }, [flow, wsResByteCount, resByteCount])
 
     useEffect(() => {
         setLoading(props.loading || false)
     }, [props.loading])
 
     useEffect(() => {
-        if (props.id <= 0) {
+        if (typeof props.id === "number" && props.id <= 0) {
             return
         }
         setLoading(true)
@@ -196,6 +206,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                 setFlow(data)
             })
             .catch((e) => {
+                debugToPrintLog(e)
                 failed(`GetHTTPFlowById[${props.id}] failed`)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
@@ -204,10 +215,14 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         return () => {}
     }, [props.id])
 
-    const onCloseDetails = useMemoizedFn((e, res) => {
-        const {type, data} = res
-        if ((type === "fuzzer" || type === "websocket-fuzzer") && data.openFlag === false) return
-        if (props.onClose) props.onClose()
+    const onCloseDetails = useMemoizedFn((_, res) => {
+        try {
+            const {type, data} = res
+            if ((type === "fuzzer" || type === "websocket-fuzzer") && data.openFlag === false) return
+            if (props.onClose) props.onClose()
+        } catch (error) {
+            debugToPrintLog(error)
+        }
     })
 
     useEffect(() => {
@@ -221,7 +236,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
     // 编辑器发送到对比器
     const {compareState, setCompareLeft, setCompareRight} = useHttpFlowStore()
-    const sendCodeCompareMenuItem = (type: string) => {
+    const sendCodeCompareMenuItem = (type: "response" | "request") => {
         return {
             codeCompare: {
                 menu: [
@@ -410,9 +425,12 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                     title={
                                         <>
                                             原始 HTTP 请求
-                                            {reqByte > 0 && (
-                                                <YakitTag style={{marginLeft: 8}}>{reqByte} bytes</YakitTag>
-                                            )}
+                                            <FlowDetailByteTag
+                                                isFlow={!!flow}
+                                                IsWebsocket={flow.IsWebsocket}
+                                                editorExample={reqEditor}
+                                                wsEditorExample={wsReqEditor}
+                                            />
                                         </>
                                     }
                                     size={"small"}
@@ -465,9 +483,12 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                     title={
                                         <>
                                             原始 HTTP 响应
-                                            {resByte > 0 && (
-                                                <YakitTag style={{marginLeft: 8}}>{resByte} bytes</YakitTag>
-                                            )}
+                                            <FlowDetailByteTag
+                                                isFlow={!!flow}
+                                                IsWebsocket={flow.IsWebsocket}
+                                                editorExample={resEditor}
+                                                wsEditorExample={wsResEditor}
+                                            />
                                         </>
                                     }
                                     size={"small"}
@@ -1967,13 +1988,12 @@ function infoTypeVerbose(i: HTTPFlowInfoType) {
     }
 }
 
-type SelectByteCountProps = () => number
-
-const ResByteCountTag: FC<{editor?: IMonacoEditor; pageType?: HTTPHistorySourcePageType; showJumpTree?: boolean}> = ({
-    editor,
-    pageType,
-    showJumpTree
-}) => {
+const ResByteCountTag: FC<{
+    targetByte?: number
+    editor?: IMonacoEditor
+    pageType?: HTTPHistorySourcePageType
+    showJumpTree?: boolean
+}> = ({editor, pageType, showJumpTree}) => {
     const resByteCount = useSelectionByteCount(editor, 500)
     return resByteCount > 0 ? (
         <YakitTag style={{marginLeft: pageType === "History" && showJumpTree ? 8 : 0}} key='selectionByteCount'>
