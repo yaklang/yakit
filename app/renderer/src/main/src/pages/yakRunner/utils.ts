@@ -877,7 +877,9 @@ export const excludeAreaInfoCode = (areaInfo: AreaInfoProps[]): AreaInfoProps[] 
     newAreaInfo.forEach((item, index) => {
         item.elements.forEach((itemIn, indexIn) => {
             itemIn.files.forEach((file, fileIndex) => {
-                delete newAreaInfo[index].elements[indexIn].files[fileIndex].code
+                if(!file.isUnSave){
+                    delete newAreaInfo[index].elements[indexIn].files[fileIndex].code
+                }
             })
         })
     })
