@@ -19,7 +19,6 @@ import styles from "./RunnerTabs.module.scss"
 import {KeyToIcon} from "../FileTree/icon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
-    OutlinCompileIcon,
     OutlineChevrondoubleleftIcon,
     OutlineChevrondoublerightIcon,
     OutlineImportIcon,
@@ -54,9 +53,9 @@ import {
     updateAreaFileInfo
 } from "../utils"
 import cloneDeep from "lodash/cloneDeep"
-import {failed, info, warn, success} from "@/utils/notification"
+import {failed, warn, success} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
-import {Divider, Result, Upload} from "antd"
+import {Divider, Result} from "antd"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {v4 as uuidv4} from "uuid"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
@@ -69,15 +68,9 @@ import {getMapFileDetail, removeMapFileDetail, setMapFileDetail} from "../FileTr
 import {getMapFolderDetail, setMapFolderDetail} from "../FileTreeMap/ChildMap"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {FileNodeMapProps} from "../FileTree/FileTreeType"
-import {Position} from "monaco-editor"
-import {
-    getWordWithPointAtPosition,
-    YaklangLanguageFindResponse,
-    YaklangLanguageSuggestionRequest
-} from "@/utils/monacoSpec/yakCompletionSchema"
-import {getModelContext} from "@/utils/monacoSpec/yakEditor"
 import {openFolder} from "../RunnerFileTree/RunnerFileTree"
 import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -353,12 +346,18 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
 
     const onCloseFileFun = useMemoizedFn((path: string) => {
+        let isRemove: boolean = false
         tabsList.some((file) => {
             if (file.path === path) {
                 onRemoveCurrent(file)
+                isRemove = true
             }
             return file.path === path
         })
+        // 特殊情况下 如若无法找到关闭项 则全部关闭
+        if (!isRemove) {
+            emiter.emit("closePage", JSON.stringify({route: YakitRoute.YakScript}))
+        }
     })
 
     useEffect(() => {
@@ -963,7 +962,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                                 (editorInfo &&
                                     JSON.stringify(editorInfo.highLightRange) !==
                                         JSON.stringify(file.highLightRange)) ||
-                                editorInfo.code !== file.code)
+                                // code如为缓存打开时则不存在 需特殊处理
+                                (typeof editorInfo.code !== "string" && typeof file.code === "string"))
                         ) {
                             // 更新编辑器展示项
                             nowPathRef.current = file.path

@@ -408,6 +408,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     const onCloseYakRunnerFun = useMemoizedFn(async () => {
         try {
+            if(areaInfo.length === 0){
+                emiter.emit("closePage", JSON.stringify({route: YakitRoute.YakScript}))
+                return
+            }
             if (activeFile?.isUnSave) {
                 emiter.emit("onCloseFile", activeFile.path)
                 return
@@ -418,7 +422,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             } else {
                 emiter.emit("closePage", JSON.stringify({route: YakitRoute.YakScript}))
             }
-        } catch (error) {}
+        } catch (error) {
+            emiter.emit("closePage", JSON.stringify({route: YakitRoute.YakScript}))
+        }
     })
 
     useEffect(() => {
@@ -543,12 +549,14 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 // 由于更改分布信息时activeFile也会改变 因此两者埋点合并
                 let newAreaInfo = excludeAreaInfoCode(areaInfo)
                 let newActiveFile = cloneDeep(activeFile)
-                delete newActiveFile.code
+                if(!newActiveFile.isUnSave){
+                  delete newActiveFile.code  
+                }
                 setYakRunnerLastAreaFile(newActiveFile, newAreaInfo)
             }
         },
         [activeFile],
-        {wait: 300}
+        {wait: 500}
     )
 
     const store: YakRunnerContextStore = useMemo(() => {
