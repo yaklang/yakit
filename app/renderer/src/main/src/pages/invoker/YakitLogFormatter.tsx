@@ -27,6 +27,10 @@ import {YakEditor} from "@/utils/editors"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {SolidCalendarIcon} from "@/assets/icon/solid"
 import {setClipboardText} from "@/utils/clipboard"
+import {FileActionEnum, PluginExecuteLogFile} from "../plugins/operator/pluginExecuteResult/PluginExecuteResultType.d"
+import {onOpenLocalFileByPath} from "../notepadManage/notepadManage/utils"
+import {isPluginExecuteLogFileItem} from "./utils"
+import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 
 const LogCharts = React.lazy(() => import("./LogCharts/LogCharts"))
 const WordCloudCharts = React.lazy(() => import("./LogCharts/WordCloudCharts"))
@@ -40,7 +44,10 @@ export const YakitLogViewers = React.memo((props: YakitLogViewersProp) => {
     return (
         <Timeline pending={!props.finished} reverse={true}>
             {(props.data || []).map((item, index) => (
-                <Timeline.Item key={`${item.timestamp}-${item.level}-${item.data}-${index}`} color={LogLevelToCode(item.level)}>
+                <Timeline.Item
+                    key={`${item.timestamp}-${item.level}-${item.data}-${index}`}
+                    color={LogLevelToCode(item.level)}
+                >
                     <YakitLogFormatter data={item.data} level={item.level} timestamp={item.timestamp} />
                 </Timeline.Item>
             ))}
@@ -62,16 +69,21 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
         switch (level) {
             case "file":
                 try {
-                    const obj = JSON.parse(data) as {
-                        title: string
-                        description: string
-                        path: string
-                        is_dir: boolean
-                        is_existed: boolean
-                        file_size: string
-                        dir: string
+                    const obj = JSON.parse(data) as PluginExecuteLogFile.FileItem | FileLogShowDataProps
+
+                    if (isPluginExecuteLogFileItem(obj)) {
+                        return (
+                            <ExecuteLogFile
+                                {...(obj as PluginExecuteLogFile.FileItem)}
+                                timestamp={timestamp}
+                                showTime={showTime}
+                            />
+                        )
+                    } else {
+                        return (
+                            <FileLogShow {...(obj as FileLogShowDataProps)} timestamp={timestamp} showTime={showTime} />
+                        )
                     }
-                    return <FileLogShow {...obj} timestamp={timestamp} showTime={showTime} />
                 } catch (e) {
                     return (
                         <div style={{height: 150}}>
@@ -166,6 +178,118 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
     return renderContent()
 })
 
+interface ExecuteLogFileProps extends PluginExecuteLogFile.FileItem {
+    timestamp: number
+    showTime: boolean
+}
+const ExecuteLogFile: React.FC<ExecuteLogFileProps> = React.memo((props) => {
+    const {title, path, actions, action_message, showTime, timestamp} = props
+    const [expand, setExpand] = useState<boolean>(true)
+    const onCopy = useMemoizedFn(() => {
+        setClipboardText(path)
+    })
+    const onOpen = useMemoizedFn(() => {
+        onOpenLocalFileByPath(path)
+    })
+    const onExpand = useMemoizedFn(() => {
+        setExpand(!expand)
+    })
+    const actionsStatus = useCreation(() => {
+        let content = ""
+        let action = "未知操作"
+        let color: YakitTagColor = "white"
+        switch (actions) {
+            case FileActionEnum.Read_Action:
+                const read = {...action_message} as PluginExecuteLogFile.ReadFileActionMessage
+                action = "读取文件"
+                break
+            case FileActionEnum.Write_Action:
+                const write = {...action_message} as PluginExecuteLogFile.WriteFileActionMessage
+                action = "修改内容"
+                break
+            case FileActionEnum.Create_Action:
+                const create = {...action_message} as PluginExecuteLogFile.CreateFileActionMessage
+                action = "创建文件"
+                color = "success"
+                break
+            case FileActionEnum.Delete_Action:
+                const remove = {...action_message} as PluginExecuteLogFile.DELETEFileActionMessage
+                action = "删除文件"
+                color = "danger"
+                break
+            case FileActionEnum.Status_Action:
+                const status = {...action_message} as PluginExecuteLogFile.STATUSFileActionMessage
+                action = "查看元信息"
+                break
+            case FileActionEnum.Chmod_Action:
+                const chmod = {...action_message} as PluginExecuteLogFile.CHMODFileActionMessage
+                action = "修改权限"
+                break
+            case FileActionEnum.Find_Action:
+                const find = {...action_message} as PluginExecuteLogFile.FINDFileActionMessage
+                action = "查找"
+                break
+            default:
+                break
+        }
+        return {
+            color,
+            action,
+            content
+        }
+    }, [actions, action_message])
+    return (
+        <div className={styles["log-file"]}>
+            <div className={styles["log-file-heard"]}>
+                {showTime && <div className={styles["time"]}>{formatTime(timestamp)}</div>}
+                <YakitTag>{actionsStatus.action}</YakitTag>
+                <YakitTag color={actionsStatus.color}>{actionsStatus.content}</YakitTag>
+            </div>
+
+            <YakitCard
+                title={
+                    <div className={styles["log-file-card-title"]}>
+                        <span className={styles["name"]} title={title}>
+                            {title}
+                        </span>
+                    </div>
+                }
+                extra={
+                    <div className={styles["log-file-card-extra"]}>
+                        <YakitButton type='outline2' icon={<OutlineDocumentduplicateIcon />} onClick={onCopy}>
+                            复制文件名
+                        </YakitButton>
+                        <YakitButton type='primary' icon={<OutlineFolderopenIcon />} disabled={!path} onClick={onOpen}>
+                            打开文件位置
+                        </YakitButton>
+                        <YakitButton
+                            type='text2'
+                            icon={expand ? <OutlineChevrondownIcon /> : <OutlineChevronupIcon />}
+                            onClick={onExpand}
+                        />
+                    </div>
+                }
+                headClassName={classNames(styles["log-file-card-heard"], {
+                    [styles["log-file-card-heard-no-border-bottom"]]: !expand
+                })}
+                className={styles["log-file-card"]}
+                bodyClassName={classNames(styles["log-file-card-body"], {
+                    [styles["log-file-card-body-hidden"]]: !expand
+                })}
+            >
+                <div className={styles["log-file-body"]}>
+                    {/* <div>
+                        <YakitTag>{is_dir ? "文件夹" : "非文件夹"}</YakitTag>
+                        {file_size && <YakitTag color='blue'>{file_size}K</YakitTag>}
+                    </div>
+                    {description && <div className={styles["file-description"]}>{description}</div>}
+                    {path && <div className={styles["file-path"]}>{path}</div>} */}
+                </div>
+            </YakitCard>
+        </div>
+    )
+})
+
 interface MarkdownLogShowProps extends YakitLogFormatterProp {}
 const MarkdownLogShow: React.FC<MarkdownLogShowProps> = React.memo((props) => {
     const {timestamp, data, showTime = true} = props
@@ -202,7 +326,7 @@ const MarkdownLogShow: React.FC<MarkdownLogShowProps> = React.memo((props) => {
     )
 })
 
-interface FileLogShowProps {
+export interface FileLogShowDataProps {
     title: string
     description: string
     path: string
@@ -210,6 +334,8 @@ interface FileLogShowProps {
     is_existed: boolean
     file_size: string
     dir: string
+}
+interface FileLogShowProps extends FileLogShowDataProps {
     timestamp: number
     showTime: boolean
 }
@@ -226,7 +352,7 @@ const FileLogShow: React.FC<FileLogShowProps> = React.memo((props) => {
         setExpand(!expand)
     })
     return (
-        <div className={styles["file-body"]}>
+        <div className={styles["file-show"]}>
             {showTime && <div className={styles["file-heard"]}>{formatTime(timestamp)}</div>}
             <YakitCard
                 title={

@@ -40,3 +40,17 @@ export const getLocalFileLinkInfo: APIFunc<string, LocalFileInfoRespose> = (path
             })
     })
 }
+
+/**通过本地路径获取文件后缀/类型 */
+export const getLocalFileType: APIFunc<string, string> = (path, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("fetch-file-type-by-path", path)
+            .then(resolve)
+            .catch((error) => {
+                if (!hiddenError) yakitNotify("error", `getLocalFileType失败: ${error}`)
+                reject(error)
+            })
+    })
+}
+

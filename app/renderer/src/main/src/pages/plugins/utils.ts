@@ -1072,7 +1072,7 @@ export const apiDebugPlugin: (request: {
     pluginCustomParams?: YakParamProps[]
     isShowStartInfo?: boolean
 }) => Promise<null> = (request) => {
-    const {params, token, pluginCustomParams = [],isShowStartInfo = true} = request
+    const {params, token, pluginCustomParams = [], isShowStartInfo = true} = request
     return new Promise((resolve, reject) => {
         try {
             let executeParams: DebugPluginRequest = {

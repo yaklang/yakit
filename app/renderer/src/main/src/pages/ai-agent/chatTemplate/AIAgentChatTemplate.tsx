@@ -83,6 +83,9 @@ import {AITabs, AITabsEnum} from "../defaultConstant"
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
 import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
+
+const AIFileSystem = React.lazy(() => import("./aiFileSystem/AIFileSystem"))
+
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks, pressure, cost, onLeafNodeClick, card} = props
@@ -305,6 +308,8 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
         switch (key) {
             case AITabsEnum.Task_Content:
                 return <AIAgentChatStream {...rest} />
+            case AITabsEnum.File_System:
+                return <AIFileSystem />
             case AITabsEnum.Risk:
                 return !!coordinatorId ? (
                     <VulnerabilitiesRisksTable

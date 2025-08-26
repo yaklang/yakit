@@ -53,5 +53,16 @@ module.exports = {
         ipcMain.handle("export-risk-html", async (event, params) => {
             return await asyncExportRiskHtml(params)
         })
+
+        // 获取通过文件路径获取文件后缀
+        ipcMain.handle("fetch-file-type-by-path", (e, path) => {
+            try {
+                // 特殊情况处理
+                if (!path || typeof path !== "string") return ""
+                return path.extname(path).toLowerCase()
+            } catch (error) {
+                return ""
+            }
+        })
     }
 }
