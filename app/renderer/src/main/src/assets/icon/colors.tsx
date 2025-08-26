@@ -1694,3 +1694,51 @@ const SolidCloseCircle = () => (
 export const SolidCloseCircleIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidCloseCircle} {...props} />
 }
+
+const ColorsChat = () => {
+    const id = uuidv4()
+    const id1 = uuidv4()
+    const id2 = uuidv4()
+    const id3 = uuidv4()
+    return (
+        <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
+            <path
+                d='M6.66667 10.0002H6.675M10 10.0002H10.0083M13.3333 10.0002H13.3417M17.5 10.0002C17.5 13.6821 14.1421 16.6668 10 16.6668C8.71728 16.6668 7.50976 16.3806 6.45389 15.8761L2.5 16.6668L3.66249 13.5669C2.9263 12.5355 2.5 11.3121 2.5 10.0002C2.5 6.31826 5.85786 3.3335 10 3.3335C14.1421 3.3335 17.5 6.31826 17.5 10.0002Z'
+                stroke={`url(#${id})`}
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <ellipse cx='6.66683' cy='9.99984' rx='0.833333' ry='0.833333' fill={`url(#${id1})`} />
+            <circle cx='9.99984' cy='9.99984' r='0.833333' fill={`url(#${id2})`} />
+            <ellipse cx='13.3333' cy='9.99984' rx='0.833333' ry='0.833333' fill={`url(#${id3})`} />
+            <defs>
+                <linearGradient id={id} x1='2.5' y1='3.3335' x2='20.0335' y2='9.85069' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#DC5CDF' />
+                    <stop offset='0.639423' stopColor='#8862F8' />
+                    <stop offset='1' stopColor='#4493FF' />
+                </linearGradient>
+                <linearGradient id={id1} x1='5.8335' y1='9.1665' x2='7.8326' y2='9.827' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#DC5CDF' />
+                    <stop offset='0.639423' stopColor='#8862F8' />
+                    <stop offset='1' stopColor='#4493FF' />
+                </linearGradient>
+                <linearGradient id={id2} x1='9.1665' y1='9.1665' x2='11.1656' y2='9.827' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#DC5CDF' />
+                    <stop offset='0.639423' stopColor='#8862F8' />
+                    <stop offset='1' stopColor='#4493FF' />
+                </linearGradient>
+                <linearGradient id={id3} x1='12.5' y1='9.1665' x2='14.4991' y2='9.82701' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#DC5CDF' />
+                    <stop offset='0.639423' stopColor='#8862F8' />
+                    <stop offset='1' stopColor='#4493FF' />
+                </linearGradient>
+            </defs>
+        </svg>
+    )
+}
+/**
+ * @description  Outline/chat
+ */
+export const ColorsChatIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ColorsChat} {...props} />
+}

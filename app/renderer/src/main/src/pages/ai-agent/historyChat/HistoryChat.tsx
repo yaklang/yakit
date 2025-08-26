@@ -17,7 +17,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import classNames from "classnames"
 import styles from "./HistoryChat.module.scss"
 
-export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
+const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
     const {onNewChat} = props
 
     const {chats, activeChat} = useAIAgentStore()
@@ -183,3 +183,5 @@ export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
         </div>
     )
 })
+
+export default HistoryChat

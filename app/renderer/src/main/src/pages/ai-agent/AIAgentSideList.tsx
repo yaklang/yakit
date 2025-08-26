@@ -3,7 +3,6 @@ import {useMemoizedFn} from "ahooks"
 import {AIAgentTabList} from "./defaultConstant"
 import {AIAgentSideListProps, AIAgentTab, AIAgentTriggerEventInfo} from "./aiAgentType"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {HistoryChat} from "./historyChat/HistoryChat"
 import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
@@ -13,6 +12,7 @@ const AIChatSetting = React.lazy(() => import("./AIChatSetting/AIChatSetting"))
 const ForgeName = React.lazy(() => import("./forgeName/ForgeName"))
 const AIToolList = React.lazy(() => import("./aiToolList/AIToolList"))
 const AIModelList = React.lazy(() => import("./aiModelList/AIModelList"))
+const HistoryChat = React.lazy(() => import("./historyChat/HistoryChat"))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
