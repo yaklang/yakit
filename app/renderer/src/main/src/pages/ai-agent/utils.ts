@@ -237,37 +237,6 @@ export const formatMCPResourceTemplates = (templates: any[]): RenderResourcesTem
     }
     return data
 }
-/**是否为 tool stdout 节点 */
-export const isToolStdout = (nodeID: string) => {
-    if (!nodeID) return false
-    return nodeID.startsWith("tool-") && nodeID.endsWith("-stdout")
-}
-/**是否显示有总结的tool card */
-export const isToolSummaryCard = (nodeID: string) => {
-    switch (nodeID) {
-        case "tool_call_user_cancel":
-        case "tool_call_done":
-        case "tool_call_error":
-        case "tool_call_summary":
-            return true
-        default:
-            return false
-    }
-}
-/**是否显示紫色主题的彩色卡片 */
-export const isShowToolColorCard = (nodeID: string) => {
-    if (nodeID === "call-tools") return true
-    if (isToolStdout(nodeID)) return true
-    return false
-}
-
-/**是否为AI tool 需要展示在页面上的节点 */
-export const isToolSyncNode = (nodeID: string) => {
-    if (nodeID === "execute") return true
-    if (nodeID === "call-tools") return true
-    if (isToolStdout(nodeID)) return true
-    return false
-}
 
 // #region chat相关工具
 /** @name 将Token转换为K/M等带单位字符 */
@@ -339,5 +308,39 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     } catch (error) {}
 
     return {...data}
+}
+// #endregion
+
+// #region 信息流式输出模块相关功能方法
+/**是否为 tool stdout 节点 */
+export const isToolStdout = (nodeID: string) => {
+    if (!nodeID) return false
+    return nodeID.startsWith("tool-") && nodeID.endsWith("-stdout")
+}
+/**是否显示有总结的tool card */
+export const isToolSummaryCard = (nodeID: string) => {
+    switch (nodeID) {
+        case "tool_call_user_cancel":
+        case "tool_call_done":
+        case "tool_call_error":
+        case "tool_call_summary":
+            return true
+        default:
+            return false
+    }
+}
+/**是否显示紫色主题的彩色卡片 */
+export const isShowToolColorCard = (nodeID: string) => {
+    if (nodeID === "call-tools") return true
+    if (isToolStdout(nodeID)) return true
+    return false
+}
+
+/**是否为AI tool 需要展示在页面上的节点 */
+export const isToolSyncNode = (nodeID: string) => {
+    if (nodeID === "execute") return true
+    if (nodeID === "call-tools") return true
+    if (isToolStdout(nodeID)) return true
+    return false
 }
 // #endregion

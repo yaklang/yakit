@@ -120,7 +120,6 @@ export interface AIAgentChatStreamProps {
     isStopScroll?: boolean
     setIsStopScroll?: Dispatch<SetStateAction<boolean>>
     tasks: AIChatMessage.PlanTask[]
-    activeStream: string[]
     streams: Record<string, AIChatStreams[]>
     defaultExpand?: boolean
 }

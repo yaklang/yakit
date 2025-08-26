@@ -24,10 +24,10 @@ import {
     AIChatLeftSide,
     AIChatLogs
 } from "../chatTemplate/AIAgentChatTemplate"
+import {formatTimeYMD} from "@/utils/timeUtil"
 
 import classNames from "classnames"
 import styles from "./AITaskChat.module.scss"
-import {formatTimeYMD} from "@/utils/timeUtil"
 
 const AIChatRightSide = React.lazy(() => import("./AIChatRightSide/AIChatRightSide"))
 
@@ -176,19 +176,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
         })
 
         const [
-            {
-                execute,
-                pressure,
-                firstCost,
-                totalCost,
-                consumption,
-                logs,
-                plan,
-                streams,
-                activeStream,
-                card,
-                systemOutputs
-            },
+            {execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, card, systemOutputs},
             events
         ] = useChatData({
             onReview: handleShowReview,
@@ -514,7 +502,6 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                             isStopScroll={isStopScroll}
                                             setIsStopScroll={setIsStopScroll}
                                             tasks={uiPlan}
-                                            activeStream={activeStream}
                                             streams={uiStreams}
                                             coordinatorId={coordinatorId}
                                             defaultExpand={!taskChat?.answer?.streams}

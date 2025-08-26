@@ -14,20 +14,11 @@ import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {isToolSyncNode, isToolStdout} from "./utils"
-import emiter from "@/utils/eventBus/eventBus"
 import {generateTaskChatExecution} from "./defaultConstant"
 import {checkStreamValidity, convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 
 const {ipcRenderer} = window.require("electron")
-
-export interface UseChatDataParams {
-    onReview?: (data: AIChatReview) => void
-    onReviewExtra?: (data: AIChatReviewExtra) => void
-    onReviewRelease?: (id: string) => void
-    onEnd?: () => void
-    setCoordinatorId?: (id: string) => void
-}
 
 /** 将树结构任务列表转换成一维数组 */
 export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMessage.PlanTask) => {
@@ -39,19 +30,30 @@ export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMess
         }
     }
 }
-const defaultAIToolData: AIChatMessage.AIToolData = {
+
+const defaultAIToolStdOutSelectors: AIChatMessage.AIToolStdOutSelectors = {
+    call_tool_id: "",
+    tool: "-",
+    selectors: [],
+    interactiveId: ""
+}
+const defaultAIToolResult: AIChatMessage.AIToolData = {
     callToolId: "",
-    toolName: "-",
+    toolName: "",
     status: "default",
     summary: "",
-    time: 0,
-    selectors: [],
-    interactiveId: "",
-    toolStdoutContent: {
-        content: "",
-        isShowAll: false
-    }
+    timestamp: 0,
+    toolStdoutSummary: ""
 }
+
+export interface UseChatDataParams {
+    onReview?: (data: AIChatReview) => void
+    onReviewExtra?: (data: AIChatReviewExtra) => void
+    onReviewRelease?: (id: string) => void
+    onEnd?: () => void
+    setCoordinatorId?: (id: string) => void
+}
+
 function useChatData(params?: UseChatDataParams) {
     const {onReview, onReviewExtra, onReviewRelease, onEnd, setCoordinatorId} = params || {}
 
@@ -78,6 +80,7 @@ function useChatData(params?: UseChatDataParams) {
 
     const [logs, setLogs] = useState<AIChatMessage.Log[]>([])
 
+    const [stream, setStream] = useState<AIChatMessage.AITaskChatStreamAnswer[]>([])
     const [streams, setStreams] = useState<Record<string, AIChatStreams[]>>({})
     const [card, setCard] = useState<AIChatMessage.AIInfoCard[]>([])
 
@@ -88,26 +91,8 @@ function useChatData(params?: UseChatDataParams) {
     // card
     const cardKVPair = useRef<Map<string, AIChatMessage.AICacheCard>>(new Map<string, AIChatMessage.AICacheCard>())
     const cardTimeRef = useRef<NodeJS.Timeout | null>(null)
-    // 从 active 里排除 nodeId 的计时器
-    const clearActiveStreamTime = useRef<Record<string, NodeJS.Timeout | null>>({})
-    const [activeStream, setActiveStream] = useState<string[]>([])
-    const handleSetClearActiveStreamTime = useMemoizedFn((streamId: string) => {
-        const time = clearActiveStreamTime.current[streamId]
-        if (time) {
-            clearTimeout(time)
-            clearActiveStreamTime.current[streamId] = setTimeout(() => {
-                setActiveStream((old) => old.filter((item) => item !== streamId))
-                clearActiveStreamTime.current[streamId] = null
-            }, 1000)
-        } else {
-            clearActiveStreamTime.current[streamId] = setTimeout(() => {
-                setActiveStream((old) => old.filter((item) => item != streamId))
-                clearActiveStreamTime.current[streamId] = null
-            }, 1000)
-        }
-    })
 
-    let toolDataMapRef = useRef<Map<string, AIChatMessage.AIToolData>>(new Map())
+    const [activeStream, setActiveStream] = useState<string[]>([])
 
     // #region 改变任务状态相关方法
     /** 更新任务状态 */
@@ -136,85 +121,159 @@ function useChatData(params?: UseChatDataParams) {
     })
     // #endregion
 
-    // #region 更新回答信息数据流
-    const selectorsRef = useRef<AIChatMessage.AIToolData>({
-        ...cloneDeep(defaultAIToolData),
-        callToolId: "",
-        selectors: [],
-        interactiveId: ""
-    }) // 保存当前工具周期内selectors和interactiveId数据
+    // #region 流式输出信息的处理相关逻辑
+    // 保存着工具数据过程中的一些 watch 相关信息(仅限当前工具周期内[tool_call_start到tool_call_summary])
+    const toolStdOutSelectors = useRef<AIChatMessage.AIToolStdOutSelectors>({
+        ...cloneDeep(defaultAIToolStdOutSelectors)
+    })
+    // 保存着工具执行结果的信息数据，供后续直接输出使用，结构是一个Map，可以同时存放多个工具的结果
+    const toolResultMap = useRef<Map<string, AIChatMessage.AIToolData>>(new Map())
+    const getToolResultMap: (callToolId: string) => AIChatMessage.AIToolData = useMemoizedFn((callToolId) => {
+        return toolResultMap.current.get(callToolId) || cloneDeep(defaultAIToolResult)
+    })
+    const onSetToolResultMap = useMemoizedFn((callToolId: string, value: Partial<AIChatMessage.AIToolData>) => {
+        if (!callToolId) return
+        let current = getToolResultMap(callToolId)
+        current = {
+            ...current,
+            ...value
+        }
+        toolResultMap.current.set(callToolId, current)
+    })
+    const onRemoveToolData = useMemoizedFn((callToolId: string) => {
+        if (!callToolId) return
+        toolResultMap.current.delete(callToolId)
+    })
+
+    // 任务执行相关的正式流式输出信息
     const handleUpdateStream = useMemoizedFn(
         (params: {
             type: string
-            nodeID: string
-            timestamp: number
-            taskIndex: string
+            NodeId: string
+            Timestamp: number
+            TaskIndex: string
             ipcContent: string
             ipcStreamDelta: string
         }) => {
-            const {type, nodeID, timestamp, taskIndex, ipcContent, ipcStreamDelta} = params
-            const index = taskIndex || "system"
-            setStreams((old) => {
-                const streams = cloneDeep(old)
-                const valueInfo = streams[index]
-                if (valueInfo) {
-                    const streamInfo = valueInfo.find((item) => item.nodeId === nodeID && item.timestamp === timestamp)
-                    if (streamInfo) {
-                        if (type === "systemStream") streamInfo.data.system += ipcContent + ipcStreamDelta
-                        if (type === "reasonStream") streamInfo.data.reason += ipcContent + ipcStreamDelta
-                        if (type === "stream") streamInfo.data.stream += ipcContent + ipcStreamDelta
-                    } else {
-                        let info: AIChatStreams = {
-                            nodeId: nodeID,
-                            timestamp: timestamp,
-                            data: {system: "", reason: "", stream: ""}
-                        }
-                        if (isToolStdout(nodeID)) info.toolAggregation = {...selectorsRef.current}
-                        if (type === "systemStream") info.data.system += ipcContent + ipcStreamDelta
-                        if (type === "reasonStream") info.data.reason += ipcContent + ipcStreamDelta
-                        if (type === "stream") info.data.stream += ipcContent + ipcStreamDelta
-                        valueInfo.push(info)
-                    }
-                    if (nodeID === "call-tools") {
-                        streams[index] = valueInfo.filter((item) => item.nodeId !== "execute")
-                    }
-                    if (isToolStdout(nodeID)) {
-                        streams[index] = valueInfo.filter((item) => item.nodeId !== "call-tools")
-                    }
+            const {type, NodeId, Timestamp, TaskIndex, ipcContent, ipcStreamDelta} = params
+            setStream((old) => {
+                let newArr = [...old]
+
+                const index = newArr.findIndex((item) => {
+                    return item.NodeId === NodeId && item.Timestamp === Timestamp && item.TaskIndex === TaskIndex
+                })
+
+                if (index >= 0) {
+                    const streamInfo = newArr[index]
+                    if (type === "systemStream") streamInfo.stream.system += ipcContent + ipcStreamDelta
+                    if (type === "reasonStream") streamInfo.stream.reason += ipcContent + ipcStreamDelta
+                    if (type === "stream") streamInfo.stream.stream += ipcContent + ipcStreamDelta
                 } else {
-                    const list: AIChatStreams[] = [
-                        {
-                            nodeId: nodeID,
-                            timestamp: timestamp,
-                            data: {system: "", reason: "", stream: ""}
-                        }
-                    ]
-                    if (type === "systemStream") list[0].data.system += ipcContent + ipcStreamDelta
-                    if (type === "reasonStream") list[0].data.reason += ipcContent + ipcStreamDelta
-                    if (type === "stream") list[0].data.stream += ipcContent + ipcStreamDelta
-                    streams[taskIndex || "system"] = list
+                    let newStreamInfo: AIChatMessage.AITaskChatStreamAnswer = {
+                        TaskIndex,
+                        NodeId,
+                        Timestamp,
+                        isToolResult: false,
+                        stream: {system: "", reason: "", stream: ""}
+                    }
+                    if (isToolStdout(NodeId)) newStreamInfo.toolStdOutSelectors = {...toolStdOutSelectors.current}
+                    if (type === "systemStream") newStreamInfo.stream.system += ipcContent + ipcStreamDelta
+                    if (type === "reasonStream") newStreamInfo.stream.reason += ipcContent + ipcStreamDelta
+                    if (type === "stream") newStreamInfo.stream.stream += ipcContent + ipcStreamDelta
+                    newArr.push(newStreamInfo)
+
+                    if (isToolStdout(NodeId)) {
+                        newArr = newArr.filter((item) => item.NodeId !== "call-tools")
+                    }
                 }
 
-                return streams
+                return newArr
             })
         }
     )
-    // #endregion
 
-    //#region 处理系统输出
+    // 将工具执行结果填充到流式输出的数据集合里
+    const aggregationToolData = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
+        const {TaskIndex, Timestamp} = res
+        if (!TaskIndex) {
+            onCloseByErrorTaskIndexData(res)
+            return
+        }
+        if (!callToolId) return
+
+        setStream((old) => {
+            let newArr = [...old]
+
+            const toolStdOut = newArr.find((el) => isToolStdout(el.NodeId))
+            const toolStdOutContent = toolStdOut?.stream.stream || ""
+            newArr = newArr.filter((item) => !isToolSyncNode(item.NodeId))
+
+            const toolResult = getToolResultMap(callToolId)
+            newArr.push({
+                TaskIndex,
+                NodeId: res.Type,
+                Timestamp,
+                isToolResult: true,
+                stream: {
+                    system: "",
+                    reason: "",
+                    stream: ""
+                },
+                toolAggregation: {
+                    ...toolResult,
+                    toolStdoutSummary: toolStdOutContent
+                }
+            })
+
+            return newArr
+        })
+    })
+
+    // 将工具执行结果的总结补充到数据输出的数据集合里
+    const onSetToolSummary = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
+        const {TaskIndex} = res
+        if (!TaskIndex) {
+            onCloseByErrorTaskIndexData(res)
+            return
+        }
+        if (!callToolId) return
+
+        setStream((old) => {
+            let newArr = old.map((item) => {
+                if (item.isToolResult && item?.toolAggregation?.callToolId === callToolId) {
+                    const resultInfo = getToolResultMap(callToolId)
+                    return {
+                        ...item,
+                        toolAggregation: {
+                            ...resultInfo,
+                            toolStdoutSummary:
+                                item?.toolAggregation?.toolStdoutSummary || defaultAIToolResult.toolStdoutSummary
+                        }
+                    }
+                }
+                return item
+            })
+
+            return newArr
+        })
+        onRemoveToolData(callToolId)
+        toolStdOutSelectors.current = cloneDeep(defaultAIToolStdOutSelectors)
+    })
+
+    // 系统输出的相关信息
     const onHandleSystemOutput = useMemoizedFn(
-        (params: {nodeID: string; timestamp: number; ipcContent: string; ipcStreamDelta: string}) => {
-            const {nodeID, timestamp, ipcContent, ipcStreamDelta} = params
+        (params: {NodeId: string; Timestamp: number; ipcContent: string; ipcStreamDelta: string}) => {
+            const {NodeId, Timestamp, ipcContent, ipcStreamDelta} = params
             setSystemOutputs((old) => {
                 const newOutput = cloneDeep(old)
-                const streamInfo = newOutput.find((item) => item.nodeId === nodeID && item.timestamp === timestamp)
+                const streamInfo = newOutput.find((item) => item.NodeId === NodeId && item.Timestamp === Timestamp)
                 const text = ipcContent + ipcStreamDelta
                 if (streamInfo) {
                     streamInfo.data += text
                 } else {
                     const info: AIChatMessage.AIChatSystemOutput = {
-                        nodeId: nodeID,
-                        timestamp: timestamp,
+                        NodeId: NodeId,
+                        Timestamp: Timestamp,
                         data: text,
                         type: "ai"
                     }
@@ -224,7 +283,7 @@ function useChatData(params?: UseChatDataParams) {
             })
         }
     )
-    //#endregion
+    // #endregion
 
     // #region review事件相关方法
     /** 不跳过 release 的 review 类型 */
@@ -237,7 +296,7 @@ function useChatData(params?: UseChatDataParams) {
 
     /** 触发review事件 */
     const handleTriggerReview = useMemoizedFn((data: AIChatReview) => {
-        console.log(`${data.type}-----\n`, JSON.stringify(data.data))
+        // console.log(`${data.type}-----\n`, JSON.stringify(data.data))
         review.current = cloneDeep(data)
         const isTrigger = handleIsTriggerReview() || noSkipReviewReleaseTypes.current.includes(data.type)
         if (isTrigger) {
@@ -264,14 +323,14 @@ function useChatData(params?: UseChatDataParams) {
             planTree.current = cloneDeep(tasks.plans.root_task)
             const sum: AIChatMessage.PlanTask[] = []
             handleFlatAITree(sum, tasks.plans.root_task)
-            console.log("sum", sum)
+            // console.log("sum", sum)
             setPlan([...sum])
         }
     })
 
     /** review 自动释放逻辑 */
     const handleReviewRelease = useMemoizedFn((id: string) => {
-        console.log("review.current", review.current, id)
+        // console.log("review.current", review.current, id)
 
         if (!review.current || review.current.data.id !== id) return
         const isTrigger = handleIsTriggerReview() || noSkipReviewReleaseTypes.current.includes(review.current.type)
@@ -325,7 +384,6 @@ function useChatData(params?: UseChatDataParams) {
         setLogs([])
         setStreams({})
         setActiveStream([])
-        clearActiveStreamTime.current = {}
         setExecute(false)
         chatID.current = ""
         chatRequest.current = undefined
@@ -334,6 +392,7 @@ function useChatData(params?: UseChatDataParams) {
         cardKVPair.current = new Map()
 
         setSystemOutputs([])
+        coordinatorId.current = {cache: "", sent: ""}
     })
 
     const onStart = useMemoizedFn((token: string, params: AIInputEvent) => {
@@ -356,29 +415,6 @@ function useChatData(params?: UseChatDataParams) {
                 ipcContent = Uint8ArrayToString(res.Content) || ""
                 ipcStreamDelta = Uint8ArrayToString(res.StreamDelta) || ""
             } catch (error) {}
-            if (res.IsSync) {
-                // AI 工具点击查询详情需要展示的数据,临时数据
-                if (!isToolSyncNode(res.NodeId)) return
-                try {
-                    const info: AIChatStreams = {
-                        nodeId: res.NodeId,
-                        timestamp: res.Timestamp,
-                        data: {system: "", reason: "", stream: ""}
-                    }
-                    // 目前AI只有IsStream为true的展示数据
-                    if (res.IsStream) {
-                        info.data.stream = ipcContent + ipcStreamDelta
-                    }
-                    emiter.emit(
-                        "onTooCardDetails",
-                        JSON.stringify({
-                            syncId: res.SyncID,
-                            info
-                        })
-                    )
-                } catch (error) {}
-                return
-            }
 
             if (res.Type === "pressure") {
                 // 上下文压力
@@ -441,7 +477,7 @@ function useChatData(params?: UseChatDataParams) {
                     const data = JSON.parse(ipcContent) as AIChatMessage.ReviewRelease
                     if (!data?.id) return
                     handleReviewRelease(data.id)
-                    console.log("review-release---\n", data)
+                    // console.log("review-release---\n", data)
                 } catch (error) {}
                 return
             }
@@ -473,7 +509,7 @@ function useChatData(params?: UseChatDataParams) {
                         const data = obj as AIChatMessage.ChangeTask
                         handleUpdateTaskState(data.task.index, "success")
                     } else {
-                        console.log("unkown-structured---\n", ipcContent)
+                        // console.log("unkown-structured---\n", ipcContent)
                     }
                 } catch (error) {}
                 return
@@ -542,51 +578,87 @@ function useChatData(params?: UseChatDataParams) {
                 return
             }
             if (res.Type === "stream") {
-                const type = res.IsSystem ? "systemStream" : res.IsReason ? "reasonStream" : "stream"
-                const nodeID = res.NodeId
-                const timestamp = res.Timestamp
-                const taskIndex = res.TaskIndex
-                if (isToolSyncNode(nodeID) && !taskIndex) {
+                console.log(
+                    "stream___",
+                    `${res.CoordinatorId}|${res.NodeId}|${res.TaskIndex}`,
+                    "\n",
+                    ipcContent,
+                    "\n",
+                    ipcStreamDelta
+                )
+                const {IsSystem, IsReason, NodeId, Timestamp, TaskIndex} = res
+                const type = IsSystem ? "systemStream" : IsReason ? "reasonStream" : "stream"
+
+                /**
+                 * 数据验证
+                 * - 如果NodeId类型是(execute|call-tools|tool-xxx-stdout),
+                 * - 并且TaskIndex不存在
+                 * 这代表数据错误，立即停止继续执行
+                 */
+                if (isToolSyncNode(NodeId) && !TaskIndex) {
                     onCloseByErrorTaskIndexData(res)
                     return
                 }
 
-                if (!!taskIndex) {
-                    handleUpdateStream({type, nodeID, timestamp, taskIndex, ipcContent, ipcStreamDelta})
+                if (!!TaskIndex) {
+                    // 任务信息输出
+                    handleUpdateStream({
+                        type,
+                        TaskIndex,
+                        NodeId,
+                        Timestamp,
+                        ipcContent,
+                        ipcStreamDelta
+                    })
                 } else {
-                    onHandleSystemOutput({nodeID, timestamp, ipcContent, ipcStreamDelta})
+                    // 系统输出
+                    onHandleSystemOutput({NodeId, Timestamp, ipcContent, ipcStreamDelta})
                 }
-
-                const streamId = `${taskIndex || "system"}|${nodeID}-${timestamp}`
-                handleSetClearActiveStreamTime(streamId)
-                setActiveStream((old) => {
-                    if (old.includes(streamId)) return old
-                    return [...old, streamId]
-                })
                 return
             }
             if (res.Type === "tool_call_start") {
                 // 工具调用开始
                 try {
                     if (!res.IsJson) return
+                    console.log(
+                        "tool_call_start___",
+                        {...res, Content: undefined, StreamDelta: undefined},
+                        "\n",
+                        ipcContent,
+                        "\n",
+                        ipcStreamDelta
+                    )
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
-                    onSetToolData(data?.call_tool_id, {
-                        callToolId: data?.call_tool_id,
-                        toolName: data?.tool?.name || "-"
+                    if (!data?.call_tool_id) return
+                    // 开始记录工具执行结果
+                    onSetToolResultMap(data.call_tool_id, {
+                        callToolId: data.call_tool_id,
+                        toolName: data?.tool?.name || ""
                     })
-                    selectorsRef.current.callToolId = data?.call_tool_id
+                    // 开始记录工具执行过程中的可选操作列表
+                    toolStdOutSelectors.current.call_tool_id = data.call_tool_id || ""
+                    toolStdOutSelectors.current.tool = data?.tool?.name || ""
                 } catch (error) {}
                 return
             }
             if (res.Type === "tool_call_user_cancel") {
                 try {
                     if (!res.IsJson) return
+                    console.log(
+                        "tool_call_user_cancel___",
+                        {...res, Content: undefined, StreamDelta: undefined},
+                        "\n",
+                        ipcContent,
+                        "\n",
+                        ipcStreamDelta
+                    )
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
-                    onSetToolData(data?.call_tool_id, {
+                    if (!data?.call_tool_id) return
+                    onSetToolResultMap(data.call_tool_id, {
                         status: "user_cancelled",
-                        time: res.Timestamp
+                        timestamp: res.Timestamp
                     })
-                    aggregationToolData(res, data?.call_tool_id)
+                    aggregationToolData(res, data.call_tool_id)
                 } catch (error) {}
                 return
             }
@@ -594,12 +666,21 @@ function useChatData(params?: UseChatDataParams) {
             if (res.Type === "tool_call_done") {
                 try {
                     if (!res.IsJson) return
+                    console.log(
+                        "tool_call_done___",
+                        {...res, Content: undefined, StreamDelta: undefined},
+                        "\n",
+                        ipcContent,
+                        "\n",
+                        ipcStreamDelta
+                    )
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
-                    onSetToolData(data?.call_tool_id, {
+                    if (!data?.call_tool_id) return
+                    onSetToolResultMap(data.call_tool_id, {
                         status: "success",
-                        time: res.Timestamp
+                        timestamp: res.Timestamp
                     })
-                    aggregationToolData(res, data?.call_tool_id)
+                    aggregationToolData(res, data.call_tool_id)
                 } catch (error) {}
                 return
             }
@@ -607,28 +688,44 @@ function useChatData(params?: UseChatDataParams) {
             if (res.Type === "tool_call_error") {
                 try {
                     if (!res.IsJson) return
+                    console.log(
+                        "tool_call_error___",
+                        {...res, Content: undefined, StreamDelta: undefined},
+                        "\n",
+                        ipcContent,
+                        "\n",
+                        ipcStreamDelta
+                    )
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
-                    onSetToolData(data?.call_tool_id, {
+                    if (!data?.call_tool_id) return
+                    onSetToolResultMap(data.call_tool_id, {
                         status: "failed",
-                        time: res.Timestamp
+                        timestamp: res.Timestamp
                     })
-                    aggregationToolData(res, data?.call_tool_id)
+                    aggregationToolData(res, data.call_tool_id)
                 } catch (error) {}
                 return
             }
 
             if (res.Type === "tool_call_watcher") {
-                // 先于 isToolStdout(nodeID) 为true的节点传给前端
+                // 先于 信息流类型 tool_xxx_stdout 之前传过来
                 try {
                     if (!res.IsJson) return
+                    console.log(
+                        "tool_call_watcher___",
+                        {...res, Content: undefined, StreamDelta: undefined},
+                        "\n",
+                        ipcContent,
+                        "\n",
+                        ipcStreamDelta
+                    )
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCallWatcher
-                    if (!data?.id) return
+                    if (!data?.id || !data?.call_tool_id) return
                     if (!data?.selectors || !data?.selectors?.length) return
-                    const currentToolData = getToolData(data.call_tool_id)
-                    if (currentToolData.callToolId === selectorsRef.current.callToolId) {
-                        // 当前的callToolId与本地工具中的一致
-                        selectorsRef.current.selectors = data.selectors
-                        selectorsRef.current.interactiveId = data.id
+                    if (toolStdOutSelectors.current.call_tool_id === data.call_tool_id) {
+                        // 获取 toolStdOut 输出中的可执行操作列表
+                        toolStdOutSelectors.current.selectors = data.selectors
+                        toolStdOutSelectors.current.interactiveId = data.id
                     }
                 } catch (error) {}
                 return
@@ -637,18 +734,27 @@ function useChatData(params?: UseChatDataParams) {
                 // 工具调用总结
                 try {
                     if (!res.IsJson) return
+                    console.log(
+                        "tool_call_summary___",
+                        {...res, Content: undefined, StreamDelta: undefined},
+                        "\n",
+                        ipcContent,
+                        "\n",
+                        ipcStreamDelta
+                    )
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
-                    const currentToolData = getToolData(data.call_tool_id)
+                    if (!data?.call_tool_id) return
+                    const currentToolData = getToolResultMap(data.call_tool_id)
                     if (currentToolData.status === "user_cancelled") {
                         currentToolData.summary = "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
                     } else {
                         currentToolData.summary = data.summary || ""
                     }
-                    onSetToolData(data?.call_tool_id, {
+                    onSetToolResultMap(data.call_tool_id, {
                         summary: currentToolData.summary,
-                        time: res.Timestamp
+                        timestamp: res.Timestamp
                     })
-                    onSetToolSummary(res, data?.call_tool_id || "")
+                    onSetToolSummary(res, data.call_tool_id)
                 } catch (error) {}
                 return
             }
@@ -656,7 +762,7 @@ function useChatData(params?: UseChatDataParams) {
             if (res.Type === "plan") {
                 // 更新正在执行的任务树
                 try {
-                    console.log("plan---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
+                    // console.log("plan---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
                     if (!res.IsJson) return
                     const tasks = JSON.parse(ipcContent) as {root_task: AIChatMessage.PlanTask}
                     planTree.current = cloneDeep(tasks.root_task)
@@ -736,93 +842,7 @@ function useChatData(params?: UseChatDataParams) {
             coordinatorId.current.sent = coordinatorId.current.cache
         }
     })
-    const getToolData = useMemoizedFn((callToolId: string): AIChatMessage.AIToolData => {
-        return toolDataMapRef.current.get(callToolId) || cloneDeep(defaultAIToolData)
-    })
-    const onSetToolData = useMemoizedFn((callToolId: string, value: Partial<AIChatMessage.AIToolData>) => {
-        let current = getToolData(callToolId)
-        current = {
-            ...current,
-            ...value
-        }
-        toolDataMapRef.current.set(callToolId, current)
-    })
-    const onRemoveToolData = useMemoizedFn((callToolId: string) => {
-        toolDataMapRef.current.delete(callToolId)
-    })
-    const aggregationToolData = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
-        if (!res.TaskIndex) {
-            onCloseByErrorTaskIndexData(res)
-            return
-        }
-        const timestamp = res.Timestamp
-        const taskIndex = res.TaskIndex
-        setStreams((old) => {
-            const streams = cloneDeep(old)
-            const valueInfo = streams[taskIndex]
-            if (valueInfo) {
-                const toolStdout = valueInfo.find((ele) => isToolStdout(ele.nodeId))
-                const content = toolStdout?.data.stream || toolStdout?.data.reason || toolStdout?.data.system || ""
-                const isShowAll = !!(content && content.length > 200)
-                const toolStdoutShowContent = isShowAll ? content.substring(0, 200) + "..." : content
 
-                const newValue = valueInfo.filter((ele) => !isToolSyncNode(ele.nodeId))
-                const toolData = getToolData(callToolId)
-                newValue.push({
-                    nodeId: res.Type,
-                    timestamp: timestamp,
-                    data: {
-                        system: "",
-                        reason: "",
-                        stream: ""
-                    },
-                    toolAggregation: {
-                        ...toolData,
-                        toolStdoutContent: {
-                            content: toolStdoutShowContent,
-                            isShowAll
-                        }
-                    }
-                })
-                streams[taskIndex] = [...newValue]
-            }
-            return streams
-        })
-    })
-
-    const onSetToolSummary = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
-        if (!res.TaskIndex) {
-            onCloseByErrorTaskIndexData(res)
-            return
-        }
-        const taskIndex = res.TaskIndex
-        setStreams((old) => {
-            const streams = cloneDeep(old)
-            const valueInfo = streams[taskIndex]
-            if (valueInfo) {
-                const newValue = valueInfo.map((ele) => {
-                    if (ele.toolAggregation?.callToolId === callToolId) {
-                        const toolData = getToolData(callToolId)
-                        return {
-                            ...ele,
-                            toolAggregation: {
-                                ...toolData,
-                                toolStdoutContent: ele.toolAggregation?.toolStdoutContent || {
-                                    ...defaultAIToolData.toolStdoutContent
-                                }
-                            }
-                        }
-                    }
-                    return ele
-                })
-                streams[taskIndex] = [...newValue]
-            }
-
-            return streams
-        })
-        onRemoveToolData(callToolId)
-        selectorsRef.current = cloneDeep(defaultAIToolData)
-    })
     const onCloseByErrorTaskIndexData = useMemoizedFn((res: AIOutputEvent) => {
         onClose(chatID.current, {
             tip: () =>

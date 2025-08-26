@@ -17,13 +17,6 @@ import {AIChatToolDrawerContent} from "./AIAgentChatTemplate"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 const {ipcRenderer} = window.require("electron")
 
-interface AIChatToolProps {
-    item: AIChatMessage.AIToolData
-}
-export const AIChatTool: React.FC<AIChatToolProps> = React.memo((props) => {
-    return <div>总结</div>
-})
-
 interface AIChatToolColorCardProps {
     toolCall: AIChatStreams
 }
@@ -147,7 +140,6 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
             content: <AIChatToolDrawerContent callToolId={item?.callToolId} />,
             onClose: () => m.destroy()
         })
-       
     })
     const tag = useCreation(() => {
         switch (item.status) {

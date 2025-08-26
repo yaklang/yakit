@@ -332,27 +332,6 @@ export declare namespace AIChatMessage {
         options: AIRequireOption[]
     }
 
-    /**AI工具聚合数据 前端使用 */
-    export interface AIToolData {
-        callToolId: string
-        /**工具名称 */
-        toolName: string
-        /**工具执行完成的状态 default是后端没有发送状态type时前端默认值 */
-        status: "default" | "success" | "failed" | "user_cancelled"
-        /**执行完后的总结 */
-        summary: string
-        /**总结的时间 */
-        time: number
-        /**ai工具按钮 */
-        selectors: ReviewSelector[]
-        /**出现ai工具按钮后，按钮功能发送信息的时候需要的id */
-        interactiveId: string
-        /**tool stdout 内容展示前200个字符 */
-        toolStdoutContent: {
-            content: string
-            isShowAll: boolean
-        }
-    }
     /**AI工具 接口返回的JSON结构 */
     export interface AIToolCall {
         call_tool_id: string
@@ -380,10 +359,54 @@ export declare namespace AIChatMessage {
 
     /** UI 渲染, 系统输出相关信息 */
     export interface AIChatSystemOutput {
-        nodeId: string
-        timestamp: number
+        NodeId: AIOutputEvent["NodeId"]
+        Timestamp: AIOutputEvent["Timestamp"]
         data: string
         type: "ai" | "user"
+    }
+
+    /** tool-stdout 对应 tool_call_watch 的数据结构 */
+    export interface AIToolStdOutSelectors {
+        call_tool_id: string
+        tool: string
+        /** 数据输出过程中可以执行的按钮列表 */
+        selectors: ReviewSelector[]
+        /** 执行功能必须附带的执行 ID */
+        interactiveId: string
+    }
+    /** 工具执行结果信息 */
+    export interface AIToolData {
+        callToolId: string
+        /** 工具名称 */
+        toolName: string
+        /** 工具执行完成的状态 default是后端没有发送状态type时前端默认值 */
+        status: "default" | "success" | "failed" | "user_cancelled"
+        /** 执行完后的总结 */
+        summary: string
+        /** 总结的时间 */
+        timestamp: number
+        /** toolStdOut输出信息 */
+        toolStdoutSummary: string
+    }
+    /** 中间展示的信息数据结构(多种流信息和工具总结信息) */
+    export interface AITaskChatStreamAnswer {
+        TaskIndex: string
+        NodeId: AIOutputEvent["NodeId"]
+        Timestamp: AIOutputEvent["Timestamp"]
+        /** 判断是工具结果输出还是正常信息输出 */
+        isToolResult: boolean
+
+        /** 任务执行过程输出数据 */
+        stream: {
+            system: string
+            reason: string
+            stream: string
+        }
+        /** 工具 stdout 输出时的按钮选项列表 */
+        toolStdOutSelectors?: AIToolStdOutSelectors
+
+        /** 工具相关结果数据 */
+        toolAggregation?: AIChatMessage.AIToolData
     }
 }
 // #endregion

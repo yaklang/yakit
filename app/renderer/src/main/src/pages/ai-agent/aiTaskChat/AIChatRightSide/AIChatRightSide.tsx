@@ -49,7 +49,7 @@ const AIChatRightSide: React.FC<AIChatRightSideProps> = React.memo((props) => {
                 <div className={styles["system-outInput-list"]} ref={outInputListRef}>
                     {systemOutputs.map((item) => (
                         <AITriageChatContent
-                            key={item.nodeId + item.timestamp}
+                            key={item.NodeId + item.Timestamp}
                             isAnswer={item.type === "ai"}
                             loading={false}
                             content={item.data}
