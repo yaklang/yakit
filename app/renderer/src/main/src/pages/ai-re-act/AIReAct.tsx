@@ -17,7 +17,7 @@ import styles from "./AIReAct.module.scss"
 /** 清空用户缓存的固定值 */
 const AIReActCacheClearValue = "20250808"
 
-export const AIReAct: React.FC<AIReActProps> = (props) => {
+export const AIReAct: React.FC<AIReActProps> = React.memo((props) => {
     // #region ai-re-act页面全局缓存
     // ai-re-act-chat 全局配置
     const [setting, setSetting, getSetting] = useGetSetState<AIReActSetting>(cloneDeep(AIReActSettingDefault))
@@ -43,7 +43,7 @@ export const AIReAct: React.FC<AIReActProps> = (props) => {
             activeChat: activeChat
         }
     }, [setting, chats, activeChat])
-    
+
     const dispatcher: AIReActContextDispatcher = useMemo(() => {
         return {
             getSetting: getSetting,
@@ -117,10 +117,14 @@ export const AIReAct: React.FC<AIReActProps> = (props) => {
                     <AIReActSideList />
                 </div>
 
-                <div className={classNames(styles["ai-re-act-chat"], {[styles["ai-re-act-chat-mini"]]: isMini})}>
+                <div
+                    className={classNames(styles["ai-re-act-chat-wrapper"], {
+                        [styles["ai-re-act-chat-mini-wrapper"]]: isMini
+                    })}
+                >
                     <AIReActChat />
                 </div>
             </div>
         </AIReActContext.Provider>
     )
-}
+})

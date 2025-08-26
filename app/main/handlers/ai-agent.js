@@ -38,6 +38,8 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, aiReActTaskPool, token)
         try {
             stream.write({...params})
+            const qs = params?.Params?.UserQuery
+            stream.write({IsFreeInput: true, FreeInput: qs})
         } catch (error) {
             throw new Error(error)
         }
@@ -165,9 +167,6 @@ module.exports = (win, getClient) => {
         try {
             const request = JSON.parse(JSON.stringify(params))
             const qs = request?.Params?.UserQuery
-            if (request && request.Params && request.Params.UserQuery) {
-                request.Params.UserQuery = ""
-            }
             stream.write({...params})
             stream.write({IsFreeInput: true, FreeInput: qs})
         } catch (error) {
