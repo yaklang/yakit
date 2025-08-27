@@ -277,6 +277,12 @@ service Yak {
   // 分析一个 HTTP 请求详情
   rpc HTTPRequestAnalyzer(HTTPRequestAnalysisMaterial) returns (HTTPRequestAnalysis);
 
+  // 用户自定义代码补全
+  rpc CreateCustomCode(CustomCodeRequest) returns (Empty);
+  rpc UpdateCustomCode(CustomCodeRequest) returns (Empty);
+  rpc DeleteCustomCode(QueryCustomCodeRequest) returns (Empty);
+  rpc QueryCustomCode(QueryCustomCodeRequest) returns (CustomCodeResponse);
+
   // 编码解码
   rpc Codec(CodecRequest) returns (CodecResponse);
   rpc NewCodec(CodecRequestFlow) returns (CodecResponse);
@@ -4819,6 +4825,28 @@ message GetYakScriptTagsAndTypeResponse {
 message TagsAndType {
   string Value = 1;
   int32 Total = 2;
+}
+
+message CustomCodeFilter {
+  repeated string Name = 1;
+}
+
+message CustomCodeRequest {
+  string Name = 1;
+  string Code = 2;
+  string Description = 3;
+  string State = 4;
+}
+
+message CustomCodeResponse {
+  repeated string Names = 1;
+  repeated string Codes = 2;
+  repeated string Descriptions = 3;
+  repeated string States = 4;
+}
+
+message QueryCustomCodeRequest {
+  CustomCodeFilter Filter = 1;
 }
 
 message CodecRequest {
