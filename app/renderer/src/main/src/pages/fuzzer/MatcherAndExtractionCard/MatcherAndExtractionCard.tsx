@@ -167,6 +167,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         : _.cloneDeepWith(matcherValue.matchersList)
             })
         }, [matcherValueCom, defActiveType])
+        const extractorValueCom = useCampare(extractorValue)
         useEffect(() => {
             setExtractor({
                 ..._.cloneDeepWith(extractorValue),
@@ -175,7 +176,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         ? [_.cloneDeepWith(defaultExtractorItem)]
                         : _.cloneDeepWith(extractorValue.extractorList)
             })
-        }, [extractorValue, defActiveType])
+        }, [extractorValueCom, defActiveType])
 
         const isEffectiveExtractor: boolean = useMemo(() => {
             return (
