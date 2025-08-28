@@ -135,7 +135,7 @@ function useCasualChat(params?: useCasualChatParams) {
             newArr.push({
                 id: uuidv4(),
                 type: "answer",
-                uiType: "stream",
+                uiType: "result",
                 Timestamp,
                 data: Result
             })
@@ -295,6 +295,9 @@ function useCasualChat(params?: useCasualChatParams) {
         if (!review.current || review.current.data.id !== id) return
         const isTrigger = !isAutoExecReview() || noSkipReviewTypes("tool_use_review_require")
         review.current = undefined
+        setContents((old) => {
+            return old.filter((item) => ["toolReview", "requireUser"].includes(item.uiType))
+        })
         if (isTrigger) {
             onReviewRelease && onReviewRelease(id)
         }
@@ -478,7 +481,7 @@ function useCasualChat(params?: useCasualChatParams) {
             if (IsInteractiveMessage && InteractiveId) {
                 // tool_review事件操作
                 setContents((old) => {
-                    return old.filter((item) => item.uiType !== "toolReview")
+                    return old.filter((item) => ["toolReview", "requireUser"].includes(item.uiType))
                 })
             }
             if (IsFreeInput && FreeInput) {
