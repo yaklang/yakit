@@ -268,7 +268,7 @@ const AICardList: React.FC<AICardListProps> = React.memo((props) => {
 
 /** @name 对话框内容 */
 export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
-    const {info, consumption, coordinatorId, ...rest} = props
+    const {info, coordinatorId, ...rest} = props
 
     //#region AI tab 相关逻辑
     const [activeKey, setActiveKey] = useState<AITabsEnumType>(AITabsEnum.Task_Content)

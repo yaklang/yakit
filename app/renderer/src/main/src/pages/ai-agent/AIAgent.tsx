@@ -6,7 +6,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {AIChatInfo} from "./type/aiChat"
-import {useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
+import {useGetState, useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
 import {AIAgentSettingDefault, YakitAIAgentPageID} from "./defaultConstant"
 import cloneDeep from "lodash/cloneDeep"
 import {AITriageChatData} from "./aiTriageChat/type"
@@ -14,6 +14,7 @@ import {AIAgentChat} from "./aiAgentChat/AIAgentChat"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
+import useChatData from "./useChatData"
 
 /** 清空用户缓存的固定值 */
 const AIAgentCacheClearValue = "20250808"

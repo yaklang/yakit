@@ -1252,6 +1252,7 @@ message AIOutputEvent {
   bool DisableMarkdown = 13;
   bool IsSync = 12; // 是否是同步消息
   string SyncID = 14; // 用于同步消息的 ID
+  string EventUUID = 16; // 事件的唯一ID, used via stream stream-finished
 }
 
 message AIInputEvent {

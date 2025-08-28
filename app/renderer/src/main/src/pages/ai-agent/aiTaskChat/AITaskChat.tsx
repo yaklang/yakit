@@ -508,7 +508,6 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                     {taskChat && (
                                         <AIAgentChatBody
                                             info={taskChat}
-                                            consumption={uiConsumption}
                                             scrollToTask={scrollTo}
                                             setScrollToTask={setScrollTo}
                                             isStopScroll={isStopScroll}
