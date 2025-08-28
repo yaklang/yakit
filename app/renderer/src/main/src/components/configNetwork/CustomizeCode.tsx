@@ -12,9 +12,15 @@ import styles from "./CustomizeCode.module.scss"
 import {useTheme} from "@/hook/useTheme"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {yakitNotify} from "@/utils/notification"
-import type {CodeCustomizeModalProps, TCodeCustomizeTagProps, TCustomCodeGeneral} from "./CustomizeCodeTypes"
+import type {
+    CodeCustomizeModalProps,
+    TCodeCustomizeTagProps,
+    TCustomCodeGeneral,
+    TQueryCustomCodeRequest
+} from "./CustomizeCodeTypes"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import form from "antd/lib/form"
+import {OutlineXIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -39,6 +45,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
     const [visibleOpen, setVisibleOpen] = useSafeState(false)
     const [submitStatus, setSubmitStatus] = useSafeState(false)
 
+    // 获取代码接口定义
     const {data, run} = useRequest(
         async () => {
             const result: TCustomCodeGeneral<string[]> = await ipcRenderer.invoke("QueryCustomCode", {Filter: {}})
@@ -53,16 +60,47 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
         }
     )
 
+    // 删除代码接口定义
+    const {run: runDeleteCode, loading} = useRequest(
+        async (response: TQueryCustomCodeRequest) => {
+            console.log(response, "response")
+            await ipcRenderer.invoke("DeleteCustomCode", {response})
+        },
+        {
+            manual: true,
+            onSuccess: () => {
+                run()
+                yakitNotify("success", "删除自定义代码片段成功")
+            },
+            onError: (error) => {
+                run()
+                yakitNotify("error", `删除自定义代码片段失败：${error}`)
+            }
+        }
+    )
+
     useEffect(() => {
         run()
     }, [])
+
+    // 删除自定义代码片段
+    const onDelete = (name: string) => {
+        runDeleteCode({Filter: {Name: [name]}})
+    }
 
     // 获取 自定义代码片段
     const codeCustomizeTag = useMemo(() => {
         return Array.isArray(data) ? (
             data.map((it) => (
                 <YakitTag size='large' key={it} color='main'>
-                    {it}
+                    <YakitSpin spinning={loading}>
+                        <div className={styles["code-tag"]}>
+                            <div> {it}</div>
+                            <div className={styles["close-icon"]} onClick={() => onDelete(it)}>
+                                <OutlineXIcon />
+                            </div>
+                        </div>
+                    </YakitSpin>
                 </YakitTag>
             ))
         ) : (
@@ -77,13 +115,12 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
         ipcRenderer
             .invoke("CreateCustomCode", resultFormValue as TCustomCodeGeneral<string>)
             .then(() => {
-                yakitNotify("success", "自定义代码片段组成功")
+                yakitNotify("success", "添加自定义代码片段组成功")
                 run()
                 setVisibleOpen(false)
             })
             .catch((err) => {
-                yakitNotify("error", `获取自定义代码片段组失败：${err}`)
-                console.error(err)
+                yakitNotify("error", `添加自定义代码片段组失败：${err}`)
             })
             .finally(() => {
                 setSubmitStatus(false)

@@ -54,7 +54,6 @@ const customize_code = [
     "X-Imforwards",
     "X-Powered-By",
     "X-Requested-With",
-    "daoyu"
 ]
 
 const httpHeaderSuggestions = [

@@ -142,4 +142,36 @@ module.exports = (win, getClient) => {
     ipcMain.handle("CreateCustomCode", async (_, parmas) => {
         return await asyncCreateCustomCode(parmas)
     })
+
+    // 删除代码片段
+    const asyncDeleteCustomCode = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteCustomCode(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteCustomCode", async (_, parmas) => {
+        return await asyncDeleteCustomCode(parmas)
+    })
+
+    // 更新代码片段
+    const asyncUpdateCustomCode = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpdateCustomCode(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("UpdateCustomCode", async (_, parmas) => {
+        return await asyncUpdateCustomCode(parmas)
+    })
 }

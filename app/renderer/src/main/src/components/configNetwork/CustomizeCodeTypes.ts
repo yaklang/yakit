@@ -18,7 +18,7 @@ type CodeCustomizeModalProps = {
     submitStatus: boolean
 }
 
-// 获取自定义代码片段详情
+// 获取自定义代码片段
 type TCustomCodeGeneral<T> = {
     Code: T
     Descriptions: T
@@ -26,11 +26,8 @@ type TCustomCodeGeneral<T> = {
     States: T
 }
 
-/**
- * {
-    Filter: {
-        Name: []
-    }
+type TQueryCustomCodeRequest = {
+    Filter: Record<"Name", string[]>
 }
- */
-export type {TCodeCustomizeTagProps, CodeCustomizeModalProps, TCustomCodeGeneral}
+
+export type {TCodeCustomizeTagProps, CodeCustomizeModalProps, TCustomCodeGeneral, TQueryCustomCodeRequest}

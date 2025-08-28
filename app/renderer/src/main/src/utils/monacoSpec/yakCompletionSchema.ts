@@ -117,7 +117,6 @@ export const getSortTextByKindAndLabel = (kind: string, label: string): string =
 let globalSuggestions: languages.CompletionItem[] = [];
 let completions: CompletionTotal = { libCompletions: [], fieldsCompletions: [], libNames: [], libToFieldCompletions: {} };
 let maxLibLength = 1;
-
 export const extraSuggestions: languages.CompletionItem[] = [
     {
         kind: languages.CompletionItemKind.Snippet,
