@@ -1,30 +1,30 @@
-import {FC, useEffect, useMemo} from "react"
-import {Form, Spin} from "antd"
-import {useForm} from "antd/es/form/Form"
-import {useRequest, useSafeState} from "ahooks"
+import { FC, useEffect, useMemo } from "react"
+import { Form, Spin } from "antd"
+import { useForm } from "antd/es/form/Form"
+import { useRequest, useSafeState } from "ahooks"
 
-import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
-import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
-import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
-import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import { YakitButton } from "../yakitUI/YakitButton/YakitButton"
+import { YakitTag } from "../yakitUI/YakitTag/YakitTag"
+import { YakitInput } from "../yakitUI/YakitInput/YakitInput"
+import { YakitSelect } from "../yakitUI/YakitSelect/YakitSelect"
+import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
 import styles from "./CustomizeCode.module.scss"
-import {useTheme} from "@/hook/useTheme"
-import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
-import {yakitNotify} from "@/utils/notification"
+import { useTheme } from "@/hook/useTheme"
+import { YakitModal } from "../yakitUI/YakitModal/YakitModal"
+import { yakitNotify } from "@/utils/notification"
 import type {
     CodeCustomizeModalProps,
     TCodeCustomizeTagProps,
     TCustomCodeGeneral,
     TQueryCustomCodeRequest
 } from "./CustomizeCodeTypes"
-import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
+import { YakitSpin } from "../yakitUI/YakitSpin/YakitSpin"
 import form from "antd/lib/form"
-import {OutlineXIcon} from "@/assets/icon/outline"
+import { OutlineXIcon } from "@/assets/icon/outline"
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
-const {Item} = Form
+const { Item } = Form
 
 // 使用位置 下拉框的 options
 const selectOptions = [
@@ -38,18 +38,18 @@ const selectOptions = [
     }
 ]
 
-const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
+const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({ value }) => {
     const [form] = useForm()
-    const {theme} = useTheme()
+    const { theme } = useTheme()
 
     const [visibleOpen, setVisibleOpen] = useSafeState(false)
     const [submitStatus, setSubmitStatus] = useSafeState(false)
 
     // 获取代码接口定义
-    const {data, run} = useRequest(
+    const { data, run } = useRequest(
         async () => {
-            const result: TCustomCodeGeneral<string[]> = await ipcRenderer.invoke("QueryCustomCode", {Filter: {}})
-            const {Names} = result
+            const result: TCustomCodeGeneral<string[]> = await ipcRenderer.invoke("QueryCustomCode", { Filter: {} })
+            const { Names } = result
             return Names
         },
         {
@@ -61,10 +61,10 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
     )
 
     // 删除代码接口定义
-    const {run: runDeleteCode, loading} = useRequest(
+    const { run: runDeleteCode, loading } = useRequest(
         async (response: TQueryCustomCodeRequest) => {
             console.log(response, "response")
-            await ipcRenderer.invoke("DeleteCustomCode", {response})
+            await ipcRenderer.invoke("DeleteCustomCode", response)
         },
         {
             manual: true,
@@ -85,7 +85,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
 
     // 删除自定义代码片段
     const onDelete = (name: string) => {
-        runDeleteCode({Filter: {Name: [name]}})
+        runDeleteCode({ Filter: { Name: [name] } })
     }
 
     // 获取 自定义代码片段
@@ -149,7 +149,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
 }
 
 const CodeCustomizeModal: FC<CodeCustomizeModalProps> = (props) => {
-    const {form, theme, visible, title, onOk, codeCustomizeModalVisible, submitStatus} = props
+    const { form, theme, visible, title, onOk, codeCustomizeModalVisible, submitStatus } = props
 
     const onCancel = () => {
         codeCustomizeModalVisible()
@@ -166,11 +166,11 @@ const CodeCustomizeModal: FC<CodeCustomizeModalProps> = (props) => {
             afterClose={() => form.resetFields()}
             confirmLoading={submitStatus}
         >
-            <Form labelCol={{span: 5}} wrapperCol={{span: 18}} form={form}>
+            <Form labelCol={{ span: 5 }} wrapperCol={{ span: 18 }} form={form}>
                 <Item
                     label='名称'
                     name='Name'
-                    rules={[{required: true, message: "该项为必填"}]}
+                    rules={[{ required: true, message: "该项为必填" }]}
                     tooltip='该名称是自动补全出现的名称，建议用英文'
                 >
                     <YakitInput placeholder='请输入' />
@@ -178,7 +178,7 @@ const CodeCustomizeModal: FC<CodeCustomizeModalProps> = (props) => {
                 <Item
                     label='使用位置'
                     name='State'
-                    rules={[{required: true, message: "该项为必填"}]}
+                    rules={[{ required: true, message: "该项为必填" }]}
                     tooltip='该代码片段的使用位置,http是指数据包,yak是指yak代码'
                 >
                     <YakitSelect placeholder='请选择' options={selectOptions} />
@@ -187,7 +187,7 @@ const CodeCustomizeModal: FC<CodeCustomizeModalProps> = (props) => {
                     <YakitInput placeholder='请输入' />
                 </Item>
                 <Item noStyle dependencies={["State"]}>
-                    {({getFieldValue}) => {
+                    {({ getFieldValue }) => {
                         const getAddress = getFieldValue("State") || "yak"
                         return (
                             <Item label='代码片段' name='Code' className={styles["customize-code-segmentation-item"]}>
@@ -201,4 +201,4 @@ const CodeCustomizeModal: FC<CodeCustomizeModalProps> = (props) => {
     )
 }
 
-export {CodeCustomize}
+export { CodeCustomize }
