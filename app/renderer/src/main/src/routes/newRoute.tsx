@@ -133,7 +133,8 @@ import {
     SpaceEnginePageInfoProps,
     WebsocketFuzzerPageInfoProps,
     AIForgeEditorPageInfoProps,
-    AIToolEditorPageInfoProps
+    AIToolEditorPageInfoProps,
+    YakRunnerScanHistoryPageInfoProps
 } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
@@ -177,6 +178,7 @@ const FingerprintManage = React.lazy(() => import("@/pages/fingerprintManage/Fin
 const SsaResDiff = React.lazy(() => import("@/pages/ssaResDiff/SsaResDiff"))
 const ForgeEditor = React.lazy(() => import("@/pages/aiForge/forgeEditor/ForgeEditor"))
 const AIToolEditor = React.lazy(() => import("@/pages/aiTool/AIToolEditor/AIToolEditor"))
+const YakRunnerScanHistory = React.lazy(() => import("@/pages/yakRunnerScanHistory/YakRunnerScanHistory"))
 
 /**
  * @description 页面路由对应的页面信息
@@ -264,6 +266,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "yakrunner-code-scan": {label: "代码扫描"},
     "yakrunner-audit-code": {label: "代码审计"},
     "yakrunner-project-manager": {label: "项目管理"},
+    "yakrunner_scanHistory": {label: "扫描历史"},
     "rule-management": {label: "规则管理"},
     "notepad-manage": {label: `${getNotepadNameByEdition()}`},
     "modify-notepad": {label: `编辑${getNotepadNameByEdition()}`},
@@ -315,6 +318,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Data_Statistics,
     YakitRoute.YakRunner_Audit_Code,
     YakitRoute.YakRunner_Project_Manager,
+    YakitRoute.YakRunner_ScanHistory,
     YakitRoute.Rule_Management,
     YakitRoute.Notepad_Manage,
     YakitRoute.YakRunner_Audit_Hole,
@@ -365,6 +369,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.YakRunner_Code_Scan,
     YakitRoute.YakRunner_Audit_Code,
     YakitRoute.YakRunner_Project_Manager,
+    YakitRoute.YakRunner_ScanHistory,
     YakitRoute.Rule_Management,
     YakitRoute.Modify_Notepad,
     YakitRoute.Notepad_Manage,
@@ -386,7 +391,8 @@ export const NoScrollRoutes: YakitRoute[] = [
     YakitRoute.Mod_Brute,
     YakitRoute.YakScript,
     YakitRoute.AI_Agent,
-    YakitRoute.ShortcutKey
+    YakitRoute.ShortcutKey,
+    YakitRoute.YakRunner_ScanHistory
 ]
 /** 一级tab固定展示tab  */
 export const defaultFixedTabs: YakitRoute[] = [
@@ -497,6 +503,8 @@ export interface ComponentParams {
 
     /** 编辑 ai tool 页面 */
     modifyAIToolPageInfo?: AIToolEditorPageInfoProps
+    /** 扫描历史页面 */
+    yakRunnerScanHistoryPageInfo?: YakRunnerScanHistoryPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
     return function WithPage(props) {
@@ -708,6 +716,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakRunnerAuditCode auditCodePageInfo={params?.auditCodePageInfo} />
         case YakitRoute.YakRunner_Project_Manager:
             return <YakRunnerProjectManager />
+        case YakitRoute.YakRunner_ScanHistory:
+            return <YakRunnerScanHistory />
         case YakitRoute.Rule_Management:
             return <RuleManagement />
         case YakitRoute.Notepad_Manage:
