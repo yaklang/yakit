@@ -231,6 +231,7 @@ export declare namespace AIChatMessage {
 
     /** 日志 */
     export interface Log {
+        id: string
         level: string
         message: string
     }
