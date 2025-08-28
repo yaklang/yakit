@@ -18,6 +18,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {generateTaskChatExecution} from "./defaultConstant"
 import {checkStreamValidity, convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {v4 as uuidv4} from "uuid"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -456,7 +457,7 @@ function useChatData(params?: UseChatDataParams) {
                     if (obj.level) {
                         // 日志信息
                         const data = obj as AIChatMessage.Log
-                        setLogs((pre) => pre.concat([data]))
+                        setLogs((pre) => pre.concat([{...data, id: uuidv4()}]))
                     } else if (obj.type && obj.type === "push_task") {
                         // 开始任务
                         const data = obj as AIChatMessage.ChangeTask
@@ -464,7 +465,9 @@ function useChatData(params?: UseChatDataParams) {
                     } else if (obj.step && obj.step === "task_execute") {
                         // AI 生成的 prompt
                         const data = obj as AIChatMessage.TaskLog
-                        setLogs((pre) => pre.concat([{level: "info", message: `task_execute : ${data.prompt}`}]))
+                        setLogs((pre) =>
+                            pre.concat([{id: uuidv4(), level: "info", message: `task_execute : ${data.prompt}`}])
+                        )
                     } else if (obj.type && obj.type === "update_task_status") {
                         // const data = obj as AIChatMessage.UpdateTask
                         // 暂时不知道这步的具体作用，如果判断执行完成，可以通过 pop 进行判断
