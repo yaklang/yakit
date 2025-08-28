@@ -799,7 +799,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     </Col>
                                 </Row>
 
-                                <Form.Item label='DNSLog 配置' name='code-customize'>
+                                <Form.Item label='代码片段' name='code-customize'>
                                     <CodeCustomize />
                                 </Form.Item>
 

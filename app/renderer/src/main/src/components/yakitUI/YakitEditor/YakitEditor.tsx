@@ -166,6 +166,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         fixContentType,
         originalContentType,
         fixContentTypeHoverMessage,
+        onChange,
         // 此处 添加 propsTheme 字段是因为类 弹窗 / 抽屉组件是在 root 节点之外，provider包裹的入口节点就无法实时获取到theme
         propsTheme
     } = props
@@ -1675,7 +1676,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         // height={100}
                         theme={theme || "kurior"}
                         value={value}
-                        onChange={setValue}
+                        onChange={setValue || onChange}
                         language={language}
                         editorDidMount={(editor: YakitIMonacoEditor, monaco) => {
                             setEditor(editor)

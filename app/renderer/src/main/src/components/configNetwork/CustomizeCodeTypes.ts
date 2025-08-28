@@ -1,5 +1,5 @@
-import { Theme } from "@/hook/useTheme"
-import { FormInstance } from "antd"
+import {Theme} from "@/hook/useTheme"
+import {FormInstance} from "antd"
 
 // 自定义代码片段 tag props
 type TCodeCustomizeTagProps = {
@@ -15,6 +15,22 @@ type CodeCustomizeModalProps = {
     title: string
     onOk?: () => void
     codeCustomizeModalVisible: () => void
+    submitStatus: boolean
 }
 
-export type {TCodeCustomizeTagProps, CodeCustomizeModalProps}
+// 获取自定义代码片段详情
+type TCustomCodeGeneral<T> = {
+    Code: T
+    Descriptions: T
+    Names: T
+    States: T
+}
+
+/**
+ * {
+    Filter: {
+        Name: []
+    }
+}
+ */
+export type {TCodeCustomizeTagProps, CodeCustomizeModalProps, TCustomCodeGeneral}

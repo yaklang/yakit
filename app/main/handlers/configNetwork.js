@@ -111,7 +111,7 @@ module.exports = (win, getClient) => {
         return await asyncListAiModel(params)
     })
 
-    // TODO 自定义代码片段接口
+    // 查询自定义代码片段
     const asyncQueryCustomCode = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QueryCustomCode(params, (err, data) => {
@@ -125,5 +125,21 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("QueryCustomCode", async (e, parmas) => {
         return await asyncQueryCustomCode(parmas)
+    })
+
+    // 增加自定义代码片段
+    const asyncCreateCustomCode = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().CreateCustomCode(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("CreateCustomCode", async (_, parmas) => {
+        return await asyncCreateCustomCode(parmas)
     })
 }

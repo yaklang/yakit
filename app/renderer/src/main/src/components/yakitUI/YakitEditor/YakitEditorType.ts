@@ -31,6 +31,7 @@ export interface YakitEditorProps {
     value?: string
     /** @name 修改编辑器内容事件回调 */
     setValue?: (content: string) => any
+    onChange?:(content: string) => any 
 
     /** @name 文件类型 */
     type?: "html" | "http" | "yak" | string
