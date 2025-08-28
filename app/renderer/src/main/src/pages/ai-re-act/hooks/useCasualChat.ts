@@ -7,7 +7,7 @@ import {isToolStdoutStream, noSkipReviewTypes} from "./utils"
 import {v4 as uuidv4} from "uuid"
 
 // 属于该 hook 处理数据的类型
-export const UseCasualChatTypes = ["stream|re-act-verify", "stream|re-act-loop", "result"]
+export const UseCasualChatTypes = ["stream|re-act-verify", "stream|re-act-loop", "result", "structured|stream-finished"]
 
 export interface useCasualChatParams {
     // 获取创建流时的请求参数
@@ -311,7 +311,7 @@ function useCasualChat(params?: useCasualChatParams) {
                 if (res.NodeId === "re-act-loop" || res.NodeId === "re-act-verify") {
                     const {IsSystem, IsReason, NodeId, Timestamp, EventUUID} = res
                     if (!NodeId || !EventUUID) {
-                        pushLog({level: "error", message: `${JSON.stringify(res)}`})
+                        pushLog({id: uuidv4(), level: "error", message: `${JSON.stringify(res)}`})
                         return
                     }
                     const type = IsSystem ? "systemStream" : IsReason ? "reasonStream" : "stream"
@@ -335,7 +335,7 @@ function useCasualChat(params?: useCasualChatParams) {
                     // 有问题
                     const {event_writer_id} = JSON.parse(ipcContent) as AIChatMessage.AIStreamFinished
                     if (!event_writer_id) {
-                        pushLog({level: "error", message: `${JSON.stringify(res)}`})
+                        pushLog({id: uuidv4(), level: "error", message: `${JSON.stringify(res)}`})
                         return
                     }
                     handleUpdateStreamStatus(event_writer_id)
@@ -351,7 +351,7 @@ function useCasualChat(params?: useCasualChatParams) {
                     const data = JSON.parse(ipcContent) as AIChatMessage.ReviewRelease
                     console.log("casualChat-review-release---\n", data)
                     if (!data?.id) {
-                        pushLog({level: "error", message: `${JSON.stringify(res)}`})
+                        pushLog({id: uuidv4(), level: "error", message: `${JSON.stringify(res)}`})
                         return
                     }
                     handleReviewRelease(data.id)
