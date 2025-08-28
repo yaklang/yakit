@@ -110,7 +110,6 @@ export interface AICardListProps {
 export type AITabsEnumType = `${AITabsEnum}`
 export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
     info: AIChatInfo
-    consumption: Record<string, AIChatMessage.Consumption>
     coordinatorId?: string
 }
 
