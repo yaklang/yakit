@@ -1,8 +1,7 @@
 import {FC, useMemo} from "react"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
-import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
-import {Form, FormInstance} from "antd"
+import {Form} from "antd"
 import {useForm} from "antd/es/form/Form"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
@@ -11,24 +10,11 @@ import styles from "./CustomizeCode.module.scss"
 import {type Theme, useTheme} from "@/hook/useTheme"
 import {useSafeState} from "ahooks"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
+import {CodeCustomizeModalProps, TCodeCustomizeTagProps} from "./CustomizeCodeTypes"
+
+const {ipcRenderer} = window.require("electron")
 
 const {Item} = Form
-
-// 自定义代码片段 tag props
-type TCodeCustomizeTagProps = {
-    value: string[]
-    onChange: (val: TCodeCustomizeTagProps["value"]) => TCodeCustomizeTagProps["value"]
-}
-
-// 添加 / 编辑代码片段 弹窗props
-type CodeCustomizeModalProps = {
-    form: FormInstance<unknown>
-    theme: Theme
-    visible: boolean
-    title: string
-    onOk?: () => void
-    codeCustomizeModalVisible: () => void
-}
 
 // 使用位置 下拉框的 options
 const selectOptions = [
@@ -42,6 +28,7 @@ const selectOptions = [
     }
 ]
 
+
 const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
     const [form] = useForm()
     const {theme} = useTheme()
@@ -50,6 +37,10 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
 
     const codeCustomizeTag = useMemo(() => {
         const list = ["数据包", "html模版", "css模版"]
+        ipcRenderer
+            .invoke("QueryCustomCode", { Filter: {} })
+            .then((res) => console.log(res))
+            .catch((err) => console.info(err))
         return (
             Array.isArray(list) &&
             list.map((it) => (
@@ -58,7 +49,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
                 </YakitTag>
             ))
         )
-    }, [value])
+    }, [])
 
     const handCodeCustomizeOk = () => {
         const resultFormValue = form.validateFields()

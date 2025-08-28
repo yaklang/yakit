@@ -1,4 +1,4 @@
-const { ipcMain } = require("electron")
+const {ipcMain} = require("electron")
 
 module.exports = (win, getClient) => {
     // asyncGetGlobalNetworkConfig wrapper
@@ -109,5 +109,21 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("ListAiModel", async (e, params) => {
         return await asyncListAiModel(params)
+    })
+
+    // TODO 自定义代码片段接口
+    const asyncQueryCustomCode = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryCustomCode(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryCustomCode", async (e, parmas) => {
+        return await asyncQueryCustomCode(parmas)
     })
 }
