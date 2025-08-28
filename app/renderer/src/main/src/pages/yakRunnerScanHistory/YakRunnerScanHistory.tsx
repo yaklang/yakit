@@ -160,7 +160,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                 {riskArr.map((item) => (
                     <>
                         {item.count > 0 && (
-                            <div className={classNames(styles["risk-tag"], styles[`${item.risk}`])}>
+                            <div className={classNames(styles["risk-tag"], styles[`${item.risk}`])} key={item.text}>
                                 <div className={styles["risk-text"]}>{item.text}</div>
                                 <div className={styles["risk-num"]}>{item.count}</div>
                             </div>
