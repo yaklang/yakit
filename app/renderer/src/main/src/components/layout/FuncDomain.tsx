@@ -121,6 +121,7 @@ import {openConsoleNewWindow} from "@/utils/openWebsite"
 import useEngineConsole from "./hooks/useEngineConsole/useEngineConsole"
 import {useTheme} from "@/hook/useTheme"
 import {grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder} from "@/utils/logCollection"
+import {useDownloadYakit} from "./update/DownloadYakit"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1854,11 +1855,29 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     const isUpdateEnpriTraceRef = useRef<boolean>(true)
     const {eeSystemConfig} = useEeSystemConfig()
-    const [isShowEnpriTraceUpdateHint, setShowEnpriTraceUpdateHint] = useState<boolean>(false)
+    const [isShowEnpriTraceUpdateVisible, setShowEnpriTraceUpdateVisible] = useState<boolean>(false)
+    const [intranetHintLoading, setIntranetHintLoading] = useState<boolean>(false)
     // 是否从内网读取版本号
     const [isIntranet, setIsIntranet] = useState<boolean>(false)
     // 内网版号
     const [yakitLastIntranetVersion, setYakitLastIntranetVersion] = useState<string>("")
+    // 内网版是否下载中
+    const [isYakitIntranetDownloading, setYakitIntranetDownloading] = useState<boolean>(false)
+    // 内网版下载后的文件路径
+    const [yakitIntranetFilePath, setYakitIntranetFilePath] = useState<string>("")
+
+    const onDownloadFinish = useMemoizedFn((filePath: string, status: boolean) => {
+        // 下载完成后的处理逻辑
+        if (status) {
+            setYakitIntranetFilePath(filePath)
+            setShowEnpriTraceUpdateVisible(true)
+            setIsIntranetYakitUpdateWait(true)
+        }
+        setYakitIntranetDownloading(false)
+    })
+    // 后台隐藏下载内网版
+    const [_, {onDownloadStart}] = useDownloadYakit({onDownloadFinish})
+
     useEffect(() => {
         if (!isEnpriTrace()) return
         // 是否从内网读取版本号
@@ -1879,7 +1898,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 const version = match ? match[1] : ""
                 const data = `v${version.endsWith("-") ? version.slice(0, -1) : version}` // 去掉末尾的'-'符号
 
-                // 企业版初次进入时 如若配置文件为强制更新则需弹出提示框
+                // 企业版初次进入时 如若配置文件为强制更新则隐藏下载更新内容后弹出提示框
                 if (isUpdateEnpriTraceRef.current && data.length > 0) {
                     const isUpdateYakit = data !== "" && removePrefixV(data) !== removePrefixV(yakitVersion)
                     // 是否强制更新
@@ -1891,7 +1910,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     })
                     if (isUpdateYakit && forceUpdate) {
                         isUpdateEnpriTraceRef.current = false
-                        setShowEnpriTraceUpdateHint(true)
+                        setYakitIntranetDownloading(true)
+                        onDownloadStart()
                     }
                 }
                 setYakitLastIntranetVersion(data)
@@ -2246,7 +2266,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                         <div className={styles["notice-version-wrapper"]}>
                             <div className={styles["version-wrapper"]}>
                                 {/* 企业版内网Yakit更新 - 无需显示更新内容 */}
-                                {yakitLastIntranetVersion.length > 0 && (
+                                {yakitLastIntranetVersion.length > 0 && !isYakitIntranetDownloading && (
                                     <UIOpUpdateYakit
                                         version={yakitVersion}
                                         lastVersion={yakitLastIntranetVersion}
@@ -2336,6 +2356,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             content={notice}
             visible={show}
             onVisibleChange={(visible) => {
+                if (isShowEnpriTraceUpdateVisible) return
                 if (editShow.visible) setShow(false)
                 else setShow(visible)
             }}
@@ -2373,18 +2394,37 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 </div>
             </YakitModal>
 
-            <YakitHint
-                visible={isShowEnpriTraceUpdateHint}
+            <YakitModal
+                type='white'
+                size='large'
+                visible={isShowEnpriTraceUpdateVisible}
                 title='检测到 内网版 EnpriTrace 版本升级'
-                content={`检测到有新版本${yakitLastIntranetVersion}，请立即更新`}
-                okButtonText='立即更新'
+                children={`检测到有新版本${yakitLastIntranetVersion}，请立即更新`}
+                onCancel={() => {
+                    setShowEnpriTraceUpdateVisible(false)
+                }}
+                maskClosable={false}
                 footer={
-                    <div style={{display: "flex", justifyContent: "flex-end", marginTop: 24}}>
+                    <div style={{display: "flex", justifyContent: "flex-end", gap: 12, width: "100%"}}>
+                        <YakitButton size='max' type='outline1' onClick={() => ipcRenderer.invoke("open-yakit-path")}>
+                            打开路径
+                        </YakitButton>
                         <YakitButton
+                            loading={intranetHintLoading}
                             size='max'
                             onClick={() => {
-                                onDownload("intranetYakit")
-                                setShowEnpriTraceUpdateHint(false)
+                                setIntranetHintLoading(true)
+                                ipcRenderer
+                                    .invoke("install-intranet-yakit", yakitIntranetFilePath)
+                                    .then(() => {
+                                        setShowEnpriTraceUpdateVisible(false)
+                                    })
+                                    .catch((e) => {
+                                        failed(`内网版更新失败：${e}`)
+                                    })
+                                    .finally(() => {
+                                        setIntranetHintLoading(false)
+                                    })
                             }}
                         >
                             立即更新

@@ -59,6 +59,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         user_name: "",
         pwd: ""
     })
+    const [isShowSkip, setShowSkip] = useState<boolean>(false)
     useEffect(() => {
         getHttpSetting()
     }, [])
@@ -117,6 +118,9 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             .catch((err) => {
                 setTimeout(() => setLoading(false), 300)
                 failed("企业登录失败：" + err)
+                if(typeof err === "string" && !err.includes("密码不正确") && skipShow){
+                    setShowSkip(true)
+                }
             })
             .finally(() => {})
     })
@@ -301,7 +305,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 )}
                 {enterpriseLogin ? (
                     <Form.Item label={" "} colon={false} className='form-item-submit'>
-                        {skipShow && (
+                        {isShowSkip && (
                             <YakitButton
                                 style={{width: 165, marginRight: 12}}
                                 onClick={() => {
@@ -316,7 +320,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                             size='large'
                             type='primary'
                             htmlType='submit'
-                            style={{width: 165, marginLeft: skipShow ? 0 : 43}}
+                            style={{width: 165, marginLeft: isShowSkip ? 0 : 43}}
                             loading={loading}
                         >
                             登录
