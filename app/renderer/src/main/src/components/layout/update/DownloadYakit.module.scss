@@ -18,7 +18,7 @@
 .modal-yaklang-engine-hint {
     box-sizing: border-box;
     width: 100%;
-    background: var(--Colors-Use-Neutral-Bg-Hover);
+    background: var(--Colors-Use-Neutral-Bg);
     border: 1px solid var(--Colors-Use-Neutral-Border);
     box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
     border-radius: 4px;
@@ -51,7 +51,7 @@
             .qs-icon {
                 width: 20px;
                 height: 20px;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 cursor: pointer;
                 svg {
                     width: 20px;

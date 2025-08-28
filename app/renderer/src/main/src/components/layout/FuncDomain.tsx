@@ -2643,6 +2643,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                 showModal({
                     width: "80%",
                     title: "详情",
+                    className: "yakit-modal-risk-details",
                     content: (
                         <div style={{overflow: "auto", maxHeight: "70vh"}}>
                             {isShowCodeScanDetail(res) ? (
