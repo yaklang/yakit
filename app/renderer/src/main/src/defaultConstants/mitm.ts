@@ -30,6 +30,15 @@ export const chromeLauncherMinParams: ChromeLauncherParams[] = [
         disabled: false,
         desc: "表示这是一个测试实例",
         default: true
+    },
+    {
+        id: uuidv4(),
+        parameterName: "--proxy-bypass-list",
+        variableValues: "<-loopback>",
+        variableType: "input",
+        disabled: false,
+        desc: "为代理设置回避列表，不代理回环地址",
+        default: true
     }
 ]
 
