@@ -230,7 +230,6 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             }
 
             try {
-                console.log(query)
                 const res = await apiQueryYakScript(query)
                 if (!res.Data) res.Data = []
                 const length = +res.Pagination.Page === 1 ? res.Data.length : res.Data.length + response.Data.length
