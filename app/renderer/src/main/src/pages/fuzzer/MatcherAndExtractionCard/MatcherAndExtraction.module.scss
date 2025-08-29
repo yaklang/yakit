@@ -70,7 +70,7 @@
                 border-top: 0;
             }
             .ant-collapse > .ant-collapse-item > .ant-collapse-header {
-                background: var(--Colors-Use-Neutral-Bg-Hover);
+                background: var(--Colors-Use-Neutral-Bg);
                 border-radius: 4px 4px 0px 0px;
                 border-bottom: 1px solid transparent;
             }
@@ -158,7 +158,7 @@
     @include HTTPFuzzerPageShare.base-icon-card;
 }
 .collapse-panel-condition {
-    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    background-color: var(--Colors-Use-Neutral-Bg);
     padding: 12px 8px;
 }
 .collapse-panel-condition-notEditable {

@@ -2,13 +2,15 @@
     display: flex;
     gap: 8px;
     justify-content: right;
-    button {
-        &:not(:first-child):hover {
-            background-color: var(--Colors-Use-Main-Bg); 
-            border-color: var(--Colors-Use-Main-Primary);
-            color: var(--Colors-Use-Main-Primary);
+    button:not(:first-child),.yak-runner-button {
+            border-color: var(--Colors-Use-Neutral-Border);
+            &:hover {
+                background-color: var(--Colors-Use-Main-Bg);
+                border-color: var(--Colors-Use-Main-Primary);
+                color: var(--Colors-Use-Main-Primary);
+            }
         }
-    }
+    
 }
 
 .import-resource-popover {

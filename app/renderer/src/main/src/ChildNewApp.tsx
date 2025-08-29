@@ -4,6 +4,8 @@ import styles from "./ChildNewApp.module.scss"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {coordinate} from "./pages/globalVariable"
 import {YakitSpin} from "./components/yakitUI/YakitSpin/YakitSpin"
+import TitleBar from "./components/BaseTitleBar"
+
 const {ipcRenderer} = window.require("electron")
 
 interface ParentWindowData {
@@ -55,7 +57,12 @@ const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
         return null
     }, [parentWinData])
 
-    return <div className={styles["child-new-app-wrapper"]}>{childNewAppEle}</div>
+    return (
+        <div className={styles["child-new-app-wrapper"]}>
+            <TitleBar />
+            {childNewAppEle}
+        </div>
+    )
 }
 
 export default ChildNewApp

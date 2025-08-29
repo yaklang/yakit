@@ -1,0 +1,68 @@
+.header {
+    width: 100%;
+    height: 37px;
+    background-color: var(--Colors-Use-Basic-Background);
+    user-select: none;
+    -webkit-app-region: drag;
+    .icons {
+        height: 100%;
+        display: flex;
+        align-items: center;
+
+        .icon-divider {
+            width: 1px;
+            height: calc(100% - 20px);
+            margin: 10px 0;
+            border-left: 1px solid var(--Colors-Use-Neutral-Border);
+            -webkit-app-region: no-drag;
+        }
+        svg {
+            cursor: pointer;
+            -webkit-app-region: no-drag;
+            &:hover {
+                color: var(--Colors-Use-Main-Primary);
+            }
+        }
+    }
+    .icons-darwin {
+        gap: 4px;
+        padding: 10px;
+        justify-content: flex-start;
+        &:hover span::after {
+            opacity: 0;
+        }
+        svg {
+            width: 16px;
+            opacity: 1;
+        }
+
+        span {
+            position: relative;
+            &::after {
+                position: absolute;
+                content: "";
+                display: block;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                top: 2px;
+                left: 2px;
+            }
+        }
+        & > :nth-child(1) span::after {
+            background-color: var(--Colors-Use-Error-Primary);
+        }
+        & > :nth-child(2) span::after {
+            background-color: var(--Colors-Use-Warning-Primary);
+        }
+        & > :nth-child(3) span::after {
+            background-color: var(--Colors-Use-Success-Primary);
+        }
+    }
+    .icons-win {
+        justify-content: flex-end;
+        svg {
+            width: 44px;
+        }
+    }
+}
