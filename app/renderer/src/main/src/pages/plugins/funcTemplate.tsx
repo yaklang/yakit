@@ -291,6 +291,9 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
             case "userName":
                 newSearch.userName = e.target.value
                 break
+            case "tag":
+                newSearch.tag = e.target.value
+                break
             case "fieldKeywords":
                 newSearch.fieldKeywords = e.target.value
                 break
@@ -313,6 +316,8 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
                 return search.keyword
             case "userName":
                 return search.userName
+            case "tag":
+                return search.tag
             case "fieldKeywords":
                 return search.fieldKeywords
             default:

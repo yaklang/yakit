@@ -118,11 +118,13 @@ export const defaultSearch: PluginSearchParams = {
     keyword: "",
     userName: "",
     fieldKeywords: "",
+    tag: "",
     type: "fieldKeywords"
 }
 
 export const funcSearchType: {value: string; label: string}[] = [
     {value: "fieldKeywords", label: "关键字"},
     {value: "userName", label: "按作者"},
+    {value: "tag", label: "按标签"},
     {value: "keyword", label: "全文搜索"}
 ]
