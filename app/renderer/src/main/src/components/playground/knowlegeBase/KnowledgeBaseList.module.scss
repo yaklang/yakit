@@ -63,11 +63,40 @@
                 flex-shrink: 0;
                 opacity: 0;
                 transition: opacity 0.2s;
+                align-items: center;
+                
+                .embed-progress {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    opacity: 1;
+                    background: #f6ffed;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    border: 1px solid #b7eb8f;
+                    
+                    .progress-text {
+                        font-size: 12px;
+                        color: #52c41a;
+                        max-width: 120px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+                }
             }
             
             &:hover .kb-actions {
                 opacity: 1;
             }
         }
+    }
+    
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #f0f0f0;
     }
 }
