@@ -1,12 +1,7 @@
-import React, {memo, useMemo, useRef, useState} from "react"
-import {HistoryChatProps} from "./type"
-import useAIAgentStore from "../useContext/useStore"
-import useAIAgentDispatcher from "../useContext/useDispatcher"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+
 import {useDebounce, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
-import {AIChatInfo} from "../type/aiChat"
-import {EditChatNameModal} from "../UtilModals"
-import {YakitAIAgentPageID} from "../defaultConstant"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
 import {OutlinePencilaltIcon, OutlinePlussmIcon, OutlineSearchIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {Tooltip} from "antd"
@@ -15,13 +10,17 @@ import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/Yaki
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 import classNames from "classnames"
-import styles from "./HistoryChat.module.scss"
+import styles from "./AIReactHistoryChat.module.scss"
+import {AIReactHistoryChatProps} from "./AIReactHistoryChatType"
+import useAIReActStore from "../useContext/useAIReActStore"
+import useAIReActDispatcher from "../useContext/useAIReActDispatcher"
+import {AIReActChatMessage} from "@/pages/ai-agent/type/aiChat"
 
-const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
+const AIReactHistoryChat: React.FC<AIReactHistoryChatProps> = memo((props) => {
     const {onNewChat} = props
 
-    const {chats, activeChat} = useAIAgentStore()
-    const {setChats, setActiveChat} = useAIAgentDispatcher()
+    const {chats, activeChat} = useAIReActStore()
+    const {setChats, setActiveChat} = useAIReActDispatcher()
     const activeID = useMemo(() => {
         return activeChat?.id || ""
     }, [activeChat])
@@ -34,7 +33,7 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
         return chats.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
     }, [chats, searchDebounce])
 
-    const handleSetActiveChat = useMemoizedFn((info: AIChatInfo) => {
+    const handleSetActiveChat = useMemoizedFn((info: AIReActChatMessage.AIReActChatItem) => {
         // 暂时性逻辑，因为老版本的对话信息里没有请求参数，导致在新版本无法使用对话里的重新执行功能
         // 所以会提示警告，由用户决定是否删除历史对话
         if (!info.request) {
@@ -43,31 +42,31 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
         setActiveChat && setActiveChat(info)
     })
 
-    const editInfo = useRef<AIChatInfo>()
+    // const editInfo = useRef<AIReActChatMessage.AIReActChatItem>()
     const [editShow, setEditShow] = useState(false)
-    const handleOpenEditName = useMemoizedFn((info: AIChatInfo) => {
+    const handleOpenEditName = useMemoizedFn((info: AIReActChatMessage.AIReActChatItem) => {
         if (editShow) return
-        editInfo.current = info
+        // editInfo.current = info
         setEditShow(true)
     })
-    const handleCallbackEditName = useMemoizedFn((result: boolean, info?: AIChatInfo) => {
-        if (result && info) {
-            setChats &&
-                setChats((old) => {
-                    return old.map((item) => {
-                        if (item.id === info.id) {
-                            return info
-                        }
-                        return item
-                    })
-                })
-        }
-        setEditShow(false)
-        editInfo.current = undefined
-    })
+    // const handleCallbackEditName = useMemoizedFn((result: boolean, info?: AIReActChatMessage.AIReActChatItem) => {
+    //     if (result && info) {
+    //         setChats &&
+    //             setChats((old) => {
+    //                 return old.map((item) => {
+    //                     if (item.id === info.id) {
+    //                         return info
+    //                     }
+    //                     return item
+    //                 })
+    //             })
+    //     }
+    //     setEditShow(false)
+    //     // editInfo.current = undefined
+    // })
 
     const [delLoading, setDelLoading] = useState<string[]>([])
-    const handleDeleteChat = useMemoizedFn((info: AIChatInfo) => {
+    const handleDeleteChat = useMemoizedFn((info: AIReActChatMessage.AIReActChatItem) => {
         const {id} = info
         const isLoading = delLoading.includes(id)
         if (isLoading) return
@@ -77,7 +76,7 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
             return
         }
         setDelLoading((old) => [...old, id])
-        let active: AIChatInfo | undefined =
+        let active: AIReActChatMessage.AIReActChatItem | undefined =
             findIndex === chats.length - 1 ? chats[findIndex - 1] : chats[findIndex + 1]
         setChats && setChats((old) => old.filter((item) => item.id !== id))
 
@@ -87,7 +86,6 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
             setDelLoading((old) => old.filter((el) => el !== id))
         }, 200)
     })
-
     return (
         <div className={styles["history-chat"]}>
             <div className={styles["header-wrapper"]}>
@@ -136,7 +134,7 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
                                 </div>
 
                                 <div className={styles["item-extra"]}>
-                                    <Tooltip
+                                    {/* <Tooltip
                                         title={"编辑对话标题"}
                                         placement='topRight'
                                         overlayClassName={styles["history-item-extra-tooltip"]}
@@ -149,7 +147,7 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
                                                 handleOpenEditName(item)
                                             }}
                                         />
-                                    </Tooltip>
+                                    </Tooltip> */}
                                     <Tooltip
                                         title={"删除任务"}
                                         placement='topRight'
@@ -170,18 +168,18 @@ const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
                         )
                     })}
 
-                    {editInfo.current && (
+                    {/* {editInfo.current && (
                         <EditChatNameModal
                             getContainer={document.getElementById(YakitAIAgentPageID) || undefined}
                             info={editInfo.current}
                             visible={editShow}
                             onCallback={handleCallbackEditName}
                         />
-                    )}
+                    )} */}
                 </div>
             </div>
         </div>
     )
 })
 
-export default HistoryChat
+export default AIReactHistoryChat

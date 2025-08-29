@@ -3,6 +3,7 @@ import {AIAgentSetting, RenderResourcesTemplates, RenderTools, RenderToolsParam}
 import cloneDeep from "lodash/cloneDeep"
 import isNil from "lodash/isNil"
 import {AIChatMessage} from "./type/aiChat"
+import {AIAgentSettingDefault} from "./defaultConstant"
 
 /** 处理默认值不同数据类型 */
 const handleDefaultValue = (value: any): string => {
@@ -335,6 +336,19 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
         }
         if (!isNil(setting?.AIService)) {
             data.AIService = setting.AIService
+        }
+        if (!isNil(setting?.ReActMaxIteration)) {
+            data.ReActMaxIteration = setting.ReActMaxIteration || AIAgentSettingDefault.ReActMaxIteration
+        }
+        if (!isNil(setting?.TimelineItemLimit)) {
+            data.TimelineItemLimit = setting.TimelineItemLimit || AIAgentSettingDefault.TimelineItemLimit
+        }
+        if (!isNil(setting?.TimelineContentSizeLimit)) {
+            data.TimelineContentSizeLimit =
+                setting.TimelineContentSizeLimit || AIAgentSettingDefault.TimelineContentSizeLimit
+        }
+        if (!isNil(setting?.UserInteractLimit)) {
+            data.UserInteractLimit = setting.UserInteractLimit || AIAgentSettingDefault.UserInteractLimit
         }
     } catch (error) {}
 

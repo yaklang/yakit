@@ -1,0 +1,33 @@
+.ai-re-act-chat-contents {
+    width: 100%;
+    overflow: hidden auto;
+    display: flex;
+    justify-content: center;
+    padding: 0 12px;
+    flex: 1;
+    .re-act-contents-list {
+        max-width: 784px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        width: 100%;
+        .think-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+        }
+        .question-wrapper {
+            justify-content: flex-start;
+        }
+        .content-wrapper {
+            max-width: 100%;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+    }
+}

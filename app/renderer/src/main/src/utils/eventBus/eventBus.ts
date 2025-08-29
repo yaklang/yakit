@@ -22,6 +22,7 @@ import {NotepadEventProps} from "./events/notepad"
 import {ShortcutKeyEventProps} from "./events/shortcutKey"
 import {AIAgentEventProps} from "./events/aiAgent"
 import {YakRunnerScanHistoryEventProps} from "./events/yakRunnerScanHistory"
+import {AIReActEventProps} from "./events/aiReAct"
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
 type OneToArr<T extends object, E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
@@ -70,7 +71,8 @@ type Events = [
     NotepadEventProps,
     ShortcutKeyEventProps,
     AIAgentEventProps,
-    YakRunnerScanHistoryEventProps
+    YakRunnerScanHistoryEventProps,
+    AIReActEventProps
 ]
 
 type CheckVal = Exchange<ArrContrast<Events>>

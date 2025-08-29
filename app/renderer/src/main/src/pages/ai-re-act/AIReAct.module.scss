@@ -1,0 +1,150 @@
+/* ---------- AIReAct ----------*/
+.ai-re-act {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
+.ai-side-list {
+    height: 100%;
+    background-color: var(--Colors-Use-Basic-Background);
+}
+.ai-side-list-mini {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 9;
+}
+.ai-re-act-chat-wrapper {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+}
+.ai-re-act-chat-mini-wrapper {
+    padding-left: 26px;
+}
+
+/* ---------- AIReActSideList ----------*/
+.ai-re-act-side-list {
+    height: 100%;
+    display: flex;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    z-index: 9;
+
+    .side-list-bar {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+
+        .list-item {
+            padding: 12px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+            position: relative;
+            user-select: none;
+            .item-title {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+                writing-mode: vertical-rl;
+                text-orientation: sideways-right;
+                transform: rotate(180deg);
+            }
+            svg {
+                width: 16px;
+                height: 16px;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            }
+        }
+        .list-item:hover {
+            background-color: var(--Colors-Use-Neutral-Border)
+        }
+
+        .list-item-active {
+            color: var(--Colors-Use-Main-On-Primary);
+            background-color: var(--Colors-Use-Main-Primary);
+            .item-title {
+                color: var(--Colors-Use-Main-On-Primary);
+            }
+            svg {
+                color: var(--Colors-Use-Main-On-Primary);
+            }
+
+            &::before {
+                position: absolute;
+                width: 1px;
+                height: 100%;
+                content: "";
+                top: 0;
+                left: -1px;
+                background-color: var(--Colors-Use-Main-Primary);
+            }
+            &::after {
+                position: absolute;
+                width: 1px;
+                height: 100%;
+                content: "";
+                top: 0;
+                right: -1px;
+                background-color: var(--Colors-Use-Main-Primary);
+            }
+
+            &.list-item:hover {
+                background-color: var(--Colors-Use-Main-Hover);
+                &::before {
+                    background-color: var(--Colors-Use-Main-Hover);
+                }
+                &::after {
+                    background-color: var(--Colors-Use-Main-Hover);
+                }
+            }
+        }
+
+        .list-item-hidden {
+            background-color: var(--Colors-Use-Main-Primary);
+
+            &.list-item-active::before {
+                background-color: var(--Colors-Use-Main-Primary);
+            }
+            &.list-item-active::after {
+                background-color: var(--Colors-Use-Main-Primary);
+            }
+
+            &.list-item-active.list-item:hover {
+                background-color: var(--Colors-Use-Main-Hover);
+                &.list-item-active::before {
+                    background-color: var(--Colors-Use-Main-Hover);
+                }
+                &.list-item-active::after {
+                    background-color: var(--Colors-Use-Main-Hover);
+                }
+            }
+        }
+    }
+    .side-list-bar-hidden {
+        border-right: 0;
+    }
+
+    .side-list-body {
+        width: 300px;
+        overflow: hidden;
+        .active-content {
+            width: 100%;
+            height: 100%;
+        }
+        .hidden-content {
+            display: none;
+        }
+    }
+    .side-list-body-hidden {
+        width: 0;
+    }
+}

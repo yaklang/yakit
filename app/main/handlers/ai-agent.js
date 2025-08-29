@@ -30,6 +30,38 @@ module.exports = (win, getClient) => {
     ipcMain.handle("cancel-ai-task", handlerHelper.cancelHandler(aiChatTaskPool))
     // #endregion
 
+    // #region AI-ReAct
+    let aiReActTaskPool = new Map()
+    // 开始执行 AI ReAct
+    ipcMain.handle("start-ai-re-act", async (e, token, params) => {
+        let stream = getClient().StartAIReAct()
+        handlerHelper.registerHandler(win, stream, aiReActTaskPool, token)
+        try {
+            stream.write({...params})
+            const qs = params?.Params?.UserQuery
+            if (!!qs) {
+                stream.write({IsFreeInput: true, FreeInput: qs})
+            }
+        } catch (error) {
+            throw new Error(error)
+        }
+    })
+    // 发送信息给 AI ReAct
+    ipcMain.handle("send-ai-re-act", async (e, token, params) => {
+        const currentStream = aiReActTaskPool.get(token)
+        if (!currentStream) {
+            return Promise.reject("stream no exist")
+        }
+        try {
+            currentStream.write({...params})
+        } catch (error) {
+            throw new Error(error)
+        }
+    })
+    // 取消 AI ReAct
+    ipcMain.handle("cancel-ai-re-act", handlerHelper.cancelHandler(aiReActTaskPool))
+    // #endregion
+
     // #region AI-Forge
     const asyncCreateAIForge = (params) => {
         return new Promise((resolve, reject) => {
@@ -135,13 +167,9 @@ module.exports = (win, getClient) => {
         let stream = getClient().StartAITriage()
         handlerHelper.registerHandler(win, stream, aiChatTriagePool, token)
         try {
-            const request = JSON.parse(JSON.stringify(params))
-            const qs = request?.Params?.UserQuery
-            if (request && request.Params && request.Params.UserQuery) {
-                request.Params.UserQuery = ""
-            }
             stream.write({...params})
-            stream.write({IsFreeInput: true, FreeInput: qs})
+            const qs = params?.Params?.UserQuery
+            if (!!qs) stream.write({IsFreeInput: true, FreeInput: qs})
         } catch (error) {
             throw new Error(error)
         }

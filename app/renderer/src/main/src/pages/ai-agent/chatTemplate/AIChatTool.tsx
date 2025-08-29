@@ -135,9 +135,10 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
 
 interface AIChatToolItemProps {
     item: AIChatMessage.AIToolData
+    type?: "re-act"
 }
 export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) => {
-    const {item} = props
+    const {item, type} = props
     const handleDetails = useMemoizedFn(() => {
         if (!item?.callToolId) return
         const m = showYakitDrawer({
@@ -147,7 +148,6 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
             content: <AIChatToolDrawerContent callToolId={item?.callToolId} />,
             onClose: () => m.destroy()
         })
-       
     })
     const tag = useCreation(() => {
         switch (item.status) {
@@ -176,15 +176,15 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
     const summaryEmpty = useCreation(() => {
         switch (item.status) {
             case "failed":
-                return "获取失败原因中..."
+                return type === "re-act" ? "执行失败" : "获取失败原因中..."
             case "success":
-                return "执行结果正在总结中..."
+                return type === "re-act" ? "执行成功" : "执行结果正在总结中..."
             case "user_cancelled":
-                return "工具调用取消中..."
+                return type === "re-act" ? "用户取消" : "工具调用取消中..."
             default:
-                return "暂无内容"
+                return "-"
         }
-    }, [item.status])
+    }, [item.status, type])
     const toolStdoutShowContent = useCreation(() => {
         return item?.toolStdoutContent?.content || ""
     }, [item.toolStdoutContent])

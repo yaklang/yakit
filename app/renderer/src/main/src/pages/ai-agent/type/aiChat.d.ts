@@ -84,6 +84,13 @@ export interface AIStartParams {
     AllowGenerateReport?: boolean
     /**选择 AI 服务 */
     AIService?: string
+    ReActMaxIteration?: number
+    /** 时间线上下文限制（默认100） */
+    TimelineItemLimit?: number
+    /** 时间线上下文大小（20*1024） */
+    TimelineContentSizeLimit?: number
+    /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
+    UserInteractLimit?: number
 }
 
 export interface AIInputEvent {
@@ -97,6 +104,9 @@ export interface AIInputEvent {
     IsSyncMessage?: boolean
     SyncType?: string
     SyncJsonInput?: string
+
+    IsFreeInput?: boolean
+    FreeInput?: string // 自由输入的文本
 }
 
 export interface AITriageInputEvent {
@@ -131,6 +141,8 @@ export interface AIOutputEvent {
     IsSync: boolean
     /**用于同步消息的 ID */
     SyncID: string
+    /** 事件的唯一标识 */
+    EventUUID: string
 }
 
 /** UI 渲染, Review相关信息 */
@@ -226,6 +238,7 @@ export declare namespace AIChatMessage {
 
     /** 日志 */
     export interface Log {
+        id: string
         level: string
         message: string
     }
@@ -384,6 +397,69 @@ export declare namespace AIChatMessage {
         timestamp: number
         data: string
         type: "ai" | "user"
+    }
+
+    export interface AIStreamOutput {
+        NodeId: AIOutputEvent["NodeId"]
+        EventUUID: AIOutputEvent["EventUUID"]
+        status: "start" | "end"
+        stream: {
+            system: string
+            reason: string
+            stream: string
+        }
+        toolAggregation?: AIChatMessage.AIToolData
+    }
+    export interface AIStreamFinished {
+        coordinator_id: string
+        duration_ms: number
+        event_writer_id: string
+        is_reason: boolean
+        is_system: boolean
+        node_id: string
+        start_timestamp: number
+        task_index: string
+    }
+    export interface AIChatResult {
+        finished: boolean
+        result: string
+        success: boolean
+        timestamp: number
+    }
+    export interface AIChatToolResult {
+        NodeId: AIOutputEvent["NodeId"]
+        toolAggregation: AIChatMessage.AIToolData
+    }
+
+    /** 自由对话的问答数据信息 */
+    export interface AICasualChatQAStream {
+        id: string
+        type: "answer" | "question"
+        /**
+         * - stream 流式输出 [AIStreamOutput]
+         * - result 问题结果 [string]
+         * - toolResult 工具执行经过 [AIChatToolResult]
+         * - toolReview 工具 review [ToolUseReviewRequire]
+         * - requireUser AI 人机交互review [AIReviewRequire]
+         */
+        uiType: "stream" | "result" | "toolResult" | "toolReview" | "requireUser"
+        Timestamp: AIOutputEvent["Timestamp"]
+        data: AIStreamOutput | string | AIChatToolResult | ToolUseReviewRequire | AIReviewRequire
+    }
+}
+export declare namespace AIReActChatMessage {
+    export interface AIReActChatItem extends Omit<AIChatInfo, "answer"> {
+        /** 回答 */
+        answer?: {
+            aiPerfData: {
+                consumption: Record<string, AIChatMessage.Consumption>
+                pressure: AIChatMessage.Pressure[]
+                firstCost: AIChatMessage.AICostMS[]
+                totalCost: AIChatMessage.AICostMS[]
+            }
+            logs: AIChatMessage.Log[]
+            casualChat: {contents: AIChatMessage.AICasualChatQAStream[]}
+        }
     }
 }
 // #endregion

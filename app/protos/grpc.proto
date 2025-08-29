@@ -859,6 +859,7 @@ service Yak {
   rpc ExportNote(ExportNoteRequest) returns (stream ExportNoteResponse);
 
   // AI Task
+  rpc StartAIReAct(stream AIInputEvent) returns(stream AIOutputEvent);
   rpc StartAITask(stream AIInputEvent) returns(stream AIOutputEvent);
   rpc QueryAITask(AITaskQueryRequest) returns (AITaskQueryResponse);
   rpc DeleteAITask(AITaskDeleteRequest) returns (DbOperateMessage);
@@ -1251,6 +1252,7 @@ message AIOutputEvent {
   bool DisableMarkdown = 13;
   bool IsSync = 12; // 是否是同步消息
   string SyncID = 14; // 用于同步消息的 ID
+  string EventUUID = 16; // 事件的唯一ID, used via stream stream-finished
 }
 
 message AIInputEvent {
@@ -1358,9 +1360,17 @@ message AIStartParams {
   bool AllowGenerateReport = 24;
 
   int64 TaskMaxContinueCount = 25;
-
   // 选择 AI 服务
   string AIService = 26;
+
+  int64 ReActMaxIteration = 27;
+
+  // 限制 Timeline 的最大条目和最大内容大小（bytes）
+  int64 TimelineItemLimit = 28;
+  int64 TimelineContentSizeLimit = 29;
+
+  // 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题
+  int64 UserInteractLimit = 30;
 }
 
 message AITaskFilter {
