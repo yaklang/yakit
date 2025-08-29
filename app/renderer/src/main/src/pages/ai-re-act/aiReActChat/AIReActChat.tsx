@@ -184,6 +184,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                 // 新开聊天对话窗
                 if (data.type === "new-chat") {
                     onStop()
+                    handleSaveChatInfo()
                     events.handleReset()
                     handleStart("")
                 }

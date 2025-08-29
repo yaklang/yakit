@@ -1,11 +1,12 @@
 import React, {ReactNode, useEffect, useRef} from "react"
 import {AIReActChatContentsPProps} from "./AIReActChatContentsType.d"
 import styles from "./AIReActChatContents.module.scss"
-import {AIChatMessage} from "@/pages/ai-agent/type/aiChat"
+import {AIChatMessage, AIChatStreams} from "@/pages/ai-agent/type/aiChat"
 import {AITriageChatContent} from "@/pages/ai-agent/aiTriageChat/AITriageChat"
 import {useMemoizedFn} from "ahooks"
-import {AIChatToolItem} from "@/pages/ai-agent/chatTemplate/AIChatTool"
+import {AIChatToolColorCard, AIChatToolItem} from "@/pages/ai-agent/chatTemplate/AIChatTool"
 import {AIReActChatReview} from "../aiReActChatReview/AIReActChatReview"
+import {isShowToolColorCard} from "@/pages/ai-agent/utils"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -36,27 +37,39 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         switch (uiType) {
             case "stream":
                 if (["question", "answer"].includes(type)) {
-                    const {reason, system, stream} = (data as AIChatMessage.AIStreamOutput).stream || {
+                    const {NodeId, toolAggregation, stream: firstStream} = data as AIChatMessage.AIStreamOutput
+                    const {reason, system, stream} = firstStream || {
                         reason: "",
                         system: "",
                         stream: ""
                     }
-                    content = (
-                        <AITriageChatContent
-                            isAnswer={type === "answer"}
-                            loading={false}
-                            content={
-                                <div className={styles["think-wrapper"]}>
-                                    {reason && <div>{reason}</div>}
+                    if (isShowToolColorCard(NodeId)) {
+                        const toolCall: AIChatStreams = {
+                            nodeId: NodeId,
+                            timestamp: 0,
+                            data: firstStream,
+                            /**工具相关输出数据聚合 */
+                            toolAggregation
+                        }
+                        content = <AIChatToolColorCard toolCall={toolCall} />
+                    } else {
+                        content = (
+                            <AITriageChatContent
+                                isAnswer={type === "answer"}
+                                loading={false}
+                                content={
+                                    <div className={styles["think-wrapper"]}>
+                                        {reason && <div>{reason}</div>}
 
-                                    {system && <div>{system}</div>}
+                                        {system && <div>{system}</div>}
 
-                                    {stream && <div>{stream}</div>}
-                                </div>
-                            }
-                            {...chatContentExtraProps}
-                        />
-                    )
+                                        {stream && <div>{stream}</div>}
+                                    </div>
+                                }
+                                {...chatContentExtraProps}
+                            />
+                        )
+                    }
                 }
                 break
             case "result":
@@ -71,7 +84,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 break
             case "toolResult":
                 const {toolAggregation} = data as AIChatMessage.AIChatToolResult
-                content = !!toolAggregation ? <AIChatToolItem item={toolAggregation} /> : <></>
+                content = !!toolAggregation ? <AIChatToolItem item={toolAggregation} type='re-act' /> : <></>
                 break
             case "toolReview":
             case "requireUser":

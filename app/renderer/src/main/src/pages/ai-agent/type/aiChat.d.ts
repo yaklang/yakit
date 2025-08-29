@@ -84,6 +84,13 @@ export interface AIStartParams {
     AllowGenerateReport?: boolean
     /**选择 AI 服务 */
     AIService?: string
+    ReActMaxIteration?: number
+    /** 时间线上下文限制（默认100） */
+    TimelineItemLimit?: number
+    /** 时间线上下文大小（20*1024） */
+    TimelineContentSizeLimit?: number
+    /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
+    UserInteractLimit?: number
 }
 
 export interface AIInputEvent {

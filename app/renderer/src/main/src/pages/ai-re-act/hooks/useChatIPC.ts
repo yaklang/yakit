@@ -9,6 +9,7 @@ import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
 import useCasualChat, {UseCasualChatTypes} from "./useCasualChat"
 import useExecCard, {UseExecCardTypes} from "./useExecCard"
 import {v4 as uuidv4} from "uuid"
+import {isToolSyncNode} from "@/pages/ai-agent/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -201,55 +202,39 @@ function useChatIPC(params?: useChatIPCParams) {
                 }
                 if (res.Type === "stream") {
                     const {TaskIndex, NodeId} = res
-                    if (!TaskIndex && UseCasualChatTypes.includes(`stream|${NodeId}`)) {
+                    //NOTE - 有些tool（-stdout）有TaskIndex，有些没有
+                    if ((!TaskIndex && UseCasualChatTypes.includes(`stream|${NodeId}`)) || isToolSyncNode(NodeId)) {
+                        // 流式输出
                         casualChatEvent.handleSetData(res)
                     }
 
                     return
                 }
                 if (res.Type === "tool_call_start") {
-                    if (res.TaskIndex) {
-                    } else {
-                        casualChatEvent.handleSetData(res)
-                    }
+                    casualChatEvent.handleSetData(res)
                     return
                 }
                 if (res.Type === "tool_call_user_cancel") {
-                    if (res.TaskIndex) {
-                    } else {
-                        casualChatEvent.handleSetData(res)
-                    }
+                    casualChatEvent.handleSetData(res)
                     return
                 }
 
                 if (res.Type === "tool_call_done") {
-                    if (res.TaskIndex) {
-                    } else {
-                        casualChatEvent.handleSetData(res)
-                    }
+                    casualChatEvent.handleSetData(res)
                     return
                 }
 
                 if (res.Type === "tool_call_error") {
-                    if (res.TaskIndex) {
-                    } else {
-                        casualChatEvent.handleSetData(res)
-                    }
+                    casualChatEvent.handleSetData(res)
                     return
                 }
 
                 if (res.Type === "tool_call_watcher") {
-                    if (res.TaskIndex) {
-                    } else {
-                        casualChatEvent.handleSetData(res)
-                    }
+                    casualChatEvent.handleSetData(res)
                     return
                 }
                 if (res.Type === "tool_call_summary") {
-                    if (res.TaskIndex) {
-                    } else {
-                        casualChatEvent.handleSetData(res)
-                    }
+                    casualChatEvent.handleSetData(res)
                     return
                 }
                 console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)

@@ -5,6 +5,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {AIChatMessage, AIChatReview, AIInputEvent, AIOutputEvent, AIStartParams} from "@/pages/ai-agent/type/aiChat"
 import {isToolStdoutStream, noSkipReviewTypes} from "./utils"
 import {v4 as uuidv4} from "uuid"
+import {isToolSyncNode} from "@/pages/ai-agent/utils"
 
 // 属于该 hook 处理数据的类型
 export const UseCasualChatTypes = ["stream|re-act-verify", "stream|re-act-loop", "result", "structured|stream-finished"]
@@ -99,7 +100,6 @@ function useCasualChat(params?: useCasualChatParams) {
                             return true
                         })
                     }
-
                     return newArr
                 })
             } catch (error) {}
@@ -307,9 +307,9 @@ function useCasualChat(params?: useCasualChatParams) {
         try {
             let ipcContent = Uint8ArrayToString(res.Content) || ""
             let ipcStreamDelta = Uint8ArrayToString(res.StreamDelta) || ""
-
             if (res.Type === "stream") {
-                if (res.NodeId === "re-act-loop" || res.NodeId === "re-act-verify") {
+                if (res.NodeId === "re-act-loop" || res.NodeId === "re-act-verify" || isToolSyncNode(res.NodeId)) {
+                    // re-act-loop 流式输出
                     const {IsSystem, IsReason, NodeId, Timestamp, EventUUID} = res
                     if (!NodeId || !EventUUID) {
                         pushLog({id: uuidv4(), level: "error", message: `${JSON.stringify(res)}`})
