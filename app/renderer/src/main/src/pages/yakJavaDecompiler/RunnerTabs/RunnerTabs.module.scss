@@ -400,7 +400,7 @@
             }
         }
         .header-style {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 32px;
             font-weight: 600;
             line-height: 40px;
@@ -419,9 +419,9 @@
             flex-direction: column;
             gap: 12px;
             border-radius: 8px;
-            background: #f8f8f8;
+            background: var(--Colors-Use-Neutral-Bg);
             .title-style {
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 14px;
                 font-weight: 600;
                 line-height: 20px;
@@ -445,7 +445,7 @@
                         display: flex;
                         align-items: center;
                         gap: 4px;
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 14px;
                         font-weight: 400;
                         line-height: 20px;
@@ -501,7 +501,7 @@
             flex-direction: column;
             gap: 4px;
             .title-style {
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 14px;
                 font-weight: 600;
                 line-height: 20px;
