@@ -752,7 +752,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             setYakitDownload(true)
             setIntranetYakit(true)
         }
-        if (type === "yakit") setYakitDownload(true)
+        if (type === "yakit") {
+            setYakitDownload(true)
+            setIntranetYakit(false)
+        }
         if (type === "yaklang") setYaklangKillPss(true)
     })
     // kill完引擎进程后开始更新引擎

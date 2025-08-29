@@ -570,20 +570,27 @@ module.exports = {
         })
 
         const asyncDownloadLatestIntranetYakit = (filePath) => {
-            return new Promise(async (resolve, reject) => {
+            return new Promise((resolve, reject) => {
                 const dest = path.join(yakitInstallDir, path.basename(filePath))
-                // 内网版下载
-                await downloadIntranetYakit(
-                    filePath,
-                    dest,
-                    (state) => {
-                        if (!!state) {
-                            win.webContents.send("download-yakit-engine-progress", state)
-                        }
-                    },
-                    resolve,
-                    reject
-                )
+                // 校验yakitInstallDir目录下是否已经存在filePath文件，存在则直接返回
+                fs.access(dest, fs.constants.F_OK, async (err) => {
+                    if (err) {
+                        // 内网版下载
+                        await downloadIntranetYakit(
+                            filePath,
+                            dest,
+                            (state) => {
+                                if (!!state) {
+                                    win.webContents.send("download-yakit-engine-progress", state)
+                                }
+                            },
+                            resolve,
+                            reject
+                        )
+                    } else {
+                        resolve(true)
+                    }
+                })
             })
         }
 

@@ -1,12 +1,12 @@
 import React, {useEffect, useState, useRef} from "react"
-import {AutoComplete, Button, Form, Input, Select, Tooltip} from "antd"
+import {Form, Tooltip} from "antd"
 import "./ConfigPrivateDomain.scss"
 import {NetWorkApi} from "@/services/fetch"
-import {failed, success, yakitFailed} from "@/utils/notification"
+import {failed, success} from "@/utils/notification"
 import {loginOut} from "@/utils/login"
-import {useDebounceFn, useMemoizedFn, useGetState} from "ahooks"
+import {useMemoizedFn, useGetState} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {useEeSystemConfig, useStore} from "@/store"
+import {useStore} from "@/store"
 import yakitImg from "@/assets/yakit.jpg"
 import {API} from "@/services/swagger/resposeType"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
@@ -16,9 +16,8 @@ import {InformationCircleIcon} from "@/assets/newIcon"
 import {CacheDropDownGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitAutoCompleteRefProps} from "../yakitUI/YakitAutoComplete/YakitAutoCompleteType"
-import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
 import {getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace} from "@/utils/envfile"
-import { apiSystemConfig, useUploadInfoByEnpriTrace } from "../layout/utils"
+import {useUploadInfoByEnpriTrace} from "../layout/utils"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -59,6 +58,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         user_name: "",
         pwd: ""
     })
+    const [isShowSkip, setShowSkip] = useState<boolean>(false)
     useEffect(() => {
         getHttpSetting()
     }, [])
@@ -105,7 +105,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         onClose && onClose()
                         onSuccee && onSuccee()
                         uploadProjectEvent.startUpload({
-                            isUploadSyncData:true
+                            isUploadSyncData: true
                         })
                     }
                     // 首次登录强制修改密码
@@ -117,6 +117,10 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             .catch((err) => {
                 setTimeout(() => setLoading(false), 300)
                 failed("企业登录失败：" + err)
+                if (typeof err === "string" && skipShow && (err.includes("密码不正确") || err.includes("用户不存在"))) {
+                    return
+                }
+                setShowSkip(true)
             })
             .finally(() => {})
     })
@@ -144,7 +148,10 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     syncLoginOut()
                     onClose && onClose()
                 }
-                ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
+                ipcRenderer.invoke("edit-baseUrl", {baseUrl: values.BaseUrl}).catch((err) => {
+                    failed("设置私有域失败:" + err)
+                    setShowSkip(true)
+                })
                 if (v?.pwd) {
                     // 加密
                     ipcRenderer
@@ -301,7 +308,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 )}
                 {enterpriseLogin ? (
                     <Form.Item label={" "} colon={false} className='form-item-submit'>
-                        {skipShow && (
+                        {isShowSkip && (
                             <YakitButton
                                 style={{width: 165, marginRight: 12}}
                                 onClick={() => {
@@ -316,7 +323,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                             size='large'
                             type='primary'
                             htmlType='submit'
-                            style={{width: 165, marginLeft: skipShow ? 0 : 43}}
+                            style={{width: 165, marginLeft: isShowSkip ? 0 : 43}}
                             loading={loading}
                         >
                             登录
