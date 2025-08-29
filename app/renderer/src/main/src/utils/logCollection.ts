@@ -16,7 +16,7 @@ export const grpcOpenPrintLogFolder = () => {
 }
 
 /** 主动输出信息到信息日志的方法 */
-export const debugToPrintLog = <T>(msg: T) => {
+export const debugToPrintLog = (msg: any) => {
     try {
         ipcRenderer.invoke("debug-print-log", `${msg || ""}`)
     } catch (error) {}

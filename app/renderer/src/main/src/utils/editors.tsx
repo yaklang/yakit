@@ -49,7 +49,6 @@ import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {useTheme} from "@/hook/useTheme"
-import {applyYakitMonacoTheme} from "./monacoSpec/theme"
 
 const {ipcRenderer} = window.require("electron")
 
