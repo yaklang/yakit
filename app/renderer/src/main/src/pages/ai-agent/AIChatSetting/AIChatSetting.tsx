@@ -179,6 +179,31 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <Form.Item label='允许任务规划阶段人机交互' name='AllowPlanUserInteract' valuePropName='checked'>
                     <YakitSwitch />
                 </Form.Item>
+                <Form.Item label={<>ReAct 迭代轮数限制</>} name='ReActMaxIteration'>
+                    <YakitInputNumber type='horizontal' size='small' min={0} max={100} />
+                </Form.Item>
+                <Form.Item label={<>时间线上下文限制</>} name='TimelineItemLimit'>
+                    <YakitInputNumber type='horizontal' size='small' min={0} max={200} />
+                </Form.Item>
+                <Form.Item label={<> 时间线上下文大小</>} name='TimelineContentSizeLimit'>
+                    <YakitInputNumber type='horizontal' size='small' min={0} max={200} />
+                </Form.Item>
+                <Form.Item
+                    label={
+                        <>
+                            用户交互测试
+                            <Tooltip
+                                overlayClassName={styles["form-info-icon-tooltip"]}
+                                title={"用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题"}
+                            >
+                                <OutlineInformationcircleIcon className={styles["info-icon"]} />
+                            </Tooltip>
+                        </>
+                    }
+                    name='UserInteractLimit'
+                >
+                    <YakitInputNumber type='horizontal' size='small' min={0} max={200} />
+                </Form.Item>
                 {AllowPlanUserInteractValue && (
                     <Form.Item
                         label={

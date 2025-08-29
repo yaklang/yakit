@@ -78,7 +78,9 @@ export const AIReActSideList: React.FC<AIReActSideListProps> = () => {
                     [styles["side-list-body-hidden"]]: hidden
                 })}
             >
-                <div className={hidden ? styles["hidden-content"] : styles["active-content"]}>{renderContent()}</div>
+                <div className={hidden ? styles["hidden-content"] : styles["active-content"]}>
+                    <React.Suspense fallback={<div>loading...</div>}>{renderContent()}</React.Suspense>
+                </div>
             </div>
         </div>
     )

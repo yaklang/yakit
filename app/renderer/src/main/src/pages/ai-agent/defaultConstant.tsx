@@ -37,7 +37,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     EnableSystemFileSystemOperator: true,
     UseDefaultAIConfig: true,
     ForgeName: "",
-    DisallowRequireForUserPrompt: false,
+    DisallowRequireForUserPrompt: true,
     ReviewPolicy: "manual",
     AIReviewRiskControlScore: 0.5,
     DisableToolUse: false,
@@ -48,7 +48,11 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     EnableQwenNoThinkMode: true,
     AllowPlanUserInteract: true,
     PlanUserInteractMaxCount: 3,
-    AIService: ""
+    AIService: "",
+    ReActMaxIteration: 100,
+    TimelineItemLimit: 100,
+    TimelineContentSizeLimit: 20 * 1024,
+    UserInteractLimit: 0
 }
 
 /** mcp 自定义服务器配置类型选项 */

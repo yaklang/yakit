@@ -2,6 +2,8 @@ import {ReactNode} from "react"
 import {AIReActSetting, AIReActTab} from "./aiReActType"
 import {OutlineCogIcon, OutlineSparklesIcon} from "@/assets/icon/outline"
 import {AIChatMessage} from "../ai-agent/type/aiChat"
+import {cloneDeep} from "lodash"
+import {AIAgentSettingDefault} from "../ai-agent/defaultConstant"
 
 /** AI-ReAct 页面的唯一 id */
 export const YakitAIReActPageID = "yakit-ai-re-act"
@@ -12,22 +14,7 @@ export const AIReActTabList: {key: AIReActTab; title: string; icon: ReactNode}[]
 ]
 
 /** ai-re-act 聊天全局配置参数默认值 */
-export const AIReActSettingDefault: AIReActSetting = {
-    EnableSystemFileSystemOperator: true,
-    UseDefaultAIConfig: true,
-    ForgeName: "",
-    DisallowRequireForUserPrompt: false,
-    ReviewPolicy: "manual",
-    AIReviewRiskControlScore: 0.5,
-    DisableToolUse: false,
-    AICallAutoRetry: 3,
-    AITransactionRetry: 5,
-    EnableAISearchTool: true,
-    EnableAISearchInternet: true,
-    EnableQwenNoThinkMode: true,
-    AllowPlanUserInteract: true,
-    PlanUserInteractMaxCount: 3
-}
+export const AIReActSettingDefault: AIReActSetting = cloneDeep(AIAgentSettingDefault)
 
 /**
  * @name 生成一个[AIChatMessage.PlanTask]任务信息
@@ -47,5 +34,3 @@ export const generateTaskChatExecution: (info?: Partial<AIChatMessage.PlanTask>)
 
     return data
 }
-
-
