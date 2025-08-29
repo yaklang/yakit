@@ -39,7 +39,9 @@ module.exports = (win, getClient) => {
         try {
             stream.write({...params})
             const qs = params?.Params?.UserQuery
-            stream.write({IsFreeInput: true, FreeInput: qs})
+            if (!!qs) {
+                stream.write({IsFreeInput: true, FreeInput: qs})
+            }
         } catch (error) {
             throw new Error(error)
         }
@@ -165,10 +167,9 @@ module.exports = (win, getClient) => {
         let stream = getClient().StartAITriage()
         handlerHelper.registerHandler(win, stream, aiChatTriagePool, token)
         try {
-            const request = JSON.parse(JSON.stringify(params))
-            const qs = request?.Params?.UserQuery
             stream.write({...params})
-            stream.write({IsFreeInput: true, FreeInput: qs})
+            const qs = params?.Params?.UserQuery
+            if (!!qs) stream.write({IsFreeInput: true, FreeInput: qs})
         } catch (error) {
             throw new Error(error)
         }

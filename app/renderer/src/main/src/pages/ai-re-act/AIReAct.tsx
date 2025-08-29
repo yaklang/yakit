@@ -5,7 +5,7 @@ import AIReActContext, {AIReActContextDispatcher, AIReActContextStore} from "./u
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIReActGV} from "@/enums/aiReAct"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {AIChatInfo} from "../ai-agent/type/aiChat"
+import {AIReActChatMessage} from "../ai-agent/type/aiChat"
 import {useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
 import {AIReActSettingDefault, YakitAIReActPageID} from "./defaultConstant"
 import cloneDeep from "lodash/cloneDeep"
@@ -23,9 +23,9 @@ export const AIReAct: React.FC<AIReActProps> = React.memo((props) => {
     const [setting, setSetting, getSetting] = useGetSetState<AIReActSetting>(cloneDeep(AIReActSettingDefault))
 
     // 历史对话
-    const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
+    const [chats, setChats, getChats] = useGetSetState<AIReActChatMessage.AIReActChatItem[]>([])
     // 当前展示对话
-    const [activeChat, setActiveChat] = useState<AIChatInfo>()
+    const [activeChat, setActiveChat] = useState<AIReActChatMessage.AIReActChatItem>()
 
     // 缓存全局配置数据
     useUpdateEffect(() => {
@@ -75,7 +75,7 @@ export const AIReAct: React.FC<AIReActProps> = React.memo((props) => {
                         .then((res) => {
                             if (!res) return
                             try {
-                                const cache = JSON.parse(res) as AIChatInfo[]
+                                const cache = JSON.parse(res) as AIReActChatMessage.AIReActChatItem[]
                                 if (!Array.isArray(cache) || cache.length === 0) return
                                 setChats(cache)
                             } catch (error) {}

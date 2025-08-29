@@ -1,7 +1,5 @@
 import React, {memo, useEffect, useState} from "react"
 import {AIChatSettingProps, FormItemSliderProps} from "./type"
-import useAIAgentStore from "../useContext/useStore"
-import useAIAgentDispatcher from "../useContext/useDispatcher"
 import {Form, Slider, Tooltip} from "antd"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {useMemoizedFn, useUpdateEffect} from "ahooks"
@@ -16,10 +14,8 @@ import {AIAgentSettingDefault} from "../defaultConstant"
 import styles from "./AIChatSetting.module.scss"
 
 const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
+    const {setting, setSetting} = props
     const [form] = Form.useForm()
-
-    const {setting} = useAIAgentStore()
-    const {setSetting} = useAIAgentDispatcher()
 
     useEffect(() => {
         form && form.setFieldsValue({...(setting || {})})

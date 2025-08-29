@@ -1,15 +1,17 @@
 import React, {useContext, useState} from "react"
-import {AIReActSideListProps, AIReActTab} from "./aiReActType"
+import {AIReActEventInfo, AIReActSideListProps, AIReActTab} from "./aiReActType"
 import {AIReActTabList} from "./defaultConstant"
-import AIReActContext from "./useContext/AIReActContext"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import classNames from "classnames"
 import styles from "./AIReAct.module.scss"
 import {useMemoizedFn} from "ahooks"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import emiter from "@/utils/eventBus/eventBus"
+import useAIReActStore from "./useContext/useAIReActStore"
+import useAIReActDispatcher from "./useContext/useAIReActDispatcher"
 
 const AIChatSetting = React.lazy(() => import("../ai-agent/AIChatSetting/AIChatSetting"))
-const HistoryChat = React.lazy(() => import("../ai-agent/historyChat/HistoryChat"))
+const AIReactHistoryChat = React.lazy(() => import("./aiReactHistoryChat/AIReactHistoryChat"))
 
 const yakitTabs: YakitTabsProps[] = AIReActTabList.map((item) => ({
     label: item.title,
@@ -17,22 +19,38 @@ const yakitTabs: YakitTabsProps[] = AIReActTabList.map((item) => ({
     icon: item.icon
 }))
 export const AIReActSideList: React.FC<AIReActSideListProps> = () => {
-    const {store, dispatcher} = useContext(AIReActContext)
+    const {setting} = useAIReActStore()
+    const {setSetting} = useAIReActDispatcher()
+
     const [tab, setTab] = useState<AIReActTab>("history")
     const [hidden, setHidden] = useState<boolean>(false)
+
+    /** 向对话框组件进行事件触发的通信 */
+    const onEmiter = useMemoizedFn((key: string) => {
+        const info: AIReActEventInfo = {type: ""}
+        switch (key) {
+            case "new-chat":
+                info.type = "new-chat"
+
+                break
+            default:
+                break
+        }
+        if (info.type) emiter.emit("onReActChatEvent", JSON.stringify(info))
+    })
 
     const renderContent = () => {
         switch (tab) {
             case "history":
                 return (
-                    <HistoryChat
+                    <AIReactHistoryChat
                         onNewChat={() => {
-                            // TODO: 实现新建对话逻辑
+                            onEmiter("new-chat")
                         }}
                     />
                 )
             case "setting":
-                return <AIChatSetting />
+                return <AIChatSetting setting={setting} setSetting={setSetting} />
             default:
                 return <div>未知页面</div>
         }

@@ -1,4 +1,4 @@
-import {Dispatch, ForwardedRef, SetStateAction} from "react"
+import {Dispatch, ForwardedRef, ReactNode, SetStateAction} from "react"
 import {AIForge, AIStartParams} from "../type/aiChat"
 
 export interface AITriageChatRef {
@@ -49,8 +49,9 @@ export interface AITriageChatContentsProps {
 export interface AITriageChatContentProps {
     isAnswer?: boolean
     loading?: boolean
-    content: string
+    content: ReactNode
     contentClassName?: string
+    chatClassName?: string
 }
 
 export interface AITriageChatContentForgesProps {

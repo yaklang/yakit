@@ -56,7 +56,6 @@ function useCasualChat(params?: useCasualChatParams) {
             try {
                 setContents((old) => {
                     let newArr = [...old]
-
                     const index = newArr.findIndex((item) => {
                         if (item.uiType === "stream" && item.data) {
                             const streamData = item.data as AIChatMessage.AIStreamOutput
@@ -64,7 +63,6 @@ function useCasualChat(params?: useCasualChatParams) {
                         }
                         return false
                     })
-
                     if (index >= 0) {
                         const streamsInfo = newArr[index].data as AIChatMessage.AIStreamOutput
                         if (type === "systemStream") streamsInfo.stream.system += content
@@ -189,7 +187,7 @@ function useCasualChat(params?: useCasualChatParams) {
             newArr = newArr.filter((item) => {
                 if (item.uiType === "stream" && item.data) {
                     const streamData = item.data as AIChatMessage.AIStreamOutput
-                    return isToolStdoutStream(streamData.NodeId)
+                    return !isToolStdoutStream(streamData.NodeId)
                 }
                 return true
             })
@@ -296,7 +294,7 @@ function useCasualChat(params?: useCasualChatParams) {
         const isTrigger = !isAutoExecReview() || noSkipReviewTypes("tool_use_review_require")
         review.current = undefined
         setContents((old) => {
-            return old.filter((item) => ["toolReview", "requireUser"].includes(item.uiType))
+            return old.filter((item) => !["toolReview", "requireUser"].includes(item.uiType))
         })
         if (isTrigger) {
             onReviewRelease && onReviewRelease(id)
@@ -481,7 +479,7 @@ function useCasualChat(params?: useCasualChatParams) {
             if (IsInteractiveMessage && InteractiveId) {
                 // tool_review事件操作
                 setContents((old) => {
-                    return old.filter((item) => ["toolReview", "requireUser"].includes(item.uiType))
+                    return old.filter((item) => !["toolReview", "requireUser"].includes(item.uiType))
                 })
             }
             if (IsFreeInput && FreeInput) {
