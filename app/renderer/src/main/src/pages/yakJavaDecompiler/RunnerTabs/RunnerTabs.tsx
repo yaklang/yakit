@@ -887,6 +887,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         document.body.removeChild(a)
     })
 
+    const setReqEditorFun = useMemoizedFn((editor: IMonacoEditor) => {
+        setReqEditor(editor)
+    })
+
     return (
         <div className={styles["runner-tab-pane"]}>
             {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -906,14 +910,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 <YakitEditor
                     readOnly={true}
                     editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
-                    editorDidMount={(editor) => {
-                        setReqEditor(editor)
-                    }}
+                    editorDidMount={setReqEditorFun}
                     type={editorInfo?.language}
                     value={editorInfo?.code || ""}
-                    setValue={(content: string) => {
-                        updateAreaInputInfo(content)
-                    }}
+                    setValue={updateAreaInputInfo}
                     highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
                     highLightClass='hight-light-yak-runner-color'
                     contextMenu={{

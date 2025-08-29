@@ -1349,6 +1349,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         {wait: 200}
     )
 
+    const setReqEditorFun = useMemoizedFn((editor: IMonacoEditor) => {
+        setEditor(editor)
+    })
+
     return (
         <div className={styles["runner-tab-pane"]}>
             {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -1368,14 +1372,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 <YakitEditor
                     readOnly={editorInfo?.fileSourceType === "audit"}
                     editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
-                    editorDidMount={(editor) => {
-                        setEditor(editor)
-                    }}
+                    editorDidMount={setReqEditorFun}
                     type={editorInfo?.language}
                     value={editorInfo?.code || ""}
-                    setValue={(content: string) => {
-                        updateAreaInputInfo(content)
-                    }}
+                    setValue={updateAreaInputInfo}
                     highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
                     highLightClass='hight-light-yak-runner-color'
                     highLightFind={highLightFind}
