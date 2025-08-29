@@ -86,6 +86,10 @@ export const convertPluginsRequestParams = (
     search: PluginSearchParams,
     pageParams?: PluginListPageMeta
 ): PluginsQueryProps => {
+    const tags = filter.tags?.map((ele) => ele.value) || []
+    if (search.type === "tag" && search.tag) {
+        tags.push(search.tag)
+    }
     const data: PluginsQueryProps = {
         page: pageParams?.page || 1,
         limit: pageParams?.limit || 20,
@@ -99,7 +103,7 @@ export const convertPluginsRequestParams = (
         // filter
         plugin_type: filter.plugin_type?.map((ele) => ele.value),
         status: filter.status?.map((ele) => Number(ele.value)) || [],
-        tags: filter.tags?.map((ele) => ele.value) || [],
+        tags: [...new Set(tags)],
         is_private: filter.plugin_private?.map((ele) => ele.value === "true") || [],
         pluginGroup: {unSetGroup: false, group: filter.plugin_group?.map((ele) => ele.value) || []}
     }
@@ -715,6 +719,13 @@ export const convertLocalPluginsRequestParams = (query: {
     const type =
         filter.plugin_type && filter.plugin_type?.length > 0 ? filter.plugin_type : defaultFilters?.plugin_type || []
     const tag = filter.tags && filter.tags.length > 0 ? filter.tags : defaultFilters?.tags || []
+    if (search.type === "tag" && search.tag) {
+        tag.push({
+            value: search.tag,
+            count: 0,
+            label: ""
+        })
+    }
     const group =
         filter.plugin_group && filter.plugin_group.length > 0 ? filter.plugin_group : defaultFilters?.plugin_group || []
 
@@ -732,7 +743,7 @@ export const convertLocalPluginsRequestParams = (query: {
 
         // filter
         Type: (type.map((ele) => ele.value) || []).join(","),
-        Tag: tag.map((ele) => ele.value) || [],
+        Tag: [...new Set(tag.map((ele) => ele.value))],
         Group: {
             UnSetGroup: false,
             Group: group?.map((ele) => ele.value) || []
@@ -1072,7 +1083,7 @@ export const apiDebugPlugin: (request: {
     pluginCustomParams?: YakParamProps[]
     isShowStartInfo?: boolean
 }) => Promise<null> = (request) => {
-    const {params, token, pluginCustomParams = [],isShowStartInfo = true} = request
+    const {params, token, pluginCustomParams = [], isShowStartInfo = true} = request
     return new Promise((resolve, reject) => {
         try {
             let executeParams: DebugPluginRequest = {
