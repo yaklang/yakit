@@ -1,4 +1,4 @@
-import React, {Fragment, memo, useEffect, useMemo, useRef, useState} from "react"
+import React, {Fragment, memo, useCallback, useEffect, useMemo, useRef, useState} from "react"
 import {
     Selection,
     CursorPosition,
@@ -968,7 +968,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 }
             })
         })
-    }, [areaInfo, reqEditor])
+    }, [areaInfo])
 
     // 光标位置信息
     const positionRef = useRef<CursorPosition>()
@@ -1180,6 +1180,15 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
     }, [editorInfo])
 
+    const setReqEditorFun = useMemoizedFn((editor: IMonacoEditor) => {
+        setReqEditor(editor)
+    })
+
+    const setYakitEditorValue = useCallback((content: string) => {
+        if (typeof editorInfo?.code !== "string") return
+        updateAreaInputInfo(content)
+    }, [editorInfo?.code])
+
     return (
         <div className={styles["runner-tab-pane"]}>
             {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -1198,16 +1207,11 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             ) : (
                 <YakitEditor
                     editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
-                    editorDidMount={(editor) => {
-                        setReqEditor(editor)
-                    }}
+                    editorDidMount={setReqEditorFun}
                     // 因monaco版本兼容问题 如若type传入“javascript”等，则可能会抛出错误 进而影响dnd拖拽
                     type={editorInfo?.language}
                     value={editorInfo?.code || ""}
-                    setValue={(content: string) => {
-                        if (typeof editorInfo?.code !== "string") return
-                        updateAreaInputInfo(content)
-                    }}
+                    setValue={setYakitEditorValue}
                     highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
                     highLightClass='hight-light-yak-runner-color'
                 />
