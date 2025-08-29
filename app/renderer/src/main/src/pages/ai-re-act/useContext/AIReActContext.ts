@@ -1,20 +1,19 @@
-import {createContext} from "react"
+import {createContext, Dispatch, SetStateAction} from "react"
 import {AIReActSetting} from "../aiReActType"
-import {AIChatInfo} from "../../ai-agent/type/aiChat"
-import useGetSetState from "../../pluginHub/hooks/useGetSetState"
+import {AIReActChatMessage} from "@/pages/ai-agent/type/aiChat"
 
 export interface AIReActContextStore {
     setting: AIReActSetting
-    chats: AIChatInfo[]
-    activeChat?: AIChatInfo
+    chats: AIReActChatMessage.AIReActChatItem[]
+    activeChat?: AIReActChatMessage.AIReActChatItem
 }
 
 export interface AIReActContextDispatcher {
     getSetting: () => AIReActSetting
-    setSetting: (setting: AIReActSetting) => void
-    setChats: (chats: AIChatInfo[]) => void
-    getChats: () => AIChatInfo[]
-    setActiveChat: (chat?: AIChatInfo) => void
+    setSetting: Dispatch<SetStateAction<AIReActSetting>>
+    setChats: Dispatch<SetStateAction<AIReActChatMessage.AIReActChatItem[]>>
+    getChats: () => AIReActChatMessage.AIReActChatItem[]
+    setActiveChat: Dispatch<SetStateAction<AIReActChatMessage.AIReActChatItem | undefined>>
 }
 
 export interface AIReActContextProps {

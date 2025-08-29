@@ -7,6 +7,8 @@ import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
+import useAIAgentStore from "./useContext/useStore"
+import useAIAgentDispatcher from "./useContext/useDispatcher"
 
 const AIChatSetting = React.lazy(() => import("./AIChatSetting/AIChatSetting"))
 const ForgeName = React.lazy(() => import("./forgeName/ForgeName"))
@@ -16,6 +18,9 @@ const HistoryChat = React.lazy(() => import("./historyChat/HistoryChat"))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
+
+    const {setting} = useAIAgentStore()
+    const {setSetting} = useAIAgentDispatcher()
 
     // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
     const rendered = useRef<Set<AIAgentTab>>(new Set(["history"]))
@@ -91,7 +96,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                         })}
                         tabIndex={active !== "setting" ? -1 : 1}
                     >
-                        <AIChatSetting />
+                        <AIChatSetting setting={setting} setSetting={setSetting} />
                     </div>
                 )}
 

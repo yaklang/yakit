@@ -440,6 +440,21 @@ export declare namespace AIChatMessage {
         data: AIStreamOutput | string | AIChatToolResult | ToolUseReviewRequire | AIReviewRequire
     }
 }
+export declare namespace AIReActChatMessage {
+    export interface AIReActChatItem extends Omit<AIChatInfo, "answer"> {
+        /** 回答 */
+        answer?: {
+            aiPerfData: {
+                consumption: Record<string, AIChatMessage.Consumption>
+                pressure: AIChatMessage.Pressure[]
+                firstCost: AIChatMessage.AICostMS[]
+                totalCost: AIChatMessage.AICostMS[]
+            }
+            logs: AIChatMessage.Log[]
+            casualChat: {contents: AIChatMessage.AICasualChatQAStream[]}
+        }
+    }
+}
 // #endregion
 
 // #region AI-Forge

@@ -86,7 +86,7 @@ function useChatIPC(params?: useChatIPCParams) {
                 yakitNotify("warning", "该选项非本次 AI 执行的回答选项")
                 return
             }
-            console.log("send-ai---\n", token, params)
+            console.log("send-ai-re-act---\n", token, params)
 
             if (type === "casual") {
                 casualChatEvent.handleSend(params, () => {
@@ -119,6 +119,7 @@ function useChatIPC(params?: useChatIPCParams) {
         chatID.current = token
         chatRequest.current = cloneDeep(params.Params)
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
+            console.log("onStart-res", res)
             try {
                 // CoordinatorId
                 if (!!res?.CoordinatorId) {

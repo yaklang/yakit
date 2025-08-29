@@ -28,6 +28,9 @@ export interface EditChatNameModalProps {
     visible: boolean
     onCallback: (result: boolean, info?: AIChatInfo) => viod
 }
+export interface AIReActEventInfo{
+    type:string
+}
 // #endregion
 
 // #region UI右侧组件定义
@@ -77,16 +80,6 @@ export interface AIReActChatFooterProps {
     onNewChat: () => void
 }
 
-// 审阅内容
-export interface AIReActChatReviewProps {
-    expand: boolean
-    setExpand: Dispatch<SetStateAction<boolean>>
-    delayLoading: boolean
-    review: AIChatReview
-    planReviewTreeKeywordsMap: Map<string, AIChatMessage.PlanReviewRequireExtra>
-    onSend: (info: AIChatMessage.ReviewSelector, qs?: string) => void
-    onSendAIRequire: (value: string) => void
-}
 
 // 对话框日志
 export interface AIChatLogsProps {
