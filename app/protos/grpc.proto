@@ -4857,7 +4857,7 @@ message CustomCodeResponse {
   repeated string Codes = 2;
   repeated string Descriptions = 3;
   repeated string States = 4;
-  repeated string Level = 5;
+  repeated string Levels = 5;
 }
 
 message CodecRequest {
