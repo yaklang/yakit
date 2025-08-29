@@ -6,13 +6,14 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {Form, Space, Divider} from "antd"
+import {Form, Space, Divider, message, Pagination} from "antd"
 import {useMemoizedFn} from "ahooks"
 import {failed, success} from "@/utils/notification"
-import {KnowledgeBase, KnowledgeBaseListProps, KnowledgeBaseFormData} from "./types"
+import {KnowledgeBase, KnowledgeBaseListProps, KnowledgeBaseFormData, GetKnowledgeBaseResponse, Pagination as PaginationType, StreamStatus} from "./types"
 import styles from "./KnowledgeBaseList.module.scss"
 import {PlusIcon, TrashIcon} from "@/assets/newIcon"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
+import {SolidPlayIcon} from "@/assets/icon/solid"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -26,31 +27,42 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
     const [modalVisible, setModalVisible] = useState(false)
     const [editingKb, setEditingKb] = useState<KnowledgeBase>()
     const [form] = Form.useForm()
+    const [searchKeyword, setSearchKeyword] = useState<string>("")
+    const [pagination, setPagination] = useState<PaginationType>({
+        Page: 1,
+        Limit: 10
+    })
+    const [total, setTotal] = useState(0)
+    const [embedStreams, setEmbedStreams] = useState<Map<string, StreamStatus>>(new Map())
 
     // 获取知识库列表
-    const fetchKnowledgeBases = useMemoizedFn(async () => {
+    const fetchKnowledgeBases = useMemoizedFn(async (resetPage = false) => {
         setLoading(true)
         try {
-            const response = await ipcRenderer.invoke("GetKnowledgeBaseNameList", {})
-            // 根据实际返回的数据结构调整，这里假设返回的是知识库对象数组
-            if (response && Array.isArray(response.KnowledgeBaseNames)) {
-                // 如果返回的是字符串数组，需要转换为对象数组
-                const kbArray = response.KnowledgeBaseNames.map((name: string, index: number) => ({
-                    Id: index + 1, // 临时ID，实际应该从后端返回
-                    KnowledgeBaseName: name,
-                    KnowledgeBaseDescription: "",
-                    KnowledgeBaseType: "默认"
-                }))
-                setKnowledgeBases(kbArray)
-            } else if (response && Array.isArray(response)) {
-                // 如果直接返回对象数组
-                setKnowledgeBases(response)
+            const currentPagination = resetPage ? { ...pagination, Page: 1 } : pagination
+            if (resetPage) {
+                setPagination(currentPagination)
+            }
+            
+            const response: GetKnowledgeBaseResponse = await ipcRenderer.invoke("GetKnowledgeBase", {
+                Keyword: searchKeyword || undefined,
+                Pagination: currentPagination
+            })
+            
+            if (response && response.KnowledgeBases) {
+                setKnowledgeBases(response.KnowledgeBases)
+                setTotal(response.Total || 0)
+                if (response.Pagination) {
+                    setPagination(response.Pagination)
+                }
             } else {
                 setKnowledgeBases([])
+                setTotal(0)
             }
         } catch (error) {
             failed(`获取知识库列表失败: ${error}`)
             setKnowledgeBases([])
+            setTotal(0)
         } finally {
             setLoading(false)
         }
@@ -58,7 +70,68 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
 
     useEffect(() => {
         fetchKnowledgeBases()
-    }, [])
+    }, [pagination.Page, pagination.Limit])
+
+    // 搜索功能
+    const handleSearch = useMemoizedFn(() => {
+        fetchKnowledgeBases(true)
+    })
+
+    // 分页变化
+    const handlePageChange = useMemoizedFn((page: number, pageSize: number) => {
+        setPagination({
+            ...pagination,
+            Page: page,
+            Limit: pageSize
+        })
+    })
+
+
+
+    // 为整个知识库建立索引
+    const handleEmbedKnowledgeBase = useMemoizedFn(async (kb: KnowledgeBase) => {
+        const streamKey = `kb_${kb.ID}`
+        
+        try {
+            setEmbedStreams(prev => new Map(prev.set(streamKey, {
+                token: "",
+                loading: true,
+                progress: "正在为知识库建立索引..."
+            })))
+
+            await ipcRenderer.invoke("BuildVectorIndexForKnowledgeBase", {
+                KnowledgeBaseId: kb.ID,
+                DistanceFuncType: "cosine"
+            })
+
+            setEmbedStreams(prev => {
+                const newMap = new Map(prev)
+                newMap.delete(streamKey)
+                return newMap
+            })
+            success("知识库索引建立完成")
+
+        } catch (error) {
+            setEmbedStreams(prev => {
+                const newMap = new Map(prev)
+                newMap.delete(streamKey)
+                return newMap
+            })
+            failed(`建立索引失败: ${error}`)
+        }
+    })
+
+    // 取消建立索引
+    const handleCancelEmbed = useMemoizedFn(async (streamKey: string) => {
+        // 由于 BuildVectorIndexForKnowledgeBase 不是流式接口，无法中途取消
+        // 这里只是清除UI状态
+        setEmbedStreams(prev => {
+            const newMap = new Map(prev)
+            newMap.delete(streamKey)
+            return newMap
+        })
+        message.info("已取消索引建立状态显示")
+    })
 
     // 创建知识库
     const handleCreate = useMemoizedFn(async (values: KnowledgeBaseFormData) => {
@@ -79,7 +152,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
         if (!editingKb) return
         try {
             await ipcRenderer.invoke("UpdateKnowledgeBase", {
-                KnowledgeBaseId: editingKb.Id,
+                KnowledgeBaseId: editingKb.ID,
                 ...values
             })
             success("更新知识库成功")
@@ -97,8 +170,9 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
     const handleDelete = useMemoizedFn(async (kb: KnowledgeBase) => {
         try {
             await ipcRenderer.invoke("DeleteKnowledgeBase", {
-                KnowledgeBaseId: kb.Id
+                KnowledgeBaseId: kb.ID
             })
+            console.log("id",kb.ID)
             success("删除知识库成功")
             fetchKnowledgeBases()
             onRefresh()
@@ -143,14 +217,24 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                 size="small"
                 bodyStyle={{padding: 12}}
                 extra={
-                    <YakitButton
-                        type="primary"
-                        size="small"
-                        icon={<PlusIcon />}
-                        onClick={handleOpenCreate}
-                    >
-                        新增知识库
-                    </YakitButton>
+                    <Space>
+                        <YakitInput.Search
+                            placeholder="搜索知识库"
+                            value={searchKeyword}
+                            onChange={(e) => setSearchKeyword(e.target.value)}
+                            onSearch={handleSearch}
+                            style={{width: 200}}
+                            size="small"
+                        />
+                        <YakitButton
+                            type="primary"
+                            size="small"
+                            icon={<PlusIcon />}
+                            onClick={handleOpenCreate}
+                        >
+                            新增知识库
+                        </YakitButton>
+                    </Space>
                 }
             >
                 <YakitSpin spinning={loading}>
@@ -160,9 +244,9 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                         <div className={styles["kb-list"]}>
                             {knowledgeBases.map((kb) => (
                                 <div
-                                    key={kb.Id}
+                                    key={kb.ID}
                                     className={`${styles["kb-item"]} ${
-                                        selectedKbId === kb.Id ? styles["selected"] : ""
+                                        selectedKbId === kb.ID ? styles["selected"] : ""
                                     }`}
                                     onClick={() => onSelectKb(kb)}
                                 >
@@ -174,37 +258,92 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                                         <div className={styles["kb-type"]}>类型: {kb.KnowledgeBaseType}</div>
                                     </div>
                                     <div className={styles["kb-actions"]}>
-                                        <YakitButton
-                                            type="text2"
-                                            size="small"
-                                            icon={<OutlinePencilaltIcon />}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleOpenEdit(kb)
-                                            }}
-                                        />
-                                        <YakitPopconfirm
-                                            title="删除后无法恢复，确认删除此知识库吗？"
-                                            onConfirm={(e) => {
-                                                e?.stopPropagation()
-                                                handleDelete(kb)
-                                            }}
-                                            placement="topRight"
-                                        >
-                                            <YakitButton
-                                                type="text2"
-                                                size="small"
-                                                colors="danger"
-                                                icon={<TrashIcon />}
-                                                onClick={(e) => e.stopPropagation()}
-                                            />
-                                        </YakitPopconfirm>
+                                        {(() => {
+                                            const streamKey = `kb_${kb.ID}`
+                                            const embedStatus = embedStreams.get(streamKey)
+                                            
+                                            if (embedStatus?.loading) {
+                                                return (
+                                                    <div className={styles["embed-progress"]}>
+                                                        <YakitSpin size="small" />
+                                                        <span className={styles["progress-text"]}>
+                                                            {embedStatus.progress}
+                                                        </span>
+                                                        <YakitButton
+                                                            type="text2"
+                                                            size="small"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                handleCancelEmbed(streamKey)
+                                                            }}
+                                                        >
+                                                            取消
+                                                        </YakitButton>
+                                                    </div>
+                                                )
+                                            }
+                                            
+                                            return (
+                                                <>
+                                                    <YakitButton
+                                                        type="text2"
+                                                        size="small"
+                                                        icon={<SolidPlayIcon />}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            handleEmbedKnowledgeBase(kb)
+                                                        }}
+                                                        title="建立索引"
+                                                    />
+                                                    <YakitButton
+                                                        type="text2"
+                                                        size="small"
+                                                        icon={<OutlinePencilaltIcon />}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            handleOpenEdit(kb)
+                                                        }}
+                                                    />
+                                                    <YakitPopconfirm
+                                                        title="删除后无法恢复，确认删除此知识库吗？"
+                                                        onConfirm={(e) => {
+                                                            e?.stopPropagation()
+                                                            handleDelete(kb)
+                                                        }}
+                                                        placement="topRight"
+                                                    >
+                                                        <YakitButton
+                                                            type="text2"
+                                                            size="small"
+                                                            colors="danger"
+                                                            icon={<TrashIcon />}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                    </YakitPopconfirm>
+                                                </>
+                                            )
+                                        })()}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
                 </YakitSpin>
+                
+                {total > 0 && (
+                    <div className={styles["pagination-wrapper"]}>
+                        <Pagination
+                            current={pagination.Page}
+                            pageSize={pagination.Limit}
+                            total={total}
+                            showSizeChanger={true}
+                            showQuickJumper={true}
+                            showTotal={(total, range) => `共 ${total} 条记录`}
+                            onChange={handlePageChange}
+                            pageSizeOptions={["10", "20", "50", "100"]}
+                        />
+                    </div>
+                )}
             </AutoCard>
 
             <YakitModal

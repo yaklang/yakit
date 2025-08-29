@@ -22,6 +22,7 @@ import {
 import styles from "./KnowledgeEntryTable.module.scss"
 import {PlusIcon, TrashIcon} from "@/assets/newIcon"
 import {OutlinePencilaltIcon, OutlineSearchIcon} from "@/assets/icon/outline"
+import {SolidPlayIcon} from "@/assets/icon/solid"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -43,6 +44,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
         Order: "desc" as "asc" | "desc"
     })
     const [form] = Form.useForm()
+    const [indexingEntries, setIndexingEntries] = useState<Set<number>>(new Set())
 
     // 搜索知识条目
     const searchEntries = useMemoizedFn(async (params?: Partial<SearchKnowledgeEntryParams>) => {
@@ -55,7 +57,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
         setSearchLoading(true)
         try {
             const searchParams: SearchKnowledgeEntryParams = {
-                KnowledgeBaseId: knowledgeBase.Id,
+                KnowledgeBaseId: knowledgeBase.ID,
                 Keyword: searchKeyword,
                 Pagination: {
                     ...pagination,
@@ -85,7 +87,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
         try {
             const params = {
                 ...values,
-                KnowledgeBaseID: knowledgeBase.Id,
+                KnowledgeBaseID: knowledgeBase.ID,
                 Keywords: values.Keywords.filter(k => k.trim() !== ""),
                 PotentialQuestions: values.PotentialQuestions.filter(q => q.trim() !== ""),
                 PotentialQuestionsVector: [] // 向量会由后端生成
@@ -109,6 +111,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
             const params = {
                 ...values,
                 KnowledgeBaseEntryID: editingEntry.ID,
+                KnowledgeBaseID: editingEntry.KnowledgeBaseId,
                 Keywords: values.Keywords.filter(k => k.trim() !== ""),
                 PotentialQuestions: values.PotentialQuestions.filter(q => q.trim() !== "")
             }
@@ -128,7 +131,8 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
     const handleDelete = useMemoizedFn(async (entry: KnowledgeBaseEntry) => {
         try {
             await ipcRenderer.invoke("DeleteKnowledgeBaseEntry", {
-                KnowledgeBaseEntryId: entry.ID
+                KnowledgeBaseEntryId: entry.ID,
+                KnowledgeBaseId: entry.KnowledgeBaseId
             })
             success("删除知识条目成功")
             searchEntries()
@@ -176,6 +180,29 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
                 handleCreate(values)
             }
         })
+    })
+
+    // 为单个知识条目创建索引
+    const handleCreateIndex = useMemoizedFn(async (entry: KnowledgeBaseEntry) => {
+        try {
+            setIndexingEntries(prev => new Set(prev.add(entry.ID)))
+            
+            await ipcRenderer.invoke("BuildVectorIndexForKnowledgeBaseEntry", {
+                KnowledgeBaseEntryId: entry.ID,
+                KnowledgeBaseId:entry.KnowledgeBaseId,
+                DistanceFuncType:"cosine"
+            })
+            
+            success(`为知识条目 "${entry.KnowledgeTitle}" 创建索引成功`)
+        } catch (error) {
+            failed(`为知识条目创建索引失败: ${error}`)
+        } finally {
+            setIndexingEntries(prev => {
+                const newSet = new Set(prev)
+                newSet.delete(entry.ID)
+                return newSet
+            })
+        }
     })
 
     const columns: ColumnsTypeProps[] = [
@@ -245,15 +272,36 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
         {
             title: "操作",
             dataKey: "actions",
-            width: 120,
+            width: 160,
             fixed: "right",
             render: (text, item: KnowledgeBaseEntry) => (
                 <Space>
+                    {indexingEntries.has(item.ID) ? (
+                        <YakitButton
+                            type="text2"
+                            size="small"
+                            loading={true}
+                            title="正在创建索引..."
+                        >
+                            索引中...
+                        </YakitButton>
+                    ) : (
+                        <YakitButton
+                            type="text2"
+                            size="small"
+                            icon={<SolidPlayIcon />}
+                            onClick={() => handleCreateIndex(item)}
+                            title="为此条目创建向量索引"
+                        >
+                            索引
+                        </YakitButton>
+                    )}
                     <YakitButton
                         type="text2"
                         size="small"
                         icon={<OutlinePencilaltIcon />}
                         onClick={() => handleOpenEdit(item)}
+                        title="编辑"
                     />
                     <YakitPopconfirm
                         title="确认删除此知识条目吗？"
@@ -265,6 +313,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
                             size="small"
                             colors="danger"
                             icon={<TrashIcon />}
+                            title="删除"
                         />
                     </YakitPopconfirm>
                 </Space>

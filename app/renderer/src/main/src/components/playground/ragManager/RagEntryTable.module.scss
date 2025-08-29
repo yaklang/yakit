@@ -1,0 +1,165 @@
+.rag-entry-table {
+    height: 100%;
+    
+    .id-cell {
+        font-family: monospace;
+        font-size: 12px;
+        color: var(--yakit-text-color-1);
+    }
+    
+    .document-id-cell {
+        font-family: monospace;
+        font-size: 12px;
+        color: var(--yakit-text-color-2);
+    }
+    
+    .content-cell {
+        font-size: 12px;
+        color: var(--yakit-text-color-1);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.4;
+    }
+    
+    .metadata-cell {
+        .metadata-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        
+        .no-metadata {
+            font-size: 12px;
+            color: var(--yakit-text-color-3);
+            font-style: italic;
+        }
+    }
+    
+    .time-cell {
+        font-size: 11px;
+        color: var(--yakit-text-color-2);
+    }
+}
+
+// 条目详情弹窗样式
+.entry-detail {
+    .detail-section {
+        margin-bottom: 24px;
+        
+        h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--yakit-header-color);
+            border-bottom: 1px solid var(--yakit-border-color);
+            padding-bottom: 8px;
+        }
+        
+        .detail-grid {
+            .detail-row {
+                display: flex;
+                align-items: center;
+                margin-bottom: 8px;
+                
+                .label {
+                    min-width: 100px;
+                    color: var(--yakit-text-color-2);
+                    font-size: 13px;
+                    font-weight: 500;
+                }
+                
+                .value {
+                    color: var(--yakit-text-color-1);
+                    font-size: 13px;
+                    font-family: monospace;
+                }
+            }
+        }
+        
+        .content-display {
+            background: var(--yakit-canvas-color);
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 13px;
+            color: var(--yakit-text-color-1);
+            line-height: 1.5;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .document-display {
+            background: var(--yakit-canvas-color);
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 13px;
+            color: var(--yakit-text-color-1);
+            line-height: 1.5;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            
+            div {
+                margin-bottom: 8px;
+                
+                &:last-child {
+                    margin-bottom: 0;
+                }
+                
+                strong {
+                    color: var(--yakit-text-color-1);
+                    font-weight: 600;
+                    margin-right: 8px;
+                }
+            }
+        }
+        
+        .metadata-display {
+            background: var(--yakit-canvas-color);
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 4px;
+            padding: 12px;
+            
+            .metadata-item {
+                display: flex;
+                align-items: flex-start;
+                margin-bottom: 8px;
+                
+                .metadata-key {
+                    min-width: 120px;
+                    color: var(--yakit-text-color-2);
+                    font-size: 12px;
+                    font-weight: 600;
+                    margin-right: 8px;
+                }
+                
+                .metadata-value {
+                    color: var(--yakit-text-color-1);
+                    font-size: 12px;
+                    font-family: monospace;
+                    flex: 1;
+                    white-space: pre-wrap;
+                    background: var(--yakit-body-background-color);
+                    padding: 4px 8px;
+                    border-radius: 2px;
+                    border: 1px solid var(--yakit-border-color);
+                }
+            }
+        }
+        
+        .vector-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            background: var(--yakit-canvas-color);
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 4px;
+            padding: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    }
+}

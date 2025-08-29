@@ -16,6 +16,7 @@ import {HybridScanTaskTable} from "@/components/playground/hybrid/HybridScanTask
 import {SpaceEngineOperator} from "@/components/playground/spaceengine/SpaceEngineOperator"
 import {JavaDecompilerOperator} from "@/components/playground/javadecompiler/JavaDecompilerOperator"
 import {KnowledgeBaseDemo} from "@/components/playground/knowlegeBase/KnowledgeBaseDemo"
+import {RagManagerDemo} from "@/components/playground/ragManager/RagManagerDemo"
 export interface DebugMonacoEditorPageProp {}
 
 const TAG = "DEBUG_PLAYGROUND_DEFAULT_MODE"
@@ -70,7 +71,8 @@ a=1&b=2 Content-Length: a
                             {value: "risk-table", label: "漏洞查询规则"},
                             {value: "http-monaco-editor", label: "HTTP 数据包编辑器"},
                             {value: "fs-tree", label: "文件系统树"},
-                            {value: "knowledge-base", label: "知识库管理"}
+                            {value: "knowledge-base", label: "知识库管理"},
+                            {value: "rag-manager", label: "RAG 向量存储管理"}
                         ]}
                         formItemStyle={{margin: 0}}
                         value={mode}
@@ -100,6 +102,8 @@ a=1&b=2 Content-Length: a
                             return <JavaDecompilerOperator />
                         case "knowledge-base":
                             return <KnowledgeBaseDemo />
+                        case "rag-manager":
+                            return <RagManagerDemo />
                     }
                     return <div>NO PLUGIN DEMO</div>
                 })()}
