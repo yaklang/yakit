@@ -279,7 +279,7 @@ service Yak {
 
   // 用户自定义代码补全
   rpc CreateCustomCode(CustomCodeRequest) returns (Empty);
-  rpc UpdateCustomCode(CustomCodeRequest) returns (Empty);
+  rpc UpdateCustomCode(EditCustomCodeRequest) returns (Empty);
   rpc DeleteCustomCode(QueryCustomCodeRequest) returns (Empty);
   rpc QueryCustomCode(QueryCustomCodeRequest) returns (CustomCodeResponse);
 
@@ -4838,15 +4838,23 @@ message CustomCodeRequest {
   string State = 4;
 }
 
+message EditCustomCodeRequest {
+  string Target = 1;
+  string Name = 2;
+  string Code = 3;
+  string Description = 4;
+  string State = 5;
+}
+
+message QueryCustomCodeRequest {
+  CustomCodeFilter Filter = 1;
+}
+
 message CustomCodeResponse {
   repeated string Names = 1;
   repeated string Codes = 2;
   repeated string Descriptions = 3;
   repeated string States = 4;
-}
-
-message QueryCustomCodeRequest {
-  CustomCodeFilter Filter = 1;
 }
 
 message CodecRequest {
