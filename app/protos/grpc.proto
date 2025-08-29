@@ -4836,6 +4836,7 @@ message CustomCodeRequest {
   string Code = 2;
   string Description = 3;
   string State = 4;
+  string Level = 5;
 }
 
 message EditCustomCodeRequest {
@@ -4844,6 +4845,7 @@ message EditCustomCodeRequest {
   string Code = 3;
   string Description = 4;
   string State = 5;
+  string Level = 6;
 }
 
 message QueryCustomCodeRequest {
@@ -4855,6 +4857,7 @@ message CustomCodeResponse {
   repeated string Codes = 2;
   repeated string Descriptions = 3;
   repeated string States = 4;
+  repeated string Level = 5;
 }
 
 message CodecRequest {
