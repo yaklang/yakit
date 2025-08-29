@@ -20,6 +20,142 @@ import styles from "./DownloadYakit.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
+interface useDownloadYakitProps {
+    intranetYakit?: boolean
+    setVisible?: (v: boolean) => void
+    onDownloadFinish?: (filePath: string,status:boolean) => void
+}
+
+/** @name Yakit软件更新下载 */
+export const useDownloadYakit = (props: useDownloadYakitProps) => {
+    const {intranetYakit = true, setVisible, onDownloadFinish} = props
+    // 是否中断下载进程
+    const isBreakRef = useRef<boolean>(false)
+    /** 下载进度条数据 */
+    const [downloadProgress, setDownloadProgress, getDownloadProgress] = useGetState<DownloadingState>()
+
+    /**
+     * 1. 获取最新软件版本号，并下载
+     * 2. 监听本地下载软件进度数据
+     */
+
+    const onDownloadStart = () => {
+        if (isCommunityEdition() || isEnpriTrace()) {
+            isBreakRef.current = true
+            setDownloadProgress(undefined)
+            if (intranetYakit) {
+                // 处理内网版本
+                grpcFetchIntranetYakitVersion()
+                    .then((filePath: string) => {
+                        ipcRenderer
+                            .invoke("download-latest-intranet-yakit", filePath)
+                            .then((isAlready) => {
+                                if (!isBreakRef.current) return
+                                if (onDownloadFinish) {
+                                    onDownloadFinish(filePath,true)
+                                    return
+                                }
+                                success("下载完毕")
+                                if (!isAlready) {
+                                    if (!getDownloadProgress()?.size) return
+                                    setDownloadProgress({
+                                        time: {
+                                            elapsed: downloadProgress?.time.elapsed || 0,
+                                            remaining: 0
+                                        },
+                                        speed: 0,
+                                        percent: 100,
+                                        // @ts-ignore
+                                        size: getDownloadProgress().size
+                                    })
+                                }
+                                ipcRenderer.invoke("open-yakit-path")
+                                emiter.emit("downloadedYakitIntranetFlag")
+                            })
+                            .catch((e: any) => {
+                                if (!isBreakRef.current) return
+                                onDownloadFinish?.(filePath,false)
+                                failed(`下载失败: ${e}`)
+                            })
+                            .finally(() => {
+                                setVisible?.(false)
+                            })
+                    })
+                    .catch((e: any) => {
+                        if (!isBreakRef.current) return
+                        setVisible?.(false)
+                    })
+            } else {
+                grpcFetchLatestYakitVersion()
+                    .then((data: string) => {
+                        let version = data
+                        if (version.startsWith("v")) version = version.slice(1)
+
+                        ipcRenderer
+                            .invoke("download-latest-yakit", version, {
+                                isEnterprise: isEnterpriseEdition(),
+                                isIRify: isIRify()
+                            })
+                            .then(() => {
+                                if (!isBreakRef.current) return
+                                success("下载完毕")
+                                if (!getDownloadProgress()?.size) return
+                                setDownloadProgress({
+                                    time: {
+                                        elapsed: downloadProgress?.time.elapsed || 0,
+                                        remaining: 0
+                                    },
+                                    speed: 0,
+                                    percent: 100,
+                                    // @ts-ignore
+                                    size: getDownloadProgress().size
+                                })
+                                ipcRenderer.invoke("open-yakit-path")
+                                emiter.emit("downloadedYakitFlag")
+                            })
+                            .catch((e: any) => {
+                                if (!isBreakRef.current) return
+                                failed(`下载失败: ${e}`)
+                            })
+                            .finally(() => setVisible?.(false))
+                    })
+                    .catch((e: any) => {
+                        if (!isBreakRef.current) return
+                        setVisible?.(false)
+                    })
+            }
+        }
+        // 如需编写 Yakit-EE 下载功能，可在此处添加
+        ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
+            if (!isBreakRef.current) return
+            setDownloadProgress(safeFormatDownloadProcessState(state))
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("download-yakit-engine-progress")
+        }
+    }
+
+    /** 取消下载事件 */
+    const onCancel = useMemoizedFn(() => {
+        isBreakRef.current = false
+        setVisible?.(false)
+        setDownloadProgress(undefined)
+        ipcRenderer.invoke("cancel-download-yakit-version")
+    })
+
+    const onBreak = useMemoizedFn((isBreak: boolean) => {
+        isBreakRef.current = isBreak
+    })
+    return [
+        downloadProgress,
+        {
+            onDownloadStart,
+            onCancel,
+            onBreak
+        }
+    ] as const
+}
+
 interface DownloadYakitProps {
     system: YakitSystem
     visible: boolean
@@ -31,6 +167,7 @@ interface DownloadYakitProps {
 export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
     const {system, visible, setVisible, intranetYakit} = props
 
+    const [downloadProgress, {onDownloadStart, onCancel, onBreak}] = useDownloadYakit({intranetYakit, setVisible})
     /** 常见问题弹窗是否展示 */
     const [qsShow, setQSShow] = useState<boolean>(false)
 
@@ -42,12 +179,6 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
     const debouncedBounds = useDebounce(bounds, {wait: 500})
     const draggleRef = useRef<HTMLDivElement>(null)
 
-    /** 下载进度条数据 */
-    const [downloadProgress, setDownloadProgress, getDownloadProgress] = useGetState<DownloadingState>()
-
-    // 是否中断下载进程
-    const isBreakRef = useRef<boolean>(false)
-
     /**
      * 1. 获取最新软件版本号，并下载
      * 2. 监听本地下载软件进度数据
@@ -55,93 +186,9 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
      */
     useEffect(() => {
         if (visible) {
-            if (isCommunityEdition() || isEnpriTrace()) {
-                isBreakRef.current = true
-                setDownloadProgress(undefined)
-                if (intranetYakit) {
-                    // 处理内网版本
-                    grpcFetchIntranetYakitVersion()
-                        .then((filePath: string) => {
-                            ipcRenderer
-                                .invoke("download-latest-intranet-yakit", filePath)
-                                .then(() => {
-                                    if (!isBreakRef.current) return
-                                    success("下载完毕")
-                                    if (!getDownloadProgress()?.size) return
-                                    setDownloadProgress({
-                                        time: {
-                                            elapsed: downloadProgress?.time.elapsed || 0,
-                                            remaining: 0
-                                        },
-                                        speed: 0,
-                                        percent: 100,
-                                        // @ts-ignore
-                                        size: getDownloadProgress().size
-                                    })
-                                    ipcRenderer.invoke("open-yakit-path")
-                                    emiter.emit("downloadedYakitIntranetFlag")
-                                })
-                                .catch((e: any) => {
-                                    if (!isBreakRef.current) return
-                                    failed(`下载失败: ${e}`)
-                                })
-                                .finally(() => setVisible(false))
-                        })
-                        .catch((e: any) => {
-                            if (!isBreakRef.current) return
-                            setVisible(false)
-                        })
-                } else {
-                    grpcFetchLatestYakitVersion()
-                        .then((data: string) => {
-                            let version = data
-                            if (version.startsWith("v")) version = version.slice(1)
-
-                            ipcRenderer
-                                .invoke("download-latest-yakit", version, {
-                                    isEnterprise: isEnterpriseEdition(),
-                                    isIRify: isIRify()
-                                })
-                                .then(() => {
-                                    if (!isBreakRef.current) return
-                                    success("下载完毕")
-                                    if (!getDownloadProgress()?.size) return
-                                    setDownloadProgress({
-                                        time: {
-                                            elapsed: downloadProgress?.time.elapsed || 0,
-                                            remaining: 0
-                                        },
-                                        speed: 0,
-                                        percent: 100,
-                                        // @ts-ignore
-                                        size: getDownloadProgress().size
-                                    })
-                                    ipcRenderer.invoke("open-yakit-path")
-                                    emiter.emit("downloadedYakitFlag")
-                                })
-                                .catch((e: any) => {
-                                    if (!isBreakRef.current) return
-                                    failed(`下载失败: ${e}`)
-                                })
-                                .finally(() => setVisible(false))
-                        })
-                        .catch((e: any) => {
-                            if (!isBreakRef.current) return
-                            setVisible(false)
-                        })
-                }
-            }
-            // 如需编写 Yakit-EE 下载功能，可在此处添加
-
-            ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
-                if (!isBreakRef.current) return
-                setDownloadProgress(safeFormatDownloadProcessState(state))
-            })
-            return () => {
-                ipcRenderer.removeAllListeners("download-yakit-engine-progress")
-            }
+            onDownloadStart()
         } else {
-            isBreakRef.current = false
+            onBreak(false)
         }
     }, [visible])
 
@@ -157,14 +204,6 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
             top: -targetRect.top + uiData.y + 36,
             bottom: clientHeight - (targetRect.bottom - uiData.y)
         })
-    })
-
-    /** 取消下载事件 */
-    const onCancel = useMemoizedFn(() => {
-        isBreakRef.current = false
-        setVisible(false)
-        setDownloadProgress(undefined)
-        ipcRenderer.invoke("cancel-download-yakit-version")
     })
 
     return (

@@ -30,9 +30,11 @@ const getSocketUrl = (inputUrl) => {
 }
 
 ipcMain.on("sync-edit-baseUrl", (event, arg) => {
-    HttpSetting.httpBaseURL = arg.baseUrl
-    HttpSetting.wsBaseURL = getSocketUrl(arg.baseUrl)
-    event.returnValue = arg
+    try {
+        HttpSetting.httpBaseURL = arg.baseUrl
+        HttpSetting.wsBaseURL = getSocketUrl(arg.baseUrl)
+        event.returnValue = arg
+    } catch (error) {}
 })
 
 const add_proxy = process.env.https_proxy || process.env.HTTPS_PROXY

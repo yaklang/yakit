@@ -292,12 +292,19 @@ module.exports = {
             event.returnValue = user
         })
 
-        ipcMain.on("edit-baseUrl", (event, arg) => {
-            HttpSetting.httpBaseURL = arg.baseUrl
-            HttpSetting.wsBaseURL = getSocketUrl(arg.baseUrl)
-            USER_INFO.token = ""
-            win.webContents.send("edit-baseUrl-status", {ok: true, info: "更改成功"})
-            win.webContents.send("refresh-new-home", {ok: true, info: "刷新成功"})
+        ipcMain.handle("edit-baseUrl", async (event, arg) => {
+            return await new Promise((resolve, reject) => {
+                try {
+                    HttpSetting.wsBaseURL = getSocketUrl(arg.baseUrl)
+                    HttpSetting.httpBaseURL = arg.baseUrl
+                    USER_INFO.token = ""
+                    win.webContents.send("edit-baseUrl-status", {ok: true, info: "更改成功"})
+                    win.webContents.send("refresh-new-home", {ok: true, info: "刷新成功"})
+                    resolve()
+                } catch (error) {
+                    reject(error)
+                }
+            })
         })
 
         ipcMain.handle("reset-password", (event, arg) => {
