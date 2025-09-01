@@ -3,7 +3,14 @@ import {yakitNotify} from "@/utils/notification"
 import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
-import {AIChatMessage, AIInputEvent, AIOutputEvent, AIStartParams} from "@/pages/ai-agent/type/aiChat"
+import {
+    AIChatIPCData,
+    AIChatIPCDataEvents,
+    AIChatMessage,
+    AIInputEvent,
+    AIOutputEvent,
+    AIStartParams
+} from "@/pages/ai-agent/type/aiChat"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
 import useCasualChat, {UseCasualChatTypes} from "./useCasualChat"
@@ -282,8 +289,8 @@ function useChatIPC(params?: useChatIPCParams) {
     }, [])
 
     return [
-        {execute, logs, aiPerfData, card, casualChat},
-        {onStart, onSend, onClose, handleReset, fetchToken}
+        {execute, logs, aiPerfData, card, casualChat} as AIChatIPCData,
+        {onStart, onSend, onClose, handleReset, fetchToken} as AIChatIPCDataEvents
     ] as const
 }
 
