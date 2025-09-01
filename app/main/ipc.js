@@ -336,5 +336,12 @@ module.exports = {
         } catch (error) {
             console.log("ai-agent.js-error", error)
         }
+
+        // entity repository
+        try {
+            require("./handlers/entityRepository")(win, getClient)
+        } catch (error) {
+            console.log("entityRepository.js-error", error)
+        }
     }
 }
