@@ -928,6 +928,89 @@ service Yak {
 
   rpc BuildVectorIndexForKnowledgeBase(BuildVectorIndexForKnowledgeBaseRequest) returns(GeneralResponse);
   rpc BuildVectorIndexForKnowledgeBaseEntry(BuildVectorIndexForKnowledgeBaseEntryRequest) returns(GeneralResponse);
+
+  // Entity Repository
+  rpc ListEntityRepository(Empty) returns(ListEntityRepositoryResponse);
+
+  rpc QueryEntity(QueryEntityRequest) returns (QueryEntityResponse);
+  rpc QueryRelationship(QueryRelationshipRequest) returns (QueryRelationshipResponse);
+  rpc GenerateERMDot(GenerateERMDotRequest) returns (GenerateERMDotResponse);
+}
+
+message EntityRepository {
+  int64 ID = 1;
+  string Name = 2;
+  string Description = 3;
+}
+
+message ListEntityRepositoryResponse {
+  repeated EntityRepository EntityRepositories = 1;
+}
+
+message Entity {
+  uint64 ID = 1;
+  string Type = 2;
+  string Name = 3;
+  string Description = 4;
+  uint64 BaseID = 5;
+  repeated KVPair Attributes = 6;
+  string  Rationale = 7;
+}
+
+message EntityFilter {
+  uint64  BaseID = 1;
+  repeated uint64 IDs = 2;
+  repeated string Types = 3;
+  repeated string Names = 4;
+}
+
+message QueryEntityRequest {
+  EntityFilter Filter = 1;
+  Paging Pagination = 2;
+}
+
+message QueryEntityResponse {
+  repeated Entity Entities = 1;
+  Paging Pagination = 2;
+  uint64 Total = 3;
+}
+
+message Relationship {
+  uint64 ID = 1;
+  string Type = 2;
+  uint64 SourceEntityID = 3;
+  uint64 TargetEntityID = 4;
+  repeated KVPair Attributes = 5;
+  string Rationale = 6;
+}
+
+message RelationshipFilter {
+  uint64 BaseID = 1;
+  repeated uint64 IDs = 2;
+  repeated string Types = 3;
+  repeated uint64 SourceEntityIDs = 4;
+  repeated uint64 TargetEntityIDs = 5;
+  repeated uint64 AboutEntityIDs = 6; // Source or Target
+}
+
+message QueryRelationshipRequest {
+  RelationshipFilter Filter = 1;
+  Paging Pagination = 2;
+}
+
+message QueryRelationshipResponse {
+  repeated Relationship Relationships = 1;
+  Paging Pagination = 2;
+  uint64 Total = 3;
+}
+
+message GenerateERMDotRequest {
+  EntityFilter Filter = 1;
+  uint64 Depth = 2;
+}
+
+message GenerateERMDotResponse {
+  string Dot = 1;
 }
 
 message StartedLocalModelInfo {

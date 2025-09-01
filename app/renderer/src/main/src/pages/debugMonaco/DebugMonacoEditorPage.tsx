@@ -16,6 +16,7 @@ import {HybridScanTaskTable} from "@/components/playground/hybrid/HybridScanTask
 import {SpaceEngineOperator} from "@/components/playground/spaceengine/SpaceEngineOperator"
 import {JavaDecompilerOperator} from "@/components/playground/javadecompiler/JavaDecompilerOperator"
 import {ThirdPartyBinaryManager} from "@/components/playground/thirdPartyBinary/ThirdPartyBinaryManager"
+import { EntityRepositoryPage } from "@/components/playground/entityRepository/EntityRepositoryPage"
 export interface DebugMonacoEditorPageProp {}
 
 const TAG = "DEBUG_PLAYGROUND_DEFAULT_MODE"
@@ -70,7 +71,8 @@ a=1&b=2 Content-Length: a
                             {value: "risk-table", label: "漏洞查询规则"},
                             {value: "http-monaco-editor", label: "HTTP 数据包编辑器"},
                             {value: "fs-tree", label: "文件系统树"},
-                            {value: "third-party-binary", label: "第三方应用管理"}
+                            {value: "third-party-binary", label: "第三方应用管理"},
+                            {value: "entity-repository", label: "实体仓库"}
                         ]}
                         formItemStyle={{margin: 0}}
                         value={mode}
@@ -100,7 +102,9 @@ a=1&b=2 Content-Length: a
                             return <JavaDecompilerOperator />
                         case "third-party-binary":
                             return <ThirdPartyBinaryManager />
-                    }
+                        case "entity-repository":
+                            return <EntityRepositoryPage />
+                        }
                     return <div>NO PLUGIN DEMO</div>
                 })()}
             </AutoCard>
