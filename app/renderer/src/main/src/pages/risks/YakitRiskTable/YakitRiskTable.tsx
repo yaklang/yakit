@@ -2068,14 +2068,14 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                 <>
                     <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
                         {info.Description ? (
-                            <MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Description} />
+                            <MDEditor.Markdown source={info.Description} style={{ whiteSpace: "normal",fontSize:14 }} />
                         ) : (
                             "-"
                         )}
                     </Descriptions.Item>
                     <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
                         {info.Solution ? (
-                            <MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Solution} />
+                            <MDEditor.Markdown source={info.Solution} style={{ whiteSpace: "normal",fontSize:14 }}/>
                         ) : (
                             "-"
                         )}
