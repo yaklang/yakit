@@ -16,6 +16,7 @@ import {
     OutlineLog2Icon,
     OutlineRefreshIcon,
     OutlineSearchIcon,
+    OutlineSelectorIcon,
     OutlineTerminalIcon
 } from "@/assets/icon/outline"
 import classNames from "classnames"
@@ -41,6 +42,7 @@ import {
     onRemoveCalloutColor,
     onSendToTab,
     RangeInputNumberTable,
+    RangeInputNumberTableWrapper,
     SourceType,
     YakQueryHTTPFlowResponse
 } from "@/components/HTTPFlowTable/HTTPFlowTable"
@@ -1017,21 +1019,17 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             {
                 title: "响应长度",
                 dataKey: "BodyLength",
-                width: 200,
-                minWidth: 140,
+                width: 120,
                 sorterProps: {
                     sorter: true
                 },
-                beforeIconExtra: (
-                    <div className={classNames(styles["body-length-checkbox"])}>
-                        <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)} />
-                        <span className={styles["tip"]}>大于0</span>
-                    </div>
-                ),
                 filterProps: {
                     filterKey: "bodyLength",
-                    filterRender: () => (
-                        <RangeInputNumberTable
+                    filterIcon: <OutlineSelectorIcon className={styles["filter-icon"]} />,
+                    filterRender: (closePopover: () => void) => (
+                        <RangeInputNumberTableWrapper
+                            checkBodyLength={checkBodyLength}
+                            onCheckThan0={onCheckThan0}
                             minNumber={afterBodyLength}
                             setMinNumber={setAfterBodyLength}
                             maxNumber={beforeBodyLength}
@@ -1047,6 +1045,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                 setBeforeBodyLength(undefined)
                                 setAfterBodyLength(undefined)
                                 setBodyLengthUnit("B")
+                                setTimeout(() => {
+                                    closePopover()
+                                }, 50)
                             }}
                             onSure={() => {
                                 setQuery((prev) => {
@@ -1063,6 +1064,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                             : undefined
                                     }
                                 })
+                                setTimeout(() => {
+                                    closePopover()
+                                }, 50)
                             }}
                             extra={
                                 <YakitSelect
