@@ -528,11 +528,10 @@ const ContentEditableDiv: React.FC<ContentEditableDivProps> = React.memo((props)
             onBlur={(e) => {
                 setValue(e.target.innerText || "")
             }}
-            dangerouslySetInnerHTML={{__html: value}}
             suppressContentEditableWarning={true}
             spellCheck={false}
             data-placeholder={placeholder}
-        ></div>
+        >{value}</div>
     )
 })
 /**树的每一项的线 */
