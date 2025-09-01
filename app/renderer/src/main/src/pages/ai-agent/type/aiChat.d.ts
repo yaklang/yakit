@@ -189,15 +189,33 @@ export interface AIChatInfo {
     request: AIStartParams
     /** 回答 */
     answer?: {
+        /**@deprecated */
         pressure: AIChatMessage.Pressure[]
+        /**@deprecated */
         firstCost: AIChatMessage.AICostMS[]
+        /**@deprecated */
         totalCost: AIChatMessage.AICostMS[]
+        /**@deprecated */
         consumption: Record<string, AIChatMessage.Consumption>
+        /**@deprecated */
         plans?: AIChatMessage.PlanTask
+        /**@deprecated */
         taskList: AIChatMessage.PlanTask[]
+        /**@deprecated */
         logs: AIChatMessage.Log[]
+        /**@deprecated */
         streams: Record<string, AIChatStreams[]>
+        /**@deprecated */
         systemOutputs: AIChatMessage.AIChatSystemOutput[]
+
+        aiPerfData: {
+            consumption: Record<string, AIChatMessage.Consumption>
+            pressure: AIChatMessage.Pressure[]
+            firstCost: AIChatMessage.AICostMS[]
+            totalCost: AIChatMessage.AICostMS[]
+        }
+        logs: AIChatMessage.Log[]
+        casualChat: {contents: AIChatMessage.AICasualChatQAStream[]}
     }
 }
 /**QueryAIEvent 接口请求 */
@@ -447,6 +465,7 @@ export declare namespace AIChatMessage {
         data: AIStreamOutput | string | AIChatToolResult | ToolUseReviewRequire | AIReviewRequire
     }
 }
+/**@deprecated */
 export declare namespace AIReActChatMessage {
     export interface AIReActChatItem extends Omit<AIChatInfo, "answer"> {
         /** 回答 */
@@ -674,5 +693,38 @@ export interface ClearAllModelsRequest {
 export interface GetAIModelListResponse {
     onlineModels: ThirdPartyApplicationConfig[]
     localModels: StartedLocalModelInfo[]
+}
+//#endregion
+
+//#region useHooks相关
+/**useChatIPC */
+export interface AIChatIPCData {
+    execute: boolean
+    logs: AIChatMessage.Log[]
+    aiPerfData: AIPerfData
+    card: AIChatMessage.AIInfoCard[]
+    casualChat: {contents: AIChatMessage.AICasualChatQAStream[]}
+}
+export interface AIChatIPCDataEvents {
+    onStart: (token: string, params: AIInputEvent) => void
+    onSend: (token: string, type: "casual" | "task", params: AIInputEvent) => void
+    onClose: (token: string, option?: {tip: () => void}) => void
+    handleReset: () => void
+    fetchToken: () => string
+}
+/**useAIPerfData */
+export interface AIPerfData {
+    consumption: Record<string, AIChatMessage.Consumption>
+    pressure: AIChatMessage.Pressure[]
+    firstCost: AIChatMessage.AICostMS[]
+    totalCost: AIChatMessage.AICostMS[]
+}
+export interface AIPerfDataEvents {
+    handleSetData: (res: AIOutputEvent) => void
+    handleResetData: () => void
+}
+export interface AIExecCardEvents {
+    handleSetData: (res: AIOutputEvent) => void
+    handleResetData: () => void
 }
 //#endregion

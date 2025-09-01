@@ -308,7 +308,16 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                     taskList: cloneDeep(plan),
                     logs: cloneDeep(logs),
                     streams: cloneDeep(streams),
-                    systemOutputs: cloneDeep(systemOutputs)
+                    systemOutputs: cloneDeep(systemOutputs),
+                    aiPerfData: {
+                        consumption: {},
+                        pressure: [],
+                        firstCost: [],
+                        totalCost: []
+                    },
+                    casualChat: {
+                        contents: []
+                    }
                 }
 
                 setChats &&

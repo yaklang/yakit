@@ -2,7 +2,7 @@ import {useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
-import {AIChatMessage, AIOutputEvent} from "@/pages/ai-agent/type/aiChat"
+import {AIChatMessage, AIOutputEvent, AIPerfData, AIPerfDataEvents} from "@/pages/ai-agent/type/aiChat"
 
 // 属于该 hook 处理数据的类型
 export const UseAIPerfDataTypes = ["consumption", "pressure", "ai_first_byte_cost_ms", "ai_total_cost_ms"]
@@ -95,8 +95,8 @@ function useAIPerfData(params?: useAIPerfDataParams) {
     })
 
     return [
-        {consumption, pressure, firstCost, totalCost},
-        {handleSetData, handleResetData}
+        {consumption, pressure, firstCost, totalCost} as AIPerfData,
+        {handleSetData, handleResetData} as AIPerfDataEvents
     ] as const
 }
 

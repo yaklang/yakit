@@ -3,7 +3,7 @@ import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import {checkStreamValidity, convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatMessage, AIOutputEvent} from "@/pages/ai-agent/type/aiChat"
+import {AIChatMessage, AIExecCardEvents, AIOutputEvent} from "@/pages/ai-agent/type/aiChat"
 
 // 属于该 hook 处理数据的类型
 export const UseExecCardTypes = ["yak_exec_result"]
@@ -72,7 +72,7 @@ function useExecCard(params?: useExecCardParams) {
         setCard([])
     })
 
-    return [card, {handleSetData, handleResetData}] as const
+    return [card, {handleSetData, handleResetData} as AIExecCardEvents] as const
 }
 
 export default useExecCard
