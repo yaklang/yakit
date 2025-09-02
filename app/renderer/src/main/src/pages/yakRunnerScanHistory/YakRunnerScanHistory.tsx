@@ -198,7 +198,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                     })
                     .then((res: GenerateSSAReportResponse) => {
                         yakitNotify("success", res.Message)
-                        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.DB_Report}))
+                        emiter.emit("openPage", JSON.stringify({route: YakitRoute.DB_Report}))
                         m.destroy()
                     })
                     .catch((e) => {

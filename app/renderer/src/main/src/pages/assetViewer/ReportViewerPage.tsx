@@ -16,7 +16,6 @@ import classNames from "classnames"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {onRemoveToolFC} from "@/utils/deleteTool"
 import {isEnterpriseEdition} from "@/utils/envfile"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import html2pdf from "html2pdf.js"
@@ -47,6 +46,7 @@ import {AutoCard} from "@/components/AutoCard"
 import styles from "./ReportViewerPage.module.scss"
 import {getEnvTypeByProjects} from "../softwareSettings/ProjectManage"
 import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
+import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 interface ReportViewerPageProp {}
@@ -116,6 +116,17 @@ const ReportList: React.FC<ReportListProp> = (props) => {
         update(1)
     }, [])
 
+    const onRefreshDBReportFun = useMemoizedFn(()=>{
+        update(1)
+    })
+
+    useEffect(()=>{
+        emiter.on("onRefreshDBReport",onRefreshDBReportFun)
+        return () => {
+            emiter.off("onRefreshDBReport", onRefreshDBReportFun)
+        }
+    },[])
+
     useEffect(() => {
         ipcRenderer.on("fetch-simple-open-report", (e, reportId: number) => {
             update(1)
@@ -170,14 +181,13 @@ const ReportList: React.FC<ReportListProp> = (props) => {
     }
 
     const onRemove = useMemoizedFn(() => {
-        const transferParams = {
-            selectedRowKeys,
-            params: {...query, Type: getEnvTypeByProjects()},
-            interfaceName: "DeleteReport",
-            selectedRowKeysNmae: "IDs"
-        }
         setLoading(true)
-        onRemoveToolFC(transferParams)
+        ipcRenderer
+            .invoke("DeleteReport", {
+                Type: getEnvTypeByProjects(),
+                IDs: selectedRowKeys,
+                DeleteAll: selectedRowKeys.length === 0
+            })
             .then(() => {
                 selectedRowKeys.length === 0 && onSetSelectReportId(undefined)
                 if (selectReportId && selectedRowKeys.includes(selectReportId)) {
@@ -185,6 +195,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                 }
                 update(1)
             })
+            .catch((e: any) => {})
             .finally(() => setLoading(false))
     })
 
