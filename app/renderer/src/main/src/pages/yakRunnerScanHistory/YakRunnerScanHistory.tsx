@@ -23,8 +23,14 @@ import classNames from "classnames"
 import {formatTimestamp} from "@/utils/timeUtil"
 
 import styles from "./YakRunnerScanHistory.module.scss"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 const {ipcRenderer} = window.require("electron")
-
+interface GenerateSSAReportResponse {
+    Success: boolean
+    Message: string
+    ReportData: string
+}
 interface YakRunnerScanHistoryProp {}
 const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
     const {queryPagesDataById} = usePageInfo(
@@ -169,6 +175,39 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
         )
     })
 
+    const exportReport = useMemoizedFn((record: SyntaxFlowScanTask) => {
+        let reportName = !!query.Filter?.Programs?.length ? `${query.Filter?.Programs[0]}-SSA扫描报告` : undefined
+        const m = showYakitModal({
+            title: "导出报告",
+            content: (
+                <div style={{padding: 20}}>
+                    <YakitInput defaultValue={reportName} placeholder='请输入报告名称' onChange={(e) => {
+                        reportName = e.target.value
+                    }} />
+                </div>
+            ),
+            onCancel: () => {
+                m.destroy()
+            },
+            showConfirmLoading: true,
+            onOk: () => {
+                ipcRenderer
+                    .invoke("GenerateSSAReport", {
+                        TaskID: record.TaskId,
+                        ReportName: reportName
+                    })
+                    .then((res: GenerateSSAReportResponse) => {
+                        yakitNotify("success", res.Message)
+                        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.DB_Report}))
+                        m.destroy()
+                    })
+                    .catch((e) => {
+                        yakitNotify("error", "导出报告失败：" + e)
+                    })
+            }
+        })
+    })
+
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(
         () => [
             {
@@ -254,32 +293,44 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
             {
                 title: "操作",
                 dataKey: "action",
-                width: 85,
+                width: 160,
                 fixed: "right",
                 render: (_, record: SyntaxFlowScanTask) => (
-                    <YakitButton
-                        type='text'
-                        onClick={() => {
-                            const params: AuditCodePageInfoProps = {
-                                Schema: "syntaxflow",
-                                Location: !!query.Filter?.Programs?.length ? query.Filter?.Programs[0] : "",
-                                Path: `/`,
-                                leftTabActive: "file",
-                                runtimeId: record.TaskId,
-                                refreshRiskOrRuleList: true,
-                                isShowCompare: true
-                            }
-                            emiter.emit(
-                                "openPage",
-                                JSON.stringify({
-                                    route: YakitRoute.YakRunner_Audit_Code,
-                                    params: params
-                                })
-                            )
-                        }}
-                    >
-                        查看详情
-                    </YakitButton>
+                    <>
+                        <YakitButton
+                            type='text'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                const params: AuditCodePageInfoProps = {
+                                    Schema: "syntaxflow",
+                                    Location: !!query.Filter?.Programs?.length ? query.Filter?.Programs[0] : "",
+                                    Path: `/`,
+                                    leftTabActive: "file",
+                                    runtimeId: record.TaskId,
+                                    refreshRiskOrRuleList: true,
+                                    isShowCompare: true
+                                }
+                                emiter.emit(
+                                    "openPage",
+                                    JSON.stringify({
+                                        route: YakitRoute.YakRunner_Audit_Code,
+                                        params: params
+                                    })
+                                )
+                            }}
+                        >
+                            查看详情
+                        </YakitButton>
+                        <YakitButton
+                            type='text'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                exportReport(record)
+                            }}
+                        >
+                            导出报告
+                        </YakitButton>
+                    </>
                 )
             }
         ],
