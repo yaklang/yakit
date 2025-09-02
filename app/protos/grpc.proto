@@ -812,6 +812,9 @@ service Yak {
 
   rpc SSARiskFeedbackToOnline(SSARiskFeedbackToOnlineRequest) returns (Empty);
 
+  // SSA Report
+  rpc GenerateSSAReport(GenerateSSAReportRequest) returns (GenerateSSAReportResponse);
+
   rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
   rpc QueryPluginEnv(QueryPluginEnvRequest) returns (PluginEnvData);
   rpc CreatePluginEnv(PluginEnvData) returns (Empty); // create
@@ -7815,4 +7818,16 @@ message PluginTraceStats {
   int64 CompletedTraces = 3;
   int64 FailedTraces = 4;
   int64 CancelledTraces = 5;
+}
+
+// SSA Report Messages
+message GenerateSSAReportRequest {
+  string TaskID = 1;     // SSA扫描TaskID
+  string ReportName = 2;    // 报告名称
+}
+
+message GenerateSSAReportResponse {
+  bool Success = 1;
+  string Message = 2;
+  string ReportData = 3;
 }
