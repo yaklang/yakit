@@ -720,10 +720,22 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.ModifyAITool:
                 modifyAITool(params)
                 break
+            case YakitRoute.DB_Report:
+                dbReport()
+                break
             default:
                 break
         }
     })
+
+    const dbReport = useMemoizedFn(()=>{
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.DB_Report).length
+        if (isExist) {
+            emiter.emit("onRefreshDBReport")
+        }
+        openMenuPage({route: YakitRoute.DB_Report})
+    })
+
     const addProjectManager = useMemoizedFn(() => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Project_Manager).length
         if (isExist) {
