@@ -9,16 +9,33 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {createRoot} from "react-dom/client"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+
+interface YakitBaseModalProp
+    extends Omit<YakitModalProp, "okType" | "okButtonProps" | "cancelButtonProps">,
+        React.ComponentProps<any> {
+    onVisibleSetter?: (setter: (i: boolean) => any) => any
+    showConfirmLoading?: boolean
+    subTitle?:string
+}
+
 export interface YakitModalConfirmProps extends YakitBaseModalProp {
     title?: React.ReactNode | string
     content?: React.ReactNode | string
     modalAfterClose?: () => any
-    onOk?: () => any
-    onCancel?: () => any
+    onOk?: (e) => any
+    onCancel?: (e) => any
     onOkText?: string
     onCancelText?: string
     showConfirmLoading?: boolean
 }
+
+interface YakitBaseModalProps extends YakitModalProp, React.ComponentProps<any> {
+    onVisibleSetter?: (setter: (i: boolean) => void) => void
+    showConfirmLoading?: boolean
+    onCancelText?: string
+    onOkText?: string
+}
+
 export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
     const div = document.createElement("div")
     document.body.appendChild(div)
@@ -107,14 +124,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
     }
 }
 
-interface YakitBaseModalProp
-    extends Omit<YakitModalProp, "cancelButtonProps" | "okButtonProps" | "okType">,
-        React.ComponentProps<any> {
-    onVisibleSetter?: (setter: (i: boolean) => any) => any
-    showConfirmLoading?: boolean
-}
-
-const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
+const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [visible, setVisible] = useState<boolean>(true)
     const [loading, setLoading] = useState<boolean>(false)

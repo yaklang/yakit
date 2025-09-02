@@ -41,6 +41,9 @@ export const BaseModal: React.FC<BaseModalProp> = (props) => {
 export interface ShowModalProps extends BaseModalProp {
     content?: React.ReactNode
     modalAfterClose?: () => any
+    type?: string
+    hiddenHeader?: boolean
+    subTitle?: string
 }
 
 export const showModal = (props: ShowModalProps) => {
@@ -105,9 +108,10 @@ export const showModal = (props: ShowModalProps) => {
 }
 
 export interface BaseDrawerProp extends DrawerProps, React.ComponentProps<any> {
-    afterClose?: (invisibleSetter?: (b: boolean) => any) => any
-    afterVisible?: (invisibleSetter?: (b: boolean) => any) => any
-    afterInvisible?: (invisibleSetter?: (b: boolean) => any) => any
+    afterClose?: (invisibleSetter?: (b: boolean) => void) => void
+    afterVisible?: (invisibleSetter?: (b: boolean) => void) => void
+    afterInvisible?: (invisibleSetter?: (b: boolean) => void) => void
+    onVisibleSetter?: (setter: (i: boolean) => void) => void
 }
 
 export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
@@ -150,6 +154,7 @@ export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
 
 export interface ShowDrawerProps extends BaseDrawerProp {
     content?: React.ReactNode
+    onCancel?: (e) => void
 }
 
 export const showDrawer = (props: ShowDrawerProps) => {
