@@ -690,29 +690,29 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                         maskClosable: false,
                                                         footer: null,
                                                         content: (
-                                                                <NewThirdPartyApplicationConfig
-                                                                    formValues={{
-                                                                        Type: i.Type,
-                                                                        ...extraParams
-                                                                    }}
-                                                                    disabledType={true}
-                                                                    onAdd={(data) => {
-                                                                        setParams({
-                                                                            ...params,
-                                                                            AppConfigs: (params.AppConfigs || []).map(
-                                                                                (i) => {
-                                                                                    if (i.Type === data.Type) {
-                                                                                        i = data
-                                                                                    }
-                                                                                    return {...i}
+                                                            <NewThirdPartyApplicationConfig
+                                                                formValues={{
+                                                                    Type: i.Type,
+                                                                    ...extraParams
+                                                                }}
+                                                                disabledType={true}
+                                                                onAdd={(data) => {
+                                                                    setParams({
+                                                                        ...params,
+                                                                        AppConfigs: (params.AppConfigs || []).map(
+                                                                            (i) => {
+                                                                                if (i.Type === data.Type) {
+                                                                                    i = data
                                                                                 }
-                                                                            )
-                                                                        })
-                                                                        setTimeout(() => submit(), 100)
-                                                                        m.destroy()
-                                                                    }}
-                                                                    onCancel={() => m.destroy()}
-                                                                />
+                                                                                return {...i}
+                                                                            }
+                                                                        )
+                                                                    })
+                                                                    setTimeout(() => submit(), 100)
+                                                                    m.destroy()
+                                                                }}
+                                                                onCancel={() => m.destroy()}
+                                                            />
                                                         )
                                                     })
                                                 }}
@@ -741,27 +741,25 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 closable: true,
                                                 maskClosable: false,
                                                 content: (
-                                                        <NewThirdPartyApplicationConfig
-                                                            onAdd={(data) => {
-                                                                let existed = false
-                                                                const existedResult = (params.AppConfigs || []).map(
-                                                                    (i) => {
-                                                                        if (i.Type === data.Type) {
-                                                                            existed = true
-                                                                            return {...i, ...data}
-                                                                        }
-                                                                        return {...i}
-                                                                    }
-                                                                )
-                                                                if (!existed) {
-                                                                    existedResult.push(data)
+                                                    <NewThirdPartyApplicationConfig
+                                                        onAdd={(data) => {
+                                                            let existed = false
+                                                            const existedResult = (params.AppConfigs || []).map((i) => {
+                                                                if (i.Type === data.Type) {
+                                                                    existed = true
+                                                                    return {...i, ...data}
                                                                 }
-                                                                setParams({...params, AppConfigs: existedResult})
-                                                                setTimeout(() => submit(), 100)
-                                                                m.destroy()
-                                                            }}
-                                                            onCancel={() => m.destroy()}
-                                                        />
+                                                                return {...i}
+                                                            })
+                                                            if (!existed) {
+                                                                existedResult.push(data)
+                                                            }
+                                                            setParams({...params, AppConfigs: existedResult})
+                                                            setTimeout(() => submit(), 100)
+                                                            m.destroy()
+                                                        }}
+                                                        onCancel={() => m.destroy()}
+                                                    />
                                                 )
                                             })
                                         }}

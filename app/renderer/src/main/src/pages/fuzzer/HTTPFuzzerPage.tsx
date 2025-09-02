@@ -1,4 +1,4 @@
-import React, {CSSProperties, useEffect, useMemo, useRef, useState} from "react"
+import React, {CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react"
 import {Form, Result, Space, Popover, Tooltip, Divider, Descriptions} from "antd"
 import {
     IMonacoEditor,
@@ -158,9 +158,14 @@ import {
 import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 import {updateConcurrentLoad} from "@/utils/duplex/duplex"
+import {debugToPrintLog} from "@/utils/logCollection"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
+
+// 保留数组中非重复数据
+type TFilterNonUnique = <T>(arr: T[]) => T[]
+const filterNonUnique: TFilterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -894,64 +899,70 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
     const isSaveFuzzerLabelFun = useMemoizedFn(() => {
         // 常用标签默认存储
-        ipcRenderer.invoke("QueryFuzzerLabel").then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
-            const {Data} = data
-            if (Array.isArray(Data) && Data.length === 0) {
-                ipcRenderer.invoke("SaveFuzzerLabel", {
-                    Data: defaultLabel
-                })
-                // 缓存标签数量 用于添加生成标签Description
-                setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: defaultLabel.length}))
-            } else {
-                // 获取缓存的固有标签
-                let oldFixedArr: string[] = []
-                // 获取最新的固有标签
-                let newFixedArr: string[] = defaultLabel.map((item) => item.DefaultDescription)
-                Data.forEach((item) => {
-                    if (item.DefaultDescription.endsWith("-fixed")) {
-                        oldFixedArr.push(item.DefaultDescription)
-                    }
-                })
-                let arr: string[] = filterNonUnique([...oldFixedArr, ...newFixedArr])
-                arr.forEach((item) => {
-                    // 需要新添的项
-                    if (newFixedArr.includes(item)) {
-                        ipcRenderer.invoke("SaveFuzzerLabel", {
-                            Data: defaultLabel.filter((itemIn) => itemIn.DefaultDescription === item)
-                        })
-                    }
-                    // 需要删除的项
-                    else {
-                        ipcRenderer.invoke("DeleteFuzzerLabel", {
-                            Hash: Data.filter((itemIn) => itemIn.DefaultDescription === item)[0].Hash
-                        })
-                    }
-                })
-            }
-        })
+        ipcRenderer
+            .invoke("QueryFuzzerLabel")
+            .then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
+                const {Data} = data
+                if (Array.isArray(Data) && Data.length === 0) {
+                    ipcRenderer.invoke("SaveFuzzerLabel", {
+                        Data: defaultLabel
+                    })
+                    // 缓存标签数量 用于添加生成标签Description
+                    const defaultLabelCount = defaultLabel?.length ?? 0
+                    setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: defaultLabelCount}))
+                } else {
+                    // 获取缓存的固有标签
+                    let oldFixedArr: string[] = []
+                    // 获取最新的固有标签
+                    let newFixedArr = defaultLabel.map((item) => item.DefaultDescription)
+                    Data.forEach((item) => {
+                        if (item.DefaultDescription.endsWith("-fixed")) {
+                            oldFixedArr.push(item.DefaultDescription)
+                        }
+                    })
+                    let arr = filterNonUnique([...oldFixedArr, ...newFixedArr])
+                    arr.forEach((item) => {
+                        // 需要新添的项
+                        if (newFixedArr.includes(item)) {
+                            ipcRenderer.invoke("SaveFuzzerLabel", {
+                                Data: defaultLabel.filter((itemIn) => itemIn.DefaultDescription === item)
+                            })
+                        }
+                        // 需要删除的项
+                        else {
+                            ipcRenderer.invoke("DeleteFuzzerLabel", {
+                                Hash: Data.filter((itemIn) => itemIn.DefaultDescription === item)[0].Hash
+                            })
+                        }
+                    })
+                }
+            })
+            .catch((err) => debugToPrintLog(err))
     })
 
     useEffect(() => {
         // 此次重构不兼容之前数据 所以在第一次进入页面时清空
-        getRemoteValue("IS_DELETE_FUZZ_LABEL").then((remoteData) => {
-            if (!remoteData) {
-                ipcRenderer
-                    .invoke("DeleteFuzzerLabel", {})
-                    .then(() => {
-                        isSaveFuzzerLabelFun()
-                    })
-                    .catch((err) => {
-                        failed(`清空老数据失败：${err}`)
-                    })
-                setRemoteValue("IS_DELETE_FUZZ_LABEL", JSON.stringify({isDelete: false}))
-                return
-            }
-            isSaveFuzzerLabelFun()
-        })
+        getRemoteValue("IS_DELETE_FUZZ_LABEL")
+            .then((remoteData) => {
+                if (!remoteData) {
+                    ipcRenderer
+                        .invoke("DeleteFuzzerLabel", {})
+                        .then(() => {
+                            isSaveFuzzerLabelFun()
+                        })
+                        .catch((err) => {
+                            failed(`清空老数据失败：${err}`)
+                        })
+                    setRemoteValue("IS_DELETE_FUZZ_LABEL", JSON.stringify({isDelete: false}))
+                    return
+                }
+                isSaveFuzzerLabelFun()
+            })
+            .catch((err) => debugToPrintLog(err))
     }, [])
 
     // 定时器
-    const resetResponse = useMemoizedFn(() => {
+    const resetResponse = useMemoizedFn(async () => {
         setFirstResponse({...emptyFuzzer})
         successFuzzerRef.current = []
         failedFuzzerRef.current = []
@@ -1028,8 +1039,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     yakitNotify("error", `WF历史数据恢复失败:${error}`)
                 }
             })
-            .catch(() => {
+            .catch((err) => {
                 setAdvancedConfigValue((v) => ({...v, ...history}))
+                debugToPrintLog(err)
             })
     })
     const responseViewerRef = useRef<MatcherAndExtractionRefProps>({
@@ -1093,16 +1105,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
         if (retryRef.current) {
             retryRef.current = false
-            const retryTaskID = failedFuzzer.length > 0 ? failedFuzzer[0].TaskId : undefined
-            if (retryTaskID) {
-                const params = {...httpParams, RetryTaskID: parseInt(retryTaskID + "")}
+            const retryTaskID = failedFuzzer?.length > 0 ? failedFuzzer[0]?.TaskId : undefined
+            if (typeof retryTaskID === "number") {
+                const params = {...httpParams, RetryTaskID: parseInt(retryTaskID + "", 10)}
                 const retryParams = _.omit(params, ["Request", "RequestRaw"])
                 ipcRenderer.invoke("HTTPFuzzer", retryParams, tokenRef.current)
                 setIsPause(true)
             }
         } else if (matchRef.current) {
             matchRef.current = false
-            const matchTaskID = successFuzzer.length > 0 ? successFuzzer[0].TaskId : undefined
+            const matchTaskID = successFuzzer?.length > 0 ? successFuzzer[0]?.TaskId : undefined
             const params = {...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID}
             setLoadingText("匹配中")
             ipcRenderer.invoke("HTTPFuzzer", params, tokenRef.current)
@@ -1302,14 +1314,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const [extractedMap, {setAll, reset}] = useMap<string, string>()
     useEffect(() => {
-        ipcRenderer.on(
-            "fetch-extracted-to-table",
-            (e: any, data: {type: string; extractedMap: Map<string, string>}) => {
-                if (data.type === "fuzzer") {
-                    setExtractedMap(data.extractedMap)
-                }
+        ipcRenderer.on("fetch-extracted-to-table", (_, data: {type: string; extractedMap: Map<string, string>}) => {
+            if (data.type === "fuzzer") {
+                setExtractedMap(data.extractedMap)
             }
-        )
+        })
         return () => {
             ipcRenderer.removeAllListeners("fetch-extracted-to-table")
         }
@@ -1425,7 +1434,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         callback(params)
     })
 
-    const cachedTotal = successFuzzer.length + failedFuzzer.length
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const cachedTotal = useMemo(
+        () => successFuzzer?.length + failedFuzzer?.length,
+        [successFuzzer?.length, failedFuzzer?.length]
+    )
+
     const [currentPage, setCurrentPage] = useState<number>(0)
     const [total, setTotal] = useState<number>()
     /**获取上一个/下一个 */
@@ -1521,21 +1535,26 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const [exportData, setExportData] = useState<FuzzerResponse[]>([])
     const onShowResponseMatcherAndExtraction = useMemoizedFn((params: ShowResponseMatcherAndExtractionProps) => {
-        const {activeType, activeKey, order} = params
-        setShowMatcherAndExtraction(true)
-        setActiveType(activeType)
-        switch (activeType) {
-            case "extractors":
-                setActiveKey(activeKey)
-                break
-            case "matchers":
-                setDefActiveKeyAndOrder({
-                    order: order || 0,
-                    defActiveKey: activeKey
-                })
-                break
-            default:
-                break
+        try {
+            const {activeType, activeKey, order} = params
+            setShowMatcherAndExtraction(true)
+            setActiveType(activeType)
+
+            switch (activeType) {
+                case "extractors":
+                    setActiveKey(activeKey)
+                    break
+                case "matchers":
+                    setDefActiveKeyAndOrder({
+                        order: order || 0,
+                        defActiveKey: activeKey
+                    })
+                    break
+                default:
+                    break
+            }
+        } catch (err) {
+            debugToPrintLog(err)
         }
     })
     const setHotPatchCodeRef = (val) => {
@@ -1930,7 +1949,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         visible={advancedConfigVisible}
                         onInsertYakFuzzer={onInsertYakFuzzerFun}
                         onValuesChange={onGetFormValue}
-                        defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || ""}
+                        defaultHttpResponse={
+                            Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || ""
+                        }
                         outsideShowResponseMatcherAndExtraction={
                             onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
                         }
@@ -2094,11 +2115,17 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             />
                         </div>
                         <div className={styles["fuzzer-heard-right"]}>
-                            <ShareImportExportData
-                                module='fuzzer'
-                                getShareContent={getShareContent}
-                                getFuzzerRequestParams={getFuzzerRequestParams}
-                            />
+                            {getFuzzerRequestParams && typeof getFuzzerRequestParams === "function" ? (
+                                <ShareImportExportData
+                                    module='fuzzer'
+                                    getShareContent={getShareContent}
+                                    getFuzzerRequestParams={
+                                        getFuzzerRequestParams as unknown as () =>
+                                            | FuzzerRequestProps[]
+                                            | FuzzerRequestProps
+                                    }
+                                />
+                            ) : null}
                             <Divider type='vertical' style={{margin: 8}} />
 
                             <FuncBtn
@@ -2349,12 +2376,14 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
         }
     }, [inViewport])
     const getConfigSystemProxy = useMemoizedFn(() => {
-        apiGetSystemProxy().then((res: GetSystemProxyResult) => {
-            setSystemProxy({
-                ...res,
-                CurrentProxy: res.CurrentProxy ? res.CurrentProxy : "127.0.0.1:8083"
+        apiGetSystemProxy()
+            .then((res: GetSystemProxyResult) => {
+                setSystemProxy({
+                    ...res,
+                    CurrentProxy: res.CurrentProxy ? res.CurrentProxy : "127.0.0.1:8083"
+                })
             })
-        })
+            .catch((err) => debugToPrintLog(err))
     })
     const isShowSystemProxy = useCreation(() => {
         return systemProxy?.Enable && !advancedConfigValue.noSystemProxy && !advancedConfigValue.proxy.length
@@ -2477,8 +2506,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         pageId,
         noPopconfirm = true,
         retryNoPopconfirm = true,
-        cancelCurrentHTTPFuzzer,
-        resumeAndPause
+        cancelCurrentHTTPFuzzer
     } = props
 
     const [color, setColor] = useState<string[]>()
@@ -2541,7 +2569,9 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     exportPayloadResponse(newListTable)
                 }
             }
-        } catch (error) {}
+        } catch (error) {
+            debugToPrintLog(error)
+        }
     })
 
     // const onViewExecResults = useMemoizedFn(() => {
@@ -3124,10 +3154,7 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
             <>
                 {rsp.IsHTTPS && <YakitTag>{rsp.IsHTTPS ? "https" : ""}</YakitTag>}
                 {selectionByteCount ? (
-                    <ByteCountTag
-                        selectionByteCount={selectionByteCount || 0}
-                        key='webfuzzerOneRes'
-                    ></ByteCountTag>
+                    <ByteCountTag selectionByteCount={selectionByteCount || 0} key='webfuzzerOneRes'></ByteCountTag>
                 ) : (
                     <YakitTag>
                         {rsp.BodyLength}bytes / {rsp.DurationMs}ms
