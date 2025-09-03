@@ -1,4 +1,4 @@
-.markdown-block{
+.markdown-block {
     :global {
         background-color: var(--Colors-Use-Basic-Background);
         h1,
@@ -13,17 +13,18 @@
             width: 100%;
             display: inline-table;
             color: var(--Colors-Use-Neutral-Text-1-Title);
-            thead{
-                tr{
+            table-layout: fixed;
+            thead {
+                tr {
                     background-color: var(--Colors-Use-Basic-Background);
                     border-color: var(--Colors-Use-Neutral-Border);
                 }
             }
-            tr{
+            tr {
                 background-color: var(--Colors-Use-Neutral-Bg);
                 border-color: var(--Colors-Use-Neutral-Border);
             }
-            tr:nth-child(2n){
+            tr:nth-child(2n) {
                 background-color: var(--Colors-Use-Basic-Background);
                 border-color: var(--Colors-Use-Neutral-Border);
             }

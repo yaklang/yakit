@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -16,7 +16,7 @@ import classNames from "classnames"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {isEnterpriseEdition} from "@/utils/envfile"
+import {GetReleaseEdition, isCommunityIRify, isEnpriTraceIRify, PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import html2pdf from "html2pdf.js"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -116,16 +116,16 @@ const ReportList: React.FC<ReportListProp> = (props) => {
         update(1)
     }, [])
 
-    const onRefreshDBReportFun = useMemoizedFn(()=>{
+    const onRefreshDBReportFun = useMemoizedFn(() => {
         update(1)
     })
 
-    useEffect(()=>{
-        emiter.on("onRefreshDBReport",onRefreshDBReportFun)
+    useEffect(() => {
+        emiter.on("onRefreshDBReport", onRefreshDBReportFun)
         return () => {
             emiter.off("onRefreshDBReport", onRefreshDBReportFun)
         }
-    },[])
+    }, [])
 
     useEffect(() => {
         ipcRenderer.on("fetch-simple-open-report", (e, reportId: number) => {
@@ -390,7 +390,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         try {
             const items = report.JsonRaw && report.JsonRaw !== "-" && (JSON.parse(report.JsonRaw) as ReportItem[])
             if (!!items && items.length > 0) {
-                const newReportItems = truncateArrayBySize(items, 300) // 每页300KB
+                const newReportItems = truncateArrayBySize(items, 90) // 每页90KB
                 setAllReportItems(newReportItems)
                 setReportItems(newReportItems[0])
             }
@@ -401,33 +401,53 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
 
     // 下载PDF
     const downloadPdf = () => {
-        setDownloadLoading(true)
-        setTimeout(() => {
+        try {
             if (!divRef || !divRef.current) return
             const contentHTML = divRef.current
-            html2pdf()
-                .from(contentHTML)
-                .set({
-                    margin: [10, 5, 10, 5],
-                    filename: `${report.Title}.pdf`,
-                    image: {type: "jpeg", quality: 0.95},
-                    jsPDF: {
-                        format: "a4"
-                    },
-                    html2canvas: {
-                        scale: 2
-                    },
-                    pagebreak: {
-                        // 自动分页控制属性
-                        // mode: 'avoid-all',
-                        after: "#cover"
-                    }
-                })
-                .save()
-                .then(() => {
-                    setDownloadLoading(false)
-                })
-        }, 50)
+            if (contentHTML.scrollTop) {
+                contentHTML.scrollTop = 0
+            }
+            // 获取所有图表 改动其元素 为了生成pdf能正确渲染
+            const echartsElements = contentHTML.querySelectorAll('[data-type="echarts-box"]')
+            // 遍历每一个元素并修改样式
+            echartsElements.forEach((element) => {
+                const el = element as HTMLElement
+                // 例如：根据 index 给每个元素设置不同的背景色
+                el.style.justifyContent = "flex-start"
+            })
+            setDownloadLoading(true)
+            setTimeout(() => {
+                html2pdf()
+                    .from(contentHTML)
+                    .set({
+                        margin: [10, 5, 10, 5],
+                        filename: `${report.Title}${allReportItems.length > 1 ? "-" + current : ""}.pdf`,
+                        image: {type: "jpeg", quality: 0.95},
+                        jsPDF: {
+                            format: "a4"
+                        },
+                        // 图像渲染的清晰度过高时 大量的数据生成的pdf文件白屏
+                        // html2canvas: {
+                        //     scale: 2
+                        // },
+                        pagebreak: {
+                            // 自动分页控制属性
+                            // mode: 'avoid-all',
+                            after: "#cover"
+                        }
+                    })
+                    .save()
+                    .then(() => {
+                        setDownloadLoading(false)
+                        // 遍历每一个元素并修改样式
+                        echartsElements.forEach((element) => {
+                            const el = element as HTMLElement
+                            // 例如：根据 index 给每个元素设置不同的背景色
+                            el.style.justifyContent = "center"
+                        })
+                    })
+            }, 500)
+        } catch (error) {}
     }
 
     // 下载HTML
@@ -489,6 +509,8 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     options = {scale: 0.8, windowWidth: 1200}
                 } else if (echartType === "nightingle-rose") {
                     options = {scale: 1, windowWidth: 1000, x: 150, y: 0, height: 400}
+                } else if (echartType === "e-chart") {
+                    options = {scale: 1, windowWidth: 1000}
                 }
 
                 const canvas = await html2canvas(element as HTMLElement, options)
@@ -507,7 +529,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         }
         // word报告不要附录 table添加边框 移除南丁格尔玫瑰图点击详情(图像中已含)
         let wordStr: string = contentHTML.outerHTML
-        if(wordStr.includes("附录：")){
+        if (wordStr.includes("附录：")) {
             wordStr = wordStr.substring(0, contentHTML.outerHTML.indexOf("附录："))
         }
         wordStr = wordStr
@@ -528,6 +550,39 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         setReportItems(allReportItems[page - 1] || [])
         setCurrent(page)
     }
+
+    const getDownloadMenu = useMemo(() => {
+        if (GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit) {
+            return [
+                {
+                    key: "pdf",
+                    label: "Pdf"
+                }
+            ]
+        } else if (isCommunityIRify() || isEnpriTraceIRify()) {
+            return [
+                {
+                    key: "pdf",
+                    label: "Pdf"
+                },
+                {
+                    key: "html",
+                    label: "HTML"
+                }
+            ]
+        } else {
+            return [
+                {
+                    key: "html",
+                    label: "HTML"
+                },
+                {
+                    key: "word",
+                    label: "Word"
+                }
+            ]
+        }
+    }, [])
 
     return (
         <div className={styles["report-viewer"]}>
@@ -579,23 +634,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                                 </YakitButton>
                                 <YakitDropdownMenu
                                     menu={{
-                                        data: isEnterpriseEdition()
-                                            ? [
-                                                  {
-                                                      key: "html",
-                                                      label: "HTML"
-                                                  },
-                                                  {
-                                                      key: "word",
-                                                      label: "Word"
-                                                  }
-                                              ]
-                                            : [
-                                                  {
-                                                      key: "pdf",
-                                                      label: "Pdf"
-                                                  }
-                                              ],
+                                        data: getDownloadMenu,
                                         onClick: ({key}) => {
                                             switch (key) {
                                                 case "html":
