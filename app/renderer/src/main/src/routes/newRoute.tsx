@@ -1053,13 +1053,14 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                   {
                       page: YakitRoute.Plugin_OP,
                       label: "子域名收集",
+                      labelUi: "YakitRoute.subdomainCollection",
                       yakScripName: ResidentPluginName.SubDomainCollection
                   },
                   {
                       page: YakitRoute.Plugin_OP,
                       label: "基础爬虫",
+                      labelUi: "YakitRoute.basicCrawler",
                       yakScripName: ResidentPluginName.BasicCrawler,
-                      describe: "通过爬虫可快速了解网站的整体架构"
                   },
                   {page: YakitRoute.Space_Engine, ...YakitRouteToPageInfo[YakitRoute.Space_Engine]},
                   {
@@ -1074,8 +1075,8 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                           {
                               page: YakitRoute.Plugin_OP,
                               label: "目录扫描",
+                              labelUi: "YakitRoute.directoryScan",
                               yakScripName: ResidentPluginName.DirectoryScanning,
-                              describe: "带有内置字典的综合目录扫描与爆破"
                           }
                       ]
                   }
