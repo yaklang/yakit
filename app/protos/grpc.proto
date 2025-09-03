@@ -278,6 +278,12 @@ service Yak {
   // 分析一个 HTTP 请求详情
   rpc HTTPRequestAnalyzer(HTTPRequestAnalysisMaterial) returns (HTTPRequestAnalysis);
 
+  // 用户自定义代码补全
+  rpc CreateSnippet(SnippetsRequest) returns (Empty);
+  rpc UpdateSnippet(EditSnippetsRequest) returns (Empty);
+  rpc DeleteSnippets(QuerySnippetsRequest) returns (Empty);
+  rpc QuerySnippets(QuerySnippetsRequest) returns (SnippetsResponse);
+
   // 编码解码
   rpc Codec(CodecRequest) returns (CodecResponse);
   rpc NewCodec(CodecRequestFlow) returns (CodecResponse);
@@ -328,9 +334,12 @@ service Yak {
   // 迁移旧的payload
   rpc MigratePayloads(Empty) returns (stream SavePayloadProgress);
 
+  // 批量导payload 数据库 已废弃
   rpc ExportPayloadBatch(ExportPayloadBatchRequest) returns (stream GetAllPayloadResponse);
   rpc UploadPayloadToOnline(UploadPayloadToOnlineRequest) returns (stream DownloadProgress);
   rpc DownloadPayload(DownloadPayloadRequest) returns (stream DownloadProgress);
+  // 批量导payload所有
+  rpc ExportPayloadDBAndFile(ExportPayloadDBAndFileRequest) returns (stream GetAllPayloadResponse);
 
 
   // 自动生成补全
@@ -812,6 +821,9 @@ service Yak {
 
   rpc SSARiskFeedbackToOnline(SSARiskFeedbackToOnlineRequest) returns (Empty);
 
+  // SSA Report
+  rpc GenerateSSAReport(GenerateSSAReportRequest) returns (GenerateSSAReportResponse);
+
   rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
   rpc QueryPluginEnv(QueryPluginEnvRequest) returns (PluginEnvData);
   rpc CreatePluginEnv(PluginEnvData) returns (Empty); // create
@@ -903,7 +915,12 @@ service Yak {
   rpc IsSearchVectorDatabaseReady(IsSearchVectorDatabaseReadyRequest) returns (IsSearchVectorDatabaseReadyResponse);
   rpc InitSearchVectorDatabase(InitSearchVectorDatabaseRequest) returns (stream ExecResult);
   rpc GetAllVectorStoreCollections(Empty) returns (GetAllVectorStoreCollectionsResponse);
+  rpc GetAllVectorStoreCollectionsWithFilter(GetAllVectorStoreCollectionsWithFilterRequest) returns (GetAllVectorStoreCollectionsWithFilterResponse);
   rpc DeleteSearchVectorDatabase(DeleteSearchVectorDatabaseRequest) returns (GeneralResponse);
+  rpc UpdateVectorStoreCollection(UpdateVectorStoreCollectionRequest) returns (GeneralResponse);
+  rpc ListVectorStoreEntries(ListVectorStoreEntriesRequest) returns (ListVectorStoreEntriesResponse);
+  rpc CreateVectorStoreEntry(CreateVectorStoreEntryRequest) returns (GeneralResponse);
+  rpc GetDocumentByVectorStoreEntryID(GetDocumentByVectorStoreEntryIDRequest) returns (GetDocumentByVectorStoreEntryIDResponse);
 
   // 第三方应用管理
   rpc ListThirdPartyBinary(Empty) returns (ListThirdPartyBinaryResponse);
@@ -917,6 +934,7 @@ service Yak {
 
   // Knowledge Base
   rpc GetKnowledgeBaseNameList(Empty) returns(GetKnowledgeBaseNameListResponse);
+  rpc GetKnowledgeBase(GetKnowledgeBaseRequest) returns(GetKnowledgeBaseResponse);
   rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns(GeneralResponse);
   rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns(GeneralResponse);
   rpc UpdateKnowledgeBase(UpdateKnowledgeBaseRequest) returns(GeneralResponse);
@@ -925,6 +943,7 @@ service Yak {
   rpc CreateKnowledgeBaseEntry(CreateKnowledgeBaseEntryRequest) returns(GeneralResponse);
   rpc UpdateKnowledgeBaseEntry(UpdateKnowledgeBaseEntryRequest) returns(GeneralResponse);
   rpc SearchKnowledgeBaseEntry(SearchKnowledgeBaseEntryRequest) returns(SearchKnowledgeBaseEntryResponse);
+  rpc QueryKnowledgeBaseByAI(QueryKnowledgeBaseByAIRequest) returns(stream QueryKnowledgeBaseByAIResponse);
 
   rpc BuildVectorIndexForKnowledgeBase(BuildVectorIndexForKnowledgeBaseRequest) returns(GeneralResponse);
   rpc BuildVectorIndexForKnowledgeBaseEntry(BuildVectorIndexForKnowledgeBaseEntryRequest) returns(GeneralResponse);
@@ -1106,7 +1125,8 @@ message StartThirdPartyBinaryRequest {
 
 message BuildVectorIndexForKnowledgeBaseEntryRequest {
   int64 KnowledgeBaseEntryId = 1;
-
+  int64 KnowledgeBaseId = 12;
+  
   string BaseUrl = 2;
   string ApiKey = 3;
   string Proxy = 4;
@@ -1140,6 +1160,24 @@ message GetKnowledgeBaseNameListResponse {
   repeated string KnowledgeBaseNames = 1;
 }
 
+message GetKnowledgeBaseRequest {
+  int64 KnowledgeBaseId = 1;
+  string Keyword = 2;
+  Paging Pagination = 3;
+}
+
+message KnowledgeBaseInfo {
+  int64 ID = 1;
+  string KnowledgeBaseName = 2;
+  string KnowledgeBaseDescription = 3;
+  string KnowledgeBaseType = 4;
+}
+
+message GetKnowledgeBaseResponse {
+  repeated KnowledgeBaseInfo KnowledgeBases = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
 message CreateKnowledgeBaseRequest {
   string KnowledgeBaseName = 1;
   string KnowledgeBaseDescription = 2;
@@ -1155,12 +1193,26 @@ message UpdateKnowledgeBaseRequest {
 
 message DeleteKnowledgeBaseEntryRequest {
   int64 KnowledgeBaseEntryId = 1;
+  int64 KnowledgeBaseId = 2;
 }
 
 message SearchKnowledgeBaseEntryRequest {
   int64 KnowledgeBaseId = 1;
   string Keyword = 2;
   Paging Pagination = 3;
+}
+
+message QueryKnowledgeBaseByAIRequest {
+  string Query = 1;
+  string EnhancePlan = 2;
+  int64 KnowledgeBaseID = 3;
+  bool QueryAllCollections = 4;
+}
+
+message QueryKnowledgeBaseByAIResponse {
+  string Message = 1;
+  string MessageType = 2;
+  string Data = 3;
 }
 
 message SearchKnowledgeBaseEntryResponse {
@@ -1183,6 +1235,7 @@ message CreateKnowledgeBaseEntryRequest {
 }
 
 message UpdateKnowledgeBaseEntryRequest {
+  int64 KnowledgeBaseID = 1;
   int64 KnowledgeBaseEntryID = 2;
   string KnowledgeTitle = 3;
   string KnowledgeType = 4;
@@ -1219,7 +1272,69 @@ message DeleteSearchVectorDatabaseRequest {
 message VectorStoreCollection{
   string Name = 1;
   string Description = 2;
+  int64 ID = 3;
+  string ModelName = 4;
+  int32 Dimension = 5;
+  int32 M = 6;
+  float Ml = 7;
+  int32 EfSearch = 8;
+  int32 EfConstruct = 9;
+  string DistanceFuncType = 10;
 }
+
+message ListVectorStoreEntriesRequest {
+  int64 CollectionID = 1;
+  string Keyword = 2;
+  Paging Pagination = 3;
+}
+
+message CreateVectorStoreEntryRequest {
+  string UID = 1;
+  string Content = 2;
+  string Metadata = 3;
+}
+
+message VectorStoreEntry {
+  int64 ID = 1;
+  string UID = 2;
+  string Content = 3;
+  string Metadata = 4;
+  repeated float Embedding = 5;
+}
+
+message ListVectorStoreEntriesResponse {
+  repeated VectorStoreEntry Entries = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message GetDocumentByVectorStoreEntryIDRequest {
+  int64 ID = 1;
+}
+
+message GetDocumentByVectorStoreEntryIDResponse {
+  KnowledgeBaseEntry Document = 1;
+}
+
+message UpdateVectorStoreCollectionRequest {
+  string Name = 1;
+  string Description = 2;
+  int64 ID = 3;
+}
+
+// 带分页
+message GetAllVectorStoreCollectionsWithFilterRequest {
+  string Keyword = 1;
+  int64 ID = 2;
+  Paging Pagination = 3;
+}
+
+message GetAllVectorStoreCollectionsWithFilterResponse {
+  repeated VectorStoreCollection Collections = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
 message GetAllVectorStoreCollectionsResponse {
   repeated VectorStoreCollection Collections = 1;
 }
@@ -1396,6 +1511,8 @@ message AIStartParams {
   repeated ExecParamItem ForgeParams = 6;
 
   // 是否禁用人机交互（AI 可能会主动问人问题）
+  // 在 AI ReAct 中，他对应的是 EnableUserInteract
+  // 在 AI Coordinator 中，还是原来的样子
   bool DisallowRequireForUserPrompt = 7;
 
   // Review 政策
@@ -1443,6 +1560,7 @@ message AIStartParams {
   bool AllowGenerateReport = 24;
 
   int64 TaskMaxContinueCount = 25;
+
   // 选择 AI 服务
   string AIService = 26;
 
@@ -3088,6 +3206,11 @@ message DownloadProgress {
 message DeletePluginByUserIDRequest {
   int64 UserID = 1;
   string OnlineBaseUrl = 2;
+}
+
+message ExportPayloadDBAndFileRequest {
+  repeated string Groups = 1;
+  string SavePath = 2;
 }
 
 message DeleteLocalPluginsByWhereRequest {
@@ -5120,6 +5243,39 @@ message TagsAndType {
   int32 Total = 2;
 }
 
+message SnippetsFilter {
+  repeated string Name = 1;
+}
+
+message SnippetsRequest {
+  string Name = 1;
+  string Code = 2;
+  string Description = 3;
+  string State = 4;
+  string Level = 5;
+}
+
+message EditSnippetsRequest {
+  string Target = 1;
+  string Name = 2;
+  string Code = 3;
+  string Description = 4;
+  string State = 5;
+  string Level = 6;
+}
+
+message QuerySnippetsRequest {
+  SnippetsFilter Filter = 1;
+}
+
+message SnippetsResponse {
+  repeated string Names = 1;
+  repeated string Codes = 2;
+  repeated string Descriptions = 3;
+  repeated string States = 4;
+  repeated string Levels = 5;
+}
+
 message CodecRequest {
   string Text = 1;
   string Type = 2;
@@ -6960,6 +7116,9 @@ message SyntaxFlowScanRequest{
   SyntaxFlowRuleInput RuleInput = 6; // 用于新建规则时的调试功能
   // 并发，默认5
   uint32  Concurrency =7;
+
+  // compile data only in memory 
+  bool Memory = 8;
 }
 
 message QuerySyntaxFlowScanTaskRequest{
@@ -7092,6 +7251,7 @@ message SyntaxFlowResult {
 
   string RuleContent = 12;
   string Kind = 13; // "query" | "debug" | "scan"
+  string SaveKind = 14; // "memory" | "database"  
 }
 
 message DeleteSyntaxFlowResultRequest{
@@ -7183,6 +7343,7 @@ message SSARisk {
   bool IsPotential = 17;
 
   string CVE = 18;
+  repeated string CWE = 31;
   string CveAccessVector = 19;
   string CveAccessComplexity = 20;
   string Tags = 21;
@@ -7815,4 +7976,16 @@ message PluginTraceStats {
   int64 CompletedTraces = 3;
   int64 FailedTraces = 4;
   int64 CancelledTraces = 5;
+}
+
+// SSA Report Messages
+message GenerateSSAReportRequest {
+  string TaskID = 1;     // SSA扫描TaskID
+  string ReportName = 2;    // 报告名称
+}
+
+message GenerateSSAReportResponse {
+  bool Success = 1;         // 是否成功
+  string Message = 2;       // 消息
+  string ReportData = 3;    // 报告数据（当格式不是yakit时）
 }

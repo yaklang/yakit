@@ -1,6 +1,5 @@
 const {ipcMain} = require("electron")
 const fs = require("fs")
-const {payloadDir} = require("../filePath")
 module.exports = (win, getClient) => {
     const asyncQueryPayload = (params) => {
         return new Promise((resolve, reject) => {
@@ -191,9 +190,9 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamAllPayloadMap, token)
     })
     const streamPayloadBatchMap = new Map()
-    ipcMain.handle("cancel-ExportPayloadBatch", handlerHelper.cancelHandler(streamPayloadBatchMap))
-    ipcMain.handle("ExportPayloadBatch", async (e, params, token) => {
-        let stream = getClient().ExportPayloadBatch(params)
+    ipcMain.handle("cancel-ExportPayloadDBAndFile", handlerHelper.cancelHandler(streamPayloadBatchMap))
+    ipcMain.handle("ExportPayloadDBAndFile", async (e, params, token) => {
+        let stream = getClient().ExportPayloadDBAndFile(params)
         handlerHelper.registerHandler(win, stream, streamPayloadBatchMap, token)
     })
 
@@ -317,20 +316,4 @@ module.exports = (win, getClient) => {
         return await asyncYakVersionAtLeast(params)
     })
 
-    const asyncExportMultiplePayloads = (params) => {
-        return new Promise((resolve, reject) => {
-            try {
-                if (!fs.existsSync(payloadDir)) {
-                    fs.mkdirSync(payloadDir, {recursive: true})
-                }
-                resolve(payloadDir)
-            } catch (error) {
-                reject(error)
-            }
-        })
-    }
-    // payload批量导出 默认在路径"yakit-projects payloads"下
-    ipcMain.handle("ExportMultiplePayloads", async (e, params) => {
-        return await asyncExportMultiplePayloads(params)
-    })
 }
