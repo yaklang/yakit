@@ -118,7 +118,6 @@
     "createTool": "新建 Tool",
     "editTool": "编辑 Tool",
     "domain": "域名",
-    "manageAllDiscoveredDomainAssets": "管理扫描出的所有域名资产",
-    "commonPlugins": "常用插件"
+    "manageAllDiscoveredDomainAssets": "管理扫描出的所有域名资产"
   }
 }

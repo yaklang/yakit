@@ -35,9 +35,9 @@
     "weakPasswordCheck": "Weak Password Detection",
     "bruteForceDescription": "Perform brute force attacks on target login accounts and passwords, with unauthorized access detection conducted beforehand.",
     "dirBruteForce": "Directory Brute Force",
-    "dataCompare": "Data Compare",
+    "dataCompare": "Compare",
     "quicklyIdentifyDifferencesInData": "Quickly Identify Differences in Data",
-    "cVEManagement": "CVE Management",
+    "cVEManagement": "CVE",
     "searchAndQueryCVEData": "Search and Query CVE Data",
     "pluginHub": "Plugin Hub",
     "massiveYakitPluginsOne-ClickDownload": "Massive Yakit Plugins, One-Click Download",
@@ -109,7 +109,7 @@
     "systemConfig": "System Configuration",
     "javaDecompile": "Java Decompile",
     "shortcutSettings": "Shortcut Settings",
-    "fingerprintDatabase": "Fingerprint Database",
+    "fingerprintDatabase": "Fingerprint",
     "AIAgent": "AIAgent",
     "AIReAct": "AI ReAct",
     "ssa-result-diff": "ssa-result-diff",
@@ -118,7 +118,6 @@
     "createTool": "Create Tool",
     "editTool": "Edit Tool",
     "domain": "Domain",
-    "manageAllDiscoveredDomainAssets": "Manage All Discovered Domain Assets",
-    "commonPlugins": "Common Plugins"
+    "manageAllDiscoveredDomainAssets": "Manage All Discovered Domain Assets"
   }
 }

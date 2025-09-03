@@ -444,7 +444,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                                           : [
                                                 {
                                                     page: undefined,
-                                                    label: t("YakitRoute.commonPlugins"),
+                                                    label: t("Layout.MenuPlugin.commonPlugins"),
                                                     menuName: "常用插件",
                                                     children: plugins
                                                 }

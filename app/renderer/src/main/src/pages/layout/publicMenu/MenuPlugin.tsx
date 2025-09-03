@@ -169,7 +169,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
 
     return (
         <div className={styles["menu-plugin-wrapper"]}>
-            <div className={styles["plugin-header"]}>{t("YakitRoute.commonPlugins")}</div>
+            <div className={styles["plugin-header"]}>{t("Layout.MenuPlugin.commonPlugins")}</div>
             <div className={styles["plugin-wrapper"]}>
                 <div className={styles["plugin-content"]}>
                     <div className={styles["plugin-body"]}>
