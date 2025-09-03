@@ -438,15 +438,28 @@ export declare namespace AIChatMessage {
         start_timestamp: number
         task_index: string
     }
+
+    export interface AIChatThought {
+        thought: string
+        timestamp: number
+    }
     export interface AIChatResult {
         finished: boolean
         result: string
         success: boolean
         timestamp: number
     }
+
     export interface AIChatToolResult {
         NodeId: AIOutputEvent["NodeId"]
         toolAggregation: AIChatMessage.AIToolData
+    }
+
+    /** 表示启动了任务规划流程，并通过coordinator_id字段标识属于任务规划的流信息 */
+    export interface AIStartPlanAndExecution {
+        coordinator_id: string
+        "re-act_id": string
+        "re-act_task": string
     }
 
     /** 自由对话的问答数据信息 */
@@ -455,12 +468,13 @@ export declare namespace AIChatMessage {
         type: "answer" | "question"
         /**
          * - stream 流式输出 [AIStreamOutput]
+         * - thought 自由问题思考 [string]
          * - result 问题结果 [string]
          * - toolResult 工具执行经过 [AIChatToolResult]
          * - toolReview 工具 review [ToolUseReviewRequire]
          * - requireUser AI 人机交互review [AIReviewRequire]
          */
-        uiType: "stream" | "result" | "toolResult" | "toolReview" | "requireUser"
+        uiType: "stream" | "thought" | "result" | "toolResult" | "toolReview" | "requireUser"
         Timestamp: AIOutputEvent["Timestamp"]
         data: AIStreamOutput | string | AIChatToolResult | ToolUseReviewRequire | AIReviewRequire
     }
@@ -696,7 +710,8 @@ export interface GetAIModelListResponse {
 }
 //#endregion
 
-//#region useHooks相关
+// #region chat-hooks 相关定义
+
 /**useChatIPC */
 export interface AIChatIPCData {
     execute: boolean
@@ -727,4 +742,4 @@ export interface AIExecCardEvents {
     handleSetData: (res: AIOutputEvent) => void
     handleResetData: () => void
 }
-//#endregion
+// #endregion

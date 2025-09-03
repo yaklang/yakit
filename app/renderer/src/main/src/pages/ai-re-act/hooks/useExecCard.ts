@@ -3,15 +3,21 @@ import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import {checkStreamValidity, convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatMessage, AIExecCardEvents, AIOutputEvent} from "@/pages/ai-agent/type/aiChat"
+import {AIChatMessage, AIOutputEvent} from "@/pages/ai-agent/type/aiChat"
+import {UseExecCardEvents, UseExecCardParams, UseExecCardState} from "./type"
+import {handleGrpcDataPushLog} from "./utils"
 
 // 属于该 hook 处理数据的类型
 export const UseExecCardTypes = ["yak_exec_result"]
 
-export interface useExecCardParams {}
+function useExecCard(params?: UseExecCardParams): [UseExecCardState, UseExecCardEvents]
 
-function useExecCard(params?: useExecCardParams) {
-    const {} = params || {}
+function useExecCard(params?: UseExecCardParams) {
+    const handlePushLog = useMemoizedFn((log: AIChatMessage.Log) => {
+        if (params?.pushLog) {
+            params.pushLog(log)
+        }
+    })
 
     // card
     const cardKVPair = useRef<Map<string, AIChatMessage.AICacheCard>>(new Map<string, AIChatMessage.AICacheCard>())
@@ -56,14 +62,13 @@ function useExecCard(params?: useExecCardParams) {
             let ipcContent = Uint8ArrayToString(res.Content) || ""
 
             if (res.Type === "yak_exec_result") {
-                try {
-                    if (!res.IsJson) return
-                    const data = JSON.parse(ipcContent) as AIChatMessage.AIPluginExecResult
-                    onHandleCard(data)
-                } catch (error) {}
+                const data = JSON.parse(ipcContent) as AIChatMessage.AIPluginExecResult
+                onHandleCard(data)
                 return
             }
-        } catch (error) {}
+        } catch (error) {
+            handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
+        }
     })
     /** 重置所有数据 */
     const handleResetData = useMemoizedFn(() => {
@@ -72,7 +77,7 @@ function useExecCard(params?: useExecCardParams) {
         setCard([])
     })
 
-    return [card, {handleSetData, handleResetData} as AIExecCardEvents] as const
+    return [card, {handleSetData, handleResetData}] as const
 }
 
 export default useExecCard

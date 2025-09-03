@@ -765,7 +765,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
             return {title: "计划审阅", subTitle: "请审核是否要按以下计划继续执行？"}
         }
         if (type === "task_review_require") {
-            return {title: "任务审阅", subTitle: "请审核是否要继续执行任务？ƒ"}
+            return {title: "任务审阅", subTitle: "请审核是否要继续执行任务？"}
         }
         if (type === "tool_use_review_require") {
             return {title: "工具审阅", subTitle: "请审核是否要继续执行？"}

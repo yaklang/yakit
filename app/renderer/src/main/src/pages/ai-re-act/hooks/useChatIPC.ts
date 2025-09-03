@@ -3,42 +3,45 @@ import {yakitNotify} from "@/utils/notification"
 import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
-import {
-    AIChatIPCData,
-    AIChatIPCDataEvents,
-    AIChatMessage,
-    AIInputEvent,
-    AIOutputEvent,
-    AIStartParams
-} from "@/pages/ai-agent/type/aiChat"
+import {AIChatMessage, AIInputEvent, AIOutputEvent, AIStartParams} from "@/pages/ai-agent/type/aiChat"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
 import useCasualChat, {UseCasualChatTypes} from "./useCasualChat"
 import useExecCard, {UseExecCardTypes} from "./useExecCard"
 import {v4 as uuidv4} from "uuid"
-import {isToolSyncNode} from "@/pages/ai-agent/utils"
+import {UseTaskChatTypes} from "./useTaskChat"
+import {handleGrpcDataPushLog} from "./utils"
+import {UseChatIPCEvents, UseChatIPCParams, UseChatIPCState} from "./type"
 
 const {ipcRenderer} = window.require("electron")
 
-/** 暂时全算到日志的数据类型 */
-const LogTypes = [
-    "structured|react_task_created",
-    "structured|react_task_enqueue",
-    "structured|react_task_dequeue",
-    "iteration",
-    "thought",
-    "structured|react_task_status_changed"
+/** 任务规划和自由对话共用的类型 */
+const UseCasualAndTaskTypes = [
+    "tool_use_review_require",
+    "require_user_interactive",
+    "review_release",
+    "stream",
+    "tool_call_start",
+    "tool_call_user_cancel",
+    "tool_call_done",
+    "tool_call_error",
+    "tool_call_watcher",
+    "tool_call_summary"
 ]
 
-export interface useChatIPCParams {
-    setCoordinatorId?: (id: string) => void
-    onReviewRelease?: (id: string) => void
-    onEnd?: () => void
-}
+function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
-function useChatIPC(params?: useChatIPCParams) {
-    const {onReviewRelease, onEnd, setCoordinatorId} = params || {}
+function useChatIPC(params?: UseChatIPCParams) {
+    const {onReviewRelease, onEnd} = params || {}
 
+    const handleCasualReviewRelease = useMemoizedFn((id: string) => {
+        onReviewRelease && onReviewRelease("casual", id)
+    })
+    const handleTaskReviewRelease = useMemoizedFn((id: string) => {
+        onReviewRelease && onReviewRelease("task", id)
+    })
+
+    // #region 启动流接口后的相关全局数据
     // 通信的唯一标识符
     const chatID = useRef<string>("")
     const fetchToken = useMemoizedFn(() => {
@@ -52,17 +55,9 @@ function useChatIPC(params?: useChatIPCParams) {
 
     // 通信的状态
     const [execute, setExecute, getExecute] = useGetSetState(false)
+    // #endregion
 
-    // 通信的CoordinatorId(唯一标识ID)
-    const coordinatorId = useRef<{cache: string; sent: string}>({cache: "", sent: ""})
-    const onSetCoordinatorId = useMemoizedFn((CoordinatorId: string) => {
-        coordinatorId.current.cache = CoordinatorId
-        if (coordinatorId.current.sent !== coordinatorId.current.cache && setCoordinatorId) {
-            setCoordinatorId(coordinatorId.current.cache)
-            coordinatorId.current.sent = coordinatorId.current.cache
-        }
-    })
-
+    // #region 单次流执行时的输出展示数据
     // 日志
     const [logs, setLogs] = useState<AIChatMessage.Log[]>([])
     const pushLog = useMemoizedFn((logInfo: AIChatMessage.Log) => {
@@ -70,17 +65,21 @@ function useChatIPC(params?: useChatIPCParams) {
     })
 
     // AI性能相关数据和逻辑
-    const [aiPerfData, aiPerfDataEvent] = useAIPerfData({pushErrorLog: pushLog})
-
+    const [aiPerfData, aiPerfDataEvent] = useAIPerfData({pushLog: pushLog})
     // 执行过程中插件输出的卡片
-    const [card, cardEvent] = useExecCard()
+    const [card, cardEvent] = useExecCard({pushLog: pushLog})
+
+    // 设置任务规划的标识ID
+    const planCoordinatorId = useRef<string>("")
 
     // 自由对话相关数据和逻辑
     const [casualChat, casualChatEvent] = useCasualChat({
         getRequest: fetchRequest,
-        pushErrorLog: pushLog,
-        onReviewRelease
+        pushLog,
+        onReviewRelease: handleCasualReviewRelease
     })
+
+    // #endregion
 
     // #region review事件相关方法
     /** review 界面选项触发事件 */
@@ -106,15 +105,15 @@ function useChatIPC(params?: useChatIPCParams) {
     // #endregion
 
     /** 重置所有数据 */
-    const handleReset = useMemoizedFn(() => {
+    const onReset = useMemoizedFn(() => {
         chatID.current = ""
         chatRequest.current = undefined
         setExecute(false)
-        coordinatorId.current = {cache: "", sent: ""}
         setLogs([])
         aiPerfDataEvent.handleResetData()
         cardEvent.handleResetData()
-        casualChatEvent.handleReset()
+        planCoordinatorId.current = ""
+        casualChatEvent.handleResetData()
     })
 
     const onStart = useMemoizedFn((token: string, params: AIInputEvent) => {
@@ -122,19 +121,24 @@ function useChatIPC(params?: useChatIPCParams) {
             yakitNotify("warning", "AI任务正在执行中，请稍后再试！")
             return
         }
-        handleReset()
+        onReset()
         setExecute(true)
         chatID.current = token
         chatRequest.current = cloneDeep(params.Params)
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
             console.log("onStart-res", res)
             try {
-                // CoordinatorId
-                if (!!res?.CoordinatorId) {
-                    onSetCoordinatorId(res.CoordinatorId)
+                let ipcContent = Uint8ArrayToString(res.Content) || ""
+
+                if (res.Type === "start_plan_and_execution") {
+                    // 触发任务规划，并传出任务规划流的标识 coordinator_id
+                    const startInfo = JSON.parse(ipcContent) as AIChatMessage.AIStartPlanAndExecution
+                    if (planCoordinatorId.current !== startInfo.coordinator_id) {
+                    }
+                    return
                 }
 
-                let ipcContent = Uint8ArrayToString(res.Content) || ""
+                casualChatEvent.handleSetCoordinatorId(res.CoordinatorId)
 
                 if (UseAIPerfDataTypes.includes(res.Type)) {
                     // AI性能数据处理
@@ -148,105 +152,57 @@ function useChatIPC(params?: useChatIPCParams) {
                     return
                 }
 
-                if (UseCasualChatTypes.includes(res.Type)) {
-                    // 用户问题的答案
-                    casualChatEvent.handleSetData(res)
-                    return
-                }
-
-                if (res.Type === "review_release") {
-                    // review释放通知
-                    if (!res.IsJson) return
-                    const {TaskIndex} = res
-                    if (!TaskIndex) {
-                        casualChatEvent.handleSetData(res)
-                    }
-                    return
-                }
-
                 if (res.Type === "structured") {
-                    try {
-                        if (!res.IsJson) return
+                    const obj = JSON.parse(ipcContent) || ""
+                    if (!obj || typeof obj !== "object") return
 
-                        const {TaskIndex, NodeId} = res
-                        if (!TaskIndex && UseCasualChatTypes.includes(`structured|${NodeId}`)) {
-                            casualChatEvent.handleSetData(res)
-                            return
-                        }
-
-                        const obj = JSON.parse(ipcContent) || ""
-                        if (!obj || typeof obj !== "object") return
-
-                        if (obj.level) {
-                            // 日志信息
-                            const data = obj as AIChatMessage.Log
-                            setLogs((pre) => pre.concat([{...data, id: uuidv4()}]))
+                    if (obj.level) {
+                        // 执行日志信息
+                        const data = obj as AIChatMessage.Log
+                        setLogs((pre) => pre.concat([{...data, id: uuidv4()}]))
+                    } else {
+                        if (planCoordinatorId.current === res.CoordinatorId) {
                         } else {
-                            setLogs((pre) =>
-                                pre.concat([{id: uuidv4(), level: "info", message: `task_execute : ${ipcContent}`}])
-                            )
-                            console.log("unkown-structured---\n", ipcContent)
+                            casualChatEvent.handleSetData(res)
                         }
-                    } catch (error) {}
+                    }
                     return
                 }
 
-                if (res.Type === "tool_use_review_require") {
-                    if (!res.IsJson) return
-                    const {TaskIndex} = res
-                    if (!TaskIndex) {
+                if (UseCasualChatTypes.includes(res.Type)) {
+                    // 专属自由对话类型的流数据
+                    if (!!planCoordinatorId.current && planCoordinatorId.current === res.CoordinatorId) {
+                        handleGrpcDataPushLog({type: "error", info: res, pushLog: pushLog})
+                        return
+                    }
+                    casualChatEvent.handleSetData(res)
+                    return
+                }
+
+                if (UseTaskChatTypes.includes(res.Type)) {
+                    // 专属任务规划类型的流数据
+                    if (!planCoordinatorId.current || planCoordinatorId.current !== res.CoordinatorId) {
+                        handleGrpcDataPushLog({type: "error", info: res, pushLog: pushLog})
+                        return
+                    }
+                    // taskChatEvent.handleSetData(res)
+                    return
+                }
+
+                if (UseCasualAndTaskTypes.includes(res.Type)) {
+                    // 自由对话和任务规划共用的类型
+                    if (planCoordinatorId.current === res.CoordinatorId) {
+                    } else {
                         casualChatEvent.handleSetData(res)
                     }
                     return
                 }
-                if (res.Type === "require_user_interactive") {
-                    if (!res.IsJson) return
-                    const {TaskIndex} = res
-                    if (!TaskIndex) {
-                        casualChatEvent.handleSetData(res)
-                    }
-                    return
-                }
-                if (res.Type === "stream") {
-                    const {TaskIndex, NodeId} = res
-                    //NOTE - 有些tool（-stdout）有TaskIndex，有些没有
-                    if ((!TaskIndex && UseCasualChatTypes.includes(`stream|${NodeId}`)) || isToolSyncNode(NodeId)) {
-                        // 流式输出
-                        casualChatEvent.handleSetData(res)
-                    }
 
-                    return
-                }
-                if (res.Type === "tool_call_start") {
-                    casualChatEvent.handleSetData(res)
-                    return
-                }
-                if (res.Type === "tool_call_user_cancel") {
-                    casualChatEvent.handleSetData(res)
-                    return
-                }
-
-                if (res.Type === "tool_call_done") {
-                    casualChatEvent.handleSetData(res)
-                    return
-                }
-
-                if (res.Type === "tool_call_error") {
-                    casualChatEvent.handleSetData(res)
-                    return
-                }
-
-                if (res.Type === "tool_call_watcher") {
-                    casualChatEvent.handleSetData(res)
-                    return
-                }
-                if (res.Type === "tool_call_summary") {
-                    casualChatEvent.handleSetData(res)
-                    return
-                }
                 console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
                 setLogs((pre) => pre.concat([{id: uuidv4(), level: "info", message: `task_execute : ${ipcContent}`}]))
-            } catch (error) {}
+            } catch (error) {
+                handleGrpcDataPushLog({type: "error", info: res, pushLog})
+            }
         })
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
             console.log("end", res)
@@ -283,14 +239,14 @@ function useChatIPC(params?: useChatIPCParams) {
         return () => {
             if (getExecute() && chatID.current) {
                 onClose(chatID.current)
-                handleReset()
+                onReset()
             }
         }
     }, [])
 
     return [
-        {execute, logs, aiPerfData, card, casualChat} as AIChatIPCData,
-        {onStart, onSend, onClose, handleReset, fetchToken} as AIChatIPCDataEvents
+        {execute, logs, card, aiPerfData, casualChat},
+        {fetchToken, fetchRequest, onStart, onSend, onClose, onReset}
     ] as const
 }
 
