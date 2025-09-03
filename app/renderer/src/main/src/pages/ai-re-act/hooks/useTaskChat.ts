@@ -12,6 +12,9 @@
 
 // export interface useTaskChatParams {}
 
+// 属于该 hook 处理数据的类型
+export const UseTaskChatTypes = ["plan_review_require", "plan_task_analysis", "task_review_require", "plan"]
+
 // const defaultAIToolData: AIChatMessage.AIToolData = {
 //     callToolId: "",
 //     toolName: "-",
