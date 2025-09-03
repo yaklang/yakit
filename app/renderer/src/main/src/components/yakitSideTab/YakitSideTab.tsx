@@ -13,7 +13,8 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
         setYakitTabs,
         type = "vertical",
         children,
-        onTabPaneRender
+        onTabPaneRender,
+        className = ""
     } = props
     const [show, setShow] = useControllableValue<boolean>(props, {
         defaultValue: true,
@@ -80,7 +81,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
         }
     })
     return (
-        <div className={styles['tab-wrap']}>
+        <div className={classNames(styles['tab-wrap'],className)}>
             {renderContent()}
             {children}
         </div>
