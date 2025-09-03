@@ -122,9 +122,6 @@ const windowStatePatch = path.join(basicDir)
 /** yak 项目相关文件路径 */
 const yakProjects = path.join(YakitProjectPath, "projects")
 
-/** payloads文件夹路径 */
-const payloadDir = path.join(YakitProjectPath, "payloads")
-
 module.exports = {
     YakitProjectPath,
 
@@ -148,6 +145,5 @@ module.exports = {
 
     htmlTemplateDir,
     windowStatePatch,
-    yakProjects,
-    payloadDir
+    yakProjects
 }

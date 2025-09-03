@@ -792,11 +792,11 @@ const nodesToDataFun = (nodes: PayloadGroupNodeProps[]) => {
     })
 }
 
-// 递归数组中的数据库文件并将其id归纳为一个数组
+// 递归数组中的数据库与文件并将其id归纳为一个数组
 const getDataBaseIds = (data: DataItem[]): string[] => {
     let ids: string[] = []
     for (const item of data) {
-        if (item.type === "DataBase") {
+        if (["DataBase", "File"].includes(item.type)) {
             ids.push(item.name)
         } else if (item.type === "Folder" && item.node) {
             const foundInNode = getDataBaseIds(item.node)
@@ -3848,7 +3848,7 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
         let exportObj = {
             file: "ExportAllPayloadFromFile",
             csv: "ExportAllPayload",
-            all: "ExportPayloadBatch"
+            all: "ExportPayloadDBAndFile"
         }
         return exportObj[exportType]
     }, [exportType])
@@ -3860,41 +3860,33 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
         let cancelExportObj = {
             file: "cancel-ExportAllPayloadFromFile",
             csv: "cancel-ExportAllPayload",
-            all: "cancel-ExportPayloadBatch"
+            all: "cancel-ExportPayloadDBAndFile"
         }
         return cancelExportObj[exportType]
     }, [exportType])
 
     // 导出任务
     const onExportFileFun = useMemoizedFn(() => {
-        if (exportType === "all") {
-            ipcRenderer
-                .invoke("ExportMultiplePayloads")
-                .then((defaultPath) => {
-                    exportPathRef.current = defaultPath
-                    ipcRenderer.invoke(
-                        getExportGrpc,
-                        {
-                            Group: group,
-                            SavePath: defaultPath
-                        },
-                        exportToken
-                    )
-                    setShowModal(true)
-                })
-                .catch((e: any) => {
-                    failed(`批量导出失败：${e}`)
-                })
-        } else {
-            ipcRenderer
-                .invoke("openDialog", {
-                    title: "请选择文件夹",
-                    properties: ["openDirectory"]
-                })
-                .then((data) => {
-                    if (data.filePaths.length) {
-                        let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-
+        ipcRenderer
+            .invoke("openDialog", {
+                title: "请选择文件夹",
+                properties: ["openDirectory"]
+            })
+            .then((data) => {
+                if (data.filePaths.length) {
+                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                    if (exportType === "all") {
+                        exportPathRef.current = absolutePath
+                        ipcRenderer.invoke(
+                            getExportGrpc,
+                            {
+                                Groups: group.split(","),
+                                SavePath: absolutePath
+                            },
+                            exportToken
+                        )
+                        setShowModal(true)
+                    } else {
                         ipcRenderer
                             .invoke("pathJoin", {
                                 dir: absolutePath,
@@ -3913,11 +3905,11 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
                                 )
                                 setShowModal(true)
                             })
-                    } else {
-                        setExportVisible(false)
                     }
-                })
-        }
+                } else {
+                    setExportVisible(false)
+                }
+            })
     })
     // 取消导出任务
     const cancelExportFile = useMemoizedFn(() => {
