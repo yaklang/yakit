@@ -16,6 +16,7 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
     const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<KnowledgeBase>()
     const [refreshKey, setRefreshKey] = useState(0)
     const [qaDrawerVisible, setQaDrawerVisible] = useState(false)
+    const [qaQueryAllCollectionsDefault, setQaQueryAllCollectionsDefault] = useState<boolean>(true)
 
     const handleSelectKb = (kb: KnowledgeBase) => {
         setSelectedKnowledgeBase(kb)
@@ -25,11 +26,8 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
         setRefreshKey(prev => prev + 1)
     }
 
-    const handleOpenQADrawer = () => {
-        if (!selectedKnowledgeBase) {
-            // 可以添加提示用户先选择知识库
-            return
-        }
+    const handleOpenQADrawer = (queryAllCollectionsDefault: boolean) => {
+        setQaQueryAllCollectionsDefault(queryAllCollectionsDefault)
         setQaDrawerVisible(true)
     }
 
@@ -44,16 +42,14 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
                 bodyStyle={{padding: 0, overflow: "hidden"}}
                 style={{height: "100%"}}
                 extra={
-                    selectedKnowledgeBase && (
-                        <YakitButton
-                            type="primary"
-                            size="small"
-                            icon={<OutlineChatalt2Icon />}
-                            onClick={handleOpenQADrawer}
-                        >
-                            AI问答
-                        </YakitButton>
-                    )
+                    <YakitButton
+                        type="primary"
+                        size="small"
+                        icon={<OutlineChatalt2Icon />}
+                        onClick={() => handleOpenQADrawer(true)}
+                    >
+                        AI问答
+                    </YakitButton>
                 }
             >
                 <YakitResizeBox
@@ -62,6 +58,11 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
                             selectedKbId={selectedKnowledgeBase?.ID}
                             onSelectKb={handleSelectKb}
                             onRefresh={handleRefresh}
+                            onOpenQA={(kb, queryAll) => {
+                                setSelectedKnowledgeBase(kb)
+                                setQaQueryAllCollectionsDefault(queryAll)
+                                setQaDrawerVisible(true)
+                            }}
                         />
                     }
                     firstMinSize="300px"
@@ -82,11 +83,12 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
                 width={600}
                 visible={qaDrawerVisible}
                 onClose={handleCloseQADrawer}
-                bodyStyle={{padding: 0}}
+                bodyStyle={{padding: 0, height: "100%", display: "flex", flexDirection: "column"}}
             >
                 <KnowledgeBaseQA
                     knowledgeBase={selectedKnowledgeBase}
                     onRefresh={handleRefresh}
+                    queryAllCollectionsDefault={qaQueryAllCollectionsDefault}
                 />
             </YakitDrawer>
         </div>

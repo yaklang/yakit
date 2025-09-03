@@ -1,5 +1,5 @@
 .knowledge-base-qa {
-    height: 100vh; /* 抽屉模式下使用全屏高度 */
+    height: 100%; /* 抽屉内自适应父容器高度 */
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -27,6 +27,20 @@
         padding: 12px;
         overflow-y: auto;
         background: #fafafa;
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+        &::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: #d9d9d9;
+            border-radius: 3px;
+        }
+        &::-webkit-scrollbar-thumb:hover {
+            background: #bfbfbf;
+        }
 
         .welcome-message {
             height: 100%;
@@ -74,6 +88,8 @@
                 position: relative;
                 word-wrap: break-word;
                 white-space: pre-wrap;
+                display: flex;
+                flex-direction: column;
 
                 .message-text {
                     line-height: 1.5;
@@ -93,10 +109,18 @@
                     color: #888;
                 }
 
+                .message-actions {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 8px;
+                    margin-top: 8px;
+                }
+
                 .knowledge-entries {
                     margin-top: 12px;
                     border-top: 1px solid #f0f0f0;
                     padding-top: 8px;
+                    display: none;
 
                     .entry-header {
                         display: flex;
@@ -141,6 +165,10 @@
                             line-height: 1.4;
                         }
                     }
+                }
+
+                &.show-related .knowledge-entries {
+                    display: block;
                 }
             }
 
@@ -193,25 +221,6 @@
             }
         }
     }
-}
-
-// 滚动条样式
-.messages-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.messages-container::-webkit-scrollbar-track {
-    background: #f0f0f0;
-    border-radius: 3px;
-}
-
-.messages-container::-webkit-scrollbar-thumb {
-    background: #d9d9d9;
-    border-radius: 3px;
-}
-
-.messages-container::-webkit-scrollbar-thumb:hover {
-    background: #bfbfbf;
 }
 
 // 响应式设计

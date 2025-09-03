@@ -91,6 +91,7 @@ export interface KnowledgeBaseListProps {
     selectedKbId?: number
     onSelectKb: (kb: KnowledgeBase) => void
     onRefresh: () => void
+    onOpenQA?: (kb: KnowledgeBase, queryAllCollectionsDefault: boolean) => void
 }
 
 export interface KnowledgeEntryTableProps {
@@ -115,13 +116,20 @@ export interface QueryKnowledgeBaseByAIResponse {
 export interface QAMessage {
     id: string
     type: "user" | "assistant"
-    content: string
+    content: string // 当前可见内容（过程或最终回答）
     timestamp: number
     entries?: KnowledgeBaseEntry[]
     isStreaming?: boolean
+    // 新增：过程内容与最终答案
+    processLog?: string
+    finalAnswer?: string
+    showDetails?: boolean
+    showRelated?: boolean
 }
 
 export interface KnowledgeBaseQAProps {
     knowledgeBase?: KnowledgeBase
     onRefresh?: () => void
+    /** 从入口控制：是否默认查询所有集合 */
+    queryAllCollectionsDefault?: boolean
 } 

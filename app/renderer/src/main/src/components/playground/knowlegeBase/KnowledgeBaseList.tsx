@@ -12,7 +12,7 @@ import {failed, success} from "@/utils/notification"
 import {KnowledgeBase, KnowledgeBaseListProps, KnowledgeBaseFormData, GetKnowledgeBaseResponse, Pagination as PaginationType, StreamStatus} from "./types"
 import styles from "./KnowledgeBaseList.module.scss"
 import {PlusIcon, TrashIcon} from "@/assets/newIcon"
-import {OutlinePencilaltIcon} from "@/assets/icon/outline"
+import {OutlinePencilaltIcon, OutlineChatalt2Icon} from "@/assets/icon/outline"
 import {SolidPlayIcon} from "@/assets/icon/solid"
 
 const {ipcRenderer} = window.require("electron")
@@ -20,7 +20,8 @@ const {ipcRenderer} = window.require("electron")
 export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
     selectedKbId,
     onSelectKb,
-    onRefresh
+    onRefresh,
+    onOpenQA
 }) => {
     const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([])
     const [loading, setLoading] = useState(false)
@@ -295,6 +296,19 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                                                         }}
                                                         title="建立索引"
                                                     />
+                                                    {onOpenQA && (
+                                                        <YakitButton
+                                                            type="text2"
+                                                            size="small"
+                                                            icon={<OutlineChatalt2Icon />}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                // 列表入口：默认仅查询当前知识库
+                                                                onOpenQA(kb, false)
+                                                            }}
+                                                            title="AI问答"
+                                                        />
+                                                    )}
                                                     <YakitButton
                                                         type="text2"
                                                         size="small"

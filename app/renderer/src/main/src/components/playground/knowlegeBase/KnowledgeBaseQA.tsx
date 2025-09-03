@@ -2,6 +2,7 @@ import React, {useEffect, useState, useRef} from "react"
 import {AutoCard} from "@/components/AutoCard"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
@@ -24,13 +25,16 @@ const {Panel} = Collapse
 
 export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({
     knowledgeBase,
-    onRefresh
+    onRefresh,
+    queryAllCollectionsDefault
 }) => {
     const [messages, setMessages] = useState<QAMessage[]>([])
     const [loading, setLoading] = useState(false)
     const [inputValue, setInputValue] = useState("")
-    const [enhancePlan, setEnhancePlan] = useState("")
-    const [queryAllCollections, setQueryAllCollections] = useState(false)
+    const [enhancePlan, setEnhancePlan] = useState("hypothetical_answer")
+    const [queryAllCollections, setQueryAllCollections] = useState<boolean>(
+        typeof queryAllCollectionsDefault === "boolean" ? queryAllCollectionsDefault : true
+    )
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const streamingTokenRef = useRef<string>("")
 
@@ -42,6 +46,11 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({
     useEffect(() => {
         scrollToBottom()
     }, [messages])
+
+    // 当入口切换或知识库变化时，重置查询范围默认值
+    useEffect(() => {
+        setQueryAllCollections(typeof queryAllCollectionsDefault === "boolean" ? queryAllCollectionsDefault : true)
+    }, [queryAllCollectionsDefault, knowledgeBase?.ID])
 
     // 生成唯一ID
     const generateId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -57,33 +66,74 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({
             if (lastMessage && lastMessage.type === "assistant" && lastMessage.isStreaming) {
                 switch (MessageType) {
                     case "message":
-                        // 过程消息，添加到内容末尾
-                        lastMessage.content += Message + "\n"
+                        // 累积过程消息，并显示为当前内容
+                        // @ts-ignore 扩展字段
+                        lastMessage.processLog = ((lastMessage as any).processLog || "") + Message + "\n"
+                        // @ts-ignore 扩展字段
+                        lastMessage.content = (lastMessage as any).processLog
                         break
                     
                     case "mid_result":
                     case "result":
-                        // 解析JSON数据
+                        // 解析JSON数据并存储（结果通常为单对象；兼容数组与对象），不直接展示
                         try {
-                            const entries: KnowledgeBaseEntry[] = JSON.parse(Data)
+                            if (Data === "null" || Data === "undefined" || Data === "" || Data == null) break
+                            let parsed: any
+                            if (typeof Data === "string") {
+                                parsed = JSON.parse(Data)
+                            } else {
+                                parsed = Data
+                            }
+                            const items: any[] = Array.isArray(parsed) ? parsed : [parsed]
+
+                            const normalizeEntry = (e: any): KnowledgeBaseEntry => {
+                                return {
+                                    ID: e?.ID ?? e?.id ?? 0,
+                                    KnowledgeBaseId: e?.KnowledgeBaseID ?? e?.KnowledgeBaseId ?? e?.knowledge_base_id ?? 0,
+                                    KnowledgeTitle: e?.KnowledgeTitle ?? e?.knowledge_title ?? "",
+                                    KnowledgeType: e?.KnowledgeType ?? e?.knowledge_type ?? "",
+                                    ImportanceScore: e?.ImportanceScore ?? e?.importance_score ?? 0,
+                                    Keywords: (e?.Keywords ?? e?.keywords) || [],
+                                    KnowledgeDetails: e?.KnowledgeDetails ?? e?.knowledge_details ?? "",
+                                    Summary: e?.Summary ?? e?.summary ?? "",
+                                    SourcePage: e?.SourcePage ?? e?.source_page ?? 0,
+                                    PotentialQuestions: (e?.PotentialQuestions ?? e?.potential_questions) || [],
+                                    PotentialQuestionsVector: (e?.PotentialQuestionsVector ?? e?.potential_questions_vector) || [],
+                                    CreatedAt: e?.CreatedAt ?? e?.created_at,
+                                    UpdatedAt: e?.UpdatedAt ?? e?.updated_at
+                                } as KnowledgeBaseEntry
+                            }
+
+                            const toAppend: KnowledgeBaseEntry[] = items
+                                .filter((e) => e !== null && e !== undefined)
+                                .map((e) => normalizeEntry(e))
+
                             if (!lastMessage.entries) {
                                 lastMessage.entries = []
                             }
-                            lastMessage.entries.push(...entries)
+                            lastMessage.entries.push(...toAppend)
                         } catch (error) {
                             console.error("解析结果数据失败:", error)
-                            lastMessage.content += `结果数据解析失败: ${Data}\n`
+                            // @ts-ignore
+                            lastMessage.processLog = ((lastMessage as any).processLog || "") + `结果数据解析失败: ${String(Data)}\n`
+                            // @ts-ignore
+                            lastMessage.content = (lastMessage as any).processLog
                         }
                         break
                     
                     case "ai_summary":
-                        // AI最终回答
-                        lastMessage.content += "\n\n**AI回答:**\n" + Message
+                        // AI最终回答：替换可见内容为最终回答，保留过程
+                        // @ts-ignore 扩展字段
+                        lastMessage.finalAnswer = Message
+                        lastMessage.content = Message
                         lastMessage.isStreaming = false
                         break
                     
                     case "error":
-                        lastMessage.content += "\n**错误:** " + Message
+                        // @ts-ignore 扩展字段
+                        lastMessage.processLog = ((lastMessage as any).processLog || "") + "\n**错误:** " + Message
+                        // @ts-ignore 扩展字段
+                        lastMessage.content = (lastMessage as any).processLog
                         lastMessage.isStreaming = false
                         break
                 }
@@ -95,8 +145,8 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({
 
     // 启动问答
     const handleAsk = useMemoizedFn(async () => {
-        if (!knowledgeBase || !inputValue.trim()) {
-            message.warning("请选择知识库并输入问题")
+        if ((!knowledgeBase && !queryAllCollections) || !inputValue.trim()) {
+            message.warning("请输入问题" + (queryAllCollections ? "" : "并选择知识库"))
             return
         }
 
@@ -113,7 +163,15 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({
             content: "正在思考中...\n",
             timestamp: Date.now(),
             entries: [],
-            isStreaming: true
+            isStreaming: true,
+            // @ts-ignore 扩展字段
+            processLog: "",
+            // @ts-ignore 扩展字段
+            finalAnswer: "",
+            // @ts-ignore 扩展字段
+            showDetails: false,
+            // @ts-ignore 扩展字段
+            showRelated: false
         }
 
         setMessages(prev => [...prev, userMessage, assistantMessage])
@@ -121,26 +179,63 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({
         setLoading(true)
 
         const token = `qa_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        // 如果之前有未清理的流，先清理
+        if (streamingTokenRef.current) {
+            try {
+                await ipcRenderer.invoke("cancel-QueryKnowledgeBaseByAI", streamingTokenRef.current)
+            } catch {}
+            ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-data`)
+            ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-error`)
+            ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-end`)
+        }
         streamingTokenRef.current = token
 
         try {
             const request: QueryKnowledgeBaseByAIRequest = {
                 Query: inputValue.trim(),
-                EnhancePlan: enhancePlan.trim() || "请基于知识库内容回答问题",
-                KnowledgeBaseID: knowledgeBase.ID,
+                EnhancePlan: enhancePlan,
+                KnowledgeBaseID: queryAllCollections ? 0 : (knowledgeBase?.ID || 0),
                 QueryAllCollections: queryAllCollections
             }
 
             // 监听流式响应
-            const handleMessage = (event: any, data: any) => {
-                if (data.token === token) {
-                    handleStreamResponse(token, data.data)
-                }
-            }
+            ipcRenderer.on(`${token}-data`, (e, data: QueryKnowledgeBaseByAIResponse) => {
+                handleStreamResponse(token, data)
+            })
+            ipcRenderer.on(`${token}-error`, (e, err: any) => {
+                failed(`查询失败: ${err?.message || err}`)
+                setMessages(prev => {
+                    const newMessages = [...prev]
+                    const lastMessage = newMessages[newMessages.length - 1]
+                    if (lastMessage && lastMessage.type === "assistant" && lastMessage.isStreaming) {
+                        lastMessage.content += `\n**错误:** ${err?.message || err}`
+                        lastMessage.isStreaming = false
+                    }
+                    return newMessages
+                })
+                ipcRenderer.removeAllListeners(`${token}-data`)
+                ipcRenderer.removeAllListeners(`${token}-error`)
+                ipcRenderer.removeAllListeners(`${token}-end`)
+                streamingTokenRef.current = ""
+                setLoading(false)
+            })
+            ipcRenderer.on(`${token}-end`, (e) => {
+                setMessages(prev => {
+                    const newMessages = [...prev]
+                    const lastMessage = newMessages[newMessages.length - 1]
+                    if (lastMessage && lastMessage.type === "assistant" && lastMessage.isStreaming) {
+                        lastMessage.isStreaming = false
+                    }
+                    return newMessages
+                })
+                ipcRenderer.removeAllListeners(`${token}-data`)
+                ipcRenderer.removeAllListeners(`${token}-error`)
+                ipcRenderer.removeAllListeners(`${token}-end`)
+                streamingTokenRef.current = ""
+                setLoading(false)
+            })
 
-            ipcRenderer.on("client-QueryKnowledgeBaseByAI", handleMessage)
-
-            // 启动流式查询
+            // 启动流式查询（注意：流式 IPC 约定为 invoke("方法名", params, token)）
             await ipcRenderer.invoke("QueryKnowledgeBaseByAI", request, token)
 
         } catch (error) {
@@ -156,10 +251,6 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({
             })
         } finally {
             setLoading(false)
-            // 清理事件监听
-            setTimeout(() => {
-                ipcRenderer.removeAllListeners("client-QueryKnowledgeBaseByAI")
-            }, 1000)
         }
     })
 
@@ -181,10 +272,26 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({
                 console.error("停止查询失败:", error)
             } finally {
                 setLoading(false)
+                ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-data`)
+                ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-error`)
+                ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-end`)
                 streamingTokenRef.current = ""
             }
         }
     })
+
+    // 组件卸载时清理流
+    useEffect(() => {
+        return () => {
+            const token = streamingTokenRef.current
+            if (token) {
+                try { ipcRenderer.invoke("cancel-QueryKnowledgeBaseByAI", token) } catch {}
+                ipcRenderer.removeAllListeners(`${token}-data`)
+                ipcRenderer.removeAllListeners(`${token}-error`)
+                ipcRenderer.removeAllListeners(`${token}-end`)
+            }
+        }
+    }, [])
 
     // 清空对话
     const handleClear = useMemoizedFn(() => {
@@ -271,7 +378,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({
                     清空对话
                 </YakitButton>
             </div>
-            {!knowledgeBase ? (
+            {(!knowledgeBase && !queryAllCollections) ? (
                 <div className={styles["no-kb-selected"]}>
                     <YakitEmpty description="请先选择一个知识库" />
                 </div>
@@ -282,7 +389,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({
                         {messages.length === 0 ? (
                             <div className={styles["welcome-message"]}>
                                 <YakitEmpty 
-                                    description={`开始与 ${knowledgeBase.KnowledgeBaseName} 对话吧！`}
+                                    description={`开始与 ${knowledgeBase ? knowledgeBase.KnowledgeBaseName : "所有集合"} 对话吧！`}
                                     imageStyle={{height: 60}}
                                 />
                             </div>
@@ -290,18 +397,59 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({
                             <div className={styles["messages-list"]}>
                                 {messages.map((msg) => (
                                     <div key={msg.id} className={`${styles["message"]} ${styles[`message-${msg.type}`]}`}>
-                                        <div className={styles["message-content"]}>
+                                        <div className={`${styles["message-content"]} ${(msg as any).showRelated ? styles["show-related"] : ""}`}>
                                             <div className={styles["message-text"]}>
                                                 {msg.content.split('\n').map((line, index) => (
                                                     <div key={index}>{line || '\u00A0'}</div>
                                                 ))}
                                             </div>
+                                            {msg.type === "assistant" && (msg as any).finalAnswer && (
+                                                <div className={styles["message-actions"]}>
+                                                    <YakitButton
+                                                        type="text2"
+                    									size="small"
+                                                        onClick={() => {
+                                                            setMessages(prev => prev.map(m => {
+                                                                if (m.id !== msg.id) return m
+                                                                const show = !(m as any).showDetails
+                                                                return {
+                                                                    ...m,
+                                                                    // @ts-ignore
+                                                                    showDetails: show,
+                                                                    // 切换显示内容：true 显示过程日志，false 显示最终回答
+                                                                    content: show ? ((m as any).processLog || (m as any).content) : ((m as any).finalAnswer || (m as any).content)
+                                                                } as any
+                                                            }))
+                                                        }}
+                                                    >
+                                                        {(msg as any).showDetails ? "隐藏详细信息" : "查看详细信息"}
+                                                    </YakitButton>
+                                                    {(msg.entries && msg.entries.length > 0) && (
+                                                        <YakitButton
+                                                            type="text2"
+                                                            size="small"
+                                                            onClick={() => {
+                                                                setMessages(prev => prev.map(m => {
+                                                                    if (m.id !== msg.id) return m
+                                                                    return {
+                                                                        ...m,
+                                                                        // @ts-ignore
+                                                                        showRelated: !(m as any).showRelated
+                                                                    } as any
+                                                                }))
+                                                            }}
+                                                        >
+                                                            {((msg as any).showRelated ? "隐藏" : "相关知识")}
+                                                        </YakitButton>
+                                                    )}
+                                                </div>
+                                            )}
                                             {msg.isStreaming && (
                                                 <div className={styles["streaming-indicator"]}>
                                                     <YakitSpin size="small" />
                                                 </div>
                                             )}
-                                            {msg.entries && renderKnowledgeEntries(msg.entries)}
+                                            {msg.entries && (msg.entries.length > 0) && renderKnowledgeEntries(msg.entries)}
                                         </div>
                                         <div className={styles["message-time"]}>
                                             {new Date(msg.timestamp).toLocaleTimeString()}
@@ -316,20 +464,17 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({
                     {/* 配置区域 */}
                     <div className={styles["config-area"]}>
                         <div className={styles["config-row"]}>
-                            <YakitInput
-                                placeholder="增强计划（可选）"
+                            <YakitSelect
                                 value={enhancePlan}
-                                onChange={(e) => setEnhancePlan(e.target.value)}
+                                onChange={(v) => setEnhancePlan(v as string)}
                                 size="small"
-                            />
-                            <div className={styles["config-switch"]}>
-                                <span>查询所有集合:</span>
-                                <YakitSwitch
-                                    checked={queryAllCollections}
-                                    onChange={setQueryAllCollections}
-                                    size="small"
-                                />
-                            </div>
+                                style={{minWidth: 220}}
+                            >
+                                <YakitSelect.Option value="hypothetical_answer">hypothetical_answer：假设回答</YakitSelect.Option>
+                                <YakitSelect.Option value="generalize_query">generalize_query：泛化回答</YakitSelect.Option>
+                                <YakitSelect.Option value="split_query">split_query：多次查询</YakitSelect.Option>
+                                <YakitSelect.Option value="hypothetical_answer_with_split">hypothetical_answer_with_split：假设并多次查询</YakitSelect.Option>
+                            </YakitSelect>
                         </div>
                     </div>
 
