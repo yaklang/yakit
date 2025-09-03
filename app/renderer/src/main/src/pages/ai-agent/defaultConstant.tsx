@@ -2,7 +2,7 @@ import {ReactNode} from "react"
 import {AIAgentSetting, AIAgentTab} from "./aiAgentType"
 import {MCPTransportType} from "./type/mcpClient"
 import {OutlineCogIcon, OutlineSparklesIcon, OutlineTemplateIcon, OutlineWrenchIcon} from "@/assets/icon/outline"
-import {AIChatMessage} from "./type/aiChat"
+import {AIChatIPCData, AIChatMessage, AIPerfData} from "./type/aiChat"
 import {YakitSideTabProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {genDefaultPagination, PaginationSchema} from "../invoker/schema"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
@@ -143,3 +143,26 @@ export enum AILocalModelTypeEnum {
     Embedding = "embedding",
     SpeechToText = "speech-to-text"
 }
+
+//#region ai hooks 默认值
+export const defaultChatIPCData: AIChatIPCData = {
+    execute: false,
+    aiPerfData: {
+        consumption: {},
+        pressure: [],
+        firstCost: [],
+        totalCost: []
+    },
+    logs: [],
+    casualChat: {
+        contents: []
+    },
+    card: []
+}
+export const defaultAIPerfData: AIPerfData = {
+    consumption: {},
+    pressure: [],
+    firstCost: [],
+    totalCost: []
+}
+//#endregion
