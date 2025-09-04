@@ -8,7 +8,8 @@ import {
     EnhancedPrivateRouteMenuProps,
     privateExchangeProps,
     privateConvertDatabase,
-    jsonDataConvertMenus} from "./HeardMenuType"
+    jsonDataConvertMenus
+} from "./HeardMenuType"
 import {
     AcademicCapIcon,
     CheckIcon,
@@ -34,9 +35,7 @@ import {failed, yakitNotify} from "@/utils/notification"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
-import {
-    isEnpriTraceAgent,
-    isIRify} from "@/utils/envfile"
+import {isEnpriTrace, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {
     DatabaseFirstMenuProps,
@@ -65,11 +64,13 @@ import {ExtraMenu} from "../publicMenu/ExtraMenu"
 import {SolidPayloadIcon} from "@/assets/icon/solid"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
 const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const {defaultExpand, onRouteMenuSelect, setRouteToLabel} = props
+    const {t, i18n} = useI18nNamespaces(["layout", "yakitRoute", "yakitUi"])
     // 专家模式菜单数据
     const ExpertMenus = useMemo(() => {
         return privateExchangeProps(PrivateExpertRouteMenu)
@@ -259,7 +260,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     })
             })
             .catch((err) => {
-                failed("获取菜单失败：" + err)
+                failed(t("Layout.HeardMenu.getMenuFailed") + err)
                 setTimeout(() => setLoading(false), 300)
             })
     })
@@ -300,7 +301,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 }
             })
             .catch((err) => {
-                yakitNotify("error", "下载菜单插件失败：" + err)
+                yakitNotify("error", t("Layout.HeardMenu.downloadMenuPluginFailed") + err)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
@@ -317,14 +318,14 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     .invoke("AddToNavigation", {Data: menus})
                     .then((rsp) => {})
                     .catch((e) => {
-                        yakitNotify("error", `保存菜单失败：${e}`)
+                        yakitNotify("error", `${t("Layout.HeardMenu.saveMenuFailed")}${e}`)
                     })
                     .finally(() => {
                         setTimeout(() => setLoading(false), 300)
                     })
             })
             .catch((e: any) => {
-                yakitNotify("error", `更新菜单失败:${e}`)
+                yakitNotify("error", `${t("Layout.HeardMenu.updateMenuFailed")}${e}`)
                 setTimeout(() => setLoading(false), 300)
             })
     })
@@ -413,17 +414,18 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         const m = YakitModalConfirm({
             width: 420,
             closable: false,
-            title: "插件加载失败",
+            title: t("Layout.HeardMenu.pluginLoadFailed"),
             showConfirmLoading: true,
             type: "white",
             content: (
                 <div className={style["modal-content"]}>
-                    {showName}菜单丢失，需点击重新下载，如仍无法下载，请前往插件商店查找
+                    {showName}
+                    {t("Layout.HeardMenu.menuMissing")}
                     <span className={style["menuItem-yakScripName"]}>{menuItem.pluginName}</span>
-                    插件
+                    {t("Layout.HeardMenu.plugin")}
                 </div>
             ),
-            onOkText: "重新下载",
+            onOkText: t("YakitButton.redownload"),
             onOk: () => {
                 singleDownloadPlugin(menuItem, () => {
                     // 下载插件成功，自动销毁弹框
@@ -452,7 +454,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     if (callback) setTimeout(() => callback(), 200)
                 }
             })
-            .catch((err) => yakitNotify("error", "下载菜单插件失败：" + err))
+            .catch((err) => yakitNotify("error", t("Layout.HeardMenu.downloadMenuPluginFailed") + err))
     })
 
     useEffect(() => {
@@ -518,7 +520,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 }, 100)
             })
             .catch((e: any) => {
-                failed(`切换菜单模式失败:${e}`)
+                failed(`${t("Layout.HeardMenu.switchMenuModeFailed")}${e}`)
             })
     })
     /** @description: 编辑菜单 */
@@ -559,22 +561,26 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 })
             })
             .catch((e: any) => {
-                failed(`删除菜单失败:${e}`)
+                failed(`${t("Layout.HeardMenu.deleteMenuFailed")}${e}`)
             })
     })
     const CustomizeMenuData = [
         {
             key: "new",
             label: "扫描模式",
+            labelUi: "Layout.HeardMenu.scanMode",
             itemIcon: <UserIcon />,
             tip: "复原扫描模式",
+            tipUi: "Layout.HeardMenu.resetScanMode",
             onRestoreMenu: () => onRestoreMenu()
         },
         {
             key: "expert",
             label: "专家模式",
+            labelUi: "Layout.HeardMenu.expertMode",
             itemIcon: <AcademicCapIcon />,
             tip: "复原专家模式",
+            tipUi: "Layout.HeardMenu.resetExpertMode",
             onRestoreMenu: () => onRestoreMenu()
         }
     ]
@@ -588,7 +594,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     /** 导入菜单json */
     const onImportJSON = useMemoizedFn(() => {
         if (!menuDataString) {
-            failed("数据不能为空")
+            failed(t("Layout.HeardMenu.dataCannotBeEmpty"))
             return
         }
         try {
@@ -613,13 +619,13 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             setRemoteValue(RemoteGV.IsImportJSONMenu, JSON.stringify(allowModify))
                             setVisibleImport(false)
                             // isError-标识标识用户有部分数据无法转换为菜单
-                            if (isError) yakitNotify("error", "转换过程中有部分数据错误，已自动丢弃")
+                            if (isError) yakitNotify("error", t("Layout.HeardMenu.partialDataError"))
                             setRouteMenu(menus)
                             setSubMenuData(menus[0]?.children || [])
                             setMenuId(menus[0]?.label || "")
                         })
                         .catch((err) => {
-                            yakitNotify("error", "保存菜单失败：" + err)
+                            yakitNotify("error", t("Layout.HeardMenu.saveMenuFailed") + err)
                         })
                         .finally(() => {
                             setTimeout(() => {
@@ -628,13 +634,13 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         })
                 })
                 .catch((e: any) => {
-                    yakitNotify("error", `删除菜单失败:${e}`)
+                    yakitNotify("error", `${t("Layout.HeardMenu.deleteMenuFailed")}${e}`)
                     setTimeout(() => {
                         setImportLoading(false)
                     }, 300)
                 })
         } catch (error) {
-            yakitNotify("error", `处理导入数据失败: ${error}`)
+            yakitNotify("error", `${t("Layout.HeardMenu.importDataFailed")}${error}`)
         }
     })
 
@@ -710,7 +716,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                                         <div className={style["customize-item-left"]}>
                                                             {item.itemIcon}
                                                             <span className={style["customize-item-label"]}>
-                                                                {item.label}
+                                                                {t(item.labelUi)}
                                                             </span>
                                                         </div>
                                                         {patternMenu === item.key && <CheckIcon />}
@@ -726,13 +732,16 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                                             )?.onRestoreMenu()
                                                         }
                                                     >
-                                                        {CustomizeMenuData.find((ele) => patternMenu === ele.key)?.tip}
+                                                        {t(
+                                                            CustomizeMenuData.find((ele) => patternMenu === ele.key)
+                                                                ?.tipUi as string
+                                                        )}
                                                     </div>
                                                     <div
                                                         className={classNames(style["customize-item"])}
                                                         onClick={() => onGoCustomize()}
                                                     >
-                                                        编辑菜单
+                                                        {t("Layout.HeardMenu.editMenu")}
                                                     </div>
                                                     <div
                                                         className={classNames(style["customize-item"])}
@@ -743,7 +752,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                                             setRefreshTrigger(!refreshTrigger)
                                                         }}
                                                     >
-                                                        导入 JSON 配置
+                                                        {t("Layout.HeardMenu.importJsonConfig")}
                                                     </div>
                                                 </YakitSpin>
                                             </>
@@ -759,7 +768,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                             icon={<CursorClickIcon />}
                                         >
                                             <div className={style["heard-menu-customize-content"]}>
-                                                自定义{(customizeVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
+                                                {t("Layout.HeardMenu.custom")}
+                                                {(customizeVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
                                             </div>
                                         </YakitButton>
                                     </Dropdown>
@@ -775,7 +785,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                 }}
                                 icon={<SolidPayloadIcon />}
                             >
-                                Payload
+                                {t("YakitRoute.Payload")}
                             </YakitButton>
                         </>
                     )}
@@ -799,6 +809,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         moreIcon={<DotsHorizontalIcon className={style["dots-icon"]} />}
                     >
                         {subMenuData.map((item, index) => {
+                            const lableShow = item.labelUi ? t(item.labelUi) : item.label
                             const nodeLabel = (
                                 <div
                                     className={classNames(
@@ -806,7 +817,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                         style["heard-menu-item-label"]
                                     )}
                                 >
-                                    {item.label}
+                                    {lableShow}
                                 </div>
                             )
                             const isDisable = !item.label || (item.page === YakitRoute.Plugin_OP && !item.yakScriptId)
@@ -827,14 +838,14 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                                             {item.hoverIcon}
                                                         </span>
                                                     </div>
-                                                    <Tooltip title={item.label} placement='bottom'>
+                                                    <Tooltip title={lableShow} placement='bottom'>
                                                         <div
                                                             className={classNames(
                                                                 style["sub-menu-expand-item-label"],
                                                                 style["heard-menu-item-label"]
                                                             )}
                                                         >
-                                                            {item.label}
+                                                            {lableShow}
                                                         </div>
                                                     </Tooltip>
                                                 </div>
@@ -858,7 +869,10 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                                         </span>
                                                     </div>
                                                     {(loading && nodeLabel) || (
-                                                        <Tooltip title='插件丢失，点击下载' placement='bottom'>
+                                                        <Tooltip
+                                                            title={t("Layout.HeardMenu.pluginMissingDownload")}
+                                                            placement='bottom'
+                                                        >
                                                             {nodeLabel}
                                                         </Tooltip>
                                                     )}
@@ -878,13 +892,13 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             )}
             {/* 后面看看菜单导出的数据格式 */}
             <YakitModal
-                title='导入 JSON 配置'
+                title={t("Layout.HeardMenu.importJsonConfig")}
                 closable={true}
                 visible={visibleImport}
                 onCancel={() => setVisibleImport(false)}
                 width='60%'
                 onOk={() => onImportJSON()}
-                okText='导入'
+                okText={t("YakitButton.import")}
                 confirmLoading={importLoading}
                 bodyStyle={{padding: 0}}
             >
@@ -901,12 +915,17 @@ export default HeardMenu
 /** 展开状态下的一级菜单项 和 收起状态下的菜单鼠标悬浮二级菜单的一级菜单项 */
 const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) => {
     const {menuItem, isShow, isExpand, onSelect, setSubMenuData, activeMenuId} = props
+    const {t, i18n} = useI18nNamespaces(["yakitRoute"])
 
     const [visible, setVisible] = useState<boolean>(false)
     const onOpenSecondMenu = useMemoizedFn(() => {
         if (!isExpand) return
         setSubMenuData(menuItem || [])
     })
+    const lableUI = useMemo(() => {
+        return isEnpriTrace() ? menuItem.label : menuItem.labelUi ? t(menuItem.labelUi) : menuItem.label
+    }, [i18n.language])
+
     const popoverContent = (
         <div
             className={classNames(style["heard-menu-item"], style["heard-menu-item-font-weight"], {
@@ -916,8 +935,8 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
             })}
             onClick={() => onOpenSecondMenu()}
         >
-            <Tooltip title={menuItem.label} placement='top'>
-                <div className={style["heard-menu-item-label"]}>{menuItem.label}</div>
+            <Tooltip title={lableUI} placement='top'>
+                <div className={style["heard-menu-item-label"]}>{lableUI}</div>
             </Tooltip>
         </div>
     )
@@ -940,6 +959,7 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
 /** 收起状态下鼠标悬浮展示的二级菜单项(带icon和hovericon) */
 const SubMenu: React.FC<SubMenuProps> = (props) => {
     const {subMenuData, onSelect} = props
+    const {t, i18n} = useI18nNamespaces(["yakitRoute", "layout"])
 
     return (
         <div className={style["heard-sub-menu"]}>
@@ -955,9 +975,15 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
                         <span className={style["heard-sub-menu-item-icon"]}>{subMenuItem.icon}</span>
                         <span className={style["heard-sub-menu-item-hoverIcon"]}>{subMenuItem.hoverIcon}</span>
                     </>
-                    {(subMenuItem.page && <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>) || (
-                        <Tooltip title='插件丢失，点击下载' placement='bottom' zIndex={9999}>
-                            <div className={style["heard-sub-menu-label"]}>{subMenuItem.label}</div>
+                    {(subMenuItem.page && (
+                        <div className={style["heard-sub-menu-label"]}>
+                            {subMenuItem.labelUi ? t(subMenuItem.labelUi) : subMenuItem.label}
+                        </div>
+                    )) || (
+                        <Tooltip title={t("Layout.HeardMenu.pluginMissingDownload")} placement='bottom' zIndex={9999}>
+                            <div className={style["heard-sub-menu-label"]}>
+                                {subMenuItem.labelUi ? t(subMenuItem.labelUi) : subMenuItem.label}
+                            </div>
                         </Tooltip>
                     )}
                 </div>
@@ -968,10 +994,11 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
 /** 宽度影响展示时的更多菜单 */
 const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
     const {menuData, moreLeft, isExpand, onMenuSelect} = props
+    const {t, i18n} = useI18nNamespaces(["yakitRoute", "layout"])
 
     const [show, setShow] = useState<boolean>(false)
 
-    const newMenuData: YakitMenuItemProps[] = routeToMenu(menuData)
+    const newMenuData: YakitMenuItemProps[] = routeToMenu(menuData, t)
 
     const menu = (
         <YakitMenu
@@ -1001,7 +1028,7 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
                         [style["heard-menu-item-flex-start"]]: isExpand
                     })}
                 >
-                    更多
+                    {t("Layout.CollapseMenu.more")}
                     {(show && <ChevronUpIcon />) || <ChevronDownIcon />}
                 </div>
             </YakitPopover>

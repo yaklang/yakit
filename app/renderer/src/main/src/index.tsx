@@ -10,9 +10,12 @@ import "./yakitUI.scss"
 import "./theme/yakit.scss"
 import "./yakitLib.scss"
 import "./assets/global.scss"
-import {useEffect, useState} from "react"
+import {Suspense, useEffect, useState} from "react"
 import ChildNewApp from "./ChildNewApp"
 import {ThemeProvider} from "./hook/useTheme"
+import {getRemoteValue} from "./utils/kv"
+import {getRemoteI18nGV} from "./utils/envfile"
+import i18n from "@/i18n/i18n"
 
 window.MonacoEnvironment = {
     getWorkerUrl: function (moduleId, label) {
@@ -46,6 +49,14 @@ const App = () => {
     const [windowType, setWindowType] = useState(getQueryParam("window"))
 
     useEffect(() => {
+        getRemoteValue(getRemoteI18nGV())
+            .then((savedLang) => {
+                if (savedLang) {
+                    i18n.changeLanguage(savedLang)
+                }
+            })
+            .catch((err) => console.error(err))
+
         const onPopState = () => {
             setWindowType(getQueryParam("window"))
         }
@@ -83,9 +94,11 @@ if (window.location.search.includes("window=child")) {
 ReactDOM.render(
     // <React.StrictMode>
     <DndProvider backend={HTML5Backend}>
-        <ThemeProvider>
-            <App />
-        </ThemeProvider>
+        <Suspense fallback={<div>loading...</div>}>
+            <ThemeProvider>
+                <App />
+            </ThemeProvider>
+        </Suspense>
     </DndProvider>,
     // </React.StrictMode>,
     document.getElementById("root")

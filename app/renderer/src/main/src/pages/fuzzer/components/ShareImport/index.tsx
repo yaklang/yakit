@@ -10,6 +10,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const layout = {
     labelCol: {span: 5},
@@ -30,9 +31,9 @@ interface pwdRequestProps {
     token: string
 }
 
-export function onImportShare() {
+export function onImportShare(i18n) {
     const m = showYakitModal({
-        title: "导入数据包 ID",
+        title: i18n.language === "en" ? "Import Packet ID" : "导入数据包 ID",
         content: <ShareImport onClose={() => m.destroy()} />,
         footer: null
     })
@@ -40,6 +41,7 @@ export function onImportShare() {
 
 export const ShareImport: React.FC<ShareImportProps> = (props) => {
     const {onClose} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
     const [loading, setLoading] = useState<boolean>(false)
     const [isShowPassword, setIsShowPassword] = useState<boolean>(false)
     // 全局监听登录状态
@@ -68,7 +70,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             .then((pwd) => {
                 if (pwd) {
                     setIsShowPassword(true)
-                    warn("该分享需要输入密码!")
+                    warn(t("WebFuzzer.ShareImport.shareNeedPassword"))
                     setTimeout(() => {
                         setLoading(false)
                     }, 200)
@@ -80,7 +82,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 setTimeout(() => {
                     setLoading(false)
                 }, 200)
-                yakitNotify("error", "密码验证失败：" + err)
+                yakitNotify("error", t("WebFuzzer.ShareImport.passwordVerifyFailed") + err)
             })
     })
     /**
@@ -111,7 +113,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 }
             })
             .catch((err) => {
-                yakitNotify("error", "获取分享数据失败：" + err)
+                yakitNotify("error", t("WebFuzzer.ShareImport.getShareDataFailed") + err)
                 setTimeout(() => {
                     setLoading(false)
                 }, 200)
@@ -129,7 +131,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 onClose()
             })
             .catch((err) => {
-                yakitNotify("error", "打开web fuzzer失败:" + err)
+                yakitNotify("error", t("WebFuzzer.ShareImport.openWebFuzzerFailed") + err)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -157,7 +159,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 onClose()
             })
             .catch((err) => {
-                yakitNotify("error", "储存HttpHistory分享数据失败" + err)
+                yakitNotify("error", t("WebFuzzer.ShareImport.saveHttpHistoryShareFailed") + err)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -168,17 +170,25 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
     return (
         <>
             <Form {...layout} name='control-hooks' onFinish={onFinish} style={{padding: 24}}>
-                <Form.Item name='share_id' label='分享id' rules={[{required: true, message: "该项为必填"}]}>
-                    <YakitInput placeholder='请输入分享id' />
+                <Form.Item
+                    name='share_id'
+                    label={t("WebFuzzer.ShareImport.shareId")}
+                    rules={[{required: true, message: t("WebFuzzer.ShareImport.thisFieldIsRequired")}]}
+                >
+                    <YakitInput placeholder={t("WebFuzzer.ShareImport.pleaseEnterShareId")} />
                 </Form.Item>
                 {isShowPassword && (
-                    <Form.Item name='extract_code' label='密码' rules={[{required: true, message: "该项为必填"}]}>
-                        <YakitInput placeholder='请输入密码' allowClear />
+                    <Form.Item
+                        name='extract_code'
+                        label={t("WebFuzzer.ShareImport.password")}
+                        rules={[{required: true, message: t("WebFuzzer.ShareImport.thisFieldIsRequired")}]}
+                    >
+                        <YakitInput placeholder={t("WebFuzzer.ShareImport.pleaseEnterPassword")} allowClear />
                     </Form.Item>
                 )}
                 <Form.Item {...tailLayout}>
                     <YakitButton type='primary' htmlType='submit' className='btn-sure' loading={loading}>
-                        确定
+                        {t("YakitButton.ok")}
                     </YakitButton>
                 </Form.Item>
             </Form>

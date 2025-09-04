@@ -30,6 +30,7 @@ import {MITMPluginLogViewer} from "@/pages/mitm/MITMPluginLogViewer"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import moment from "moment"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -172,6 +173,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         cardStyleType,
         consoleHeight
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitStore"])
     const [active, setActive] = useState(() => {
         if (props.defaultActive) {
             return props.defaultActive
@@ -194,7 +196,12 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         progressBars.push({
             id: v.id,
             node: (
-                <Card size={"small"} hoverable={false} bordered={true} title={`任务进度ID：${v.id}`}>
+                <Card
+                    size={"small"}
+                    hoverable={false}
+                    bordered={true}
+                    title={`${t("viewers.base.PluginResultUI.taskProgressID")}${v.id}`}
+                >
                     <Progress
                         strokeColor='var(--Colors-Use-Main-Primary)'
                         trailColor='var(--Colors-Use-Neutral-Bg)'
@@ -327,13 +334,16 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         </TabPane>
                     )
                 })}
-                <TabPane tab={"日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
+                <TabPane
+                    tab={t("viewers.base.PluginResultUI.log")}
+                    key={finalFeatures.length > 0 ? "log" : "feature-0"}
+                >
                     {
                         <>
                             <AutoCard
                                 title={
                                     <Space>
-                                        <div>任务额外日志与结果</div>
+                                        <div>{t("viewers.base.PluginResultUI.taskExtraLogAndResult")}</div>
                                         <YakitTag color='info'>
                                             {(timelineItemProps || []).length > 0
                                                 ? formatDate(timelineItemProps[0].timestamp)
@@ -374,7 +384,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     <TabPane
                         tab={
                             <div>
-                                {`漏洞与风险`}
+                                {t("viewers.base.PluginResultUI.vulnerabilitiesAndRisks")}
                                 <Tag style={{marginLeft: 4}} color={"red"}>
                                     {props.risks.length}
                                 </Tag>

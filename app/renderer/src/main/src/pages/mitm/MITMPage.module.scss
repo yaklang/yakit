@@ -567,16 +567,17 @@
 
 .operation-dropdown-wrapper {
     position: absolute;
-    right: 0;
-    top: 36px;
+    top: calc(100% + 5px);
     left: 0;
     padding: 4px;
     z-index: 9999;
-    transition: all 0.5 ease;
+    transition: all 0.5s ease;
     border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px;
     background-color: var(--Colors-Use-Basic-Background);
-    width: 180px;
+    white-space: nowrap;
+    width: max-content;
+    min-width: 100%;
     .operation-dropdown-list-item {
         display: flex;
         justify-content: space-between;

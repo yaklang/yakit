@@ -44,6 +44,7 @@ import {
     grpcFetchSpecifiedYakVersionHash
 } from "@/apiUtils/grpc"
 import {OutlineShieldcheckIcon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -82,6 +83,7 @@ interface ReverseDetail {
 
 export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) => {
     const {isEngineLink, system} = props
+    const {t, i18n} = useI18nNamespaces(["yakitRoute", "home"])
 
     /** 自启全局反连配置(默认指定为本地) */
     useEffect(() => {
@@ -658,29 +660,32 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     onClick={() => {
                                         setShow(false)
                                         const m = showYakitModal({
-                                            title: "生成自动安装脚本",
+                                            title: t("Home.generateAutoInstallScript"),
                                             width: "600px",
                                             centered: true,
                                             content: (
-                                                <div style={{padding: 15,color:'var(--Colors-Use-Neutral-Text-1-Title)'}}>
-                                                    请按照以下步骤进行操作：
+                                                <div
+                                                    style={{
+                                                        padding: 15,
+                                                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                                                    }}
+                                                >
+                                                    {t("Home.pleaseFollowSteps")}
                                                     <br />
                                                     <br />
-                                                    1. 点击确定后将会打开脚本存放的目录。
+                                                    1. {t("Home.openScriptDir")}
                                                     <br />
-                                                    2. 双击打开 "auto-install-cert.bat/auto-install-cert.sh"
-                                                    的文件执行安装。
+                                                    2. {t("Home.runAutoInstallScript")}
                                                     <br />
-                                                    3. 如果安装成功，您将看到“Certificate successfully
-                                                    installed.”的提示。
+                                                    3. {t("Home.installSuccessMessage")}
                                                     <br />
                                                     <br />
-                                                    请确保在运行脚本之前关闭任何可能会阻止安装的应用程序。
+                                                    {t("Home.closeAppsBeforeRun")}
                                                     <br />
-                                                    安装完成后，您将能够顺利使用 MITM。
+                                                    {t("Home.mitmReadyAfterInstall", {name: t("YakitRoute.MITM")})}
                                                     <br />
                                                     <br />
-                                                    如有任何疑问或需要进一步帮助，请随时联系我们。
+                                                    {t("Home.contactForHelp")}
                                                 </div>
                                             ),
                                             onOk: () => {
@@ -690,7 +695,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                                         if (p) {
                                                             openABSFileLocated(p)
                                                         } else {
-                                                            failed("生成失败")
+                                                            failed(t("YakitNotification.generationFailed"))
                                                         }
                                                     })
                                                     .catch(() => {})
@@ -1101,23 +1106,23 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             <YakitHint
                 visible={pcapHintShow}
                 heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
-                title={pcapResult ? "已有网卡操作权限" : "当前引擎不具有网卡操作权限"}
+                title={pcapResult ? t("Home.netcardAccessGranted") : t("Home.netcardNoAccess")}
                 width={600}
                 content={
                     pcapResult ? (
-                        "网卡修复需要时间，请耐心等待"
+                        t("Home.netcardRepairWaiting")
                     ) : (
                         <>
-                            Linux 与 MacOS 可通过设置权限与组为用户态赋予网卡完全权限。如无法修复可以执行命令行{" "}
+                            {t("Home.linuxMacosPermission")}{" "}
                             <YakitTag enableCopy={true} color='yellow' copyText={`chmod +rw /dev/bpf*`}></YakitTag>
-                            或者{" "}
+                            {t("Home.or")}{" "}
                             <YakitTag enableCopy={true} color='purple' copyText={`sudo chmod +rw /dev/bpf*`}></YakitTag>
-                            可以开放网卡读写权限
+                            {t("Home.rwPermissionAvailable")}
                         </>
                     )
                 }
-                okButtonText='开启 PCAP 权限'
-                cancelButtonText={pcapResult ? "知道了～" : "稍后再说"}
+                okButtonText={t("Home.pcapEnablePermission")}
+                cancelButtonText={pcapResult ? t("YakitButton.ok") : t("YakitButton.remindMeLater")}
                 okButtonProps={{loading: pcapHintLoading, style: pcapResult ? {display: "none"} : undefined}}
                 cancelButtonProps={{loading: !pcapResult && pcapHintLoading}}
                 onOk={openPcapPower}
@@ -1129,7 +1134,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     pcapResult ? undefined : (
                         <Tooltip title={`${pcap.AdviceVerbose}: ${pcap.Advice}`}>
                             <YakitButton className={styles["btn-style"]} type='text' size='max'>
-                                手动修复
+                                {t("YakitButton.manualFix")}
                             </YakitButton>
                         </Tooltip>
                     )

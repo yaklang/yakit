@@ -15,6 +15,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import classNames from "classnames"
 import styles from "./MenuPlugin.module.scss"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -27,6 +28,7 @@ interface MenuPluginProps {
 
 export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
     const {loading, pluginList, onMenuSelect, onRestore: restoreCallback} = props
+    const {t, i18n} = useI18nNamespaces(["yakitRoute", "layout"])
 
     /** 转换成菜单组件统一处理的数据格式，插件是否下载的验证由菜单组件处理，这里不处理 */
     const onMenu = useMemoizedFn((pluginId: number, pluginName: string) => {
@@ -155,19 +157,19 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
                 <div className={styles["list-custom"]}>
                     <div className={classNames(styles["btn-style"], styles["add-list"])} onClick={onCustom}>
                         <SMViewGridAddIcon />
-                        自定义...
+                        {t("Layout.MenuPlugin.custom")}...
                     </div>
                     <div className={classNames(styles["btn-style"], styles["restore-style"])} onClick={onClickRestore}>
-                        复原菜单
+                        {t("Layout.MenuPlugin.restoreMenu")}
                     </div>
                 </div>
             </div>
         )
-    }, [pluginList, loading])
+    }, [pluginList, loading, i18n.language])
 
     return (
         <div className={styles["menu-plugin-wrapper"]}>
-            <div className={styles["plugin-header"]}>常用插件</div>
+            <div className={styles["plugin-header"]}>{t("Layout.MenuPlugin.commonPlugins")}</div>
             <div className={styles["plugin-wrapper"]}>
                 <div className={styles["plugin-content"]}>
                     <div className={styles["plugin-body"]}>
@@ -248,8 +250,8 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
             {/* 复原菜单提醒 */}
             <YakitHint
                 visible={restoreVisible}
-                title={"复原菜单提醒"}
-                content={"确认复原后，将重置常用插件菜单栏。是否确认复原？"}
+                title={t("Layout.MenuPlugin.restoreMenuTip")}
+                content={t("Layout.MenuPlugin.confirmRestoreMenu")}
                 onOk={handleRestoreHint}
                 onCancel={() => {
                     setRestoreVisible(false)

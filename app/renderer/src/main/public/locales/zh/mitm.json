@@ -1,0 +1,26 @@
+{
+  "MitmPage": {
+    "ImportLocalPlugin": {
+      "importLocalPluginSuccess": "导入本地插件成功",
+      "pluginSource": "插件源",
+      "proxy": "代理",
+      "accessRepoViaProxy": "通过代理访问中国大陆无法访问的代码仓库：例如http://127.0.0.1:7890",
+      "localPluginPath": "本地插件路径",
+      "enterLocalPluginPath": "请输入本地插件路径",
+      "password": "密码",
+      "nucleiPoCLocalPath": "Nuclei PoC 本地路径",
+      "pluginID": "插件ID",
+      "enterPluginID": "请输入插件ID，多个ID用”英文逗号“或”换行“分割...",
+      "importOnlineNuclei": "导入线上Nuclei",
+      "enterNucleiPoCLocalPath": "请输入Nuclei PoC 本地路径",
+      "importLocalNuclei": "导入本地Nuclei",
+      "pluginImportSuccess": "插件导入成功",
+      "pluginImportMethod": "导入插件方式",
+      "externalResourceWarning": "导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。如果确实需要使用外部资源，建议优先选择官方发布的安全版本，或自行编写可控的数据源。同时，请保持系统和软件的最新版本，及时修复已知漏洞，做好日常安全防护。",
+      "onlineNuclei": "线上 Nuclei",
+      "localPlugin": "本地插件",
+      "localNuclei": "本地 Nuclei",
+      "requiredField": "该项为必填项"
+    }
+  }
+}

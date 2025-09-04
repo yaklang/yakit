@@ -4,6 +4,7 @@ import {useMemoizedFn} from "ahooks"
 import {YakitButton, YakitButtonProp} from "../YakitButton/YakitButton"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import styles from "./yakitModal.module.scss"
 
@@ -47,10 +48,10 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         title,
         footer,
         cancelButtonProps,
-        cancelText = "取消",
+        cancelText,
         okButtonProps,
         confirmLoading,
-        okText = "确认",
+        okText,
         okType,
         onCloseX,
         onCancel,
@@ -63,6 +64,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         hiddenHeader = false,
         ...resetProps
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
 
     const typeClass = useMemo(() => {
         if (type === "white") return styles["yakit-modal-white"]
@@ -133,7 +135,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
                                         onClick={onCancel}
                                         {...cancelButtonProps}
                                     >
-                                        {cancelText}
+                                        {cancelText || t("YakitButton.cancel")}
                                     </YakitButton>
                                     <YakitButton
                                         loading={confirmLoading}
@@ -142,7 +144,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
                                         onClick={onOk}
                                         {...okButtonProps}
                                     >
-                                        {okText}
+                                        {okText || t("YakitButton.ok")}
                                     </YakitButton>
                                 </div>
                             </>

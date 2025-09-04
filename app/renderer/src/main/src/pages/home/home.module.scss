@@ -164,12 +164,12 @@
             .mitm-operation {
                 .operation-dropdown-wrapper {
                     position: absolute;
-                    bottom: -154px;
+                    top: calc(100% + 5px);
                     left: 50%;
                     width: 300px;
                     margin-left: -150px;
                     padding: 20px 20px 10px 10px;
-                    transition: all 0.5 ease;
+                    transition: all 0.5s ease;
                     border: 1px solid var(--Colors-Use-Neutral-Border);
                     border-radius: 4px;
                     background: var(--Colors-Use-Basic-Background);
@@ -339,21 +339,24 @@
         padding-bottom: 14px;
         border: 1px solid var(--Colors-Use-Blue-Border);
         background: var(--Colors-Use-Blue-Bg);
+        margin-bottom: 8px;
         &:hover{
             border: 1px solid var(--Colors-Use-Blue-Primary);
             background: var(--Colors-Use-Blue-Bg-Hover);
         }
         .operation-dropdown-wrapper {
             position: absolute;
-            right: 0;
-            bottom: -85px;
+            top: calc(100% + 5px);
             left: 0;
             padding: 8px;
-            transition: all 0.5 ease;
+            transition: all 0.5s ease;
             border-radius: 4px;
             border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
             background: var(--Colors-Use-Basic-Background);
             box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
+            white-space: nowrap;
+            width: max-content;
+            min-width: 100%;
             .operation-dropdown-list-item {
                 display: flex;
                 justify-content: space-between;
@@ -382,27 +385,37 @@
             flex: 1;
 
             gap: 10px;
+
             &-item {
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 flex-direction: column;
                 flex: 1;
+                min-width: 0;
                 cursor: pointer;
                 border-radius: 8px;
                 background: var(--Colors-Use-Basic-Background);
+
                 gap: 6px;
+
                 &:hover {
                     border: 1px solid var(--Colors-Use-Main-Primary);
                 }
+
                 .tools-icon {
                     svg {
                         width: 36px;
                         height: 36px;
                     }
                 }
+
                 .tools-text {
+                    overflow: hidden;
+                    width: 100%;
+                    text-align: center;
                     white-space: nowrap;
+                    text-overflow: ellipsis;
                     font-size: 16px;
                     font-weight: 600;
                 }
@@ -584,7 +597,7 @@
             }
             .data-preview-item-text {
                 display: inline-block;
-                width: 100px;
+                width: 140px;
                 color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 font-size: 16px;
             }
@@ -774,7 +787,6 @@
             .mitm-cont-wrapper {
                 .mitm-operation {
                     .operation-dropdown-wrapper {
-                        bottom: -145px;
                         padding: 18px 18px 8px 8px;
                         :global {
                             .ant-form-item {
@@ -958,7 +970,6 @@
                     }
                 }
                 .data-preview-item-text {
-                    width: 100px;
                     font-size: 12px;
                 }
                 .data-preview-item-cont {
@@ -1059,7 +1070,6 @@
             .mitm-cont-wrapper {
                 .mitm-operation {
                     .operation-dropdown-wrapper {
-                        bottom: -154px;
                         padding: 20px 20px 10px 10px;
                         :global {
                             .ant-form-item {
@@ -1243,7 +1253,6 @@
                     }
                 }
                 .data-preview-item-text {
-                    width: 100px;
                     font-size: 14px;
                 }
                 .data-preview-item-cont {
@@ -1343,7 +1352,6 @@
             .mitm-cont-wrapper {
                 .mitm-operation {
                     .operation-dropdown-wrapper {
-                        bottom: -154px;
                         padding: 20px 20px 10px 10px;
                         :global {
                             .ant-form-item {
@@ -1527,7 +1535,6 @@
                     }
                 }
                 .data-preview-item-text {
-                    width: 100px;
                     font-size: 16px;
                 }
                 .data-preview-item-cont {

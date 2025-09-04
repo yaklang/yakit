@@ -21,6 +21,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {RefreshIcon} from "@/assets/newIcon"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -318,6 +319,7 @@ interface StartExecYakCodeModalProps {
 }
 export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (props) => {
     const {visible, onClose, params, verbose, successInfo, noErrorsLogCallBack} = props
+    const {t, i18n} = useI18nNamespaces(["utils"])
 
     const startToExecYakScriptViewerRef = useRef<any>()
 
@@ -339,7 +341,7 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
             width='60%'
             maskClosable={false}
             destroyOnClose={true}
-            title={`正在执行：${verbose}`}
+            title={`${t("basic.StartExecYakCodeModal.executing")}${verbose}`}
             onCancel={onCancel}
             closable={true}
             footer={null}
@@ -372,6 +374,7 @@ const StartToExecYakScriptViewer = React.forwardRef(
         ref
     ) => {
         const {script, verbose, successInfo = true, onCancel, noErrorsLogCallBack} = props
+        const {t, i18n} = useI18nNamespaces(["utils"])
         const [token, setToken] = useState(randomString(40))
         const [loading, setLoading] = useState(true)
         const [messageStateStr, setMessageStateStr] = useState<string>("")
@@ -390,10 +393,10 @@ const StartToExecYakScriptViewer = React.forwardRef(
                 ipcRenderer
                     .invoke("ExecYakCode", script, token)
                     .then(() => {
-                        successInfo && info(`执行 ${verbose} 成功`)
+                        successInfo && info(t("basic.StartToExecYakScriptViewer.executeSuccess", {verbose}))
                     })
                     .catch((e) => {
-                        failed(`执行 ${verbose} 遇到问题：${e}`)
+                        failed(`${t("basic.StartToExecYakScriptViewer.executeError", {verbose})}${e}`)
                     })
             }
         )

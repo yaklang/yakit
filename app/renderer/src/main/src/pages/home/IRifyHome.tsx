@@ -21,9 +21,11 @@ import {FieldName, Fields} from "../risks/RiskTable"
 import {QueryGeneralResponse} from "../invoker/schema"
 import {SSAProgramResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
 import {apiGetSSARiskFieldGroup} from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 interface IRifyHomeProps {}
 const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
+    const {t, i18n} = useI18nNamespaces(["home", "yakitRoute", "yakitUi"])
     const homeRef = useRef(null)
     const [inViewport] = useInViewport(homeRef)
     const [curProjectInfo, setCurProjectInfo] = useState<ProjectDescription>()
@@ -87,18 +89,16 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
     return (
         <div className={styles["irify-home"]} ref={homeRef}>
             <div className={styles["main"]}>
-                <div className={styles["header"]}>代码千万行 安全第一行</div>
+                <div className={styles["header"]}>{t("IRifyHome.securityFirst")}</div>
+                
                 <div className={styles["card-list"]}>
                     <div className={styles["card-item"]}>
                         <div className={styles["img"]}>
                             <PublicAuditCodeIcon />
                         </div>
                         <div className={styles["content"]}>
-                            <div className={styles["title"]}>代码审计</div>
-                            <div className={styles["sub-title"]}>
-                                通过编写审计规则对代码行为进行分析，发现代码中的风险片段，支持Java、PHP、Yaklang、Golang
-                                等多种语言
-                            </div>
+                            <div className={styles["title"]}>{t("YakitRoute.codeAudit")}</div>
+                            <div className={styles["sub-title"]}>{t("YakitRoute.auditRuleCodeAnalysis")}</div>
                         </div>
                         <YakitButton
                             icon={<SolidPlayIcon />}
@@ -110,7 +110,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                 })
                             }
                         >
-                            开始审计
+                            {t("YakitButton.startAudit")}
                         </YakitButton>
                     </div>
                     <div className={styles["card-item"]}>
@@ -118,10 +118,8 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                             <PublicCodeScanIcon />
                         </div>
                         <div className={styles["content"]}>
-                            <div className={styles["title"]}>代码扫描</div>
-                            <div className={styles["sub-title"]}>
-                                内置丰富规则库，可自由选择规则分组进行代码扫描，帮助分析代码结构和发现代码中的风险片段
-                            </div>
+                            <div className={styles["title"]}>{t("YakitRoute.codeScan")}</div>
+                            <div className={styles["sub-title"]}>{t("YakitRoute.richRuleLibrary")}</div>
                         </div>
 
                         <YakitButton
@@ -134,7 +132,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                 })
                             }
                         >
-                            开始扫描
+                            {t("YakitButton.startScan")}
                         </YakitButton>
                     </div>
                     <div className={styles["card-item"]}>
@@ -142,10 +140,8 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                             <PublicRuleManagementIcon />
                         </div>
                         <div className={styles["content"]}>
-                            <div className={styles["title"]}>规则管理</div>
-                            <div className={styles["sub-title"]}>
-                                可根据需求自定义审计规则和规则分组，支持导入导出，上传云端等分享行为，便于积累属于自己的规则库
-                            </div>
+                            <div className={styles["title"]}>{t("YakitRoute.ruleManagement")}</div>
+                            <div className={styles["sub-title"]}>{t("YakitRoute.customAuditRules")}</div>
                         </div>
 
                         <YakitButton
@@ -158,7 +154,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                 })
                             }
                         >
-                            查看规则
+                            {t("IRifyHome.viewRules")}
                         </YakitButton>
                     </div>
                 </div>
@@ -167,7 +163,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                 <div className={styles["main"]}>
                     <div className={styles["data-preview-item"]}>
                         <OutlineDatabaseIcon className={styles["data-preview-item-icon"]} />
-                        <span className={styles["data-preview-item-text"]}>项目数据库</span>
+                        <span className={styles["data-preview-item-text"]}>{t("HomeCom.projectDatabase")}</span>
                         <div className={styles["data-preview-item-cont"]}>
                             {!judgeMoreTenGB ? (
                                 <span className={styles["data-preview-item-number"]}>{curProjectInfo?.FileSize}</span>
@@ -176,7 +172,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                     <span className={styles["data-preview-item-number"]} style={{color: "#d33a30"}}>
                                         {curProjectInfo?.FileSize}
                                     </span>
-                                    <Tooltip title='数据库过大，为避免影响使用，建议创建新项目。'>
+                                    <Tooltip title={t("HomeCom.databaseTooLarge")}>
                                         <SolidExclamationIcon className={styles["database-warning-icon"]} />
                                     </Tooltip>
                                 </>
@@ -186,7 +182,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                     <div className={styles["divider"]} />
                     <div className={styles["data-preview-item"]}>
                         <OutlineBugIcon className={styles["data-preview-item-icon"]} />
-                        <span className={styles["data-preview-item-text"]}>漏洞数据</span>
+                        <span className={styles["data-preview-item-text"]}>{t("HomeCom.vulnerabilityData")}</span>
                         <div className={styles["risk-tag-wrapper"]}>
                             {riskLevelTotal("严重") ? (
                                 <div
@@ -198,7 +194,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                         })
                                     }
                                 >
-                                    <div className={styles["risk-text"]}>严重</div>
+                                    <div className={styles["risk-text"]}>{t("HomeCom.critical")}</div>
                                     <div className={styles["risk-num"]}>{riskLevelTotal("严重")}</div>
                                 </div>
                             ) : null}
@@ -212,7 +208,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                         })
                                     }
                                 >
-                                    <div className={styles["risk-text"]}>高危</div>
+                                    <div className={styles["risk-text"]}>{t("HomeCom.high")}</div>
                                     <div className={styles["risk-num"]}>{riskLevelTotal("高危")}</div>
                                 </div>
                             ) : null}
@@ -226,7 +222,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                         })
                                     }
                                 >
-                                    <div className={styles["risk-text"]}>中危</div>
+                                    <div className={styles["risk-text"]}>{t("HomeCom.warning")}</div>
                                     <div className={styles["risk-num"]}>{riskLevelTotal("中危")}</div>
                                 </div>
                             ) : null}
@@ -240,7 +236,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                                         })
                                     }
                                 >
-                                    <div className={styles["risk-text"]}>低危</div>
+                                    <div className={styles["risk-text"]}>{t("HomeCom.low")}</div>
                                     <div className={styles["risk-num"]}>{riskLevelTotal("低危")}</div>
                                 </div>
                             ) : null}
@@ -249,7 +245,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                     <div className={styles["divider"]} />
                     <div className={styles["data-preview-item"]}>
                         <OutlinCompileIcon className={styles["data-preview-item-icon"]} />
-                        <span className={styles["data-preview-item-text"]}>编译项目数</span>
+                        <span className={styles["data-preview-item-text"]}>{t("IRifyHome.compiledProjectsCount")}</span>
                         <div className={styles["data-preview-item-cont"]}>
                             <span className={styles["data-preview-item-number"]}>{total}</span>
                         </div>

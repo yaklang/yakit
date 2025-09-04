@@ -9,6 +9,7 @@ import {CheckOutlined, LoadingOutlined} from "@ant-design/icons"
 import {success} from "@/utils/notification"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {setClipboardText} from "@/utils/clipboard"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 /**
  * 更新说明
@@ -80,6 +81,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
 
 export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
     const {className, iconColor} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [loading, setLoading] = useState<boolean>(false)
     const [isShowSure, setIsShowSure] = useState<boolean>(false)
     const onCopy = useMemoizedFn((e) => {
@@ -95,7 +97,7 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
                     setTimeout(() => {
                         setIsShowSure(false)
                     }, 2000)
-                    success("复制成功")
+                    success(t("YakitNotification.copySuccess"))
                 }, 1000)
             }
         })

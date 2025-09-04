@@ -30,7 +30,7 @@ import {MultipleNodeInfo} from "@/pages/layout/mainOperatorContent/MainOperatorC
 import {defaultAdvancedConfigValue, DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-
+import i18n from "@/i18n/i18n"
 const {ipcRenderer} = window.require("electron")
 
 const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
@@ -181,7 +181,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
                 onClick: ({key}) => {
                     switch (key) {
                         case "dataPacketId":
-                            onImportShare()
+                            onImportShare(i18n)
                             break
                         case "yamlDocument":
                             onOpenImportYamlPop()
