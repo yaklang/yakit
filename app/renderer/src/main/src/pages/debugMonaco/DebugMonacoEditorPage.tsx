@@ -15,6 +15,8 @@ import {HybridScanDemo} from "@/components/playground/hybrid/HybridScanDemo"
 import {HybridScanTaskTable} from "@/components/playground/hybrid/HybridScanTaskTable"
 import {SpaceEngineOperator} from "@/components/playground/spaceengine/SpaceEngineOperator"
 import {JavaDecompilerOperator} from "@/components/playground/javadecompiler/JavaDecompilerOperator"
+import {KnowledgeBaseDemo} from "@/components/playground/knowlegeBase/KnowledgeBaseDemo"
+import {RagManagerDemo} from "@/components/playground/ragManager/RagManagerDemo"
 import {ThirdPartyBinaryManager} from "@/components/playground/thirdPartyBinary/ThirdPartyBinaryManager"
 import { EntityRepositoryPage } from "@/components/playground/entityRepository/EntityRepositoryPage"
 export interface DebugMonacoEditorPageProp {}
@@ -71,6 +73,8 @@ a=1&b=2 Content-Length: a
                             {value: "risk-table", label: "漏洞查询规则"},
                             {value: "http-monaco-editor", label: "HTTP 数据包编辑器"},
                             {value: "fs-tree", label: "文件系统树"},
+                            {value: "knowledge-base", label: "知识库管理"},
+                            {value: "rag-manager", label: "RAG 向量存储管理"},
                             {value: "third-party-binary", label: "第三方应用管理"},
                             {value: "entity-repository", label: "实体仓库"}
                         ]}
@@ -100,6 +104,10 @@ a=1&b=2 Content-Length: a
                             return <SpaceEngineOperator />
                         case "java-decompiler":
                             return <JavaDecompilerOperator />
+                        case "knowledge-base":
+                            return <KnowledgeBaseDemo />
+                        case "rag-manager":
+                            return <RagManagerDemo />
                         case "third-party-binary":
                             return <ThirdPartyBinaryManager />
                         case "entity-repository":
