@@ -66,7 +66,7 @@
     }
 }
 
-.file-body {
+.file-show {
     @extend %display-column-center;
     gap: 4px;
     .file-card {
@@ -141,6 +141,66 @@
         font-style: normal;
         font-weight: 400;
         line-height: 16px; /* 133.333% */
+    }
+}
+
+.log-file {
+    @extend %display-column-center;
+    gap: 4px;
+    .log-file-heard {
+        @extend %display-flex-center;
+        gap: 12px;
+        .time {
+            @extend %time-text;
+        }
+    }
+    .log-file-card-title {
+        @extend %display-flex-center;
+        gap: 8px;
+        .name {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 14px;
+            font-weight: 400;
+
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+        }
+    }
+    .log-file-card-heard {
+        gap: 12px;
+        height: 36px;
+        background: var(--Colors-Use-Neutral-Bg);
+    }
+    .log-file-card-heard-no-border-bottom {
+        border-bottom-color: transparent;
+    }
+    .log-file-card-extra {
+        @extend %display-flex-center;
+        gap: 8px;
+    }
+    .log-file-card {
+        background-color: var(--Colors-Use-Basic-Background);
+        border-radius: 4px;
+    }
+    .log-file-card-body {
+        gap: 8px;
+        display: grid;
+        grid-template-rows: 1fr;
+        padding: 0 12px;
+        transition: grid-template-rows 0.3s ease;
+        background-color: var(--Colors-Use-Basic-Background);
+    }
+    .log-file-card-body-hidden {
+        grid-template-rows: 0fr;
+        .log-file-body {
+            padding: 0;
+        }
+    }
+    .log-file-body {
+        overflow: hidden;
+        padding: 12px 0;
     }
 }
 

@@ -1,5 +1,5 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {EditorLogShow, YakitLogFormatter} from "@/pages/invoker/YakitLogFormatter"
+import {EditorLogShow, FileLogShowDataProps, YakitLogFormatter} from "@/pages/invoker/YakitLogFormatter"
 import {Timeline} from "antd"
 import React from "react"
 import styles from "./LocalPluginLog.module.scss"
@@ -18,15 +18,26 @@ import {
     LogNodeStatusSuccessIcon,
     LogNodeStatusWarningIcon
 } from "@/assets/icon/colors"
-import {SolidCalendarIcon} from "@/assets/icon/solid"
-import {formatTimestamp} from "@/utils/timeUtil"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {renderFileTypeIcon} from "@/components/MilkdownEditor/CustomFile/CustomFile"
+import {PluginExecuteLogFile} from "./PluginExecuteResultType"
+import {isPluginExecuteLogFileItem} from "@/pages/invoker/utils"
 
-export interface LocalPluginLogList extends StreamResult.Log {}
-export interface LocalPluginLogProps {
+interface LocalPluginLogList extends StreamResult.Log {}
+interface LocalPluginLogProps {
     loading: boolean
     list: LocalPluginLogList[]
 }
+
+const getFileExtension = (filename) => {
+    if (!filename || typeof filename !== "string") return ""
+
+    // 方法1: 使用 split
+    const parts: string[] = filename.split(".")
+    if (parts.length === 1) return "" // 没有扩展名
+    return parts.pop()?.toLowerCase() || ""
+}
+
 /**插件日志 */
 export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) => {
     const {loading, list} = props
@@ -35,34 +46,35 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
     }, [])
     const logLevelToDot = useMemoizedFn((item) => {
         let key = item.level
-        switch (key) {
-            case "file":
-                try {
-                    const fileItem = JSON.parse(item.data) as {
-                        title: string
-                        description: string
-                        path: string
-                        is_dir: boolean
-                        is_existed: boolean
-                        file_size: string
-                        dir: string
-                    }
-                    if (fileItem.is_dir) {
+        if (key === "file") {
+            try {
+                const fileItem = JSON.parse(item.data) as PluginExecuteLogFile.FileItem | FileLogShowDataProps
+                if (isPluginExecuteLogFileItem(fileItem)) {
+                    const newFileIte = {...fileItem} as PluginExecuteLogFile.FileItem
+                    if (newFileIte.is_dir) {
                         key = "folder"
-                        if (!fileItem.is_existed) {
+                    } else {
+                        const fileType = getFileExtension(newFileIte.path)
+                        return renderFileTypeIcon({
+                            type: fileType,
+                            iconClassName: styles["info-icon"]
+                        })
+                    }
+                } else {
+                    const oldFileItem = {...fileItem} as FileLogShowDataProps
+                    if (oldFileItem.is_dir) {
+                        key = "folder"
+                        if (!oldFileItem.is_existed) {
                             key = "folder-error"
                         }
                     } else {
                         key = "file"
-                        if (!fileItem.is_existed) {
+                        if (!oldFileItem.is_existed) {
                             key = "file-error"
                         }
                     }
-                } catch (error) {}
-                break
-
-            default:
-                break
+                }
+            } catch (error) {}
         }
         switch (key) {
             case "warn":
@@ -86,7 +98,6 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
                 return <LogNodeStatusFileIcon />
             case "markdown":
                 return <LogNodeStatusMDIcon />
-
             default:
                 return <LogNodeStatusInfoIcon className={styles["info-icon"]} />
         }
