@@ -475,25 +475,3 @@ export const showSaveDialog: APIOptionalFunc<string, ShowSaveDialogResponse> = (
             })
     })
 }
-
-export interface OpenDialogRequest {
-    title?: string
-    properties?: string[]
-    defaultPath?: string
-}
-export interface OpenDialogResponse {
-    canceled: boolean
-    filePaths: string[]
-    bookmarks?: string[]
-}
-export const openDialog: APIOptionalFunc<OpenDialogRequest, OpenDialogResponse> = (params, hiddenError) => {
-    return new Promise((resolve, reject) => {
-        ipcRenderer
-            .invoke("openDialog", params)
-            .then(resolve)
-            .catch((err) => {
-                if (!hiddenError) yakitNotify("error", `获取保存文件路径错误${err}`)
-                reject(err)
-            })
-    })
-}

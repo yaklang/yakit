@@ -21,6 +21,7 @@ import {HttpUploadImgBaseRequest, httpUploadImgPath} from "@/apiUtils/http"
 import {callCommand} from "@milkdown/kit/utils"
 import {insertImageBlockCommand} from "./imageBlock"
 import {fileCommand} from "./uploadPlugin"
+import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -250,12 +251,8 @@ export const uploadFileInMilkdown = (
     option: {type: HttpUploadImgBaseRequest["type"]; notepadHash: string; userId: number}
 ) => {
     const {type, notepadHash, userId} = option
-    ipcRenderer
-        .invoke("openDialog", {
-            title: "请选择文件",
-            properties: ["openFile"]
-        })
-        .then((data: {filePaths: string[]}) => {
+        handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
+        .then((data) => {
             const filesLength = data.filePaths.length
             if (filesLength) {
                 const path = data.filePaths[0].replace(/\\/g, "\\")

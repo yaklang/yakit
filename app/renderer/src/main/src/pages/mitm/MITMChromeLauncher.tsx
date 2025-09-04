@@ -32,6 +32,7 @@ import {chromeLauncherMinParams, chromeLauncherParamsArr} from "@/defaultConstan
 import {SolidCheckIcon, SolidStoreIcon} from "@/assets/icon/solid"
 import {useGoogleChromePluginPath} from "@/store"
 import {RemoteMitmGV} from "@/enums/mitm"
+import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -238,12 +239,8 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                     <Tooltip title={"选择存储路径"}>
                         <CloudUploadOutlined
                             onClick={() => {
-                                ipcRenderer
-                                    .invoke("openDialog", {
-                                        title: "请选择文件夹",
-                                        properties: ["openDirectory"]
-                                    })
-                                    .then((data: any) => {
+                                    handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]})
+                                    .then((data) => {
                                         if (data.filePaths.length) {
                                             let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
                                             setUserDataDir(absolutePath)

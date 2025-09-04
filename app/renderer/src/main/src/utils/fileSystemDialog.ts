@@ -1,7 +1,7 @@
 const {ipcRenderer} = window.require("electron")
 
 /** 引用 electron.d.ts @OpenDialogOptions */
-interface OpenDialogOptions {
+export interface OpenDialogOptions {
     title?: string
     /** 默认值：当前用户的桌面目录 */
     defaultPath?: string
@@ -44,7 +44,7 @@ interface OpenDialogOptions {
     securityScopedBookmarks?: boolean
 }
 /** 引用 electron.d.ts @OpenDialogReturnValue */
-interface OpenDialogReturnValue {
+export interface OpenDialogReturnValue {
     /**
      * whether or not the dialog was canceled.
      */

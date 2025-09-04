@@ -67,6 +67,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {MultipleNodeInfo} from "../layout/mainOperatorContent/MainOperatorContentType"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {useTheme} from "@/hook/useTheme"
+import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
@@ -191,12 +192,8 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
             warn("暂无保存内容")
             return
         }
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件夹",
-                properties: ["openDirectory"]
-            })
-            .then((data: {filePaths: string[]}) => {
+            handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]})
+            .then((data) => {
                 const filesLength = data.filePaths.length
                 if (filesLength) {
                     const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")

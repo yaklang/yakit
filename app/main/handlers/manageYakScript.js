@@ -1,4 +1,4 @@
-const {ipcMain, dialog} = require("electron")
+const {ipcMain} = require("electron")
 const path = require("path")
 const fs = require("fs")
 module.exports = (win, getClient) => {
@@ -306,23 +306,6 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("DeleteMarkdownDocument", async (e, params) => {
         return await asyncDeleteMarkdownDocument(params)
-    })
-
-    ipcMain.handle("openDialog", async (e, params) => {
-        return await new Promise((resolve, reject) => {
-            dialog
-                .showOpenDialog({
-                    ...params
-                })
-                .then((res) => {
-                    if (res) {
-                        let result = {...res}
-                        resolve(result)
-                    } else {
-                        reject("获取文件失败")
-                    }
-                })
-        })
     })
 
     // 读取本地文件内容(同时校验其文件大小是否读取本地文件10M，大于则不读取)

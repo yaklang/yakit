@@ -4,10 +4,11 @@ import {randomString} from "@/utils/randomUtil"
 import {yakitNotify} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {Progress} from "antd"
-import {NoteFilter, OpenDialogRequest, OpenDialogResponse, onOpenLocalFileByPath, openDialog} from "../utils"
+import {NoteFilter, onOpenLocalFileByPath} from "../utils"
 import {OutlineExportIcon, OutlineImportIcon} from "@/assets/icon/outline"
 import {useMemoizedFn} from "ahooks"
 import moment from "moment"
+import { handleOpenFileSystemDialog, OpenDialogOptions, OpenDialogReturnValue } from "@/utils/fileSystemDialog"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -54,11 +55,11 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
         }
     }, [taskToken])
     useEffect(() => {
-        const data: OpenDialogRequest = {
+        const data: OpenDialogOptions = {
             title: "请选择文件",
             properties: ["openFile"]
         }
-        openDialog(data).then((data: OpenDialogResponse) => {
+        handleOpenFileSystemDialog(data).then((data) => {
             if (data.filePaths.length > 0) {
                 const filePath = data.filePaths[0].replace(/\\/g, "\\")
                 const importParams: ImportNoteRequest = {
@@ -155,11 +156,11 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
         }
     }, [taskToken])
     useEffect(() => {
-        const data: OpenDialogRequest = {
+        const data: OpenDialogOptions = {
             title: "请选择文件夹",
             properties: ["openDirectory"]
         }
-        openDialog(data).then((data: OpenDialogResponse) => {
+        handleOpenFileSystemDialog(data).then((data) => {
             const {filePaths} = data
             if (filePaths.length > 0) {
                 const selectedPath = filePaths[0]

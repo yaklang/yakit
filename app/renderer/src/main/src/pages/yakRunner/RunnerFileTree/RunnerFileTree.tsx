@@ -58,6 +58,7 @@ import {Tooltip} from "antd"
 import {getYakitEngineMode} from "@/constants/software"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
+import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
 
 export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
     const {setAbsolutePath} = props
@@ -104,12 +105,8 @@ export const openFolder = () => {
             }
         })
     } else {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件夹",
-                properties: ["openDirectory"]
-            })
-            .then((data: any) => {
+        handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]})
+            .then((data) => {
                 if (data.filePaths.length) {
                     let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
                     emiter.emit("onOpenFileTree", absolutePath)

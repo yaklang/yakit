@@ -1,27 +1,7 @@
-import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
+import {APIFunc} from "@/apiUtils/type"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {yakitNotify} from "@/utils/notification"
-
-const {ipcRenderer} = window.require("electron")
-
-interface DirectoryProps {
-    filePaths: string[]
-}
-export const openDirectory: APINoRequestFunc<DirectoryProps> = () => {
-    return new Promise((resolve, reject) => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件夹",
-                properties: ["openDirectory"]
-            })
-            .then(resolve)
-            .catch((err) => {
-                yakitNotify("error", "打开文件夹失败：" + err)
-                reject(err)
-            })
-    })
-}
 
 export interface UserSearchQuery {
     keywords: string

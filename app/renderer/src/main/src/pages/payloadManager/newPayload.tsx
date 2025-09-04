@@ -94,6 +94,7 @@ import {
 import {DeleteOnlinePayloadProps, NewPayloadOnlineTable} from "./onlinePayload/PayloadOnlineTable"
 import {API} from "@/services/swagger/resposeType"
 import {useTheme} from "@/hook/useTheme"
+import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
 const {ipcRenderer} = window.require("electron")
 
 // 是否为Payload操作员
@@ -792,11 +793,11 @@ const nodesToDataFun = (nodes: PayloadGroupNodeProps[]) => {
     })
 }
 
-// 递归数组中的数据库文件并将其id归纳为一个数组
+// 递归数组中的数据库与文件并将其id归纳为一个数组
 const getDataBaseIds = (data: DataItem[]): string[] => {
     let ids: string[] = []
     for (const item of data) {
-        if (item.type === "DataBase") {
+        if (["DataBase", "File"].includes(item.type)) {
             ids.push(item.name)
         } else if (item.type === "Folder" && item.node) {
             const foundInNode = getDataBaseIds(item.node)
@@ -3848,7 +3849,7 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
         let exportObj = {
             file: "ExportAllPayloadFromFile",
             csv: "ExportAllPayload",
-            all: "ExportPayloadBatch"
+            all: "ExportPayloadDBAndFile"
         }
         return exportObj[exportType]
     }, [exportType])
@@ -3860,64 +3861,51 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
         let cancelExportObj = {
             file: "cancel-ExportAllPayloadFromFile",
             csv: "cancel-ExportAllPayload",
-            all: "cancel-ExportPayloadBatch"
+            all: "cancel-ExportPayloadDBAndFile"
         }
         return cancelExportObj[exportType]
     }, [exportType])
 
     // 导出任务
     const onExportFileFun = useMemoizedFn(() => {
-        if (exportType === "all") {
-            ipcRenderer
-                .invoke("ExportMultiplePayloads")
-                .then((defaultPath) => {
-                    exportPathRef.current = defaultPath
+        handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]}).then((data) => {
+            if (data.filePaths.length) {
+                let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                if (exportType === "all") {
+                    exportPathRef.current = absolutePath
                     ipcRenderer.invoke(
                         getExportGrpc,
                         {
-                            Group: group,
-                            SavePath: defaultPath
+                            Groups: group.split(","),
+                            SavePath: absolutePath
                         },
                         exportToken
                     )
                     setShowModal(true)
-                })
-                .catch((e: any) => {
-                    failed(`批量导出失败：${e}`)
-                })
-        } else {
-            ipcRenderer
-                .invoke("openDialog", {
-                    title: "请选择文件夹",
-                    properties: ["openDirectory"]
-                })
-                .then((data) => {
-                    if (data.filePaths.length) {
-                        let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-
-                        ipcRenderer
-                            .invoke("pathJoin", {
-                                dir: absolutePath,
-                                file: `${group}.${exportType === "file" ? "txt" : "csv"}`
-                            })
-                            .then((currentPath: string) => {
-                                exportPathRef.current = currentPath
-                                ipcRenderer.invoke(
-                                    getExportGrpc,
-                                    {
-                                        Group: group,
-                                        Folder: folder,
-                                        SavePath: currentPath
-                                    },
-                                    exportToken
-                                )
-                                setShowModal(true)
-                            })
-                    } else {
-                        setExportVisible(false)
-                    }
-                })
-        }
+                } else {
+                    ipcRenderer
+                        .invoke("pathJoin", {
+                            dir: absolutePath,
+                            file: `${group}.${exportType === "file" ? "txt" : "csv"}`
+                        })
+                        .then((currentPath: string) => {
+                            exportPathRef.current = currentPath
+                            ipcRenderer.invoke(
+                                getExportGrpc,
+                                {
+                                    Group: group,
+                                    Folder: folder,
+                                    SavePath: currentPath
+                                },
+                                exportToken
+                            )
+                            setShowModal(true)
+                        })
+                }
+            } else {
+                setExportVisible(false)
+            }
+        })
     })
     // 取消导出任务
     const cancelExportFile = useMemoizedFn(() => {

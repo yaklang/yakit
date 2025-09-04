@@ -278,6 +278,12 @@ service Yak {
   // 分析一个 HTTP 请求详情
   rpc HTTPRequestAnalyzer(HTTPRequestAnalysisMaterial) returns (HTTPRequestAnalysis);
 
+  // 用户自定义代码补全
+  rpc CreateSnippet(SnippetsRequest) returns (Empty);
+  rpc UpdateSnippet(EditSnippetsRequest) returns (Empty);
+  rpc DeleteSnippets(QuerySnippetsRequest) returns (Empty);
+  rpc QuerySnippets(QuerySnippetsRequest) returns (SnippetsResponse);
+
   // 编码解码
   rpc Codec(CodecRequest) returns (CodecResponse);
   rpc NewCodec(CodecRequestFlow) returns (CodecResponse);
@@ -328,9 +334,12 @@ service Yak {
   // 迁移旧的payload
   rpc MigratePayloads(Empty) returns (stream SavePayloadProgress);
 
+  // 批量导payload 数据库 已废弃
   rpc ExportPayloadBatch(ExportPayloadBatchRequest) returns (stream GetAllPayloadResponse);
   rpc UploadPayloadToOnline(UploadPayloadToOnlineRequest) returns (stream DownloadProgress);
   rpc DownloadPayload(DownloadPayloadRequest) returns (stream DownloadProgress);
+  // 批量导payload所有
+  rpc ExportPayloadDBAndFile(ExportPayloadDBAndFileRequest) returns (stream GetAllPayloadResponse);
 
 
   // 自动生成补全
@@ -3199,6 +3208,11 @@ message DeletePluginByUserIDRequest {
   string OnlineBaseUrl = 2;
 }
 
+message ExportPayloadDBAndFileRequest {
+  repeated string Groups = 1;
+  string SavePath = 2;
+}
+
 message DeleteLocalPluginsByWhereRequest {
   string Keywords = 1;
   string Type = 2;
@@ -5227,6 +5241,39 @@ message GetYakScriptTagsAndTypeResponse {
 message TagsAndType {
   string Value = 1;
   int32 Total = 2;
+}
+
+message SnippetsFilter {
+  repeated string Name = 1;
+}
+
+message SnippetsRequest {
+  string Name = 1;
+  string Code = 2;
+  string Description = 3;
+  string State = 4;
+  string Level = 5;
+}
+
+message EditSnippetsRequest {
+  string Target = 1;
+  string Name = 2;
+  string Code = 3;
+  string Description = 4;
+  string State = 5;
+  string Level = 6;
+}
+
+message QuerySnippetsRequest {
+  SnippetsFilter Filter = 1;
+}
+
+message SnippetsResponse {
+  repeated string Names = 1;
+  repeated string Codes = 2;
+  repeated string Descriptions = 3;
+  repeated string States = 4;
+  repeated string Levels = 5;
 }
 
 message CodecRequest {
