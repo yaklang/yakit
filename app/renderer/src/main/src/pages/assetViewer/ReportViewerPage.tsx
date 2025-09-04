@@ -399,7 +399,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
     // 下载HTML
     const downloadHtml = () => {
             handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]})
-            .then((data: any) => {
+            .then((data) => {
                 if (data.filePaths.length) {
                     setDownloadLoading(true)
                     let absolutePath = data.filePaths[0].replace(/\\/g, "\\")

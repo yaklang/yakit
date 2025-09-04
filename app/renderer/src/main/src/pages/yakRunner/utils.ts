@@ -760,7 +760,7 @@ export const getDefaultActiveFile = async (info: FileDetailInfo) => {
 export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> => {
     return new Promise(async (resolve, reject) => {
         handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
-            .then(async (data: {filePaths: string[]}) => {
+            .then(async (data) => {
                 try {
                     const filesLength = data.filePaths.length
                     if (filesLength === 1) {

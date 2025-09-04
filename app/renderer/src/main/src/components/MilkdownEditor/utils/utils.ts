@@ -252,7 +252,7 @@ export const uploadFileInMilkdown = (
 ) => {
     const {type, notepadHash, userId} = option
         handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
-        .then((data: {filePaths: string[]}) => {
+        .then((data) => {
             const filesLength = data.filePaths.length
             if (filesLength) {
                 const path = data.filePaths[0].replace(/\\/g, "\\")

@@ -59,7 +59,7 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
             title: "请选择文件",
             properties: ["openFile"]
         }
-        handleOpenFileSystemDialog(data).then((data: OpenDialogReturnValue) => {
+        handleOpenFileSystemDialog(data).then((data) => {
             if (data.filePaths.length > 0) {
                 const filePath = data.filePaths[0].replace(/\\/g, "\\")
                 const importParams: ImportNoteRequest = {
@@ -160,7 +160,7 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
             title: "请选择文件夹",
             properties: ["openDirectory"]
         }
-        handleOpenFileSystemDialog(data).then((data: OpenDialogReturnValue) => {
+        handleOpenFileSystemDialog(data).then((data) => {
             const {filePaths} = data
             if (filePaths.length > 0) {
                 const selectedPath = filePaths[0]

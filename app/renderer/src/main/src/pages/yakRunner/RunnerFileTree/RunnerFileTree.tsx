@@ -106,7 +106,7 @@ export const openFolder = () => {
         })
     } else {
         handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]})
-            .then((data: any) => {
+            .then((data) => {
                 if (data.filePaths.length) {
                     let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
                     emiter.emit("onOpenFileTree", absolutePath)

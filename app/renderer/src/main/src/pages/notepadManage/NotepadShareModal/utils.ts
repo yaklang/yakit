@@ -1,22 +1,7 @@
-import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
+import {APIFunc} from "@/apiUtils/type"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
 import {yakitNotify} from "@/utils/notification"
-
-interface DirectoryProps {
-    filePaths: string[]
-}
-export const openDirectory: APINoRequestFunc<DirectoryProps> = () => {
-    return new Promise((resolve, reject) => {
-        handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]})
-            .then(resolve)
-            .catch((err) => {
-                yakitNotify("error", "打开文件夹失败：" + err)
-                reject(err)
-            })
-    })
-}
 
 export interface UserSearchQuery {
     keywords: string

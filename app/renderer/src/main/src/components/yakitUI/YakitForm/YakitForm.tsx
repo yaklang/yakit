@@ -351,7 +351,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             properties.push("multiSelections")
         }
             handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFolder"), properties})
-            .then((data: {filePaths: string[]}) => {
+            .then((data) => {
                 const filesLength = data.filePaths.length
                 if (filesLength) {
                     const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
@@ -368,7 +368,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             properties.push("multiSelections")
         }
             handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFile"), properties})
-            .then((data: {filePaths: string[]}) => {
+            .then((data) => {
                 const filesLength = data.filePaths.length
                 let acceptFlag = true
                 if (filesLength) {
@@ -670,7 +670,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
         e.stopPropagation()
         if (disabled) return
             handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
-            .then((data: {filePaths: string[]}) => {
+            .then((data) => {
                 const filesLength = data.filePaths.length
                 if (filesLength === 1) {
                     const path: string = data.filePaths[0].replace(/\\/g, "\\")
@@ -855,7 +855,7 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
         e.stopPropagation()
         if (disabled) return
             handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
-            .then((data: {filePaths: string[]}) => {
+            .then((data) => {
                 const filesLength = data.filePaths.length
                 if (filesLength === 1) {
                     const path: string = data.filePaths[0].replace(/\\/g, "\\")

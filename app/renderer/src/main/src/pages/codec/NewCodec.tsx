@@ -193,7 +193,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
             return
         }
             handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]})
-            .then((data: {filePaths: string[]}) => {
+            .then((data) => {
                 const filesLength = data.filePaths.length
                 if (filesLength) {
                     const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
