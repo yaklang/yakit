@@ -13,6 +13,7 @@ import styles from "./ScreenRecorderPage.module.scss"
 import screcorderEmpty from "./screcorderEmpty.png"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 export interface ScreenRecorderPageProp {}
 
@@ -76,6 +77,10 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
                 okButtonProps={{style: {display: "none"}}}
                 isDrag={true}
                 mask={false}
+                getContainer={
+                    document.getElementById(`main-operator-page-body-${YakitRoute.ScreenRecorderPage}`) || undefined
+                }
+                wrapClassName={styles["screenRecorderInstallModal"]}
             >
                 <InstallFFmpeg
                     visible={installVisible}
@@ -94,7 +99,7 @@ export interface InstallFFmpegProp {
     onFinish: () => void
 }
 
-export const InstallFFmpeg: React.FC<InstallFFmpegProp> = (props) => {
+const InstallFFmpeg: React.FC<InstallFFmpegProp> = (props) => {
     const {onFinish, visible} = props
     const [token, setToken] = useState(randomString(40))
     const [results, setResults, getResult] = useGetState<string[]>([])

@@ -32,7 +32,8 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
         cancelButtonText,
         cancelButtonProps,
         onCancel,
-        children
+        children,
+        getContainer
     } = props
 
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
@@ -97,6 +98,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
                         </div>
                     </>
                 }
+                getContainer={getContainer}
             />
         </>
     )
@@ -115,7 +117,8 @@ export const HintModal: React.FC<HintModalProps> = memo((props) => {
         children,
         isResize,
         resizeMinWidth,
-        resizeMinWHeight
+        resizeMinWHeight,
+        getContainer
     } = props
     const [disabled, setDisabled] = useState(true)
     const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
@@ -123,14 +126,19 @@ export const HintModal: React.FC<HintModalProps> = memo((props) => {
     const draggleRef = useRef<HTMLDivElement>(null)
     /** 弹窗拖拽移动触发事件 */
     const onStart = useMemoizedFn((_event: DraggableEvent, uiData: DraggableData) => {
-        const {clientWidth, clientHeight} = window.document.documentElement
+        let containerRect
+        if (getContainer) {
+            containerRect = getContainer.getBoundingClientRect()
+        } else {
+            containerRect = window.document.documentElement.getBoundingClientRect()
+        }
         const targetRect = draggleRef.current?.getBoundingClientRect()
         if (!targetRect) return
         setBounds({
-            left: -targetRect.left + uiData.x,
-            right: clientWidth - (targetRect.right - uiData.x),
-            top: -targetRect.top + uiData.y + 36,
-            bottom: clientHeight - (targetRect.bottom - uiData.y)
+            left: containerRect.left - targetRect.left + uiData.x,
+            right: containerRect.right - targetRect.right + uiData.x,
+            top: containerRect.top - targetRect.top + uiData.y,
+            bottom: containerRect.bottom - targetRect.bottom + uiData.y
         })
     })
 

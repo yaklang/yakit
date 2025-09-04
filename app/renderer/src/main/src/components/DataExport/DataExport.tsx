@@ -19,6 +19,7 @@ interface ExportExcelProps {
     showButton?: boolean
     text?: string
     newUIType?: YakitButtonProp["type"]
+    getContainer?: HTMLElement
 }
 
 interface resProps {
@@ -82,7 +83,8 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         pageSize = 100000,
         showButton = true,
         text,
-        newUIType = "outline2"
+        newUIType = "outline2",
+        getContainer
     } = props
     const [loading, setLoading] = useState<boolean>(false)
     const [selectItem, setSelectItem] = useState<number>()
@@ -110,7 +112,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
 
                     const maxSizeInBytes = 90 * 1024 * 1024 // 90MB
                     const chunks: any[] = splitArrayBySize(exportData, maxSizeInBytes)
-                    
+
                     if (totalCellNumber < maxCellNumber && response.Total <= pageSize && chunks.length === 1) {
                         // 单元格数量小于最大单元格数量 或者导出内容小于90M，直接导出
                         export_json_to_excel({
@@ -221,6 +223,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                 visible={visible}
                 onCancel={() => setVisible(false)}
                 footer={null}
+                getContainer={getContainer}
             >
                 <div style={{padding: 24}}>
                     <Space wrap>
@@ -263,6 +266,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                 visible={splitVisible}
                 onCancel={() => setSplitVisible(false)}
                 footer={null}
+                getContainer={getContainer}
             >
                 <div style={{padding: 24}}>
                     <Space wrap>
@@ -313,16 +317,17 @@ interface ExportSelectProps {
     initCheckValue?: string[]
     /**关闭 */
     onClose: () => void
+    getContainer?: HTMLElement
 }
 // 导出字段选择
 export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
-    const {exportValue, fileName, setExportTitle, exportKey, getData, pageSize, initCheckValue, onClose} = props
+    const {exportValue, fileName, setExportTitle, exportKey, getData, pageSize, initCheckValue, onClose, getContainer} = props
     const [checkValue, setCheckValue] = useState<CheckboxValueType[]>([])
     useEffect(() => {
         getRemoteValue(exportKey).then((setting) => {
             if (!setting) {
                 // 第一次进入 默认勾选所有导出字段
-                setExportTitle(initCheckValue || exportValue as string[])
+                setExportTitle(initCheckValue || (exportValue as string[]))
                 setCheckValue(initCheckValue || exportValue)
             } else {
                 const values = JSON.parse(setting)
@@ -358,6 +363,7 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
                     fileName={fileName}
                     text='导出'
                     pageSize={pageSize}
+                    getContainer={getContainer}
                 />
             </div>
         </div>

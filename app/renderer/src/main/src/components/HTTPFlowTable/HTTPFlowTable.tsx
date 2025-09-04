@@ -2746,6 +2746,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     })
     const onExcelExport = (list) => {
+        percentContainerRef.current = currentPageTabRouteKey
         const titleValue = configColumnRef.current.map((item) => item.title)
         const exportValue = [...titleValue, "请求包", "响应包"]
         const m = showYakitModal({
@@ -2759,6 +2760,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     fileName={"History"}
                     getData={(pagination) => getExcelData(pagination, list)}
                     onClose={() => m.destroy()}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+                    }
                 />
             ),
             onCancel: () => {
@@ -2768,7 +2772,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             },
             width: 650,
             footer: null,
-            maskClosable: false
+            maskClosable: false,
+            getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
         })
     }
 
