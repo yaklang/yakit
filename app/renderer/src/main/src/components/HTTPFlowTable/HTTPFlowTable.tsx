@@ -72,10 +72,12 @@ import {useHttpFlowStore} from "@/store/httpFlow"
 import {
     OutlineBanIcon,
     OutlineCogIcon,
+    OutlineFilterIcon,
     OutlineInformationcircleIcon,
     OutlineQuestionmarkcircleIcon,
     OutlineRefreshIcon,
     OutlineSearchIcon,
+    OutlineSelectorIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {serverPushStatus} from "@/utils/duplex/duplex"
@@ -114,12 +116,12 @@ import {
 import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
-import {isEqual} from "lodash"
+import {DebouncedFunc, isEqual} from "lodash"
 import {defalutColumnsOrder} from "@/pages/hTTPHistoryAnalysis/HTTPHistory/HTTPHistoryFilter"
-import { isEnpriTrace } from "@/utils/envfile"
-import { HTTPFlowsToOnlineRequest } from "@/utils/login"
-import { NowProjectDescription } from "@/pages/globalVariable"
-import { useStore } from "@/store"
+import {isEnpriTrace} from "@/utils/envfile"
+import {HTTPFlowsToOnlineRequest} from "@/utils/login"
+import {NowProjectDescription} from "@/pages/globalVariable"
+import {useStore} from "@/store"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -2062,18 +2064,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             {
                 title: "响应长度",
                 dataKey: "BodyLength",
-                width: 200,
-                minWidth: 140,
-                beforeIconExtra: (
-                    <div className={classNames(style["body-length-checkbox"])}>
-                        <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)} />
-                        <span className={style["tip"]}>大于0</span>
-                    </div>
-                ),
+                width: 100,
                 filterProps: {
                     filterKey: "bodyLength",
-                    filterRender: () => (
-                        <RangeInputNumberTable
+                    filterIcon: <OutlineSelectorIcon className={style["filter-icon"]} />,
+                    filterRender: (closePopover: () => void) => (
+                        <RangeInputNumberTableWrapper
+                            checkBodyLength={checkBodyLength}
+                            onCheckThan0={onCheckThan0}
                             minNumber={getAfterBodyLength()}
                             setMinNumber={setAfterBodyLength}
                             maxNumber={getBeforeBodyLength()}
@@ -2087,6 +2085,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 setBeforeBodyLength(undefined)
                                 setAfterBodyLength(undefined)
                                 setBodyLengthUnit("B")
+                                setTimeout(() => {
+                                    closePopover()
+                                }, 50)
                             }}
                             onSure={() => {
                                 const afterBodyLen = getAfterBodyLength()
@@ -2103,6 +2104,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         ? onConvertBodySizeByUnit(beforeBodyLen, getBodyLengthUnit())
                                         : undefined
                                 }))
+                                setTimeout(() => {
+                                    closePopover()
+                                }, 50)
                             }}
                             extra={
                                 <YakitSelect
@@ -3033,349 +3037,347 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [])
 
     const {userInfo} = useStore()
-    const menuData = useMemo(()=>{
+    const menuData = useMemo(() => {
         let menu = [
-        {
-            key: "发送到 Web Fuzzer",
-            label: "发送到 Web Fuzzer",
-            number: 10,
-            default: true,
-            webSocket: false,
-            children: [
-                {
-                    key: "sendAndJumpToWebFuzzer",
-                    label: "发送并跳转",
-                    keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys
-                },
-                {
-                    key: "sendToWebFuzzer",
-                    label: "仅发送",
-                    keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys
+            {
+                key: "发送到 Web Fuzzer",
+                label: "发送到 Web Fuzzer",
+                number: 10,
+                default: true,
+                webSocket: false,
+                children: [
+                    {
+                        key: "sendAndJumpToWebFuzzer",
+                        label: "发送并跳转",
+                        keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys
+                    },
+                    {
+                        key: "sendToWebFuzzer",
+                        label: "仅发送",
+                        keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys
+                    }
+                ],
+                onClickBatch: () => {}
+            },
+            {
+                key: "发送到 WS Fuzzer",
+                label: "发送到 WS Fuzzer",
+                number: 10,
+                webSocket: true,
+                default: false,
+                children: [
+                    {
+                        key: "sendAndJumpToWS",
+                        label: "发送并跳转",
+                        keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys
+                    },
+                    {
+                        key: "sendToWS",
+                        label: "仅发送",
+                        keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys
+                    }
+                ],
+                onClickBatch: () => {}
+            },
+            {
+                key: "数据包扫描",
+                label: "数据包扫描",
+                number: 200,
+                default: true,
+                webSocket: false,
+                onClickSingle: () => {},
+                onClickBatch: () => {},
+                children: GetPacketScanByCursorMenuItem(selected?.Id || 0)?.subMenuItems?.map((ele) => ({
+                    key: ele.title,
+                    label: ele.title
+                }))
+            },
+            {
+                key: "插件扩展",
+                label: "插件扩展",
+                default: true,
+                webSocket: false,
+                onClickSingle: () => {},
+                onClickBatch: () => {},
+                children: getCodecHistoryPlugin()
+            },
+            {
+                key: "AI插件",
+                label: (
+                    <>
+                        <IconSolidAIIcon className={"ai-plugin-menu-icon-default"} />
+                        <IconSolidAIWhiteIcon className={"ai-plugin-menu-icon-hover"} />
+                        AI插件
+                    </>
+                ),
+                default: true,
+                webSocket: false,
+                onClickSingle: () => {},
+                onClickBatch: () => {},
+                children: getCodecAIPlugin()
+            },
+            {
+                key: "复制 URL",
+                label: "复制 URL",
+                number: 30,
+                webSocket: true,
+                default: true,
+                onClickSingle: (v) => setClipboardText(v.Url),
+                onClickBatch: (v, number) => {
+                    if (v.length === 0) {
+                        yakitNotify("warning", "请选择数据")
+                        return
+                    }
+                    if (v.length < number) {
+                        setClipboardText(v.map((ele) => `${ele.Url}`).join("\r\n"))
+                        setSelectedRowKeys([])
+                        setSelectedRows([])
+                    } else {
+                        yakitNotify("warning", `最多同时只能复制${number}条数据`)
+                    }
                 }
-            ],
-            onClickBatch: () => {}
-        },
-        {
-            key: "发送到 WS Fuzzer",
-            label: "发送到 WS Fuzzer",
-            number: 10,
-            webSocket: true,
-            default: false,
-            children: [
-                {
-                    key: "sendAndJumpToWS",
-                    label: "发送并跳转",
-                    keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys
-                },
-                {
-                    key: "sendToWS",
-                    label: "仅发送",
-                    keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys
+            },
+            {
+                key: "下载 Response Body",
+                label: "下载 Response Body",
+                default: true,
+                webSocket: false,
+                onClickSingle: (v) => {
+                    ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
+                        saveABSFileToOpen(`response-body.txt`, bytes.Raw)
+                    })
                 }
-            ],
-            onClickBatch: () => {}
-        },
-        {
-            key: "数据包扫描",
-            label: "数据包扫描",
-            number: 200,
-            default: true,
-            webSocket: false,
-            onClickSingle: () => {},
-            onClickBatch: () => {},
-            children: GetPacketScanByCursorMenuItem(selected?.Id || 0)?.subMenuItems?.map((ele) => ({
-                key: ele.title,
-                label: ele.title
-            }))
-        },
-        {
-            key: "插件扩展",
-            label: "插件扩展",
-            default: true,
-            webSocket: false,
-            onClickSingle: () => {},
-            onClickBatch: () => {},
-            children: getCodecHistoryPlugin()
-        },
-        {
-            key: "AI插件",
-            label: (
-                <>
-                    <IconSolidAIIcon className={"ai-plugin-menu-icon-default"} />
-                    <IconSolidAIWhiteIcon className={"ai-plugin-menu-icon-hover"} />
-                    AI插件
-                </>
-            ),
-            default: true,
-            webSocket: false,
-            onClickSingle: () => {},
-            onClickBatch: () => {},
-            children: getCodecAIPlugin()
-        },
-        {
-            key: "复制 URL",
-            label: "复制 URL",
-            number: 30,
-            webSocket: true,
-            default: true,
-            onClickSingle: (v) => setClipboardText(v.Url),
-            onClickBatch: (v, number) => {
-                if (v.length === 0) {
-                    yakitNotify("warning", "请选择数据")
-                    return
+            },
+            {
+                key: "浏览器中打开URL",
+                label: "浏览器中打开URL",
+                default: true,
+                webSocket: false,
+                onClickSingle: (v) => {
+                    v.Url && openExternalWebsite(v.Url)
                 }
-                if (v.length < number) {
-                    setClipboardText(v.map((ele) => `${ele.Url}`).join("\r\n"))
-                    setSelectedRowKeys([])
-                    setSelectedRows([])
-                } else {
-                    yakitNotify("warning", `最多同时只能复制${number}条数据`)
+            },
+            {
+                key: "浏览器中查看响应",
+                label: "浏览器中查看响应",
+                default: true,
+                webSocket: false,
+                onClickSingle: (v) => {
+                    showResponseViaHTTPFlowID(v)
                 }
-            }
-        },
-        {
-            key: "下载 Response Body",
-            label: "下载 Response Body",
-            default: true,
-            webSocket: false,
-            onClickSingle: (v) => {
-                ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
-                    saveABSFileToOpen(`response-body.txt`, bytes.Raw)
+            },
+            {
+                key: "复制为 CSRF Poc",
+                label: "复制为 CSRF Poc",
+                default: true,
+                webSocket: false,
+                onClickSingle: (v) => {
+                    const flow = v as HTTPFlow
+                    if (!flow) return
+                    generateCSRFPocByRequest(flow.Request, flow.IsHTTPS, (e) => {
+                        setClipboardText(e)
+                    })
+                }
+            },
+            {
+                key: "复制为 Yak PoC 模版",
+                label: "复制为 Yak PoC 模版",
+                default: true,
+                webSocket: false,
+                onClickSingle: () => {},
+                children: [
+                    {
+                        key: "数据包 PoC 模版",
+                        label: "数据包 PoC 模版"
+                    },
+                    {
+                        key: "批量检测 PoC 模版",
+                        label: "批量检测 PoC 模版"
+                    }
+                ]
+            },
+            {
+                key: "标注颜色",
+                label: "标注颜色",
+                default: true,
+                webSocket: false,
+                number: 20,
+                onClickSingle: () => {},
+                onClickBatch: () => {},
+                children: availableColors.map((i) => {
+                    return {
+                        key: i.title,
+                        label: i.render,
+                        onClick: (v) => CalloutColor(v, i, data, setData),
+                        onClickBatch: (list, n) => CalloutColorBatch(list, n, i)
+                    }
                 })
-            }
-        },
-        {
-            key: "浏览器中打开URL",
-            label: "浏览器中打开URL",
-            default: true,
-            webSocket: false,
-            onClickSingle: (v) => {
-                v.Url && openExternalWebsite(v.Url)
-            }
-        },
-        {
-            key: "浏览器中查看响应",
-            label: "浏览器中查看响应",
-            default: true,
-            webSocket: false,
-            onClickSingle: (v) => {
-                showResponseViaHTTPFlowID(v)
-            }
-        },
-        {
-            key: "复制为 CSRF Poc",
-            label: "复制为 CSRF Poc",
-            default: true,
-            webSocket: false,
-            onClickSingle: (v) => {
-                const flow = v as HTTPFlow
-                if (!flow) return
-                generateCSRFPocByRequest(flow.Request, flow.IsHTTPS, (e) => {
-                    setClipboardText(e)
-                })
-            }
-        },
-        {
-            key: "复制为 Yak PoC 模版",
-            label: "复制为 Yak PoC 模版",
-            default: true,
-            webSocket: false,
-            onClickSingle: () => {},
-            children: [
-                {
-                    key: "数据包 PoC 模版",
-                    label: "数据包 PoC 模版"
-                },
-                {
-                    key: "批量检测 PoC 模版",
-                    label: "批量检测 PoC 模版"
+            },
+            {
+                key: "移除颜色",
+                label: "移除颜色",
+                default: true,
+                webSocket: false,
+                number: 20,
+                onClickSingle: (v) => onRemoveCalloutColor(v, data, setData),
+                onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n)
+            },
+            {
+                key: "发送到对比器",
+                label: "发送到对比器",
+                default: true,
+                webSocket: false,
+                onClickSingle: () => {},
+                children: [
+                    {
+                        key: "发送到对比器左侧",
+                        label: "发送到对比器左侧",
+                        disabled: [false, true, false][compareState]
+                    },
+                    {
+                        key: "发送到对比器右侧",
+                        label: "发送到对比器右侧",
+                        disabled: [false, false, true][compareState]
+                    }
+                ]
+            },
+            {
+                key: "屏蔽",
+                label: "屏蔽",
+                webSocket: true,
+                default: true,
+                onClickSingle: () => {},
+                children: [
+                    {
+                        key: "屏蔽该记录",
+                        label: "屏蔽该记录"
+                    },
+                    {
+                        key: "屏蔽URL",
+                        label: "屏蔽URL"
+                    },
+                    {
+                        key: "屏蔽域名",
+                        label: "屏蔽域名"
+                    }
+                ]
+            },
+            {
+                key: "删除",
+                label: "删除",
+                webSocket: true,
+                default: true,
+                onClickSingle: () => {},
+                onClickBatch: () => {},
+                all: true,
+                children: [
+                    {
+                        key: "删除记录",
+                        label: "删除记录",
+                        onClick: (v) => onRemoveHttpHistory({Id: [v.Id]}),
+                        onClickBatch: (list) => {
+                            onRemoveHttpHistory({Id: list.map((ele) => ele.Id)})
+                        }
+                    },
+                    {
+                        key: "删除URL",
+                        label: "删除URL",
+                        onClick: (v) => onRemoveHttpHistory({URLPrefix: v.Url}),
+                        onClickBatch: (list) => {
+                            const urls = list.map((ele) => ele.Url)
+                            onRemoveHttpHistory({
+                                Filter: {
+                                    IncludeInUrl: urls
+                                }
+                            })
+                        }
+                    },
+                    {
+                        key: "删除域名",
+                        label: "删除域名",
+                        onClick: (v) => onRemoveHttpHistory({URLPrefix: v?.HostPort?.split(":")[0]}),
+                        onClickBatch: (list) => {
+                            const hosts = list.map((ele) => ele.HostPort?.split(":")[0])
+                            onRemoveHttpHistory({
+                                Filter: {
+                                    IncludeInUrl: hosts
+                                }
+                            })
+                        }
+                    }
+                ]
+            },
+            {
+                key: "分享数据包",
+                label: "分享数据包",
+                number: 30,
+                default: true,
+                webSocket: false,
+                onClickSingle: (v) => onShareData([v.Id], 50),
+                onClickBatch: (list, n) => {
+                    const ids: string[] = list.map((ele) => ele.Id)
+                    onShareData(ids, n)
                 }
-            ]
-        },
-        {
-            key: "标注颜色",
-            label: "标注颜色",
-            default: true,
-            webSocket: false,
-            number: 20,
-            onClickSingle: () => {},
-            onClickBatch: () => {},
-            children: availableColors.map((i) => {
-                return {
-                    key: i.title,
-                    label: i.render,
-                    onClick: (v) => CalloutColor(v, i, data, setData),
-                    onClickBatch: (list, n) => CalloutColorBatch(list, n, i)
+            },
+            {
+                key: "导出数据",
+                label: "导出数据",
+                default: true,
+                webSocket: false,
+                onClickSingle: () => {},
+                onClickBatch: () => {},
+                children: [
+                    {
+                        key: "导出为Excel",
+                        label: "导出为Excel",
+                        onClick: (v) => onExcelExport([v]),
+                        onClickBatch: (list) => {
+                            onExcelExport(list)
+                        }
+                    },
+                    {
+                        key: "导出为HAR",
+                        label: "导出为HAR",
+                        onClick: (v) => onHarExport([v.Id]),
+                        onClickBatch: (list) => {
+                            onHarExport(list.map((item) => item.Id))
+                        }
+                    }
+                ]
+            },
+            {
+                key: "编辑tag",
+                label: "编辑tag",
+                default: true,
+                webSocket: true,
+                onClickSingle: (v) => onEditTags(v)
+            },
+            {
+                key: "新窗口打开",
+                label: "新窗口打开",
+                default: true,
+                webSocket: true,
+                onClickSingle: (v) => {
+                    onHTTPFlowTableRowDoubleClick(v)
+                }
+            }
+        ]
+        if (isEnpriTrace() && userInfo.isLogin) {
+            menu.push({
+                key: "上传数据",
+                label: "上传数据",
+                number: 30,
+                default: true,
+                webSocket: false,
+                onClickSingle: (v) => onUploadData([v.Id]),
+                onClickBatch: (list) => {
+                    const ids: string[] = list.map((ele) => ele.Id)
+                    onUploadData(ids)
                 }
             })
-        },
-        {
-            key: "移除颜色",
-            label: "移除颜色",
-            default: true,
-            webSocket: false,
-            number: 20,
-            onClickSingle: (v) => onRemoveCalloutColor(v, data, setData),
-            onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n)
-        },
-        {
-            key: "发送到对比器",
-            label: "发送到对比器",
-            default: true,
-            webSocket: false,
-            onClickSingle: () => {},
-            children: [
-                {
-                    key: "发送到对比器左侧",
-                    label: "发送到对比器左侧",
-                    disabled: [false, true, false][compareState]
-                },
-                {
-                    key: "发送到对比器右侧",
-                    label: "发送到对比器右侧",
-                    disabled: [false, false, true][compareState]
-                }
-            ]
-        },
-        {
-            key: "屏蔽",
-            label: "屏蔽",
-            webSocket: true,
-            default: true,
-            onClickSingle: () => {},
-            children: [
-                {
-                    key: "屏蔽该记录",
-                    label: "屏蔽该记录"
-                },
-                {
-                    key: "屏蔽URL",
-                    label: "屏蔽URL"
-                },
-                {
-                    key: "屏蔽域名",
-                    label: "屏蔽域名"
-                }
-            ]
-        },
-        {
-            key: "删除",
-            label: "删除",
-            webSocket: true,
-            default: true,
-            onClickSingle: () => {},
-            onClickBatch: () => {},
-            all: true,
-            children: [
-                {
-                    key: "删除记录",
-                    label: "删除记录",
-                    onClick: (v) => onRemoveHttpHistory({Id: [v.Id]}),
-                    onClickBatch: (list) => {
-                        onRemoveHttpHistory({Id: list.map((ele) => ele.Id)})
-                    }
-                },
-                {
-                    key: "删除URL",
-                    label: "删除URL",
-                    onClick: (v) => onRemoveHttpHistory({URLPrefix: v.Url}),
-                    onClickBatch: (list) => {
-                        const urls = list.map((ele) => ele.Url)
-                        onRemoveHttpHistory({
-                            Filter: {
-                                IncludeInUrl: urls
-                            }
-                        })
-                    }
-                },
-                {
-                    key: "删除域名",
-                    label: "删除域名",
-                    onClick: (v) => onRemoveHttpHistory({URLPrefix: v?.HostPort?.split(":")[0]}),
-                    onClickBatch: (list) => {
-                        const hosts = list.map((ele) => ele.HostPort?.split(":")[0])
-                        onRemoveHttpHistory({
-                            Filter: {
-                                IncludeInUrl: hosts
-                            }
-                        })
-                    }
-                }
-            ]
-        },
-        {
-            key: "分享数据包",
-            label: "分享数据包",
-            number: 30,
-            default: true,
-            webSocket: false,
-            onClickSingle: (v) => onShareData([v.Id], 50),
-            onClickBatch: (list, n) => {
-                const ids: string[] = list.map((ele) => ele.Id)
-                onShareData(ids, n)
-            }
-        },
-        {
-            key: "导出数据",
-            label: "导出数据",
-            default: true,
-            webSocket: false,
-            onClickSingle: () => {},
-            onClickBatch: () => {},
-            children: [
-                {
-                    key: "导出为Excel",
-                    label: "导出为Excel",
-                    onClick: (v) => onExcelExport([v]),
-                    onClickBatch: (list) => {
-                        onExcelExport(list)
-                    }
-                },
-                {
-                    key: "导出为HAR",
-                    label: "导出为HAR",
-                    onClick: (v) => onHarExport([v.Id]),
-                    onClickBatch: (list) => {
-                        onHarExport(list.map((item) => item.Id))
-                    }
-                }
-            ]
-        },
-        {
-            key: "编辑tag",
-            label: "编辑tag",
-            default: true,
-            webSocket: true,
-            onClickSingle: (v) => onEditTags(v)
-        },
-        {
-            key: "新窗口打开",
-            label: "新窗口打开",
-            default: true,
-            webSocket: true,
-            onClickSingle: (v) => {
-                onHTTPFlowTableRowDoubleClick(v)
-            }
         }
-    ]
-    if(isEnpriTrace() && userInfo.isLogin){
-        menu.push(
-            {
-            key: "上传数据",
-            label: "上传数据",
-            number: 30,
-            default: true,
-            webSocket: false,
-            onClickSingle: (v) => onUploadData([v.Id]),
-            onClickBatch: (list) => {
-                const ids: string[] = list.map((ele) => ele.Id)
-                onUploadData(ids)
-            }
-        },
-        )
-    }
-    return menu
-    },[userInfo.isLogin])
+        return menu
+    }, [userInfo.isLogin])
 
     /** 菜单自定义快捷键渲染处理事件 */
     const contextMenuKeybindingHandle = useMemoizedFn((data) => {
@@ -3651,6 +3653,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setIsReset(!isReset)
         setColor([])
         setCheckBodyLength(false)
+        setBeforeBodyLength(undefined)
+        setAfterBodyLength(undefined)
+        setBodyLengthUnit("B")
         setSearchVal("")
         refreshTabsContRef.current = true
     })
@@ -3701,15 +3706,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             footer: null
         })
     })
-    
+
     const isUploadingRef = useRef<boolean>(false)
     /**
      * @description 上传数据（仅在企业版中生效）
      * @param ids 上传数据的ids
      */
-    
+
     const onUploadData = useMemoizedFn((ids: string[]) => {
-        if (isUploadingRef.current){
+        if (isUploadingRef.current) {
             yakitNotify("warning", "上传数据中，上传完成前无法再次点击上传数据")
             return
         }
@@ -3717,14 +3722,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             yakitNotify("warning", "请选择数据")
             return
         }
-        if(!NowProjectDescription){ 
+        if (!NowProjectDescription) {
             yakitNotify("warning", `参数缺失`)
-            return 
+            return
         }
         const {ProjectName, Description, ExternalModule, ExternalProjectCode} = NowProjectDescription
-        const newIds = ids.map((id) => parseInt(id+""))
-        const query:HTTPFlowsToOnlineBatchRequest = {
-            ToOnlineWhere:{
+        const newIds = ids.map((id) => parseInt(id + ""))
+        const query: HTTPFlowsToOnlineBatchRequest = {
+            ToOnlineWhere: {
                 Token: userInfo.token,
                 ProjectName,
                 ProjectDescription: Description,
@@ -3734,7 +3739,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             UploadHTTPFlowsWhere: {...params, IncludeId: isAllSelect ? [] : newIds}
         }
         isUploadingRef.current = true
-        yakitNotify("info", "数据正在上传中");
+        yakitNotify("info", "数据正在上传中")
         ipcRenderer
             .invoke("HTTPFlowsToOnlineBatch", query)
             .then((rsp: HTTPFlowsToOnlineBatchResponse) => {
@@ -3742,9 +3747,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             .catch((e: any) => {
                 yakitNotify("error", `query HTTP Flow failed: ${e}`)
-            }).finally(() =>
-                isUploadingRef.current = false
-            )
+            })
+            .finally(() => (isUploadingRef.current = false))
     })
 
     const [searchVal, setSearchVal] = useState<string>("")
@@ -4842,6 +4846,53 @@ export const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
     return <div className={style["select-search"]}>{renderMultiple()}</div>
 }
 
+interface RangeInputNumberTableWrapperProps extends RangeInputNumberProps {
+    checkBodyLength: boolean
+    onCheckThan0: DebouncedFunc<(check: boolean) => void>
+}
+export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapperProps> = React.memo((props) => {
+    const {checkBodyLength, onCheckThan0, minNumber, maxNumber, onSure, onReset, ...reset} = props
+    const [show, setShow] = useState<boolean>(false)
+
+    return (
+        <div className={style["rangeInputNumberTableWrapper"]} style={{padding: show ? undefined : "0 8px 8px"}}>
+            {show ? (
+                <RangeInputNumberTable
+                    {...reset}
+                    minNumber={minNumber}
+                    maxNumber={maxNumber}
+                    onSure={() => {
+                        setShow(false)
+                        onSure?.()
+                    }}
+                    onReset={() => {
+                        setShow(false)
+                        onReset?.()
+                    }}
+                />
+            ) : (
+                <>
+                    <div
+                        className={classNames(style["body-length-filter"], {
+                            [style["body-length-filter-active"]]:
+                                typeof minNumber === "number" || typeof maxNumber === "number"
+                        })}
+                        onClick={() => {
+                            setShow(true)
+                        }}
+                    >
+                        <OutlineFilterIcon className={style["outlineFilterIcon"]} /> 筛选
+                    </div>
+                    <Divider style={{margin: "4px 0"}}></Divider>
+                    <div className={style["body-length-checkbox"]}>
+                        <span className={style["tip"]}>仅看大于0</span>
+                        <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)} />
+                    </div>
+                </>
+            )}
+        </div>
+    )
+})
 interface RangeInputNumberProps {
     minNumber?: number
     setMinNumber?: (b: number) => void

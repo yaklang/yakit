@@ -167,6 +167,7 @@
             .refresh-icon {
                 color: var(--Colors-Use-Neutral-Text-1-Title);
                 cursor: pointer;
+
                 &:hover {
                     color: var(--Colors-Use-Main-Primary);
                 }
@@ -215,6 +216,7 @@
 
 .http-history-table-shield-popover {
     padding-top: 5px;
+
     :global {
         .ant-popover-inner-content {
             padding: 0;
@@ -231,6 +233,7 @@
         overflow-y: auto;
         padding: 12px;
         padding-right: 50px;
+
         .shield-reset {
             position: absolute;
             top: 8px;
@@ -267,9 +270,11 @@
                 cursor: pointer;
                 margin-left: 8px;
                 color: var(--Colors-Use-Neutral-Disable);
+
                 &:hover {
                     color: var(--Colors-Use-Main-Hover);
                 }
+
                 &:active {
                     color: var(--Colors-Use-Main-Pressed);
                 }
@@ -301,6 +306,7 @@
 .select-search {
     position: relative;
     overflow: hidden;
+
     .select-container {
         max-height: 200px;
         overflow-y: auto;
@@ -372,11 +378,14 @@
                     flex-wrap: nowrap;
                     overflow-x: overlay;
                 }
+
                 .search-icon {
                     color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
                     svg {
                         height: 12px;
                         width: 12px;
+
                         path {
                             stroke-width: 1.5;
                         }
@@ -399,6 +408,7 @@
 
 .http-history-table-drop-down-popover {
     padding-top: 5px;
+
     :global {
         .ant-popover-inner-content {
             padding: 4px;
@@ -415,7 +425,7 @@
             margin: 0px !important;
         }
 
-        .ant-input-group.ant-input-group-compact > .ant-select:last-child > .ant-select-selector {
+        .ant-input-group.ant-input-group-compact>.ant-select:last-child>.ant-select-selector {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
             border-top-right-radius: 4px;
@@ -428,7 +438,7 @@
             }
         }
 
-        .ant-input-group.ant-input-group-compact > *:first-child {
+        .ant-input-group.ant-input-group-compact>*:first-child {
             border-top-left-radius: 4px;
             border-bottom-left-radius: 4px;
         }
@@ -443,7 +453,7 @@
             margin-left: 1px;
         }
 
-        .ant-input-group.ant-input-group-compact > *:not(:last-child) {
+        .ant-input-group.ant-input-group-compact>*:not(:last-child) {
             margin-right: 0;
         }
     }
@@ -486,6 +496,7 @@
             text-align: center;
             height: 24px;
             border-radius: 0;
+
             &:hover,
             &:focus,
             &:active {
@@ -500,10 +511,51 @@
     }
 }
 
+.rangeInputNumberTableWrapper {
+    padding-top: 0px;
+
+    .body-length-filter {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+
+        .outlineFilterIcon {
+            svg {
+                width: 16px;
+                height: 16px;
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
+        }
+
+        &:hover {
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        }
+    }
+    .body-length-filter-active {
+        color: var((--Colors-Use-Main-Primary));
+        .outlineFilterIcon {
+            svg {
+                color: var((--Colors-Use-Main-Primary));
+            }
+        }
+    }
+
+    .body-length-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px;
+    }
+}
+
 
 .http-history-table-color-item-list {
     padding: 8px 4px;
 }
+
 .http-history-table-color-item {
     height: 28px;
     line-height: 28px;
@@ -518,26 +570,18 @@
     &:hover {
         background-color: var(--Colors-Use-Neutral-Bg);
     }
+
     .http-history-table-color-item-render {
         width: 100%;
     }
 }
+
 .http-history-table-color-item-active {
     color: var(--Colors-Use-Main-Primary);
 }
 
 .color-select-footer {
     position: relative !important;
-}
-
-.body-length-checkbox {
-    display: flex;
-    align-items: center;
-    margin-right: 12px;
-
-    .tip {
-        margin-left: 4px;
-    }
 }
 
 .duration-ms {
@@ -559,24 +603,27 @@
     .icon-style {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
+
     .icon-hover:hover {
         color: var(--Colors-Use-Main-Primary);
     }
 }
 
-.hover-grey-row{
+.hover-grey-row {
     .icon-hover {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
+
     .icon-hover:hover {
         color: var(--Colors-Use-Basic-White);
     }
 }
 
-.hover-red-row{
+.hover-red-row {
     .icon-hover {
         color: var(--yakit-colors-Error-100);
     }
+
     .icon-hover:hover {
         color: var(--Colors-Use-Basic-White);
     }
@@ -585,6 +632,7 @@
 
 .check-icon {
     color: var(--Colors-Use-Main-Primary);
+
     svg {
         height: 16px;
         width: 16px;
@@ -593,14 +641,17 @@
 
 .unit-select {
     width: 60px;
+
     :global {
         .ant-select-arrow {
             z-index: 1;
         }
+
         .ant-select-selector {
             border-left-width: 0 !important;
             border-top-left-radius: 0 !important;
             border-bottom-left-radius: 0 !important;
+
             &:hover,
             &:focus,
             &:active {
@@ -609,6 +660,7 @@
                 border-bottom-left-radius: 4px !important;
             }
         }
+
         .ant-select-focused {
             .ant-select-selector {
                 z-index: 1;
@@ -617,6 +669,7 @@
                 border-bottom-left-radius: 4px !important;
             }
         }
+
         .ant-select-open {
             .ant-select-selector {
                 z-index: 1;
@@ -641,6 +694,7 @@
         display: flex;
         align-items: center;
     }
+
     .keybind-style {
         height: 100%;
         display: flex;
@@ -663,8 +717,10 @@
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
+
     .http-history-search-question-icon {
         margin-left: 2px;
+
         svg {
             width: 16px;
             height: 16px;
@@ -678,17 +734,20 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+
         .advanced-configuration-drawer-title-text {
             font-weight: 600;
             font-size: 14px;
             line-height: 20px;
             color: var(--Colors-Use-Neutral-Text-1-Title);
         }
+
         .advanced-configuration-drawer-title-btns {
             display: flex;
             gap: 8px;
         }
     }
+
     .history-advanced-set-cont {
         .history-advanced-set-item {
             &-title {
@@ -698,24 +757,30 @@
                 font-size: 14px;
                 color: var(--Colors-Use-Neutral-Text-1-Title);
             }
+
             &-desc {
                 font-size: 12px;
                 margin-bottom: 5px;
             }
+
             &-cont {
                 margin-bottom: 15px;
+
                 .backgroundRefresh {
                     display: flex;
                     align-items: center;
                     gap: 8px;
                     margin-left: 55px;
+
                     .title-style {
                         font-size: 14px;
                         line-height: 22px;
                         color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
+
                     .hint-style {
                         cursor: pointer;
+
                         svg {
                             width: 16px;
                             height: 16px;
@@ -723,6 +788,7 @@
                         }
                     }
                 }
+
                 .columnSet {
                     .column-item {
                         display: flex;
@@ -733,27 +799,34 @@
                         border: 1px solid var(--Colors-Use-Neutral-Border);
                         border-radius: 4px;
                         cursor: grab;
+
                         .column-title {
                             flex: 1;
                         }
+
                         svg {
                             width: 16px;
                             height: 16px;
                             color: var(--Colors-Use-Neutral-Text-1-Title);
                         }
+
                         &:hover {
                             svg {
                                 color: var(--Colors-Use-Main-Primary);
                             }
+
                             border: 1px solid var(--Colors-Use-Main-Primary);
                         }
+
                         &:active {
                             border: 1px solid var(--Colors-Use-Main-Primary);
                         }
+
                         .ban-icon {
                             cursor: pointer;
                         }
                     }
+
                     .column-item-not-allowed {
                         background-color: var(--Colors-Use-Neutral-Bg-Hover);
                         color: var(--Colors-Use-Neutral-Disable);
