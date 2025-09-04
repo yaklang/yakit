@@ -25,6 +25,7 @@ import {YakitSpin} from "../YakitSpin/YakitSpin"
 import {YakitRadioButtons} from "../YakitRadioButtons/YakitRadioButtons"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { handleOpenFileSystemDialog, OpenDialogOptions } from "@/utils/fileSystemDialog"
 
 const {Dragger} = Upload
 
@@ -345,15 +346,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
      */
     const onUploadFolder = useMemoizedFn(() => {
         if (disabled) return
-        const properties = ["openDirectory"]
+        const properties: OpenDialogOptions["properties"] = ["openDirectory"]
         if (multiple !== false) {
             properties.push("multiSelections")
         }
-        ipcRenderer
-            .invoke("openDialog", {
-                title: t("YakitFormDragger.selectFolder"),
-                properties
-            })
+            handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFolder"), properties})
             .then((data: {filePaths: string[]}) => {
                 const filesLength = data.filePaths.length
                 if (filesLength) {
@@ -366,15 +363,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     /**选择文件 */
     const onUploadFile = useMemoizedFn(() => {
         if (disabled) return
-        const properties = ["openFile"]
+        const properties: OpenDialogOptions["properties"] = ["openFile"]
         if (multiple !== false) {
             properties.push("multiSelections")
         }
-        ipcRenderer
-            .invoke("openDialog", {
-                title: t("YakitFormDragger.selectFile"),
-                properties
-            })
+            handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFile"), properties})
             .then((data: {filePaths: string[]}) => {
                 const filesLength = data.filePaths.length
                 let acceptFlag = true
@@ -676,11 +669,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
     const onUploadFile = useMemoizedFn((e) => {
         e.stopPropagation()
         if (disabled) return
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件",
-                properties: ["openFile"]
-            })
+            handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
             .then((data: {filePaths: string[]}) => {
                 const filesLength = data.filePaths.length
                 if (filesLength === 1) {
@@ -865,11 +854,7 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
     const onUploadFile = useMemoizedFn((e) => {
         e.stopPropagation()
         if (disabled) return
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件",
-                properties: ["openFile"]
-            })
+            handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
             .then((data: {filePaths: string[]}) => {
                 const filesLength = data.filePaths.length
                 if (filesLength === 1) {

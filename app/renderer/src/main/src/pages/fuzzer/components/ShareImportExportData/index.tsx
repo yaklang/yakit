@@ -31,6 +31,7 @@ import {defaultAdvancedConfigValue, DefFuzzerTableMaxData} from "@/defaultConsta
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import i18n from "@/i18n/i18n"
+import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
 const {ipcRenderer} = window.require("electron")
 
 const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
@@ -231,10 +232,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
 
     const onOpenSystemDialog = async () => {
         try {
-            const {canceled, filePaths} = await ipcRenderer.invoke("openDialog", {
-                title: "请选择文件",
-                properties: ["openFile"]
-            })
+            const {canceled, filePaths} = await handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
             if (canceled) return
             if (filePaths.length) {
                 let absolutePath = filePaths[0].replace(/\\/g, "\\")
