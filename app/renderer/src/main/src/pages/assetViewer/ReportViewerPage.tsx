@@ -45,6 +45,7 @@ import {FoldHoleCard, FoldRuleCard} from "./reportRenders/ReportExtendCard"
 import {AutoCard} from "@/components/AutoCard"
 import styles from "./ReportViewerPage.module.scss"
 import {getEnvTypeByProjects} from "../softwareSettings/ProjectManage"
+import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
 const {ipcRenderer} = window.require("electron")
 
 interface ReportViewerPageProp {}
@@ -397,11 +398,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
 
     // 下载HTML
     const downloadHtml = () => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件夹",
-                properties: ["openDirectory"]
-            })
+            handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]})
             .then((data: any) => {
                 if (data.filePaths.length) {
                     setDownloadLoading(true)

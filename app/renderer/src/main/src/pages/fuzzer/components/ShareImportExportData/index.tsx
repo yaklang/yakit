@@ -30,6 +30,7 @@ import {MultipleNodeInfo} from "@/pages/layout/mainOperatorContent/MainOperatorC
 import {defaultAdvancedConfigValue, DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -231,10 +232,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
 
     const onOpenSystemDialog = async () => {
         try {
-            const {canceled, filePaths} = await ipcRenderer.invoke("openDialog", {
-                title: "请选择文件",
-                properties: ["openFile"]
-            })
+            const {canceled, filePaths} = await handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
             if (canceled) return
             if (filePaths.length) {
                 let absolutePath = filePaths[0].replace(/\\/g, "\\")

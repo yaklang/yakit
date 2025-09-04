@@ -20,6 +20,7 @@ import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {randomString} from "@/utils/randomUtil"
 import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
+import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -758,11 +759,7 @@ export const getDefaultActiveFile = async (info: FileDetailInfo) => {
  */
 export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> => {
     return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件",
-                properties: ["openFile"]
-            })
+        handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
             .then(async (data: {filePaths: string[]}) => {
                 try {
                     const filesLength = data.filePaths.length

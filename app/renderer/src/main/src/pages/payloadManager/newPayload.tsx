@@ -94,6 +94,7 @@ import {
 import {DeleteOnlinePayloadProps, NewPayloadOnlineTable} from "./onlinePayload/PayloadOnlineTable"
 import {API} from "@/services/swagger/resposeType"
 import {useTheme} from "@/hook/useTheme"
+import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
 const {ipcRenderer} = window.require("electron")
 
 // 是否为Payload操作员
@@ -3867,49 +3868,44 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
 
     // 导出任务
     const onExportFileFun = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件夹",
-                properties: ["openDirectory"]
-            })
-            .then((data) => {
-                if (data.filePaths.length) {
-                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    if (exportType === "all") {
-                        exportPathRef.current = absolutePath
-                        ipcRenderer.invoke(
-                            getExportGrpc,
-                            {
-                                Groups: group.split(","),
-                                SavePath: absolutePath
-                            },
-                            exportToken
-                        )
-                        setShowModal(true)
-                    } else {
-                        ipcRenderer
-                            .invoke("pathJoin", {
-                                dir: absolutePath,
-                                file: `${group}.${exportType === "file" ? "txt" : "csv"}`
-                            })
-                            .then((currentPath: string) => {
-                                exportPathRef.current = currentPath
-                                ipcRenderer.invoke(
-                                    getExportGrpc,
-                                    {
-                                        Group: group,
-                                        Folder: folder,
-                                        SavePath: currentPath
-                                    },
-                                    exportToken
-                                )
-                                setShowModal(true)
-                            })
-                    }
+        handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]}).then((data) => {
+            if (data.filePaths.length) {
+                let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                if (exportType === "all") {
+                    exportPathRef.current = absolutePath
+                    ipcRenderer.invoke(
+                        getExportGrpc,
+                        {
+                            Groups: group.split(","),
+                            SavePath: absolutePath
+                        },
+                        exportToken
+                    )
+                    setShowModal(true)
                 } else {
-                    setExportVisible(false)
+                    ipcRenderer
+                        .invoke("pathJoin", {
+                            dir: absolutePath,
+                            file: `${group}.${exportType === "file" ? "txt" : "csv"}`
+                        })
+                        .then((currentPath: string) => {
+                            exportPathRef.current = currentPath
+                            ipcRenderer.invoke(
+                                getExportGrpc,
+                                {
+                                    Group: group,
+                                    Folder: folder,
+                                    SavePath: currentPath
+                                },
+                                exportToken
+                            )
+                            setShowModal(true)
+                        })
                 }
-            })
+            } else {
+                setExportVisible(false)
+            }
+        })
     })
     // 取消导出任务
     const cancelExportFile = useMemoizedFn(() => {
