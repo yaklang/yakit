@@ -63,6 +63,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {API} from "@/services/swagger/resposeType"
 import {isCommunityIRify, isEnpriTraceIRify} from "@/utils/envfile"
 import ImportExportModal, {ImportExportModalExtra} from "../fingerprintManage/ImportExportModal/ImportExportModal"
+import {YakitRoute} from "@/enums/yakitRoute"
 const DefaultPaging: Paging = {Page: 1, Limit: 20, OrderBy: "updated_at", Order: "desc"}
 const DefaultOnlinePaging: API.Pagination = {page: 1, limit: 20, order_by: "updated_at", order: "desc"}
 
@@ -1198,6 +1199,10 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                     setVisible={(v) => {
                         setRuleUpdateShow(v)
                     }}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${YakitRoute.Rule_Management}`) || undefined
+                    }
+                    wrapClassName={styles['updateRuleModal']}
                 />
 
                 {/* 上传、下载提示 */}

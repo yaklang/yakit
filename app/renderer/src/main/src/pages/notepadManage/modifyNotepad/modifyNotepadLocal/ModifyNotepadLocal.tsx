@@ -537,7 +537,15 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     </div>
                 </div>
             </ModifyNotepadContent>
-            {exportVisible && <NotepadExport filter={filterRef.current} onClose={() => setExportVisible(false)} />}
+            {exportVisible && (
+                <NotepadExport
+                    filter={filterRef.current}
+                    onClose={() => setExportVisible(false)}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${YakitRoute.Modify_Notepad}`) || undefined
+                    }
+                />
+            )}
         </>
     )
 })

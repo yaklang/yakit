@@ -890,6 +890,9 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                     visible={allDownloadHint}
                     setVisible={() => setAllDownloadHint(false)}
                     listType='mine'
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${YakitRoute.Plugin_Hub}`) || undefined
+                    }
                 />
             )}
 

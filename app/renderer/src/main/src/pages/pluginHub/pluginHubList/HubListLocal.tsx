@@ -467,7 +467,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             modalAfterClose: () => {
                 setBatchUploadLoading(false)
                 onCheck(false)
-            }
+            },
+            getContainer: document.getElementById(`main-operator-page-body-${YakitRoute.Plugin_Hub}`) || undefined
         })
     })
 

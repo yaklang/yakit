@@ -76,7 +76,7 @@ import {compareAsc} from "@/pages/yakitStore/viewers/base"
 import {batchPluginType} from "@/defaultConstants/PluginBatchExecutor"
 import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
-import { getRemoteHttpSettingGV } from "@/utils/envfile"
+import {getRemoteHttpSettingGV} from "@/utils/envfile"
 
 const HybridScanTaskListDrawer = React.lazy(
     () => import("@/pages/plugins/pluginBatchExecutor/HybridScanTaskListDrawer")
@@ -739,6 +739,7 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
                     }, 200)
                 }}
                 listType='online'
+                getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.PoC}`) || undefined}
             />
         </div>
     )
@@ -918,6 +919,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                     }, 200)
                 }}
                 listType='online'
+                getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.PoC}`) || undefined}
             />
         </div>
     )

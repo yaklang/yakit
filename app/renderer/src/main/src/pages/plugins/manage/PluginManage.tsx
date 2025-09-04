@@ -92,6 +92,7 @@ import {randomString} from "@/utils/randomUtil"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {SolidClouduploadIcon} from "@/assets/icon/solid"
 import {httpUploadPluginToEE} from "@/pages/pluginHub/utils/http"
+import { YakitRoute } from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 interface PluginManageProps {}
@@ -1483,6 +1484,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     listType='check'
                     visible={allDownloadHint}
                     setVisible={(v) => setAllDownloadHint(v)}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${YakitRoute.Plugin_Audit}`) || undefined
+                    }
                 />
             )}
             {/* 批量下载同名覆盖提示 */}
@@ -1525,6 +1529,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 okButtonProps={{style: {display: "none"}}}
                 isDrag={true}
                 mask={false}
+                getContainer={
+                    document.getElementById(`main-operator-page-body-${YakitRoute.Plugin_Audit}`) || undefined
+                }
+                wrapClassName={styles["uploadPluginLibraryModal"]}
             >
                 <Progress
                     strokeColor='var(--Colors-Use-Main-Primary)'

@@ -10,6 +10,7 @@ import {useMemoizedFn} from "ahooks"
 import moment from "moment"
 import { handleOpenFileSystemDialog, OpenDialogOptions, OpenDialogReturnValue } from "@/utils/fileSystemDialog"
 
+import styles from "./NotepadImportAndExport.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 interface ImportNoteRequest {
@@ -24,7 +25,7 @@ interface ImportNoteResponse {
  * @description 笔记本导入
  */
 export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) => {
-    const {onClose, onImportSuccessAfter} = props
+    const {onClose, onImportSuccessAfter, getContainer} = props
 
     const [percent, setPercent] = useState<number>(0)
     const [visible, setVisible] = useState<boolean>(false)
@@ -105,6 +106,8 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}
+            getContainer={getContainer}
+            wrapClassName={styles["notepadImportModal"]}
         >
             <Progress
                 strokeColor='var(--Colors-Use-Main-Primary)'
@@ -126,7 +129,7 @@ interface ExportNoteResponse {
 }
 
 export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) => {
-    const {filter, onClose} = props
+    const {filter, onClose, getContainer} = props
     const [percent, setPercent] = useState<number>(0)
     const taskToken = useMemo(() => randomString(40), [])
     const [visible, setVisible] = useState<boolean>(false)
@@ -211,6 +214,8 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}
+            getContainer={getContainer}
+            wrapClassName={styles["notepadExportModal"]}
         >
             <Progress
                 strokeColor='var(--Colors-Use-Main-Primary)'

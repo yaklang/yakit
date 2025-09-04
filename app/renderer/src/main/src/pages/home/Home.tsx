@@ -1452,6 +1452,10 @@ const Home: React.FC<HomeProp> = (props) => {
                                             setVisibleOnline(v)
                                             updateLocalPluginTotal()
                                         }}
+                                        getContainer={
+                                            document.getElementById(`main-operator-page-body-${YakitRoute.NewHome}`) ||
+                                            undefined
+                                        }
                                     />
                                 )}
                             </div>

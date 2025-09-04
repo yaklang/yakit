@@ -21,6 +21,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {setClipboardText} from "@/utils/clipboard"
 import {grpcFetchLatestOSSDomain} from "@/apiUtils/grpc"
 import classNames from "classnames"
+import {YakitRoute} from "@/enums/yakitRoute"
 export interface VulinboxManagerProp {}
 
 const {ipcRenderer} = window.require("electron")
@@ -225,7 +226,11 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 }}
                                             />
                                         </div>
-                                    )
+                                    ),
+                                    getContainer:
+                                        document.getElementById(
+                                            `main-operator-page-body-${YakitRoute.Beta_VulinboxManager}`
+                                        ) || undefined
                                 })
                             }}
                         >
@@ -563,7 +568,7 @@ export interface InstallVulinboxPromptProp {
     onFinished: () => any
 }
 
-export const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
+const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
     const [token, setToken] = useState(randomString(60))
     const [data, setData, getData] = useGetState<string[]>([])
     const [percent, setPercent] = useState(0)

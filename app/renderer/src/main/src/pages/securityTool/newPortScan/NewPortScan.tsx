@@ -393,7 +393,9 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                 reportName: taskNameRef.current,
                 runtimeId
             }
-            onCreateReportModal(params)
+            onCreateReportModal(params, {
+                getContainer: document.getElementById(`main-operator-page-body-${YakitRoute.Mod_ScanPort}`) || undefined
+            })
         })
 
         const [inputType, setInputType] = useState<"content" | "path">("content")
