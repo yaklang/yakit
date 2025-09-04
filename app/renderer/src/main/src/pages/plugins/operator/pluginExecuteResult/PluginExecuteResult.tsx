@@ -55,6 +55,7 @@ import {LocalList, LocalPluginLog, LocalText} from "./LocalPluginLog"
 import {CodeScanResult} from "@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable"
 import {YakitAuditHoleTable} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 import {HTTPFlowRealTimeTableAndEditor} from "@/components/HTTPHistory"
+import {ErrorBoundary} from "react-error-boundary"
 
 const {TabPane} = PluginTabs
 
@@ -129,11 +130,15 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
             case "console":
                 return <EngineConsole isMini={true} />
             case "table":
-                const tableInfo: HoldGRPCStreamProps.InfoTable = streamInfo.tabsInfoState[ele.tabName] || {
+                let tableInfo: HoldGRPCStreamProps.InfoTable = streamInfo.tabsInfoState[ele.tabName] || {
                     columns: [],
                     data: [],
                     name: ""
                 }
+                // 过滤掉数据中含有对象与数组的数据
+                tableInfo.data = tableInfo.data.filter((item) =>
+                    Object.values(item).every((value) => !(typeof value === "object"))
+                )
                 return <PluginExecuteCustomTable tableInfo={tableInfo} />
             case "text":
                 const textInfo: HoldGRPCStreamProps.InfoText = streamInfo.tabsInfoState[ele.tabName] || {
@@ -668,44 +673,58 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
         setSorterTable(sorter)
     })
     return (
-        <PluginExecuteResultTabContent
-            // title={name}
-            title={
-                <span className={styles["table-title"]}>
-                    Total<span className={styles["table-title-number"]}>{data.length}</span>
-                </span>
-            }
-            extra={
-                <ExportExcel
-                    btnProps={{
-                        size: "small",
-                        type: "outline2"
-                    }}
-                    getData={getData}
-                    fileName={name || "输出表"}
-                    text='导出全部'
-                />
-            }
-            className={styles["plugin-execute-custom-table"]}
+        <ErrorBoundary
+            FallbackComponent={({error, resetErrorBoundary}) => {
+                if (!error) {
+                    return <div>未知错误</div>
+                }
+                return (
+                    <div>
+                        <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                        <pre>{error?.message}</pre>
+                    </div>
+                )
+            }}
         >
-            <TableVirtualResize
-                loading={loading}
-                isRefresh={loading}
-                isShowTitle={false}
-                enableDrag={true}
-                data={tableData}
-                renderKey={"uuid"}
-                pagination={{
-                    page: 1,
-                    limit: 50,
-                    total: data.length,
-                    onChange: () => {}
-                }}
-                columns={columnsData}
-                containerClassName={styles["custom-table-container"]}
-                onChange={onTableChange}
-            />
-        </PluginExecuteResultTabContent>
+            <PluginExecuteResultTabContent
+                // title={name}
+                title={
+                    <span className={styles["table-title"]}>
+                        Total<span className={styles["table-title-number"]}>{data.length}</span>
+                    </span>
+                }
+                extra={
+                    <ExportExcel
+                        btnProps={{
+                            size: "small",
+                            type: "outline2"
+                        }}
+                        getData={getData}
+                        fileName={name || "输出表"}
+                        text='导出全部'
+                    />
+                }
+                className={styles["plugin-execute-custom-table"]}
+            >
+                <TableVirtualResize
+                    loading={loading}
+                    isRefresh={loading}
+                    isShowTitle={false}
+                    enableDrag={true}
+                    data={tableData}
+                    renderKey={"uuid"}
+                    pagination={{
+                        page: 1,
+                        limit: 50,
+                        total: data.length,
+                        onChange: () => {}
+                    }}
+                    columns={columnsData}
+                    containerClassName={styles["custom-table-container"]}
+                    onChange={onTableChange}
+                />
+            </PluginExecuteResultTabContent>
+        </ErrorBoundary>
     )
 })
 
