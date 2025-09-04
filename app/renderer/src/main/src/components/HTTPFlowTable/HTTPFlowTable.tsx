@@ -3384,7 +3384,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const menus: any = []
         for (let item of data) {
             /** 处理带快捷键的菜单项 */
-            const info = item
+            const info = {...item}
             if (info.children && info.children.length > 0) {
                 info.children = contextMenuKeybindingHandle(info.children)
             } else {
