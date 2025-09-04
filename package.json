@@ -106,7 +106,6 @@
         "node-stream-zip": "^1.15.0",
         "node-xlsx": "^0.21.0",
         "process": "^0.11.10",
-        "rehype-sanitize": "^6.0.0",
         "request": "^2.88.2",
         "request-progress": "^3.0.0",
         "sudo-prompt": "^9.2.1",
