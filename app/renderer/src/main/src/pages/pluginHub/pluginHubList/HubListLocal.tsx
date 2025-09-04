@@ -1070,8 +1070,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
 
     // 控制添加分组按钮显示颜色
     const addGroupBtnColor = useMemo(() => {
-        if (!selectList.length && !allChecked ) return "var(--Colors-Use-Neutral-Disable)"
-        return "var(--Colors-Use-Main-Primary)" 
+        if (!selectList.length && !allChecked) return "var(--Colors-Use-Neutral-Disable)"
+        return "var(--Colors-Use-Main-Primary)"
     }, [allChecked, selectList.length])
 
     return (
