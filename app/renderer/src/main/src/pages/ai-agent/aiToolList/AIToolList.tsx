@@ -204,7 +204,7 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
         const length = tagColors.length
         return (
             <div className={styles["ai-tool-list-item-keywords"]}>
-                {item.Keywords.map((keyword) => {
+                {[...new Set(item.Keywords)].map((keyword) => {
                     const number = Math.floor(Math.random() * length)
                     return (
                         <YakitTag
