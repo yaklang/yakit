@@ -82,6 +82,12 @@ export interface OnlineRuleGroupListProps {
     onRefreshRuleManagement: () => void
 }
 
+export interface RelatedHoleListProps {
+    info?: SyntaxFlowRule
+    visible: boolean
+    alertMsgRef: React.MutableRefObject<{[key: string]: AlertMessage}>
+}
+
 /** ---------- 规则组相关接口定义 Start ---------- */
 // #region
 export interface SyntaxFlowRuleGroupFilter {

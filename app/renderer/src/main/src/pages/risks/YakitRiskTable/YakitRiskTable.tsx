@@ -2066,14 +2066,14 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                 <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
                 <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                 <>
-                    <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
+                    <Descriptions.Item label='漏洞描述' span={column}>
                         {info.Description ? (
                             <MDEditor.Markdown source={info.Description} style={{ whiteSpace: "normal",fontSize:14 }} />
                         ) : (
                             "-"
                         )}
                     </Descriptions.Item>
-                    <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
+                    <Descriptions.Item label='解决方案' span={column}>
                         {info.Solution ? (
                             <MDEditor.Markdown source={info.Solution} style={{ whiteSpace: "normal",fontSize:14 }}/>
                         ) : (
