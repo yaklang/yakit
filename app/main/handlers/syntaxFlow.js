@@ -205,6 +205,22 @@ module.exports = (win, getClient) => {
         return await asyncQuerySyntaxFlowScanTask(params)
     })
 
+    // SSA Report
+    const asyncGenerateSSAReport = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GenerateSSAReport(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GenerateSSAReport", async (e, params) => {
+        return await asyncGenerateSSAReport(params)
+    })
+
     // 规则执行-任务列表/删除
     const asyncDeleteSyntaxFlowScanTask = (params) => {
         return new Promise((resolve, reject) => {
