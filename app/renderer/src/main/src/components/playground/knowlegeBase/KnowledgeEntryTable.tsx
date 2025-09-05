@@ -112,6 +112,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
                 ...values,
                 KnowledgeBaseEntryID: editingEntry.ID,
                 KnowledgeBaseID: editingEntry.KnowledgeBaseId,
+                KnowledgeBaseEntryHiddenIndex: editingEntry.HiddenIndex,
                 Keywords: values.Keywords.filter(k => k.trim() !== ""),
                 PotentialQuestions: values.PotentialQuestions.filter(q => q.trim() !== "")
             }
@@ -129,10 +130,12 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
 
     // 删除知识条目
     const handleDelete = useMemoizedFn(async (entry: KnowledgeBaseEntry) => {
+        console.log("entry",entry.HiddenIndex)
         try {
             await ipcRenderer.invoke("DeleteKnowledgeBaseEntry", {
                 KnowledgeBaseEntryId: entry.ID,
-                KnowledgeBaseId: entry.KnowledgeBaseId
+                KnowledgeBaseId: entry.KnowledgeBaseId,
+                KnowledgeBaseEntryHiddenIndex:entry.HiddenIndex
             })
             success("删除知识条目成功")
             searchEntries()
@@ -190,6 +193,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
             await ipcRenderer.invoke("BuildVectorIndexForKnowledgeBaseEntry", {
                 KnowledgeBaseEntryId: entry.ID,
                 KnowledgeBaseId:entry.KnowledgeBaseId,
+                KnowledgeBaseEntryHiddenIndex:entry.HiddenIndex,
                 DistanceFuncType:"cosine"
             })
             

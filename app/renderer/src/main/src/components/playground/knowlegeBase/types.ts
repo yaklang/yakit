@@ -12,6 +12,7 @@ export interface KnowledgeBase {
 export interface KnowledgeBaseEntry {
     ID: number
     KnowledgeBaseId: number
+    HiddenIndex: string
     KnowledgeTitle: string
     KnowledgeType: string
     ImportanceScore: number
