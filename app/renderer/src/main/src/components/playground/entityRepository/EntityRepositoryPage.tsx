@@ -77,16 +77,19 @@ export interface EntityRepository {
     ID: number
     Name: string
     Description: string
+    HiddenIndex: string
 }
 
 export interface Entity {
     ID: number
+    BaseIndex: string
     Type: string
     Name: string
     Description: string
     BaseID: number
     Attributes: KVPair[]
     Rationale: string
+    HiddenIndex: string
 }
 
 export interface Relationship {
@@ -96,6 +99,8 @@ export interface Relationship {
     TargetEntityID: number
     Attributes: KVPair[]
     Rationale: string
+    SourceEntityIndex: string
+    TargetEntityIndex: string
 }
 
 export interface KVPair {
@@ -105,6 +110,7 @@ export interface KVPair {
 
 export interface EntityFilter {
     BaseID?: number
+    BaseIndex?: string
     IDs?: number[]
     Types?: string[]
     Names?: string[]
@@ -112,11 +118,17 @@ export interface EntityFilter {
 
 export interface RelationshipFilter {
     BaseID?: number
+    BaseIndex?: string
     IDs?: number[]
     Types?: string[]
+    // 废弃
     SourceEntityIDs?: number[]
     TargetEntityIDs?: number[]
     AboutEntityIDs?: number[]
+    // 建议
+    SourceEntityIndex?: string[]
+    TargetEntityIndex?: string[]
+    AboutEntityIndex?: string[]
 }
 
 export interface QueryEntityRequest extends QueryGeneralRequest {
@@ -264,7 +276,7 @@ export const EntityRepositoryPage: React.FC = () => {
         setLoading(true)
         try {
             const filter: EntityFilter = {
-                BaseID: selectedRepository.ID
+                BaseIndex: selectedRepository.HiddenIndex
             }
             
             // 如果传入了实体ID，则添加到过滤条件中

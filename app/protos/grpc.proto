@@ -960,6 +960,7 @@ message EntityRepository {
   int64 ID = 1;
   string Name = 2;
   string Description = 3;
+  string HiddenIndex = 4;
 }
 
 message ListEntityRepositoryResponse {
@@ -972,15 +973,19 @@ message Entity {
   string Name = 3;
   string Description = 4;
   uint64 BaseID = 5;
+  string BaseIndex = 9;
   repeated KVPair Attributes = 6;
   string  Rationale = 7;
+  string  HiddenIndex = 8;
 }
 
 message EntityFilter {
   uint64  BaseID = 1;
+  string BaseIndex = 6;
   repeated uint64 IDs = 2;
   repeated string Types = 3;
   repeated string Names = 4;
+  repeated string HiddenIndex = 5;
 }
 
 message QueryEntityRequest {
@@ -1001,15 +1006,25 @@ message Relationship {
   uint64 TargetEntityID = 4;
   repeated KVPair Attributes = 5;
   string Rationale = 6;
+
+  string SourceEntityIndex = 7;
+  string TargetEntityIndex = 8;
 }
 
 message RelationshipFilter {
   uint64 BaseID = 1;
+
+  string BaseIndex = 10;
+
   repeated uint64 IDs = 2;
   repeated string Types = 3;
   repeated uint64 SourceEntityIDs = 4;
   repeated uint64 TargetEntityIDs = 5;
   repeated uint64 AboutEntityIDs = 6; // Source or Target
+
+  repeated string SourceEntityIndex = 7;
+  repeated string TargetEntityIndex = 8;
+  repeated string AboutEntityIndex = 9; // Source or Target
 }
 
 message QueryRelationshipRequest {
@@ -1125,6 +1140,7 @@ message StartThirdPartyBinaryRequest {
 
 message BuildVectorIndexForKnowledgeBaseEntryRequest {
   int64 KnowledgeBaseEntryId = 1;
+  string KnowledgeBaseEntryHiddenIndex = 13;
   int64 KnowledgeBaseId = 12;
   
   string BaseUrl = 2;
@@ -1193,6 +1209,7 @@ message UpdateKnowledgeBaseRequest {
 
 message DeleteKnowledgeBaseEntryRequest {
   int64 KnowledgeBaseEntryId = 1;
+  string KnowledgeBaseEntryHiddenIndex = 3;
   int64 KnowledgeBaseId = 2;
 }
 
@@ -1237,6 +1254,7 @@ message CreateKnowledgeBaseEntryRequest {
 message UpdateKnowledgeBaseEntryRequest {
   int64 KnowledgeBaseID = 1;
   int64 KnowledgeBaseEntryID = 2;
+  string KnowledgeBaseEntryHiddenIndex = 11;
   string KnowledgeTitle = 3;
   string KnowledgeType = 4;
   int32 ImportanceScore = 5;
