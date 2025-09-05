@@ -42,7 +42,7 @@ import {
     SolidPlayIcon,
     SolidReplyIcon
 } from "@/assets/icon/solid"
-import {Form, InputRef, Modal, Progress, Tooltip} from "antd"
+import {Descriptions, Form, InputRef, Modal, Progress, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -654,7 +654,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 // 重置基础信息
                 setExpand(true)
                 setGroups([])
-                isEdit ? setActiveTab("hole") : setActiveTab("code")
+                setActiveTab(undefined)
                 setProject([])
                 setContent(DefaultRuleContent)
 
@@ -766,7 +766,11 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     const [content, setContent] = useState<string>(DefaultRuleContent)
 
     /** ---------- 规则代码调试 Start ---------- */
-    const [activeTab, setActiveTab] = useState<"code" | "debug" | "hole">(info ? "hole" : "code")
+    const [activeTab, setActiveTab] = useState<"code" | "debug" | "hole">()
+
+    useEffect(() => {
+        visible && setActiveTab(info && Object.keys(info?.AlertMsg || {}).length > 0 ? "hole" : "code")
+    }, [info,visible])
 
     const [debugForm] = Form.useForm()
     // 项目列表
@@ -843,8 +847,11 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                         return
                     }
                     setExpand(false)
-                    if (activeTab !== "hole" && isEdit) setActiveTab("hole")
-                    if (activeTab !== "code" && !isEdit) setActiveTab("code")
+                    if (activeTab !== "hole" && isEdit && Object.keys(info?.AlertMsg || {}).length > 0) {
+                        setActiveTab("hole")
+                    } else {
+                        setActiveTab("code")
+                    }
                     onStart({
                         ControlMode: "start",
                         ProgramName: cloneDeep(project),
@@ -941,7 +948,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             {value: "code", label: "规则内容"},
             {value: "debug", label: "执行结果"}
         ]
-    }, [isEdit,info])
+    }, [isEdit, info])
 
     return (
         <>
@@ -2603,16 +2610,22 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                                     </div>
                                 }
                             >
-                                <MilkdownEditor
-                                    type='notepad'
-                                    defaultValue={alert.Description}
-                                    onMarkdownUpdated={(value) => onMarkdownUpdated("Description", value, key)}
-                                />
-                                <MilkdownEditor
-                                    type='notepad'
-                                    defaultValue={alert.Solution}
-                                    onMarkdownUpdated={(value) => onMarkdownUpdated("Solution", value, key)}
-                                />
+                                <Descriptions bordered size='small' labelStyle={{width: 120}}>
+                                    <Descriptions.Item label='漏洞描述' span={3}>
+                                        <MilkdownEditor
+                                            type='notepad'
+                                            defaultValue={alert.Description}
+                                            onMarkdownUpdated={(value) => onMarkdownUpdated("Description", value, key)}
+                                        />
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label='修复建议' span={3}>
+                                        <MilkdownEditor
+                                            type='notepad'
+                                            defaultValue={alert.Solution}
+                                            onMarkdownUpdated={(value) => onMarkdownUpdated("Solution", value, key)}
+                                        />
+                                    </Descriptions.Item>
+                                </Descriptions>
                             </YakitPanel>
                         )
                     })}
