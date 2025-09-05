@@ -161,6 +161,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     onClick={() => {
                         onMenuSelect({route: YakitRoute.YakScript})
                     }}
+                    className={styles["yak-runner-button"]}
                     icon={<SolidTerminalIcon />}
                 >
                     {t("YakitRoute.YakRunner")}

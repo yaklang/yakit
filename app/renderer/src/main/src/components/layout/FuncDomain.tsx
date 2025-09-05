@@ -2640,7 +2640,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             .invoke("QueryRisk", {Id: info.Id})
             .then((res: Risk) => {
                 if (!res) return
-                showModal({
+                showYakitModal({
                     width: "80%",
                     title: "详情",
                     content: (

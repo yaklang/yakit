@@ -12,7 +12,6 @@ import "./yakitLib.scss"
 import "./assets/global.scss"
 import {Suspense, useEffect, useState} from "react"
 import ChildNewApp from "./ChildNewApp"
-import {ThemeProvider} from "./hook/useTheme"
 import {getRemoteValue} from "./utils/kv"
 import {getRemoteI18nGV} from "./utils/envfile"
 import i18n from "@/i18n/i18n"
@@ -95,9 +94,7 @@ ReactDOM.render(
     // <React.StrictMode>
     <DndProvider backend={HTML5Backend}>
         <Suspense fallback={<div>loading...</div>}>
-            <ThemeProvider>
-                <App />
-            </ThemeProvider>
+            <App />
         </Suspense>
     </DndProvider>,
     // </React.StrictMode>,

@@ -106,7 +106,7 @@ $allColors-hover: (
                     // 单色-红色单独处理
                     .virtual-table-cell-#{$type} {
                         background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 100%);
-                        color: var(--yakit-colors-Error-100);
+                        color: var(--Colors-Use-Error-On-Primary);
                         font-weight: bold;
                     }
 
@@ -116,7 +116,7 @@ $allColors-hover: (
                     }
                     .virtual-table-hover-cell-#{$type}.virtual-table-cell-#{$type} {
                         background: var(--Colors-Use-Error-Pressed);
-                        color: var(--yakit-colors-Error-100);
+                        color: var(--Colors-Use-Error-On-Primary);
                     }
 
                     .virtual-table-active-cell-#{$type} {

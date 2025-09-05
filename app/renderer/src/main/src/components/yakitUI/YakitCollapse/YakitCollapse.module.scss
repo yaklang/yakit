@@ -39,7 +39,7 @@
             color: var(--Colors-Use-Neutral-Text-1-Title);
             &:hover {
                 border-radius: 4px;
-                background: var(--Colors-Use-Neutral-Bg-Hover);
+                background: var(--Colors-Use-Neutral-Bg);
             }
         }
         &:global(:last-child) {
@@ -51,7 +51,7 @@
         }
         &:global(.ant-collapse-item-active) {
             border-radius: 4px;
-            background: var(--Colors-Use-Neutral-Bg-Hover);
+            background: var(--Colors-Use-Neutral-Bg);
             margin-bottom: 8px;
             &:last-child {
                 margin-bottom: 0;

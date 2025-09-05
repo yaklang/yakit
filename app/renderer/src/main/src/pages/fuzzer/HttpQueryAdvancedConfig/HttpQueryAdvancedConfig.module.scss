@@ -141,7 +141,10 @@
         .ant-radio-button-wrapper {
             padding: 3px 10px;
         }
-    }
+        .ant-collapse-item > .ant-collapse-header {
+            border-top-color: transparent;
+        }
+    }    
 }
 .matchers-panel {
     display: flex;
