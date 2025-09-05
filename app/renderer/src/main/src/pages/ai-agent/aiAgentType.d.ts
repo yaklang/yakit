@@ -2,7 +2,7 @@ import {CSSProperties, Dispatch, ReactNode, SetStateAction} from "react"
 import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
 import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIStartParams} from "./type/aiChat"
 import {AITreeNodeProps} from "./aiTree/type"
-import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AITabsEnum} from "./defaultConstant"
 
 export interface AIAgentProps {}
@@ -61,7 +61,7 @@ export interface RenderMCPClientInfo extends MCPClientInfo {
 // #region UI左侧组件定义
 export interface AIAgentSideListProps {}
 // 侧边栏 tab 类型
-export type AIAgentTab = "history" | "setting" | "forgeName" | "tool"|"AIModel" //  | "mcp"
+export type AIAgentTab = "history" | "setting" | "forgeName" | "tool" | "AIModel" //  | "mcp"
 
 // 编辑对话名字
 export interface EditChatNameModalProps {
@@ -111,6 +111,7 @@ export type AITabsEnumType = `${AITabsEnum}`
 export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
     info: AIChatInfo
     coordinatorId?: string
+    yakExecResultLogs: StreamResult.Log[]
 }
 
 export interface AIAgentChatStreamProps {

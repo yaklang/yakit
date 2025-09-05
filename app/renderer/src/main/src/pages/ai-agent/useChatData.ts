@@ -81,6 +81,7 @@ function useChatData(params?: UseChatDataParams) {
 
     const [streams, setStreams] = useState<Record<string, AIChatStreams[]>>({})
     const [card, setCard] = useState<AIChatMessage.AIInfoCard[]>([])
+    const [yakExecResultLogs, setYakExecResultLogs] = useState<StreamResult.Log[]>([]) // log:目前只有file
 
     const [systemOutputs, setSystemOutputs] = useState<AIChatMessage.AIChatSystemOutput[]>([])
 
@@ -333,7 +334,7 @@ function useChatData(params?: UseChatDataParams) {
         onSetCoordinatorId("")
         setCard([])
         cardKVPair.current = new Map()
-
+        setYakExecResultLogs([])
         setSystemOutputs([])
     })
 
@@ -674,7 +675,7 @@ function useChatData(params?: UseChatDataParams) {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIPluginExecResult
-                    onHandleCard(data)
+                    onHandleYakExecResult(data)
                 } catch (error) {}
                 return
             }
@@ -700,29 +701,51 @@ function useChatData(params?: UseChatDataParams) {
         console.log("start-ai-task", token, params)
         ipcRenderer.invoke("start-ai-task", token, params)
     })
-    const onHandleCard = useMemoizedFn((value: AIChatMessage.AIPluginExecResult) => {
+
+    const onHandleYakExecResult = useMemoizedFn((value: AIChatMessage.AIPluginExecResult) => {
         try {
             if (!value?.IsMessage) return
             const message = value?.Message || ""
             const obj: AIChatMessage.AICardMessage = JSON.parse(Buffer.from(message, "base64").toString("utf8"))
-            const logData = obj.content as StreamResult.Log
-            if (!(obj.type === "log" && logData.level === "feature-status-card-data")) return
-            const checkInfo: AIChatMessage.AICard = checkStreamValidity(obj.content as StreamResult.Log)
-            if (!checkInfo) return
-            const {id, data, tags} = checkInfo
-            const {timestamp} = logData
-            const originData = cardKVPair.current.get(id)
-            if (originData && originData.Timestamp > timestamp) {
-                return
+
+            if (obj.type !== "log") return
+            const content = obj.content as StreamResult.Log
+            switch (content.level) {
+                case "feature-status-card-data":
+                    onHandleCard(obj)
+                    break
+                case "file":
+                    onHandleYakExecResultLogs(obj)
+                    break
+                default:
+                    break
             }
-            cardKVPair.current.set(id, {
-                Id: id,
-                Data: data,
-                Timestamp: timestamp,
-                Tags: Array.isArray(tags) ? tags : []
-            })
-            onSetCard()
         } catch (error) {}
+    })
+    /**
+     * @description 该方法可以记录yak_exec_result中所有的日志，但是目前只对接level:fil;后续根据可需求更改
+     */
+    const onHandleYakExecResultLogs = useMemoizedFn((obj: AIChatMessage.AICardMessage) => {
+        const log = obj.content as StreamResult.Log
+        setYakExecResultLogs((perLog) => [...perLog, {...log, id: uuidv4()}])
+    })
+    const onHandleCard = useMemoizedFn((obj: AIChatMessage.AICardMessage) => {
+        const logData = obj.content as StreamResult.Log
+        const checkInfo: AIChatMessage.AICard = checkStreamValidity(obj.content as StreamResult.Log)
+        if (!checkInfo) return
+        const {id, data, tags} = checkInfo
+        const {timestamp} = logData
+        const originData = cardKVPair.current.get(id)
+        if (originData && originData.Timestamp > timestamp) {
+            return
+        }
+        cardKVPair.current.set(id, {
+            Id: id,
+            Data: data,
+            Timestamp: timestamp,
+            Tags: Array.isArray(tags) ? tags : []
+        })
+        onSetCard()
     })
     const onSetCard = useMemoizedFn(() => {
         if (cardTimeRef.current) return
@@ -858,7 +881,20 @@ function useChatData(params?: UseChatDataParams) {
     }, [])
 
     return [
-        {execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream, card, systemOutputs},
+        {
+            execute,
+            pressure,
+            firstCost,
+            totalCost,
+            consumption,
+            logs,
+            plan,
+            streams,
+            activeStream,
+            card,
+            systemOutputs,
+            yakExecResultLogs
+        },
         {onStart, onSend, onClose, handleReset, fetchToken, fetchPlanTree}
     ] as const
 }

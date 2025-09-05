@@ -83,6 +83,7 @@ import {AITabs, AITabsEnum} from "../defaultConstant"
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
 import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
+import {LocalPluginLog} from "@/pages/plugins/operator/pluginExecuteResult/LocalPluginLog"
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks, pressure, cost, onLeafNodeClick, card} = props
@@ -268,7 +269,7 @@ const AICardList: React.FC<AICardListProps> = React.memo((props) => {
 
 /** @name 对话框内容 */
 export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
-    const {info, coordinatorId, ...rest} = props
+    const {info, coordinatorId, yakExecResultLogs, ...rest} = props
 
     //#region AI tab 相关逻辑
     const [activeKey, setActiveKey] = useState<AITabsEnumType>(AITabsEnum.Task_Content)
@@ -305,6 +306,8 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
         switch (key) {
             case AITabsEnum.Task_Content:
                 return <AIAgentChatStream {...rest} />
+            case AITabsEnum.File_System:
+                return <LocalPluginLog loading={false} list={yakExecResultLogs} />
             case AITabsEnum.Risk:
                 return !!coordinatorId ? (
                     <VulnerabilitiesRisksTable
