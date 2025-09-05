@@ -168,14 +168,7 @@
             word-break: break-all;
         }
     }
-    .log-file-card-heard {
-        gap: 12px;
-        height: 36px;
-        background: var(--Colors-Use-Neutral-Bg);
-    }
-    .log-file-card-heard-no-border-bottom {
-        border-bottom-color: transparent;
-    }
+
     .log-file-card-extra {
         @extend %display-flex-center;
         gap: 8px;
@@ -183,6 +176,14 @@
     .log-file-card {
         background-color: var(--Colors-Use-Basic-Background);
         border-radius: 4px;
+        .log-file-card-heard {
+            gap: 12px;
+            height: 36px;
+            background: var(--Colors-Use-Neutral-Bg);
+        }
+        .log-file-card-heard-no-border-bottom {
+            border-bottom-color: transparent;
+        }
     }
     .log-file-card-body {
         gap: 8px;

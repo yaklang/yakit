@@ -193,7 +193,7 @@ const ExecuteLogFile: React.FC<ExecuteLogFileProps> = React.memo((props) => {
         })
     }, [path])
     const onCopy = useMemoizedFn(() => {
-        setClipboardText(path)
+        setClipboardText(fileName)
     })
     const onOpen = useMemoizedFn(() => {
         onOpenLocalFileByPath(path)
@@ -250,7 +250,6 @@ const ExecuteLogFile: React.FC<ExecuteLogFileProps> = React.memo((props) => {
                     const chmod = {...action_message} as PluginExecuteLogFile.CHMODFileActionMessage
                     actionText = "修改权限"
                     const mode = modeToPermissions(chmod.chmodMode)
-                    message = `权限修改为:${chmod.chmodMode}`
                     content = (
                         <>
                             所属者权限: {mode ? mode[0] : "未知"}
