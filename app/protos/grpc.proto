@@ -1277,6 +1277,7 @@ message KnowledgeBaseEntry {
   int32 SourcePage = 9;
   repeated string PotentialQuestions = 10;
   repeated float PotentialQuestionsVector = 11;
+  string HiddenIndex = 12;
 }
 
 message DeleteKnowledgeBaseRequest {
@@ -6329,6 +6330,7 @@ message Certificate {
   // pkcs12path need a .p12 or .pfx file
   bytes Pkcs12Bytes = 4;
   bytes Pkcs12Password = 5;
+  string Host = 6;
 }
 
 message MITMContentReplacer {
@@ -7460,6 +7462,7 @@ message SSARiskDisposalData{
   string Comment = 5;
 
   int64 RiskId = 6;
+  string TaskName = 7;         // 任务名称，追踪处置来自哪次扫描任务
 }
 
 message SSARiskDisposalsFilter {
