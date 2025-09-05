@@ -25,7 +25,9 @@ export interface UseExecCardParams {
     pushLog: (log: AIChatMessage.Log) => void
 }
 
-export type UseExecCardState = AIChatMessage.AIInfoCard[]
+export interface UseExecCardState {
+    card: AIChatMessage.AIInfoCard[]
+}
 export interface UseExecCardEvents extends UseHookBaseEvents {}
 // #endregion
 
@@ -45,6 +47,27 @@ export interface UseCasualChatState {
     contents: AIChatMessage.AICasualChatQAStream[]
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents {
+    handleSetCoordinatorId: (id: string) => void
+    handleSend: (request: AIInputEvent, cb?: () => void) => void
+}
+// #endregion
+
+// #region useTaskChat相关定义
+export interface UseTaskChatParams {
+    /** 将数据存入日志信息队列中 */
+    pushLog: (log: AIChatMessage.Log) => void
+    /** 获取流接口请求参数 */
+    getRequest: () => AIStartParams | undefined
+    /** 触发 review-relaese 后的回调事件 */
+    onReviewRelease: (id: string) => voud
+}
+
+export interface UseTaskChatState {
+    /** 任务对话的 id */
+    coordinatorId: string
+    contents: AIChatMessage.AICasualChatQAStream[]
+}
+export interface UseTaskChatEvents extends UseHookBaseEvents {
     handleSetCoordinatorId: (id: string) => void
     handleSend: (request: AIInputEvent, cb?: () => void) => void
 }

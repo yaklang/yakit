@@ -77,7 +77,7 @@ function useExecCard(params?: UseExecCardParams) {
         setCard([])
     })
 
-    return [card, {handleSetData, handleResetData}] as const
+    return [{card}, {handleSetData, handleResetData}] as const
 }
 
 export default useExecCard

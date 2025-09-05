@@ -32,67 +32,76 @@ function useCasualChat(params?: UseCasualChatParams) {
     const review = useRef<AIChatReview>()
 
     const [coordinatorId, setCoordinatorId] = useState<string>("")
+    // 存放流式输出的EventUUID的集合
+    const eventUUIDs = useRef<Set<string>>(new Set())
+    const handleSetEventUUID = useMemoizedFn((id: string) => {
+        if (!eventUUIDs.current.has(id)) eventUUIDs.current.add(id)
+    })
     const [contents, setContents] = useState<AIChatMessage.AICasualChatQAStream[]>([])
 
     // #region 流式输出处理的相关逻辑
-    const handleStreams = useMemoizedFn(
-        (params: {type: string; NodeId: string; EventUUID: string; Timestamp: number; content: string}) => {
-            const {type, NodeId, EventUUID, Timestamp, content} = params
-            try {
-                setContents((old) => {
-                    let newArr = [...old]
-                    const index = newArr.findIndex((item) => {
+    const handleStreams = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const {IsSystem, IsReason, NodeId, Timestamp, EventUUID, Content, StreamDelta} = res
+            const type = IsSystem ? "systemStream" : IsReason ? "reasonStream" : "stream"
+            let ipcContent = Uint8ArrayToString(Content) || ""
+            let ipcStreamDelta = Uint8ArrayToString(StreamDelta) || ""
+            const content = ipcContent + ipcStreamDelta
+
+            setContents((old) => {
+                let newArr = [...old]
+                const index = newArr.findIndex((item) => {
+                    if (item.uiType === "stream" && item.data) {
+                        const streamData = item.data as AIChatMessage.AIStreamOutput
+                        return streamData.NodeId === NodeId && streamData.EventUUID === EventUUID
+                    }
+                    return false
+                })
+                if (index >= 0) {
+                    const streamsInfo = newArr[index].data as AIChatMessage.AIStreamOutput
+                    if (type === "systemStream") streamsInfo.stream.system += content
+                    if (type === "reasonStream") streamsInfo.stream.reason += content
+                    if (type === "stream") streamsInfo.stream.stream += content
+                    newArr[index].data = {...streamsInfo}
+                } else {
+                    const streamsInfo: AIChatMessage.AIStreamOutput = {
+                        NodeId,
+                        EventUUID,
+                        status: "start",
+                        stream: {system: "", reason: "", stream: ""}
+                    }
+                    if (type === "systemStream") streamsInfo.stream.system += content
+                    if (type === "reasonStream") streamsInfo.stream.reason += content
+                    if (type === "stream") streamsInfo.stream.stream += content
+                    if (isToolStdoutStream(NodeId)) streamsInfo.toolAggregation = {...toolStdOutSelectors.current}
+                    newArr.push({
+                        id: uuidv4(),
+                        type: "answer",
+                        uiType: "stream",
+                        Timestamp,
+                        data: {...streamsInfo}
+                    })
+                }
+
+                // 出现tool_stdout时，删除前面的call-tools类型数据
+                if (isToolStdoutStream(NodeId)) {
+                    newArr = newArr.filter((item) => {
                         if (item.uiType === "stream" && item.data) {
                             const streamData = item.data as AIChatMessage.AIStreamOutput
-                            return streamData.NodeId === NodeId && streamData.EventUUID === EventUUID
+                            return streamData.NodeId !== "call-tools"
                         }
-                        return false
+                        return true
                     })
-                    if (index >= 0) {
-                        const streamsInfo = newArr[index].data as AIChatMessage.AIStreamOutput
-                        if (type === "systemStream") streamsInfo.stream.system += content
-                        if (type === "reasonStream") streamsInfo.stream.reason += content
-                        if (type === "stream") streamsInfo.stream.stream += content
-                        newArr[index].data = {...streamsInfo}
-                    } else {
-                        const streamsInfo: AIChatMessage.AIStreamOutput = {
-                            NodeId,
-                            EventUUID,
-                            status: "start",
-                            stream: {system: "", reason: "", stream: ""}
-                        }
-                        if (type === "systemStream") streamsInfo.stream.system += content
-                        if (type === "reasonStream") streamsInfo.stream.reason += content
-                        if (type === "stream") streamsInfo.stream.stream += content
-                        if (isToolStdoutStream(NodeId)) streamsInfo.toolAggregation = {...toolStdOutSelectors.current}
-                        newArr.push({
-                            id: uuidv4(),
-                            type: "answer",
-                            uiType: "stream",
-                            Timestamp,
-                            data: {...streamsInfo}
-                        })
-                    }
-
-                    // 出现tool_stdout时，删除前面的call-tools类型数据
-                    if (isToolStdoutStream(NodeId)) {
-                        newArr = newArr.filter((item) => {
-                            if (item.uiType === "stream" && item.data) {
-                                const streamData = item.data as AIChatMessage.AIStreamOutput
-                                return streamData.NodeId !== "call-tools"
-                            }
-                            return true
-                        })
-                    }
-                    return newArr
-                })
-            } catch (error) {}
-        }
-    )
+                }
+                return newArr
+            })
+        } catch (error) {}
+    })
 
     // 将流式输出的状态改成已完成
     const handleUpdateStreamStatus = useMemoizedFn((EventUUID: string) => {
         try {
+            if (!eventUUIDs.current.has(EventUUID)) return
             setContents((old) => {
                 return old.map((item) => {
                     if (item.uiType === "stream" && item.data) {
@@ -308,23 +317,18 @@ function useCasualChat(params?: UseCasualChatParams) {
     const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
         try {
             let ipcContent = Uint8ArrayToString(res.Content) || ""
-            let ipcStreamDelta = Uint8ArrayToString(res.StreamDelta) || ""
             if (res.Type === "stream") {
-                if (res.NodeId === "re-act-loop" || res.NodeId === "re-act-verify" || isToolExecStream(res.NodeId)) {
-                    // re-act-loop 流式输出
-                    const {IsSystem, IsReason, NodeId, Timestamp, EventUUID} = res
-                    if (!NodeId || !EventUUID) {
-                        handleGrpcDataPushLog({
-                            type: "error",
-                            info: res,
-                            pushLog: handlePushLog
-                        })
-                        return
-                    }
-                    const type = IsSystem ? "systemStream" : IsReason ? "reasonStream" : "stream"
-                    handleStreams({type, NodeId, EventUUID, Timestamp, content: ipcContent + ipcStreamDelta})
+                const {NodeId, EventUUID} = res
+                if (!NodeId || !EventUUID) {
+                    handleGrpcDataPushLog({
+                        type: "error",
+                        info: res,
+                        pushLog: handlePushLog
+                    })
                     return
                 }
+                handleSetEventUUID(EventUUID)
+                handleStreams(res)
                 return
             }
 
@@ -518,8 +522,10 @@ function useCasualChat(params?: UseCasualChatParams) {
     const handleResetData = useMemoizedFn(() => {
         review.current = undefined
         setCoordinatorId("")
+        eventUUIDs.current.clear()
         setContents([])
     })
+
     return [
         {coordinatorId, contents},
         {handleSetData, handleResetData, handleSetCoordinatorId, handleSend}

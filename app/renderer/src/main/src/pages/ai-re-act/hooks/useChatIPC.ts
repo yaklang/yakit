@@ -20,7 +20,7 @@ const UseCasualAndTaskTypes = [
     "tool_use_review_require",
     "require_user_interactive",
     "review_release",
-    "stream",
+    // "stream",
     "tool_call_start",
     "tool_call_user_cancel",
     "tool_call_done",
@@ -161,6 +161,12 @@ function useChatIPC(params?: UseChatIPCParams) {
                         const data = obj as AIChatMessage.Log
                         setLogs((pre) => pre.concat([{...data, id: uuidv4()}]))
                     } else {
+                        // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
+                        if (res.NodeId === "stream-finished") {
+                            casualChatEvent.handleSetData(res)
+                            return
+                        }
+
                         if (planCoordinatorId.current === res.CoordinatorId) {
                         } else {
                             casualChatEvent.handleSetData(res)
@@ -186,6 +192,15 @@ function useChatIPC(params?: UseChatIPCParams) {
                         return
                     }
                     // taskChatEvent.handleSetData(res)
+                    return
+                }
+
+                // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
+                if (res.Type === "stream") {
+                    if (!!res.TaskIndex) {
+                    } else {
+                        casualChatEvent.handleSetData(res)
+                    }
                     return
                 }
 
