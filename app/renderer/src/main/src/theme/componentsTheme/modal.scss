@@ -76,19 +76,3 @@
     }
 }
 // ========================== Modal.confirm end ==========================
-
-.yakit-modal-risk-details {
-    .ant-modal-header {
-        background-color: var(--Colors-Use-Neutral-Bg);
-        border-color: var(--Colors-Use-Neutral-Bg);
-        .ant-modal-title {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-        }
-    }
-    .ant-modal-body {
-        background-color: var(--Colors-Use-Basic-Background);
-    }
-    .ant-modal-close-x{
-        color: var(--Colors-Use-Main-Primary);
-    }
-}

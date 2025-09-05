@@ -1,4 +1,4 @@
-import { type FC, useState, useEffect, MouseEvent, ReactNode, useCallback} from "react"
+import {type FC, useState, useEffect, MouseEvent, ReactNode, useCallback} from "react"
 import {
     MacUIOpCloseSvgIcon,
     MacUIOpMaxSvgIcon,
@@ -29,47 +29,50 @@ const TitleBar: FC = () => {
 
     useEffect(() => {
         const fetchIcons = async () => {
-            const systemName = await ipcRenderer.invoke("fetch-system-name")
-            const isMac = systemName === "Darwin"
-            setIsDarwin(isMac)
-            setIcons(
-                isMac
-                    ? {
-                          min: <MacUIOpMinSvgIcon />,
-                          max: <MacUIOpMaxSvgIcon />,
-                          restore: <MacUIOpRestoreSvgIcon />,
-                          close: <MacUIOpCloseSvgIcon />
-                      }
-                    : {
-                          min: <WinUIOpMinSvgIcon />,
-                          max: <WinUIOpMaxSvgIcon />,
-                          restore: <WinUIOpRestoreSvgIcon />,
-                          close: <WinUIOpCloseSvgIcon />
-                      }
-            )
+            try {
+                const systemName = await ipcRenderer.invoke("fetch-system-name")
+                const isMac = systemName === "Darwin"
+                setIsDarwin(isMac)
+                setIcons(
+                    isMac
+                        ? {
+                              min: <MacUIOpMinSvgIcon />,
+                              max: <MacUIOpMaxSvgIcon />,
+                              restore: <MacUIOpRestoreSvgIcon />,
+                              close: <MacUIOpCloseSvgIcon />
+                          }
+                        : {
+                              min: <WinUIOpMinSvgIcon />,
+                              max: <WinUIOpMaxSvgIcon />,
+                              restore: <WinUIOpRestoreSvgIcon />,
+                              close: <WinUIOpCloseSvgIcon />
+                          }
+                )
+            } catch (error) {
+                console.log("fetch-system-name:", error)
+            }
         }
         fetchIcons()
     }, [])
 
-    const windowActions = {
-        minimize: useCallback(() => ipcRenderer.send("minimize-childWin"), []),
-        maximizeRestore: useCallback(() => {
-            if (isDarwin) {
-                ipcRenderer.invoke("UIOperate-childWin", "full")
-            } else {
-                ipcRenderer.send(isMaximized ? "restore-childWin" : "maximize-childWin")
-            }
-            setIsMaximized((prev) => !prev)
-        }, [isDarwin, isMaximized]),
+    const minimize = () => ipcRenderer.send("minimize-childWin")
 
-        close: useCallback(() => ipcRenderer.send("close-childWin"), [])
-    }
+    const maximizeRestore = useCallback(() => {
+        if (isDarwin) {
+            ipcRenderer.invoke("UIOperate-childWin", "full")
+        } else {
+            ipcRenderer.send(isMaximized ? "restore-childWin" : "maximize-childWin")
+        }
+        setIsMaximized((prev) => !prev)
+    }, [isDarwin, isMaximized])
+
+    const close = () => ipcRenderer.send("close-childWin")
 
     /** 双击 header 空白处时触发 */
     const handleDoubleClick = (e: MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement
         if (target.closest("svg") || target.classList.contains(styles["icon-divider"])) return
-        windowActions.maximizeRestore()
+        maximizeRestore()
     }
 
     if (!icons) return null
@@ -84,17 +87,17 @@ const TitleBar: FC = () => {
             >
                 {isDarwin ? (
                     <>
-                        <div onClick={windowActions.close}>{icons.close}</div>
-                        <div onClick={windowActions.minimize}>{icons.min}</div>
-                        <div onClick={windowActions.maximizeRestore}>{isMaximized ? icons.restore : icons.max}</div>
+                        <div onClick={close}>{icons.close}</div>
+                        <div onClick={minimize}>{icons.min}</div>
+                        <div onClick={maximizeRestore}>{isMaximized ? icons.restore : icons.max}</div>
                     </>
                 ) : (
                     <>
-                        <div onClick={windowActions.minimize}>{icons.min}</div>
+                        <div onClick={minimize}>{icons.min}</div>
                         <div hidden={isDarwin} className={styles["icon-divider"]} />
-                        <div onClick={windowActions.maximizeRestore}>{isMaximized ? icons.restore : icons.max}</div>
+                        <div onClick={maximizeRestore}>{isMaximized ? icons.restore : icons.max}</div>
                         <div hidden={isDarwin} className={styles["icon-divider"]} />
-                        <div onClick={windowActions.close}>{icons.close}</div>
+                        <div onClick={close}>{icons.close}</div>
                     </>
                 )}
             </div>

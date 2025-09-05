@@ -39,7 +39,7 @@
             color: var(--Colors-Use-Neutral-Text-1-Title);
             &:hover {
                 border-radius: 4px;
-                background: var(--Colors-Use-Neutral-Bg-Hover);
+                background: var(--Colors-Use-Neutral-Bg);
             }
         }
         &:global(:last-child) {
