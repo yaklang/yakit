@@ -77,7 +77,7 @@ export declare namespace PluginExecuteLogFile {
         title: string
     }
 
-    export type FileActionType = `${FileAction}`
+    export type FileActionType = `${FileActionEnum}`
     export interface ReadFileActionMessage {
         content: string
         length: number
