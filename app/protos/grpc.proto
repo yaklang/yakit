@@ -893,6 +893,7 @@ service Yak {
   rpc GetAIToolList(GetAIToolListRequest) returns(GetAIToolListResponse);
   rpc DeleteAITool(DeleteAIToolRequest) returns(DbOperateMessage);
   rpc SaveAITool(SaveAIToolRequest) returns(DbOperateMessage);
+  rpc SaveAIToolV2(SaveAIToolRequest) returns(SaveAIToolV2Response);
   rpc UpdateAITool(UpdateAIToolRequest) returns(DbOperateMessage);
   rpc ToggleAIToolFavorite(ToggleAIToolFavoriteRequest) returns(ToggleAIToolFavoriteResponse);
   rpc AIToolGenerateMetadata(AIToolGenerateMetadataRequest) returns(AIToolGenerateMetadataResponse);
@@ -1403,6 +1404,12 @@ message SaveAIToolRequest {
   string Content = 3;
   string ToolPath = 4;
   repeated string Keywords = 5;
+}
+
+message SaveAIToolV2Response{
+  bool IsSuccess = 1;
+  string Message = 2;
+  AITool AITool = 3;
 }
 
 message UpdateAIToolRequest {
