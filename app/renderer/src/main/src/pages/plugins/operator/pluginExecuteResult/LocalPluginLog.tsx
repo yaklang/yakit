@@ -1,7 +1,7 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {EditorLogShow, FileLogShowDataProps, YakitLogFormatter} from "@/pages/invoker/YakitLogFormatter"
 import {Timeline} from "antd"
-import React from "react"
+import React, {ReactNode} from "react"
 import styles from "./LocalPluginLog.module.scss"
 import {useCreation, useMemoizedFn} from "ahooks"
 import moment from "moment"
@@ -27,6 +27,7 @@ interface LocalPluginLogList extends StreamResult.Log {}
 interface LocalPluginLogProps {
     loading: boolean
     list: LocalPluginLogList[]
+    heard?: ReactNode
 }
 
 const getFileExtension = (filename) => {
@@ -40,10 +41,7 @@ const getFileExtension = (filename) => {
 
 /**插件日志 */
 export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) => {
-    const {loading, list} = props
-    const currentTime = useCreation(() => {
-        return moment().format("YYYY-MM-DD")
-    }, [])
+    const {loading, list, heard} = props
     const logLevelToDot = useMemoizedFn((item) => {
         let key = item.level
         if (key === "file") {
@@ -104,7 +102,7 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
     })
     return (
         <div className={styles["log-body"]}>
-            <div className={styles["log-heard"]}>{currentTime} 日志查询结果</div>
+            {heard && <div className={styles["log-heard"]}>{heard}</div>}
             {!loading && list.length === 0 ? (
                 <YakitEmpty style={{paddingTop: 48}} title='暂无日志信息' />
             ) : (

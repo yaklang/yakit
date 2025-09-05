@@ -56,6 +56,7 @@ import {CodeScanResult} from "@/pages/yakRunnerCodeScan/CodeScanResultTable/Code
 import {YakitAuditHoleTable} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 import {HTTPFlowRealTimeTableAndEditor} from "@/components/HTTPHistory"
 import {ErrorBoundary} from "react-error-boundary"
+import moment from "moment"
 
 const {TabPane} = PluginTabs
 
@@ -386,7 +387,8 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
     const renderTabContent = useMemoizedFn((type) => {
         switch (type) {
             case "plugin-log":
-                return <LocalPluginLog loading={loading} list={list} />
+                const currentTime=moment().format("YYYY-MM-DD")
+                return <LocalPluginLog loading={loading} list={list} heard={<> {currentTime} 日志查询结果</>}/>
             case "echarts-statistics":
                 return <LocalList list={echartsLists} />
             case "output-text":

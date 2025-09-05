@@ -187,7 +187,8 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                 streams,
                 activeStream,
                 card,
-                systemOutputs
+                systemOutputs,
+                yakExecResultLogs
             },
             events
         ] = useChatData({
@@ -517,6 +518,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                             streams={uiStreams}
                                             coordinatorId={coordinatorId}
                                             defaultExpand={!taskChat?.answer?.streams}
+                                            yakExecResultLogs={yakExecResultLogs}
                                         />
                                     )}
                                 </div>
