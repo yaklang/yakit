@@ -847,11 +847,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                         return
                     }
                     setExpand(false)
-                    if (activeTab !== "hole" && isEdit && Object.keys(info?.AlertMsg || {}).length > 0) {
-                        setActiveTab("hole")
-                    } else {
-                        setActiveTab("code")
-                    }
+                    if (activeTab !== "debug") setActiveTab("debug")
                     onStart({
                         ControlMode: "start",
                         ProgramName: cloneDeep(project),
