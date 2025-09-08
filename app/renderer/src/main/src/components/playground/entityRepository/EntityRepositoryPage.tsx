@@ -223,7 +223,7 @@ export const EntityRepositoryPage: React.FC = () => {
             const response: QueryEntityResponse = await ipcRenderer.invoke("QueryEntity", {
                 Filter: {
                     ...entityFilters,
-                    BaseID: selectedRepository.ID
+                    BaseIndex: selectedRepository.HiddenIndex
                 },
                 Pagination: paginationProps
             })
@@ -254,7 +254,7 @@ export const EntityRepositoryPage: React.FC = () => {
             const response: QueryRelationshipResponse = await ipcRenderer.invoke("QueryRelationship", {
                 Filter: {
                     ...relationshipFilters,
-                    BaseID: selectedRepository.ID
+                    BaseIndex: selectedRepository.HiddenIndex
                 },
                 Pagination: paginationProps
             })
