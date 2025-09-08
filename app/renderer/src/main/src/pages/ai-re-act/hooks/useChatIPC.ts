@@ -9,9 +9,9 @@ import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
 import useCasualChat, {UseCasualChatTypes} from "./useCasualChat"
 import useExecCard, {UseExecCardTypes} from "./useExecCard"
 import {v4 as uuidv4} from "uuid"
-import {UseTaskChatTypes} from "./useTaskChat"
+import useTaskChat, {UseTaskChatTypes} from "./useTaskChat"
 import {handleGrpcDataPushLog} from "./utils"
-import {UseChatIPCEvents, UseChatIPCParams, UseChatIPCState} from "./type"
+import {UseCasualChatEvents, UseChatIPCEvents, UseChatIPCParams, UseChatIPCState} from "./type"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -20,7 +20,7 @@ const UseCasualAndTaskTypes = [
     "tool_use_review_require",
     "require_user_interactive",
     "review_release",
-    "stream",
+    // "stream",
     "tool_call_start",
     "tool_call_user_cancel",
     "tool_call_done",
@@ -32,7 +32,7 @@ const UseCasualAndTaskTypes = [
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
 function useChatIPC(params?: UseChatIPCParams) {
-    const {onReviewRelease, onEnd} = params || {}
+    const {onTaskReview, onTaskReviewExtra, onReviewRelease, onEnd} = params || {}
 
     const handleCasualReviewRelease = useMemoizedFn((id: string) => {
         onReviewRelease && onReviewRelease("casual", id)
@@ -79,6 +79,14 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReviewRelease: handleCasualReviewRelease
     })
 
+    // 任务规划相关数据和逻辑
+    const [taskChat, taskChatEvent] = useTaskChat({
+        getRequest: fetchRequest,
+        pushLog,
+        onReview: onTaskReview,
+        onReviewExtra: onTaskReviewExtra,
+        onReviewRelease: handleTaskReviewRelease
+    })
     // #endregion
 
     // #region review事件相关方法
@@ -93,13 +101,12 @@ function useChatIPC(params?: UseChatIPCParams) {
                 yakitNotify("warning", "该选项非本次 AI 执行的回答选项")
                 return
             }
-            console.log("send-ai-re-act---\n", token, params)
 
-            if (type === "casual") {
-                casualChatEvent.handleSend(params, () => {
-                    ipcRenderer.invoke("send-ai-re-act", token, params)
-                })
-            }
+            const events: UseCasualChatEvents | UseChatIPCEvents = type === "casual" ? casualChatEvent : taskChatEvent
+            events.handleSend(params, () => {
+                console.log("send-ai-re-act---\n", token, params)
+                ipcRenderer.invoke("send-ai-re-act", token, params)
+            })
         } catch (error) {}
     })
     // #endregion
@@ -114,6 +121,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         cardEvent.handleResetData()
         planCoordinatorId.current = ""
         casualChatEvent.handleResetData()
+        taskChatEvent.handleResetData()
     })
 
     const onStart = useMemoizedFn((token: string, params: AIInputEvent) => {
@@ -134,6 +142,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                     // 触发任务规划，并传出任务规划流的标识 coordinator_id
                     const startInfo = JSON.parse(ipcContent) as AIChatMessage.AIStartPlanAndExecution
                     if (planCoordinatorId.current !== startInfo.coordinator_id) {
+                        taskChatEvent.handleSetCoordinatorId(startInfo.coordinator_id)
                     }
                     return
                 }
@@ -161,7 +170,15 @@ function useChatIPC(params?: UseChatIPCParams) {
                         const data = obj as AIChatMessage.Log
                         setLogs((pre) => pre.concat([{...data, id: uuidv4()}]))
                     } else {
+                        // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
+                        if (res.NodeId === "stream-finished") {
+                            casualChatEvent.handleSetData(res)
+                            taskChatEvent.handleSetData(res)
+                            return
+                        }
+
                         if (planCoordinatorId.current === res.CoordinatorId) {
+                            taskChatEvent.handleSetData(res)
                         } else {
                             casualChatEvent.handleSetData(res)
                         }
@@ -185,13 +202,24 @@ function useChatIPC(params?: UseChatIPCParams) {
                         handleGrpcDataPushLog({type: "error", info: res, pushLog: pushLog})
                         return
                     }
-                    // taskChatEvent.handleSetData(res)
+                    taskChatEvent.handleSetData(res)
+                    return
+                }
+
+                // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
+                if (res.Type === "stream") {
+                    if (!!res.TaskIndex) {
+                        taskChatEvent.handleSetData(res)
+                    } else {
+                        casualChatEvent.handleSetData(res)
+                    }
                     return
                 }
 
                 if (UseCasualAndTaskTypes.includes(res.Type)) {
                     // 自由对话和任务规划共用的类型
                     if (planCoordinatorId.current === res.CoordinatorId) {
+                        taskChatEvent.handleSetData(res)
                     } else {
                         casualChatEvent.handleSetData(res)
                     }
@@ -206,6 +234,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         })
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
             console.log("end", res)
+            taskChatEvent.handleCloseGrpc()
             setExecute(false)
             onEnd && onEnd()
 
@@ -245,7 +274,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     }, [])
 
     return [
-        {execute, logs, card, aiPerfData, casualChat},
+        {execute, logs, card, aiPerfData, casualChat, taskChat},
         {fetchToken, fetchRequest, onStart, onSend, onClose, onReset}
     ] as const
 }

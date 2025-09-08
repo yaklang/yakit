@@ -439,6 +439,10 @@ export declare namespace AIChatMessage {
         task_index: string
     }
 
+    export interface AITaskStreamOutput extends AIStreamOutput {
+        timestamp: number
+    }
+
     export interface AIChatThought {
         thought: string
         timestamp: number
