@@ -770,7 +770,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
     useEffect(() => {
         visible && setActiveTab(info && Object.keys(info?.AlertMsg || {}).length > 0 ? "hole" : "code")
-    }, [info,visible])
+    }, [info, visible])
 
     const [debugForm] = Form.useForm()
     // 项目列表
@@ -2518,7 +2518,7 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
 
     /** 编辑器内容的变化，更新数据 */
     const onMarkdownUpdated = useDebounceFn(
-        (key: "Description" | "Solution", value: string, alertMsgKey: string) => {
+        (key: "Description" | "Solution" | "RiskType", value: string, alertMsgKey: string) => {
             alertMsgRef.current = {
                 ...alertMsgRef.current,
                 [alertMsgKey]: {...alertMsgRef.current[alertMsgKey], [key]: value}
@@ -2607,6 +2607,15 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                                 }
                             >
                                 <Descriptions bordered size='small' labelStyle={{width: 120}}>
+                                    <Descriptions.Item label='类型' span={3}>
+                                        <YakitInput
+                                            defaultValue={alert.RiskType}
+                                            onChange={(e) => {
+                                                const {value} = e.target
+                                                onMarkdownUpdated("RiskType", value, key)
+                                            }}
+                                        />
+                                    </Descriptions.Item>
                                     <Descriptions.Item label='漏洞描述' span={3}>
                                         <MilkdownEditor
                                             type='notepad'
