@@ -1217,6 +1217,8 @@ const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props)
         valuePropName: "disposalData",
         trigger: "setDisposalData"
     })
+    console.log("disposalData:", disposalData)
+
     const onDeleteSSARiskDisposals = useMemoizedFn((id: number) => {
         apiDeleteSSARiskDisposals({Filter: {ID: [id]}})
             .then(() => {
@@ -1276,6 +1278,7 @@ const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props)
                                 <div className={styles["author-name"]}>处置状态：{getLabelByValue(info.Status)}</div>
                                 {/* <div className={styles["log-content"]}>content</div> */}
                                 <div className={styles["log-time"]}>{formatTimestamp(info.UpdatedAt)}</div>
+                                {info.TaskName && <YakitTag color={"info"}>{info.TaskName}</YakitTag>}
                                 <div className={styles["option"]}>
                                     <YakitPopconfirm
                                         title={"确认删除此处置记录吗？"}
