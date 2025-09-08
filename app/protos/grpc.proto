@@ -7442,6 +7442,7 @@ message SSARiskDisposalData{
   string Comment = 5;
 
   int64 RiskId = 6;
+  string TaskName = 7;    // 任务名称，追踪处置来自哪次扫描任务
 }
 
 message SSARiskDisposalsFilter {
