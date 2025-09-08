@@ -223,9 +223,9 @@ module.exports = (win, getClient) => {
         return await asyncDeleteAITool(param)
     })
 
-    const asyncSaveAITool = (params) => {
+    const asyncSaveAIToolV2 = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().SaveAITool(params, (err, data) => {
+            getClient().SaveAIToolV2(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -235,8 +235,8 @@ module.exports = (win, getClient) => {
         })
     }
     /**新增工具 */
-    ipcMain.handle("SaveAITool", async (e, param) => {
-        return await asyncSaveAITool(param)
+    ipcMain.handle("SaveAIToolV2", async (e, param) => {
+        return await asyncSaveAIToolV2(param)
     })
 
     const asyncUpdateAITool = (params) => {

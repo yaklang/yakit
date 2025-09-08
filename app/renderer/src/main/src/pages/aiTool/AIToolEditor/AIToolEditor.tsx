@@ -46,14 +46,26 @@ import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {CodeScoreModal} from "@/pages/plugins/funcTemplate"
-import {AIToolGenerateMetadataRequest, SaveAIToolRequest, UpdateAIToolRequest} from "@/pages/ai-agent/type/aiChat"
-import {grpcAIToolGenerateDescription, grpcAIToolGenerateKeywords, grpcSaveAITool, grpcUpdateAITool} from "../utils"
+import {
+    AITool,
+    AIToolGenerateMetadataRequest,
+    SaveAIToolRequest,
+    UpdateAIToolRequest
+} from "@/pages/ai-agent/type/aiChat"
+import {
+    grpcAIToolGenerateDescription,
+    grpcAIToolGenerateKeywords,
+    grpcSaveAITool,
+    grpcUpdateAITool,
+    isAITool
+} from "../utils"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {grpcGetAIToolById} from "@/pages/ai-agent/aiToolList/utils"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {setAIModal} from "@/pages/ai-agent/aiModelList/AIModelList"
 import styles from "./AIToolEditor.module.scss"
+import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 
 const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
     const {isModify} = props
@@ -166,9 +178,12 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                     reject("数据错误,编辑状态下ID不能为空")
                     return
                 }
-                const func = isModify ? grpcUpdateAITool : grpcSaveAITool
+                const func = !!toolIdRef.current ? grpcUpdateAITool : grpcSaveAITool
                 func(params)
-                    .then(() => {
+                    .then((res: AITool | DbOperateMessage) => {
+                        if (isAITool(res)) {
+                            toolIdRef.current = res.ID
+                        }
                         yakitNotify("success", "保存成功")
                         resolve()
                     })
