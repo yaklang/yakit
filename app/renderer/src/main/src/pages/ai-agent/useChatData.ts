@@ -723,7 +723,7 @@ function useChatData(params?: UseChatDataParams) {
         } catch (error) {}
     })
     /**
-     * @description 该方法可以记录yak_exec_result中所有的日志，但是目前只对接level:fil;后续根据可需求更改
+     * @description 该方法可以记录yak_exec_result中所有的日志，但是目前只对接level:file;后续根据可需求更改
      */
     const onHandleYakExecResultLogs = useMemoizedFn((obj: AIChatMessage.AICardMessage) => {
         const log = obj.content as StreamResult.Log

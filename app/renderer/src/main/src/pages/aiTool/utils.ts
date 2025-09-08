@@ -2,18 +2,31 @@ import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {DbOperateMessage} from "../layout/mainOperatorContent/utils"
 import {
+    AITool,
     AIToolGenerateMetadataRequest,
     AIToolGenerateMetadataResponse,
     SaveAIToolRequest,
+    SaveAIToolV2Response,
     UpdateAIToolRequest
 } from "../ai-agent/type/aiChat"
 const {ipcRenderer} = window.require("electron")
 
-export const grpcSaveAITool: APIFunc<SaveAIToolRequest, DbOperateMessage> = (params, hiddenError) => {
+export const isAITool = (value: AITool | DbOperateMessage): value is AITool => {
+    return "ID" in value
+}
+
+export const grpcSaveAITool: APIFunc<SaveAIToolRequest, AITool> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("SaveAITool", params)
-            .then(resolve)
+            .invoke("SaveAIToolV2", params)
+            .then((res: SaveAIToolV2Response) => {
+                if (res.IsSuccess) {
+                    resolve(res.AITool)
+                } else {
+                    if (!hiddenError) yakitNotify("error", "grpcSaveAITool 失败: " + res.Message)
+                    reject(res.Message)
+                }
+            })
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", "grpcSaveAITool 失败:" + err)
                 reject(err)

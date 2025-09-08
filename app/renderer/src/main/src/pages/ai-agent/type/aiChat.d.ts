@@ -558,6 +558,11 @@ export interface SaveAIToolRequest {
     ToolPath: string
     Keywords: string[]
 }
+export interface SaveAIToolV2Response {
+    IsSuccess: boolean
+    Message: string
+    AITool: AITool
+}
 export interface UpdateAIToolRequest extends SaveAIToolRequest {
     ID: number
 }
