@@ -1217,8 +1217,6 @@ const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props)
         valuePropName: "disposalData",
         trigger: "setDisposalData"
     })
-    console.log("disposalData:", disposalData)
-
     const onDeleteSSARiskDisposals = useMemoizedFn((id: number) => {
         apiDeleteSSARiskDisposals({Filter: {ID: [id]}})
             .then(() => {
