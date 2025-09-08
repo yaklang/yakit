@@ -36,6 +36,18 @@ export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMess
     }
 }
 
+/** 判断接口请求参数里，是否自动继续执行 review 操作 */
+export const isAutoContinueReview = (getFunc?: () => AIStartParams | undefined) => {
+    try {
+        if (getFunc) {
+            const request = getFunc()
+            return request ? request.ReviewPolicy === "yolo" : false
+        }
+        return false
+    } catch (error) {
+        return false
+    }
+}
 /** 不跳过 review 的数据类型 */
 export const noSkipReviewTypes = (type: string) => {
     return ["require_user_interactive"].includes(type)

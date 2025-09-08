@@ -1,4 +1,11 @@
-import {AIChatMessage, AIInputEvent, AIOutputEvent, AIStartParams} from "@/pages/ai-agent/type/aiChat"
+import {
+    AIChatMessage,
+    AIChatReview,
+    AIChatReviewExtra,
+    AIInputEvent,
+    AIOutputEvent,
+    AIStartParams
+} from "@/pages/ai-agent/type/aiChat"
 
 /** 公共 hoos 事件 */
 interface UseHookBaseEvents {
@@ -25,7 +32,9 @@ export interface UseExecCardParams {
     pushLog: (log: AIChatMessage.Log) => void
 }
 
-export type UseExecCardState = AIChatMessage.AIInfoCard[]
+export interface UseExecCardState {
+    card: AIChatMessage.AIInfoCard[]
+}
 export interface UseExecCardEvents extends UseHookBaseEvents {}
 // #endregion
 
@@ -36,7 +45,7 @@ export interface UseCasualChatParams {
     /** 获取流接口请求参数 */
     getRequest: () => AIStartParams | undefined
     /** 触发 review-relaese 后的回调事件 */
-    onReviewRelease: (id: string) => voud
+    onReviewRelease?: (id: string) => voud
 }
 
 export interface UseCasualChatState {
@@ -50,12 +59,48 @@ export interface UseCasualChatEvents extends UseHookBaseEvents {
 }
 // #endregion
 
+// #region useTaskChat相关定义
+export interface UseTaskChatParams {
+    /** 获取流接口请求参数 */
+    getRequest: () => AIStartParams | undefined
+    /** 将数据存入日志信息队列中 */
+    pushLog: (log: AIChatMessage.Log) => void
+    /** review 触发回调事件 */
+    onReview?: (data: AIChatReview) => void
+    /** plan_review 补充数据 */
+    onReviewExtra?: (data: AIChatReviewExtra) => void
+    /** 触发 review-relaese 后的回调事件 */
+    onReviewRelease?: (id: string) => voud
+}
+
+export interface UseTaskChatState {
+    /** 任务对话的 id */
+    coordinatorId: string
+    /** 正在执行的任务列表 */
+    plan: AIChatMessage.PlanTask[]
+    /** 流式输出 */
+    streams: Record<string, AIChatMessage.AITaskStreamOutput[]>
+}
+export interface UseTaskChatEvents extends UseHookBaseEvents {
+    handleSetCoordinatorId: (id: string) => void
+    handleSend: (request: AIInputEvent, cb?: () => void) => void
+    /** 获取原始任务列表树 */
+    fetchPlanTree: () => AIChatMessage.PlanTask | undefined
+    /** 接口关闭后的后续执行逻辑 */
+    handleCloseGrpc: () => void
+}
+// #endregion
+
 // #region useChatIPC相关定义
 export interface UseChatIPCParams {
+    /** 任务规划的 review 事件 */
+    onTaskReview?: (data: AIChatReview) => void
+    /** 任务规划中 plan_review 事件的补充数据 */
+    onTaskReviewExtra?: (data: AIChatReviewExtra) => void
     /** 主动 review-release 的回调事件 */
-    onReviewRelease: (type: "casual" | "task", id: string) => void
+    onReviewRelease?: (type: "casual" | "task", id: string) => void
     /** 接口结束断开的回调事件 */
-    onEnd: () => void
+    onEnd?: () => void
 }
 
 export interface UseChatIPCState {
@@ -69,6 +114,8 @@ export interface UseChatIPCState {
     aiPerfData: UseAIPerfDataState
     /** 自由对话相关数据 */
     casualChat: UseCasualChatState
+    /** 任务规划相关数据 */
+    taskChat: UseTaskChatState
 }
 export interface UseChatIPCEvents {
     /** 获取当前执行接口流的唯一标识符 */
