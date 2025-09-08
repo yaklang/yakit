@@ -62,6 +62,7 @@ export interface SSARiskDisposalData {
     CreatedAt: number
     UpdatedAt: number
     RiskId: number
+    TaskName: string
 }
 
 export interface GetSSARiskDisposalResponse {
