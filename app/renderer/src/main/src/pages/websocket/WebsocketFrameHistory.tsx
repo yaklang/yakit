@@ -18,6 +18,7 @@ import classNames from "classnames"
 import styles from "./WebsocketFrameHistory.module.scss"
 import oneDarkPro from "react-hex-editor/themes/oneDarkPro"
 import {useTheme} from "@/hook/useTheme"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -45,6 +46,7 @@ export interface WebsocketFlowParams {
 
 export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props) => {
     const {websocketHash} = props
+    const {t, i18n} = useI18nNamespaces(["history", "yakitUi"])
 
     /** ---------- 表格数据+逻辑 Start ---------- */
     const initLoading = useRef<boolean>(false)
@@ -174,10 +176,10 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
 
     return (
         <YakitCard
-            title={"Websocket 数据帧"}
+            title={t("WebsocketFrameHistory.websocket_data_frame")}
             bodyStyle={{padding: 0}}
             extra={
-                <Tooltip title='刷新' placement='top'>
+                <Tooltip title={t("YakitButton.refresh")} placement='top'>
                     <YakitButton
                         type='text2'
                         icon={<OutlineRefreshIcon />}
@@ -190,20 +192,26 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
         >
             <div className={styles["websocket-frame-history"]}>
                 <div className={styles["table-header"]}>
-                    <div style={{width: 50}} className={classNames(styles["header-cell"], styles["base-cell"])}>
-                        序号
+                    <div
+                        style={{width: i18n.language === "zh" ? 50 : 80}}
+                        className={classNames(styles["header-cell"], styles["base-cell"])}
+                    >
+                        {t("WebsocketFrameHistory.order")}
                     </div>
-                    <div style={{width: 100}} className={classNames(styles["header-cell"], styles["base-cell"])}>
-                        数据方向
+                    <div
+                        style={{width: i18n.language === "zh" ? 100 : 150}}
+                        className={classNames(styles["header-cell"], styles["base-cell"])}
+                    >
+                        {t("WebsocketFrameHistory.data_direction")}
                     </div>
                     <div style={{width: 97}} className={classNames(styles["header-cell"], styles["base-cell"])}>
                         Type
                     </div>
                     <div className={classNames(styles["header-cell"], styles["base-cell"], styles["flex-cell"])}>
-                        预览
+                        {t("WebsocketFrameHistory.preview")}
                     </div>
                     <div style={{width: 63}} className={classNames(styles["header-cell"], styles["base-cell"])}>
-                        操作
+                        {t("WebsocketFrameHistory.action")}
                     </div>
                 </div>
 
@@ -239,9 +247,13 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                                 className={classNames(styles["tr-cell"], styles["base-cell"])}
                                             >
                                                 {FromServer ? (
-                                                    <YakitTag className={styles["cell-tag-style"]}>服务端响应</YakitTag>
+                                                    <YakitTag className={styles["cell-tag-style"]}>
+                                                        {t("WebsocketFrameHistory.server_response")}
+                                                    </YakitTag>
                                                 ) : (
-                                                    <YakitTag className={styles["cell-tag-style"]}>客户端请求</YakitTag>
+                                                    <YakitTag className={styles["cell-tag-style"]}>
+                                                        {t("WebsocketFrameHistory.client_request")}
+                                                    </YakitTag>
                                                 )}
                                             </div>
                                             <div
@@ -288,7 +300,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                                         handleOpenInfoDetail(data)
                                                     }}
                                                 >
-                                                    详情
+                                                    {t("YakitButton.detail")}
                                                 </YakitButton>
                                             </div>
                                         </div>
@@ -302,7 +314,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                 </div>
                             )}
                             {!loading && !hasMore.current && (
-                                <div className={styles["table-footer-empty"]}>暂无数据</div>
+                                <div className={styles["table-footer-empty"]}>{t("YakitEmpty.noData")}</div>
                             )}
                         </div>
                     </YakitSpin>
@@ -311,7 +323,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
 
             <YakitModal
                 type='white'
-                title='数据帧详情'
+                title={t("WebsocketFrameHistory.data_frame_details")}
                 centered={true}
                 width={"60%"}
                 footer={null}

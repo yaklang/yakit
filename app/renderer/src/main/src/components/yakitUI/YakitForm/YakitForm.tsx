@@ -145,7 +145,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     setContent(res)
                 })
                 .catch((err) => {
-                    failed(t("YakitNotification.dataFetchFailed") + err)
+                    failed(t("YakitNotification.dataFetchFailed", {colon: true}) + err)
                     setContent("")
                 })
                 .finally(() => setTimeout(() => setUploadLoading(false), 200))

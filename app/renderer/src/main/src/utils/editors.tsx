@@ -50,6 +50,7 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {Theme, useTheme} from "@/hook/useTheme"
 import {applyYakitMonacoTheme} from "./monacoSpec/theme"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -585,6 +586,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         downstreamProxyStr = "",
         noShowHex = true
     } = props
+    const {t, i18n} = useI18nNamespaces(["history"])
     const [strValue, setStrValue] = useState(originValue)
     const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array()) // 只有切换到hex时才会用这个值，目前切换得时候会把最新得编辑器中得值赋值到该变量里面
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
@@ -811,14 +813,14 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                 },
                                 {
                                     value: "render",
-                                    label: "渲染"
+                                    label: t("NewHTTPPacketEditor.render")
                                 }
                             ])
                         } else {
                             setTypeOptions([
                                 {
                                     value: "beautify",
-                                    label: "美化"
+                                    label: t("NewHTTPPacketEditor.beautify")
                                 },
                                 {
                                     value: "hex",
@@ -826,7 +828,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                 },
                                 {
                                     value: "render",
-                                    label: "渲染"
+                                    label: t("NewHTTPPacketEditor.render")
                                 }
                             ])
                         }
@@ -842,7 +844,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             setTypeOptions([
                                 {
                                     value: "beautify",
-                                    label: "美化"
+                                    label: t("NewHTTPPacketEditor.beautify")
                                 },
                                 {
                                     value: "hex",
@@ -864,7 +866,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     setTypeOptions([
                         {
                             value: "beautify",
-                            label: "美化"
+                            label: t("NewHTTPPacketEditor.beautify")
                         },
                         {
                             value: "hex",
@@ -876,7 +878,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         } else {
             setTypeOptions([])
         }
-    }, [originValue, originalPackage])
+    }, [originValue, originalPackage, i18n.language])
 
     const isShowBeautifyRenderRef = useRef<boolean>()
     useEffect(() => {
@@ -1005,7 +1007,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                         openCompareModal(dataCompare)
                                     }}
                                 >
-                                    对比
+                                    {t("NewHTTPPacketEditor.compare")}
                                 </YakitButton>
                             )}
                             {props.sendToWebFuzzer && (
@@ -1030,7 +1032,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             )}
                             {showDefaultExtra && (
                                 <>
-                                    <Tooltip title={"不自动换行"}>
+                                    <Tooltip title={t("NewHTTPPacketEditor.noWrap")}>
                                         <YakitButton
                                             size={"small"}
                                             type={noWordwrap ? "text" : "primary"}
@@ -1042,7 +1044,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     </Tooltip>
                                     {!props.noSetIngEditor && (
                                         <YakitPopover
-                                            title={"配置编辑器"}
+                                            title={t("NewHTTPPacketEditor.configureEditor")}
                                             content={
                                                 <>
                                                     <Form
@@ -1051,17 +1053,17 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                         }}
                                                         size={"small"}
                                                         layout={"horizontal"}
-                                                        wrapperCol={{span: 14}}
-                                                        labelCol={{span: 10}}
+                                                        wrapperCol={{span: 16}}
+                                                        labelCol={{span: 8}}
                                                     >
                                                         {(fontSize || 0) > 0 && (
                                                             <SelectOne
                                                                 formItemStyle={{marginBottom: 4}}
-                                                                label={"字号"}
+                                                                label={t("NewHTTPPacketEditor.fontSize")}
                                                                 data={[
-                                                                    {text: "小", value: 12},
-                                                                    {text: "中", value: 16},
-                                                                    {text: "大", value: 20}
+                                                                    {text: t("NewHTTPPacketEditor.small"), value: 12},
+                                                                    {text: t("NewHTTPPacketEditor.medium"), value: 16},
+                                                                    {text: t("NewHTTPPacketEditor.large"), value: 20}
                                                                 ]}
                                                                 oldTheme={false}
                                                                 value={fontSize}
@@ -1070,7 +1072,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                                 }}
                                                             />
                                                         )}
-                                                        <Form.Item label={"全屏"} style={{marginBottom: 4}}>
+                                                        <Form.Item
+                                                            label={t("NewHTTPPacketEditor.fullScreen")}
+                                                            style={{marginBottom: 4}}
+                                                        >
                                                             <YakitButton
                                                                 size={"small"}
                                                                 type={"text"}
@@ -1078,7 +1083,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                                 disabled={props.disableFullscreen}
                                                                 onClick={() => {
                                                                     showYakitDrawer({
-                                                                        title: "全屏",
+                                                                        title: t("NewHTTPPacketEditor.fullScreen"),
                                                                         width: "100%",
                                                                         content: (
                                                                             <div
@@ -1101,7 +1106,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                         </Form.Item>
                                                         {(props.language === "http" || !isResponse) && (
                                                             <Form.Item
-                                                                label='是否显示换行符'
+                                                                label={t("NewHTTPPacketEditor.showLineBreaks")}
                                                                 style={{marginBottom: 4, lineHeight: "16px"}}
                                                             >
                                                                 <YakitSwitch
@@ -1122,7 +1127,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                             onVisibleChange={(v) => {
                                                 setPopoverVisible(v)
                                             }}
-                                            overlayInnerStyle={{width: 300}}
+                                            overlayInnerStyle={{width: 350}}
                                             visible={popoverVisible}
                                         >
                                             <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />

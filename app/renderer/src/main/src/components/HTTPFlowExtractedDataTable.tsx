@@ -13,6 +13,7 @@ import {HistoryHighLightText} from "./HTTPFlowDetail"
 import {ColumnsType} from "antd/lib/table"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {CopyComponents} from "./yakitUI/YakitTag/YakitTag"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {Text} = Typography
 
 export interface HTTPFlowExtractedDataTableRefProps {
@@ -58,6 +59,7 @@ export interface QueryMITMRuleExtractedDataRequest extends QueryGeneralRequest {
 }
 
 export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp> = React.forwardRef((props, ref) => {
+    const {t, i18n} = useI18nNamespaces(["history"])
     const [pagination, setPagination] = useState<Paging>(genDefaultPagination())
     const [loading, setLoading] = useState(false)
     const [data, setData] = useControllableValue<HTTPFlowExtractedData[]>(props, {
@@ -220,7 +222,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
 
     const columns: ColumnsType<HTTPFlowExtractedData> = [
         {
-            title: "规则名",
+            title: t("HTTPFlowExtractedDataTable.ruleName"),
             ellipsis: {
                 showTitle: false
             },
@@ -299,7 +301,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             }
         },
         {
-            title: "规则数据",
+            title: t("HTTPFlowExtractedDataTable.ruleData"),
             ellipsis: {
                 showTitle: false
             },
@@ -317,19 +319,19 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             )
         },
         {
-            title: "操作",
+            title: t("HTTPFlowExtractedDataTable.action"),
             width: 55,
             align: "center",
             render: (i: HTTPFlowExtractedData, record) => {
                 return (
-                    <Tooltip title='定位'>
+                    <Tooltip title={t("HTTPFlowExtractedDataTable.locate")}>
                         <OutlinePositionIcon
                             className={classNames(styles["position-icon"], {
                                 [styles["position-icon-active"]]: currId == i.Id
                             })}
                             onClick={() => {
                                 if (props.invalidForUTF8Request || props.InvalidForUTF8Response) {
-                                    yakitNotify("info", "含有二进制流的数据包无法定位")
+                                    yakitNotify("info", t("HTTPFlowExtractedDataTable.binaryStreamLocateError"))
                                     return
                                 }
                                 setCurrId(+i.Id)

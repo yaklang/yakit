@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useCallback, FC} from "react"
-import {Button, Card, Col, Descriptions, Empty, PageHeader, Row, Space, Tag, Tooltip} from "antd"
+import {Button, Card, Col, Descriptions, PageHeader, Row, Space, Tooltip} from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
 import {IMonacoEditor, NewHTTPPacketEditor, RenderTypeOptionVal} from "../utils/editors"
@@ -47,6 +47,7 @@ import {HighLightText} from "./yakitUI/YakitEditor/YakitEditorType"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {useSelectionByteCount} from "./yakitUI/YakitEditor/useSelectionByteCount"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -98,6 +99,7 @@ export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
 }
 
 export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDetail) => {
+    const {t, i18n} = useI18nNamespaces(["history"])
     const [response, setResponse] = useState<FuzzerResponse>()
     const [index, setIndex] = useState<number>()
     const [id, setId] = useState(0)
@@ -122,7 +124,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
                 setId(d.Id)
             })
             .catch((e) => {
-                failed(`分析参数失败: ${e}`)
+                failed(`${t("FuzzerResponseToHTTPFlowDetail.analyzeParameterFailed")}${e}`)
             })
     }, [response])
 
@@ -154,6 +156,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
 }
 
 export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
+    const {t, i18n} = useI18nNamespaces(["history"])
     const [flow, setFlow] = useState<HTTPFlow>()
     const [loading, setLoading] = useState(false)
 
@@ -223,16 +226,16 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                 menu: [
                     {
                         key: "code-compare",
-                        label: "发送到对比器",
+                        label: t("HTTPFlowTable.RowContextMenu.sendToComparer"),
                         children: [
                             {
                                 key: "code-compare-left",
-                                label: "发送到对比器左侧",
+                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft"),
                                 disabled: [false, true, false][compareState]
                             },
                             {
                                 key: "code-compare-right",
-                                label: "发送到对比器右侧",
+                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight"),
                                 disabled: [false, false, true][compareState]
                             }
                         ]
@@ -274,12 +277,16 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     }
 
     return (
-        <YakitSpin spinning={loading} style={{width: "100%", marginBottom: 24}} tip='正在分析详细参数'>
+        <YakitSpin
+            spinning={loading}
+            style={{width: "100%", marginBottom: 24}}
+            tip={t("HTTPFlowDetail.analyzingDetailedParameters")}
+        >
             {flow ? (
                 <>
                     {props.noHeader ? undefined : (
                         <PageHeader
-                            title={`请求详情`}
+                            title={t("HTTPFlowDetail.requestDetails")}
                             subTitle={`${props.id}${
                                 (props.payloads || []).length > 0 ? `  Payload: ${props.payloads?.join(",")}` : ""
                             }`}
@@ -287,7 +294,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             extra={
                                 props.fetchRequest ? (
                                     <Space>
-                                        <Tooltip title={"上一个请求"}>
+                                        <Tooltip title={t("HTTPFlowDetail.previousRequest")}>
                                             <YakitButton
                                                 type='text'
                                                 disabled={!!props.isFront}
@@ -297,7 +304,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 }}
                                             ></YakitButton>
                                         </Tooltip>
-                                        <Tooltip title={"下一个请求"}>
+                                        <Tooltip title={t("HTTPFlowDetail.nextRequest")}>
                                             <YakitButton
                                                 type='text'
                                                 disabled={!!props.isBehind}
@@ -321,10 +328,10 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             size={"small"}
                             className={classNames(styles["detail-header-info"], "yakit-descriptions")}
                         >
-                            <Descriptions.Item key={"method"} span={1} label={"HTTP 方法"}>
+                            <Descriptions.Item key={"method"} span={1} label={t("HTTPFlowDetail.hTTPMethod")}>
                                 <YakitTag color='blue'>{flow.Method}</YakitTag>
                             </Descriptions.Item>
-                            <Descriptions.Item key={"url"} span={3} label={"请求 URL"}>
+                            <Descriptions.Item key={"url"} span={3} label={t("HTTPFlowDetail.requestURL")}>
                                 <div style={{display: "flex"}}>
                                     <Tooltip title={flow.Url} overlayInnerStyle={{maxHeight: 300, overflowY: "auto"}}>
                                         <span className='content-ellipsis'>{flow.Url}</span>
@@ -343,7 +350,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             <Descriptions.Item key={"status"} span={1} label={"StatusCode"}>
                                 <YakitTag color='blue'>{flow.StatusCode}</YakitTag>
                             </Descriptions.Item>
-                            <Descriptions.Item key={"size"} span={1} label={"Body大小"}>
+                            <Descriptions.Item key={"size"} span={1} label={t("HTTPFlowDetail.bodySize")}>
                                 <YakitTag color='blue'>{flow.BodySizeVerbose}</YakitTag>
                             </Descriptions.Item>
                             <Descriptions.Item key={"type"} span={1} label={"Content-Type"}>
@@ -366,7 +373,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             {flow.GetParams.length > 0 || flow.PostParams.length > 0 || flow.CookieParams.length > 0 ? (
                                 <PluginTabs>
                                     {flow.GetParams.length > 0 && (
-                                        <TabPane key={"get"} tab={"GET 参数"}>
+                                        <TabPane key={"get"} tab={t("HTTPFlowDetail.gETParameters")}>
                                             <FuzzableParamList
                                                 data={flow.GetParams}
                                                 sendToWebFuzzer={() => {
@@ -376,7 +383,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                         </TabPane>
                                     )}
                                     {flow.PostParams.length > 0 && (
-                                        <TabPane key={"post"} tab={"POST 参数"}>
+                                        <TabPane key={"post"} tab={t("HTTPFlowDetail.pOSTParameters")}>
                                             <FuzzableParamList
                                                 data={flow.PostParams}
                                                 sendToWebFuzzer={() => {
@@ -386,7 +393,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                         </TabPane>
                                     )}
                                     {flow.CookieParams.length > 0 && (
-                                        <TabPane key={"cookie"} tab={"Cookie 参数"}>
+                                        <TabPane key={"cookie"} tab={t("HTTPFlowDetail.cookieParameters")}>
                                             <FuzzableParamList
                                                 data={flow.CookieParams}
                                                 sendToWebFuzzer={() => {
@@ -405,7 +412,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                 <Card
                                     title={
                                         <>
-                                            原始 HTTP 请求
+                                            {t("HTTPFlowDetail.rawHTTPRequest")}
                                             {reqByte > 0 && (
                                                 <YakitTag style={{marginLeft: 8}}>{reqByte} bytes</YakitTag>
                                             )}
@@ -460,7 +467,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                 <Card
                                     title={
                                         <>
-                                            原始 HTTP 响应
+                                            {t("HTTPFlowDetail.rawHTTPResponse")}
                                             {resByte > 0 && (
                                                 <YakitTag style={{marginLeft: 8}}>{resByte} bytes</YakitTag>
                                             )}
@@ -645,6 +652,7 @@ export interface HistoryHighLightText extends HighLightText {
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const {id, selectedFlow, refresh, analyzedIds, showHeaderInfo = false, showFlod = true} = props
+    const {t, i18n} = useI18nNamespaces(["history", "yakitUi"])
     const ref = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(ref)
     const [flow, setFlow, getFlow] = useGetSetState<HTTPFlow>()
@@ -802,7 +810,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 }
             })
             .catch((e) => {
-                failed("获取规则提取数据失败")
+                failed(t("HTTPFlowDetailMini.getRuleExtractDataFailed"))
             })
             .finally(() => {
                 if ((i.Domains || []).length > 0 || (i.RootDomains || []).length > 0) {
@@ -845,10 +853,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             })
             .then((ExportFilePath: string) => {
                 openABSFileLocated(ExportFilePath)
-                yakitNotify("success", "导出成功")
+                yakitNotify("success", t("YakitNotification.exportSuccess"))
             })
             .catch((err) => {
-                yakitNotify("error", "导出失败：" + err)
+                yakitNotify("error", t("YakitNotification.exportFailed", {colon: true}) + err)
             })
     })
     const disablePrev = useMemo(() => {
@@ -945,7 +953,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             </Tooltip>
                         </div>
                     </Descriptions.Item>
-                    <Descriptions.Item key={"ContentType"} span={1} label={"响应类型"}>
+                    <Descriptions.Item key={"ContentType"} span={1} label={t("HTTPFlowDetailMini.responseType")}>
                         {contentTypeFixed}
                     </Descriptions.Item>
                 </Descriptions>
@@ -972,7 +980,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             className={classNames(styles["http-history-icon-box"])}
                                             style={{height: 32}}
                                         >
-                                            <Tooltip placement='top' title='向左展开'>
+                                            <Tooltip placement='top' title={t("HTTPFlowDetailMini.expandLeft")}>
                                                 <SideBarCloseIcon
                                                     className={styles["fold-icon"]}
                                                     onClick={() => {
@@ -1000,7 +1008,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                                         }}
                                                                         key={i}
                                                                     >
-                                                                        {infoTypeVerbose(i)}
+                                                                        {infoTypeVerbose(i, t)}
                                                                     </YakitButton>
                                                                 )
                                                             })}
@@ -1014,7 +1022,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     extraEnd={
                                                         <div className={classNames(styles["http-history-fold-box"])}>
                                                             <div className={styles["http-history-icon-box"]}>
-                                                                <Tooltip placement='top' title='向右收起'>
+                                                                <Tooltip
+                                                                    placement='top'
+                                                                    title={t("HTTPFlowDetailMini.collapseRight")}
+                                                                >
                                                                     <SideBarOpenIcon
                                                                         className={styles["fold-icon"]}
                                                                         onClick={() => {
@@ -1076,12 +1087,12 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                                                 }}
                                                                                 key={i}
                                                                             >
-                                                                                {infoTypeVerbose(i)}
+                                                                                {infoTypeVerbose(i, t)}
                                                                             </YakitButton>
                                                                         )
                                                                     })}
                                                                 </Button.Group>
-                                                                <Tooltip title={"上一个规则"}>
+                                                                <Tooltip title={t("HTTPFlowDetailMini.previousRule")}>
                                                                     <YakitButton
                                                                         type='text'
                                                                         size='small'
@@ -1094,7 +1105,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                                         }}
                                                                     ></YakitButton>
                                                                 </Tooltip>
-                                                                <Tooltip title={"下一个规则"}>
+                                                                <Tooltip title={t("HTTPFlowDetailMini.nextRule")}>
                                                                     <YakitButton
                                                                         type='text'
                                                                         size='small'
@@ -1115,7 +1126,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                                     size='small'
                                                                     onClick={exportMITMRuleExtractedData}
                                                                 >
-                                                                    导出
+                                                                    {t("YakitButton.export")}
                                                                 </YakitButton>
                                                                 <div
                                                                     className={classNames(
@@ -1123,7 +1134,12 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                                     )}
                                                                 >
                                                                     <div className={styles["http-history-icon-box"]}>
-                                                                        <Tooltip placement='top' title='向右收起'>
+                                                                        <Tooltip
+                                                                            placement='top'
+                                                                            title={t(
+                                                                                "HTTPFlowDetailMini.collapseRight"
+                                                                            )}
+                                                                        >
                                                                             <SideBarOpenIcon
                                                                                 className={styles["fold-icon"]}
                                                                                 onClick={() => {
@@ -1151,7 +1167,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             <div className={styles["empty-box"]}>
                                                 <div className={classNames(styles["empty-box-fold-box"])}>
                                                     <div className={styles["empty-box-icon-box"]}>
-                                                        <Tooltip placement='top' title='向右收起'>
+                                                        <Tooltip
+                                                            placement='top'
+                                                            title={t("HTTPFlowDetailMini.collapseRight")}
+                                                        >
                                                             <SideBarOpenIcon
                                                                 className={styles["fold-icon"]}
                                                                 onClick={() => {
@@ -1165,7 +1184,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                         </Tooltip>
                                                     </div>
                                                 </div>
-                                                <YakitEmpty title='暂无数据' />
+                                                <YakitEmpty title={t("YakitEmpty.noData")} />
                                             </div>
                                         )}
                                     </div>
@@ -1218,6 +1237,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         noPacketModifier = false,
         noOpenPacketNewWindow = false
     } = props
+    const {t, i18n} = useI18nNamespaces(["history"])
 
     // 编辑器发送到对比器
     const {compareState, setCompareLeft, setCompareRight} = useHttpFlowStore()
@@ -1227,16 +1247,16 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 menu: [
                     {
                         key: "code-compare",
-                        label: "发送到对比器",
+                        label: t("HTTPFlowTable.RowContextMenu.sendToComparer"),
                         children: [
                             {
                                 key: "code-compare-left",
-                                label: "发送到对比器左侧",
+                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft"),
                                 disabled: [false, true, false][compareState]
                             },
                             {
                                 key: "code-compare-right",
-                                label: "发送到对比器右侧",
+                                label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight"),
                                 disabled: [false, false, true][compareState]
                             }
                         ]
@@ -1454,8 +1474,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     key='intact-rsp'
                     menu={{
                         data: [
-                            {key: "tooLargeResponseHeaderFile", label: "查看Header"},
-                            {key: "tooLargeResponseBodyFile", label: "查看Body"}
+                            {
+                                key: "tooLargeResponseHeaderFile",
+                                label: t("HTTPFlowDetailRequestAndResponse.viewHeader")
+                            },
+                            {key: "tooLargeResponseBodyFile", label: t("HTTPFlowDetailRequestAndResponse.viewBody")}
                         ],
                         onClick: ({key}) => {
                             switch (key) {
@@ -1466,7 +1489,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                             if (flag) {
                                                 openABSFileLocated(flow.TooLargeResponseHeaderFile)
                                             } else {
-                                                failed("目标文件已不存在!")
+                                                failed(t("HTTPFlowDetailRequestAndResponse.targetFileNotExist"))
                                             }
                                         })
                                         .catch(() => {})
@@ -1478,7 +1501,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                             if (flag) {
                                                 openABSFileLocated(flow.TooLargeResponseBodyFile)
                                             } else {
-                                                failed("目标文件已不存在!")
+                                                failed(t("HTTPFlowDetailRequestAndResponse.targetFileNotExist"))
                                             }
                                         })
                                         .catch(() => {})
@@ -1494,7 +1517,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     }}
                 >
                     <YakitButton type='primary' size='small'>
-                        完整响应
+                        {t("HTTPFlowDetailRequestAndResponse.fullResponse")}
                     </YakitButton>
                 </YakitDropdownMenu>
             )
@@ -1567,7 +1590,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         <YakitResizeBox
             firstNode={() => {
                 if (flow === undefined) {
-                    return <Empty description={"选择想要查看的 HTTP 记录请求"} />
+                    return <YakitEmpty title={t("HTTPFlowDetailRequestAndResponse.selectHttpRecordToView")} />
                 }
                 if (flow?.IsWebsocket) {
                     return (
@@ -1602,7 +1625,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                                 }
                                             }}
                                         >
-                                            请求
+                                            {t("HTTPFlowDetailRequestAndResponse.request")}
                                         </YakitCheckableTag>
                                         <YakitCheckableTag
                                             checked={resType === "request"}
@@ -1612,7 +1635,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                                 }
                                             }}
                                         >
-                                            原始请求
+                                            {t("HTTPFlowDetailRequestAndResponse.rawRequest")}
                                         </YakitCheckableTag>
                                     </div>
                                 )
@@ -1662,7 +1685,13 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         // 这个为了解决不可见字符的问题
                         defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
-                        extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
+                        extra={
+                            flow.InvalidForUTF8Request ? (
+                                <YakitTag color={"red"}>
+                                    {t("HTTPFlowDetailRequestAndResponse.containsBinaryStream")}
+                                </YakitTag>
+                            ) : undefined
+                        }
                         defaultSearchKeyword={search}
                         editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_REQUEST'
                         extraEditorProps={{
@@ -1671,8 +1700,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         dataCompare={{
                             rightCode: beforeResValue,
                             leftCode: resType === "request" ? flow?.RequestString || "" : undefined,
-                            leftTitle: "请求",
-                            rightTitle: "原始请求"
+                            leftTitle: t("HTTPFlowDetailRequestAndResponse.request"),
+                            rightTitle: t("HTTPFlowDetailRequestAndResponse.rawRequest")
                         }}
                         onEditor={(Editor) => {
                             setReqEditor(Editor)
@@ -1702,7 +1731,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             firstMinSize={300}
             secondNode={() => {
                 if (flow === undefined) {
-                    return <Empty description={"选择想要查看的 HTTP 记录响应"} />
+                    return <YakitEmpty title={t("HTTPFlowDetailRequestAndResponse.selectHttpRecordResponseToView")} />
                 }
                 if (flow?.IsWebsocket) {
                     return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""} />
@@ -1742,7 +1771,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                                 }
                                             }}
                                         >
-                                            响应
+                                            {t("HTTPFlowDetailRequestAndResponse.response")}
                                         </YakitCheckableTag>
                                         <YakitCheckableTag
                                             checked={rspType === "response"}
@@ -1752,7 +1781,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                                 }
                                             }}
                                         >
-                                            原始响应
+                                            {t("HTTPFlowDetailRequestAndResponse.rawResponse")}
                                         </YakitCheckableTag>
                                     </div>
                                 ]
@@ -1761,7 +1790,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             if (flow?.IsTooLargeResponse) {
                                 titleEle.push(
                                     <YakitTag style={{marginLeft: 8}} color='danger' key={"title-IsTooLargeResponse"}>
-                                        超大响应
+                                        {t("HTTPFlowDetailRequestAndResponse.oversizedResponse")}
                                     </YakitTag>
                                 )
                             }
@@ -1784,7 +1813,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                             emiter.emit("onEditTag", JSON.stringify({id: flow.Id, historyId}))
                                         }}
                                     >
-                                        编辑tag
+                                        {t("HTTPFlowDetailRequestAndResponse.editTag")}
                                     </YakitButton>
                                 )}
                                 <CodingPopover
@@ -1816,8 +1845,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         dataCompare={{
                             rightCode: beforeRspValue,
                             leftCode: rspType === "response" ? flow?.ResponseString || "" : undefined,
-                            leftTitle: "响应",
-                            rightTitle: "原始响应"
+                            leftTitle: t("HTTPFlowDetailRequestAndResponse.response"),
+                            rightTitle: t("HTTPFlowDetailRequestAndResponse.rawResponse")
                         }}
                         onEditor={(Editor) => {
                             setResEditor(Editor)
@@ -1848,6 +1877,7 @@ interface CodingPopoverProps {
 }
 export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
     const {originValue, codeKey, onSetCodeKey, onSetCodeValue, onSetCodeLoading} = props
+    const {t, i18n} = useI18nNamespaces(["history"])
     const [codeShow, setCodeShow] = useState<boolean>(false)
 
     useDebounceEffect(
@@ -1946,21 +1976,21 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
                 type={codeKey !== "" ? "primary" : "outline2"}
                 onClick={(e) => e.preventDefault()}
             >
-                编码
+                {t("CodingPopover.encoding")}
                 {codeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
             </YakitButton>
         </YakitPopover>
     )
 }
 
-function infoTypeVerbose(i: HTTPFlowInfoType) {
+function infoTypeVerbose(i: HTTPFlowInfoType, t: (text: string) => string) {
     switch (i) {
         case "domains":
-            return "域名 "
+            return t("HTTPFlowDetailMini.domain")
         case "json":
-            return "对象 "
+            return t("HTTPFlowDetailMini.object")
         case "rules":
-            return "规则 "
+            return t("HTTPFlowDetailMini.rule")
         default:
             return "-"
     }

@@ -55,6 +55,7 @@ import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutK
 import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
 import {v4 as uuidv4} from "uuid"
 import {ShortcutKeyFocusType} from "@/utils/globalShortcutKey/events/global"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {RangePicker} = YakitDatePicker
 
 /**
@@ -140,6 +141,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         isHiddenLoadingUI = false,
         onRowDoubleClick
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const defItemHeight = useCreation(() => {
         if (size === "middle") return 32
         return 28
@@ -899,9 +901,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                         locale={locale}
                         size='small'
                         ranges={{
-                            "1分钟": [moment().subtract(1, "minute"), moment()],
-                            "1小时": [moment().subtract(1, "hours"), moment()],
-                            "1天": [moment().subtract(1, "day"), moment()]
+                            [t("YakitDatePicker.oneMinute")]: [moment().subtract(1, "minute"), moment()],
+                            [t("YakitDatePicker.oneHour")]: [moment().subtract(1, "hours"), moment()],
+                            [t("YakitDatePicker.oneDay")]: [moment().subtract(1, "day"), moment()]
                         }}
                         onChange={(time) => {
                             onDateTimeSearch(time as [Moment, Moment] | null, filterKey)
@@ -917,19 +919,19 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                             color='info'
                             onClick={() => onDateTimeSearch([moment().subtract(1, "minute"), moment()], filterKey)}
                         >
-                            1分钟
+                            {t("YakitDatePicker.oneMinute")}
                         </YakitTag>
                         <YakitTag
                             color='info'
                             onClick={() => onDateTimeSearch([moment().subtract(1, "hours"), moment()], filterKey)}
                         >
-                            1小时
+                            {t("YakitDatePicker.oneHour")}
                         </YakitTag>
                         <YakitTag
                             color='info'
                             onClick={() => onDateTimeSearch([moment().subtract(1, "day"), moment()], filterKey)}
                         >
-                            1天
+                            {t("YakitDatePicker.oneDay")}
                         </YakitTag>
                     </div>
                 </div>
@@ -1175,7 +1177,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                                 scroll.scrollBottom < 10 || list.length === 0
                                         })}
                                     >
-                                        暂无更多数据
+                                        {t("YakitEmpty.noMoreData")}
                                     </div>
                                 )}
                             </div>
@@ -1955,6 +1957,7 @@ export const TableVirtualResize = React.forwardRef(TableVirtualResizeFunction) a
 
 export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
     const {originalList, onSelect, value, filterProps, onClose, onQuery} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const {
         filterOptionRender,
         filtersSelectAll,
@@ -2046,7 +2049,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
                                         ? filterOptionRender(item.data)
                                         : item.data.label || item.data.value}
                                 </div>
-                            ))) || <div className={classNames(styles["no-data"])}>暂无数据</div>}
+                            ))) || <div className={classNames(styles["no-data"])}>{t("YakitEmpty.noData")}</div>}
                     </div>
                 </div>
             </div>
@@ -2146,7 +2149,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
                                         {checked && <CheckIcon className={styles["check-icon"]} />}
                                     </div>
                                 )
-                            })) || <div className={classNames(styles["no-data"])}>暂无数据</div>}
+                            })) || <div className={classNames(styles["no-data"])}>{t("YakitEmpty.noData")}</div>}
                     </div>
                     <FooterBottom onReset={onReset} onSure={onSure} />
                 </div>
@@ -2164,13 +2167,14 @@ interface FooterBottomProps {
 }
 export const FooterBottom: React.FC<FooterBottomProps> = React.memo((props) => {
     const {onReset, onSure, className} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     return (
         <div className={classNames(styles["select-footer"], className)}>
             <div className={classNames(styles["footer-bottom"], styles["select-reset"])} onClick={() => onReset()}>
-                重置
+                {t("YakitButton.reset")}
             </div>
             <div className={classNames(styles["footer-bottom"], styles["select-sure"])} onClick={() => onSure()}>
-                确定
+                {t("YakitButton.ok")}
             </div>
         </div>
     )
