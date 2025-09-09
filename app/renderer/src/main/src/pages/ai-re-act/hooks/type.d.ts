@@ -27,15 +27,15 @@ export interface UseAIPerfDataState {
 export interface UseAIPerfDataEvents extends UseHookBaseEvents {}
 // #endregion
 
-// #region useExecCard相关定义
-export interface UseExecCardParams {
+// #region useYakExecResult相关定义
+export interface UseYakExecResultParams {
     pushLog: (log: AIChatMessage.Log) => void
 }
 
-export interface UseExecCardState {
+export interface UseYakExecResultState {
     card: AIChatMessage.AIInfoCard[]
 }
-export interface UseExecCardEvents extends UseHookBaseEvents {}
+export interface UseYakExecResultEvents extends UseHookBaseEvents {}
 // #endregion
 
 // #region useCasualChat相关定义
@@ -93,6 +93,8 @@ export interface UseTaskChatEvents extends UseHookBaseEvents {
 
 // #region useChatIPC相关定义
 export interface UseChatIPCParams {
+    /** 出现任务规划的触发回调(id 是 coordinatorId) */
+    onTaskStart?: (id: string) => void
     /** 任务规划的 review 事件 */
     onTaskReview?: (data: AIChatReview) => void
     /** 任务规划中 plan_review 事件的补充数据 */
@@ -109,7 +111,7 @@ export interface UseChatIPCState {
     /** 执行日志 */
     logs: AIChatMessage.Log[]
     /** 插件输出的卡片数据 */
-    card: UseExecCardState
+    yakExecResult: UseYakExecResultState
     /** AI性能相关数据 */
     aiPerfData: UseAIPerfDataState
     /** 自由对话相关数据 */
