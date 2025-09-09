@@ -29,7 +29,8 @@ import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {GetReleaseEdition, PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
-import { YakEditorOptionShortcutKey } from "@/utils/globalShortcutKey/events/page/yakEditor"
+import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 const HTTP_PACKET_EDITOR_DisableUnicodeDecode = "HTTP_PACKET_EDITOR_DisableUnicodeDecode"
@@ -83,6 +84,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         onlyBasicMenu = false,
         ...restProps
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const {goAddNotepad} = useGoEditNotepad()
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
@@ -131,19 +133,21 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         let menuItems: OtherMenuListProps = {
             ...(contextMenu || {}),
             copyCURL: {
-                menu: [{key: "copy-as-curl", label: "复制 curl 命令"}],
+                menu: [{key: "copy-as-curl", label: t("YakitEditor.HTTPPacketYakitEditor.copyCurlCommand")}],
                 onRun: (editor, key) => {
                     switch (key) {
                         case "copy-as-curl":
                             const text = editor.getModel()?.getValue() || ""
                             if (!text) {
-                                info("数据包为空")
+                                info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
                                 return
                             }
                             execCodec("packet-to-curl", text, undefined, undefined, undefined, [
                                 {Key: "https", Value: defaultHttps ? "true" : ""}
                             ]).then((data) => {
-                                setClipboardText(data, {hintText: "复制到剪贴板"})
+                                setClipboardText(data, {
+                                    hintText: t("YakitEditor.HTTPPacketYakitEditor.copyToClipboard")
+                                })
                             })
                             return
                         default:
@@ -155,7 +159,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "copyUrl",
-                        label: "复制 URL"
+                        label: t("YakitEditor.HTTPPacketYakitEditor.copyUrl")
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -170,21 +174,21 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "csrfpoc",
-                        label: "复制为 CSRF PoC"
+                        label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPoc")
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
                     try {
                         const text = editor.getModel()?.getValue() || ""
                         if (!text) {
-                            info("数据包为空")
+                            info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
                             return
                         }
                         generateCSRFPocByRequest(StringToUint8Array(text, "utf8"), defaultHttps, (code) => {
                             setClipboardText(code)
                         })
                     } catch (e) {
-                        failed("自动生成 CSRF 失败")
+                        failed(t("YakitEditor.HTTPPacketYakitEditor.autoGenerateCsrfFailed"))
                     }
                 }
             },
@@ -192,9 +196,9 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "copy-to-notepad",
-                        label: `复制到${getNotepadNameByEdition()}${
+                        label: `${t("YakitEditor.HTTPPacketYakitEditor.copyTo")}${getNotepadNameByEdition()}${
                             !userInfo.isLogin && GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
-                                ? "请登录"
+                                ? t("YakitEditor.HTTPPacketYakitEditor.pleaseLogin")
                                 : ""
                         }`,
                         disabled: !userInfo.isLogin && GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
@@ -203,12 +207,12 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
                     const text = editor.getModel()?.getValue() || ""
                     if (!text) {
-                        info("数据包为空")
+                        info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
                         return
                     }
                     let content = "```" + text + "\n```"
                     goAddNotepad({
-                        title: `数据包-${Date.now()}`,
+                        title: `${t("YakitEditor.HTTPPacketYakitEditor.packet")}-${Date.now()}`,
                         content
                     })
                 }
@@ -217,23 +221,23 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "export-txt",
-                        label: "导出为 txt 文件"
+                        label: t("YakitEditor.HTTPPacketYakitEditor.exportAsTxtFile")
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
                     const text = editor.getModel()?.getValue() || ""
                     if (!text) {
-                        info("数据包为空")
+                        info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
                         return
                     }
-                    saveABSFileToOpen(`数据包-${Date.now()}.txt`, text)
+                    saveABSFileToOpen(`${t("YakitEditor.HTTPPacketYakitEditor.packet")}-${Date.now()}.txt`, text)
                 }
             },
             openURLBrowser: {
                 menu: [
                     {
                         key: "open-url-in-browser",
-                        label: "浏览器中打开URL"
+                        label: t("YakitEditor.HTTPPacketYakitEditor.openUrlInBrowser")
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -242,7 +246,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     } else if (url) {
                         openExternalWebsite(url)
                     } else {
-                        yakitNotify("info", "url 不存在")
+                        yakitNotify("info", t("YakitEditor.HTTPPacketYakitEditor.urlNotExist"))
                     }
                 }
             },
@@ -250,17 +254,17 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "open-packet-new-window",
-                        label: "在新窗口打开"
+                        label: t("YakitEditor.HTTPPacketYakitEditor.openInNewWindow")
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
                     if (noOpenPacketNewWindow) {
-                        yakitNotify("info", "展示原始编辑器内部")
+                        yakitNotify("info", t("YakitEditor.HTTPPacketYakitEditor.showRawInEditor"))
                     } else {
                         if (onClickOpenPacketNewWindowMenu) {
                             onClickOpenPacketNewWindowMenu()
                         } else {
-                            yakitNotify("info", "展示原始编辑器内部")
+                            yakitNotify("info", t("YakitEditor.HTTPPacketYakitEditor.showRawInEditor"))
                         }
                     }
                 }
@@ -269,7 +273,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "open-in-browser",
-                        label: "浏览器中查看响应"
+                        label: t("YakitEditor.HTTPPacketYakitEditor.viewResponseInBrowser")
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -280,7 +284,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         }
                         const text = editor.getModel()?.getValue()
                         if (!text) {
-                            failed("无法获取数据包内容")
+                            failed(t("YakitEditor.HTTPPacketYakitEditor.cannotRetrievePacketContent"))
                             return
                         }
                         showResponseViaResponseRaw(originValueBytes)
@@ -293,7 +297,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "auto-decode",
-                        label: "智能自动解码（Inspector）"
+                        label: t("YakitEditor.HTTPPacketYakitEditor.smartAutoDecodeInspector")
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -301,8 +305,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         const text = editor.getModel()?.getValueInRange(editor.getSelection() as any) || ""
                         if (!text) {
                             Modal.info({
-                                title: "自动解码失败",
-                                content: <>{"文本为空，请选择文本再自动解码"}</>
+                                title: t("YakitEditor.HTTPPacketYakitEditor.autoDecodeFailed"),
+                                content: <>{t("YakitEditor.HTTPPacketYakitEditor.textEmptySelectToAutoDecode")}</>
                             })
                             return
                         }
@@ -316,7 +320,9 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "disable-unicode-decode",
-                        label: disableUnicodeDecode ? "启用自动 Unicode 解码" : "禁用自动 Unicode 解码"
+                        label: disableUnicodeDecode
+                            ? t("YakitEditor.HTTPPacketYakitEditor.enableAutoUnicodeDecode")
+                            : t("YakitEditor.HTTPPacketYakitEditor.disableAutoUnicodeDecode")
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -334,7 +340,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         menu: [
                             {
                                 key: "download-body",
-                                label: "下载 Body"
+                                label: t("YakitEditor.HTTPPacketYakitEditor.downloadBody")
                             }
                         ],
                         onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -346,16 +352,22 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                             uuid: uuidv4()
                                         })
                                         .then(() => {
-                                            yakitNotify("success", "下载成功")
+                                            yakitNotify("success", t("YakitNotification.downloaded"))
                                         })
                                         .catch((e) => {
-                                            yakitNotify("error", `下载body：${e}`)
+                                            yakitNotify(
+                                                "error",
+                                                `${t("YakitNotification.downloadFailed", {colon: true})}${e}`
+                                            )
                                         })
                                     return
                                 }
                                 const text = editor.getModel()?.getValue()
                                 if (!text) {
-                                    yakitNotify("info", "无数据包-无法下载 Body")
+                                    yakitNotify(
+                                        "info",
+                                        t("YakitEditor.HTTPPacketYakitEditor.noPacketCannotDownloadBody")
+                                    )
                                     return
                                 }
                                 ipcRenderer
@@ -379,13 +391,13 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         menu: [
                             {
                                 key: "copyBodyBase64",
-                                label: "复制body（base64）"
+                                label: t("YakitEditor.HTTPPacketYakitEditor.copyBodyBase64")
                             }
                         ],
                         onRun: (editor: YakitIMonacoEditor, key: string) => {
                             const text = editor.getModel()?.getValue()
                             if (!text) {
-                                yakitNotify("info", "无数据包-无法复制 Body")
+                                yakitNotify("info", t("YakitEditor.HTTPPacketYakitEditor.noPacketCannotCopyBody"))
                                 return
                             }
                             ipcRenderer
@@ -415,16 +427,16 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "new-web-socket-tab",
-                        label: "发送到WS Fuzzer",
+                        label: t("YakitEditor.HTTPPacketYakitEditor.sendToWsFuzzer"),
                         children: [
                             {
                                 key: "发送并跳转",
-                                label: "发送并跳转",
+                                label: t("YakitEditor.HTTPPacketYakitEditor.sendAndRedirect"),
                                 keybindings: YakEditorOptionShortcutKey.CommonSendAndJumpToWebFuzzer
                             },
                             {
                                 key: "仅发送",
-                                label: "仅发送",
+                                label: t("YakitEditor.HTTPPacketYakitEditor.sendOnly"),
                                 keybindings: YakEditorOptionShortcutKey.CommonSendToWebFuzzer
                             }
                         ]
@@ -434,7 +446,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     try {
                         const text = webSocketValue || editor.getModel()?.getValue() || ""
                         if (!text) {
-                            info("数据包为空")
+                            info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
                             return
                         }
                         if (key === "发送并跳转") {
@@ -462,16 +474,16 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "new-web-fuzzer-tab",
-                        label: "发送到 Web Fuzzer",
+                        label: t("YakitEditor.HTTPPacketYakitEditor.sendToWebFuzzer"),
                         children: [
                             {
                                 key: "发送并跳转",
-                                label: "发送并跳转",
+                                label: t("YakitEditor.HTTPPacketYakitEditor.sendAndRedirect"),
                                 keybindings: YakEditorOptionShortcutKey.CommonSendAndJumpToWebFuzzer
                             },
                             {
                                 key: "仅发送",
-                                label: "仅发送",
+                                label: t("YakitEditor.HTTPPacketYakitEditor.sendOnly"),
                                 keybindings: YakEditorOptionShortcutKey.CommonSendToWebFuzzer
                             }
                         ]
@@ -506,7 +518,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                 })
                                 .then(() => {
                                     if (!openFlag) {
-                                        info("发送成功")
+                                        info(t("YakitNotification.sendSuccess"))
                                     }
                                     webFuzzerCallBack && webFuzzerCallBack()
                                 })
@@ -515,7 +527,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         try {
                             const text = webFuzzerValue || editor.getModel()?.getValue() || ""
                             if (!text) {
-                                info("数据包为空")
+                                info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
                                 return
                             }
                             if (key === "发送并跳转") {
@@ -534,7 +546,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                     downstreamProxyStr,
                                     openFlag: false
                                 }).finally(() => {
-                                    info("发送成功")
+                                    info(t("YakitNotification.sendSuccess"))
                                     webFuzzerCallBack && webFuzzerCallBack()
                                 })
                             }
@@ -565,7 +577,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         onClickUrlMenu,
         onClickOpenBrowserMenu,
         noOpenPacketNewWindow,
-        userInfo.isLogin
+        userInfo.isLogin,
+        i18n.language
     ])
 
     return (

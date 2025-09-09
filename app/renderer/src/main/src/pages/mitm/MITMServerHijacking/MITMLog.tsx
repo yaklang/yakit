@@ -27,6 +27,7 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {Badge} from "antd"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {HTTPFlowTableFormConfiguration} from "@/components/HTTPFlowTable/HTTPFlowTableForm"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 interface MITMLogHeardExtraProps {
@@ -48,6 +49,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
         tableSelectNum,
         hasNewData
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "history", "yakitRoute"])
     const mitmContent = useContext(MITMContext)
     const mitmVersion = useCreation(() => {
         return mitmContent.mitmStore.version
@@ -218,7 +220,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
             excludeKeywords.length > 0 ||
             statusCode?.length > 0
         )
-    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords,statusCode])
+    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords, statusCode])
 
     useEffect(() => {
         emiter.on("onGetAdvancedSearchDataEvent", onGetAdvancedSearchData)
@@ -271,7 +273,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                                 }
                             }}
                         >
-                            {tag.text}
+                            {tag.text(t)}
                         </YakitCheckableTag>
                     ))}
                 </div>
@@ -301,8 +303,15 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                             visible={drawerFormVisible}
                             setVisible={setDrawerFormVisible}
                             onSave={(filters) => {
-                                const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords,statusCode} =
-                                    filters
+                                const {
+                                    filterMode,
+                                    hostName,
+                                    urlPath,
+                                    fileSuffix,
+                                    searchContentType,
+                                    excludeKeywords,
+                                    statusCode
+                                } = filters
                                 setFilterMode(filterMode)
                                 setHostName(hostName)
                                 setUrlPath(urlPath)

@@ -63,6 +63,11 @@ export function useI18nNamespaces(namespaces: string[]) {
         let strText: string = typeof text === "string" ? text : String(text ?? fallback)
 
         if (vars) {
+            if (vars.colon === true) {
+                const lang = i18n.language
+                vars.colon = lang === "zh" ? ":" : "：" // 中文紧跟，英文冒号后加空格
+            }
+
             Object.keys(vars).forEach((k) => {
                 const regex = new RegExp(`{${k}}`, "g")
                 strText = strText.replace(regex, String(vars[k]))

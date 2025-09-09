@@ -159,6 +159,7 @@ import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 import {updateConcurrentLoad} from "@/utils/duplex/duplex"
 import {debugToPrintLog} from "@/utils/logCollection"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -2509,7 +2510,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         retryNoPopconfirm = true,
         cancelCurrentHTTPFuzzer
     } = props
-
+    const {t, i18n} = useI18nNamespaces(["history"])
     const [color, setColor] = useState<string[]>()
     const [keyWord, setKeyWord] = useState<string>()
     const [statusCode, setStatusCode] = useState<string>()
@@ -2766,7 +2767,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 <YakitSelect
                                     size='small'
                                     mode='tags'
-                                    options={availableColors.map((i) => ({value: i.searchWord, label: i.render}))}
+                                    options={availableColors.map((i) => ({value: i.searchWord, label: i.render(t)}))}
                                     allowClear
                                     value={color}
                                     onChange={setColor}

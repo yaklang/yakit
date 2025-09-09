@@ -5,13 +5,23 @@
         padding: 1px 4px;
         background-color: var(--yakit-colors-Neutral-40);
 
-        border-radius: 3px; /* 添加圆角以使样式更好看 */
+        border-radius: 3px;
+        /* 添加圆角以使样式更好看 */
         /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 
-    .content-length:hover::after {
+    .content-length:hover.lang-zh::after {
         content: "发包时自动修复，一般无需指定";
+        background-color: var(--yakit-colors-Neutral-40);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        padding: 5px;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        border-radius: 4px;
+    }
+
+    .content-length:hover.lang-en::after {
+        content: "Automatically fixed when sending packets, usually no need to specify";
         background-color: var(--yakit-colors-Neutral-40);
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
         padding: 5px;
@@ -30,8 +40,17 @@
         // opacity: 0.3;
     }
 
-    .host:hover::after {
+    .host:hover.lang-zh::after {
         content: '如需手动指定目标地址或 Host 碰撞，请配置"高级配置-真实Host"';
+        background-color: var(--yakit-colors-Neutral-40);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        padding: 5px;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        border-radius: 4px;
+    }
+
+    .host:hover.lang-en::after {
+        content: 'To manually specify the target address or perform Host collision, please configure "Advanced Settings - Real Host"';
         background-color: var(--yakit-colors-Neutral-40);
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
         padding: 5px;
@@ -62,40 +81,52 @@
         content: "↵";
         background-color: var(--yakit-colors-Neutral-40);
         margin: 4px;
-        padding: 1px 4px; /* 根据需要添加内边距 */
-        border-radius: 3px; /* 添加圆角以使样式更好看 */
-        color: var(--Colors-Use-Neutral-Text-1-Title); /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+        padding: 1px 4px;
+        /* 根据需要添加内边距 */
+        border-radius: 3px;
+        /* 添加圆角以使样式更好看 */
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
     }
 
     .lf::before {
         content: "↓";
         background-color: var(--yakit-colors-Neutral-40);
         margin: 4px;
-        padding: 1px 4px; /* 根据需要添加内边距 */
-        border-radius: 3px; /* 添加圆角以使样式更好看 */
-        color: var(--Colors-Use-Neutral-Text-1-Title); /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+        padding: 1px 4px;
+        /* 根据需要添加内边距 */
+        border-radius: 3px;
+        /* 添加圆角以使样式更好看 */
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
     }
+
     .hight-light-default-bg-color {
         background-color: var(--Colors-Use-Success-Focus); // 代码高亮标记背景色
         z-index: -1;
     }
+
     .hight-light-find-default-bg-color {
         background-color: var(--yakit-colors-Neutral-40);
         z-index: -1;
     }
+
     .hight-light-yak-runner-color {
         background-color: var(--Colors-Use-Yellow-Bg);
         z-index: -1;
     }
+
     .hight-light-rule-color {
         background-color: var(--Colors-Use-Yellow-Bg);
         z-index: -1;
     }
 }
+
 .yakit-editor-wrap-style {
     .crlf::before {
         opacity: 0;
     }
+
     .lf::before {
         opacity: 0;
     }

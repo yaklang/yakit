@@ -1,3 +1,4 @@
+import i18n from "@/i18n/i18n"
 import {yakitNotify} from "./notification"
 
 const {ipcRenderer} = window.require("electron")
@@ -25,7 +26,8 @@ export const setClipboardText = (text?: string, extra?: SetClipboardTextExtraPar
         ipcRenderer
             .invoke("set-clipboard-text", text)
             .then(() => {
-                if (!hiddenHint) yakitNotify("success", hintText || "复制成功")
+                if (!hiddenHint)
+                    yakitNotify("success", hintText || (i18n.language === "zh" ? "复制成功" : "Copied successfully"))
                 successCallback && successCallback()
             })
             .catch(() => {

@@ -9,21 +9,34 @@ import styles from "./packetScanner.module.scss"
 /**
  * @description 数据包扫描的默认菜单数据
  */
-export const packetScanDefaultValue: {Verbose: string; Keyword?: string}[] = [
-    {Verbose: "批量执行", Keyword: undefined},
-    {Verbose: "网络设备与OA系统", Keyword: "锐捷,若依,金和,金山,金蝶,致远,Seeyou,seeyou,通达,tonged,Tongda,银澎,浪潮,泛微,方维,帆软,向日葵,ecshop,dahua,huawei,zimbra,coremail,Coremail,邮件服务器"},
-    {Verbose: "安全产品", Keyword: "防火墙,行为管理,绿盟,天擎,tianqing,防篡改,网御星云,安防,审计系统,天融信,安全系统"},
+export const packetScanDefaultValue: {Verbose: string; VerboseUi?: string; Keyword?: string}[] = [
+    {Verbose: "批量执行", VerboseUi: "HTTPFlowTable.RowContextMenu.batchExecute", Keyword: undefined},
+    {
+        Verbose: "网络设备与OA系统",
+        VerboseUi: "HTTPFlowTable.RowContextMenu.networkDevicesAndOASystem",
+        Keyword:
+            "锐捷,若依,金和,金山,金蝶,致远,Seeyou,seeyou,通达,tonged,Tongda,银澎,浪潮,泛微,方维,帆软,向日葵,ecshop,dahua,huawei,zimbra,coremail,Coremail,邮件服务器"
+    },
+    {
+        Verbose: "安全产品",
+        VerboseUi: "HTTPFlowTable.RowContextMenu.securityProduct",
+        Keyword: "防火墙,行为管理,绿盟,天擎,tianqing,防篡改,网御星云,安防,审计系统,天融信,安全系统"
+    },
     {Verbose: "FastJSON", Keyword: "fastjson,FastJson,FastJSON"},
     {Verbose: "Log4j", Keyword: "Log4j,log4j,Log4shell,log4shell,Log4Shell"},
     {Verbose: "Weblogic", Keyword: "weblogic,Weblogic"},
-    {Verbose: "远程代码执行（扫描）", Keyword: "RCE,rce"},
+    {
+        Verbose: "远程代码执行（扫描）",
+        VerboseUi: "HTTPFlowTable.RowContextMenu.remoteCodeExecutionScan",
+        Keyword: "RCE,rce"
+    },
     {Verbose: "XSS", Keyword: "xss,XSS"},
     {Verbose: "Java", Keyword: "Java"},
     {Verbose: "Tomcat", Keyword: "Tomcat"},
     {Verbose: "IIS", Keyword: "IIS"},
     {Verbose: "Nginx", Keyword: "Nginx"},
     {Verbose: "Shiro", Keyword: "Shiro"},
-    {Verbose: "SQL注入", Keyword: "SQL注入"}
+    {Verbose: "SQL注入", VerboseUi: "HTTPFlowTable.RowContextMenu.sQLInjection", Keyword: "SQL注入"}
 ]
 
 export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps => {
@@ -33,7 +46,7 @@ export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps
         subMenuItems: packetScanDefaultValue.map((i) => {
             return {
                 id: i.Keyword,
-                title: i.Verbose,
+                title: i.VerboseUi || i.Verbose,
                 onClick: () => {
                     execPacketScan({
                         httpFlowIds: [id],
@@ -51,16 +64,16 @@ export interface PacketScanButtonProp {
 }
 
 export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
-    const [visible, setVisible] = useState<false | undefined>(undefined);
+    const [visible, setVisible] = useState<false | undefined>(undefined)
     return (
         <YakitPopover
-            key={'数据包扫描'}
+            key={"数据包扫描"}
             title={"数据包扫描"}
             trigger={["click"]}
             visible={visible}
             content={
                 <Space direction={"vertical"} style={{width: 150}}>
-                    {packetScanDefaultValue.map((i,n) => {
+                    {packetScanDefaultValue.map((i, n) => {
                         return (
                             <YakitButton
                                 className={styles["yakit-button-theme"]}

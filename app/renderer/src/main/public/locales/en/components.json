@@ -1,0 +1,7 @@
+{
+  "ExportExcel": {
+    "dataExport": "Data Export",
+    "pageNumber": "Page {page}",
+    "totalItems": "Total {total} items"
+  }
+}

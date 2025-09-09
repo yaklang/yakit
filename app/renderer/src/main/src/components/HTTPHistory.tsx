@@ -64,6 +64,7 @@ import styles from "./HTTPHistory.module.scss"
 import MITMContext from "@/pages/mitm/Context/MITMContext"
 import {RemoteGV} from "@/yakitGV"
 import {cloneDeep} from "lodash"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export interface HTTPPacketFuzzable {
@@ -76,7 +77,7 @@ export interface HTTPPacketFuzzable {
 type tabKeys = "web-tree" | "process"
 interface TabsItem {
     key: tabKeys
-    label: ReactElement | string
+    label: (t: (keys: string) => string) => ReactElement | string
     contShow: boolean
 }
 
@@ -101,25 +102,25 @@ interface HTTPHistoryProp extends HistoryTableTitleShow {
 }
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const {pageType} = props
-
+    const {t, i18n} = useI18nNamespaces(["history"])
     // #region 左侧tab
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
     const [curTabKey, setCurTabKey] = useState<tabKeys>("web-tree")
     const [tabsData, setTabsData] = useState<Array<TabsItem>>([
         {
             key: "web-tree",
-            label: (
+            label: (t) => (
                 <>
-                    <span className={styles["tab-item-text"]}>网站树</span> <OutlineLog2Icon />
+                    <span className={styles["tab-item-text"]}>{t("HTTPHistory.websiteTree")}</span> <OutlineLog2Icon />
                 </>
             ),
             contShow: true // 初始为true
         },
         {
             key: "process",
-            label: (
+            label: (t) => (
                 <>
-                    <span className={styles["tab-item-text"]}>进程</span>
+                    <span className={styles["tab-item-text"]}>{t("HTTPHistory.process")}</span>
                     <OutlineTerminalIcon />
                 </>
             ),
@@ -293,7 +294,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             handleTabClick(item)
                                         }}
                                     >
-                                        {item.label}
+                                        {item.label(t)}
                                     </div>
                                 ))}
                             </div>
@@ -320,7 +321,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     <WebTree
                                         ref={webTreeRef}
                                         height={treeWrapHeight - 30}
-                                        searchPlaceholder='请输入域名进行搜索，例baidu.com'
+                                        searchPlaceholder={t("HTTPHistory.pleaseEnterDomainToSearch")}
                                         treeExtraQueryparams={treeQueryparams}
                                         refreshTreeFlag={refreshFlag}
                                         onGetUrl={(searchURL, includeInUrl) => {

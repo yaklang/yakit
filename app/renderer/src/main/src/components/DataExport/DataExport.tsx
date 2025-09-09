@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Space, Pagination, Checkbox, Row, Col} from "antd"
 import {LoadingOutlined} from "@ant-design/icons"
 import {export_json_to_excel, CellSetting} from "./toExcel"
@@ -11,6 +11,7 @@ import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import styles from "./DataExport.module.scss"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 interface ExportExcelProps {
     btnProps?: YakitButtonProp
     getData: (query: PaginationSchema) => Promise<any>
@@ -79,13 +80,14 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     const {
         btnProps,
         getData,
-        fileName = "端口资产",
+        fileName,
         pageSize = 100000,
         showButton = true,
         text,
         newUIType = "outline2",
         getContainer
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "yakitRoute", "components"])
     const [loading, setLoading] = useState<boolean>(false)
     const [selectItem, setSelectItem] = useState<number>()
     const [visible, setVisible] = useState<boolean>(false)
@@ -102,6 +104,10 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     const [splitVisible, setSplitVisible] = useState<boolean>(false)
     const [chunksData, setChunksData] = useState<any[]>([])
     const beginNumberRef = useRef<number>(0)
+    const fileNameMemo = useMemo(() => {
+        return fileName || t("YakitRoute.portAssets")
+    }, [i18n.language, fileName])
+
     const toExcel = useMemoizedFn((query = {Limit: pageSize, Page: 1}) => {
         setLoading(true)
         getData(query as any)
@@ -118,7 +124,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                         export_json_to_excel({
                             header: header,
                             data: exportData,
-                            filename: `${fileName}1-${exportData.length}`,
+                            filename: `${fileNameMemo} 1-${exportData.length}`,
                             autoWidth: true,
                             bookType: "xlsx",
                             optsSingleCellSetting
@@ -140,7 +146,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                         setChunksData(chunks)
                         // let begin:number = 0
                         // for (let i = 0; i < chunks.length; i++) {
-                        //     let filename = `${fileName}${begin||1}-${begin+chunks[i].length}`
+                        //     let filename = `${fileNameMemo} ${begin||1}-${begin+chunks[i].length}`
                         //     begin += chunks[i].length
                         //     export_json_to_excel({
                         //         header: header,
@@ -157,7 +163,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                 }
             })
             .catch((e: any) => {
-                failed("数据导出失败: " + `${e}`)
+                failed(t("YakitNotification.exportFailed", {colon: true}) + `${e}`)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -169,9 +175,9 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         const lastIndex =
             (index === frequency - 1 && exportDataBatch.current?.length) ||
             (exportNumber.current && exportNumber.current * (index + 1))
-        const name = `${fileName}(第${pagination.Pagination.Page}页${
-            exportNumber.current && firstIndx + 1
-        }-${lastIndex})`
+        const name = `${fileNameMemo} ${t("ExportExcel.pageNumber", {
+            page: pagination.Pagination.Page
+        })} ${exportNumber.current && firstIndx + 1}-${lastIndex})`
         const list: Array<string[]> = exportDataBatch.current?.slice(firstIndx, lastIndex + 1)
         export_json_to_excel({
             header: headerExcel.current,
@@ -196,7 +202,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         export_json_to_excel({
             header: headerExcel.current,
             data: data,
-            filename: `${fileName}${start}-${end}`,
+            filename: `${fileNameMemo} ${start}-${end}`,
             autoWidth: true,
             bookType: "xlsx",
             optsSingleCellSetting: optsCell.current
@@ -208,17 +214,17 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
             {showButton ? (
                 <>
                     <YakitButton loading={loading} type={newUIType} onClick={() => toExcel()} {...btnProps}>
-                        {text || "导出Excel"}
+                        {text || t("YakitButton.exportExcel")}
                     </YakitButton>
                 </>
             ) : (
                 <>
-                    <span onClick={() => toExcel()}>{text || "导出Excel"}</span>
+                    <span onClick={() => toExcel()}>{text || t("YakitButton.exportExcel")}</span>
                     {loading && <LoadingOutlined spin={loading} style={{marginLeft: 5}} />}
                 </>
             )}
             <YakitModal
-                title='数据导出'
+                title={t("ExportExcel.dataExport")}
                 closable={true}
                 visible={visible}
                 onCancel={() => setVisible(false)}
@@ -240,7 +246,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                                     }, 500)
                                 }}
                             >
-                                第{pagination.Pagination.Page}页
+                                {t("ExportExcel.pageNumber", {page: pagination.Pagination.Page})}
                                 {exportNumber.current && exportNumber.current * index + 1}-
                                 {(index === frequency - 1 && exportDataBatch.current?.length) ||
                                     (exportNumber.current && exportNumber.current * (index + 1))}
@@ -253,7 +259,11 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                             total={pagination.Total}
                             current={Number(pagination.Pagination.Page)}
                             pageSize={pageSize}
-                            showTotal={(total) => <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>共 {total} 条</div>}
+                            showTotal={(total) => (
+                                <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
+                                    {t("ExportExcel.totalItems", {total})}
+                                </div>
+                            )}
                             hideOnSinglePage={true}
                             onChange={onChange}
                         />
@@ -261,7 +271,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                 </div>
             </YakitModal>
             <YakitModal
-                title='数据导出'
+                title={t("ExportExcel.dataExport")}
                 closable={true}
                 visible={splitVisible}
                 onCancel={() => setSplitVisible(false)}
@@ -301,9 +311,10 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     )
 }
 
+type ExportValue = string | {title: string; key: string}
 interface ExportSelectProps {
     /* 导出字段 */
-    exportValue: string[]
+    exportValue: ExportValue[]
     /* 传出导出字段 */
     setExportTitle: (v: string[]) => void
     /* 导出Key 用于缓存 */
@@ -314,54 +325,72 @@ interface ExportSelectProps {
     fileName?: string
     /* limit */
     pageSize?: number
-    initCheckValue?: string[]
+    initCheckValue?: ExportValue[]
     /**关闭 */
     onClose: () => void
     getContainer?: HTMLElement
 }
 // 导出字段选择
 export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
-    const {exportValue, fileName, setExportTitle, exportKey, getData, pageSize, initCheckValue, onClose, getContainer} = props
+    const {exportValue, fileName, setExportTitle, exportKey, getData, pageSize, initCheckValue, onClose, getContainer} =
+        props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [checkValue, setCheckValue] = useState<CheckboxValueType[]>([])
+
+    const handleExportVal = useMemoizedFn((arr?: ExportValue[]) => {
+        return arr
+            ? arr.map((item) => {
+                  if (typeof item === "string") {
+                      return item
+                  } else {
+                      return item.key
+                  }
+              })
+            : []
+    })
     useEffect(() => {
         getRemoteValue(exportKey).then((setting) => {
             if (!setting) {
                 // 第一次进入 默认勾选所有导出字段
-                setExportTitle(initCheckValue || (exportValue as string[]))
-                setCheckValue(initCheckValue || exportValue)
+                setExportTitle(handleExportVal(initCheckValue || exportValue))
+                setCheckValue(handleExportVal(initCheckValue || exportValue))
             } else {
                 const values = JSON.parse(setting)
                 setCheckValue(values?.checkedValues)
-                setExportTitle(values?.checkedValues as string[])
+                setExportTitle(values?.checkedValues)
             }
         })
     }, [])
     const onChange = (checkedValues: CheckboxValueType[]) => {
-        const orderCheckedValues = exportValue.filter((item) => checkedValues.includes(item))
-        setExportTitle(orderCheckedValues)
-        setCheckValue(orderCheckedValues)
-        setRemoteValue(exportKey, JSON.stringify({checkedValues: orderCheckedValues}))
+        const orderCheckedValues = exportValue.filter((item) =>
+            checkedValues.includes(typeof item === "string" ? item : item.key)
+        )
+        setExportTitle(handleExportVal(orderCheckedValues))
+        setCheckValue(handleExportVal(orderCheckedValues))
+        setRemoteValue(exportKey, JSON.stringify({checkedValues: handleExportVal(orderCheckedValues)}))
     }
     return (
         <div className={styles["export-select"]}>
             <Checkbox.Group style={{width: "100%", padding: 24}} value={checkValue} onChange={onChange}>
                 <Row>
                     {exportValue.map((item) => (
-                        <Col span={6} className={styles["item"]} key={item}>
-                            <YakitCheckbox value={item}>{item}</YakitCheckbox>
+                        <Col span={6} className={styles["item"]} key={typeof item === "string" ? item : item.key}>
+                            <YakitCheckbox value={typeof item === "string" ? item : item.key}>
+                                {typeof item === "string" ? item : item.title}
+                            </YakitCheckbox>
                         </Col>
                     ))}
                 </Row>
             </Checkbox.Group>
             <div className={styles["button-box"]}>
                 <YakitButton type='outline2' onClick={() => onClose()}>
-                    取消
+                    {t("YakitButton.cancel")}
                 </YakitButton>
                 <ExportExcel
                     newUIType='primary'
                     getData={getData}
                     fileName={fileName}
-                    text='导出'
+                    text={t("YakitButton.export")}
                     pageSize={pageSize}
                     getContainer={getContainer}
                 />

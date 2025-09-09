@@ -12,5 +12,15 @@
       "pleaseEnterPassword": "请输入密码",
       "thisFieldIsRequired": "该项为必填"
     }
+  },
+  "DecodeComponent": {
+    "smartDecode": "智能解码",
+    "noDecodeInfo": "无解码信息"
+  },
+  "HTTPFuzzerRangeReadOnlyEditorMenu": {
+    "decode": "解码"
+  },
+  "DecodeCopyReplace": {
+    "replace": "替换"
   }
 }

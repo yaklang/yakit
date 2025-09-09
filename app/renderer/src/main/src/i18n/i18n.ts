@@ -7,9 +7,11 @@ i18n.use(HttpBackend)
     .init({
         lng: "zh",
         fallbackLng: "en",
-        ns: ["yakitUi", "yakitRoute", "layout", "customizeMenu", "home"], // 这几个需要预加载
+        ns: ["yakitUi", "yakitRoute", "layout", "customizeMenu", "home", "history", "webFuzzer"], // 这几个需要预加载
         defaultNS: "",
-        interpolation: {escapeValue: false},
+        interpolation: {
+            escapeValue: false
+        },
         backend: {loadPath: "./locales/{{lng}}/{{ns}}.json"},
         react: {useSuspense: true}
     })

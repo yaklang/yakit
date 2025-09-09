@@ -12,5 +12,15 @@
       "pleaseEnterPassword": "Please enter Password",
       "thisFieldIsRequired": "This field is required"
     }
+  },
+  "DecodeComponent": {
+    "smartDecode": "Smart Decode",
+    "noDecodeInfo": "No decode information"
+  },
+  "HTTPFuzzerRangeReadOnlyEditorMenu": {
+    "decode": "Decode"
+  },
+  "DecodeCopyReplace": {
+    "replace": "Replace"
   }
 }

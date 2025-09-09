@@ -21,7 +21,7 @@ export const execPacketScan = (params: {
 export const execPacketScanFromRaw = (
     https: boolean,
     request: Uint8Array,
-    value: {Keyword?: string; Verbose: string}
+    value: {Keyword?: string; Verbose: string; VerboseUi?: string}
 ) => {
     const {Keyword, Verbose} = value
     execPacketScanWithNewTab({httpFlowIds: [], https, request, keyword: Keyword || "", verbose: Verbose})

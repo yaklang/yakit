@@ -30,6 +30,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {defaultLabel} from "@/defaultConstants/HTTPFuzzerPage"
 import {PluginSwitchToTag} from "../pluginEditor/defaultconstants"
 import {setClipboardText} from "@/utils/clipboard"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export interface CountDirectionProps {
@@ -327,7 +328,10 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     style={{
                         ...directionStyle(editorInfo),
                         left: ["left"].includes(editorInfo?.direction.x || "") ? 0 : undefined,
-                        right: ["right", "middle"].includes(editorInfo?.direction.x || "") && !onClickSegmentedType ? 0 : undefined,
+                        right:
+                            ["right", "middle"].includes(editorInfo?.direction.x || "") && !onClickSegmentedType
+                                ? 0
+                                : undefined,
                         width: menuWidth ? menuWidth : 360,
                         maxHeight: menuHeight ? menuHeight : undefined
                     }}
@@ -767,6 +771,7 @@ interface DecodeCopyReplaceProps {
 
 export const DecodeCopyReplace: React.FC<DecodeCopyReplaceProps> = (props) => {
     const {item, index, isShowBorder, isReadOnly, replace} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const itemStr: string = new Buffer(item.Result).toString("utf8")
     return (
         <div className={styles["decode-copy-replace"]}>
@@ -795,7 +800,7 @@ export const DecodeCopyReplace: React.FC<DecodeCopyReplaceProps> = (props) => {
                                 replace && replace(itemStr)
                             }}
                         >
-                            替换
+                            {t("DecodeCopyReplace.replace")}
                         </YakitButton>
                     )}
                 </div>
@@ -819,6 +824,7 @@ export interface DecodeComponentProps {
 
 export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
     const {isReadOnly, rangeValue, replace} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const [status, setStatus] = useState<"none" | "only" | "many">()
     const [result, setResult] = useState<AutoDecodeResult[]>([])
     useEffect(() => {
@@ -855,7 +861,7 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
 
     return (
         <div className={styles["decode-box"]}>
-            {isReadOnly && <div className={styles["title"]}>智能解码</div>}
+            {isReadOnly && <div className={styles["title"]}>{t("DecodeComponent.smartDecode")}</div>}
             {status === "only" && (
                 <div className={styles["only-one"]}>
                     <DecodeCopyReplace isReadOnly={isReadOnly} item={result[0]} isShowBorder={true} replace={replace} />
@@ -883,7 +889,7 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
                     </Timeline>
                 </div>
             )}
-            {status === "none" && <div className={styles["none-decode"]}>无解码信息</div>}
+            {status === "none" && <div className={styles["none-decode"]}>{t("DecodeComponent.noDecodeInfo")}</div>}
         </div>
     )
 }
@@ -1078,6 +1084,7 @@ interface HTTPFuzzerRangeReadOnlyEditorMenuProps {
 
 export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnlyEditorMenuProps> = (props) => {
     const {editorInfo, rangeValue, fizzRangeTimeoutId, close} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const [segmentedType, setSegmentedType] = useState<"decode">()
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     // 菜单显示宽度
@@ -1117,6 +1124,7 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
             className={classNames(styles["http-fuzzer-read-editor"], {
                 [styles["box-hidden"]]: boxHidden
             })}
+            style={{width: i18n.language === "zh" ? 68 : 85}}
             onMouseEnter={() => {
                 fizzRangeTimeoutId.current && clearTimeout(fizzRangeTimeoutId.current)
             }}
@@ -1129,7 +1137,7 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
                 <div className={styles["show-box"]}>
                     <div className={styles["decode-box"]} onClick={() => setSegmentedType("decode")}>
                         <IconSolidSparklesIcon className={styles[""]} />
-                        <div className={styles["content"]}>解码</div>
+                        <div className={styles["content"]}>{t("HTTPFuzzerRangeReadOnlyEditorMenu.decode")}</div>
                     </div>
                 </div>
             </div>

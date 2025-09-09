@@ -73,12 +73,17 @@ import {OutlineArrowleftIcon, OutlineArrowrightIcon, OutlineLoadingIcon} from "@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
-import {getGlobalShortcutKeyEvents, GlobalShortcutKey, ShortcutKeyFocusType} from "@/utils/globalShortcutKey/events/global"
+import {
+    getGlobalShortcutKeyEvents,
+    GlobalShortcutKey,
+    ShortcutKeyFocusType
+} from "@/utils/globalShortcutKey/events/global"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "@/utils/prettifyPacket"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
-import { YakitKeyBoard, YakitKeyMod } from "@/utils/globalShortcutKey/keyboard"
-import { YakEditorOptionShortcutKey } from "@/utils/globalShortcutKey/events/page/yakEditor"
+import {YakitKeyBoard, YakitKeyMod} from "@/utils/globalShortcutKey/keyboard"
+import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
     forwardRef((props, ref) => {
@@ -92,6 +97,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             hijackFilterFlag,
             setAutoForward
         } = props
+        const {t, i18n} = useI18nNamespaces(["history"])
         const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
         const [currentSelectItem, setCurrentSelectItem, getCurrentSelectItem] =
@@ -347,7 +353,8 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                                     <div className={styles["content-style"]}>发送并跳转</div>
                                     <div className={classNames(styles["keybind-style"], "keys-style")}>
                                         {convertKeyboardToUIKey(
-                                            getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys
+                                            getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer]
+                                                .keys
                                         )}
                                     </div>
                                 </div>
@@ -359,7 +366,9 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                                 <div className={styles["context-menu-keybind-wrapper"]}>
                                     <div className={styles["content-style"]}>仅发送</div>
                                     <div className={classNames(styles["keybind-style"], "keys-style")}>
-                                        {convertKeyboardToUIKey(getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys)}
+                                        {convertKeyboardToUIKey(
+                                            getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys
+                                        )}
                                     </div>
                                 </div>
                             )
@@ -372,7 +381,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                     children: availableColors.map((i) => {
                         return {
                             key: i.title,
-                            label: i.render
+                            label: i.render(t)
                         }
                     })
                 },
@@ -393,14 +402,14 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         const mitmV2ManualTableRef = useRef<HTMLDivElement>(null)
         const [inViewport] = useInViewport(mitmV2ManualTableRef)
         useShortcutKeyTrigger("sendAndJump*common", (focus) => {
-            let item = (focus||[]).find((item)=>item.startsWith(ShortcutKeyFocusType.Monaco))
+            let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
             if (inViewport && !item) {
                 onSendToTab(getCurrentSelectItem(), true, downstreamProxyStr)
             }
         })
 
         useShortcutKeyTrigger("send*common", (focus) => {
-            let item = (focus||[]).find((item)=>item.startsWith(ShortcutKeyFocusType.Monaco))
+            let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
             if (inViewport && !item) {
                 onSendToTab(getCurrentSelectItem(), false, downstreamProxyStr)
             }
