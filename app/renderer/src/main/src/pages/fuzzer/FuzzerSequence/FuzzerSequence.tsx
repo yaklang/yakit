@@ -1097,12 +1097,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             const {onlyOneResponse, successFuzzer} = currentSelectResponse
             if (successFuzzer.length > 1) {
                 const firstSuccessResponse = successFuzzer[0]
-                return Uint8ArrayToString(firstSuccessResponse.ResponseRaw)
+                return Uint8ArrayToString(firstSuccessResponse.ResponseRaw || "")
             } else {
-                return Uint8ArrayToString(onlyOneResponse.ResponseRaw)
+                return Uint8ArrayToString(onlyOneResponse.ResponseRaw || "")
             }
         } else {
-            return Uint8ArrayToString(emptyFuzzer.ResponseRaw)
+            return Uint8ArrayToString(emptyFuzzer.ResponseRaw || "")
         }
     }, [currentSelectResponse, currentSelectRequest])
     /**提取器和匹配器的值 */
