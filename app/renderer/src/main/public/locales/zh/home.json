@@ -1,5 +1,6 @@
 {
     "Home": {
+        "MITMHijackV1": "MITM 劫持 v1",
         "certNotConfigured": "检测到证书未配置",
         "hijackStart": "启动劫持",
         "hostListen": "监听主机",

@@ -193,7 +193,7 @@ export const YakitRouteToPageInfo: Record<
 > = {
     "new-home": {label: "首页", labelUi: "YakitRoute.home"},
     httpHacker: {
-        label: "MITM 交互式劫持",
+        label: "MITM 交互式劫持 v1",
         labelUi: "YakitRoute.MITM",
         describeUi: "YakitRoute.mitmSslHijack"
     },
@@ -685,7 +685,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     switch (routeKey) {
         case YakitRoute.NewHome:
             return <>{isIRify() ? <IRifyHome /> : <Home />}</>
-        case YakitRoute.HTTPHacker: // 废弃
+        case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
                     <HTTPHacker />
