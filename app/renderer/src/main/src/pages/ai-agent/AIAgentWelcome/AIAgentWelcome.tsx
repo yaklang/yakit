@@ -1,7 +1,7 @@
 import React, {forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {AIAgentWelcomeProps} from "./type"
-import {AIForge, AIStartParams, QueryAIForgeRequest} from "../type/aiChat"
+import {AIStartParams} from "../type/aiChat"
 import {grpcGetAIForge, grpcQueryAIForge} from "../grpc"
 import {AIForgeForm, AIForgeInfoOpt} from "../aiTriageChatTemplate/AITriageChatTemplate"
 import {AIChatTextarea} from "../template/template"
@@ -10,12 +10,13 @@ import {yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
+import {AIForge, QueryAIForgeRequest} from "../AIForge/type"
 
 // import classNames from "classnames"
 import AIAgentWelcomebg from "@/assets/aiAgent/ai-agent-welcome-bg.png"
 import AIAgentWelcomePixel from "@/assets/aiAgent/ai-agent-welcome-pixel.png"
 import styles from "./AIAgentWelcome.module.scss"
-import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 
 export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
     forwardRef((props, ref) => {

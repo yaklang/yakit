@@ -2,15 +2,7 @@ import React, {memo, useEffect, useRef, useState} from "react"
 import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps} from "./type"
 import {AIAgentWelcome} from "../AIAgentWelcome/AIAgentWelcome"
 import {useCreation, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {
-    AIChatInfo,
-    AIChatMessage,
-    AIChatReview,
-    AIChatReviewExtra,
-    AIForge,
-    AIInputEvent,
-    AIStartParams
-} from "../type/aiChat"
+import {AIChatInfo, AIChatMessage, AIChatReview, AIChatReviewExtra, AIInputEvent, AIStartParams} from "../type/aiChat"
 import {AITriageChatRef} from "../aiTriageChat/type"
 import {AITaskChatRef} from "../aiTaskChat/type"
 import emiter from "@/utils/eventBus/eventBus"
@@ -21,9 +13,7 @@ import {yakitNotify} from "@/utils/notification"
 import {AIAgentWelcomeRef} from "../AIAgentWelcome/type"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
-
-import classNames from "classnames"
-import styles from "./AIAgentChat.module.scss"
+import {AIForge} from "../AIForge/type"
 import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import useAIAgentDispatcher from "../useContext/useDispatcher"
@@ -41,6 +31,9 @@ import {ChatIPCSendType} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import {AIReActEventInfo} from "@/pages/ai-re-act/aiReActType"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
+
+import classNames from "classnames"
+import styles from "./AIAgentChat.module.scss"
 
 const AIReActTaskChat = React.lazy(() => import("../../ai-re-act/aiReActTaskChat/AIReActTaskChat"))
 

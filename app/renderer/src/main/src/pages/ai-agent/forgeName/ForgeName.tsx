@@ -12,7 +12,6 @@ import {
     useUpdateEffect,
     useVirtualList
 } from "ahooks"
-import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../type/aiChat"
 import {grpcDeleteAIForge, grpcGetAIForge, grpcQueryAIForge} from "../grpc"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -26,6 +25,7 @@ import {Tooltip} from "antd"
 import {yakitNotify} from "@/utils/notification"
 import {AIForgeListDefaultPagination} from "../defaultConstant"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../AIForge/type"
 
 import classNames from "classnames"
 import styles from "./ForgeName.module.scss"

@@ -1,4 +1,4 @@
-import {AIForge} from "@/pages/ai-agent/type/aiChat"
+import {AIForge} from "@/pages/ai-agent/AIForge/type"
 import {Dispatch, ForwardedRef, SetStateAction} from "react"
 
 export interface ForgeEditorProps {

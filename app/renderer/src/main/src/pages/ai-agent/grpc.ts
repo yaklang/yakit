@@ -2,14 +2,8 @@ import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {RenderMCPClientInfo} from "./aiAgentType"
 import {MCPCallToolRequest, MCPClientResource} from "./type/mcpClient"
-import {
-    AIEventQueryRequest,
-    AIEventQueryResponse,
-    AIForge,
-    AIForgeFilter,
-    QueryAIForgeRequest,
-    QueryAIForgeResponse
-} from "./type/aiChat"
+import {AIEventQueryRequest, AIEventQueryResponse} from "./type/aiChat"
+import {AIForge, AIForgeFilter, QueryAIForgeRequest, QueryAIForgeResponse} from "./AIForge/type"
 
 const {ipcRenderer} = window.require("electron")
 
