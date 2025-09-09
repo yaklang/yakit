@@ -4862,3 +4862,4 @@ const SolidTool = () => (
 export const SolidToolIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidTool} {...props} />
 }
+

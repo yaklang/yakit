@@ -35,6 +35,20 @@ const TaskError = () => (
         />
     </svg>
 )
+
+const TaskInProgressDescribe = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10' fill='none'>
+        <path
+            d='M9.5 5C9.5 7.48528 7.48528 9.5 5 9.5C2.51472 9.5 0.5 7.48528 0.5 5C0.5 2.51472 2.51472 0.5 5 0.5'
+            stroke='var(--Colors-Use-Warning-Primary)'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+export const TaskInProgressDescribeIcon = (props: Partial<IconProps>) => <Icon component={TaskInProgressDescribe} {...props} />
+
 export const TaskErrorIcon = (props: Partial<IconProps>) => {
     return <Icon component={TaskError} {...props} />
 }
@@ -50,3 +64,12 @@ export const TaskInProgressIcon: React.FC<{}> = React.memo((props) => {
         </div>
     )
 })
+
+export const TaskTemplateInProgressIcon: React.FC<{}> = React.memo((props) => {
+    return (
+        <div className={styles["task-template-in-progress-icon"]}>
+            <div className={styles["center-wrapper"]}></div>
+        </div>
+    )
+})
+

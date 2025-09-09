@@ -7,11 +7,22 @@ import {useMemoizedFn} from "ahooks"
 import {AIChatToolColorCard, AIChatToolItem} from "@/pages/ai-agent/chatTemplate/AIChatTool"
 import {AIReActChatReview} from "../aiReActChatReview/AIReActChatReview"
 import {isShowToolColorCard} from "@/pages/ai-agent/utils"
+import {AiTemplateHeader} from "@/pages/ai-agent/ai-template"
+import { TAiTemplateHeaderProps } from "@/pages/ai-agent/ai-template/AiTemplateHeader/TAiTemplateHeader"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
     chatClassName: styles["question-wrapper"]
 }
+
+// TODO 模拟数据
+const headerData = {
+    name: "网络链接检查网络链接检查网络链接检查网络链接检查网络链接检查网络链接检查",
+    describe: "这里是一句话对本次任务的执行结果进行简单描述，请查看这里是一句话对本次任务的执行结果进行简单描述，请查看这里是一句话对本次任务的执行结果进行简单描述，请查看",
+    type: "in-progress" as TAiTemplateHeaderProps['type']
+}
+
+
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {
     const {chats, onSendAIRequire} = props
     const listRef = useRef<HTMLDivElement>(null)
@@ -98,7 +109,10 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     return (
         <div ref={listRef} className={styles["ai-re-act-chat-contents"]}>
             <div className={styles["re-act-contents-list"]}>
-                {chats.map((item: AIChatMessage.AICasualChatQAStream, index) => renderContent(item))}
+                {/* TODO 此处需要还原 */}
+                {/* {chats.map((item: AIChatMessage.AICasualChatQAStream, index) => renderContent(item))} */}
+
+                <AiTemplateHeader {...headerData} />
             </div>
         </div>
     )

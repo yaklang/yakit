@@ -1,0 +1,74 @@
+.template-header-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    .template-header-separation {
+        margin: 8px 0;
+        align-self: stretch;
+        border-top: 1px dashed var(--Colors-Use-Neutral-Border);
+        width: 100%;
+    }
+    .template-header-content {
+        display: flex;
+        align-items: center;
+        padding: 4px 0;
+        .template-header-box {
+            display: flex;
+            padding: 4px 8px 4px 6px;
+            align-items: center;
+            gap: 4px;
+            flex: 1 0 0;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 16px;
+            color: var(--Colors-Use-Neutral-Text-2-Primary);
+            &>div:first-child {
+                max-width: 188px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                word-break: keep-all;
+            }
+            .template-header-describe {
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                font-size: 11px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 14px;
+                max-width: 418px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                word-break: keep-all;
+            }
+            .template-header-describe-in-progress {
+                height: 18px;
+                padding: 2px 6px;
+                border-radius: 9999px;
+                background: var(--Colors-Use-Warning-Bg-Hover);
+                color: var(--Colors-Use-Warning-Primary);
+                
+                .icon {
+                    animation: in-progress-icon 2.5s linear infinite;
+                    margin-right: 4px;
+                }
+                @keyframes in-progress-icon {
+                    from {
+                        transform: rotate(0deg);
+                    }
+                    to {
+                        transform: rotate(360deg);
+                    }
+                }
+            }
+            .template-header-describe-error {
+                height: 18px;
+                padding: 2px 6px;
+                border-radius: 9999px;
+                background: var(--Colors-Use-Error-Bg-Hover);
+                color: var(--Colors-Use-Error-Primary);
+            }
+        }
+    }
+}
