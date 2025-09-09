@@ -23,7 +23,7 @@ $tagColor: (
         color: var(--Colors-Use-Error-Primary)
     ),
     "serious": (
-        color: var(--yakit-serious-5)
+        color: var(--Colors-Use-Status-Serious)
     ),
     "default": (
         color: var(--Colors-Use-Neutral-Disable)
@@ -175,10 +175,12 @@ $keyColor: map-keys($tagColor);
     height: 100%;
     display: flex;
     flex-direction: column;
+    flex: 1;
+    overflow: hidden;
     .main-title {
-        border-left: 1px solid #eaecf3;
-        border-bottom: 1px solid #eaecf3;
-        border-right: 1px solid #eaecf3;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         background: var(--Colors-Use-Neutral-Bg);
         display: flex;
         flex-direction: row;
@@ -407,7 +409,7 @@ $keyColor: map-keys($tagColor);
             .line-top-dot {
                 width: 1px;
                 height: 1px;
-                background-color: #eaecf3;
+                background-color: var(--Colors-Use-Neutral-Border);
                 border-top-left-radius: 50%;
                 border-top-right-radius: 50%;
                 overflow: hidden;
@@ -415,12 +417,12 @@ $keyColor: map-keys($tagColor);
             .line-style {
                 flex: 1;
                 width: 1px;
-                background-color: #eaecf3;
+                background-color: var(--Colors-Use-Neutral-Border);
             }
             .line-bottom-dot {
                 width: 1px;
                 height: 1px;
-                background-color: #eaecf3;
+                background-color: var(--Colors-Use-Neutral-Border);
                 border-bottom-left-radius: 50%;
                 border-bottom-right-radius: 50%;
                 overflow: hidden;
@@ -497,7 +499,7 @@ $keyColor: map-keys($tagColor);
             .divider-style {
                 width: 1px;
                 height: 12px;
-                background-color: #eaecf3;
+                background-color: var(--Colors-Use-Neutral-Border);
             }
             .reply-btn {
                 margin-left: 8px;
@@ -510,9 +512,9 @@ $keyColor: map-keys($tagColor);
     .info-additional {
         padding: 10px 12px;
         border-radius: 0 0 4px 4px;
-        border-right: 1px solid #eaecf3;
-        border-bottom: 1px solid #eaecf3;
-        border-left: 1px solid #eaecf3;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
         background: #fff;
 
         .description-style {
@@ -539,7 +541,7 @@ $keyColor: map-keys($tagColor);
             gap: 8px;
             .reply-line {
                 width: 2px;
-                background-color: #eaecf3;
+                background-color: var(--Colors-Use-Neutral-Border);
             }
             .reply-content {
                 cursor: pointer;

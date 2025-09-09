@@ -110,7 +110,7 @@ import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightA
 import {JumpToAuditEditorProps} from "@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType"
 import {Selection} from "@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType"
 import MDEditor from "@uiw/react-md-editor"
-import { getNameByPath } from "@/pages/yakRunner/utils"
+import {getNameByPath} from "@/pages/yakRunner/utils"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -2068,14 +2068,22 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                 <>
                     <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
                         {info.Description ? (
-                            <MDEditor.Markdown source={info.Description} style={{ whiteSpace: "normal",fontSize:14 }} />
+                            <MDEditor.Markdown
+                                className={classNames(styles["md-content"])}
+                                source={info.Description}
+                                style={{whiteSpace: "normal"}}
+                            />
                         ) : (
                             "-"
                         )}
                     </Descriptions.Item>
                     <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
                         {info.Solution ? (
-                            <MDEditor.Markdown source={info.Solution} style={{ whiteSpace: "normal",fontSize:14 }}/>
+                            <MDEditor.Markdown
+                                className={classNames(styles["md-content"])}
+                                source={info.Solution}
+                                style={{whiteSpace: "normal"}}
+                            />
                         ) : (
                             "-"
                         )}

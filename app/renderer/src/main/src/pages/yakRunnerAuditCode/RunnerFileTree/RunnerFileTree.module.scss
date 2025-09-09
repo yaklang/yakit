@@ -173,8 +173,8 @@
 .left-side-bar {
     height: 100%;
     display: flex;
-    // border-left: 1px solid #eaecf3;
-    // border-right: 1px solid #eaecf3;
+    // border-left: 1px solid var(--Colors-Use-Neutral-Border);
+    // border-right: 1px solid var(--Colors-Use-Neutral-Border);
 
     &-list {
         display: inline-flex;

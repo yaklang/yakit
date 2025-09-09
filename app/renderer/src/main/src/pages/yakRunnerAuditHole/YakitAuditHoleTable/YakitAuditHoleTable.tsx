@@ -1173,7 +1173,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                 )}
             </div>
             <YakitRadioButtons
-                style={{marginTop: 6, marginBottom: 6}}
+                style={{margin: 6 }}
                 value={showType}
                 onChange={(e) => {
                     const value = e.target.value

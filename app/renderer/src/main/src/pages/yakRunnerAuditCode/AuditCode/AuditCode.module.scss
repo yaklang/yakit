@@ -75,6 +75,9 @@
     height: 100%;
     padding: 0px 0px 0px 4px;
     :global {
+        .ant-tree {
+            background-color: var(--Colors-Use-Basic-Background);
+        }
         .ant-tree .ant-tree-treenode {
             padding-bottom: 0;
         }
@@ -291,7 +294,7 @@
         display: flex;
         flex-direction: row;
         justify-content: space-between;
-        border-bottom: 1px solid #eaecf3;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         background: var(--Colors-Use-Neutral-Bg);
         .main {
             display: flex;
@@ -374,7 +377,7 @@
         flex: 1;
         overflow: hidden;
         height: 1px;
-        border-top: 1px dashed #eaecf3;
+        border-top: 1px dashed var(--Colors-Use-Neutral-Border);
     }
 }
 
@@ -444,7 +447,7 @@
         overflow: hidden;
         .history-item-box {
             padding: 2px;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             .history-item {
                 margin-bottom: 4px;
                 cursor: pointer;
@@ -485,7 +488,7 @@
         flex: 1;
         overflow: hidden;
         height: 1px;
-        border-top: 1px dashed #eaecf3;
+        border-top: 1px dashed var(--Colors-Use-Neutral-Border);
     }
 }
 
@@ -496,7 +499,7 @@
 }
 
 .extra-params-divider {
-    border-bottom: 1px solid #eaecf3;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 }
 
 .tooltip-line-feed {

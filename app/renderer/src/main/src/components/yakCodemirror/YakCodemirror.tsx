@@ -6,7 +6,7 @@ import {Controlled as CodeMirror} from "react-codemirror2"
 // 正确的样式导入方式
 import "codemirror/lib/codemirror.css"
 // 主题样式
-// import "codemirror/theme/material.css"
+import "codemirror/theme/material.css" // 暗黑主题
 // import "codemirror/theme/eclipse.css" // Eclipse主题
 // import "codemirror/theme/xq-light.css" // XQ Light主题
 // import "codemirror/theme/idea.css" // IntelliJ IDEA主题
@@ -31,6 +31,7 @@ import "codemirror/addon/hint/javascript-hint"
 import "codemirror/addon/hint/show-hint.css"
 import "codemirror/addon/selection/active-line"
 import "codemirror/addon/edit/matchbrackets"
+import {useTheme} from "@/hook/useTheme"
 
 export const YakCodemirror: React.FC<YakCodemirrorProps> = (props) => {
     const {
@@ -45,6 +46,7 @@ export const YakCodemirror: React.FC<YakCodemirrorProps> = (props) => {
         editorDidMount
     } = props
     const [codemirrorEditor, setCodemirrorEditor] = useState<any>()
+    const {theme: currentTheme} = useTheme()
 
     // 根据文件后缀判断语言模式
     const getLanguageMode = (filename: string) => {
@@ -111,7 +113,7 @@ export const YakCodemirror: React.FC<YakCodemirrorProps> = (props) => {
         // neat (简洁主题)    theme: "neat"
         let setting: any = {
             mode: fileName ? getLanguageMode(fileName) : language,
-            theme: theme,
+            theme: currentTheme === "dark" ? "material" : theme,
             lineNumbers: true,
             viewportMargin: Infinity, // 关键设置
             lineWrapping: false, // 设置为 false 禁止换行
@@ -126,14 +128,14 @@ export const YakCodemirror: React.FC<YakCodemirrorProps> = (props) => {
             readOnly,
             extraKeys: {
                 "Ctrl-Space": "autocomplete"
-            },
+            }
         }
         if (readOnly) {
             // 隐藏光标
             setting.cursorHeight = 0
         }
         return setting
-    }, [readOnly, fileName])
+    }, [readOnly, fileName, currentTheme])
 
     useEffect(() => {
         if (!codemirrorEditor || !highLight) return
@@ -150,7 +152,7 @@ export const YakCodemirror: React.FC<YakCodemirrorProps> = (props) => {
         // 添加新的高亮
         codemirrorEditor.markText(newForm, newTo, {
             className: highLight.className || styles["highlight-text"],
-            css: "background-color: #fff3b2" // 可以直接设置样式，或者通过 className 在 CSS 中设置
+            css: "background-color: var(--Colors-Use-Yellow-Bg)" // 可以直接设置样式，或者通过 className 在 CSS 中设置
         })
     }, [codemirrorEditor, highLight])
 

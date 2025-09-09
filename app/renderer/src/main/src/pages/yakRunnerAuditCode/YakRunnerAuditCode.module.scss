@@ -46,7 +46,7 @@
             height: 100%;
             overflow: hidden;
             .runner-tabs-top{
-                border-top: 1px solid #ffffff;
+                border-top: 1px solid var(--Colors-Use-Main-On-Primary)
             }
         }
     }
@@ -60,7 +60,7 @@
             height: 100%;
             overflow: hidden;
             .runner-tabs-top{
-                border-top: 1px solid #ffffff;
+                border-top: 1px solid var(--Colors-Use-Main-On-Primary);
             }
         }
     }
