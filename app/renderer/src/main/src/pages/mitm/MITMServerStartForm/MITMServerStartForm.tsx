@@ -276,8 +276,21 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [width, setWidth] = useState<number>(0)
 
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
+    const [alertVisible, setAlertVisible] = useState<boolean>(true)
     return (
         <>
+            {mitmVersion === MITMVersion.V1 && (
+                <div className={styles["mitm-alert-msg"]} style={{display: alertVisible ? "block" : "none"}}>
+                    当前使用的是MITM v1版本
+                    <YakitButton
+                        style={{float: "right"}}
+                        type='text2'
+                        size={"middle"}
+                        icon={<OutlineXIcon />}
+                        onClick={() => setAlertVisible(false)}
+                    />
+                </div>
+            )}
             <div className={styles["mitm-server-start-form"]}>
                 <ReactResizeDetector
                     onResize={(w) => {

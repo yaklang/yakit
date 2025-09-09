@@ -795,6 +795,16 @@ const Home: React.FC<HomeProp> = (props) => {
                                         <span className={styles["title-text"]}>
                                             {t("YakitRoute.MITM Interactive Hijacking")}
                                         </span>
+                                        <YakitButton
+                                            type='outline1'
+                                            style={{marginLeft: 8}}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                onMenu({route: YakitRoute.HTTPHacker})
+                                            }}
+                                        >
+                                            {t("Home.MITMHijackV1")}
+                                        </YakitButton>
                                     </div>
                                     <div className={styles["home-card-header-desc"]}>
                                         {t("YakitRoute.mitmSslHijack")}

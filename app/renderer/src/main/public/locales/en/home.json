@@ -1,5 +1,6 @@
 {
     "Home": {
+        "MITMHijackV1": "MITM Hijack v1",
         "certNotConfigured": "Certificate not configured detected",
         "hijackStart": "Start Hijacking",
         "hostListen": "Listen Host",

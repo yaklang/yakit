@@ -33,7 +33,7 @@ import {cloneDeep} from "lodash"
 import {MITMHotPatchTempDefault} from "@/defaultConstants/mitm"
 import {SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
 import {OutlineRefreshIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
-import MITMContext from "../Context/MITMContext"
+import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {
     grpcClientMITMHooks,
     grpcClientMITMLoading,
@@ -532,6 +532,13 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         onError: () => {},
         onEnd: () => {}
     })
+    const startPluginTrace = useMemoizedFn(() => {
+        if (mitmVersion === MITMVersion.V1) {
+            yakitNotify("info", "MITM 交互式劫持v1 暂不支持")
+            return
+        }
+        pluginTraceActions.startPluginTrace()
+    })
 
     const onRenderContent = useMemoizedFn(() => {
         switch (curTabKey) {
@@ -719,7 +726,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                         startLoading={puginTraceData.startLoading}
                         tracing={puginTraceData.tracing}
                         stopLoading={puginTraceData.stopLoading}
-                        startPluginTrace={pluginTraceActions.startPluginTrace}
+                        startPluginTrace={startPluginTrace}
                         resetPluginTrace={pluginTraceActions.resetPluginTrace}
                         stopPluginTrace={pluginTraceActions.stopPluginTrace}
                         cancelPluginTraceById={pluginTraceActions.cancelPluginTraceById}
