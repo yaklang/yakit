@@ -734,7 +734,9 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             const newEditorInfo = {...editorInfo, code: content}
             setEditorInfo(newEditorInfo)
         }
-        updateAreaFun(content)
+        if(content !== editorInfo?.code){
+            updateAreaFun(content)
+        }
     })
 
     // 更新当前底部展示信息

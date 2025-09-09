@@ -44,7 +44,7 @@
 
 .white-link {
     @extend .fake-content;
-    border-color: #fff;
+    border-color: var(--Colors-Use-Neutral-Border);
 }
 
 .grey-link {
@@ -58,7 +58,7 @@
 }
 
 .dragging {
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
 
     &::before {
         @extend .white-link;
@@ -96,7 +96,7 @@
         display: flex;
         overflow: hidden;
         width: 100%;
-        background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        background-color: var(--Colors-Use-Neutral-Bg);
         position: relative;
 
         &::after {
@@ -196,7 +196,7 @@
         position: absolute;
         bottom: 0;
         left: 0;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }
 
@@ -252,7 +252,7 @@
             .dot {
                 width: 10px;
                 height: 10px;
-                background: #f28b44;
+                background: var(--Colors-Use-Main-Primary);
                 border-radius: 50%;
                 margin: 5px;
                 position: relative;
@@ -263,7 +263,7 @@
 }
 
 .runner-tab-bar-item:hover {
-    background-color: #ffffff;
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
 }
 
 .runner-tab-bar-item:not(:first-child) {
@@ -274,13 +274,13 @@
         top: 8px;
         width: 1px;
         height: 16px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }
 
 .runner-tab-bar-item.selected {
     min-width: fit-content;
-    background-color: #f0f1f3;
+    background-color: var(--Colors-Use-Neutral-Bg);
     &::after {
         content: "";
         position: absolute;
@@ -288,14 +288,14 @@
         left: 0;
         width: 100%;
         height: 1px;
-        background-color: #f0f1f3;
+        background-color: var(--Colors-Use-Neutral-Bg);
         z-index: 10;
     }
 
     .item-wrapper {
         .text-style {
             white-space: nowrap;
-            color: #f28b44;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 600;
             line-height: 16px;
@@ -352,7 +352,7 @@
 }
 
 .runner-tab-bar-item.dragging {
-    border: 1px solid #f28b44;
+    border: 1px solid var(--Colors-Use-Main-Border);
     border-radius: 4px;
     background-color: rgba(242, 139, 68, 0.06);
     &.selected {
@@ -370,7 +370,7 @@
 /* ---------- RunnerTabPane ----------*/
 .runner-tab-pane {
     height: 100%;
-    background-color: #f0f1f3;
+    background-color: var(--Colors-Use-Neutral-Bg);
     .warning-editor {
         height: 100%;
         width: 100%;
@@ -519,14 +519,14 @@
                     line-height: 20px;
                     white-space: nowrap;
                     .file-name {
-                        color: #f28b44;
+                        color: var(--Colors-Use-Main-Primary);
                     }
                     .file-path {
-                        color: #b4bbca;
+                        color: var(--Colors-Use-Neutral-Disable);
                     }
                     &:hover {
                         .file-path {
-                            color: #f28b44;
+                            color: var(--Colors-Use-Main-Hover);
                             text-decoration: underline;
                         }
                     }
@@ -549,13 +549,12 @@
 .code-scan-monaco-widget {
     border-radius: 4px;
     width: 188px;
-    background-color: rgba(203, 210, 222, 0.5);
+    background-color: var(--Colors-Use-Grey-Border);
     padding: 10px;
     &:hover {
-        background-color: rgba(203, 210, 222, 0.8);
+        background-color: var(--Colors-Use-Grey-Bg-Hover);
     }
     .header {
-        // color: #ffffff;
         display: flex;
         flex-direction: row;
         justify-content: space-between;
@@ -572,11 +571,11 @@
             svg {
                 width: 16px;
                 height: 16px;
-                color: black;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             &:hover {
                 svg {
-                    color: #f28b44;
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }

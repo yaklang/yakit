@@ -675,7 +675,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                                     total={allReportItems.length}
                                     current={current}
                                     pageSize={1}
-                                    showTotal={(total) => `共 ${total} 页`}
+                                    showTotal={(total) => <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>共 {total} 页</div>}
                                     onChange={onChangePagination}
                                 />
                             </div>

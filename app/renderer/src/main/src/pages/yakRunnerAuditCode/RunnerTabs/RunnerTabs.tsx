@@ -915,7 +915,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 }
             })
         })
-    }, [areaInfo, editor])
+    }, [areaInfo])
 
     // 光标位置信息
     const positionRef = useRef<CursorPosition>()
@@ -956,7 +956,9 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             }
             setEditorInfo(newEditorInfo)
         }
-        updateAreaFun(content)
+        if(content !== editorInfo?.code){
+            updateAreaFun(content)
+        }
     })
 
     // 更新当前底部展示信息
@@ -1072,9 +1074,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             // 获取选中的字符内容 用于搜索代入
             const selectedText = editor.getModel()?.getValueInRange(selection)
             onSetSelectedSearchVal(selectedText)
-
-            // 选中时也调用了onDidChangeCursorPosition考虑优化掉重复调用
-            // updateBottomEditorDetails()
         })
         // 监听编辑器是否聚焦
         const focusEditor = editor.onDidFocusEditorWidget(() => {
@@ -1170,7 +1169,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     })
 
     // 代码扫描编辑器提示
-    const editerMenuFun = (editor: YakitIMonacoEditor) => {
+    const editerMenuFun = useDebounceFn((editor: YakitIMonacoEditor) => {
         // 编辑器选中弹窗的唯一Id
         const rangeId: string = `monaco.range.code.scan.widget`
 
@@ -1271,7 +1270,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         if (!editorInfo?.highLightRange || !editorInfo?.highLightRange?.source) return
         openFizzRangeWidget()
         editor?.getModel()?.pushEOL(newEditor.EndOfLineSequence.CRLF)
-    }
+    },
+        {wait: 300}).run
 
     const onRefreshWidgetFun = useMemoizedFn((value) => {
         try {
@@ -1293,7 +1293,11 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     {highLightRange: {...highLightRange, source}},
                     activeFile.path
                 )
-                setAreaInfo && setAreaInfo(newAreaInfo)
+                // PS:行列更行可能会导致此刷新在行列刷新前,导致Widget无法正常显示（line:1138）
+                // 添加定时器等待一下吧
+                setTimeout(()=>{
+                    setAreaInfo && setAreaInfo(newAreaInfo)
+                },200)
             }
         } catch (error) {}
     })
@@ -1316,10 +1320,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
     useEffect(() => {
         if (!editor) return
-        setTimeout(() => {
-            // 此处定时器作用为多文件切换时 需等待其内容渲染完毕，否则会导致位置信息错误
-            editerMenuFun(editor)
-        }, 50)
+        // 此处定时器作用为多文件切换时 需等待其内容渲染完毕，否则会导致位置信息错误
+        editerMenuFun(editor)
     }, [editor, editorInfo])
 
     /** 代码审计 代码错误检查并显示提示标记 */

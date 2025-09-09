@@ -23,7 +23,7 @@ $tagColor: (
         color: var(--Colors-Use-Error-Primary)
     ),
     "serious": (
-        color: var(--yakit-serious-5)
+        color: var(--Colors-Use-Status-Serious)
     ),
     "default": (
         color: var(--Colors-Use-Neutral-Disable)
@@ -56,10 +56,10 @@ $keyColor: map-keys($tagColor);
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
         svg {
             width: 16px;
-            height: 16px
+            height: 16px;
         }
         &:hover {
-            color: var(--Colors-Use-Main-Primary)
+            color: var(--Colors-Use-Main-Primary);
         }
     }
     .yakit-risk-details {
@@ -129,9 +129,9 @@ $keyColor: map-keys($tagColor);
                     font-weight: 600;
                     line-height: 24px;
                 }
-                .content-heard-body-title-click{
+                .content-heard-body-title-click {
                     cursor: pointer;
-                    &:hover{
+                    &:hover {
                         text-decoration: underline;
                     }
                 }
@@ -168,7 +168,6 @@ $keyColor: map-keys($tagColor);
             justify-content: flex-end;
         }
     }
-    
 }
 .yakit-risk-details-content-no-border {
     border: 0;
@@ -263,9 +262,9 @@ $keyColor: map-keys($tagColor);
     display: flex;
     flex-direction: column;
     .main-title {
-        border-left: 1px solid #eaecf3;
-        border-bottom: 1px solid #eaecf3;
-        border-right: 1px solid #eaecf3;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         background: var(--Colors-Use-Neutral-Bg);
         display: flex;
         flex-direction: row;
@@ -310,7 +309,7 @@ $keyColor: map-keys($tagColor);
     display: flex;
     gap: 4px;
     align-items: center;
-    svg{
+    svg {
         width: 16px;
         height: 16px;
         color: var(--Colors-Use-Neutral-Disable);
@@ -369,8 +368,14 @@ $keyColor: map-keys($tagColor);
     overflow-y: auto;
     height: 100%;
 }
-.md-content{
+div.md-content {
     font-size: 14px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    background-color: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Basic-Background);
+    pre{
+        background: var(--Colors-Use-Neutral-Bg);
+    }
 }
