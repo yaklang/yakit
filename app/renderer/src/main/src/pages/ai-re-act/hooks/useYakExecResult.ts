@@ -4,15 +4,15 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {checkStreamValidity, convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AIChatMessage, AIOutputEvent} from "@/pages/ai-agent/type/aiChat"
-import {UseExecCardEvents, UseExecCardParams, UseExecCardState} from "./type"
+import {UseYakExecResultEvents, UseYakExecResultParams, UseYakExecResultState} from "./type"
 import {handleGrpcDataPushLog} from "./utils"
 
 // 属于该 hook 处理数据的类型
-export const UseExecCardTypes = ["yak_exec_result"]
+export const UseYakExecResultTypes = ["yak_exec_result"]
 
-function useExecCard(params?: UseExecCardParams): [UseExecCardState, UseExecCardEvents]
+function useYakExecResult(params?: UseYakExecResultParams): [UseYakExecResultState, UseYakExecResultEvents]
 
-function useExecCard(params?: UseExecCardParams) {
+function useYakExecResult(params?: UseYakExecResultParams) {
     const handlePushLog = useMemoizedFn((log: AIChatMessage.Log) => {
         if (params?.pushLog) {
             params.pushLog(log)
@@ -80,4 +80,4 @@ function useExecCard(params?: UseExecCardParams) {
     return [{card}, {handleSetData, handleResetData}] as const
 }
 
-export default useExecCard
+export default useYakExecResult

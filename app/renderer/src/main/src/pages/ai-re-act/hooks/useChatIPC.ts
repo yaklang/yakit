@@ -7,7 +7,7 @@ import {AIChatMessage, AIInputEvent, AIOutputEvent, AIStartParams} from "@/pages
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
 import useCasualChat, {UseCasualChatTypes} from "./useCasualChat"
-import useExecCard, {UseExecCardTypes} from "./useExecCard"
+import useYakExecResult, {UseYakExecResultTypes} from "./useYakExecResult"
 import {v4 as uuidv4} from "uuid"
 import useTaskChat, {UseTaskChatTypes} from "./useTaskChat"
 import {handleGrpcDataPushLog} from "./utils"
@@ -32,7 +32,7 @@ const UseCasualAndTaskTypes = [
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
 function useChatIPC(params?: UseChatIPCParams) {
-    const {onTaskReview, onTaskReviewExtra, onReviewRelease, onEnd} = params || {}
+    const {onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onEnd} = params || {}
 
     const handleCasualReviewRelease = useMemoizedFn((id: string) => {
         onReviewRelease && onReviewRelease("casual", id)
@@ -67,7 +67,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     // AI性能相关数据和逻辑
     const [aiPerfData, aiPerfDataEvent] = useAIPerfData({pushLog: pushLog})
     // 执行过程中插件输出的卡片
-    const [card, cardEvent] = useExecCard({pushLog: pushLog})
+    const [yakExecResult, yakExecResultEvent] = useYakExecResult({pushLog: pushLog})
 
     // 设置任务规划的标识ID
     const planCoordinatorId = useRef<string>("")
@@ -118,7 +118,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         setExecute(false)
         setLogs([])
         aiPerfDataEvent.handleResetData()
-        cardEvent.handleResetData()
+        yakExecResultEvent.handleResetData()
         planCoordinatorId.current = ""
         casualChatEvent.handleResetData()
         taskChatEvent.handleResetData()
@@ -141,8 +141,10 @@ function useChatIPC(params?: UseChatIPCParams) {
                 if (res.Type === "start_plan_and_execution") {
                     // 触发任务规划，并传出任务规划流的标识 coordinator_id
                     const startInfo = JSON.parse(ipcContent) as AIChatMessage.AIStartPlanAndExecution
-                    if (planCoordinatorId.current !== startInfo.coordinator_id) {
+                    if (startInfo.coordinator_id && planCoordinatorId.current !== startInfo.coordinator_id) {
+                        onTaskStart && onTaskStart(startInfo.coordinator_id)
                         taskChatEvent.handleSetCoordinatorId(startInfo.coordinator_id)
+                        planCoordinatorId.current = startInfo.coordinator_id
                     }
                     return
                 }
@@ -155,9 +157,9 @@ function useChatIPC(params?: UseChatIPCParams) {
                     return
                 }
 
-                if (UseExecCardTypes.includes(res.Type)) {
+                if (UseYakExecResultTypes.includes(res.Type)) {
                     // 执行过程中插件输出的卡片
-                    cardEvent.handleSetData(res)
+                    yakExecResultEvent.handleSetData(res)
                     return
                 }
 
@@ -274,7 +276,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     }, [])
 
     return [
-        {execute, logs, card, aiPerfData, casualChat, taskChat},
+        {execute, logs, yakExecResult, aiPerfData, casualChat, taskChat},
         {fetchToken, fetchRequest, onStart, onSend, onClose, onReset}
     ] as const
 }
