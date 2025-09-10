@@ -328,6 +328,7 @@
         cursor: pointer;
         border-radius: 4px;
         justify-content: space-between;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
 
         &:hover {
             background: var(--Colors-Use-Neutral-Bg-Hover);
@@ -513,6 +514,7 @@
 
 .rangeInputNumberTableWrapper {
     padding-top: 0px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 
     .body-length-filter {
         display: flex;
