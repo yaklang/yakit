@@ -13,6 +13,7 @@ import {getEnginePortCacheKey} from "@/utils/localCache/engine"
 import yakitSE from "@/assets/yakitSE.png"
 import yakitEE from "@/assets/yakitEE.png"
 import yakitSS from "@/assets/yakitSS.png"
+import stateGrid from "@/assets/yakit.jpg"
 import styles from "./yakitLoading.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -349,13 +350,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                 </div>
                             ) : (
                                 <div className={styles["yakit-loading-icon-wrapper"]}>
-                                    <div className={styles["theme-icon-wrapper"]}>
+                                    {/* <div className={styles["theme-icon-wrapper"]}>
                                         <div className={styles["theme-icon"]}>
                                             <YakitThemeLoadingSvgIcon />
                                         </div>
-                                    </div>
+                                    </div> */}
                                     <div className={styles["white-icon"]}>
-                                        <YakitLoadingSvgIcon />
+                                        <img src={stateGrid} alt='暂无图片' />
                                     </div>
                                 </div>
                             )}

@@ -68,7 +68,7 @@ switch (platform) {
         // ce
         appInfoOption = {
             appId: "io.yaklang.yakit",
-            productName: "Yakit",
+            productName: "SGC",
             copyright: "Copyright © 2024 yaklang.io"
         }
         macIcon = "app/assets/yakitlogo.icns"

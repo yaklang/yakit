@@ -30,7 +30,8 @@ export const getReleaseEditionName = () => {
         case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
             return "IRify-EnpriTrace"
         default:
-            return "Yakit"
+            // return "Yakit"
+            return "红队数字人"
     }
 }
 /** EE */

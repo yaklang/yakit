@@ -565,7 +565,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 height: "100%"
                             }}
                         >
-                            {isCommunityEdition() ? (
+                            {/* {isCommunityEdition() ? (
                                 <>
                                     <PublicMenu
                                         defaultExpand={defaultExpand}
@@ -587,7 +587,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                         })
                                     }}
                                 />
-                            )}
+                            )} */}
                             <MainOperatorContent routeKeyToLabel={routeKeyToLabel.current} />
                         </div>
                     </AutoSpin>

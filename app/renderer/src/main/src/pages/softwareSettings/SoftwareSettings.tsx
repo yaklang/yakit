@@ -17,6 +17,9 @@ import yakitEEMiniProject from "@/assets/yakitEE.png"
 import yakitSEMiniProject from "@/assets/yakitSE.png"
 import yakitSSMiniProject from "@/assets/yakitMiniSS.png"
 
+import stateGridSSProject from "@/assets/stateGrid.png"
+import stateGridSSMiniProject from "@/assets/yakit.jpg"
+
 const ProjectManage = React.lazy(() => import("./ProjectManage"))
 
 const {ipcRenderer} = window.require("electron")
@@ -29,15 +32,22 @@ interface SettingsMenuProp {
     icon: ReactNode
 }
 const ProjectLogo = (showMini: boolean) => {
-    if (isIRify()) {
-        return <img style={{height: "100%"}} src={showMini ? yakitSSMiniProject : yakitSSProject} alt='暂无图片' />
-    } else if (isEnpriTrace()) {
-        return <img style={{height: "100%"}} src={showMini ? yakitEEMiniProject : yakitEEProject} alt='暂无图片' />
-    } else if (isEnpriTraceAgent()) {
-        return <img style={{height: "100%"}} src={showMini ? yakitSEMiniProject : yakitSEProject} alt='暂无图片' />
-    } else {
-        return <YakitLogoSvgIcon />
-    }
+    // if (isIRify()) {
+    //     return <img style={{height: "100%"}} src={showMini ? yakitSSMiniProject : yakitSSProject} alt='暂无图片' />
+    // } else if (isEnpriTrace()) {
+    //     return <img style={{height: "100%"}} src={showMini ? yakitEEMiniProject : yakitEEProject} alt='暂无图片' />
+    // } else if (isEnpriTraceAgent()) {
+    //     return <img style={{height: "100%"}} src={showMini ? yakitSEMiniProject : yakitSEProject} alt='暂无图片' />
+    // } else {
+    //     return <YakitLogoSvgIcon />
+    // }
+    return (
+        <img
+            style={showMini ? {width: 32, height: 32} : {}}
+            src={showMini ? stateGridSSMiniProject : stateGridSSProject}
+            alt='暂无图片'
+        />
+    )
 }
 const SettingsMenu: SettingsMenuProp[] = [
     {

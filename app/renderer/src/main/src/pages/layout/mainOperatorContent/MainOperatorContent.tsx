@@ -369,41 +369,6 @@ const getColor = (subPage) => {
 }
 // 软件初始化时的默认打开页面数据
 export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCache[] = (routeKeyToLabel) => {
-    if (isEnpriTraceAgent()) {
-        return []
-    }
-
-    if (isBreachTrace()) {
-        return [
-            {
-                routeKey: routeConvertKey(YakitRoute.DB_ChaosMaker, ""),
-                verbose: "入侵模拟",
-                menuName: YakitRouteToPageInfo[YakitRoute.DB_ChaosMaker].label,
-                route: YakitRoute.DB_ChaosMaker,
-                singleNode: true,
-                multipleNode: []
-            }
-        ]
-    }
-
-    if (isIRify()) {
-        return [
-            {
-                routeKey: routeConvertKey(YakitRoute.NewHome, ""),
-                verbose: "首页",
-                menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
-                route: YakitRoute.NewHome,
-                singleNode: true,
-                multipleNode: []
-            }
-        ]
-    }
-
-    const time = new Date().getTime().toString()
-    const tabId = `${YakitRoute.DB_HTTPHistoryAnalysis}-[${randomString(6)}]-${time}`
-    const menuName = YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis]?.label || ""
-    let tabName = routeKeyToLabel.get(YakitRoute.DB_HTTPHistoryAnalysis) || menuName
-    let verbose = `${tabName}-1`
     return [
         {
             routeKey: routeConvertKey(YakitRoute.NewHome, ""),
@@ -414,31 +379,92 @@ export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCac
             multipleNode: []
         },
         {
-            routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
-            verbose: "History",
-            menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
-            route: YakitRoute.DB_HTTPHistory,
+            routeKey: routeConvertKey(YakitRoute.AI_Agent, ""),
+            verbose: "AIAgent",
+            menuName: YakitRouteToPageInfo[YakitRoute.AI_Agent].label,
+            route: YakitRoute.AI_Agent,
             singleNode: true,
             multipleNode: []
         },
         {
-            routeKey: routeConvertKey(YakitRoute.DB_HTTPHistoryAnalysis, ""),
-            verbose: "流量分析器",
-            menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis].label,
-            route: YakitRoute.DB_HTTPHistoryAnalysis,
-            singleNode: false,
-            multipleLength: 1,
-            multipleNode: [
-                {
-                    id: tabId,
-                    verbose,
-                    time,
-                    groupId: "0",
-                    sortFieId: 1
-                }
-            ]
+            routeKey: routeConvertKey(YakitRoute.AI_ReAct, ""),
+            verbose: "AIReAct",
+            menuName: YakitRouteToPageInfo[YakitRoute.AI_ReAct].label,
+            route: YakitRoute.AI_ReAct,
+            singleNode: true,
+            multipleNode: []
         }
     ]
+    // if (isEnpriTraceAgent()) {
+    //     return []
+    // }
+
+    // if (isBreachTrace()) {
+    //     return [
+    //         {
+    //             routeKey: routeConvertKey(YakitRoute.DB_ChaosMaker, ""),
+    //             verbose: "入侵模拟",
+    //             menuName: YakitRouteToPageInfo[YakitRoute.DB_ChaosMaker].label,
+    //             route: YakitRoute.DB_ChaosMaker,
+    //             singleNode: true,
+    //             multipleNode: []
+    //         }
+    //     ]
+    // }
+
+    // if (isIRify()) {
+    //     return [
+    //         {
+    //             routeKey: routeConvertKey(YakitRoute.NewHome, ""),
+    //             verbose: "首页",
+    //             menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+    //             route: YakitRoute.NewHome,
+    //             singleNode: true,
+    //             multipleNode: []
+    //         }
+    //     ]
+    // }
+
+    // const time = new Date().getTime().toString()
+    // const tabId = `${YakitRoute.DB_HTTPHistoryAnalysis}-[${randomString(6)}]-${time}`
+    // const menuName = YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis]?.label || ""
+    // let tabName = routeKeyToLabel.get(YakitRoute.DB_HTTPHistoryAnalysis) || menuName
+    // let verbose = `${tabName}-1`
+    // return [
+    //     {
+    //         routeKey: routeConvertKey(YakitRoute.NewHome, ""),
+    //         verbose: "首页",
+    //         menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+    //         route: YakitRoute.NewHome,
+    //         singleNode: true,
+    //         multipleNode: []
+    //     },
+    //     {
+    //         routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
+    //         verbose: "History",
+    //         menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
+    //         route: YakitRoute.DB_HTTPHistory,
+    //         singleNode: true,
+    //         multipleNode: []
+    //     },
+    //     {
+    //         routeKey: routeConvertKey(YakitRoute.DB_HTTPHistoryAnalysis, ""),
+    //         verbose: "流量分析器",
+    //         menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis].label,
+    //         route: YakitRoute.DB_HTTPHistoryAnalysis,
+    //         singleNode: false,
+    //         multipleLength: 1,
+    //         multipleNode: [
+    //             {
+    //                 id: tabId,
+    //                 verbose,
+    //                 time,
+    //                 groupId: "0",
+    //                 sortFieId: 1
+    //             }
+    //         ]
+    //     }
+    // ]
 }
 
 // 固定页面需要icon图标的
@@ -451,14 +477,15 @@ const InitPageHasRouteIcon = [
 
 // 软件初始化时的默认当前打开页面的key
 export const getInitActiveTabKey = () => {
-    if (isEnpriTraceAgent()) {
-        return ""
-    }
-    if (isBreachTrace()) {
-        return YakitRoute.DB_ChaosMaker
-    }
+    return YakitRoute.AI_Agent
+    // if (isEnpriTraceAgent()) {
+    //     return ""
+    // }
+    // if (isBreachTrace()) {
+    //     return YakitRoute.DB_ChaosMaker
+    // }
 
-    return YakitRoute.NewHome
+    // return YakitRoute.NewHome
 }
 
 /**@description 拖拽样式 */
@@ -728,7 +755,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
 
-    const dbReport = useMemoizedFn(()=>{
+    const dbReport = useMemoizedFn(() => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.DB_Report).length
         if (isExist) {
             emiter.emit("onRefreshDBReport")
