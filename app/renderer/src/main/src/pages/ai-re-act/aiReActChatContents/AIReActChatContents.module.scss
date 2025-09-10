@@ -13,13 +13,24 @@
         width: 100%;
         .think-wrapper {
             display: flex;
-            flex-direction: column;
-            gap: 8px;
+            gap: 4px;
+            overflow: hidden;
 
             color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 400;
             line-height: 20px;
+            white-space: nowrap;
+            .before-text {
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                word-break: break-all;
+            }
+            .after-text {
+                width: fit-content;
+                flex-shrink: 0;
+            }
         }
         .question-wrapper {
             justify-content: flex-start;

@@ -9,10 +9,10 @@ import {
     AIChatLeftSideProps,
     AIChatLogsProps,
     AIChatToolDrawerContentProps,
-    AIChatToolSync,
     AITabsEnumType,
     ChatStreamCollapseItemProps,
-    ChatStreamCollapseProps
+    ChatStreamCollapseProps,
+    ChatStreamContentProps
 } from "../aiAgentType"
 import {
     OutlineArrowrightIcon,
@@ -47,13 +47,7 @@ import {
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {AITree} from "../aiTree/AITree"
 import cloneDeep from "lodash/cloneDeep"
-import {
-    AIChatMessage,
-    AIChatStreams,
-    AIEventQueryRequest,
-    AIEventQueryResponse,
-    NoAIChatReviewSelector
-} from "../type/aiChat"
+import {AIChatMessage, AIEventQueryRequest, AIEventQueryResponse, NoAIChatReviewSelector} from "../type/aiChat"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {handleFlatAITree} from "../useChatData"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -86,7 +80,7 @@ import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 import {LocalPluginLog} from "@/pages/plugins/operator/pluginExecuteResult/LocalPluginLog"
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
-    const {tasks, pressure, cost, onLeafNodeClick, card} = props
+    const {tasks, pressure, cost, card} = props
 
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
@@ -218,7 +212,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
             <div className={styles["task-list"]}>
                 {tasks.length > 0 ? (
-                    <AITree tasks={tasks} onNodeClick={onLeafNodeClick} />
+                    <AITree tasks={tasks} />
                 ) : (
                     <YakitEmpty style={{marginTop: "20%"}} title='思考中...' description='' />
                 )}
@@ -383,58 +377,12 @@ const taskAnswerToIconMap: Record<string, ReactNode> = {
 }
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {scrollToTask, setScrollToTask, tasks, activeStream, streams, defaultExpand} = props
-
-    // const activeFirstTabKey = useMemo(() => {
-    //     if (!activeStream || activeStream.length === 0) return []
-    //     return [
-    //         ...new Set(
-    //             activeStream.map((item) => {
-    //                 return (item || "").split("|")[0]
-    //             })
-    //         )
-    //     ]
-    // }, [activeStream])
-    // const activeSecondTabKey = useMemo(() => {
-    //     if (!activeStream || activeStream.length === 0) return []
-    //     return activeStream.map((item) => {
-    //         const first = (item || "").split("|")[0] || ""
-    //         const second = (item || "").split("|")[1] || ""
-    //         return `${first}-${second}`
-    //     })
-    // }, [activeStream])
+    const {tasks, streams, defaultExpand} = props
 
     // 任务集合
     const lists = useMemo(() => {
         return Object.keys(streams)
     }, [streams])
-
-    const [isStopScroll, setIsStopScroll] = useControllableValue<boolean>(props, {
-        defaultValue: false,
-        valuePropName: "isStopScroll",
-        trigger: "setIsStopScroll"
-    })
-
-    const wrapper = useRef<HTMLDivElement>(null)
-    useEffect(() => {
-        if (isStopScroll) return
-        // if (wrapper.current) {
-        //     const {scrollHeight} = wrapper.current
-        //     const {height} = wrapper.current.getBoundingClientRect()
-        //     if (height < scrollHeight) {
-        //         if (!isScrollTo.current) return
-        //         wrapper.current.scrollTop = scrollHeight
-        //     }
-        // }
-    }, [streams, isStopScroll])
-    const handleWrapperScroll: UIEventHandler<HTMLDivElement> = useMemoizedFn((e) => {
-        // if (wrapper.current) {
-        //     const {scrollHeight, scrollTop} = wrapper.current
-        //     const {height} = wrapper.current.getBoundingClientRect()
-        //     const offset = scrollHeight - scrollTop - height
-        //     if (offset > 20) setIsStopScroll(true)
-        // }
-    })
 
     // 生成任务展示名称
     const handleGenerateTaskName = useMemoizedFn((order: string) => {
@@ -444,100 +392,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         return task.name
     })
 
-    const isScrollTo = useRef(true)
-    useUpdateEffect(() => {
-        isScrollTo.current = !scrollToTask
-        if (!scrollToTask) {
-            setClickFirstPanel([])
-            setClickSecondPanel([])
-        }
-    }, [scrollToTask])
-
-    const [clickFirstPanel, setClickFirstPanel] = useState<string[]>([])
-    // 关闭一级容器，自动关闭该一级下的二级容器
-    // const handleChangeFirstPanel = useMemoizedFn((expand: boolean, order: string) => {
-    //     setClickFirstPanel((old) => {
-    //         if (expand) {
-    //             if (old.includes(order)) {
-    //                 return cloneDeep(old)
-    //             } else {
-    //                 return old.concat([order])
-    //             }
-    //         } else {
-    //             if (!old.includes(order)) {
-    //                 return cloneDeep(old)
-    //             } else {
-    //                 return old.filter((item) => item !== order)
-    //             }
-    //         }
-    //     })
-    //     if (!expand) {
-    //         if (order === scrollToTask?.index && setScrollToTask) setScrollToTask(undefined)
-    //         setClickSecondPanel((old) => {
-    //             return old.filter((item) => !item.startsWith(order))
-    //         })
-    //     }
-    // })
-    // const activeFirstPanel = useMemo(() => {
-    //     let active: string[] = []
-    //     if (scrollToTask) {
-    //         active.push(scrollToTask.index)
-    //         setTimeout(() => {
-    //             document.getElementById(scrollToTask.index)?.scrollIntoView()
-    //         }, 100)
-    //     }
-    //     if (lists.length === 1) return [lists[0]]
-    //     if (activeFirstTabKey.length > 0) {
-    //         active = active.concat(activeFirstTabKey)
-    //     }
-    //     return active.concat(clickFirstPanel.filter((item) => !active.includes(item)))
-    // }, [lists, scrollToTask, activeFirstTabKey, clickFirstPanel])
-
-    const [clickSecondPanel, setClickSecondPanel] = useState<string[]>([])
-    // const handleChangeSecondPanel = useMemoizedFn((expand: boolean, order: string) => {
-    //     setClickFirstPanel((old) => {
-    //         const first = order.split("-")[0]
-    //         if (expand) {
-    //             if (old.includes(first)) {
-    //                 return old
-    //             } else {
-    //                 return old.concat([first])
-    //             }
-    //         } else {
-    //             if (!old.includes(first)) {
-    //                 return old
-    //             } else {
-    //                 return old.filter((item) => item !== first)
-    //             }
-    //         }
-    //     })
-    //     setClickSecondPanel((old) => {
-    //         if (expand) {
-    //             if (old.includes(order)) {
-    //                 return old
-    //             } else {
-    //                 return old.concat([order])
-    //             }
-    //         } else {
-    //             if (!old.includes(order)) {
-    //                 return old
-    //             } else {
-    //                 return old.filter((item) => item !== order)
-    //             }
-    //         }
-    //     })
-    // })
-    // const activeSecondPanel = useMemo(() => {
-    //     let active: string[] = []
-    //     scrollToTask && active.push(scrollToTask.index)
-    //     if (activeSecondTabKey.length > 0) {
-    //         active = active.concat(activeSecondTabKey)
-    //     }
-    //     return active.concat(clickSecondPanel.filter((item) => !active.includes(item)))
-    // }, [activeSecondTabKey, clickSecondPanel])
-
     return (
-        <div ref={wrapper} className={styles["ai-agent-chat-stream"]} onScroll={handleWrapperScroll}>
+        <div className={styles["ai-agent-chat-stream"]}>
             {lists.map((taskName) => {
                 const headerTitle = handleGenerateTaskName(taskName)
                 // const firstExpand = activeFirstPanel.includes(taskName)
@@ -553,24 +409,23 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                             [styles["chat-stream-collapse-expand-first"]]: true // firstExpand
                         })}
                     >
-                        {(streams[taskName] || []).map((info: AIChatStreams, index) => {
-                            const {nodeId, timestamp, toolAggregation} = info
-                            const key = `${taskName}-${nodeId}-${timestamp}`
-                            // const secondExpand = activeSecondPanel.includes(key)
-                            if (isShowToolColorCard(nodeId)) {
-                                return <AIChatToolColorCard key={key} toolCall={info} />
+                        {(streams[taskName] || []).map((info: AIChatMessage.AITaskStreamOutput, index) => {
+                            const {NodeId, EventUUID, timestamp, toolAggregation} = info
+                            if (isShowToolColorCard(NodeId)) {
+                                return <AIChatToolColorCard key={EventUUID} toolCall={info} />
                             }
-                            if (isToolSummaryCard(nodeId) && toolAggregation) {
-                                return <AIChatToolItem key={key} item={toolAggregation} />
+                            if (isToolSummaryCard(NodeId) && toolAggregation) {
+                                return <AIChatToolItem key={EventUUID} item={toolAggregation} />
                             }
                             return (
                                 <ChatStreamCollapseItem
-                                    key={key}
+                                    key={EventUUID}
                                     info={info}
-                                    expandKey={key}
+                                    expandKey={EventUUID}
                                     secondExpand={false}
                                     handleChangeSecondPanel={() => {}}
                                     defaultExpand={defaultExpand}
+                                    timestamp={timestamp}
                                 />
                             )
                         })}
@@ -581,42 +436,41 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     )
 })
 const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo((props) => {
-    const {expandKey, info, secondExpand, handleChangeSecondPanel, className, defaultExpand} = props
-    const {nodeId, timestamp, data} = info
+    const {expandKey, info, className, defaultExpand, timestamp} = props
+    const {NodeId, stream} = info
     return (
         <ChatStreamCollapse
             key={expandKey}
             style={{marginBottom: 0}}
             defaultExpand={defaultExpand ?? true}
-            // expand={secondExpand}
-            // onChange={(value) => handleChangeSecondPanel(value, expandKey)}
             title={
                 <div className={styles["task-type-header"]}>
-                    {taskAnswerToIconMap[nodeId] || <SolidLightningboltIcon />}
-                    <div className={styles["task-type-header-title"]}>{nodeId}</div>
+                    {taskAnswerToIconMap[NodeId] || <SolidLightningboltIcon />}
+                    <div className={styles["task-type-header-title"]}>{NodeId}</div>
                     <div className={styles["task-type-header-time"]}>{formatTimestamp(timestamp)}</div>
                 </div>
             }
             className={classNames(styles["chat-stream-collapse-expand"], className || "")}
         >
-            {(data.reason || data.system || data.stream) && (
+            <ChatStreamContent stream={stream} />
+        </ChatStreamCollapse>
+    )
+})
+
+export const ChatStreamContent: React.FC<ChatStreamContentProps> = React.memo((props) => {
+    const {stream} = props
+    return (
+        <>
+            {(stream.reason || stream.system || stream.stream) && (
                 <div className={styles["think-wrapper"]}>
-                    {data.reason && <div>{data.reason}</div>}
+                    {stream.reason && <div>{stream.reason}</div>}
 
-                    {data.system && <div>{data.system}</div>}
+                    {stream.system && <div>{stream.system}</div>}
 
-                    {data.stream && <div>{data.stream}</div>}
+                    {stream.stream && <div>{stream.stream}</div>}
                 </div>
             )}
-
-            {/* {data.stream && (
-                <div className={styles["anwser-wrapper"]}>
-                    <React.Fragment>
-                        <ChatMarkdown content={data.stream} skipHtml={true} />
-                    </React.Fragment>
-                </div>
-            )} */}
-        </ChatStreamCollapse>
+        </>
     )
 })
 
@@ -1192,7 +1046,7 @@ export const AIChatLogs: React.FC<AIChatLogsProps> = memo((props) => {
 export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = memo((props) => {
     const {callToolId} = props
     const [secondExpand, setSecondExpand] = useState<string[]>([])
-    const [toolList, setToolList] = useState<AIChatStreams[]>([])
+    const [toolList, setToolList] = useState<AIChatMessage.AITaskStreamOutput[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     useEffect(() => {
         getList()
@@ -1207,10 +1061,10 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
         grpcQueryAIEvent(params)
             .then((res: AIEventQueryResponse) => {
                 const {Events} = res
-                const list: AIChatStreams[] = []
+                const list: AIChatMessage.AITaskStreamOutput[] = []
                 Events.filter((ele) => ele.Type === "stream").forEach((item) => {
                     const type = item.IsSystem ? "systemStream" : item.IsReason ? "reasonStream" : "stream"
-                    const nodeID = item.NodeId
+
                     const timestamp = item.Timestamp
                     let ipcContent = ""
                     let ipcStreamDelta = ""
@@ -1218,18 +1072,20 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                         ipcContent = Uint8ArrayToString(item.Content) || ""
                         ipcStreamDelta = Uint8ArrayToString(item.StreamDelta) || ""
                     } catch (error) {}
-                    const current: AIChatStreams = {
-                        nodeId: nodeID,
+                    const current: AIChatMessage.AITaskStreamOutput = {
+                        NodeId: item.NodeId,
                         timestamp: timestamp,
-                        data: {system: "", reason: "", stream: ""}
+                        stream: {system: "", reason: "", stream: ""},
+                        EventUUID: item.EventUUID,
+                        status: "end"
                     }
-                    if (type === "systemStream") current.data.system = ipcContent + ipcStreamDelta
-                    if (type === "reasonStream") current.data.reason = ipcContent + ipcStreamDelta
-                    if (type === "stream") current.data.stream = ipcContent + ipcStreamDelta
+                    if (type === "systemStream") current.stream.system = ipcContent + ipcStreamDelta
+                    if (type === "reasonStream") current.stream.reason = ipcContent + ipcStreamDelta
+                    if (type === "stream") current.stream.stream = ipcContent + ipcStreamDelta
                     list.push(current)
                 })
                 setToolList(list)
-                setSecondExpand(list.map((ele) => `${ele.nodeId}-${ele.timestamp}`))
+                setSecondExpand(list.map((ele) => ele.EventUUID))
             })
             .finally(() => {
                 setTimeout(() => {
@@ -1253,20 +1109,20 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                 <YakitSpin />
             ) : (
                 <>
-                    {toolList.map((info: AIChatStreams) => {
-                        const {nodeId, timestamp} = info
-                        const key = `${nodeId}-${timestamp}`
-                        const expand = secondExpand.includes(key)
+                    {toolList.map((info: AIChatMessage.AITaskStreamOutput) => {
+                        const {EventUUID, timestamp} = info
+                        const expand = secondExpand.includes(EventUUID)
                         return (
                             <ChatStreamCollapseItem
-                                key={key}
-                                expandKey={key}
+                                key={EventUUID}
+                                expandKey={EventUUID}
                                 info={info}
                                 secondExpand={expand}
                                 handleChangeSecondPanel={handleChangeSecondPanel}
                                 className={classNames({
                                     [styles["ai-tool-collapse-expand"]]: expand
                                 })}
+                                timestamp={timestamp}
                             />
                         )
                     })}

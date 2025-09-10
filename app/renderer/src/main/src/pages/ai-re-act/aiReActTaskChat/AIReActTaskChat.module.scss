@@ -1,0 +1,63 @@
+@use "../../ai-agent//aiTaskChat/AITaskChat.module.scss" as AITaskChat;
+
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.tab-wrap {
+    width: 100%;
+}
+.tab-content {
+    height: 100%;
+    overflow: hidden;
+}
+.ai-re-act-task-chat {
+    @extend %display-flex-center;
+    align-items: flex-start;
+    flex: 1;
+    overflow: hidden;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    @include AITaskChat.content-side("left");
+    .chat-content-wrapper {
+        @extend %display-column-center;
+        flex: 1;
+        overflow: hidden;
+        height: 100%;
+        width: 100%;
+        position: relative;
+    }
+    .header {
+        @extend %display-flex-center;
+        justify-content: space-between;
+        gap: 4px;
+        padding: 12px 12px 8px 12px;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        width: 100%;
+        height: 45px;
+        .title {
+            @extend %display-flex-center;
+            gap: 4px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+
+            /* PingFang SC/T6/Medium */
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 20px; /* 142.857% */
+            letter-spacing: 0.1px;
+            svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+        .extra {
+            @extend %display-flex-center;
+            gap: 12px;
+        }
+    }
+}

@@ -5,14 +5,13 @@ import AIReActContext, {AIReActContextDispatcher, AIReActContextStore} from "./u
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIReActGV} from "@/enums/aiReAct"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {AIReActChatMessage} from "../ai-agent/type/aiChat"
 import {useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
 import {AIReActSettingDefault, YakitAIReActPageID} from "./defaultConstant"
 import cloneDeep from "lodash/cloneDeep"
-import {AIReActChat} from "./aiReActChat/AIReActChat"
 
 import classNames from "classnames"
 import styles from "./AIReAct.module.scss"
+import {AIChatInfo} from "../ai-agent/type/aiChat"
 
 /** 清空用户缓存的固定值 */
 const AIReActCacheClearValue = "20250808"
@@ -23,9 +22,9 @@ export const AIReAct: React.FC<AIReActProps> = React.memo((props) => {
     const [setting, setSetting, getSetting] = useGetSetState<AIReActSetting>(cloneDeep(AIReActSettingDefault))
 
     // 历史对话
-    const [chats, setChats, getChats] = useGetSetState<AIReActChatMessage.AIReActChatItem[]>([])
+    const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
     // 当前展示对话
-    const [activeChat, setActiveChat] = useState<AIReActChatMessage.AIReActChatItem>()
+    const [activeChat, setActiveChat] = useState<AIChatInfo>()
 
     // 缓存全局配置数据
     useUpdateEffect(() => {
@@ -75,7 +74,7 @@ export const AIReAct: React.FC<AIReActProps> = React.memo((props) => {
                         .then((res) => {
                             if (!res) return
                             try {
-                                const cache = JSON.parse(res) as AIReActChatMessage.AIReActChatItem[]
+                                const cache = JSON.parse(res) as AIChatInfo[]
                                 if (!Array.isArray(cache) || cache.length === 0) return
                                 setChats(cache)
                             } catch (error) {}
@@ -117,13 +116,13 @@ export const AIReAct: React.FC<AIReActProps> = React.memo((props) => {
                     <AIReActSideList />
                 </div>
 
-                <div
+                {/* <div
                     className={classNames(styles["ai-re-act-chat-wrapper"], {
                         [styles["ai-re-act-chat-mini-wrapper"]]: isMini
                     })}
                 >
                     <AIReActChat />
-                </div>
+                </div> */}
             </div>
         </AIReActContext.Provider>
     )

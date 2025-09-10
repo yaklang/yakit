@@ -31,6 +31,7 @@ import {formatTimeYMD} from "@/utils/timeUtil"
 
 const AIChatRightSide = React.lazy(() => import("./AIChatRightSide/AIChatRightSide"))
 
+/**@deprecated */
 const AITaskChat: React.FC<AITaskChatProps> = memo(
     forwardRef((props, ref) => {
         const {onBack} = props
@@ -300,6 +301,11 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
             // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
             if (showID && events.fetchToken() && showID === events.fetchToken()) {
                 const answer: AIChatInfo["answer"] = {
+                    taskChat: {
+                        coordinatorId: "",
+                        plan: [],
+                        streams: {}
+                    },
                     pressure: cloneDeep(pressure),
                     firstCost: cloneDeep(firstCost),
                     totalCost: cloneDeep(totalCost),
@@ -316,7 +322,8 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                         totalCost: []
                     },
                     casualChat: {
-                        contents: []
+                        contents: [],
+                        coordinatorId: ""
                     }
                 }
 
@@ -497,7 +504,6 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                     expand={leftExpand}
                                     setExpand={setLeftExpand}
                                     tasks={uiPlan}
-                                    onLeafNodeClick={handleSetScrollTo}
                                     pressure={uiPressure}
                                     cost={uiFirstCost}
                                     card={card}
@@ -514,7 +520,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                             </div>
 
                             <div className={styles["content-list"]}>
-                                <div ref={chatBody} className={styles["chat-wrapper"]}>
+                                {/* <div ref={chatBody} className={styles["chat-wrapper"]}>
                                     {taskChat && (
                                         <AIAgentChatBody
                                             info={taskChat}
@@ -530,7 +536,7 @@ const AITaskChat: React.FC<AITaskChatProps> = memo(
                                             yakExecResultLogs={yakExecResultLogs}
                                         />
                                     )}
-                                </div>
+                                </div> */}
 
                                 <div className={styles["content-review"]}>
                                     {!!reviewInfo && (

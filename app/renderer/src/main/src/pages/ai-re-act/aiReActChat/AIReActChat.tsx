@@ -5,28 +5,35 @@ import {AIReActChatProps, AIReActLogProps} from "./AIReActChatType"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
 import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaProps} from "@/pages/ai-agent/template/type"
-import {useCreation, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
-import {AIInputEvent, AIReActChatMessage, AIStartParams} from "@/pages/ai-agent/type/aiChat"
+import {AIChatInfo, AIInputEvent, AIStartParams} from "@/pages/ai-agent/type/aiChat"
 import {randomString} from "@/utils/randomUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {SolidStopIcon} from "@/assets/icon/solid"
-import useAIReActDispatcher from "../useContext/useAIReActDispatcher"
 import {ColorsChatIcon} from "@/assets/icon/colors"
-import useAIReActStore from "../useContext/useAIReActStore"
-import useChatIPC from "../hooks/useChatIPC"
 import {OutlineNewspaperIcon, OutlineXIcon} from "@/assets/icon/outline"
-import cloneDeep from "lodash/cloneDeep"
-import emiter from "@/utils/eventBus/eventBus"
-import {AIReActEventInfo} from "../aiReActType"
+import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
+import useAIAgentDispatcher from "@/pages/ai-agent/useContext/useDispatcher"
+import {AIModelSelect} from "@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect"
+import classNames from "classnames"
+import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
+import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
+import {ChevrondownButton, ChevronleftButton, RoundedStopButton} from "./AIReActComponent"
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
+    const {mode, setMode} = props
+
+    const {chatIPCData} = useChatIPCStore()
+    const {chatIPCEvents} = useChatIPCDispatcher()
+    const {execute, logs, casualChat} = chatIPCData
+
     const wrapperRef = useRef<HTMLDivElement>(null)
 
     const [logVisible, setLogVisible] = useState<boolean>(false)
+    const [showFreeChat, setShowFreeChat] = useState<boolean>(true)
 
-    const {activeChat, setting} = useAIReActStore()
-    const {setChats, setActiveChat} = useAIReActDispatcher()
+    const {activeChat, setting} = useAIAgentStore()
+    const {setChats, setActiveChat} = useAIAgentDispatcher()
     /** 当前对话唯一ID */
     const activeID = useMemo(() => {
         return activeChat?.id
@@ -40,56 +47,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
         }
     }, [])
     // #endregion
-    // const handleShowReview = useMemoizedFn((info: AIChatReview) => {
-    //     // userInteractiveRef.current=true
-    //     setReviewInfo(info)
-    // })
-
-    // const handleShowReviewExtra = useMemoizedFn((info: AIChatReviewExtra) => {
-    //     if (info.type === "plan_task_analysis") {
-    //         setPlanReviewTreeKeywords(info.data.index, info.data)
-    //     }
-    // })
-    // 释放review
-    const handleReleaseReview = useMemoizedFn((id: string) => {
-        // const info = getReviewInfo()
-        // if (!info) return
-        // if (info.data.id === id) {
-        //     handleStopAfterChangeState()
-        // }
-    })
-    // 提问结束后缓存数据
-    const handleChatingEnd = useMemoizedFn(() => {
-        handleSaveChatInfo()
-    })
-    const [{execute, aiPerfData, logs, casualChat}, events] = useChatIPC({
-        // onReview: handleShowReview,
-        // onReviewExtra: handleShowReviewExtra,
-        onReviewRelease: handleReleaseReview,
-        onEnd: handleChatingEnd
-    })
-
-    // 保存上次对话信息
-    const handleSaveChatInfo = useMemoizedFn(() => {
-        const showID = activeID
-        // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
-        if (showID && events.fetchToken() && showID === events.fetchToken()) {
-            const answer: AIReActChatMessage.AIReActChatItem["answer"] = {
-                aiPerfData: cloneDeep(aiPerfData),
-                logs: cloneDeep(logs),
-                casualChat: cloneDeep(casualChat)
-            }
-            setChats &&
-                setChats((old) => {
-                    const newValue = cloneDeep(old)
-                    const findIndex = newValue.findIndex((item) => item.id === showID)
-                    if (findIndex !== -1) {
-                        newValue[findIndex].answer = {...(answer || {})}
-                    }
-                    return newValue
-                })
-        }
-    })
 
     // #region 问题相关逻辑
     // 初始化 AI ReAct
@@ -114,7 +71,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             Sequence: 1
         }
         // 创建新的聊天记录
-        const newChat: AIReActChatMessage.AIReActChatItem = {
+        const newChat: AIChatInfo = {
             id: randomString(16),
             name: `AI ReAct - ${new Date().toLocaleString()}`,
             question: qs,
@@ -130,9 +87,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                 ...request
             }
         }
-        events.onStart(newChat.id, startParams)
+        chatIPCEvents.onStart(newChat.id, startParams)
     })
 
+    /**自由对话 */
     const handleSend = useMemoizedFn((qs: string) => {
         if (!activeChat) return
         try {
@@ -142,66 +100,16 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
             }
 
             // 发送到服务端
-            events.onSend(activeChat.id, "casual", chatMessage)
+            chatIPCEvents.onSend(activeChat.id, "casual", chatMessage)
         } catch (error) {}
     })
 
-    /** AI交互补充策略 */
-    const handleSendAIRequire = useMemoizedFn((value: string, id) => {
-        if (!activeID) return
-        if (!id) return
-
-        const info: AIInputEvent = {
-            IsInteractiveMessage: true,
-            InteractiveId: id,
-            InteractiveJSONInput: value
-        }
-        setTimeout(() => {
-            events.onSend(activeID, "casual", info)
-            handleStopAfterChangeState()
-        }, 50)
-    })
-    /** 停止回答后的状态调整||清空Review状态 */
-    const handleStopAfterChangeState = useMemoizedFn(() => {
-        // 清空review信息
-        // setReviewInfo(undefined)
-        // resetPlanReviewTreeKeywords()
-    })
     const onStop = useMemoizedFn(() => {
         if (execute && activeID) {
-            events.onClose(activeID)
-            // handleStopAfterChangeState()
+            chatIPCEvents.onClose(activeID)
         }
     })
     // #endregion
-
-    useEffect(() => {
-        // ai-re-act 页面左侧侧边栏向 chatUI 发送的事件
-        const onEvents = (res: string) => {
-            try {
-                const data = JSON.parse(res) as AIReActEventInfo
-                if (!data.type) return
-                // 新开聊天对话窗
-                if (data.type === "new-chat") {
-                    onStop()
-                    handleSaveChatInfo()
-                    events.handleReset()
-                    handleStart("")
-                }
-            } catch (error) {}
-        }
-        emiter.on("onReActChatEvent", onEvents)
-        return () => {
-            emiter.off("onReActChatEvent", onEvents)
-        }
-    }, [])
-
-    useUpdateEffect(() => {
-        const token = events.fetchToken()
-        if (execute && activeChat?.id !== token) {
-            events.onClose(token)
-        }
-    }, [activeChat, execute])
 
     const uiCasualChat = useCreation(() => {
         if (!!activeChat?.answer?.casualChat) {
@@ -215,55 +123,78 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
         }
         return logs
     }, [activeChat, logs])
-
+    const openTask = useMemoizedFn(() => {
+        setMode("task")
+    })
+    const isShowRetract = useCreation(() => {
+        return mode === "task" && showFreeChat
+    }, [mode, showFreeChat])
+    const isShowExpand = useCreation(() => {
+        return mode === "task" && !showFreeChat
+    }, [mode, showFreeChat])
+    const handleCancelExpand = useMemoizedFn(() => {
+        setShowFreeChat(false)
+    })
     return (
-        <div className={styles["ai-re-act"]}>
-            <div ref={wrapperRef} className={styles["ai-re-act-chat"]} style={{height: "100%"}}>
-                <div className={styles["chat-container"]}>
-                    <div className={styles["chat-header"]}>
-                        <div className={styles["chat-header-title"]}>
-                            <ColorsChatIcon />
-                            自由对话
+        <>
+            <div
+                className={classNames(styles["ai-re-act"], {
+                    [styles["content-re-act-side"]]: isShowRetract,
+                    [styles["content-re-act-side-hidden"]]: isShowExpand
+                })}
+            >
+                <div
+                    ref={wrapperRef}
+                    className={classNames(styles["ai-re-act-chat"], {
+                        [styles["ai-re-act-chat-hidden"]]: !showFreeChat
+                    })}
+                >
+                    <div className={styles["chat-container"]}>
+                        <div className={styles["chat-header"]}>
+                            <div className={styles["chat-header-title"]}>
+                                <ColorsChatIcon />
+                                自由对话
+                            </div>
+                            <div className={styles["chat-header-extra"]}>
+                                <YakitButton
+                                    type='secondary2'
+                                    isHover={logVisible}
+                                    icon={<OutlineNewspaperIcon />}
+                                    onClick={() => setLogVisible((v) => !v)}
+                                >
+                                    日志
+                                </YakitButton>
+                                {isShowRetract && <ChevronleftButton onClick={handleCancelExpand} />}
+                                <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={openTask}>
+                                    打开Task
+                                </YakitButton>
+                            </div>
                         </div>
-                        <div className={styles["chat-header-extra"]}>
-                            <YakitButton
-                                type='secondary2'
-                                isHover={logVisible}
-                                icon={<OutlineNewspaperIcon />}
-                                onClick={() => setLogVisible((v) => !v)}
-                            >
-                                日志
-                            </YakitButton>
+                        <AIReActChatContents chats={uiCasualChat.contents} />
+                    </div>
+                    <div className={styles["chat-footer"]}>
+                        <div className={styles["footer-body"]}>
+                            <div className={styles["footer-inputs"]}>
+                                <AIChatTextarea
+                                    loading={false}
+                                    question={question}
+                                    setQuestion={setQuestion}
+                                    textareaProps={textareaProps}
+                                    onSubmit={handleSubmit}
+                                    extraFooterRight={execute && <RoundedStopButton onClick={onStop} />}
+                                    extraFooterLeft={<AIModelSelect />}
+                                />
+                            </div>
                         </div>
                     </div>
-                    <AIReActChatContents chats={uiCasualChat.contents} onSendAIRequire={handleSendAIRequire} />
                 </div>
-                <div className={styles["chat-footer"]}>
-                    <div className={styles["footer-body"]}>
-                        <div className={styles["footer-inputs"]}>
-                            <AIChatTextarea
-                                loading={false}
-                                question={question}
-                                setQuestion={setQuestion}
-                                textareaProps={textareaProps}
-                                onSubmit={handleSubmit}
-                                extraFooterRight={
-                                    execute && (
-                                        <YakitButton
-                                            className={styles["rounded-icon-btn"]}
-                                            colors='danger'
-                                            icon={<SolidStopIcon className={styles["stop-icon"]} />}
-                                            onClick={onStop}
-                                        />
-                                    )
-                                }
-                            />
-                        </div>
-                    </div>
+                <div className={styles["open-wrapper"]} onClick={() => setShowFreeChat(true)}>
+                    <ChevrondownButton />
+                    <div className={styles["text"]}>自由对话</div>
                 </div>
             </div>
             {logVisible && <AIReActLog logs={uiLogs} setLogVisible={setLogVisible} />}
-        </div>
+        </>
     )
 })
 

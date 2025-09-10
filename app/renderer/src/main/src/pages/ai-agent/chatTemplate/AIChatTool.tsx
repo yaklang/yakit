@@ -13,7 +13,7 @@ import {v4 as uuidv4} from "uuid"
 import {isToolStdout} from "../utils"
 import {OutlineArrownarrowrightIcon} from "@/assets/icon/outline"
 import useAIAgentStore from "../useContext/useStore"
-import {AIChatToolDrawerContent} from "./AIAgentChatTemplate"
+import {AIChatToolDrawerContent, ChatStreamContent} from "./AIAgentChatTemplate"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 const {ipcRenderer} = window.require("electron")
 
@@ -25,7 +25,7 @@ export const AIChatTool: React.FC<AIChatToolProps> = React.memo((props) => {
 })
 
 interface AIChatToolColorCardProps {
-    toolCall: AIChatStreams
+    toolCall: AIChatMessage.AIStreamOutput
 }
 const OutlineSparklesColorsIcon = () => {
     const id = uuidv4()
@@ -54,12 +54,12 @@ const AIToolToIconMap: Record<string, ReactNode> = {
 export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.memo((props) => {
     const {activeChat} = useAIAgentStore()
     const {toolCall} = props
-    const {nodeId, data, toolAggregation} = toolCall
+    const {NodeId, stream, toolAggregation} = toolCall
 
     const title = useCreation(() => {
-        if (nodeId === "call-tools") return "Call-tools：参数生成中..."
-        if (isToolStdout(nodeId)) return `${nodeId}：调用工具中...`
-    }, [nodeId])
+        if (NodeId === "call-tools") return "Call-tools：参数生成中..."
+        if (isToolStdout(NodeId)) return `${NodeId}：调用工具中...`
+    }, [NodeId])
     const onToolExtra = useMemoizedFn((item: AIChatMessage.ReviewSelector) => {
         switch (item.value) {
             case "enough-cancel":
@@ -90,7 +90,7 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                     <OutlineSparklesColorsIcon />
                     <div>{title}</div>
                 </div>
-                {isToolStdout(nodeId) && toolAggregation?.selectors && (
+                {isToolStdout(NodeId) && toolAggregation?.selectors && (
                     <div className={styles["card-extra"]}>
                         {toolAggregation.selectors.map((item) => {
                             return (
@@ -110,24 +110,7 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                 )}
             </div>
             <div className={styles["card-content"]}>
-                {
-                    <>
-                        {(data.reason || data.system || data.stream) && (
-                            <div className={styles["think-wrapper"]}>
-                                {data.reason && <div>{data.reason}</div>}
-                                {data.system && <div>{data.system}</div>}
-                                {data.stream && <div>{data.stream}</div>}
-                            </div>
-                        )}
-                        {/* {data.stream && (
-                            <div className={styles["anwser-wrapper"]}>
-                                <React.Fragment>
-                                    <ChatMarkdown content={data.stream} skipHtml={true} />
-                                </React.Fragment>
-                            </div>
-                        )} */}
-                    </>
-                }
+                <ChatStreamContent stream={stream} />
             </div>
         </div>
     )

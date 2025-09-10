@@ -1,4 +1,4 @@
-// @use "../../ai-agent/aiTriageChat/AITriageChat.module.scss" as aiChat;
+@use "../../ai-agent/aiTaskChat/AITaskChat.module.scss" as AITaskChat;
 %display-flex-center {
     display: flex;
     align-items: center;
@@ -10,9 +10,21 @@
 // #region AIReActChat
 .ai-re-act {
     @extend %display-flex-center;
+    align-items: flex-start;
     height: 100%;
     width: 100%;
     overflow: hidden;
+    .open-wrapper {
+        width: 0;
+        height: 100%;
+        overflow: hidden;
+        opacity: 0;
+    }
+}
+
+@include AITaskChat.content-side("re-act") {
+    width: 432px;
+    border-left: 0;
 }
 .ai-re-act-chat {
     width: 100%;
@@ -22,7 +34,10 @@
     flex-direction: column;
     background: var(--Colors-Use-Neutral-Bg);
 }
-
+.ai-re-act-chat-hidden {
+    width: 0;
+    overflow: hidden;
+}
 .chat-container {
     flex: 1;
     overflow: hidden;
@@ -207,3 +222,8 @@
     }
 }
 // #endregion
+
+.side-header-btn {
+    border-radius: 50%;
+    background: var(--Colors-Use-Basic-Background);
+}

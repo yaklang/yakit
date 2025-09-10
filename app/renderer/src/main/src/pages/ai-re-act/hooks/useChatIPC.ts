@@ -11,7 +11,7 @@ import useYakExecResult, {UseYakExecResultTypes} from "./useYakExecResult"
 import {v4 as uuidv4} from "uuid"
 import useTaskChat, {UseTaskChatTypes} from "./useTaskChat"
 import {handleGrpcDataPushLog} from "./utils"
-import {UseCasualChatEvents, UseChatIPCEvents, UseChatIPCParams, UseChatIPCState} from "./type"
+import {ChatIPCSendType, UseCasualChatEvents, UseChatIPCEvents, UseChatIPCParams, UseChatIPCState} from "./type"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -91,7 +91,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     // #region review事件相关方法
     /** review 界面选项触发事件 */
-    const onSend = useMemoizedFn((token: string, type: "casual" | "task", params: AIInputEvent) => {
+    const onSend = useMemoizedFn((token: string, type: ChatIPCSendType, params: AIInputEvent) => {
         try {
             if (!execute) {
                 yakitNotify("warning", "AI 未执行任务，无法发送选项")
@@ -126,7 +126,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     const onStart = useMemoizedFn((token: string, params: AIInputEvent) => {
         if (execute) {
-            yakitNotify("warning", "AI任务正在执行中，请稍后再试！")
+            yakitNotify("warning", "useChatIPC AI任务正在执行中，请稍后再试！")
             return
         }
         onReset()
@@ -262,7 +262,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         if (option?.tip) {
             option.tip()
         } else {
-            yakitNotify("info", "AI 任务已取消")
+            yakitNotify("info", "useChatIPC AI 任务已取消")
         }
     })
 

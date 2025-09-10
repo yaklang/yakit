@@ -1,8 +1,9 @@
 .ai-task-chat {
-    width: 100%;
+    // width: 100%;
     height: 100%;
     display: flex;
     position: relative;
+    flex: 1;
 }
 
 .task-chat-body {
@@ -34,6 +35,7 @@
             overflow: hidden;
             opacity: 0;
         }
+        @content;
     }
     .content-#{$type}-side-hidden {
         overflow: hidden;

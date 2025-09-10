@@ -7,13 +7,17 @@ import {useMemoizedFn} from "ahooks"
 import {AIChatToolColorCard, AIChatToolItem} from "@/pages/ai-agent/chatTemplate/AIChatTool"
 import {AIReActChatReview} from "../aiReActChatReview/AIReActChatReview"
 import {isShowToolColorCard} from "@/pages/ai-agent/utils"
+import {Tooltip} from "antd"
+import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
+import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
     chatClassName: styles["question-wrapper"]
 }
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {
-    const {chats, onSendAIRequire} = props
+    const {chats} = props
+    const {handleSendCasual} = useChatIPCDispatcher()
     const listRef = useRef<HTMLDivElement>(null)
     useEffect(() => {
         scrollToBottom()
@@ -44,27 +48,38 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                         stream: ""
                     }
                     if (isShowToolColorCard(NodeId)) {
-                        const toolCall: AIChatStreams = {
-                            nodeId: NodeId,
+                        const toolCall: AIChatMessage.AITaskStreamOutput = {
+                            NodeId,
+                            EventUUID: "",
                             timestamp: 0,
-                            data: firstStream,
+                            stream: firstStream,
+                            status: "end",
                             /**工具相关输出数据聚合 */
                             toolAggregation
                         }
                         content = <AIChatToolColorCard toolCall={toolCall} />
                     } else {
+                        const textLength = stream.length
+                        const beforeContent = textLength > 120 ? stream.slice(0, 100) : stream
+                        const afterContent = textLength > 120 ? stream.slice(-20) : ""
                         content = (
                             <AITriageChatContent
                                 isAnswer={type === "answer"}
                                 loading={false}
                                 content={
-                                    <div className={styles["think-wrapper"]}>
-                                        {reason && <div>{reason}</div>}
-
-                                        {system && <div>{system}</div>}
-
-                                        {stream && <div>{stream}</div>}
-                                    </div>
+                                    <Tooltip
+                                        title={
+                                            <div>
+                                                {stream}
+                                                <CopyComponents copyText={stream} />
+                                            </div>
+                                        }
+                                    >
+                                        <div className={styles["think-wrapper"]}>
+                                            <div className={styles["before-text"]}>{beforeContent}</div>
+                                            {afterContent && <div className={styles["after-text"]}>{afterContent}</div>}
+                                        </div>
+                                    </Tooltip>
                                 }
                                 {...chatContentExtraProps}
                             />
@@ -82,13 +97,25 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                     />
                 )
                 break
+            case "thought":
+                content = (
+                    <AITriageChatContent
+                        isAnswer={type === "answer"}
+                        loading={false}
+                        content={`思考：${data}`}
+                        {...chatContentExtraProps}
+                    />
+                )
+                break
             case "toolResult":
                 const {toolAggregation} = data as AIChatMessage.AIChatToolResult
                 content = !!toolAggregation ? <AIChatToolItem item={toolAggregation} type='re-act' /> : <></>
                 break
-            case "toolReview":
-            case "requireUser":
-                content = <AIReActChatReview type={uiType} review={data} onSendAIRequire={onSendAIRequire} />
+            case "tool_use_review_require":
+            case "require_user_interactive":
+                content = (
+                    <AIReActChatReview type={uiType} review={data} onSendAI={handleSendCasual} isEmbedded={true} />
+                )
                 break
             default:
                 break
