@@ -3,6 +3,7 @@ import {StreamResult, HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHol
 import {KVPair} from "@/models/kv"
 import {ExecResult, PaginationSchema} from "@/pages/invoker/schema"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {UseCasualChatState, UseChatIPCState, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
 // #region AI-(Task|Triage)
 export interface McpConfig {
     Type: string
@@ -208,14 +209,10 @@ export interface AIChatInfo {
         /**@deprecated */
         systemOutputs: AIChatMessage.AIChatSystemOutput[]
 
-        aiPerfData: {
-            consumption: Record<string, AIChatMessage.Consumption>
-            pressure: AIChatMessage.Pressure[]
-            firstCost: AIChatMessage.AICostMS[]
-            totalCost: AIChatMessage.AICostMS[]
-        }
-        logs: AIChatMessage.Log[]
-        casualChat: {contents: AIChatMessage.AICasualChatQAStream[]}
+        aiPerfData: UseChatIPCState["aiPerfData"]
+        logs: UseChatIPCState["logs"]
+        casualChat: UseChatIPCState["casualChat"]
+        taskChat: UseChatIPCState["taskChat"]
     }
 }
 /**QueryAIEvent 接口请求 */
@@ -475,10 +472,10 @@ export declare namespace AIChatMessage {
          * - thought 自由问题思考 [string]
          * - result 问题结果 [string]
          * - toolResult 工具执行经过 [AIChatToolResult]
-         * - toolReview 工具 review [ToolUseReviewRequire]
-         * - requireUser AI 人机交互review [AIReviewRequire]
+         * - tool_use_review_require 工具 review [ToolUseReviewRequire]
+         * - require_user_interactive AI 人机交互review [AIReviewRequire]
          */
-        uiType: "stream" | "thought" | "result" | "toolResult" | "toolReview" | "requireUser"
+        uiType: "stream" | "thought" | "result" | "toolResult" | "tool_use_review_require" | "require_user_interactive"
         Timestamp: AIOutputEvent["Timestamp"]
         data: AIStreamOutput | string | AIChatToolResult | ToolUseReviewRequire | AIReviewRequire
     }
@@ -713,37 +710,3 @@ export interface GetAIModelListResponse {
     localModels: StartedLocalModelInfo[]
 }
 //#endregion
-
-// #region chat-hooks 相关定义
-
-/**useChatIPC */
-export interface AIChatIPCData {
-    execute: boolean
-    logs: AIChatMessage.Log[]
-    aiPerfData: AIPerfData
-    card: AIChatMessage.AIInfoCard[]
-    casualChat: {contents: AIChatMessage.AICasualChatQAStream[]}
-}
-export interface AIChatIPCDataEvents {
-    onStart: (token: string, params: AIInputEvent) => void
-    onSend: (token: string, type: "casual" | "task", params: AIInputEvent) => void
-    onClose: (token: string, option?: {tip: () => void}) => void
-    handleReset: () => void
-    fetchToken: () => string
-}
-/**useAIPerfData */
-export interface AIPerfData {
-    consumption: Record<string, AIChatMessage.Consumption>
-    pressure: AIChatMessage.Pressure[]
-    firstCost: AIChatMessage.AICostMS[]
-    totalCost: AIChatMessage.AICostMS[]
-}
-export interface AIPerfDataEvents {
-    handleSetData: (res: AIOutputEvent) => void
-    handleResetData: () => void
-}
-export interface AIExecCardEvents {
-    handleSetData: (res: AIOutputEvent) => void
-    handleResetData: () => void
-}
-// #endregion

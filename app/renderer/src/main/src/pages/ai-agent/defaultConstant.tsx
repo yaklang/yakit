@@ -2,7 +2,7 @@ import {ReactNode} from "react"
 import {AIAgentSetting, AIAgentTab} from "./aiAgentType"
 import {MCPTransportType} from "./type/mcpClient"
 import {OutlineCogIcon, OutlineSparklesIcon, OutlineTemplateIcon, OutlineWrenchIcon} from "@/assets/icon/outline"
-import {AIChatIPCData, AIChatMessage, AIPerfData} from "./type/aiChat"
+import {AIChatMessage} from "./type/aiChat"
 import {YakitSideTabProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {genDefaultPagination, PaginationSchema} from "../invoker/schema"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
@@ -19,6 +19,7 @@ import {
     TongyiIcon,
     YakIcon
 } from "./aiModelList/icon"
+import {UseAIPerfDataState, UseChatIPCState} from "../ai-re-act/hooks/type"
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
@@ -145,7 +146,7 @@ export enum AILocalModelTypeEnum {
 }
 
 //#region ai hooks 默认值
-export const defaultChatIPCData: AIChatIPCData = {
+export const defaultChatIPCData: UseChatIPCState = {
     execute: false,
     aiPerfData: {
         consumption: {},
@@ -155,11 +156,19 @@ export const defaultChatIPCData: AIChatIPCData = {
     },
     logs: [],
     casualChat: {
-        contents: []
+        contents: [],
+        coordinatorId: ""
     },
-    card: []
+    yakExecResult: {
+        card: []
+    },
+    taskChat: {
+        coordinatorId: '',
+        plan: [],
+        streams: {}
+    }
 }
-export const defaultAIPerfData: AIPerfData = {
+export const defaultAIPerfData: UseAIPerfDataState = {
     consumption: {},
     pressure: [],
     firstCost: [],
