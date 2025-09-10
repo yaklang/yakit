@@ -1,4 +1,4 @@
-import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactElement, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import HexEditor from "react-hex-editor"
@@ -48,7 +48,8 @@ import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {useTheme} from "@/hook/useTheme"
+import {Theme, useTheme} from "@/hook/useTheme"
+import {applyYakitMonacoTheme} from "./monacoSpec/theme"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -82,6 +83,9 @@ export interface EditorProps {
     triggerId?: any
 
     full?: boolean
+
+    // 弹窗 / 抽屉类独立在 root 节点外的盒模型，需外部传入颜色主题
+    propsTheme?: Theme
 }
 
 export const YakEditor: React.FC<EditorProps> = (props) => {
@@ -94,6 +98,12 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
     // const [editorHeight, setEditorHeight] = useState(0);
     const outterContainer = useRef(null)
     const [loading, setLoading] = useState(true)
+
+    const {theme: themeGlobal} = useTheme()
+
+    useLayoutEffect(() => {
+        applyYakitMonacoTheme(props?.propsTheme ?? themeGlobal)
+    }, [themeGlobal, editor, props?.propsTheme])
 
     /** 编辑器语言 */
     const language = useMemo(() => {

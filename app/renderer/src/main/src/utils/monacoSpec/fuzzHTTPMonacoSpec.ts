@@ -124,7 +124,7 @@ const httpHeaderSuggestions = [
 export const getHTTPHeaderSuggestions = async (position: monaco.Position) => {
     // 获取自定义代码片段
     const customCodeList: TCustomCodeGeneral<string[]> = await ipcRenderer
-        .invoke("QueryCustomCode", {Filter: {}})
+        .invoke("QuerySnippets", {Filter: {}})
         .catch((err) => console.info(err))
     const targetCustomCode = getAllRows(customCodeList ?? []).filter((it) => it.State === "http") ?? []
 
