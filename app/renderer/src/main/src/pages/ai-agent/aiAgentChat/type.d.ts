@@ -1,8 +1,8 @@
-import {AIChatReviewExtra} from "../type/aiChat"
+import {AIChatReview} from "../type/aiChat"
 
 export interface AIAgentChatProps {}
 export type AIAgentChatMode = "welcome" | "re-act" | "task"
 export interface AIReActTaskChatReviewProps {
-    reviewInfo: AIChatReviewExtra
+    reviewInfo: AIChatReview
     planReviewTreeKeywordsMap: Map<string, AIChatMessage.PlanReviewRequireExtra>
 }
