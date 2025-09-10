@@ -29,7 +29,6 @@ import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {GetReleaseEdition, PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
-import { getGlobalShortcutKeyEvents, GlobalShortcutKey } from "@/utils/globalShortcutKey/events/global"
 import { YakEditorOptionShortcutKey } from "@/utils/globalShortcutKey/events/page/yakEditor"
 const {ipcRenderer} = window.require("electron")
 
@@ -47,6 +46,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     webSocketToServer?: string
     webFuzzerCallBack?: () => void
     downstreamProxyStr?: string
+    keepSearchName?: string
     url?: string
     pageId?: string
     downbodyParams?: HTTPFlowBodyByIdRequest
@@ -59,6 +59,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
     const {
+        keepSearchName,
         defaultHttps = false,
         originValue,
         noPacketModifier = false,
@@ -569,6 +570,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
 
     return (
         <YakitEditor
+            keepSearchName={keepSearchName}
             menuType={rightMenuType}
             readOnly={readOnly}
             contextMenu={rightContextMenu}

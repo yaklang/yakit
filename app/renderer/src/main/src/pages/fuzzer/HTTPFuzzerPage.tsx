@@ -2203,6 +2203,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
                                 {onlyOneResponse ? (
                                     <ResponseViewer
+                                        keepSearchName="fuzzer-response"
                                         isHttps={advancedConfigValue.isHttps}
                                         ref={responseViewerRef}
                                         fuzzerResponse={httpResponse}
@@ -3280,12 +3281,13 @@ interface ResponseViewerProps {
     webFuzzerValue: string
     isHttps?: boolean
     request: string
-
     showResponseInfoSecondEditor: boolean
     setShowResponseInfoSecondEditor: (b: boolean) => void
     secondNodeTitle?: () => JSX.Element
     secondNodeExtra?: () => JSX.Element
     onSetOnlyOneResEditor: (editor: IMonacoEditor) => void
+
+    keepSearchName?: string
 }
 
 export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
@@ -3308,6 +3310,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             secondNodeExtra,
             webFuzzerValue,
             request,
+            keepSearchName,
             onSetOnlyOneResEditor
         } = props
 
@@ -3473,6 +3476,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                     firstNodeStyle={{padding: !show ? 0 : undefined, background: "var(--Colors-Use-Basic-Background)"}}
                     firstNode={
                         <NewHTTPPacketEditor
+                            keepSearchName={keepSearchName}
                             language={fuzzerResponse?.DisableRenderStyles ? "text" : undefined}
                             isShowBeautifyRender={!fuzzerResponse?.IsTooLargeResponse}
                             defaultHttps={isHttps}

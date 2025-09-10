@@ -95,6 +95,9 @@ export interface YakitEditorProps {
     renderValidationDecorations?: "on" | "off" | "editable"
     // 弹窗 / 抽屉类独立在 root 节点外的盒模型，需外部传入颜色主题
     propsTheme?: Theme
+
+    // 查找关键字
+    keepSearchName?: string
 }
 
 /**

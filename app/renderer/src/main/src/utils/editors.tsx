@@ -551,6 +551,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     fixContentType?: string
     originalContentType?: string
     fixContentTypeHoverMessage?: string
+
+    keepSearchName?: string
 }
 
 export type RenderTypeOptionVal = "beautify" | "render" | "hex"
@@ -567,6 +569,7 @@ interface RefreshEditorOperationRecordProps extends OperationRecordRes {
 export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
     const isResponse = props.isResponse
     const {
+        keepSearchName,
         originValue,
         originalPackage,
         isShowBeautifyRender = true,
@@ -1137,6 +1140,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     {props.renderHtml || renderHtml}
                     {type !== "hex" && noShowHex && !empty && !renderHtml && !props.renderHtml && (
                         <HTTPPacketYakitEditor
+                            keepSearchName={keepSearchName}
                             theme={props.theme}
                             noLineNumber={props.noLineNumber}
                             lineNumbersMinChars={props.lineNumbersMinChars}

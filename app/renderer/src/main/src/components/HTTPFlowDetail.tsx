@@ -1572,6 +1572,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 if (flow?.IsWebsocket) {
                     return (
                         <HTTPFlowForWebsocketViewer
+                            keepSearchName={`${pageType}-request`}
                             flow={flow}
                             historyId={historyId}
                             pageType={pageType}
@@ -1584,6 +1585,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
                 return (
                     <NewHTTPPacketEditor
+                        keepSearchName={`${pageType}-request`}
                         title={(() => {
                             let titleEle: ReactNode[] = []
                             if (isShowBeforeData && beforeResValue.length > 0) {
@@ -1707,6 +1709,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
                 return (
                     <NewHTTPPacketEditor
+                        keepSearchName={`${pageType}-response`}
                         language={flow?.DisableRenderStyles ? "text" : undefined}
                         typeOptionVal={resTypeOptionVal}
                         onTypeOptionVal={(typeOptionVal) => {
