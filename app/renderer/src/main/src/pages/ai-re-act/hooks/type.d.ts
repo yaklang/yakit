@@ -92,6 +92,7 @@ export interface UseTaskChatEvents extends UseHookBaseEvents {
 // #endregion
 
 // #region useChatIPC相关定义
+export type ChatIPCSendType = "casual" | "task"
 export interface UseChatIPCParams {
     /** 出现任务规划的触发回调(id 是 coordinatorId) */
     onTaskStart?: (id: string) => void
@@ -100,7 +101,7 @@ export interface UseChatIPCParams {
     /** 任务规划中 plan_review 事件的补充数据 */
     onTaskReviewExtra?: (data: AIChatReviewExtra) => void
     /** 主动 review-release 的回调事件 */
-    onReviewRelease?: (type: "casual" | "task", id: string) => void
+    onReviewRelease?: (type: ChatIPCSendType, id: string) => void
     /** 接口结束断开的回调事件 */
     onEnd?: () => void
 }
@@ -127,7 +128,7 @@ export interface UseChatIPCEvents {
     /** 开始执行接口流 */
     onStart: (token: string, params: AIInputEvent) => void
     /** 向执行中的接口流主动输入信息 */
-    onSend: (token: string, type: "casual" | "task", params: AIInputEvent) => void
+    onSend: (token: string, type: ChatIPCSendType, params: AIInputEvent) => void
     /** 主动结束正在执行中的接口流 */
     onClose: (
         token: string,

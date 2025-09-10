@@ -1,15 +1,19 @@
 import {createContext} from "react"
-import {AIChatIPCData, AIChatIPCDataEvents} from "../../type/aiChat"
 import {defaultChatIPCData} from "../../defaultConstant"
 import {cloneDeep} from "lodash"
+import {UseChatIPCEvents, UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
+import {AIChatReview, AIChatMessage} from "../../type/aiChat"
 
 export interface ChatIPCContextStore {
-    chatIPCData: AIChatIPCData
-    coordinatorId:string
+    chatIPCData: UseChatIPCState
+    reviewInfo?: AIChatReview
+    planReviewTreeKeywordsMap: Map<string, AIChatMessage.PlanReviewRequireExtra>
 }
 
 export interface ChatIPCContextDispatcher {
-    chatIPCEvents: AIChatIPCDataEvents
+    chatIPCEvents: UseChatIPCEvents
+    handleSendCasual: (value: string, id: string) => void
+    handleSendTask: (value: string, id: string) => void
 }
 
 export interface ChatIPCContextValue {
@@ -20,15 +24,19 @@ export interface ChatIPCContextValue {
 export default createContext<ChatIPCContextValue>({
     store: {
         chatIPCData: cloneDeep(defaultChatIPCData),
-        coordinatorId:""
+        reviewInfo: undefined,
+        planReviewTreeKeywordsMap: new Map()
     },
     dispatcher: {
         chatIPCEvents: {
+            fetchToken: () => "",
+            fetchRequest: () => undefined,
             onStart: () => {},
             onSend: () => {},
             onClose: () => {},
-            handleReset: () => {},
-            fetchToken: () => ""
-        }
+            onReset: () => {}
+        },
+        handleSendCasual: (value: string, id: string) => {},
+        handleSendTask: (value: string, id: string) => {}
     }
 })

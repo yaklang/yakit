@@ -8,8 +8,11 @@ export enum RemoteAIReActGV {
     AIReActChatHistory = "ai-re-act-chat-history"
 }
 
-/** AI-ReAct 标签页枚举 */
-export enum AITabsEnum {
-    answer = "answer",
-    log = "log"
-}
+/**
+ * @deprecated
+ * AI-ReAct 标签页枚举
+ * */
+// export enum AITabsEnum {
+//     answer = "answer",
+//     log = "log"
+// }
