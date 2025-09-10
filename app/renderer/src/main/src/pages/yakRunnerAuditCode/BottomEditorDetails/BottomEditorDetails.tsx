@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {useInViewport, useMemoizedFn} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import styles from "./BottomEditorDetails.module.scss"
 import classNames from "classnames"
 import {BottomEditorDetailsProps, ShowItemType} from "./BottomEditorDetailsType"
@@ -11,13 +11,16 @@ import {PaperAirplaneIcon} from "@/assets/newIcon"
 import {RuleEditorBox} from "./RuleEditorBox/RuleEditorBox"
 import useDispatcher from "../hooks/useDispatcher"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import { HoleBugDetail } from "@/pages/yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import {HoleDispose} from "./HoleDispose/HoleDispose"
+import {QuerySSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import {RightBugAuditResult} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {isShowEditorDetails, setEditorDetails, showItem, setShowItem} = props
-    const {projectName, auditExecuting, activeFile} = useStore()
+    const {projectName, auditExecuting} = useStore()
     const {setAuditRule} = useDispatcher()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
@@ -25,6 +28,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const [ruleEditor, setRuleEditor] = useState<string>("")
     // 展示所需的BugHash
     const [bugHash, setBugHash] = useState<string>("")
+    const [info, setInfo] = useState<SSARisk>()
 
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
@@ -56,7 +60,20 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     })
 
     const onCodeAuditOpenBugDetailFun = useMemoizedFn((hash: string) => {
-        setBugHash(hash)
+        ipcRenderer
+            .invoke("QuerySSARisks", {
+                Filter: {
+                    Hash: [hash]
+                }
+            })
+            .then((res: QuerySSARisksResponse) => {
+                const {Data} = res
+                if (Data.length > 0) {
+                    setInfo(Data[0])
+                    setBugHash(hash)
+                }
+            })
+            .catch((err) => {})
     })
 
     useEffect(() => {
@@ -79,16 +96,12 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         emiter.emit("onStopAuditRule")
     })
 
-    // useUpdateEffect(() => {
-    //     setBugHash("")
-    // }, [activeFile?.path])
-
     useShortcutKeyTrigger("submit*aduit", () => {
         if (isShowEditorDetails && showItem === "ruleEditor") {
             onAuditRuleSubmit()
         }
     })
-    
+
     return (
         <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>
@@ -110,6 +123,15 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         onClick={() => setShowItem("holeDetail")}
                     >
                         <div className={styles["title"]}>漏洞详情</div>
+                    </div>
+                    <div
+                        className={classNames(styles["item"], {
+                            [styles["active-item"]]: showItem === "holeDispose",
+                            [styles["no-active-item"]]: showItem !== "holeDispose"
+                        })}
+                        onClick={() => setShowItem("holeDispose")}
+                    >
+                        <div className={styles["title"]}>漏洞处置</div>
                     </div>
                 </div>
                 <div className={styles["extra"]}>
@@ -161,10 +183,25 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         })}
                     >
                         {bugHash ? (
-                            <HoleBugDetail bugHash={bugHash} />
+                            <>{info && <RightBugAuditResult info={info} />}</>
                         ) : (
                             <div className={styles["no-audit"]}>
                                 <YakitEmpty title='暂无漏洞' />
+                            </div>
+                        )}
+                    </div>
+                )}
+                {showType.includes("holeDispose") && (
+                    <div
+                        className={classNames(styles["render-hideen"], {
+                            [styles["render-show"]]: showItem === "holeDispose"
+                        })}
+                    >
+                        {bugHash ? (
+                            <HoleDispose RiskHash={bugHash} info={info} />
+                        ) : (
+                            <div className={styles["no-audit"]}>
+                                <YakitEmpty title='请选择漏洞进行处置' />
                             </div>
                         )}
                     </div>

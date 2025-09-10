@@ -2108,14 +2108,13 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
     )
 })
 
-export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.memo((props) => {
-    const {info, columnSize} = props
+interface RightBugAuditResultHeaderProps {
+    info: SSARisk
+    extra?: React.ReactNode
+}
 
-    const column = useCreation(() => {
-        if (columnSize) return columnSize
-        return 1
-    }, [])
-
+export const RightBugAuditResultHeader: React.FC<RightBugAuditResultHeaderProps> = React.memo((props) => {
+    const {info, extra} = props
     const severityInfo = useCreation(() => {
         const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
         let icon = <></>
@@ -2145,11 +2144,6 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
             name: severity?.name || info?.Severity || "-"
         }
     }, [info.Severity])
-
-    const getRule = useMemoizedFn(() => {
-        const newInfo = info as any
-        return newInfo?.FromYakScript || newInfo?.FromRule || "漏洞检测"
-    })
 
     const onContext = useMemoizedFn(async () => {
         try {
@@ -2181,49 +2175,68 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
             }, 100)
         } catch (error) {}
     })
+
+    return (
+        <div className={styles["content-heard"]}>
+            <div className={styles["content-heard-left"]}>
+                <div className={styles["content-heard-severity"]}>
+                    {severityInfo.icon}
+                    <span
+                        className={classNames(
+                            styles["content-heard-severity-name"],
+                            styles[`severity-${severityInfo.tag}`]
+                        )}
+                    >
+                        {severityInfo.name}
+                    </span>
+                </div>
+                <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
+                <div className={styles["content-heard-body"]}>
+                    <div
+                        className={classNames(
+                            styles["content-heard-body-title"],
+                            styles["content-heard-body-title-click"],
+                            "content-ellipsis"
+                        )}
+                        onClick={onContext}
+                    >
+                        {info.Title || "-"}
+                    </div>
+                    <div className={styles["content-heard-body-description"]} style={{flexWrap: "wrap"}}>
+                        <YakitTag color='info'>ID:{info.Id}</YakitTag>
+                        <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                        <span className={styles["description-port"]}>所属项目:{info.ProgramName || "-"}</span>
+                        <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                        <span className={styles["content-heard-body-time"]}>
+                            发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {extra && <div className={styles["content-heard-right"]}>{extra}</div>}
+        </div>
+    )
+})
+
+export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.memo((props) => {
+    const {info, columnSize} = props
+    const column = useCreation(() => {
+        if (columnSize) return columnSize
+        return 1
+    }, [])
+
+    const getRule = useMemoizedFn(() => {
+        const newInfo = info as any
+        return newInfo?.FromYakScript || newInfo?.FromRule || "漏洞检测"
+    })
+
     return (
         <div
             className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions", {
                 [styles["yakit-risk-details-content-no-border"]]: true
             })}
         >
-            <div className={styles["content-heard"]}>
-                <div className={styles["content-heard-left"]}>
-                    <div className={styles["content-heard-severity"]}>
-                        {severityInfo.icon}
-                        <span
-                            className={classNames(
-                                styles["content-heard-severity-name"],
-                                styles[`severity-${severityInfo.tag}`]
-                            )}
-                        >
-                            {severityInfo.name}
-                        </span>
-                    </div>
-                    <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
-                    <div className={styles["content-heard-body"]}>
-                        <div
-                            className={classNames(
-                                styles["content-heard-body-title"],
-                                styles["content-heard-body-title-click"],
-                                "content-ellipsis"
-                            )}
-                            onClick={onContext}
-                        >
-                            {info.Title || "-"}
-                        </div>
-                        <div className={styles["content-heard-body-description"]} style={{flexWrap: "wrap"}}>
-                            <YakitTag color='info'>ID:{info.Id}</YakitTag>
-                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                            <span className={styles["description-port"]}>所属项目:{info.ProgramName || "-"}</span>
-                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                            <span className={styles["content-heard-body-time"]}>
-                                发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <RightBugAuditResultHeader info={info} />
             <div className={styles["content-resize-second"]}>
                 <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
                     <Descriptions.Item label='类型'>

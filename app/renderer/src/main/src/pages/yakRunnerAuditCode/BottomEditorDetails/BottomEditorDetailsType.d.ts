@@ -7,7 +7,7 @@ export interface BottomEditorDetailsProps {
     setEditorDetails: (v: boolean) => void
 }
 
-export type ShowItemType = "ruleEditor" | "holeDetail"
+export type ShowItemType = "ruleEditor" | "holeDetail" | "holeDispose"
 
 export interface JumpToAuditEditorProps {
     isSelect?: boolean

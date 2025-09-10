@@ -69,13 +69,13 @@ export interface GetSSARiskDisposalResponse {
     Data: SSARiskDisposalData[]
 }
 
-export const apiGetSSARiskDisposal: (params: {RiskId: number}) => Promise<GetSSARiskDisposalResponse> = (params) => {
+export const apiGetSSARiskDisposal: (params: {RiskId?: number, RiskHash?: string}) => Promise<GetSSARiskDisposalResponse> = (params) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("GetSSARiskDisposal", params)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `设置失败: ${e}`)
+                yakitNotify("error", `获取失败: ${e}`)
                 reject(e)
             })
     })
