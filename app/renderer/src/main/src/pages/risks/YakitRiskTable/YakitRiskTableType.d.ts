@@ -4,6 +4,7 @@ import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {ReactNode} from "react"
 import {TableVirtualResizeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import { CodeRangeProps } from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail";
+// import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 export interface YakitRiskTableProps {
     setRiskLoading: (b: boolean) => void
     /**是否开启高级查询 */

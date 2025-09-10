@@ -89,12 +89,10 @@ import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamTyp
 import {SyntaxFlowResult} from "../yakRunnerCodeScan/YakRunnerCodeScanType"
 import {AuditTree} from "../yakRunnerAuditCode/AuditCode/AuditCode"
 import {loadAuditFromYakURLRaw} from "../yakRunnerAuditCode/utils"
-import {AuditCodeDetailTopId} from "../yakRunnerCodeScan/AuditCodeDetailDrawer/defaultConstant"
 import {v4 as uuidv4} from "uuid"
 import {AuditEmiterYakUrlProps} from "../yakRunnerAuditCode/YakRunnerAuditCodeType"
-import {HoleBugDetail} from "../yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 import {RightAuditDetail} from "../yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
-import {SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
+import {RightBugAuditResult, SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import NoPermissions from "@/assets/no_permissions.png"
@@ -107,11 +105,14 @@ import styles from "./RuleManagement.module.scss"
 import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CodeScoreModal} from "../plugins/funcTemplate"
+import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
 
 const severityOrder = ["critical", "high", "middle", "low", "info"]
+
+const AuditCodeDetailTopId = "top-message-code-scan"
 
 /** @name 规则组列表组件 */
 export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
@@ -2066,17 +2067,37 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
     const [isShowAuditDetail, setShowAuditDetail] = useState<boolean>(false)
 
     const bugHash = useRef<string>()
-    const onJump = useMemoizedFn((node: AuditNodeProps) => {
+    const [ssaRisksinfo, setSSARisksInfo] = useState<SSARisk>()
+
+    const getInfoFun = useMemoizedFn((hash) => {
+        ipcRenderer
+            .invoke("QuerySSARisks", {
+                Filter: {
+                    Hash: [hash]
+                }
+            })
+            .then((res: QuerySSARisksResponse) => {
+                const {Data} = res
+                if (Data.length > 0) {
+                    setSSARisksInfo(Data[0])
+                }
+            })
+            .catch((err) => {})
+    })
+
+    const onJump = useMemoizedFn(async (node: AuditNodeProps) => {
         try {
             const arr = node.Extra.filter((item) => item.Key === "risk_hash")
             // 预留打开BUG详情
             if (arr.length > 0 && node.isBug) {
                 const hash = arr[0]?.Value
+                getInfoFun(hash)
                 bugHash.current = hash
                 setShowAuditDetail(true)
             }
             if (!node.isBug) {
                 bugHash.current = undefined
+                setSSARisksInfo(undefined)
             }
             if (node.ResourceType === "value") {
                 if (!currentInfo.current) return
@@ -2098,6 +2119,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
         setAuditRightParams(undefined)
         setShowAuditDetail(false)
         bugHash.current = undefined
+        setSSARisksInfo(undefined)
     })
     /** ---------- 审计详情信息 End ---------- */
 
@@ -2143,7 +2165,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
                 {isShowAuditDetail ? (
                     <>
                         {bugHash.current ? (
-                            <HoleBugDetail bugHash={bugHash.current} />
+                            <>{ssaRisksinfo && <RightBugAuditResult info={ssaRisksinfo} columnSize={1} />}</>
                         ) : (
                             <RightAuditDetail
                                 auditRightParams={auditRightParams}
