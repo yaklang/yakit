@@ -155,7 +155,6 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                 else isMore.current = true
 
                 const newArr = isInit ? res.Data : getData().Data.concat(res.Data)
-                console.log("res", request, res, newArr, getData().Data)
                 setData({...res, Pagination: request.Pagination, Data: newArr})
                 if (isInit) {
                     setTimeout(() => {
@@ -337,7 +336,10 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                             </div>
                                         }
                                     >
-                                        <div className={styles["forge-list-opt"]} onClick={() => handleOnClick(data)}>
+                                        <div
+                                            className={styles["forge-list-opt"]}
+                                            // onClick={() => handleOnClick(data)}
+                                        >
                                             <div
                                                 className={classNames(
                                                     styles["opt-title"],

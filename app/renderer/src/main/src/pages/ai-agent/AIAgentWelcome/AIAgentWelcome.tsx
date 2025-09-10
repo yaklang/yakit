@@ -38,25 +38,25 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
         const wrapperRef = useRef<HTMLDivElement>(null)
 
         // #region  AI-Forge 模板相关逻辑
-        const [forges, setForges] = useState<AIForge[]>([])
-        const fetchForges = useMemoizedFn(() => {
-            const request: QueryAIForgeRequest = {
-                Pagination: {
-                    Page: 1,
-                    Limit: 3,
-                    Order: "desc",
-                    OrderBy: "id"
-                }
-            }
-            grpcQueryAIForge(request)
-                .then((res) => {
-                    setForges(res?.Data || [])
-                })
-                .catch(() => {})
-        })
-        useEffect(() => {
-            fetchForges()
-        }, [])
+        // const [forges, setForges] = useState<AIForge[]>([])
+        // const fetchForges = useMemoizedFn(() => {
+        //     const request: QueryAIForgeRequest = {
+        //         Pagination: {
+        //             Page: 1,
+        //             Limit: 3,
+        //             Order: "desc",
+        //             OrderBy: "id"
+        //         }
+        //     }
+        //     grpcQueryAIForge(request)
+        //         .then((res) => {
+        //             setForges(res?.Data || [])
+        //         })
+        //         .catch(() => {})
+        // })
+        // useEffect(() => {
+        //     fetchForges()
+        // }, [])
         // #endregion
 
         // #region 问题相关逻辑
@@ -144,7 +144,7 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
                                 <div className={styles["sub-title"]}>专注于安全编码与漏洞分析的智能助手</div>
                             </div>
 
-                            <div className={styles["suggestion-forges"]}>
+                            {/* <div className={styles["suggestion-forges"]}>
                                 {forges.map((item) => {
                                     return (
                                         <div key={item.Id} className={styles["suggestion-forge"]}>
@@ -156,7 +156,7 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
                                         </div>
                                     )
                                 })}
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 </div>
