@@ -79,7 +79,7 @@ FunctionEnd
 
 
 !macro checkInstalled
-    ReadRegStr $INSTALL_PATH HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME
+    ReadRegStr $INSTALL_PATH HKCU "Software\SGC" $INSTALL_PATH_REG_KEY_NAME
     ${If} $INSTALL_PATH != "" 
         ; set install path
         StrCpy $INSTDIR $INSTALL_PATH
@@ -103,7 +103,7 @@ FunctionEnd
 !macro customInit 
     ; 根据不同版本设置不同的RegKey 社区版/SE/EE
     StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
-    StrCpy $EXE_NAME "Yakit"
+    StrCpy $EXE_NAME "SGC"
     ${StrStr} $0 $EXEFILE "EnpriTraceAgent"
     ${If} $0 != "" ; se
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
@@ -138,7 +138,7 @@ FunctionEnd
 !macro customUnInit 
     ; 根据不同版本设置不同的RegKey 社区版/SE/EE
     StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
-    StrCpy $EXE_NAME "Yakit"
+    StrCpy $EXE_NAME "SGC"
     ${If} ${FileExists} `$INSTDIR\EnpriTraceAgent.exe` ; se 
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
@@ -194,7 +194,7 @@ FunctionEnd
 
 
         ; 删除注册表项
-        DeleteRegValue HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME
+        DeleteRegValue HKCU "Software\SGC" $INSTALL_PATH_REG_KEY_NAME
         DeleteRegValue HKCU "Environment" "YAKIT_HOME"
     ${EndIf}
 !macroend
@@ -215,7 +215,7 @@ FunctionEnd
 
     ; 存储安装目录
     DetailPrint "写入环境变量..."
-    WriteRegStr HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME "$INSTDIR"
+    WriteRegStr HKCU "Software\SGC" $INSTALL_PATH_REG_KEY_NAME "$INSTDIR"
     WriteRegStr HKCU "Environment" "YAKIT_HOME" "$INSTDIR\yakit-projects" 
     ; 创建 yakit-projects 文件夹
     DetailPrint "创建yakit-projects文件夹..."
