@@ -7516,6 +7516,7 @@ message DeleteSSARiskDisposalsResponse {
 
 message GetSSARiskDisposalRequest{
   int64 RiskId = 1;
+  string RiskHash = 2;
 }
 
 message GetSSARiskDisposalResponse{
