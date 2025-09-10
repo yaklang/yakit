@@ -573,6 +573,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             readOnly={readOnly}
             contextMenu={rightContextMenu}
             disableUnicodeDecode={disableUnicodeDecode}
+            isDiff={true}
             {...restProps}
             {...extraEditorProps}
         />

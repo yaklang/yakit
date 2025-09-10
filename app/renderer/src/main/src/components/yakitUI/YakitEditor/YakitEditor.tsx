@@ -87,6 +87,7 @@ import {
 import {YakitKeyBoard, YakitKeyMod} from "@/utils/globalShortcutKey/keyboard"
 import {applyYakitMonacoTheme} from "@/utils/monacoSpec/theme"
 import {useTheme} from "@/hook/useTheme"
+import {YakitAiDiffEditor} from "./YakitAiDiffEditor"
 
 export interface CodecTypeProps {
     key?: string
@@ -1672,86 +1673,106 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 }}
             >
                 <ShortcutKeyFocusHook style={{height: "100%", width: "100%", overflow: "hidden"}} focusId={focusIds}>
-                    <MonacoEditor
-                        // height={100}
-                        theme={theme || "kurior"}
-                        value={value}
-                        onChange={setValue || onChange}
-                        language={language}
-                        editorDidMount={(editor: YakitIMonacoEditor, monaco) => {
-                            setEditor(editor)
-                            /** 编辑器关光标，设置坐标0的初始位置 */
-                            editor.setSelection({
-                                startColumn: 0,
-                                startLineNumber: 0,
-                                endColumn: 0,
-                                endLineNumber: 0
-                            })
+                    {props.isDiff ? (
+                        <YakitAiDiffEditor
+                            value={value}
+                            theme={theme}
+                            onChange={onChange}
+                            language={language}
+                            yakStaticAnalyze={yakStaticAnalyze}
+                            nowFontsize={nowFontsize}
+                            readOnly={readOnly}
+                            noLineNumber={noLineNumber}
+                            noMiniMap={noMiniMap}
+                            noWordWrap={noWordWrap}
+                            editorDidMount={editorDidMount}
+                            renderValidationDecorations={renderValidationDecorations}
+                            editor={editor}
+                            lineNumbersMinChars={lineNumbersMinChars}
+                        />
+                    ) : (
+                        <MonacoEditor
+                            // height={100}
+                            theme={theme || "kurior"}
+                            value={value}
+                            onChange={setValue || onChange}
+                            language={language}
+                            editorDidMount={(editor: YakitIMonacoEditor, monaco) => {
+                                setEditor(editor)
+                                /** 编辑器关光标，设置坐标0的初始位置 */
+                                editor.setSelection({
+                                    startColumn: 0,
+                                    startLineNumber: 0,
+                                    endColumn: 0,
+                                    endLineNumber: 0
+                                })
 
-                            if (editor) {
-                                /** Yak语言 代码错误检查 */
-                                const model = editor.getModel()
-                                if (model) {
-                                    yakStaticAnalyze.run(editor, model)
-                                    model.onDidChangeContent(() => {
+                                if (editor) {
+                                    /** Yak语言 代码错误检查 */
+                                    const model = editor.getModel()
+                                    if (model) {
                                         yakStaticAnalyze.run(editor, model)
-                                    })
+                                        model.onDidChangeContent(() => {
+                                            yakStaticAnalyze.run(editor, model)
+                                        })
+                                    }
                                 }
-                            }
 
-                            editor.onKeyDown((e) => {
-                                // 是否直接使用编辑器快捷键 不走自定义逻辑
-                                const isUseDefaultShortcut = isYakEditorDefaultShortcut(e.browserEvent)
-                                if (!isUseDefaultShortcut) {
-                                    // 判断当前输入是否激活 编辑器内部快捷键
-                                    const isActiveYakEditor = isYakEditorShortcut(e.browserEvent)
-                                    if (isActiveYakEditor) {
-                                        const keys = convertKeyEventToKeyCombination(e.browserEvent)
-                                        if (keys) {
-                                            let sortKeys = sortKeysCombination(keys)
-                                            const keyToMenu = keyBindingRef.current[sortKeys.join("-")]
-                                            if (!keyToMenu) return
-                                            menuItemHandle(keyToMenu[0], keyToMenu)
+                                editor.onKeyDown((e) => {
+                                    // 是否直接使用编辑器快捷键 不走自定义逻辑
+                                    const isUseDefaultShortcut = isYakEditorDefaultShortcut(e.browserEvent)
+                                    if (!isUseDefaultShortcut) {
+                                        // 判断当前输入是否激活 编辑器内部快捷键
+                                        const isActiveYakEditor = isYakEditorShortcut(e.browserEvent)
+                                        if (isActiveYakEditor) {
+                                            const keys = convertKeyEventToKeyCombination(e.browserEvent)
+                                            if (keys) {
+                                                let sortKeys = sortKeysCombination(keys)
+                                                const keyToMenu = keyBindingRef.current[sortKeys.join("-")]
+                                                if (!keyToMenu) return
+                                                menuItemHandle(keyToMenu[0], keyToMenu)
+                                            }
+                                            e.browserEvent.stopImmediatePropagation()
+                                            return
                                         }
-                                        e.browserEvent.stopImmediatePropagation()
-                                        return
+                                        // 判断当前输入是否激活 页面级或全局快捷键
+                                        const event = isPageOrGlobalShortcut(e.browserEvent)
+                                        if (event) {
+                                            // 未接入时特殊处理removePage,接入monaco快捷键后移除此项
+                                            if (["removePage"].includes(event))
+                                                e.browserEvent.stopImmediatePropagation()
+                                            // 由于目前 存在老版本键盘快捷键(line：1112) 暂时不做后续接入 等待第二版焦点与monaco绑定
+                                            // e.browserEvent.stopImmediatePropagation()
+                                            return
+                                        }
                                     }
-                                    // 判断当前输入是否激活 页面级或全局快捷键
-                                    const event = isPageOrGlobalShortcut(e.browserEvent)
-                                    if (event) {
-                                        // 未接入时特殊处理removePage,接入monaco快捷键后移除此项
-                                        if (["removePage"].includes(event)) e.browserEvent.stopImmediatePropagation()
-                                        // 由于目前 存在老版本键盘快捷键(line：1112) 暂时不做后续接入 等待第二版焦点与monaco绑定
-                                        // e.browserEvent.stopImmediatePropagation()
-                                        return
-                                    }
-                                }
-                            })
+                                })
 
-                            if (editorDidMount) editorDidMount(editor, monaco)
-                        }}
-                        options={{
-                            readOnly: readOnly,
-                            scrollBeyondLastLine: false,
-                            fontWeight: "500",
-                            fontSize: nowFontsize || 12,
-                            showFoldingControls: "always",
-                            showUnused: true,
-                            wordWrap: noWordWrap ? "off" : "on",
-                            renderLineHighlight: "line",
-                            lineNumbers: noLineNumber ? "off" : "on",
-                            minimap: noMiniMap ? {enabled: false} : undefined,
-                            lineNumbersMinChars: lineNumbersMinChars || 5,
-                            contextmenu: false,
-                            renderWhitespace: "all",
-                            bracketPairColorization: {
-                                enabled: true,
-                                independentColorPoolPerBracketType: true
-                            },
-                            fixedOverflowWidgets: true,
-                            renderValidationDecorations: renderValidationDecorations
-                        }}
-                    />
+                                if (editorDidMount) editorDidMount(editor, monaco)
+                            }}
+                            options={{
+                                readOnly: readOnly,
+                                scrollBeyondLastLine: false,
+                                fontWeight: "500",
+                                fontSize: nowFontsize || 12,
+                                showFoldingControls: "always",
+                                showUnused: true,
+                                wordWrap: noWordWrap ? "off" : "on",
+                                renderLineHighlight: "line",
+                                lineNumbers: noLineNumber ? "off" : "on",
+                                minimap: noMiniMap ? {enabled: false} : undefined,
+                                lineNumbersMinChars: lineNumbersMinChars || 5,
+                                contextmenu: false,
+                                renderWhitespace: "all",
+                                bracketPairColorization: {
+                                    enabled: true,
+                                    independentColorPoolPerBracketType: true
+                                },
+                                fixedOverflowWidgets: true,
+                                renderValidationDecorations: renderValidationDecorations
+                            }}
+                        />
+                    )}
                 </ShortcutKeyFocusHook>
             </div>
         </div>
