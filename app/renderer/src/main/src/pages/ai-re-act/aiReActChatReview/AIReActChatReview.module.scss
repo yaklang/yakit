@@ -29,7 +29,7 @@
         }
     }
     .review-container {
-        // flex: 1;
+        flex: 1;
         overflow: hidden auto;
         display: flex;
         flex-direction: column;
@@ -37,11 +37,11 @@
         gap: 8px;
 
         .review-data {
-            // min-height: 30px;
+            min-height: 30px;
         }
 
         .reivew-options {
-            // min-height: 30px;
+            min-height: 30px;
         }
     }
     .review-input {
@@ -88,7 +88,12 @@
         gap: 4px;
     }
 }
-
+.review-content-hidden {
+    height: 0;
+    opacity: 0;
+    padding: 0;
+    margin-bottom: 0;
+}
 .ai-require-input {
     padding: 8px 12px;
     border-radius: 8px;

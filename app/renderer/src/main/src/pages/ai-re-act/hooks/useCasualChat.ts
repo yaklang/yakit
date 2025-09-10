@@ -257,7 +257,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     newArr.push({
                         id: uuidv4(),
                         type: "answer",
-                        uiType: "toolReview",
+                        uiType: "tool_use_review_require",
                         Timestamp,
                         data: cloneDeep(data)
                     })
@@ -277,7 +277,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 newArr.push({
                     id: uuidv4(),
                     type: "answer",
-                    uiType: "requireUser",
+                    uiType: "require_user_interactive",
                     Timestamp,
                     data: cloneDeep(data)
                 })
@@ -290,7 +290,7 @@ function useCasualChat(params?: UseCasualChatParams) {
     const handleReviewRelease = useMemoizedFn((id: string) => {
         if (!review.current || review.current.data.id !== id) return
         const isTrigger = !isAutoContinueReview(getRequest) || noSkipReviewTypes(review.current.type)
-        const type = review.current.type === "tool_use_review_require" ? "toolReview" : "requireUser"
+        const type = review.current.type
         review.current = undefined
         setContents((old) => {
             return old.filter((item) => item.uiType !== type)
@@ -486,7 +486,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     yakitNotify("error", "未获取到 review 信息, 操作无效")
                     return
                 }
-                const type = review.current.type === "tool_use_review_require" ? "toolReview" : "requireUser"
+                const type = review.current.type
                 review.current = undefined
                 // tool_review事件操作
                 setContents((old) => {
