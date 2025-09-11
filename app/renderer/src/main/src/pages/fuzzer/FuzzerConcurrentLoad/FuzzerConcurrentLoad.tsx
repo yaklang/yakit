@@ -6,10 +6,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {useMemoizedFn, useThrottleFn} from "ahooks"
 import {ConcurrentLoad, concurrentLoad} from "@/utils/duplex/duplex"
 import {formatTime} from "@/utils/timeUtil"
-
-const getCssVar = (varName: string) => {
-    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim()
-}
+import { getCssVar } from "@/utils/tool"
 
 const lineDefaultOption: echarts.EChartsOption = {
     title: {

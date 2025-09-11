@@ -4,13 +4,12 @@ import {
     useGetState,
     useInViewport,
     useMemoizedFn,
-    useThrottleEffect,
     useThrottleFn,
     useUpdateEffect
 } from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
-import {FileNodeMapProps, FileNodeProps, FileTreeListProps, FileTreeNodeProps} from "./FileTree/FileTreeType"
+import {FileNodeMapProps, FileTreeListProps} from "./FileTree/FileTreeType"
 import {
     addAreaFileInfo,
     excludeAreaInfoCode,
@@ -35,7 +34,6 @@ import {
 } from "./utils"
 import {
     AreaInfoProps,
-    AuditCodeStatusInfoProps,
     OpenFileByPathProps,
     YakRunnerHistoryProps,
     YakRunnerProps
@@ -56,7 +54,6 @@ import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import cloneDeep from "lodash/cloneDeep"
 import {v4 as uuidv4} from "uuid"
 import moment from "moment"
-import {keySortHandle} from "@/components/yakitUI/YakitEditor/editorUtils"
 import emiter from "@/utils/eventBus/eventBus"
 import {clearMapFileDetail, getMapAllFileKey, getMapFileDetail, setMapFileDetail} from "./FileTreeMap/FileMap"
 import {clearMapFolderDetail, getMapFolderDetail, hasMapFolderDetail, setMapFolderDetail} from "./FileTreeMap/ChildMap"
@@ -65,9 +62,6 @@ import {StringToUint8Array} from "@/utils/str"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {LeftSideType} from "./LeftSideBar/LeftSideBarType"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Progress} from "antd"
-import {SolidDocumentdownloadIcon} from "@/assets/icon/solid"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
 import {registerShortcutKeyHandle, unregisterShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"

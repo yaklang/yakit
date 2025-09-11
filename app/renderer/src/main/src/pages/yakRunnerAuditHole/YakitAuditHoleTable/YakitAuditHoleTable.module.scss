@@ -178,6 +178,7 @@ $keyColor: map-keys($tagColor);
     flex: 1;
     overflow: hidden;
     .main-title {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         border-left: 1px solid var(--Colors-Use-Neutral-Border);
         border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         border-right: 1px solid var(--Colors-Use-Neutral-Border);
@@ -374,6 +375,8 @@ $keyColor: map-keys($tagColor);
     gap: 8px;
     margin-bottom: 16px;
 }
+
+// ---------- 插件日志各种类型对应样式 ----------
 .audit-result-history-opt {
     display: flex;
     flex-direction: column;
@@ -381,7 +384,7 @@ $keyColor: map-keys($tagColor);
     .arrow-icon {
         position: absolute;
         right: -10px;
-        color: var(--plugin-log-type-background);
+        color: var(--Colors-Use-Neutral-Border);
         z-index: 9;
     }
     .icon-wrapper {

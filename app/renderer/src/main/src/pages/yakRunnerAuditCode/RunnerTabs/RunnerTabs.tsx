@@ -1216,8 +1216,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
 
         // 编辑器选中显示的内容
-        const fizzRangeWidget = {
-            isOpen: false,
+        const fizzRangeWidget: newEditor.IContentWidget = {
             // 在可能溢出编辑器视图dom节点的位置呈现此内容小部件
             allowEditorOverflow: true,
             getId: function () {
@@ -1226,8 +1225,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             getDomNode: function () {
                 // 将TSX转换为DOM节点
                 const domNode = document.createElement("div")
-                // 解决弹窗内鼠标滑轮无法滚动的问题
-                domNode.onwheel = (e) => e.stopPropagation()
+                domNode.style.height= "100px";
                 createRoot(domNode).render(
                     <CodeScanMonacoWidget
                         source={editorInfo?.highLightRange?.source}
@@ -1244,16 +1242,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     },
                     preference: [1]
                 }
-            },
-            update: function () {
-                // 更新小部件的位置
-                this.getPosition()
-                editor.layoutContentWidget(this)
             }
         }
         // 关闭选中的内容
         const closeFizzRangeWidget = () => {
-            fizzRangeWidget.isOpen = false
             editor.removeContentWidget(fizzRangeWidget)
         }
 
@@ -1261,7 +1253,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         const openFizzRangeWidget = () => {
             closeFizzRangeWidget()
             editor.addContentWidget(fizzRangeWidget)
-            fizzRangeWidget.isOpen = true
         }
 
         // 编辑器更新 关闭之前展示

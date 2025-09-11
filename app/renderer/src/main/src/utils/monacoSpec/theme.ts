@@ -159,7 +159,22 @@ const applyYakitMonacoTheme = (themeGlobal: Theme) => {
                 token: "number.json",
                 foreground: vars["--yakit-colors-Green-80"]
             },
-
+            {
+                token: "tag.xml",
+                foreground: vars["--Colors-Use-Error-Primary"]
+            },
+            {
+                token: "delimiter.xml",
+                foreground: vars["--Colors-Use-Neutral-Text-1-Title"],
+            },
+            {
+                token: "attribute.name.xml",
+                foreground: vars["--Colors-Use-Error-Primary"]
+            },
+            {
+                token: "attribute.value.xml",
+                foreground: vars["--yakit-colors-Green-80"],
+            },
             // ------------------------------------------
 
             {

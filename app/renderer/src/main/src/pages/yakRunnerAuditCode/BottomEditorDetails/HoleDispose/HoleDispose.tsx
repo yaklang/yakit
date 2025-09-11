@@ -62,7 +62,7 @@ export const HoleDispose: React.FC<HoleDisposeProps> = (props) => {
                 <>
                     <RightBugAuditResultHeader
                         info={info}
-                        extra={<YakitButton onClick={() => onOpenSelect(info)}>处置</YakitButton>}
+                        extra={<YakitButton type="text" onClick={() => onOpenSelect(info)}>处置漏洞</YakitButton>}
                     />
                     {disposalData.length > 0 ? (
                         <AuditResultHistory

@@ -547,6 +547,7 @@
 }
 
 .code-scan-monaco-widget {
+    opacity: 0;
     border-radius: 4px;
     width: 188px;
     background-color: var(--Colors-Use-Grey-Border);
@@ -587,5 +588,11 @@
         margin-top: 10px;
         display: flex;
         gap: 8px;
+    }
+}
+
+div[widgetid="monaco.range.code.scan.widget"][monaco-visible-content-widget="true"] {
+    .code-scan-monaco-widget {
+        opacity: 1;
     }
 }
