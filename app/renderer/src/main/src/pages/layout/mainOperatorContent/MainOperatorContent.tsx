@@ -1965,7 +1965,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
             case YakitRoute.MITMHacker:
                 removeMenuPage(data)
-                console.log('YakitRoute:', YakitRoute.MITMHacker);
                 keepSearchNameMapStore.removeKeepSearchRouteNameMap(YakitRoute.MITMHacker)
                 break
             default:
