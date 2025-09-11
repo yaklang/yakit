@@ -6,6 +6,7 @@ import classNames from "classnames"
 import {useSize} from "ahooks"
 import {useTheme} from "@/hook/useTheme"
 import cloneDeep from "lodash/cloneDeep"
+import { getCssVar } from "@/utils/tool"
 
 interface VerticalOptionBarProps {
     content: any
@@ -40,7 +41,6 @@ interface EchartsCardProps {
 }
 
 export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
-    const getCssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
     const {theme} = useTheme()
     const {content} = props
     const ref = useRef<HTMLDivElement>(null)
@@ -163,8 +163,6 @@ export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
 
 // 堆叠柱状图
 export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
-    const getCssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-
     const {theme} = useTheme()
     const {content} = props
     const ref = useRef(null)
@@ -341,8 +339,6 @@ export const HollowPie: React.FC<HollowPieProps> = (props) => {
     const newData = data.filter((item) => item.direction != "center" && item.value !== 0)
     const centerData = data.filter((item) => item.direction === "center") || [{name: "资产", value: 0}]
     const chartRef = useRef(null)
-
-    const getCssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 
     const buildOptions = () => {
         const titleColor = getCssVar("--Colors-Use-Neutral-Text-1-Title")
@@ -648,8 +644,6 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
     const size = useSize(ref)
     const [details, setDetails] = useState<DetailsProps>()
     const chartRef = useRef(null)
-
-    const getCssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 
     const buildBaseOption = () => {
         const titleColor = getCssVar("--Colors-Use-Neutral-Text-1-Title")
