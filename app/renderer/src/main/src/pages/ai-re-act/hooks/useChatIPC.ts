@@ -134,10 +134,9 @@ function useChatIPC(params?: UseChatIPCParams) {
         chatID.current = token
         chatRequest.current = cloneDeep(params.Params)
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
-            console.log("onStart-res", res)
             try {
                 let ipcContent = Uint8ArrayToString(res.Content) || ""
-
+                console.log("onStart-res", res, ipcContent)
                 if (res.Type === "start_plan_and_execution") {
                     // 触发任务规划，并传出任务规划流的标识 coordinator_id
                     const startInfo = JSON.parse(ipcContent) as AIChatMessage.AIStartPlanAndExecution

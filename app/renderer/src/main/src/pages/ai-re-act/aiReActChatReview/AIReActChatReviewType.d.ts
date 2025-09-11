@@ -9,5 +9,6 @@ export interface AIReActChatReviewProps {
     planReviewTreeKeywordsMap?: Map<string, AIChatMessage.PlanReviewRequireExtra>
     isEmbedded?: boolean
     renderFooterExtra?: (node: React.ReactNode) => React.ReactNode
-    expand?: boolean
+    expand: boolean
+    className?: string
 }

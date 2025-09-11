@@ -10,6 +10,7 @@ import {isShowToolColorCard} from "@/pages/ai-agent/utils"
 import {Tooltip} from "antd"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
+import classNames from "classnames"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -75,9 +76,20 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                                             </div>
                                         }
                                     >
-                                        <div className={styles["think-wrapper"]}>
-                                            <div className={styles["before-text"]}>{beforeContent}</div>
-                                            {afterContent && <div className={styles["after-text"]}>{afterContent}</div>}
+                                        <div>
+                                            <div className='content-ellipsis'>{NodeId}</div>
+                                            <div className={styles["think-wrapper"]}>
+                                                <div
+                                                    className={classNames(styles["before-text"], {
+                                                        [styles["before-text-max-width"]]: !!afterContent
+                                                    })}
+                                                >
+                                                    {beforeContent}
+                                                </div>
+                                                {afterContent && (
+                                                    <div className={styles["after-text"]}>{afterContent}</div>
+                                                )}
+                                            </div>
                                         </div>
                                     </Tooltip>
                                 }
@@ -114,7 +126,14 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
             case "tool_use_review_require":
             case "require_user_interactive":
                 content = (
-                    <AIReActChatReview type={uiType} review={data} onSendAI={handleSendCasual} isEmbedded={true} />
+                    <AIReActChatReview
+                        type={uiType}
+                        review={data}
+                        onSendAI={handleSendCasual}
+                        isEmbedded={true}
+                        expand={true}
+                        className={styles["review-wrapper"]}
+                    />
                 )
                 break
             default:

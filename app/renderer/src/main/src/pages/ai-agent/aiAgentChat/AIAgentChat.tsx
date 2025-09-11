@@ -40,6 +40,7 @@ import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon} from "@/assets
 import {ChatIPCSendType} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import {AIReActEventInfo} from "@/pages/ai-re-act/aiReActType"
+import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 
 const AIReActTaskChat = React.lazy(() => import("../../ai-re-act/aiReActTaskChat/AIReActTaskChat"))
 
@@ -68,9 +69,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     })
 
     // #region ai-task-chat 相关逻辑
+    const [isShowTask, setIsShowTask] = useState<boolean>(false)
     const taskChatRef = useRef<AITaskChatRef>(null)
 
-    const handleStartTaskChat = useMemoizedFn((request: AIStartParams) => {
+    /**欢迎页中 Forge 启动ai */
+    const handleStartTaskChatByForge = useMemoizedFn((request: AIStartParams) => {
         setMode("re-act")
         setSetting &&
             setSetting((old) => {
@@ -83,6 +86,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setTimeout(() => {
             handleStart("")
         }, 100)
+    })
+
+    /**自由对话中触发任务开始 */
+    const handleTaskStart = useMemoizedFn(() => {
+        setMode("task")
+        setIsShowTask(true)
     })
 
     // #region 外部元素触发的通信事件处理
@@ -176,6 +185,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const [reviewExpand, setReviewExpand] = useState<boolean>(true)
 
     const handleShowReview = useMemoizedFn((info: AIChatReview) => {
+        console.log("reviewInfo", info)
         setReviewExpand(true)
         setReviewInfo(cloneDeep(info))
     })
@@ -191,7 +201,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleStopAfterChangeState()
         }
     })
-    //#region
+    //#endregion
 
     //#region re-act版本的
     /** 当前对话唯一ID */
@@ -201,12 +211,14 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     // 提问结束后缓存数据
     const handleChatingEnd = useMemoizedFn(() => {
         handleSaveChatInfo()
+        handleStopAfterChangeState()
     })
     const [chatIPCData, events] = useChatIPC({
         onEnd: handleChatingEnd,
         onTaskReview: handleShowReview,
         onTaskReviewExtra: handleShowReviewExtra,
-        onReviewRelease: handleReleaseReview
+        onReviewRelease: handleReleaseReview,
+        onTaskStart: handleTaskStart
     })
     const {execute, aiPerfData, logs, casualChat, taskChat} = chatIPCData
 
@@ -244,19 +256,21 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
             UserQuery: qs,
-            CoordinatorId: randomString(16),
+            CoordinatorId: "",
             Sequence: 1
         }
         // 创建新的聊天记录
         const newChat: AIChatInfo = {
             id: randomString(16),
-            name: `AI ReAct - ${new Date().toLocaleString()}`,
+            name: qs || `AI Agent - ${new Date().toLocaleString()}`,
             question: qs,
             time: new Date().getTime(),
             request
         }
         setActiveChat && setActiveChat(newChat)
         setChats && setChats((old) => [...old, newChat])
+        setMode("re-act")
+        setIsShowTask(false)
         // 发送初始化参数
         const startParams: AIInputEvent = {
             IsStart: true,
@@ -264,7 +278,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 ...request
             }
         }
-        // console.log("startParams", startParams)
         events.onStart(newChat.id, startParams)
     })
     const handleSendCasual = useMemoizedFn((value: string, id: string) => {
@@ -332,19 +345,21 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     //#region
     const store: ChatIPCContextStore = useCreation(() => {
-        return {chatIPCData, planReviewTreeKeywordsMap, reviewInfo}
-    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo])
+        return {chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand}
+    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand])
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
             chatIPCEvents: events,
             handleSendCasual,
             handleSendTask,
-            handleSaveChatInfo
+            handleSaveChatInfo,
+            handleStart,
+            handleStop: onStop
         }
-    }, [events, handleSendCasual, handleSendTask, handleSaveChatInfo])
-    // useEffect(() => {
-    //     console.log("chatIPCData", chatIPCData)
-    // }, [chatIPCData])
+    }, [events])
+    useEffect(() => {
+        console.log("chatIPCData", chatIPCData)
+    }, [chatIPCData])
 
     //#endregion
     return (
@@ -357,13 +372,17 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                         setReplaceForgeNoPrompt={setReplaceForgeNoPrompt}
                         setCacheReplaceForgeNoPrompt={handleSetReplaceForgeNoPrompt}
                         onTriageSubmit={handleStartTriageChat}
-                        onTaskSubmit={handleStartTaskChat}
+                        onTaskSubmit={handleStartTaskChatByForge}
                     />
                 </div>
             ) : (
                 <ChatIPCContent.Provider value={{store, dispatcher}}>
                     <div className={styles["chat-wrapper"]}>
-                        {mode === "task" && <AIReActTaskChat execute={execute} onStop={onStop} />}
+                        {isShowTask && (
+                            <React.Suspense fallback={<div>loading...</div>}>
+                                <AIReActTaskChat execute={execute} onStop={onStop} />
+                            </React.Suspense>
+                        )}
                         <AIReActChat mode={mode} setMode={setMode} />
                     </div>
                 </ChatIPCContent.Provider>
@@ -374,8 +393,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
 export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React.memo((props) => {
     const {reviewInfo, planReviewTreeKeywordsMap} = props
+    const {reviewExpand} = useChatIPCStore()
     const {handleSendTask} = useChatIPCDispatcher()
-    const [reviewExpand, setReviewExpand] = useState<boolean>(true)
+    const [expand, setReviewExpand] = useState<boolean>(true)
+    useEffect(() => {
+        setReviewExpand(reviewExpand)
+    }, [reviewExpand])
     const handleExpand = useMemoizedFn(() => {
         setReviewExpand((old) => !old)
     })
@@ -384,10 +407,10 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
             <div className={styles["review-footer-box"]}>
                 <YakitButton
                     type='text2'
-                    icon={reviewExpand ? <OutlineChevrondoubledownIcon /> : <OutlineChevrondoubleupIcon />}
+                    icon={expand ? <OutlineChevrondoubledownIcon /> : <OutlineChevrondoubleupIcon />}
                     onClick={handleExpand}
                 >
-                    {reviewExpand ? "隐藏，稍后审阅" : "展开审阅信息"}
+                    {expand ? "隐藏，稍后审阅" : "展开审阅信息"}
                 </YakitButton>
                 {node}
             </div>
@@ -397,7 +420,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
         <div className={styles["review-box"]}>
             <div
                 className={classNames(styles["review-border-shadow"], {
-                    [styles["review-mini"]]: !reviewExpand
+                    [styles["review-mini"]]: !expand
                 })}
             >
                 <div className={styles["review-wrapper"]}>
@@ -407,7 +430,8 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                         onSendAI={handleSendTask}
                         planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
                         renderFooterExtra={renderFooter}
-                        expand={reviewExpand}
+                        expand={expand}
+                        className={styles["review-body"]}
                     />
                 </div>
             </div>

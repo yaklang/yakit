@@ -27,6 +27,9 @@
                 overflow: hidden;
                 word-break: break-all;
             }
+            .before-text-max-width {
+                max-width: 80px;
+            }
             .after-text {
                 width: fit-content;
                 flex-shrink: 0;
@@ -39,6 +42,10 @@
             max-width: 100%;
             max-height: 150px;
             overflow-y: auto;
+        }
+        .review-wrapper {
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            flex: none;
         }
     }
 }

@@ -396,15 +396,12 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         <div className={styles["ai-agent-chat-stream"]}>
             {lists.map((taskName) => {
                 const headerTitle = handleGenerateTaskName(taskName)
-                // const firstExpand = activeFirstPanel.includes(taskName)
                 return (
                     <ChatStreamCollapse
                         key={taskName}
                         id={taskName}
                         title={headerTitle}
                         defaultExpand={defaultExpand ?? true}
-                        // expand={firstExpand}
-                        // onChange={(value) => handleChangeFirstPanel(value, taskName)}
                         className={classNames({
                             [styles["chat-stream-collapse-expand-first"]]: true // firstExpand
                         })}
@@ -457,7 +454,7 @@ const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo
     )
 })
 
-export const ChatStreamContent: React.FC<ChatStreamContentProps> = React.memo((props) => {
+export const ChatStreamContent: React.FC<ChatStreamContentProps> = (props) => {
     const {stream} = props
     return (
         <>
@@ -472,7 +469,7 @@ export const ChatStreamContent: React.FC<ChatStreamContentProps> = React.memo((p
             )}
         </>
     )
-})
+}
 
 /** @name 回答信息折叠组件 */
 export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props) => {

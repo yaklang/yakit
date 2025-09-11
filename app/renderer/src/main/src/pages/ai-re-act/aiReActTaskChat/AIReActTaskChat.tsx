@@ -87,7 +87,6 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     const renderTabContent = useMemoizedFn((key: AITabsEnumType) => {
         switch (key) {
             case AITabsEnum.Task_Content:
-                console.log("renderTabContent-taskChat", taskChat)
                 return (
                     <>
                         <AIAgentChatStream tasks={plan} streams={streams} />
@@ -156,10 +155,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             {!!reviewInfo && (
                 <AIReActTaskChatReview
                     reviewInfo={reviewInfo}
-                    // reviewExpand={reviewExpand}
-                    // setReviewExpand={setReviewExpand}
                     planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
-                    // chatBodyHeight={chatBodySize?.height || 0}
                 />
             )}
         </>

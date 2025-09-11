@@ -7,8 +7,7 @@ import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaProps} from "@/pages/ai-agent/template/type"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
-import {AIChatInfo, AIInputEvent, AIStartParams} from "@/pages/ai-agent/type/aiChat"
-import {randomString} from "@/utils/randomUtil"
+import {AIInputEvent} from "@/pages/ai-agent/type/aiChat"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ColorsChatIcon} from "@/assets/icon/colors"
 import {OutlineNewspaperIcon, OutlineXIcon} from "@/assets/icon/outline"
@@ -24,7 +23,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const {mode, setMode} = props
 
     const {chatIPCData} = useChatIPCStore()
-    const {chatIPCEvents} = useChatIPCDispatcher()
+    const {chatIPCEvents, handleStart, handleStop} = useChatIPCDispatcher()
     const {execute, logs, casualChat} = chatIPCData
 
     const wrapperRef = useRef<HTMLDivElement>(null)
@@ -63,33 +62,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
         setQuestion("")
     })
 
-    const handleStart = useMemoizedFn((qs: string) => {
-        const request: AIStartParams = {
-            ...setting,
-            UserQuery: qs,
-            CoordinatorId: randomString(16),
-            Sequence: 1
-        }
-        // 创建新的聊天记录
-        const newChat: AIChatInfo = {
-            id: randomString(16),
-            name: `AI ReAct - ${new Date().toLocaleString()}`,
-            question: qs,
-            time: new Date().getTime(),
-            request
-        }
-        setActiveChat && setActiveChat(newChat)
-        setChats && setChats((old) => [...old, newChat])
-        // 发送初始化参数
-        const startParams: AIInputEvent = {
-            IsStart: true,
-            Params: {
-                ...request
-            }
-        }
-        chatIPCEvents.onStart(newChat.id, startParams)
-    })
-
     /**自由对话 */
     const handleSend = useMemoizedFn((qs: string) => {
         if (!activeChat) return
@@ -104,11 +76,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
         } catch (error) {}
     })
 
-    const onStop = useMemoizedFn(() => {
-        if (execute && activeID) {
-            chatIPCEvents.onClose(activeID)
-        }
-    })
     // #endregion
 
     const uiCasualChat = useCreation(() => {
@@ -123,9 +90,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
         }
         return logs
     }, [activeChat, logs])
-    const openTask = useMemoizedFn(() => {
-        setMode("task")
-    })
     const isShowRetract = useCreation(() => {
         return mode === "task" && showFreeChat
     }, [mode, showFreeChat])
@@ -165,9 +129,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                     日志
                                 </YakitButton>
                                 {isShowRetract && <ChevronleftButton onClick={handleCancelExpand} />}
-                                <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={openTask}>
-                                    打开Task
-                                </YakitButton>
                             </div>
                         </div>
                         <AIReActChatContents chats={uiCasualChat.contents} />
@@ -181,8 +142,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                     setQuestion={setQuestion}
                                     textareaProps={textareaProps}
                                     onSubmit={handleSubmit}
-                                    extraFooterRight={execute && <RoundedStopButton onClick={onStop} />}
-                                    extraFooterLeft={<AIModelSelect />}
+                                    extraFooterRight={execute && <RoundedStopButton onClick={handleStop} />}
+                                    extraFooterLeft={<AIModelSelect disabled={execute} />}
                                 />
                             </div>
                         </div>

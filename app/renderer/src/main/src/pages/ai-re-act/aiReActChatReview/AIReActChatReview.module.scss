@@ -1,13 +1,13 @@
 .review-content {
-    // flex: 1;
-    // overflow: hidden;
+    flex: 1;
+    overflow: hidden;
     margin-bottom: 8px;
     padding: 8px;
     display: flex;
     flex-direction: column;
     gap: 8px;
     border-radius: 8px;
-    background: var(--Colors-Use-Neutral-Bg-Hover);
+
     .review-header {
         display: flex;
         align-items: center;
@@ -38,6 +38,8 @@
 
         .review-data {
             min-height: 30px;
+            flex: 1;
+            overflow: auto;
         }
 
         .reivew-options {
@@ -74,11 +76,6 @@
         display: flex;
         justify-content: flex-end;
         align-items: center;
-        .btn-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
     }
     .review-selectors-wrapper {
         flex: 1;
@@ -87,6 +84,11 @@
         align-items: flex-start;
         gap: 4px;
     }
+}
+.btn-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 .review-content-hidden {
     height: 0;

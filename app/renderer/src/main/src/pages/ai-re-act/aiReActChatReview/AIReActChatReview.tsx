@@ -14,9 +14,10 @@ import cloneDeep from "lodash/cloneDeep"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import AIPlanReviewTree from "@/pages/ai-agent/aiPlanReviewTree/AIPlanReviewTree"
 import {handleFlatAITree} from "../hooks/utils"
+import {reviewListToTrees} from "@/pages/ai-agent/utils"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
-    const {type, review, onSendAI, planReviewTreeKeywordsMap, isEmbedded, renderFooterExtra, expand} = props
+    const {type, review, onSendAI, planReviewTreeKeywordsMap, isEmbedded, renderFooterExtra, expand, className} = props
 
     const [reviewTreeOption, setReviewTreeOption] = useState<AIChatMessage.ReviewSelector>()
     const [reviewTrees, setReviewTrees] = useState<AIChatMessage.PlanTask[]>([])
@@ -211,7 +212,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     }, [requireQS])
 
     const handleAIRequireQSSend = useMemoizedFn(() => {
-        console.log("handleAIRequireQSSend-review", review)
         if (!isRequireQS) {
             yakitNotify("error", "请输入一些细节信息")
             return
@@ -226,6 +226,17 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     const handleAIRequireOpSend = useMemoizedFn((info: AIChatMessage.AIRequireOption) => {
         const jsonInput: Record<string, string> = {suggestion: info.prompt || info.prompt_title}
         onSendAIByType(JSON.stringify(jsonInput))
+    })
+    /**审阅模式提交树 */
+    const handleSubmitReviewTree = useMemoizedFn(() => {
+        if (!!reviewTreeOption) {
+            const tree = reviewListToTrees(reviewTrees)
+            const jsonInput = {
+                suggestion: reviewTreeOption.value,
+                "reviewed-task-tree": tree[0]
+            }
+            onSendAIByType(JSON.stringify(jsonInput))
+        }
     })
     const aiOptionsLength = useCreation(() => {
         if (type !== "require_user_interactive") return 0
@@ -302,10 +313,23 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             <div className={styles["btn-group"]}>
                 {isContinue && (
                     <>
-                        <YakitButton onClick={handleContinue}>
-                            继续执行
-                            <OutlineWarpIcon />
-                        </YakitButton>
+                        {!!reviewTreeOption ? (
+                            <>
+                                <YakitButton type='outline2' onClick={() => setReviewTreeOption(undefined)}>
+                                    取消
+                                </YakitButton>
+                                <YakitButton type='primary' onClick={handleSubmitReviewTree}>
+                                    提交
+                                </YakitButton>
+                            </>
+                        ) : (
+                            <>
+                                <YakitButton onClick={handleContinue}>
+                                    继续执行
+                                    <OutlineWarpIcon />
+                                </YakitButton>
+                            </>
+                        )}
                     </>
                 )}
                 {type === "require_user_interactive" && !aiOptionsLength && (
@@ -315,13 +339,17 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 )}
             </div>
         )
-    }, [isContinue, type, aiOptionsLength, isRequireQS, requireLoading])
+    }, [isContinue, reviewTreeOption, type, aiOptionsLength, isRequireQS, requireLoading])
     return (
         <>
             <div
-                className={classNames(styles["review-content"], {
-                    [styles["review-content-hidden"]]: !expand
-                })}
+                className={classNames(
+                    styles["review-content"],
+                    {
+                        [styles["review-content-hidden"]]: !expand
+                    },
+                    className || ""
+                )}
             >
                 <div className={styles["review-header"]}>
                     <OutlineHandIcon />
@@ -337,39 +365,41 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                             {toolReview}
                             {aiRequireReview}
                         </div>
-                        <div className={styles["reivew-options"]}>
-                            {aiOptions}
-                            {!!noAIOptions &&
-                                (editShow ? (
-                                    <div className={styles["review-input"]}>
-                                        <Input.TextArea
-                                            bordered={false}
-                                            placeholder={editInfo.current?.prompt || "请输入..."}
-                                            value={reviewQS}
-                                            autoSize={{minRows: 4, maxRows: 4}}
-                                            onChange={(e) => setReviewQS(e.target.value)}
-                                        />
+                        {!reviewTreeOption && (
+                            <div className={styles["reivew-options"]}>
+                                {aiOptions}
+                                {!!noAIOptions &&
+                                    (editShow ? (
+                                        <div className={styles["review-input"]}>
+                                            <Input.TextArea
+                                                bordered={false}
+                                                placeholder={editInfo.current?.prompt || "请输入..."}
+                                                value={reviewQS}
+                                                autoSize={{minRows: 4, maxRows: 4}}
+                                                onChange={(e) => setReviewQS(e.target.value)}
+                                            />
 
-                                        <div className={styles["question-footer"]}>
-                                            <div className={styles["extra-btns"]}>
-                                                <YakitButton
-                                                    className={styles["btn-style"]}
-                                                    type='outline2'
-                                                    icon={<OutlineXIcon />}
-                                                    onClick={() => handleCallbackEdit(false)}
-                                                />
-                                                <YakitButton
-                                                    className={styles["btn-style"]}
-                                                    icon={<OutlineArrowrightIcon />}
-                                                    onClick={() => handleCallbackEdit(true)}
-                                                />
+                                            <div className={styles["question-footer"]}>
+                                                <div className={styles["extra-btns"]}>
+                                                    <YakitButton
+                                                        className={styles["btn-style"]}
+                                                        type='outline2'
+                                                        icon={<OutlineXIcon />}
+                                                        onClick={() => handleCallbackEdit(false)}
+                                                    />
+                                                    <YakitButton
+                                                        className={styles["btn-style"]}
+                                                        icon={<OutlineArrowrightIcon />}
+                                                        onClick={() => handleCallbackEdit(true)}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ) : (
-                                    noAIOptions
-                                ))}
-                        </div>
+                                    ) : (
+                                        noAIOptions
+                                    ))}
+                            </div>
+                        )}
                     </>
                 </div>
                 {isEmbedded && <div className={styles["review-footer"]}>{footerNode}</div>}

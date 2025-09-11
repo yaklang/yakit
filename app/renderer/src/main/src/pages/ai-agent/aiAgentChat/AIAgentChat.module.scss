@@ -21,7 +21,7 @@
 .review-box {
     position: absolute;
     bottom: 0;
-    max-height: calc(100% - 100px);
+    max-height: calc(100% - 120px);
     display: flex;
     justify-content: center;
     margin-bottom: 24px;
@@ -31,15 +31,21 @@
         max-width: 507px;
         background: var(--Colors-Use-Basic-Background);
         border-radius: 8px;
-        border: 4px solid var(--Colors-Use-Main-Focus);
+        outline: 4px solid var(--Colors-Use-Main-Focus);
+        border: 1px solid var(--Colors-Use-Main-Border);
         /* 投影 12px */
-        box-shadow: 0px 6px 12px 0px var(--Colors-Use-Neutral-Shadow);
+        box-shadow: 0px 6px 12px 0px var(--Colors-Use-Basic-Shadow);
         margin: 0 12px;
+        padding: 8px;
+
         .review-wrapper {
             height: 100%;
-            padding: 8px;
             border-radius: 4px;
-            border: 1px solid var(--Colors-Use-Main-Border);
+            display: flex;
+            flex-direction: column;
+            .review-body {
+                background: var(--Colors-Use-Neutral-Bg-Hover);
+            }
         }
         .review-footer-box {
             display: flex;

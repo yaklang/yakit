@@ -8,12 +8,15 @@ export interface ChatIPCContextStore {
     chatIPCData: UseChatIPCState
     reviewInfo?: AIChatReview
     planReviewTreeKeywordsMap: Map<string, AIChatMessage.PlanReviewRequireExtra>
+    reviewExpand: boolean
 }
 
 export interface ChatIPCContextDispatcher {
     chatIPCEvents: UseChatIPCEvents
     handleSendCasual: (value: string, id: string) => void
     handleSendTask: (value: string, id: string) => void
+    handleStart: (qs: string) => void
+    handleStop: () => void
 }
 
 export interface ChatIPCContextValue {
@@ -25,7 +28,8 @@ export default createContext<ChatIPCContextValue>({
     store: {
         chatIPCData: cloneDeep(defaultChatIPCData),
         reviewInfo: undefined,
-        planReviewTreeKeywordsMap: new Map()
+        planReviewTreeKeywordsMap: new Map(),
+        reviewExpand: false
     },
     dispatcher: {
         chatIPCEvents: {
@@ -37,6 +41,8 @@ export default createContext<ChatIPCContextValue>({
             onReset: () => {}
         },
         handleSendCasual: (value: string, id: string) => {},
-        handleSendTask: (value: string, id: string) => {}
+        handleSendTask: (value: string, id: string) => {},
+        handleStart: (qs: string) => {},
+        handleStop: () => {}
     }
 })

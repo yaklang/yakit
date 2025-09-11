@@ -29,7 +29,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         setOpen(false)
     }, [selectWrapperRef])
     const getAIModelListOption = useDebounceFn(
-        useMemoizedFn(() => {
+        () => {
             getAIModelList().then((res) => {
                 setAIModelOptions(res)
                 if (!setting?.AIService) {
@@ -40,7 +40,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                     }
                 }
             })
-        }),
+        },
         {wait: 200, leading: true}
     ).run
 

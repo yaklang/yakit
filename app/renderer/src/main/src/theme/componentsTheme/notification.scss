@@ -2,7 +2,7 @@
 .yakit-notification-failed,
 .yakit-notification-error {
     background: var(--Colors-Use-Basic-Background);
-    box-shadow: 0px 4px 8px var(--Colors-Use-Neutral-Shadow);
+    box-shadow: 0px 4px 8px var(--Colors-Use-Basic-Shadow);
     padding: 0;
 
     .ant-notification-notice-content {
