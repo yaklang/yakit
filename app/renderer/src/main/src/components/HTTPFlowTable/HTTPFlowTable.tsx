@@ -2913,7 +2913,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }))
     })
     const getCodecHistoryPlugin = useMemoizedFn(() => {
-        if (selectedRows.length > 1) {
+        if (selectedRowKeys.length > 1) {
             return codecMultipleHistoryPlugin.length > 0
                 ? addIconLabel(codecMultipleHistoryPlugin)
                 : [
@@ -2945,7 +2945,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const getCodecAIPlugin = useMemoizedFn(() => {
-        if (selectedRows.length > 1) {
+        if (selectedRowKeys.length > 1) {
             const codecMultipleHistoryAIPlugin = codecMultipleHistoryPlugin
                 .filter((item) => item.isAiPlugin)
                 .map((item) => {
@@ -3037,6 +3037,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [])
 
     const {userInfo} = useStore()
+    const codecMultipleHistoryPluginCom = useCampare(codecMultipleHistoryPlugin)
+    const codecSingleHistoryPluginCom = useCampare(codecSingleHistoryPlugin)
+    const selectedRowKeysCom = useCampare(selectedRowKeys)
     const menuData = useMemo(() => {
         let menu = [
             {
@@ -3377,7 +3380,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
         }
         return menu
-    }, [userInfo.isLogin])
+    }, [userInfo.isLogin, codecMultipleHistoryPluginCom, codecSingleHistoryPluginCom, selectedRowKeysCom])
 
     /** 菜单自定义快捷键渲染处理事件 */
     const contextMenuKeybindingHandle = useMemoizedFn((data) => {
