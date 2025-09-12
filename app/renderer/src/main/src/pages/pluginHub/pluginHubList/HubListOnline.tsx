@@ -397,7 +397,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         if (getPluginSource() === "official") {
             request.Official = [true]
         }
-        
+
         if (allChecked) {
             request = {
                 ...request,
@@ -796,7 +796,13 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
 
             {/* 一键下载 */}
             {allDownloadHint && (
-                <YakitGetOnlinePlugin visible={allDownloadHint} setVisible={() => setAllDownloadHint(false)} />
+                <YakitGetOnlinePlugin
+                    visible={allDownloadHint}
+                    setVisible={() => setAllDownloadHint(false)}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${YakitRoute.Plugin_Hub}`) || undefined
+                    }
+                />
             )}
             {/* 一键上传 */}
             {uploadModal && <PluginsUploadHint visible={uploadModal} setVisible={setUploadModal} />}

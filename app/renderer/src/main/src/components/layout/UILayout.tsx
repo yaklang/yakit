@@ -90,6 +90,8 @@ import {
 } from "./utils"
 import moment from "moment"
 import {debugToPrintLog} from "@/utils/logCollection"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
@@ -111,6 +113,12 @@ export interface UILayoutProp {
 }
 
 const UILayout: React.FC<UILayoutProp> = (props) => {
+    const {currentPageTabRouteKey} = usePageInfo(
+        (s) => ({
+            currentPageTabRouteKey: s.currentPageTabRouteKey
+        }),
+        shallow
+    )
     /** ---------- 软件级功能设置 Start ---------- */
     // 顶部是否可以拖拽并移动软件位置
     const [drop, setDrop] = useState<boolean>(true)
@@ -1246,10 +1254,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [coedcPluginShow, setCoedcPluginShow] = useState<boolean>(false)
 
     // 判断打开 ChatCS-AI插件执行/全局网络配置第三方应用框
+    const percentContainerRef = useRef<string>(currentPageTabRouteKey)
     const onFuzzerModal = useMemoizedFn(async (value) => {
         try {
             const val: {text?: string; scriptName?: string; code?: string; isAiPlugin: any} = JSON.parse(value)
             if (val.isAiPlugin === "isGetPlugin") {
+                percentContainerRef.current = currentPageTabRouteKey
                 setCoedcPluginShow(true)
                 return
             }
@@ -1994,6 +2004,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     // 此处通知刷新各类基于codec插件菜单
                     emiter.emit("onRefPluginCodecMenu")
                 }}
+                getContainer={
+                    document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+                }
             />
         </div>
     )

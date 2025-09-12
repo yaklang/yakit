@@ -21,6 +21,7 @@ import {
     OutlineTrashIcon,
     OutlineRefreshIcon
 } from "@/assets/icon/outline"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
@@ -34,35 +35,34 @@ export interface ThirdPartyBinary {
 export interface ThirdPartyBinaryManagerProps {}
 
 // Status component for each binary
-const BinaryStatusTag: React.FC<{binary: ThirdPartyBinary, checkBinaryReady: (name: string) => Promise<boolean>}> = ({binary, checkBinaryReady}) => {
+const BinaryStatusTag: React.FC<{binary: ThirdPartyBinary; checkBinaryReady: (name: string) => Promise<boolean>}> = ({
+    binary,
+    checkBinaryReady
+}) => {
     const [ready, setReady] = useState<boolean | null>(null)
-    
+
     useEffect(() => {
         if (binary.InstallPath) {
             checkBinaryReady(binary.Name).then(setReady)
         }
     }, [binary, checkBinaryReady])
-    
+
     if (!binary.InstallPath) {
-        return <YakitTag color="red">未安装</YakitTag>
+        return <YakitTag color='red'>未安装</YakitTag>
     }
-    
+
     if (ready === null) {
         return <YakitTag>检查中...</YakitTag>
     }
-    
-    return ready ? (
-        <YakitTag color="green">就绪</YakitTag>
-    ) : (
-        <YakitTag color="warning">异常</YakitTag>
-    )
+
+    return ready ? <YakitTag color='green'>就绪</YakitTag> : <YakitTag color='warning'>异常</YakitTag>
 }
 
 export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (props) => {
     const [binaries, setBinaries] = useState<ThirdPartyBinary[]>([])
     const [loading, setLoading] = useState(false)
     const [refreshLoading, setRefreshLoading] = useState(false)
-    
+
     // Install modal state
     const [installVisible, setInstallVisible] = useState(false)
     const [installForm] = Form.useForm()
@@ -70,7 +70,7 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
     const [installToken, setInstallToken] = useState(randomString(50))
     const [installProgress, setInstallProgress] = useState(0)
     const [installLogs, setInstallLogs, getInstallLogs] = useGetState<string[]>([])
-    
+
     // Start modal state
     const [startVisible, setStartVisible] = useState(false)
     const [startForm] = Form.useForm()
@@ -79,7 +79,8 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
     // Fetch binaries list
     const fetchBinaries = useMemoizedFn(() => {
         setRefreshLoading(true)
-        ipcRenderer.invoke("ListThirdPartyBinary", {})
+        ipcRenderer
+            .invoke("ListThirdPartyBinary", {})
             .then((res: {Binaries: ThirdPartyBinary[]}) => {
                 setBinaries(res.Binaries || [])
             })
@@ -144,24 +145,32 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
             setInstallLoading(true)
             const newToken = randomString(50)
             setInstallToken(newToken)
-            
-            ipcRenderer.invoke("InstallThirdPartyBinary", {
-                Name: name,
-                Proxy: proxy || "",
-                Force: force || false
-            }, newToken).then(() => {
-                info(`开始安装 ${name}`)
-            }).catch((err) => {
-                failed(`安装失败: ${err}`)
-                setInstallLoading(false)
-            })
+
+            ipcRenderer
+                .invoke(
+                    "InstallThirdPartyBinary",
+                    {
+                        Name: name,
+                        Proxy: proxy || "",
+                        Force: force || false
+                    },
+                    newToken
+                )
+                .then(() => {
+                    info(`开始安装 ${name}`)
+                })
+                .catch((err) => {
+                    failed(`安装失败: ${err}`)
+                    setInstallLoading(false)
+                })
         })
     })
 
     // Uninstall binary
     const handleUninstall = useMemoizedFn((name: string) => {
         setLoading(true)
-        ipcRenderer.invoke("UninstallThirdPartyBinary", {Name: name})
+        ipcRenderer
+            .invoke("UninstallThirdPartyBinary", {Name: name})
             .then(() => {
                 success(`卸载 ${name} 成功`)
                 fetchBinaries()
@@ -179,21 +188,28 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
         startForm.validateFields().then((values) => {
             const {args} = values
             if (!selectedBinary) return
-            
-            const argsArray = args ? args.split(' ').filter((arg: string) => arg.trim()) : []
+
+            const argsArray = args ? args.split(" ").filter((arg: string) => arg.trim()) : []
             const token = randomString(50)
-            
-            ipcRenderer.invoke("StartThirdPartyBinary", {
-                Name: selectedBinary.Name,
-                Args: argsArray
-            }, token).then(() => {
-                info(`启动 ${selectedBinary.Name} 成功`)
-                setStartVisible(false)
-                startForm.resetFields()
-                setSelectedBinary(null)
-            }).catch((err) => {
-                failed(`启动失败: ${err}`)
-            })
+
+            ipcRenderer
+                .invoke(
+                    "StartThirdPartyBinary",
+                    {
+                        Name: selectedBinary.Name,
+                        Args: argsArray
+                    },
+                    token
+                )
+                .then(() => {
+                    info(`启动 ${selectedBinary.Name} 成功`)
+                    setStartVisible(false)
+                    startForm.resetFields()
+                    setSelectedBinary(null)
+                })
+                .catch((err) => {
+                    failed(`启动失败: ${err}`)
+                })
         })
     })
 
@@ -227,15 +243,15 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
             dataIndex: "Description",
             key: "Description",
             ellipsis: true,
-            render: (text: string) => <Text type="secondary">{text}</Text>
+            render: (text: string) => <Text type='secondary'>{text}</Text>
         },
         {
             title: "安装路径",
-            dataIndex: "InstallPath", 
+            dataIndex: "InstallPath",
             key: "InstallPath",
             width: 200,
             ellipsis: true,
-            render: (text: string) => text || <Text type="secondary">未安装</Text>
+            render: (text: string) => text || <Text type='secondary'>未安装</Text>
         },
         {
             title: "状态",
@@ -254,8 +270,8 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
                     {record.InstallPath ? (
                         <>
                             <YakitButton
-                                type="primary"
-                                size="small"
+                                type='primary'
+                                size='small'
                                 icon={<OutlinePlayIcon />}
                                 onClick={() => openStartModal(record)}
                                 disabled={loading}
@@ -264,7 +280,7 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
                             </YakitButton>
                             <YakitButton
                                 danger
-                                size="small"
+                                size='small'
                                 icon={<OutlineTrashIcon />}
                                 onClick={() => handleUninstall(record.Name)}
                                 disabled={loading}
@@ -274,8 +290,8 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
                         </>
                     ) : (
                         <YakitButton
-                            type="primary"
-                            size="small"
+                            type='primary'
+                            size='small'
                             icon={<OutlineDownloadIcon />}
                             onClick={() => {
                                 setInstallVisible(true)
@@ -294,23 +310,19 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
     return (
         <div className={styles["third-party-binary-manager"]}>
             <AutoCard
-                title="第三方二进制文件管理"
-                size="small"
+                title='第三方二进制文件管理'
+                size='small'
                 extra={
                     <Space>
                         <YakitButton
-                            type="primary"
+                            type='primary'
                             icon={<OutlineDownloadIcon />}
                             onClick={() => setInstallVisible(true)}
                             disabled={loading}
                         >
                             安装新工具
                         </YakitButton>
-                        <YakitButton
-                            icon={<OutlineRefreshIcon />}
-                            onClick={fetchBinaries}
-                            loading={refreshLoading}
-                        >
+                        <YakitButton icon={<OutlineRefreshIcon />} onClick={fetchBinaries} loading={refreshLoading}>
                             刷新
                         </YakitButton>
                     </Space>
@@ -321,20 +333,20 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
                     <Table
                         dataSource={binaries}
                         columns={columns}
-                        rowKey="Name"
+                        rowKey='Name'
                         pagination={{
                             pageSize: 10,
                             simple: true,
                             size: "small"
                         }}
-                        size="small"
+                        size='small'
                     />
                 </AutoSpin>
             </AutoCard>
 
             {/* Install Modal */}
             <YakitModal
-                title="安装第三方工具"
+                title='安装第三方工具'
                 visible={installVisible}
                 onCancel={() => {
                     if (!installLoading) {
@@ -345,7 +357,7 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
                 width={500}
                 footer={[
                     <YakitButton
-                        key="cancel"
+                        key='cancel'
                         onClick={() => {
                             if (installLoading) {
                                 cancelInstall()
@@ -358,8 +370,8 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
                         {installLoading ? "取消安装" : "取消"}
                     </YakitButton>,
                     <YakitButton
-                        key="install"
-                        type="primary"
+                        key='install'
+                        type='primary'
                         loading={installLoading}
                         onClick={handleInstall}
                         disabled={installLoading}
@@ -367,6 +379,9 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
                         {installLoading ? "安装中..." : "开始安装"}
                     </YakitButton>
                 ]}
+                getContainer={
+                    document.getElementById(`main-operator-page-body-${YakitRoute.Beta_DebugMonacoEditor}`) || undefined
+                }
             >
                 {installLoading ? (
                     <div>
@@ -375,15 +390,17 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
                             format={(percent) => `已完成 ${percent}%`}
                             style={{marginBottom: 16}}
                         />
-                        <div style={{
-                            maxHeight: 200,
-                            overflow: "auto",
-                            backgroundColor: "#f5f5f5",
-                            padding: 8,
-                            borderRadius: 4,
-                            fontSize: 12,
-                            fontFamily: "monospace"
-                        }}>
+                        <div
+                            style={{
+                                maxHeight: 200,
+                                overflow: "auto",
+                                backgroundColor: "var(--Colors-Use-Neutral-Bg)",
+                                padding: 8,
+                                borderRadius: 4,
+                                fontSize: 12,
+                                fontFamily: "monospace"
+                            }}
+                        >
                             {installLogs.map((log, index) => (
                                 <div key={index} style={{marginBottom: 4}}>
                                     {log}
@@ -392,27 +409,16 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
                         </div>
                     </div>
                 ) : (
-                    <Form form={installForm} layout="vertical">
-                        <Form.Item
-                            label="工具名称"
-                            name="name"
-                            rules={[{required: true, message: "请输入工具名称"}]}
-                        >
-                            <YakitInput placeholder="请输入要安装的工具名称" />
+                    <Form form={installForm} layout='vertical'>
+                        <Form.Item label='工具名称' name='name' rules={[{required: true, message: "请输入工具名称"}]}>
+                            <YakitInput placeholder='请输入要安装的工具名称' />
                         </Form.Item>
-                        
-                        <Form.Item
-                            label="代理设置"
-                            name="proxy"
-                        >
-                            <YakitInput placeholder="可选：http://proxy:port" />
+
+                        <Form.Item label='代理设置' name='proxy'>
+                            <YakitInput placeholder='可选：http://proxy:port' />
                         </Form.Item>
-                        
-                        <Form.Item
-                            label="强制重新安装"
-                            name="force"
-                            valuePropName="checked"
-                        >
+
+                        <Form.Item label='强制重新安装' name='force' valuePropName='checked'>
                             <YakitSwitch />
                         </Form.Item>
                     </Form>
@@ -431,7 +437,7 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
                 width={500}
                 footer={[
                     <YakitButton
-                        key="cancel"
+                        key='cancel'
                         onClick={() => {
                             setStartVisible(false)
                             startForm.resetFields()
@@ -440,40 +446,38 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
                     >
                         取消
                     </YakitButton>,
-                    <YakitButton
-                        key="start"
-                        type="primary"
-                        onClick={handleStart}
-                    >
+                    <YakitButton key='start' type='primary' onClick={handleStart}>
                         开始执行
                     </YakitButton>
                 ]}
             >
-                <Form form={startForm} layout="vertical">
-                    <Form.Item
-                        label="命令行参数"
-                        name="args"
-                    >
-                        <YakitInput placeholder="可选：输入命令行参数，空格分隔" />
+                <Form form={startForm} layout='vertical'>
+                    <Form.Item label='命令行参数' name='args'>
+                        <YakitInput placeholder='可选：输入命令行参数，空格分隔' />
                     </Form.Item>
-                    
+
                     {selectedBinary && (
                         <div>
                             <Divider />
                             <Row gutter={16}>
                                 <Col span={12}>
-                                    <Text strong>工具名称:</Text><br />
+                                    <Text strong>工具名称:</Text>
+                                    <br />
                                     <Text>{selectedBinary.Name}</Text>
                                 </Col>
                                 <Col span={12}>
-                                    <Text strong>安装路径:</Text><br />
-                                    <Text type="secondary" ellipsis>{selectedBinary.InstallPath}</Text>
+                                    <Text strong>安装路径:</Text>
+                                    <br />
+                                    <Text type='secondary' ellipsis>
+                                        {selectedBinary.InstallPath}
+                                    </Text>
                                 </Col>
                             </Row>
                             <Row style={{marginTop: 8}}>
                                 <Col span={24}>
-                                    <Text strong>描述:</Text><br />
-                                    <Text type="secondary">{selectedBinary.Description}</Text>
+                                    <Text strong>描述:</Text>
+                                    <br />
+                                    <Text type='secondary'>{selectedBinary.Description}</Text>
                                 </Col>
                             </Row>
                         </div>
@@ -482,4 +486,4 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
             </YakitModal>
         </div>
     )
-} 
+}

@@ -44,6 +44,7 @@ import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const NotepadLocalSearch = React.lazy(() => import("./NotepadLocalSearch"))
 
@@ -404,11 +405,20 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                     />
                 )}
             </div>
-            {exportVisible && <NotepadExport filter={actionFilter} onClose={() => setExportVisible(false)} />}
+            {exportVisible && (
+                <NotepadExport
+                    filter={actionFilter}
+                    onClose={() => setExportVisible(false)}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${YakitRoute.Notepad_Manage}`) || undefined
+                    }
+                />
+            )}
             {importVisible && (
                 <NotepadImport
                     onClose={() => setImportVisible(false)}
                     onImportSuccessAfter={() => setRefresh(!refresh)}
+                    getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.Notepad_Manage}`) || undefined}
                 />
             )}
         </YakitSpin>
@@ -477,7 +487,15 @@ const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props)
             <YakitPopconfirm title='确定要删掉该文档吗' onConfirm={() => onSingleRemove()}>
                 <YakitButton type='text' danger loading={removeItemLoading} icon={<OutlineTrashIcon />} />
             </YakitPopconfirm>
-            {exportVisible && <NotepadExport filter={filterRef.current} onClose={() => setExportVisible(false)} />}
+            {exportVisible && (
+                <NotepadExport
+                    filter={filterRef.current}
+                    onClose={() => setExportVisible(false)}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${YakitRoute.Notepad_Manage}`) || undefined
+                    }
+                />
+            )}
         </div>
     )
 })

@@ -53,6 +53,7 @@ import {UpdateGroupList, UpdateGroupListItem} from "@/pages/pluginHub/group/Upda
 import {DelGroupConfirmPop} from "@/pages/pluginHub/group/PluginOperationGroupList"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -313,6 +314,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                         setRefresh(!refresh)
                     }, 100)
                 }}
+                getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.MITMHacker}`) || undefined}
             />
         </div>
     )
@@ -327,13 +329,22 @@ export interface YakitGetOnlinePluginProps {
     setVisible: (b: boolean) => void
     onFinish?: () => void
     isRereshLocalPluginList?: boolean
+    getContainer?: HTMLElement
 }
 /**
  * 一键下载插件
  * @param listType 'online'默认首页 mine 个人, recycle 回收站 check 审核页面"
  */
 export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
-    const {listType = "online", pluginType, visible, setVisible, onFinish, isRereshLocalPluginList = true} = props
+    const {
+        listType = "online",
+        pluginType,
+        visible,
+        setVisible,
+        onFinish,
+        isRereshLocalPluginList = true,
+        getContainer
+    } = props
     const taskToken = useMemo(() => randomString(40), [])
     const [percent, setPercent] = useState<number>(0)
     useEffect(() => {
@@ -400,6 +411,8 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}
+            getContainer={getContainer}
+            wrapClassName={style["yakitGetOnlinePlugin"]}
         >
             <Progress
                 strokeColor='var(--Colors-Use-Main-Primary)'
@@ -417,6 +430,8 @@ interface ApplySyntaxFlowRuleUpdateResponse {
 }
 
 export interface IRifyApplySyntaxFlowRuleUpdateProps {
+    wrapClassName?: string
+    getContainer?: HTMLElement
     visible: boolean
     setVisible: (b: boolean) => void
 }
@@ -424,7 +439,7 @@ export interface IRifyApplySyntaxFlowRuleUpdateProps {
  * IRify一键更新规则
  */
 export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUpdateProps> = React.memo((props) => {
-    const {visible, setVisible} = props
+    const {visible, setVisible, getContainer, wrapClassName} = props
     const taskToken = useMemo(() => randomString(40), [])
     const [percent, setPercent] = useState<number>(0)
     useEffect(() => {
@@ -484,6 +499,8 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}
+            getContainer={getContainer}
+            wrapClassName={wrapClassName}
         >
             <Progress
                 strokeColor='var(--Colors-Use-Main-Primary)'

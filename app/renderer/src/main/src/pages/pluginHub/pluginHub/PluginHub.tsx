@@ -9,6 +9,7 @@ import {RemotePluginGV} from "@/enums/plugin"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {registerShortcutKeyHandle, unregisterShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"
 import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
@@ -123,7 +124,13 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
             />
             {/* 一键下载 */}
             {allDownloadHint && (
-                <YakitGetOnlinePlugin visible={allDownloadHint} setVisible={() => setAllDownloadHint(false)} />
+                <YakitGetOnlinePlugin
+                    visible={allDownloadHint}
+                    setVisible={() => setAllDownloadHint(false)}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${YakitRoute.Plugin_Hub}`) || undefined
+                    }
+                />
             )}
         </div>
     )

@@ -57,6 +57,7 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
             <div className={styles["yakit-hint-body"]}>
                 <YakitHintModal
                     {...rest}
+                    getContainer={getContainer}
                     isMask={mask}
                     visible={true}
                     isTop={currentTop === "main"}

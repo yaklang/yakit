@@ -14,10 +14,11 @@ import {
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import emiter from "@/utils/eventBus/eventBus"
+import { ShowModalProps } from "@/utils/showModal"
 
 const {ipcRenderer} = window.require("electron")
 
-export const onCreateReportModal = (createReportContent: CreateReportContentProps) => {
+export const onCreateReportModal = (createReportContent: CreateReportContentProps, modalProps: ShowModalProps) => {
     const m = showYakitModal({
         title: "下载报告",
         footer: null,
@@ -25,7 +26,8 @@ export const onCreateReportModal = (createReportContent: CreateReportContentProp
         onCancel: () => {
             m.destroy()
         },
-        bodyStyle: {padding: 24}
+        bodyStyle: {padding: 24},
+        ...modalProps
     })
 }
 export interface CreateReportContentProps {

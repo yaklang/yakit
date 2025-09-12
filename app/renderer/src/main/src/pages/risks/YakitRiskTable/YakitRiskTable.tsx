@@ -88,7 +88,7 @@ import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {AuditCodePageInfoProps, PluginHubPageInfoProps} from "@/store/pageInfo"
+import {AuditCodePageInfoProps, PluginHubPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import ReactResizeDetector from "react-resize-detector"
 import {serverPushStatus} from "@/utils/duplex/duplex"
@@ -110,7 +110,8 @@ import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightA
 import {JumpToAuditEditorProps} from "@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType"
 import {Selection} from "@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType"
 import MDEditor from "@uiw/react-md-editor"
-import { getNameByPath } from "@/pages/yakRunner/utils"
+import {getNameByPath} from "@/pages/yakRunner/utils"
+import {shallow} from "zustand/shallow"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -276,8 +277,15 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         yakitRiskDetailsBorder = true,
         excludeColumnsKey = []
     } = props
+    const {currentPageTabRouteKey} = usePageInfo(
+        (s) => ({
+            currentPageTabRouteKey: s.currentPageTabRouteKey
+        }),
+        shallow
+    )
     const {userInfo} = useStore()
     const [loading, setLoading] = useState<boolean>(false)
+    const percentContainerRef = useRef<string>(currentPageTabRouteKey)
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [response, setResponse] = useState<QueryRisksResponse>({
@@ -782,6 +790,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     })
     const onExportCSV = useMemoizedFn(() => {
         if (+response.Total === 0) return
+        percentContainerRef.current = currentPageTabRouteKey
         const exportValue = exportFields.map((item) => item.label)
         const initCheckFields = exportFields.filter((ele) => ele.isDefaultChecked).map((item) => item.label)
         const m = showYakitModal({
@@ -795,6 +804,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     getData={getExcelData}
                     onClose={() => m.destroy()}
                     fileName='风险与漏洞'
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+                    }
                 />
             ),
             onCancel: () => {
@@ -802,7 +814,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 setSelectList([])
             },
             footer: null,
-            width: 650
+            width: 650,
+            getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
         })
     })
     const formatJson = (filterVal, jsonData) => {
@@ -2068,14 +2081,14 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                 <>
                     <Descriptions.Item label='漏洞描述' span={column}>
                         {info.Description ? (
-                            <MDEditor.Markdown source={info.Description} style={{ whiteSpace: "normal",fontSize:14 }} />
+                            <MDEditor.Markdown source={info.Description} style={{whiteSpace: "normal", fontSize: 14}} />
                         ) : (
                             "-"
                         )}
                     </Descriptions.Item>
                     <Descriptions.Item label='解决方案' span={column}>
                         {info.Solution ? (
-                            <MDEditor.Markdown source={info.Solution} style={{ whiteSpace: "normal",fontSize:14 }}/>
+                            <MDEditor.Markdown source={info.Solution} style={{whiteSpace: "normal", fontSize: 14}} />
                         ) : (
                             "-"
                         )}

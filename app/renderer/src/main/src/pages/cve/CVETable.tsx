@@ -33,6 +33,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {CacheDropDownGV} from "@/yakitGV"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 export interface CVETableProp {
     available: boolean
@@ -736,6 +737,8 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
             cancelButtonProps={{style: {display: status === "progress" && !props.latestMode ? "none" : "flex"}}}
             okButtonProps={{style: {display: status === "progress" ? "none" : "flex"}}}
             content={<div className={styles["database-update-content"]}>{HintContent()}</div>}
+            getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.DB_CVE}`) || undefined}
+            wrapClassName={styles["databaseUpdateModal"]}
         />
     )
 })
