@@ -487,8 +487,6 @@ function useCasualChat(params?: UseCasualChatParams) {
                 handleToolResultSummary(res, data?.call_tool_id || "")
                 return
             }
-
-            console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
         } catch (error) {
             handleGrpcDataPushLog({
                 type: "error",

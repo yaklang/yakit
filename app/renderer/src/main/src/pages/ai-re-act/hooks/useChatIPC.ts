@@ -215,7 +215,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
                 // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
                 if (res.Type === "stream") {
-                    if (planCoordinatorId.current === res.CoordinatorId && !res.TaskIndex) {
+                    if (planCoordinatorId.current === res.CoordinatorId && !!res.TaskIndex) {
                         taskChatEvent.handleSetData(res)
                     } else {
                         casualChatEvent.handleSetData(res)

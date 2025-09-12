@@ -18,12 +18,37 @@ import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import classNames from "classnames"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {ChevrondownButton, RoundedStopButton} from "../aiReActChat/AIReActComponent"
-import {UseTaskChatState} from "../hooks/type"
+import {UseAIPerfDataState, UseTaskChatState} from "../hooks/type"
 import {AIReActTaskChatReview} from "@/pages/ai-agent/aiAgentChat/AIAgentChat"
+import {OutlineArrowdownIcon, OutlineArrowupIcon} from "@/assets/icon/outline"
+import {formatNumberUnits} from "@/pages/ai-agent/utils"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {execute, onStop} = props
+    const {activeChat} = useAIAgentStore()
+    const {chatIPCData} = useChatIPCStore()
 
+    const aiPerfData: UseAIPerfDataState = useCreation(() => {
+        return chatIPCData.aiPerfData || defaultChatIPCData.aiPerfData
+    }, [chatIPCData.aiPerfData])
+
+    // ui实际渲染数据-consumption
+    const uiConsumption = useCreation(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.aiPerfData)
+            return activeChat.answer.aiPerfData.consumption
+        return aiPerfData.consumption
+    }, [activeChat, aiPerfData.consumption])
+    // AI的Token消耗
+    const token = useCreation(() => {
+        let input = 0
+        let output = 0
+        const keys = Object.keys(uiConsumption || {})
+        for (let name of keys) {
+            input += uiConsumption[name]?.input_consumption || 0
+            output += uiConsumption[name]?.output_consumption || 0
+        }
+        return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
+    }, [uiConsumption])
     return (
         <div className={styles["ai-re-act-task-chat"]}>
             <AIReActTaskChatLeftSide />
@@ -33,7 +58,21 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
                         <ColorsBrainCircuitIcon />
                         深度规划
                     </div>
-                    <div className={styles["extra"]}>{execute && <RoundedStopButton onClick={onStop} />}</div>
+                    <div className={styles["extra"]}>
+                        <div className={styles["info-token"]}>
+                            Tokens:
+                            <div className={classNames(styles["token-tag"], styles["upload-token"])}>
+                                <OutlineArrowupIcon />
+                                {token[0]}
+                            </div>
+                            <div className={classNames(styles["token-tag"], styles["download-token"])}>
+                                <OutlineArrowdownIcon />
+                                {token[1]}
+                            </div>
+                        </div>
+                        <div className={styles["divider-style"]}></div>
+                        {execute && <RoundedStopButton onClick={onStop} />}
+                    </div>
                 </div>
                 <AIReActTaskChatContent />
             </div>
@@ -153,10 +192,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
                 <div className={styles["tab-content"]}>{renderTabContent(activeKey)}</div>
             </YakitSideTab>
             {!!reviewInfo && (
-                <AIReActTaskChatReview
-                    reviewInfo={reviewInfo}
-                    planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
-                />
+                <AIReActTaskChatReview reviewInfo={reviewInfo} planReviewTreeKeywordsMap={planReviewTreeKeywordsMap} />
             )}
         </>
     )
