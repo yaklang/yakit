@@ -328,6 +328,16 @@ export declare namespace AIChatMessage {
         system: boolean
     }
 
+    /** ai 对 tool_review 判断的数据 */
+    export interface AIToolReviewJudgement {
+        /** 对应 tool_review 的 id */
+        interactive_id: string
+        /** review 操作的得分 */
+        score?: number
+        /** 多少秒后自动执行 review 的 continue 操作 */
+        seconds?: number
+    }
+
     /** 工具审阅请求 */
     export interface ToolUseReviewRequire {
         id: string
@@ -335,6 +345,7 @@ export declare namespace AIChatMessage {
         selectors: ReviewSelector[]
         tool: string
         tool_description: string
+        aiReview?: AIToolReviewJudgement
     }
 
     /** 任务审阅请求 */

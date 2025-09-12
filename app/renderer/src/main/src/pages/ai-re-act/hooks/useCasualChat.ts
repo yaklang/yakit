@@ -3,7 +3,13 @@ import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import {AIChatMessage, AIChatReview, AIInputEvent, AIOutputEvent} from "@/pages/ai-agent/type/aiChat"
-import {handleGrpcDataPushLog, isAutoContinueReview, isToolStdoutStream, noSkipReviewTypes} from "./utils"
+import {
+    handleGrpcDataPushLog,
+    isAutoContinueReview,
+    isToolExecStream,
+    isToolStdoutStream,
+    noSkipReviewTypes
+} from "./utils"
 import {v4 as uuidv4} from "uuid"
 import {UseCasualChatEvents, UseCasualChatParams, UseCasualChatState} from "./type"
 import {DefaultAIToolResult} from "./defaultConstant"
@@ -62,10 +68,10 @@ function useCasualChat(params?: UseCasualChatParams) {
                         status: "start",
                         stream: {system: "", reason: "", stream: ""}
                     }
+                    if (isToolStdoutStream(NodeId)) streamsInfo.toolAggregation = {...toolStdOutSelectors.current}
                     if (type === "systemStream") streamsInfo.stream.system += content
                     if (type === "reasonStream") streamsInfo.stream.reason += content
                     if (type === "stream") streamsInfo.stream.stream += content
-                    if (isToolStdoutStream(NodeId)) streamsInfo.toolAggregation = {...toolStdOutSelectors.current}
                     newArr.push({
                         id: uuidv4(),
                         type: "answer",
@@ -75,6 +81,15 @@ function useCasualChat(params?: UseCasualChatParams) {
                     })
                 }
 
+                if (NodeId === "call-tools") {
+                    newArr = newArr.filter((item) => {
+                        if (item.uiType === "stream" && item.data) {
+                            const streamData = item.data as AIChatMessage.AIStreamOutput
+                            return streamData.NodeId !== "execute"
+                        }
+                        return true
+                    })
+                }
                 // 出现tool_stdout时，删除前面的call-tools类型数据
                 if (isToolStdoutStream(NodeId)) {
                     newArr = newArr.filter((item) => {
@@ -168,7 +183,7 @@ function useCasualChat(params?: UseCasualChatParams) {
     })
 
     // 工具执行结果生成为答案UI的逻辑
-    const aggregationToolData = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
+    const handleToolResultStatus = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
         setContents((old) => {
             let newArr = [...old]
 
@@ -186,7 +201,7 @@ function useCasualChat(params?: UseCasualChatParams) {
             newArr = newArr.filter((item) => {
                 if (item.uiType === "stream" && item.data) {
                     const streamData = item.data as AIChatMessage.AIStreamOutput
-                    return !isToolStdoutStream(streamData.NodeId)
+                    return !isToolExecStream(streamData.NodeId)
                 }
                 return true
             })
@@ -214,7 +229,7 @@ function useCasualChat(params?: UseCasualChatParams) {
     })
 
     // 补全工具执行结果UI内的执行总结
-    const onSetToolSummary = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
+    const handleToolResultSummary = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
         setContents((old) => {
             let newArr = old.map((item) => {
                 if (item.uiType === "toolResult") {
@@ -371,6 +386,12 @@ function useCasualChat(params?: UseCasualChatParams) {
                 return
             }
 
+            if (res.Type === "ai_review_start") {
+            }
+            if (res.Type === "ai_review_countdown") {
+            }
+            if (res.Type === "ai_review_end") {
+            }
             if (res.Type === "tool_use_review_require") {
                 const data = JSON.parse(ipcContent) as AIChatMessage.ToolUseReviewRequire
                 if (!data?.id || !data?.selectors || !data?.selectors?.length) {
@@ -415,7 +436,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     status: "user_cancelled",
                     time: res.Timestamp
                 })
-                aggregationToolData(res, data?.call_tool_id)
+                handleToolResultStatus(res, data?.call_tool_id)
                 return
             }
             if (res.Type === "tool_call_done") {
@@ -424,7 +445,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     status: "success",
                     time: res.Timestamp
                 })
-                aggregationToolData(res, data?.call_tool_id)
+                handleToolResultStatus(res, data?.call_tool_id)
                 return
             }
             if (res.Type === "tool_call_error") {
@@ -433,7 +454,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     status: "failed",
                     time: res.Timestamp
                 })
-                aggregationToolData(res, data?.call_tool_id)
+                handleToolResultStatus(res, data?.call_tool_id)
                 return
             }
 
@@ -463,7 +484,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     summary: currentToolData.summary,
                     time: res.Timestamp
                 })
-                onSetToolSummary(res, data?.call_tool_id || "")
+                handleToolResultSummary(res, data?.call_tool_id || "")
                 return
             }
 

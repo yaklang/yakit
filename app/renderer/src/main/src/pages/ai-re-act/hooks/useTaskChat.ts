@@ -170,7 +170,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
 
     const handleToolResultStatus = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
-        const {NodeId, EventUUID, TaskIndex, Timestamp} = res
+        const {Type, EventUUID, TaskIndex, Timestamp} = res
         if (!TaskIndex) {
             onCloseByErrorTaskIndexData(res)
             return
@@ -188,7 +188,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 const newValue = valueInfo.filter((ele) => !isToolExecStream(ele.NodeId))
                 const toolData = getToolResult(callToolId)
                 newValue.push({
-                    NodeId: NodeId,
+                    NodeId: Type,
                     EventUUID: EventUUID,
                     status: "end",
                     timestamp: Timestamp,
@@ -211,7 +211,7 @@ function useTaskChat(params?: UseTaskChatParams) {
         })
     })
 
-    const onSetToolSummary = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
+    const handleToolResultSummary = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
         const {TaskIndex} = res
         if (!TaskIndex) {
             onCloseByErrorTaskIndexData(res)
@@ -533,7 +533,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                     summary: currentToolData.summary,
                     time: res.Timestamp
                 })
-                onSetToolSummary(res, data?.call_tool_id || "")
+                handleToolResultSummary(res, data?.call_tool_id || "")
                 return
             }
 
@@ -571,19 +571,23 @@ function useTaskChat(params?: UseTaskChatParams) {
 
     /** review 界面选项触发事件 */
     const handleSend = useMemoizedFn((request: AIInputEvent, cb?: () => void) => {
-        if (!review.current) {
-            yakitNotify("error", " 未获取到审阅信息，请停止对话并重试")
-            return
-        }
-        if (
-            review.current.type === "plan_review_require" &&
-            request.InteractiveJSONInput === JSON.stringify({suggestion: "continue"})
-        ) {
-            handleAutoRviewData(review.current)
-        }
+        try {
+            if (!review.current) {
+                yakitNotify("error", " 未获取到审阅信息，请停止对话并重试")
+                return
+            }
+            if (
+                review.current.type === "plan_review_require" &&
+                request.InteractiveJSONInput === JSON.stringify({suggestion: "continue"})
+            ) {
+                handleAutoRviewData(review.current)
+            }
 
-        review.current = undefined
-        currentPlansId.current = ""
+            review.current = undefined
+            currentPlansId.current = ""
+
+            cb && cb()
+        } catch (error) {}
     })
 
     // 接口流关闭

@@ -44,8 +44,8 @@ export interface UseCasualChatParams {
     pushLog: (log: AIChatMessage.Log) => void
     /** 获取流接口请求参数 */
     getRequest: () => AIStartParams | undefined
-    /** 触发 review-relaese 后的回调事件 */
-    onReviewRelease?: (id: string) => voud
+    /** 触发 review-release 后的回调事件 */
+    onReviewRelease?: (id: string) => void
 }
 
 export interface UseCasualChatState {
@@ -69,8 +69,8 @@ export interface UseTaskChatParams {
     onReview?: (data: AIChatReview) => void
     /** plan_review 补充数据 */
     onReviewExtra?: (data: AIChatReviewExtra) => void
-    /** 触发 review-relaese 后的回调事件 */
-    onReviewRelease?: (id: string) => voud
+    /** 触发 review-release 后的回调事件 */
+    onReviewRelease?: (id: string) => void
 }
 
 export interface UseTaskChatState {

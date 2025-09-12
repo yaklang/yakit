@@ -26,7 +26,11 @@ const UseCasualAndTaskTypes = [
     "tool_call_done",
     "tool_call_error",
     "tool_call_watcher",
-    "tool_call_summary"
+    "tool_call_summary",
+    // 对 tool_review 的 ai 评分
+    "ai_review_start",
+    "ai_review_countdown",
+    "ai_review_end"
 ]
 
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
@@ -34,9 +38,11 @@ function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEven
 function useChatIPC(params?: UseChatIPCParams) {
     const {onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onEnd} = params || {}
 
+    // 自由对话-review 信息的自动释放
     const handleCasualReviewRelease = useMemoizedFn((id: string) => {
         onReviewRelease && onReviewRelease("casual", id)
     })
+    // 任务规划-review 信息的自动释放
     const handleTaskReviewRelease = useMemoizedFn((id: string) => {
         onReviewRelease && onReviewRelease("task", id)
     })
@@ -169,7 +175,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                     if (obj.level) {
                         // 执行日志信息
                         const data = obj as AIChatMessage.Log
-                        setLogs((pre) => pre.concat([{...data, id: uuidv4()}]))
+                        pushLog(data)
                     } else {
                         // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
                         if (res.NodeId === "stream-finished") {
@@ -209,7 +215,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
                 // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
                 if (res.Type === "stream") {
-                    if (!!res.TaskIndex) {
+                    if (planCoordinatorId.current === res.CoordinatorId && !res.TaskIndex) {
                         taskChatEvent.handleSetData(res)
                     } else {
                         casualChatEvent.handleSetData(res)
@@ -228,7 +234,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 }
 
                 console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
-                setLogs((pre) => pre.concat([{id: uuidv4(), level: "info", message: `task_execute : ${ipcContent}`}]))
+                setLogs((pre) => pre.concat([{id: uuidv4(), level: "info", message: ipcContent}]))
             } catch (error) {
                 handleGrpcDataPushLog({type: "error", info: res, pushLog})
             }
