@@ -1,0 +1,89 @@
+.repository-manage {
+    display: flex;
+    height: 100%;
+
+    &-container {
+        width: 300px;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        .repository-manage-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+            &:first-child {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+            }
+        }
+        .repository-manage-content {
+            overflow: auto;
+            height: calc(100% - 45px);
+            .repository-manage-box {
+                display: flex;
+                gap: 4px;
+                padding: 8px;
+                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+                justify-content: space-between;
+                align-items: center;
+                .repository-manage-box-content {
+                    & > :first-child {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+                    & > :last-child {
+                        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                    }
+                }
+                .repository-manage-box-icon {
+                    align-items: center;
+                    display: none;
+                    & > span > svg {
+                        padding: 4px;
+                        cursor: pointer;
+                        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                        &:hover {
+                            color: var(--Colors-Use-Main-Primary);
+                            background-color: var(--Colors-Use-Main-Bg);
+                            border-radius: 4px;
+                        }
+                    }
+                    & > div {
+                        display: flex;
+                        align-items: center;
+                        span > svg {
+                            padding: 4px;
+                            cursor: pointer;
+                            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                            &:hover {
+                                color: var(--Colors-Use-Main-Primary);
+                                background-color: var(--Colors-Use-Main-Bg);
+                                border-radius: 4px;
+                            }
+                        }
+                    }
+                }
+                &:hover{
+                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+                }
+                &:hover > .repository-manage-box-icon{
+                    display: flex;
+                }
+                .repository-manage-box-icon-selected{
+                    display: flex;
+                }
+            }
+        }
+    }
+}
+
+.knowledge-base-modal-footer{
+    display: flex; 
+    align-items: center;
+    width: 100%;
+    justify-content: flex-end;
+    gap: 12px;
+}
