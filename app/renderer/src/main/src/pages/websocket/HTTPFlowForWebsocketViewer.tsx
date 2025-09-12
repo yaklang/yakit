@@ -28,11 +28,12 @@ export interface HTTPFlowForWebsocketViewerProp {
     highLightItem?: HistoryHighLightText
     highLightFindClass?: string
     showJumpTree?: boolean
+    keepSearchName? : string
 }
 
 export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp> = (props) => {
     const [mode, setMode] = useState<"request" | "response">("request")
-    const {flow, historyId, pageType, highLightText, highLightItem, highLightFindClass, showJumpTree} = props
+    const {flow, historyId, pageType, highLightText, highLightItem, highLightFindClass, showJumpTree, keepSearchName} = props
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
     const resSelectionByteCount = useSelectionByteCount(resEditor, 500)
@@ -112,6 +113,7 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                 {mode === "request" && (
                     <WebSocketEditor
                         flow={flow}
+                        keepSearchName={keepSearchName}
                         value={Uint8ArrayToString(flow.Request)}
                         highLightText={highLightText?.filter((i) => i.IsMatchRequest)}
                         highLightFind={highLightItem?.IsMatchRequest ? [highLightItem] : []}
@@ -123,6 +125,7 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                 {mode === "response" && (
                     <WebSocketEditor
                         flow={flow}
+                        keepSearchName={keepSearchName}
                         value={Uint8ArrayToString(flow.Response)}
                         highLightText={highLightText?.filter((i) => !i.IsMatchRequest)}
                         highLightFind={highLightItem ? (highLightItem.IsMatchRequest ? [] : [highLightItem]) : []}
@@ -142,6 +145,7 @@ interface WebSocketEditorProps {
     contextMenu?: OtherMenuListProps
     highLightText?: HighLightText[]
     highLightFind?: HighLightText[]
+    keepSearchName? : string
     highLightFindClass?: string
     isPositionHighLightCursor?: boolean
     onSetEditor?: (editor: IMonacoEditor) => void
@@ -150,6 +154,7 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
     const {
         flow,
         value,
+        keepSearchName,
         contextMenu = {},
         highLightText,
         highLightFind,
@@ -205,6 +210,7 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
             type='http'
             value={value}
             readOnly={true}
+            keepSearchName={keepSearchName}
             noMiniMap={true}
             highLightText={highLightText}
             highLightFind={highLightFind}

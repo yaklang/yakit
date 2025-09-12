@@ -170,6 +170,7 @@ import {
     sortKeysCombination,
     unregisterShortcutFocusHandle
 } from "@/utils/globalShortcutKey/utils"
+import { keepSearchNameMapStore } from "@/store/keepSearchName"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
@@ -548,7 +549,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey())
     useEffect(() => {
         setCurrentPageTabRouteKey(currentTabKey)
-
         // 固定页面多开，如果从未打开，则默认新增一个标签页
         if (defaultFixedTabsNoSinglPageRoute.includes(currentTabKey as YakitRoute)) {
             const item = getPageCache().find((i) => i.routeKey === currentTabKey)
@@ -1937,7 +1937,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     judgeDataIsFuncOrSettingForConfirm(
                         modalProps["close"],
                         (setting) => {
-                            onModalSecondaryConfirm(setting, isModalVisibleRef)
+                            onModalSecondaryConfirm(setting, isModalVisibleRef, data.route)
                         },
                         () => {
                             removeMenuPage(data)
@@ -1962,6 +1962,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
             case YakitRoute.YakScript:
                 emiter.emit("onCloseYakRunner")
+                break
+            case YakitRoute.MITMHacker:
+                removeMenuPage(data)
+                keepSearchNameMapStore.removeKeepSearchRouteNameMap(YakitRoute.MITMHacker)
                 break
             default:
                 removeMenuPage(data)
@@ -5670,7 +5674,7 @@ const judgeDataIsFuncOrSettingForConfirm = async (
 }
 
 // 多开页面的一级页面关闭的确认弹窗
-const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?: React.MutableRefObject<boolean>) => {
+const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?: React.MutableRefObject<boolean>, route?: YakitRoute) => {
     if (visibleRef) visibleRef.current = true
     let m = YakitModalConfirm({
         width: 420,
@@ -5688,6 +5692,9 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?
         onOk: () => {
             if (visibleRef) {
                 visibleRef.current = false
+            }
+            if(route){
+                keepSearchNameMapStore.removeKeepSearchRouteNameMap(route)
             }
             if (props?.onOk) {
                 props.onOk(m)

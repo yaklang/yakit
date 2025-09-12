@@ -87,6 +87,8 @@ import {
 import {YakitKeyBoard, YakitKeyMod} from "@/utils/globalShortcutKey/keyboard"
 import {applyYakitMonacoTheme} from "@/utils/monacoSpec/theme"
 import {useTheme} from "@/hook/useTheme"
+import { keepSearchNameMapStore, useKeepSearchNameMap } from "@/store/keepSearchName"
+import type {IEvent} from "monaco-editor"
 
 export interface CodecTypeProps {
     key?: string
@@ -101,6 +103,23 @@ export interface contextMenuProps {
     key: string
     value: string
     isAiPlugin: boolean
+}
+
+interface IFindReplaceState {
+    isRevealed: boolean
+    searchString: string
+    change(update: {searchString: string}, moveCursor: boolean): void
+    onFindReplaceStateChange: IEvent<() => void>
+}
+
+interface IFindController extends monaco.editor.IStandaloneCodeEditor {
+    getState(): IFindReplaceState
+    start(opts?: {
+        forceRevealReplace?: boolean
+        seedSearchStringFromSelection?: boolean
+        shouldFocus?: boolean
+        seedSearchStringFromGlobalClipboard?: boolean
+    }): void
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -132,6 +151,22 @@ const DefaultMenuBottom: EditorMenuItemType[] = [
     {key: "paste", label: "粘贴"}
 ]
 
+function openFind(editor: YakitIMonacoEditor, keyword: string) {
+    editor.focus()
+    const findController = editor.getContribution<IFindController>("editor.contrib.findController")
+    const state = findController?.getState()
+    if (!state?.isRevealed) {
+        findController?.start({
+            seedSearchStringFromSelection: false,
+            shouldFocus: true
+        })
+    }
+
+    if (state?.searchString !== keyword) {
+        state?.change({searchString: keyword}, false)
+    }
+}
+
 export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const {
         forceRenderMenu = false,
@@ -140,6 +175,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         setValue,
         type,
         theme = "kurior",
+        keepSearchName,
         editorDidMount,
         contextMenu = {},
         onContextMenu,
@@ -178,6 +214,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const [editor, setEditor] = useState<YakitIMonacoEditor>()
     const preWidthRef = useRef<number>(0)
     const preHeightRef = useRef<number>(0)
+
+    // 获取查找的关键字
+    const keepSearchNameMap = useKeepSearchNameMap()
 
     /** 编辑器语言 */
     const language = useMemo(() => {
@@ -1061,6 +1100,17 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         })
         current = model.deltaDecorations(current, generateDecorations())
 
+        // 监听查找面板变化
+        const findController = editor.getContribution<IFindController>("editor.contrib.findController")
+        const state = findController?.getState()
+        state?.onFindReplaceStateChange(() => {
+            if (!keepSearchName) return
+            if (state.isRevealed) {
+                keepSearchNameMapStore.setKeepSearchNameMap(keepSearchName, state.searchString || "")
+            } else {
+                keepSearchNameMapStore.removeKeepSearchNameMap(keepSearchName)
+            }
+        })
         return () => {
             try {
                 editor.dispose()
@@ -1680,6 +1730,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         language={language}
                         editorDidMount={(editor: YakitIMonacoEditor, monaco) => {
                             setEditor(editor)
+                            if (keepSearchName) {
+                                const keyword = keepSearchNameMap.get(keepSearchName)
+                                if (keyword) {
+                                    openFind(editor, keyword)
+                                }
+                            }
                             /** 编辑器关光标，设置坐标0的初始位置 */
                             editor.setSelection({
                                 startColumn: 0,
