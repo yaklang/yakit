@@ -25,7 +25,6 @@ const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
             ipcRenderer.removeAllListeners("get-parent-window-data")
         }
     }, [])
-
     // 全局记录鼠标坐标位置(为右键菜单提供定位)
     const handleMouseMove = useDebounceFn(
         useMemoizedFn((e: MouseEvent) => {

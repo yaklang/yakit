@@ -1,21 +1,28 @@
-import React, {useEffect, useState} from "react"
-import {AutoCard} from "@/components/AutoCard"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {Form, Space, Divider, message, Pagination} from "antd"
-import {useMemoizedFn} from "ahooks"
-import {failed, success} from "@/utils/notification"
-import {KnowledgeBase, KnowledgeBaseListProps, KnowledgeBaseFormData, GetKnowledgeBaseResponse, Pagination as PaginationType, StreamStatus} from "./types"
+import React, { useEffect, useState } from "react"
+import { AutoCard } from "@/components/AutoCard"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
+import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
+import { YakitPopconfirm } from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import { YakitEmpty } from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import { Form, Space, Divider, message, Pagination } from "antd"
+import { useMemoizedFn } from "ahooks"
+import { failed, success } from "@/utils/notification"
+import {
+    KnowledgeBase,
+    KnowledgeBaseListProps,
+    KnowledgeBaseFormData,
+    GetKnowledgeBaseResponse,
+    Pagination as PaginationType,
+    StreamStatus
+} from "./types"
 import styles from "./KnowledgeBaseList.module.scss"
-import {PlusIcon, TrashIcon} from "@/assets/newIcon"
-import {OutlinePencilaltIcon, OutlineChatalt2Icon} from "@/assets/icon/outline"
-import {SolidPlayIcon} from "@/assets/icon/solid"
+import { PlusIcon, TrashIcon } from "@/assets/newIcon"
+import { OutlinePencilaltIcon, OutlineChatalt2Icon } from "@/assets/icon/outline"
+import { SolidPlayIcon } from "@/assets/icon/solid"
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
     selectedKbId,
@@ -44,12 +51,12 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
             if (resetPage) {
                 setPagination(currentPagination)
             }
-            
+
             const response: GetKnowledgeBaseResponse = await ipcRenderer.invoke("GetKnowledgeBase", {
                 Keyword: searchKeyword || undefined,
                 Pagination: currentPagination
             })
-            
+
             if (response && response.KnowledgeBases) {
                 setKnowledgeBases(response.KnowledgeBases)
                 setTotal(response.Total || 0)
@@ -87,33 +94,35 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
         })
     })
 
-
-
     // 为整个知识库建立索引
     const handleEmbedKnowledgeBase = useMemoizedFn(async (kb: KnowledgeBase) => {
         const streamKey = `kb_${kb.ID}`
-        
+
         try {
-            setEmbedStreams(prev => new Map(prev.set(streamKey, {
-                token: "",
-                loading: true,
-                progress: "正在为知识库建立索引..."
-            })))
+            setEmbedStreams(
+                (prev) =>
+                    new Map(
+                        prev.set(streamKey, {
+                            token: "",
+                            loading: true,
+                            progress: "正在为知识库建立索引..."
+                        })
+                    )
+            )
 
             await ipcRenderer.invoke("BuildVectorIndexForKnowledgeBase", {
                 KnowledgeBaseId: kb.ID,
                 DistanceFuncType: "cosine"
             })
 
-            setEmbedStreams(prev => {
+            setEmbedStreams((prev) => {
                 const newMap = new Map(prev)
                 newMap.delete(streamKey)
                 return newMap
             })
             success("知识库索引建立完成")
-
         } catch (error) {
-            setEmbedStreams(prev => {
+            setEmbedStreams((prev) => {
                 const newMap = new Map(prev)
                 newMap.delete(streamKey)
                 return newMap
@@ -126,7 +135,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
     const handleCancelEmbed = useMemoizedFn(async (streamKey: string) => {
         // 由于 BuildVectorIndexForKnowledgeBase 不是流式接口，无法中途取消
         // 这里只是清除UI状态
-        setEmbedStreams(prev => {
+        setEmbedStreams((prev) => {
             const newMap = new Map(prev)
             newMap.delete(streamKey)
             return newMap
@@ -173,7 +182,6 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
             await ipcRenderer.invoke("DeleteKnowledgeBase", {
                 KnowledgeBaseId: kb.ID
             })
-            console.log("id",kb.ID)
             success("删除知识库成功")
             fetchKnowledgeBases()
             onRefresh()
@@ -214,25 +222,20 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
     return (
         <div className={styles["knowledge-base-list"]}>
             <AutoCard
-                title="知识库列表"
-                size="small"
-                bodyStyle={{padding: 12}}
+                title='知识库列表'
+                size='small'
+                bodyStyle={{ padding: 12 }}
                 extra={
                     <Space>
                         <YakitInput.Search
-                            placeholder="搜索知识库"
+                            placeholder='搜索知识库'
                             value={searchKeyword}
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             onSearch={handleSearch}
-                            style={{width: 200}}
-                            size="small"
+                            style={{ width: 200 }}
+                            size='small'
                         />
-                        <YakitButton
-                            type="primary"
-                            size="small"
-                            icon={<PlusIcon />}
-                            onClick={handleOpenCreate}
-                        >
+                        <YakitButton type='primary' size='small' icon={<PlusIcon />} onClick={handleOpenCreate}>
                             新增知识库
                         </YakitButton>
                     </Space>
@@ -240,15 +243,14 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
             >
                 <YakitSpin spinning={loading}>
                     {knowledgeBases.length === 0 ? (
-                        <YakitEmpty description="暂无知识库" />
+                        <YakitEmpty description='暂无知识库' />
                     ) : (
                         <div className={styles["kb-list"]}>
                             {knowledgeBases.map((kb) => (
                                 <div
                                     key={kb.ID}
-                                    className={`${styles["kb-item"]} ${
-                                        selectedKbId === kb.ID ? styles["selected"] : ""
-                                    }`}
+                                    className={`${styles["kb-item"]} ${selectedKbId === kb.ID ? styles["selected"] : ""
+                                        }`}
                                     onClick={() => onSelectKb(kb)}
                                 >
                                     <div className={styles["kb-info"]}>
@@ -262,17 +264,17 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                                         {(() => {
                                             const streamKey = `kb_${kb.ID}`
                                             const embedStatus = embedStreams.get(streamKey)
-                                            
+
                                             if (embedStatus?.loading) {
                                                 return (
                                                     <div className={styles["embed-progress"]}>
-                                                        <YakitSpin size="small" />
+                                                        <YakitSpin size='small' />
                                                         <span className={styles["progress-text"]}>
                                                             {embedStatus.progress}
                                                         </span>
                                                         <YakitButton
-                                                            type="text2"
-                                                            size="small"
+                                                            type='text2'
+                                                            size='small'
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 handleCancelEmbed(streamKey)
@@ -283,35 +285,35 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                                                     </div>
                                                 )
                                             }
-                                            
+
                                             return (
                                                 <>
                                                     <YakitButton
-                                                        type="text2"
-                                                        size="small"
+                                                        type='text2'
+                                                        size='small'
                                                         icon={<SolidPlayIcon />}
                                                         onClick={(e) => {
                                                             e.stopPropagation()
                                                             handleEmbedKnowledgeBase(kb)
                                                         }}
-                                                        title="建立索引"
+                                                        title='建立索引'
                                                     />
                                                     {onOpenQA && (
                                                         <YakitButton
-                                                            type="text2"
-                                                            size="small"
+                                                            type='text2'
+                                                            size='small'
                                                             icon={<OutlineChatalt2Icon />}
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 // 列表入口：默认仅查询当前知识库
                                                                 onOpenQA(kb, false)
                                                             }}
-                                                            title="AI问答"
+                                                            title='AI问答'
                                                         />
                                                     )}
                                                     <YakitButton
-                                                        type="text2"
-                                                        size="small"
+                                                        type='text2'
+                                                        size='small'
                                                         icon={<OutlinePencilaltIcon />}
                                                         onClick={(e) => {
                                                             e.stopPropagation()
@@ -319,17 +321,17 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                                                         }}
                                                     />
                                                     <YakitPopconfirm
-                                                        title="删除后无法恢复，确认删除此知识库吗？"
+                                                        title='删除后无法恢复，确认删除此知识库吗？'
                                                         onConfirm={(e) => {
                                                             e?.stopPropagation()
                                                             handleDelete(kb)
                                                         }}
-                                                        placement="topRight"
+                                                        placement='topRight'
                                                     >
                                                         <YakitButton
-                                                            type="text2"
-                                                            size="small"
-                                                            colors="danger"
+                                                            type='text2'
+                                                            size='small'
+                                                            colors='danger'
                                                             icon={<TrashIcon />}
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
@@ -343,7 +345,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                         </div>
                     )}
                 </YakitSpin>
-                
+
                 {total > 0 && (
                     <div className={styles["pagination-wrapper"]}>
                         <Pagination
@@ -370,37 +372,29 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                 }}
                 onOk={handleSubmit}
                 width={600}
-                okText="确认"
-                cancelText="取消"
+                okText='确认'
+                cancelText='取消'
             >
-                <Form form={form} layout="vertical" style={{marginTop: 16}}>
+                <Form form={form} layout='vertical' style={{ marginTop: 16 }}>
                     <Form.Item
-                        label="知识库名称"
-                        name="KnowledgeBaseName"
-                        rules={[{required: true, message: "请输入知识库名称"}]}
+                        label='知识库名称'
+                        name='KnowledgeBaseName'
+                        rules={[{ required: true, message: "请输入知识库名称" }]}
                     >
-                        <YakitInput placeholder="请输入知识库名称" />
+                        <YakitInput placeholder='请输入知识库名称' />
+                    </Form.Item>
+                    <Form.Item label='知识库描述' name='KnowledgeBaseDescription'>
+                        <YakitInput.TextArea placeholder='请输入知识库描述' rows={3} maxLength={500} showCount />
                     </Form.Item>
                     <Form.Item
-                        label="知识库描述"
-                        name="KnowledgeBaseDescription"
+                        label='知识库类型'
+                        name='KnowledgeBaseType'
+                        rules={[{ required: true, message: "请输入知识库类型" }]}
                     >
-                        <YakitInput.TextArea
-                            placeholder="请输入知识库描述"
-                            rows={3}
-                            maxLength={500}
-                            showCount
-                        />
-                    </Form.Item>
-                    <Form.Item
-                        label="知识库类型"
-                        name="KnowledgeBaseType"
-                        rules={[{required: true, message: "请输入知识库类型"}]}
-                    >
-                        <YakitInput placeholder="请输入知识库类型" />
+                        <YakitInput placeholder='请输入知识库类型' />
                     </Form.Item>
                 </Form>
             </YakitModal>
         </div>
     )
-} 
+}

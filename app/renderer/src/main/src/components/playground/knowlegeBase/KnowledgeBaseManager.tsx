@@ -23,7 +23,7 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
     }
 
     const handleRefresh = () => {
-        setRefreshKey(prev => prev + 1)
+        setRefreshKey((prev) => prev + 1)
     }
 
     const handleOpenQADrawer = (queryAllCollectionsDefault: boolean) => {
@@ -38,13 +38,13 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
     return (
         <div className={styles["knowledge-base-manager"]}>
             <AutoCard
-                title="知识库管理"
+                title='知识库管理'
                 bodyStyle={{padding: 0, overflow: "hidden"}}
                 style={{height: "100%"}}
                 extra={
                     <YakitButton
-                        type="primary"
-                        size="small"
+                        type='primary'
+                        size='small'
                         icon={<OutlineChatalt2Icon />}
                         onClick={() => handleOpenQADrawer(true)}
                     >
@@ -65,21 +65,16 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
                             }}
                         />
                     }
-                    firstMinSize="300px"
-                    firstRatio="300px"
-                    secondNode={
-                        <KnowledgeEntryTable
-                            knowledgeBase={selectedKnowledgeBase}
-                            onRefresh={handleRefresh}
-                        />
-                    }
+                    firstMinSize='300px'
+                    firstRatio='300px'
+                    secondNode={<KnowledgeEntryTable knowledgeBase={selectedKnowledgeBase} onRefresh={handleRefresh} />}
                 />
             </AutoCard>
 
             {/* AI问答抽屉 */}
             <YakitDrawer
                 title={`AI问答 - ${selectedKnowledgeBase?.KnowledgeBaseName || "知识库"}`}
-                placement="right"
+                placement='right'
                 width={600}
                 visible={qaDrawerVisible}
                 onClose={handleCloseQADrawer}
@@ -93,4 +88,4 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
             </YakitDrawer>
         </div>
     )
-} 
+}

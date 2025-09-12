@@ -64,4 +64,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GenerateERMDot", async (e, params) => {
         return await asyncGenerateERMDot(params)
     })
+
+     // Generate ERM Dot
+    const asyncGenerateERM = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QuerySubERM(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QuerySubERM", async (e, params) => {
+        return await asyncGenerateERM(params)
+    })
 }

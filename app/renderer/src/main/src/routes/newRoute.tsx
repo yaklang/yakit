@@ -177,6 +177,7 @@ const ModifyNotepad = React.lazy(() => import("@/pages/notepadManage/modifyNotep
 const NotepadManage = React.lazy(() => import("@/pages/notepadManage/notepadManage/NotepadManage"))
 const FingerprintManage = React.lazy(() => import("@/pages/fingerprintManage/FingerprintManage"))
 const SsaResDiff = React.lazy(() => import("@/pages/ssaResDiff/SsaResDiff"))
+const KnowledgeBase = React.lazy(() => import("@/pages/KnowledgeBase/KnowledgeBasePage"))
 const ForgeEditor = React.lazy(() => import("@/pages/aiForge/forgeEditor/ForgeEditor"))
 const AIToolEditor = React.lazy(() => import("@/pages/aiTool/AIToolEditor/AIToolEditor"))
 const YakRunnerScanHistory = React.lazy(() => import("@/pages/yakRunnerScanHistory/YakRunnerScanHistory"))
@@ -369,6 +370,7 @@ export const YakitRouteToPageInfo: Record<
     "fingerprint-manage": {label: "指纹库", labelUi: "YakitRoute.fingerprintDatabase"},
     "ai-agent": {label: "AIAgent", labelUi: "YakitRoute.AIAgent"},
     "ssa-result-diff": {label: "ssa-result-diff", labelUi: "YakitRoute.ssa-result-diff"},
+    "ai-repository": {label: "知识库", labelUi: "YakitRoute.ai-repository"},
     "add-ai-forge": {label: "新建 Forge", labelUi: "YakitRoute.createForge"},
     "modify-ai-forge": {label: "编辑 Forge", labelUi: "YakitRoute.editForge"},
     "add-ai-tool": {label: "新建 Tool", labelUi: "YakitRoute.createTool"},
@@ -424,6 +426,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.ModifyAIForge,
     YakitRoute.AddAITool,
     YakitRoute.ModifyAITool,
+   
+    YakitRoute.AI_REPOSITORY
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -475,6 +479,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.ModifyAIForge,
     YakitRoute.AddAITool,
     YakitRoute.ModifyAITool,
+  
+    YakitRoute.AI_REPOSITORY
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -612,7 +618,7 @@ function withRouteToPage(WrappedComponent) {
                             <p>逻辑性崩溃，请关闭重试！</p>
                             <div style={{marginTop: "16px"}}>
                                 <h4>错误信息:</h4>
-                                <pre style={{background: "#f5f5f5", padding: "8px", borderRadius: "4px"}}>
+                                <pre style={{                background: "var(--Colors-Use-Neutral-Bg)", padding: "8px", borderRadius: "4px"}}>
                                     {error?.message}
                                 </pre>
                             </div>
@@ -620,7 +626,7 @@ function withRouteToPage(WrappedComponent) {
                                 <h4>错误堆栈:</h4>
                                 <pre
                                     style={{
-                                        background: "#f5f5f5",
+                                         background: "var(--Colors-Use-Neutral-Bg)",
                                         padding: "8px",
                                         borderRadius: "4px",
                                         maxHeight: "300px",
@@ -633,7 +639,7 @@ function withRouteToPage(WrappedComponent) {
                             </div>
                             <div style={{marginTop: "16px"}}>
                                 <h4>组件信息:</h4>
-                                <pre style={{background: "#f5f5f5", padding: "8px", borderRadius: "4px"}}>
+                                <pre style={{background: "var(--Colors-Use-Neutral-Bg)", padding: "8px", borderRadius: "4px"}}>
                                     组件名称: {WrappedComponent?.name || WrappedComponent?.displayName || "未知组件"}
                                 </pre>
                             </div>
@@ -641,7 +647,7 @@ function withRouteToPage(WrappedComponent) {
                                 <h4>传入参数:</h4>
                                 <pre
                                     style={{
-                                        background: "#f5f5f5",
+                                        background: "var(--Colors-Use-Neutral-Bg)",
                                         padding: "8px",
                                         borderRadius: "4px",
                                         maxHeight: "200px",
@@ -657,8 +663,8 @@ function withRouteToPage(WrappedComponent) {
                                 style={{
                                     marginTop: "16px",
                                     padding: "8px 16px",
-                                    background: "#1890ff",
-                                    color: "white",
+                                    background: "var(--Colors-Use-Blue-Primary)",
+                                    color:"var(--Colors-Use-Blue-On-Primary)",
                                     border: "none",
                                     borderRadius: "4px",
                                     cursor: "pointer"
@@ -830,6 +836,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <FingerprintManage />
         case YakitRoute.Ssa_Result_Diff:
             return <SsaResDiff />
+        case YakitRoute.AI_REPOSITORY:
+            return <KnowledgeBase />
         case YakitRoute.AddAIForge:
             return <ForgeEditor />
         case YakitRoute.ModifyAIForge:
@@ -1054,7 +1062,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                       page: YakitRoute.Plugin_OP,
                       label: "基础爬虫",
                       labelUi: "YakitRoute.basicCrawler",
-                      yakScripName: ResidentPluginName.BasicCrawler,
+                      yakScripName: ResidentPluginName.BasicCrawler
                   },
                   {page: YakitRoute.Space_Engine, ...YakitRouteToPageInfo[YakitRoute.Space_Engine]},
                   {
@@ -1070,7 +1078,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                               page: YakitRoute.Plugin_OP,
                               label: "目录扫描",
                               labelUi: "YakitRoute.directoryScan",
-                              yakScripName: ResidentPluginName.DirectoryScanning,
+                              yakScripName: ResidentPluginName.DirectoryScanning
                           }
                       ]
                   }
