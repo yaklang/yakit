@@ -55,7 +55,6 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
     const {activeChat} = useAIAgentStore()
     const {toolCall} = props
     const {NodeId, stream, toolAggregation} = toolCall
-
     const title = useCreation(() => {
         if (NodeId === "call-tools") return "Call-tools：参数生成中..."
         if (isToolStdout(NodeId)) return `${NodeId}：调用工具中...`

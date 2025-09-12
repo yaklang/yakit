@@ -11,9 +11,10 @@
 }
 .tab-wrap {
     width: 100%;
+    overflow: hidden;
 }
 .tab-content {
-    height: 100%;
+    flex: 1;
     overflow: hidden;
 }
 .ai-re-act-task-chat {

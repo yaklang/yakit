@@ -272,7 +272,11 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 {(options || []).map((el) => {
                     if (!el.prompt && !el.prompt_title) return null
                     return (
-                        <YakitButton key={el.prompt} type='outline2' onClick={() => handleAIRequireOpSend(el)}>
+                        <YakitButton
+                            key={el.prompt || el.prompt_title}
+                            type='outline2'
+                            onClick={() => handleAIRequireOpSend(el)}
+                        >
                             {el.prompt || el.prompt_title}
                         </YakitButton>
                     )

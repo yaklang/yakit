@@ -1762,7 +1762,7 @@ const ColorsBrainCircuit = () => {
                     y2='8.43914'
                     gradientUnits='userSpaceOnUse'
                 >
-                    <stop stop-color='#DC5CDF' />
+                    <stop stopColor='#DC5CDF' />
                     <stop offset='0.639423' stopColor='#8862F8' />
                     <stop offset='1' stopColor='#4493FF' />
                 </linearGradient>

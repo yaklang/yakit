@@ -409,10 +409,10 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                         {(streams[taskName] || []).map((info: AIChatMessage.AITaskStreamOutput, index) => {
                             const {NodeId, EventUUID, timestamp, toolAggregation} = info
                             if (isShowToolColorCard(NodeId)) {
-                                return <AIChatToolColorCard key={EventUUID} toolCall={info} />
+                                return <AIChatToolColorCard key={EventUUID} toolCall={{...info}} />
                             }
                             if (isToolSummaryCard(NodeId) && toolAggregation) {
-                                return <AIChatToolItem key={EventUUID} item={toolAggregation} />
+                                return <AIChatToolItem key={toolAggregation.callToolId} item={toolAggregation} />
                             }
                             return (
                                 <ChatStreamCollapseItem
@@ -1050,6 +1050,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
     }, [])
 
     const getList = useMemoizedFn(() => {
+        console.log("grpcQueryAIEvent-callToolId", callToolId)
         if (!callToolId) return
         const params: AIEventQueryRequest = {
             ProcessID: callToolId
@@ -1057,6 +1058,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
         setLoading(true)
         grpcQueryAIEvent(params)
             .then((res: AIEventQueryResponse) => {
+                console.log("grpcQueryAIEvent-res", res)
                 const {Events} = res
                 const list: AIChatMessage.AITaskStreamOutput[] = []
                 Events.filter((ele) => ele.Type === "stream").forEach((item) => {
