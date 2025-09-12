@@ -227,7 +227,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         const jsonInput: Record<string, string> = {suggestion: info.prompt || info.prompt_title}
         onSendAIByType(JSON.stringify(jsonInput))
     })
-    /**审阅模式提交树 */
+    /**审阅模式提交树,type: plan_review_require */
     const handleSubmitReviewTree = useMemoizedFn(() => {
         if (!!reviewTreeOption) {
             const tree = reviewListToTrees(reviewTrees)
@@ -307,7 +307,12 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             case "require_user_interactive":
                 onSendAI(value, (review as AIChatMessage.AIReviewRequire).id)
                 break
-
+            case "plan_review_require":
+                onSendAI(value, (review as AIChatMessage.PlanReviewRequire).id)
+                break
+            case "task_review_require":
+                onSendAI(value, (review as AIChatMessage.TaskReviewRequire).id)
+                break
             default:
                 break
         }
