@@ -1,4 +1,4 @@
-@use "../../ai-agent//aiTaskChat/AITaskChat.module.scss" as AITaskChat;
+@use "../aiReActChat/AIReActChat.module.scss" as AIReActChat;
 
 %display-flex-center {
     display: flex;
@@ -23,7 +23,7 @@
     flex: 1;
     overflow: hidden;
     border-right: 1px solid var(--Colors-Use-Neutral-Border);
-    @include AITaskChat.content-side("left");
+    @include AIReActChat.content-side("left");
     .chat-content-wrapper {
         @extend %display-column-center;
         flex: 1;

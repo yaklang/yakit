@@ -263,15 +263,15 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                     return
                 }
                 emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
-                setTimeout(() => {
-                    emiter.emit(
-                        "onServerChatEvent",
-                        JSON.stringify({
-                            type: "open-forge-form",
-                            params: {value: forgeData.current}
-                        })
-                    )
-                }, 100)
+                // setTimeout(() => {
+                //     emiter.emit(
+                //         "onServerChatEvent",
+                //         JSON.stringify({
+                //             type: "open-forge-form",
+                //             params: {value: forgeData.current}
+                //         })
+                //     )
+                // }, 100)
             })
             .catch(() => {})
     })

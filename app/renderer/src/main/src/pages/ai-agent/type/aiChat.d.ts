@@ -190,25 +190,6 @@ export interface AIChatInfo {
     request: AIStartParams
     /** 回答 */
     answer?: {
-        /**@deprecated */
-        pressure: AIChatMessage.Pressure[]
-        /**@deprecated */
-        firstCost: AIChatMessage.AICostMS[]
-        /**@deprecated */
-        totalCost: AIChatMessage.AICostMS[]
-        /**@deprecated */
-        consumption: Record<string, AIChatMessage.Consumption>
-        /**@deprecated */
-        plans?: AIChatMessage.PlanTask
-        /**@deprecated */
-        taskList: AIChatMessage.PlanTask[]
-        /**@deprecated */
-        logs: AIChatMessage.Log[]
-        /**@deprecated */
-        streams: Record<string, AIChatStreams[]>
-        /**@deprecated */
-        systemOutputs: AIChatMessage.AIChatSystemOutput[]
-
         aiPerfData: UseChatIPCState["aiPerfData"]
         logs: UseChatIPCState["logs"]
         casualChat: UseChatIPCState["casualChat"]

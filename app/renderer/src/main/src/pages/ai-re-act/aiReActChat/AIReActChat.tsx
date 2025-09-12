@@ -32,11 +32,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true)
 
     const {activeChat, setting} = useAIAgentStore()
-    const {setChats, setActiveChat} = useAIAgentDispatcher()
-    /** 当前对话唯一ID */
-    const activeID = useMemo(() => {
-        return activeChat?.id
-    }, [activeChat])
 
     // #region 问题相关逻辑
     const [question, setQuestion] = useState<string>("")

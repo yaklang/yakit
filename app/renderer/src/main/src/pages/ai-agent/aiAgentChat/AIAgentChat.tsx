@@ -3,17 +3,13 @@ import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps} from "./t
 import {AIAgentWelcome} from "../AIAgentWelcome/AIAgentWelcome"
 import {useCreation, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AIChatInfo, AIChatMessage, AIChatReview, AIChatReviewExtra, AIInputEvent, AIStartParams} from "../type/aiChat"
-import {AITriageChatRef} from "../aiTriageChat/type"
-import {AITaskChatRef} from "../aiTaskChat/type"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIAgentStore from "../useContext/useStore"
-import {yakitNotify} from "@/utils/notification"
 import {AIAgentWelcomeRef} from "../AIAgentWelcome/type"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
-import {AIForge} from "../AIForge/type"
 import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
 import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import useAIAgentDispatcher from "../useContext/useDispatcher"
@@ -29,7 +25,6 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon} from "@/assets/icon/outline"
 import {ChatIPCSendType} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
-import {AIReActEventInfo} from "@/pages/ai-re-act/aiReActType"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 
 import classNames from "classnames"
@@ -52,7 +47,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     // #region ai-re-act-chat 相关逻辑
     /** tirage对话是否存在 */
     const isTriageChatExist = useRef(false)
-    const triageChatRef = useRef<AITriageChatRef>(null)
     const handleStartTriageChat = useMemoizedFn((qs: string) => {
         setMode("re-act")
         setTimeout(() => {
@@ -63,7 +57,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     // #region ai-task-chat 相关逻辑
     const [isShowTask, setIsShowTask] = useState<boolean>(false)
-    const taskChatRef = useRef<AITaskChatRef>(null)
 
     /**欢迎页中 Forge 启动ai */
     const handleStartTaskChatByForge = useMemoizedFn((request: AIStartParams) => {
@@ -99,38 +92,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         }
     })
 
-    /** 从别的元素上触发使用 forge 模板的功能 */
-    const handleTriggerExecForge = useMemoizedFn((forge: AIForge) => {
-        if (!forge || !forge.Id) {
-            yakitNotify("error", "准备使用的模板数据异常，请稍后再试")
-            return
-        }
-
-        if (mode === "task" && taskChatRef.current) {
-            const isExec = taskChatRef.current.onGetExecuting()
-            if (isExec) {
-                yakitNotify("warning", "当前任务正在执行中，请稍后再试")
-                return
-            } else {
-                const domRef = isTriageChatExist.current ? triageChatRef.current : welcomeRef.current
-                if (domRef) {
-                    setMode(isTriageChatExist.current ? "re-act" : "welcome")
-                    setTimeout(() => {
-                        if (domRef) {
-                            domRef.onTriggerExecForge(forge.Id)
-                        }
-                    }, 100)
-                }
-            }
-        }
-        if (mode === "welcome" && welcomeRef.current) {
-            welcomeRef.current.onTriggerExecForge(forge.Id)
-        }
-        if (mode === "re-act" && triageChatRef.current) {
-            triageChatRef.current.onTriggerExecForge(forge.Id)
-        }
-    })
-
     useEffect(() => {
         // 获取 replaceForgeNoPrompt 的缓存值
         getRemoteValue(RemoteAIAgentGV.AIAgentReplaceForgeNoPrompt)
@@ -150,12 +111,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 if (data.type === "new-chat") {
                     if (["welcome"].includes(getMode())) return
                     setMode("welcome")
-                }
-
-                // 替换当前使用的 forge 模板
-                if (data.type === "open-forge-form") {
-                    const {value} = data.params || {}
-                    handleTriggerExecForge(value)
                 }
             } catch (error) {}
         }
@@ -224,14 +179,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 taskChat: cloneDeep(taskChat),
                 aiPerfData: cloneDeep(aiPerfData),
                 logs: cloneDeep(logs),
-                casualChat: cloneDeep(casualChat),
-                pressure: [],
-                firstCost: [],
-                totalCost: [],
-                consumption: {},
-                taskList: [],
-                streams: {},
-                systemOutputs: []
+                casualChat: cloneDeep(casualChat)
             }
             setChats &&
                 setChats((old) => {
@@ -312,7 +260,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         // ai-re-act 页面左侧侧边栏向 chatUI 发送的事件
         const onEvents = (res: string) => {
             try {
-                const data = JSON.parse(res) as AIReActEventInfo
+                const data = JSON.parse(res) as AIAgentTriggerEventInfo
                 if (!data.type) return
                 // 新开聊天对话窗
                 if (data.type === "new-chat") {
