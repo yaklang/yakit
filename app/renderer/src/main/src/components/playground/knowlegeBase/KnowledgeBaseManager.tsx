@@ -17,6 +17,7 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
     const [refreshKey, setRefreshKey] = useState(0)
     const [qaDrawerVisible, setQaDrawerVisible] = useState(false)
     const [qaQueryAllCollectionsDefault, setQaQueryAllCollectionsDefault] = useState<boolean>(true)
+    console.log(selectedKnowledgeBase, 'selectedKnowledgeBase')
 
     const handleSelectKb = (kb: KnowledgeBase) => {
         setSelectedKnowledgeBase(kb)

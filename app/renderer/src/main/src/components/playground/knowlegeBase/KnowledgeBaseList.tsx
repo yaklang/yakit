@@ -173,7 +173,6 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
             await ipcRenderer.invoke("DeleteKnowledgeBase", {
                 KnowledgeBaseId: kb.ID
             })
-            console.log("id",kb.ID)
             success("删除知识库成功")
             fetchKnowledgeBases()
             onRefresh()

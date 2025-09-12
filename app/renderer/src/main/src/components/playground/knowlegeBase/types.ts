@@ -46,7 +46,7 @@ export interface KnowledgeEntryFormData {
 
 export interface SearchKnowledgeEntryParams {
     KnowledgeBaseId: number
-    Keyword: string
+    Keyword?: string
     Pagination: {
         Page: number
         Limit: number
