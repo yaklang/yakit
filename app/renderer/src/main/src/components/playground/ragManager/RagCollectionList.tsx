@@ -202,7 +202,7 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
                             total={total}
                             showSizeChanger={true}
                             showQuickJumper={true}
-                            showTotal={(total, range) => `共 ${total} 条记录`}
+                            showTotal={(total) => <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>共 {total} 条记录</div>}
                             onChange={handlePageChange}
                             pageSizeOptions={["10", "20", "50", "100"]}
                             size="small"

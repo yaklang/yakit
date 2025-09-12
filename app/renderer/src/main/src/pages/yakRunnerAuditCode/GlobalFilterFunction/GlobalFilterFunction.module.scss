@@ -62,7 +62,7 @@
     .item-left {
         @extend %display-flex-center;
         @extend %font;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         overflow: hidden;
         gap: 4px;
         .name {
@@ -76,7 +76,7 @@
         @extend %display-flex-center;
         @extend %font;
         gap: 4px;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         overflow: hidden;
         .fileName {
             white-space: nowrap;

@@ -48,3 +48,6 @@ const urlRegex =
 export const isValidURL = (url: string) => {
     return urlRegex.test(url)
 }
+
+/**将 CSS 变量名转换为对应的值 */
+export const getCssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()

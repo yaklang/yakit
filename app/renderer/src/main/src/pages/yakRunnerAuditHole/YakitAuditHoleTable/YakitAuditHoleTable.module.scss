@@ -23,7 +23,7 @@ $tagColor: (
         color: var(--Colors-Use-Error-Primary)
     ),
     "serious": (
-        color: var(--yakit-serious-5)
+        color: var(--Colors-Use-Status-Serious)
     ),
     "default": (
         color: var(--Colors-Use-Neutral-Disable)
@@ -175,10 +175,13 @@ $keyColor: map-keys($tagColor);
     height: 100%;
     display: flex;
     flex-direction: column;
+    flex: 1;
+    overflow: hidden;
     .main-title {
-        border-left: 1px solid #eaecf3;
-        border-bottom: 1px solid #eaecf3;
-        border-right: 1px solid #eaecf3;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         background: var(--Colors-Use-Neutral-Bg);
         display: flex;
         flex-direction: row;
@@ -372,14 +375,17 @@ $keyColor: map-keys($tagColor);
     gap: 8px;
     margin-bottom: 16px;
 }
+
+// ---------- 插件日志各种类型对应样式 ----------
 .audit-result-history-opt {
     display: flex;
     flex-direction: column;
     position: relative;
     .arrow-icon {
         position: absolute;
-        right: -9px;
-        color: var(--plugin-log-type-background, #f0f1f3);
+        right: -10px;
+        color: var(--Colors-Use-Neutral-Border);
+        z-index: 9;
     }
     .icon-wrapper {
         width: 24px;
@@ -407,7 +413,7 @@ $keyColor: map-keys($tagColor);
             .line-top-dot {
                 width: 1px;
                 height: 1px;
-                background-color: #eaecf3;
+                background-color: var(--Colors-Use-Neutral-Bg);
                 border-top-left-radius: 50%;
                 border-top-right-radius: 50%;
                 overflow: hidden;
@@ -415,12 +421,12 @@ $keyColor: map-keys($tagColor);
             .line-style {
                 flex: 1;
                 width: 1px;
-                background-color: #eaecf3;
+                background-color: var(--Colors-Use-Neutral-Bg);
             }
             .line-bottom-dot {
                 width: 1px;
                 height: 1px;
-                background-color: #eaecf3;
+                background-color: var(--Colors-Use-Neutral-Bg);
                 border-bottom-left-radius: 50%;
                 border-bottom-right-radius: 50%;
                 overflow: hidden;
@@ -447,8 +453,8 @@ $keyColor: map-keys($tagColor);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: var(--plugin-log-type-background, #f0f1f3);
-
+        background: var(--Colors-Use-Grey-Bg);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         .header-content {
             flex: 1;
             overflow: hidden;
@@ -460,11 +466,11 @@ $keyColor: map-keys($tagColor);
             font-weight: 400;
             line-height: 20px;
             .img-style {
-                background-color: #ffffff;
+                background-color: var(--Colors-Use-Basic-Background);
             }
             .author-name {
                 white-space: nowrap;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 margin-right: 4px;
             }
             .author-name + .log-content {
@@ -475,7 +481,7 @@ $keyColor: map-keys($tagColor);
             }
             .log-content {
                 white-space: nowrap;
-                color: var(--plugin-log-type-content, #85899e);
+                color: var(--plugin-log-type-content);
             }
             .log-content + .reply-name {
                 margin-left: 6px;
@@ -483,7 +489,7 @@ $keyColor: map-keys($tagColor);
             .log-time {
                 white-space: nowrap;
                 overflow: hidden;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 margin-right: 4px;
             }
             .option {
@@ -498,7 +504,7 @@ $keyColor: map-keys($tagColor);
             .divider-style {
                 width: 1px;
                 height: 12px;
-                background-color: #eaecf3;
+                background-color: var(--Colors-Use-Neutral-Border);
             }
             .reply-btn {
                 margin-left: 8px;
@@ -511,17 +517,16 @@ $keyColor: map-keys($tagColor);
     .info-additional {
         padding: 10px 12px;
         border-radius: 0 0 4px 4px;
-        border-right: 1px solid #eaecf3;
-        border-bottom: 1px solid #eaecf3;
-        border-left: 1px solid #eaecf3;
-        background: #fff;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        border-top: 0;
+        background: var(--Colors-Use-Basic-Background);
 
         .description-style {
             width: 100%;
             overflow: hidden;
             --yakit-ellipsis-row: 3;
 
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 400;
             line-height: 20px;
@@ -540,14 +545,14 @@ $keyColor: map-keys($tagColor);
             gap: 8px;
             .reply-line {
                 width: 2px;
-                background-color: #eaecf3;
+                background-color: var(--Colors-Use-Neutral-Border);
             }
             .reply-content {
                 cursor: pointer;
                 overflow: hidden;
                 display: flex;
                 gap: 8px;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px;

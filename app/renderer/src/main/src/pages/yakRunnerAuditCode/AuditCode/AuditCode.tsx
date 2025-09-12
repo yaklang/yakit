@@ -2067,7 +2067,7 @@ export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = mem
         <div className={styles["project-manager-edit-form"]}>
             <Form layout='vertical' form={form} onFinish={(v) => onFinish(v)}>
                 <Form.Item name='Name' label='项目名称' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input disabled allowClear size='small' placeholder='请输入项目名称...' />
+                    <YakitInput disabled size='small' placeholder='请输入项目名称...' />
                 </Form.Item>
                 <Form.Item name='Description' label='项目描述'>
                     <YakitInput.TextArea rows={3} allowClear size='small' placeholder='请输入项目描述...' />

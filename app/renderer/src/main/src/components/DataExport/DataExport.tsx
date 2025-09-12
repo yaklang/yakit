@@ -253,7 +253,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                             total={pagination.Total}
                             current={Number(pagination.Pagination.Page)}
                             pageSize={pageSize}
-                            showTotal={(total) => `共 ${total} 条`}
+                            showTotal={(total) => <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>共 {total} 条</div>}
                             hideOnSinglePage={true}
                             onChange={onChange}
                         />

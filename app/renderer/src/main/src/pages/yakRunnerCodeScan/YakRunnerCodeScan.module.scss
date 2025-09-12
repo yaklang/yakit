@@ -19,7 +19,7 @@
         gap: 16px;
         height: 100%;
         overflow: hidden;
-        border-right: 1px solid #eaecf3;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         padding: 12px 8px;
         width: 33.33333%;
         max-width: 432px;
@@ -295,7 +295,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px 0;
-            border-top: 1px solid #eaecf3;
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
             border-bottom: 1px solid transparent;
             .flow-rule-item-info {
                 height: 28px;
@@ -382,7 +382,7 @@
         flex: 1;
         overflow: hidden;
         height: 1px;
-        border-top: 1px dashed #eaecf3;
+        border-top: 1px dashed var(--Colors-Use-Neutral-Border);
     }
 }
 
@@ -393,7 +393,7 @@
 }
 
 .extra-params-collapse {
-    border-bottom: 1px solid #eaecf3;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     margin-left: calc(33% - 90px);
 }
 

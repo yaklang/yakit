@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useState} from "react"
 import {BottomSideBarProps} from "./BottomSideBarType"
 import classNames from "classnames"
 import styles from "./BottomSideBar.module.scss"
-import {OutlineBugIcon, OutlineClockIcon, OutlineScanRuleEditIcon, OutlineTagIcon} from "@/assets/icon/outline"
+import {OutlineAnnotationIcon, OutlineBugIcon, OutlineClockIcon, OutlineScanRuleEditIcon, OutlineTagIcon} from "@/assets/icon/outline"
 import useStore from "../hooks/useStore"
 import emiter from "@/utils/eventBus/eventBus"
 
@@ -61,6 +61,13 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                 >
                     <OutlineBugIcon />
                     漏洞详情
+                </div>
+                <div className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
+                    onClick={() => {
+                        onOpenEditorDetails("holeDispose")
+                    }}>
+                        <OutlineAnnotationIcon />
+                        漏洞处置
                 </div>
             </div>
 

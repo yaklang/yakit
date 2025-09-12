@@ -945,7 +945,7 @@ const defaultTags = [
         value: "not_set"
     }
 ]
-const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props) => {
+export const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props) => {
     const {ids, onClose, onCreate} = props
 
     const onFinish = useMemoizedFn((value) => {
@@ -1173,7 +1173,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                 )}
             </div>
             <YakitRadioButtons
-                style={{marginTop: 6, marginBottom: 6}}
+                style={{margin: 6 }}
                 value={showType}
                 onChange={(e) => {
                     const value = e.target.value
@@ -1210,8 +1210,8 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
     )
 })
 
-const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props) => {
-    const {info, setShowType, setLatestDisposalStatus} = props
+export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props) => {
+    const {info, setShowType, setLatestDisposalStatus,style} = props
     const [disposalData, setDisposalData] = useControllableValue<SSARiskDisposalData[]>(props, {
         defaultValue: [],
         valuePropName: "disposalData",
@@ -1223,7 +1223,7 @@ const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props)
                 const newDisposalData = disposalData.filter((item) => item.Id !== id)
                 // 删除完毕后跳转至漏洞详情
                 if (newDisposalData.length === 0) {
-                    setShowType("detail")
+                    setShowType && setShowType("detail")
                 }
                 setLatestDisposalStatus &&
                     setLatestDisposalStatus(info, newDisposalData.length > 0 ? newDisposalData[0].Status : "not_set")
@@ -1244,7 +1244,7 @@ const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props)
             return option ? option.label : "未识别状态"
         }
         return (
-            <div className={classNames(styles["audit-result-history"])}>
+            <div className={classNames(styles["audit-result-history"])} style={style}>
                 <div className={styles["audit-result-history-opt"]}>
                     <PopoverArrowIcon className={styles["arrow-icon"]} />
                     <div className={styles["icon-wrapper"]}>
