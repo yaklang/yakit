@@ -324,6 +324,13 @@ module.exports = {
         // local note
         require("./handlers/note")(win, getClient)
 
+        // 日志
+        try {
+            require("./handlers/logger").register()
+        } catch (error) {
+            console.log('error:', error);
+        }
+
         // mcp client
         try {
             require("./handlers/mcpServere")(win, getClient)

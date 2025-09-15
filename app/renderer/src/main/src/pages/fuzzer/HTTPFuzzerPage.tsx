@@ -159,6 +159,8 @@ import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 import {updateConcurrentLoad} from "@/utils/duplex/duplex"
 import {debugToPrintLog} from "@/utils/logCollection"
+import {formatTimeYMD} from "@/utils/timeUtil"
+import {type LoggerData, useLogger} from "@/hook/useLogger/useLogger"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -168,6 +170,20 @@ type TFilterNonUnique = <T>(arr: T[]) => T[]
 const filterNonUnique: TFilterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
 
 const {ipcRenderer} = window.require("electron")
+
+const httpFuzzerLog = ({name, title, content, status}: Partial<LoggerData>) => {
+    return {
+        name: name || "HTTPFuzzerPage",
+        title: title || "sendRequest",
+        content: content || "发送请求",
+        status,
+        time: formatTimeYMD(Date.now())
+    }
+}
+
+const logger = (log: LoggerData) => {
+    ipcRenderer.invoke("add-log", log)
+}
 
 export type AdvancedConfigShowProps = Record<Exclude<WebFuzzerType, "sequence">, boolean>
 export interface ShareValueProps {
@@ -1302,6 +1318,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setLoading(false)
                 getTotal()
             }, 500)
+            stop()
+            logger(httpFuzzerLog({content: "发送完成", status: "end"}))
         })
 
         return () => {
@@ -1891,7 +1909,43 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
         })
     )
+
+    const {start, stop} = useLogger(
+        (logFn) => {
+            // 日志超过一万条，记录长度
+            if (successFuzzerRef.current.length < 10000 && failedFuzzerRef.current.length < 10000) return
+            logFn(
+                httpFuzzerLog({
+                    title: "成功与失败的长度",
+                    content: `成功：${successFuzzerRef.current.length}——失败：${failedFuzzerRef.current.length}`
+                })
+            )
+        },
+        [],
+        {immediate: false}
+    )
+
     const sendRequest = useMemoizedFn(() => {
+        logger(
+            httpFuzzerLog({
+                status: "start",
+                content: "发送请求"
+            })
+        )
+
+        logger(
+            httpFuzzerLog({
+                title: "参数",
+                content: JSON.stringify({
+                    pageId: props.id,
+                    advancedConfigValue,
+                    request: requestRef.current,
+                    advancedConfigShow,
+                    hotPatchCode: hotPatchCodeRef.current
+                })
+            })
+        )
+        start()
         setRedirectedResponse(undefined)
         sendFuzzerSettingInfo()
         onValidateHTTPFuzzer()

@@ -72,6 +72,8 @@ const createWindow = () => {
             // 如果渲染端崩溃了，设置渲染端崩溃标记位
             setLocalCache("render-crash-screen", true)
         }
+        // 记录logger日志
+        require("./handlers/logger").saveLogs()
     })
 
     win.setSize(mainWindowState.width, mainWindowState.height)
