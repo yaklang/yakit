@@ -95,7 +95,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         tabsInfoState: {},
         riskState: [],
         logState: [],
-        rulesState: []
+        rulesState: [],
+        dotGraph: ""
     })
 
     // 启动数据流处理定时器
@@ -129,6 +130,11 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     let messages = useRef<StreamResult.Message[]>([])
     // ruleData
     let ruleData = useRef<StreamResult.RuleData[]>([])
+    // dot-graph
+    let dotGraph = useRef<StreamResult.DotGraphData>({
+        table_name: "",
+        data: ""
+    })
 
     /** 自定义tab页放前面还是后面 */
     const placeTab = useMemoizedFn((isHead: boolean, info: HoldGRPCStreamProps.InfoTab) => {
@@ -154,7 +160,6 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
             if (data.RuleData && data.ExtractedContent !== undefined) {
                 ruleData.current.push({...data.RuleData, ExtractedContent: data.ExtractedContent})
             }
-            
             const isMessage = data.IsMessage || data.ExecResult?.IsMessage
             if (isMessage) {
                 try {
@@ -206,6 +211,11 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
 
                             let tabInfo: HoldGRPCStreamProps.InfoTab = {tabName: "", type: ""}
                             switch (info.feature) {
+                                case "dot-graph-tab":
+                                    const dotGraph = info.params as StreamResult.DotGraphTabData
+                                    tabInfo = {tabName: dotGraph?.tab_name, type: "dot-graph-tab"}
+                                    placeTab(!!info.at_head, tabInfo)
+                                    break
                                 case "website-trees":
                                     const website = info.params as StreamResult.WebSite
                                     // tabInfo = {tabName: "网站树结构", type: "website"}
@@ -308,7 +318,15 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
                         } catch (e) {}
                         return
                     }
-
+                    if (obj.type === "log" && logData.level === "dot-graph-data") {
+                        try {
+                            const checkInfo = checkStreamValidity(logData)
+                            if (!checkInfo) return
+                            const content: StreamResult.DotGraphData = checkInfo
+                            dotGraph.current = content
+                        } catch (e) {}
+                        return
+                    }
                     // 外界传入的筛选方法
                     if (dataFilter && dataFilter(obj, logData)) return
                     // 日志信息
@@ -318,7 +336,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         })
         // token-error
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            yakitFailed(`[Mod] ${taskName} error: ${error}`,true)
+            yakitFailed(`[Mod] ${taskName} error: ${error}`, true)
             if (onError) {
                 onError(error)
             }
@@ -399,7 +417,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
             tabsInfoState: tabsInfo,
             riskState: risks,
             logState: logs,
-            rulesState: rules
+            rulesState: rules,
+            dotGraph: dotGraph.current.data
         })
     })
 
@@ -439,7 +458,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
             tabsInfoState: {},
             riskState: [],
             logState: [],
-            rulesState: []
+            rulesState: [],
+            dotGraph: ""
         })
 
         runTimeId.current = {cache: "", sent: ""}
@@ -453,6 +473,10 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         riskMessages.current = []
         messages.current = []
         ruleData.current = []
+        dotGraph.current = {
+            table_name: "",
+            data: ""
+        }
     })
 
     return [streamInfo, {start, stop, cancel, reset}] as const

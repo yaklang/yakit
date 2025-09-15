@@ -62,6 +62,7 @@ export interface HoldGRPCStreamInfo {
     riskState: StreamResult.Risk[]
     logState: StreamResult.Log[]
     rulesState: StreamResult.RuleData[]
+    dotGraph: string
 }
 
 /** @name 数据流结果 */
@@ -141,6 +142,11 @@ export declare namespace StreamResult {
     export interface TextData {
         data: string
         table_name: string
+    }
+
+    export interface DotGraphData extends TextData {}
+    export interface DotGraphTabData {
+        tab_name: string
     }
 
     /** @name 数据流结果(风险数据) */

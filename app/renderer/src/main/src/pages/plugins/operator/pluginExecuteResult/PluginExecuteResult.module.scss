@@ -159,3 +159,41 @@
         gap: 8px;
     }
 }
+
+.dot-grab-warp {
+    display: flex;
+    flex: 1;
+    height: 100%;
+
+    .svg-box {
+        flex: 1;
+        height: 100%;
+        overflow: hidden;
+        user-select: none;
+        svg {
+            width: 100%;
+            height: 100%;
+            :global {
+                polygon {
+                    fill: var(--Colors-Use-Basic-Background);
+                }
+                ellipse {
+                    stroke: var(--Colors-Use-Neutral-Text-2-Primary);
+                }
+                .node {
+                    text {
+                        cursor: pointer;
+                        fill: var(--Colors-Use-Neutral-Text-2-Primary);
+                    }
+                    &:hover {
+                        text {
+                            fill: var(--Colors-Use-Main-Primary);
+                        }
+                    }
+                }
+                .node-main text {
+                }
+            }
+        }
+    }
+}

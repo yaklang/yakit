@@ -39,7 +39,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
         riskState: [],
         logState: [],
         pluginExecuteLog: [],
-        rulesState: []
+        rulesState: [],
+        dotGraph: ""
     })
 
     // 启动数据流处理定时器
@@ -274,7 +275,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
             riskState: risks,
             logState: logs,
             pluginExecuteLog: pluginLog.current,
-            rulesState: []
+            rulesState: [],
+            dotGraph: ""
         }
         setStreamInfo(info)
     })
@@ -322,7 +324,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
             riskState: [],
             logState: [],
             pluginExecuteLog: [],
-            rulesState: []
+            rulesState: [],
+            dotGraph: ""
         })
 
         runTimeId.current = {cache: "", sent: ""}

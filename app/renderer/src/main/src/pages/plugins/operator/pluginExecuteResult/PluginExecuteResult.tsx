@@ -1,9 +1,10 @@
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useId, useMemo, useRef, useState, WheelEvent} from "react"
 import {HorizontalScrollCard} from "../horizontalScrollCard/HorizontalScrollCard"
 import styles from "./PluginExecuteResult.module.scss"
 import {
     AuditHoleTableOnTabProps,
+    DotGraphProps,
     PluginExecuteCodeProps,
     PluginExecuteCustomTableProps,
     PluginExecuteLogProps,
@@ -21,6 +22,7 @@ import {
     useDebounceFn,
     useInterval,
     useMemoizedFn,
+    useThrottleFn,
     useUpdateEffect
 } from "ahooks"
 import emiter from "@/utils/eventBus/eventBus"
@@ -57,6 +59,7 @@ import {YakitAuditHoleTable} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTabl
 import {HTTPFlowRealTimeTableAndEditor} from "@/components/HTTPHistory"
 import {ErrorBoundary} from "react-error-boundary"
 import moment from "moment"
+import {instance} from "@viz-js/viz"
 
 const {TabPane} = PluginTabs
 
@@ -151,6 +154,8 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 return <CodeScanResult {...(customProps || {})} isExecuting={loading} runtimeId={runtimeId} />
             case "ssa-risk":
                 return <AuditHoleTableOnTab runtimeId={runtimeId} />
+            case "dot-graph-tab":
+                return <DotGraph dotGraphData={streamInfo.dotGraph} />
             default:
                 return <></>
         }
@@ -387,8 +392,8 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
     const renderTabContent = useMemoizedFn((type) => {
         switch (type) {
             case "plugin-log":
-                const currentTime=moment().format("YYYY-MM-DD")
-                return <LocalPluginLog loading={loading} list={list} heard={<> {currentTime} 日志查询结果</>}/>
+                const currentTime = moment().format("YYYY-MM-DD")
+                return <LocalPluginLog loading={loading} list={list} heard={<> {currentTime} 日志查询结果</>} />
             case "echarts-statistics":
                 return <LocalList list={echartsLists} />
             case "output-text":
@@ -736,5 +741,135 @@ const PluginExecuteCode: React.FC<PluginExecuteCodeProps> = React.memo((props) =
         <>
             <YakitEditor readOnly={true} value={content} type='plaintext' />
         </>
+    )
+})
+
+export const DotGraph: React.FC<DotGraphProps> = React.memo((props) => {
+    const {dotGraphData, onClick, onContextMenu} = props
+    const [scale, setScale] = useState(1) // 初始缩放比例为1
+    const [dragging, setDragging] = useState(false) // 是否正在拖动
+    const [offset, setOffset] = useState({x: 0, y: 0}) // 鼠标拖动的偏移量
+
+    const firstOffsetRef = useRef<{x: number; y: number}>()
+    const svgBoxRef = useRef<HTMLDivElement>(null)
+    const svgRef = useRef<any>(null)
+    const idBoxRef = useId()
+
+    // 记录root节点id 使样式控制将其排除在外
+    const parentElementNodeRef = useRef<string>()
+    useEffect(() => {
+        if (!dotGraphData) return
+        instance().then((viz) => {
+            const svg = viz.renderSVGElement(dotGraphData, {})
+
+            svgRef.current = svg
+            onClick && svg.addEventListener("click", onClick)
+            onContextMenu && svg.addEventListener("contextmenu", onContextMenu)
+            if (svgBoxRef.current) {
+                // 清空所有子元素
+                while (svgBoxRef.current.firstChild) {
+                    svgBoxRef.current.removeChild(svgBoxRef.current.firstChild)
+                }
+                // 新增svg子元素
+                svgBoxRef.current.appendChild(svg)
+                onInitSvgStyle()
+            }
+        })
+        return () => {
+            if (svgRef.current) {
+                onClick && svgRef.current.removeEventListener("click", onClick)
+                onContextMenu && svgRef.current.removeEventListener("contextmenu", onContextMenu)
+            }
+        }
+    }, [dotGraphData])
+    useUpdateEffect(() => {
+        if (svgRef.current && svgBoxRef.current) {
+            const svg = svgRef.current as SVGSVGElement
+            svg.style.transform = `scale(${scale})`
+            svgBoxRef.current.style.cursor = dragging ? "grabbing" : "grab"
+            svg.style.position = "relative"
+            svg.style.left = `${offset.x}px`
+            svg.style.top = `${offset.y}px`
+        }
+    }, [scale, dragging, offset])
+    // 初始默认样式
+    const onInitSvgStyle = useMemoizedFn((id?: string) => {
+        const element = document.getElementById(idBoxRef)
+        if (element) {
+            const titles = element.getElementsByTagName("title")
+            // 遍历所有 <title> 元素
+            for (let i = 0; i < titles.length; i++) {
+                if (titles[i].textContent === "n1") {
+                    // 获取匹配的 <title> 元素的父元素
+                    const parentElement = titles[i].parentElement
+                    if (parentElement) {
+                        // 新增class用于屏蔽通用hover样式
+                        parentElement.classList.add("node-main")
+                        parentElementNodeRef.current = parentElement.id
+                        // 查找该元素下的所有 ellipse 标签
+                        const ellipses = parentElement.getElementsByTagName("ellipse")
+
+                        // 遍历所有找到的 ellipse 标签，并添加样式
+                        for (let i = 0; i < ellipses.length; i++) {
+                            ellipses[i].style.stroke = "#8863F7"
+                            ellipses[i].style.fill = "rgba(136, 99, 247, 0.10)"
+                        }
+                    }
+                    break // 找到匹配的元素后停止遍历
+                }
+            }
+        }
+    })
+    // 处理鼠标按下事件
+    const handleMouseDown = (e) => {
+        setDragging(true)
+        firstOffsetRef.current = {
+            x: e.nativeEvent.offsetX,
+            y: e.nativeEvent.offsetY
+        }
+    }
+
+    // 处理鼠标抬起事件
+    const handleMouseUp = () => {
+        setDragging(false)
+        firstOffsetRef.current = undefined
+    }
+    const handleWheel = useMemoizedFn((event: WheelEvent<HTMLDivElement>) => {
+        if (event.deltaY > 0) {
+            // 最小缩放比例为0.2
+            setScale((prevScale) => Math.max(0.2, prevScale - 0.2))
+        } else if (event.deltaY < 0) {
+            setScale((prevScale) => prevScale + 0.2)
+        }
+    })
+    // 处理鼠标移动事件
+    const handleMouseMove = useThrottleFn(
+        (e) => {
+            if (dragging && firstOffsetRef.current) {
+                const newOffsetX = e.nativeEvent.offsetX
+                const newOffsetY = e.nativeEvent.offsetY
+                const firstX = firstOffsetRef.current.x
+                const firstY = firstOffsetRef.current.y
+                setOffset((prevOffset) => ({
+                    x: prevOffset.x + (newOffsetX - firstX),
+                    y: prevOffset.y + (newOffsetY - firstY)
+                }))
+            }
+        },
+        {wait: 100}
+    ).run
+    return (
+        <div className={styles["dot-grab-warp"]} id={idBoxRef}>
+            <div
+                style={{cursor: "grab"}}
+                className={styles["svg-box"]}
+                ref={svgBoxRef}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
+            />
+        </div>
     )
 })

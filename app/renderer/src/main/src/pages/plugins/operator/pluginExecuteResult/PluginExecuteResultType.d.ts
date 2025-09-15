@@ -50,6 +50,11 @@ export interface PluginExecuteCodeProps {
     content: string
 }
 
+export interface DotGraphProps {
+    dotGraphData: string
+    onClick?: (m: MouseEvent) => void
+    onContextMenu?: (m: MouseEvent) => void
+}
 export enum FileActionEnum {
     Read_Action = "READ", // 读取
     Write_Action = "WRITE", // 写入

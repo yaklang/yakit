@@ -1147,7 +1147,8 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                                 logState: streamInfo.logState,
                                                 tabsInfoState: {},
                                                 riskState: [],
-                                                rulesState: []
+                                                rulesState: [],
+                                                dotGraph:""
                                             }}
                                             runtimeId={runtimeId}
                                             loading={isExecuting}
