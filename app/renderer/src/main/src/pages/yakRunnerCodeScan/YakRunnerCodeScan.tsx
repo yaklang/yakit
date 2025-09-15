@@ -37,6 +37,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
+    OutlineClipboardlistIcon,
     OutlineCloseIcon,
     OutlineOpenIcon,
     OutlineQuestionmarkcircleIcon,
@@ -93,6 +94,7 @@ import {DefaultRuleGroupFilterPageMeta} from "@/defaultConstants/RuleManagement"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RuleDebugAuditDetail} from "../ruleManagement/template"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import { CreateReportContentProps, onCreateReportModal } from "../portscan/CreateReport"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -570,6 +572,21 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
 
     const [selectProject, setsSelectProject] = useState<string[]>([])
     const [openProject, setOpenProject] = useState<string>()
+
+    const onCreateReport = useMemoizedFn((e) => {
+        e.stopPropagation()
+        codeScanExecuteContentRef.current?.onCreateReport()
+    })
+    const disabledReport = useCreation(() => {
+        switch (executeStatus) {
+            case "finished":
+                return false
+            case "error":
+                return false
+            default:
+                return true
+        }
+    }, [executeStatus])
     return (
         <>
             {isShowFlowRule && (
@@ -670,10 +687,20 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                                       ) : (
                                           <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
                                       )}
-                                      <div className={styles["divider-style"]}></div>
+                                      {/* <div className={styles["divider-style"]} /> */}
                                   </>
                               )}
-                        {Object.keys(pageInfo).length > 0 && (
+
+                        <YakitButton
+                            icon={<OutlineClipboardlistIcon />}
+                            disabled={disabledReport}
+                            onClick={onCreateReport}
+                        >
+                            生成报告
+                        </YakitButton>
+                        <div className={styles["divider-style"]} />
+
+                        {/* {Object.keys(pageInfo).length > 0 && (
                             <Tooltip
                                 title='在代码审计中打开'
                                 destroyTooltipOnHide={true}
@@ -708,7 +735,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                                     icon={<OutlineTerminalIcon />}
                                 />
                             </Tooltip>
-                        )}
+                        )} */}
                         <YakitButton
                             type='text2'
                             icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
@@ -948,7 +975,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 },
                 onStopAuditExecute: () => {
                     codeScanAuditExecuteRef.current?.onCancelAudit()
-                }
+                },
+                onCreateReport
             }),
             [form]
         )
@@ -1086,6 +1114,24 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         })
 
         const pageInfoCacheRef = useRef<CodeScanPageInfoProps>()
+
+        /**生成报告 */
+        const onCreateReport = useMemoizedFn(() => {
+            if (executeStatus === "default") return
+            let reportName = ""
+            if (pageInfo.projectName && pageInfo.projectName.length > 0) {
+                reportName = `${pageInfo.projectName[0]}代码扫描报告`
+            }
+
+            const params: CreateReportContentProps = {
+                reportName,
+                runtimeId,
+                type: "codeScan"
+            }
+            onCreateReportModal(params, {
+                getContainer: document.getElementById(`main-operator-page-body-${YakitRoute.YakRunner_Code_Scan}`) || undefined
+            })
+        })
 
         useEffect(() => {
             ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {

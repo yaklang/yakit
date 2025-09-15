@@ -26,7 +26,7 @@ import styles from "./YakRunnerScanHistory.module.scss"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 const {ipcRenderer} = window.require("electron")
-interface GenerateSSAReportResponse {
+export interface GenerateSSAReportResponse {
     Success: boolean
     Message: string
     ReportData: string

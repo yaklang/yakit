@@ -78,7 +78,7 @@
                     color: var(--Colors-Use-Main-Primary);
                     margin-left: 4px;
                 }
-                .option{
+                .option {
                     display: flex;
                 }
             }
@@ -384,6 +384,12 @@
         height: 1px;
         border-top: 1px dashed var(--Colors-Use-Neutral-Border);
     }
+}
+
+.divider-style {
+    width: 1px;
+    height: 12px;
+    background-color: var(--Colors-Use-Neutral-Border);
 }
 
 .agent-down-stream-proxy {
