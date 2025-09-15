@@ -122,6 +122,7 @@ interface ClientCertificatePfx {
     Pkcs12Bytes: TenumBuffer
     Pkcs12Password: TenumBuffer
     password?: boolean
+    Host?: string
 }
 
 interface ClientCertificates {
@@ -130,6 +131,7 @@ interface ClientCertificates {
     CaCertificates: TenumBuffer[]
     Pkcs12Bytes: TenumBuffer
     Pkcs12Password: TenumBuffer
+    Host?: string
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -210,8 +212,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             })
             if (Array.isArray(ClientCertificates) && ClientCertificates.length > 0 && format === 1) {
                 let newArr = ClientCertificates.map((item, index) => {
-                    const {Pkcs12Bytes, Pkcs12Password} = item
-                    return {Pkcs12Bytes, Pkcs12Password, name: `证书${index + 1}`}
+                    const {Pkcs12Bytes, Pkcs12Password, Host} = item
+                    return {Pkcs12Bytes, Pkcs12Password, Host, name: `证书${index + 1}`}
                 })
                 setCertificateParams(newArr)
                 currentIndex.current = ClientCertificates.length
@@ -324,8 +326,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             }
             const certificate = (certificateParams || []).filter((item) => item.password !== true)
             const ClientCertificates = certificate.map((item) => {
-                const {Pkcs12Bytes, Pkcs12Password} = item
-                return {Pkcs12Bytes, Pkcs12Password, ...obj}
+                const {Pkcs12Bytes, Pkcs12Password, Host} = item
+                return {Pkcs12Bytes, Pkcs12Password, Host, ...obj}
             })
             const newParams: GlobalNetworkConfig = {
                 ...params,
@@ -352,6 +354,44 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         }
     })
 
+    const hostRef = useRef<string>("")
+    const handleConfigureHost = (key: number, Host?: string) => {
+        hostRef.current = Host || ""
+        const m = showYakitModal({
+            title: "输入 Host 配置",
+            content: (
+                <div style={{paddingTop: 20}}>
+                    <Form labelCol={{span: 5}} wrapperCol={{span: 18}} size={"small"}>
+                        <Form.Item label={"域名"} help='为该证书指定Host地址'>
+                            <YakitInput
+                                defaultValue={hostRef.current}
+                                placeholder='例如baidu.com或者*.baidu.com'
+                                allowClear
+                                onChange={(e) => {
+                                    const {value} = e.target
+                                    hostRef.current = value
+                                }}
+                            />
+                        </Form.Item>
+                    </Form>
+                </div>
+            ),
+            onCancel: () => {
+                m.destroy()
+            },
+            onOkText: "添加",
+            onOk: () => {
+                if (Array.isArray(certificateParams)) {
+                    certificateParams[key].Host = hostRef.current
+                    let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
+                    setCertificateParams(cache)
+                }
+                m.destroy()
+            },
+            width: 400
+        })
+    }
+
     const closeCard = useMemoizedFn((item: ClientCertificatePfx) => {
         if (Array.isArray(certificateParams)) {
             let cache: ClientCertificatePfx[] = certificateParams.filter((itemIn) => item.name !== itemIn.name)
@@ -361,8 +401,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
     const failCard = useMemoizedFn((item: ClientCertificatePfx, key: number) => {
         return (
-            <div className={styles["certificate-card-item"]}>
-                <div key={key} className={classNames(styles["certificate-card"], styles["certificate-fail"])}>
+            <div className={styles["certificate-card-item"]} key={key}>
+                <div className={classNames(styles["certificate-card"], styles["certificate-fail"])}>
                     <div className={styles["decorate"]}>
                         <RectangleFailIcon />
                     </div>
@@ -426,7 +466,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     </div>
                 </div>
                 <div className={styles["certificate-card-item-footer"]}>
-                    <OutlineCogIcon className={styles["icon-cog"]} />
+                    <OutlineCogIcon
+                        className={styles["icon-cog"]}
+                        onClick={() => {
+                            handleConfigureHost(key, item.Host)
+                        }}
+                    />
                     <OutlineTrashIcon
                         className={styles["icon-trash"]}
                         onClick={() => {
@@ -440,8 +485,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
     const succeeCard = useMemoizedFn((item: ClientCertificatePfx, key: number) => {
         return (
-            <div className={styles["certificate-card-item"]}>
-                <div key={key} className={classNames(styles["certificate-card"], styles["certificate-succee"])}>
+            <div className={styles["certificate-card-item"]} key={key}>
+                <div className={classNames(styles["certificate-card"], styles["certificate-succee"])}>
                     <div className={styles["decorate"]}>
                         <RectangleSucceeIcon />
                     </div>
@@ -458,7 +503,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     </div>
                 </div>
                 <div className={styles["certificate-card-item-footer"]}>
-                    <OutlineCogIcon className={styles["icon-cog"]} />
+                    <OutlineCogIcon
+                        className={styles["icon-cog"]}
+                        onClick={() => {
+                            handleConfigureHost(key, item.Host)
+                        }}
+                    />
                     <OutlineTrashIcon
                         className={styles["icon-trash"]}
                         onClick={() => {
