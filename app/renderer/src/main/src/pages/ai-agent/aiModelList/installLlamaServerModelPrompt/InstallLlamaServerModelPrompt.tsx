@@ -56,7 +56,7 @@ export const InstallLlamaServerModelPrompt: React.FC<InstallLlamaServerModelProm
 })
 
 export const InstallLlamaServer: React.FC<InstallLlamaServerProps> = React.memo((props) => {
-    const {onFinished, onCancel, token, title, grpcInterface} = props
+    const {onFinished, onCancel, token, title, grpcInterface, getContainer} = props
 
     const [percent, setPercent] = useState<number>(0)
     const [data, setData] = useState<string[]>([])
@@ -120,6 +120,8 @@ export const InstallLlamaServer: React.FC<InstallLlamaServerProps> = React.memo(
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}
+            getContainer={getContainer}
+            wrapClassName={styles["installLlamaServerModal"]}
         >
             <div className={styles["download-progress"]}>
                 <Progress percent={percent} format={(p) => `进度 ${p}%`} />

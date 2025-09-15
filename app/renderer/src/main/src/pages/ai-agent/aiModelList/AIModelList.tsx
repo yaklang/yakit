@@ -72,6 +72,7 @@ import classNames from "classnames"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 export const setAIModal = (params: {
     config: GlobalNetworkConfig
@@ -599,6 +600,7 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
                         token={tokenRef.current}
                         onFinished={installFinished}
                         onCancel={installCancel}
+                        getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined}
                     />
                 )}
             </YakitSpin>
@@ -898,6 +900,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                     token={downTokenRef.current}
                     onFinished={installFinished}
                     onCancel={installCancel}
+                    getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined}
                 />
             )}
             {removeVisible && (
