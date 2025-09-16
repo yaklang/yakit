@@ -260,6 +260,31 @@ function useCasualChat(params?: UseCasualChatParams) {
     // #endregion
 
     // #region review事件转换成UI处理逻辑
+    // 处理 tool_review 的 ai 判断得分事件
+    const handleToolReviewJudgement = useMemoizedFn((score: AIChatMessage.AIToolReviewJudgement) => {
+        const {interactive_id} = score
+        const isTrigger = !isAutoContinueReview(getRequest)
+        if (isTrigger) {
+            setContents((old) => {
+                return old.map((item) => {
+                    if (item.uiType === "tool_use_review_require" && item.data) {
+                        const data = item.data as AIChatMessage.ToolUseReviewRequire
+                        if (
+                            data.id === interactive_id &&
+                            // aiReview 没有或者 aiReview 的 seconds 为空时可以赋值
+                            (!data.aiReview || (data.aiReview && typeof data.aiReview.seconds === "undefined"))
+                        ) {
+                            data.aiReview = cloneDeep(score)
+                            item.data = cloneDeep(data)
+                        }
+                        return item
+                    }
+                    return item
+                })
+            })
+        }
+    })
+
     // review触发事件处理
     const handleTriggerReview = useMemoizedFn(
         (params: {Timestamp: number; data: AIChatMessage.ToolUseReviewRequire}) => {
@@ -386,12 +411,20 @@ function useCasualChat(params?: UseCasualChatParams) {
                 return
             }
 
-            if (res.Type === "ai_review_start") {
+            if (["ai_review_start", "ai_review_countdown", "ai_review_end"].includes(res.Type)) {
+                const data = JSON.parse(ipcContent) as AIChatMessage.AIToolReviewJudgement
+                if (!data?.interactive_id) {
+                    handleGrpcDataPushLog({
+                        type: "error",
+                        info: res,
+                        pushLog: handlePushLog
+                    })
+                    return
+                }
+                handleToolReviewJudgement(data)
+                return
             }
-            if (res.Type === "ai_review_countdown") {
-            }
-            if (res.Type === "ai_review_end") {
-            }
+
             if (res.Type === "tool_use_review_require") {
                 const data = JSON.parse(ipcContent) as AIChatMessage.ToolUseReviewRequire
                 if (!data?.id || !data?.selectors || !data?.selectors?.length) {

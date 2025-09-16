@@ -247,6 +247,26 @@ function useTaskChat(params?: UseTaskChatParams) {
     // #endregion
 
     // #region  review 相关逻辑
+    // 处理 tool_review 的 ai 判断得分事件
+    const handleToolReviewJudgement = useMemoizedFn((score: AIChatMessage.AIToolReviewJudgement) => {
+        if (!review.current) return
+
+        const isTrigger = !isAutoContinueReview(getRequest)
+        if (!isTrigger) return
+
+        const {interactive_id} = score
+        const {type, data} = review.current
+        if (type === "tool_use_review_require" && data.id === interactive_id) {
+            const info = cloneDeep(data) as AIChatMessage.ToolUseReviewRequire
+            // aiReview 没有或者 aiReview 的 seconds 为空时可以赋值
+            if (!info.aiReview || (info.aiReview && typeof info.aiReview.seconds === "undefined")) {
+                info.aiReview = cloneDeep(score)
+                review.current.data = cloneDeep(info)
+                onReview && onReview(cloneDeep(review.current))
+            }
+        }
+    })
+
     // 触发 review
     const handleTriggerReview = useMemoizedFn((data: AIChatReview) => {
         console.log(`${data.type}-----\n`, JSON.stringify(data.data))
@@ -390,6 +410,20 @@ function useTaskChat(params?: UseTaskChatParams) {
                     info: res,
                     pushLog: handlePushLog
                 })
+                return
+            }
+
+            if (["ai_review_start", "ai_review_countdown", "ai_review_end"].includes(res.Type)) {
+                const data = JSON.parse(ipcContent) as AIChatMessage.AIToolReviewJudgement
+                if (!review.current || review.current.type !== "tool_use_review_require" || !data?.interactive_id) {
+                    handleGrpcDataPushLog({
+                        type: "error",
+                        info: res,
+                        pushLog: handlePushLog
+                    })
+                    return
+                }
+                handleToolReviewJudgement(data)
                 return
             }
 
