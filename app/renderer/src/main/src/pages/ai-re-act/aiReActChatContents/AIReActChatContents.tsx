@@ -1,16 +1,16 @@
 import React, {ReactNode, useEffect, useRef} from "react"
-import {AIReActChatContentsPProps} from "./AIReActChatContentsType.d"
+import {AIReActChatContentsPProps, AIStreamChatContentProps} from "./AIReActChatContentsType.d"
 import styles from "./AIReActChatContents.module.scss"
 import {AIChatMessage, AIChatStreams} from "@/pages/ai-agent/type/aiChat"
 import {AITriageChatContent} from "@/pages/ai-agent/aiTriageChat/AITriageChat"
-import {useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {AIChatToolColorCard, AIChatToolItem} from "@/pages/ai-agent/chatTemplate/AIChatTool"
 import {AIReActChatReview} from "../aiReActChatReview/AIReActChatReview"
 import {isShowToolColorCard} from "@/pages/ai-agent/utils"
 import {Tooltip} from "antd"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
-import classNames from "classnames"
+import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -60,42 +60,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                         }
                         content = <AIChatToolColorCard toolCall={toolCall} />
                     } else {
-                        const textLength = stream.length
-                        const beforeContent = textLength > 120 ? stream.slice(0, 100) : stream
-                        const afterContent = textLength > 120 ? stream.slice(-20) : ""
-                        content = (
-                            <AITriageChatContent
-                                isAnswer={type === "answer"}
-                                loading={false}
-                                content={
-                                    <Tooltip
-                                        title={
-                                            <div>
-                                                {stream}
-                                                <CopyComponents copyText={stream} />
-                                            </div>
-                                        }
-                                    >
-                                        <div>
-                                            <div className='content-ellipsis'>{NodeId}</div>
-                                            <div className={styles["think-wrapper"]}>
-                                                <div
-                                                    className={classNames(styles["before-text"], {
-                                                        [styles["before-text-max-width"]]: !!afterContent
-                                                    })}
-                                                >
-                                                    {beforeContent}
-                                                </div>
-                                                {afterContent && (
-                                                    <div className={styles["after-text"]}>{afterContent}</div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </Tooltip>
-                                }
-                                {...chatContentExtraProps}
-                            />
-                        )
+                        content = <AIStreamChatContent stream={stream} nodeId={NodeId} />
                     }
                 }
                 break
@@ -147,5 +112,30 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 {chats.map((item: AIChatMessage.AICasualChatQAStream, index) => renderContent(item))}
             </div>
         </div>
+    )
+})
+
+const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.memo((props) => {
+    const {stream, nodeId} = props
+    const content = useCreation(() => {
+        return stream.slice(-150)
+    }, [stream])
+    return (
+        <Tooltip
+            title={
+                <div>
+                    {stream}
+                    <CopyComponents copyText={stream} />
+                </div>
+            }
+        >
+            <div className={styles["ai-stream-chat-content-wrapper"]}>
+                <div className={styles["title"]}>
+                    <OutlineSparklesColorsIcon />
+                    {nodeId}...
+                </div>
+                <div className={styles["ai-stream-content"]}>{content}</div>
+            </div>
+        </Tooltip>
     )
 })

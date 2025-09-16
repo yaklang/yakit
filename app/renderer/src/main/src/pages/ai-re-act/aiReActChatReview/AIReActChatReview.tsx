@@ -370,7 +370,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                         <>
                             {!!toolReviewData.aiReview.score && (
                                 <div>
-                                    AI评分:
+                                    AI风险评分:
                                     <span className={styles["ai-countdown"]}>
                                         {toolReviewData.aiReview.score || 0.1}
                                     </span>
