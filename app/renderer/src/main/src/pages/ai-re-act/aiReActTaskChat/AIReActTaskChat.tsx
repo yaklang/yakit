@@ -18,10 +18,11 @@ import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import classNames from "classnames"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {ChevrondownButton, RoundedStopButton} from "../aiReActChat/AIReActComponent"
-import {UseAIPerfDataState, UseTaskChatState} from "../hooks/type"
+import {UseAIPerfDataState, UseTaskChatState, UseYakExecResultState} from "../hooks/type"
 import {AIReActTaskChatReview} from "@/pages/ai-agent/aiAgentChat/AIAgentChat"
 import {OutlineArrowdownIcon, OutlineArrowupIcon} from "@/assets/icon/outline"
 import {formatNumberUnits} from "@/pages/ai-agent/utils"
+import {LocalPluginLog} from "@/pages/plugins/operator/pluginExecuteResult/LocalPluginLog"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {execute, onStop} = props
@@ -89,6 +90,10 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         return chatIPCData.taskChat || defaultChatIPCData.taskChat
     }, [chatIPCData.taskChat])
 
+    const yakExecResult: UseYakExecResultState = useCreation(() => {
+        return chatIPCData.yakExecResult || defaultChatIPCData.yakExecResult
+    }, [chatIPCData.yakExecResult])
+
     const {coordinatorId, plan, streams} = taskChat
 
     //#region AI tab 相关逻辑
@@ -131,6 +136,8 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
                         <AIAgentChatStream tasks={plan} streams={streams} />
                     </>
                 )
+            case AITabsEnum.File_System:
+                return <LocalPluginLog loading={false} list={yakExecResult.yakExecResultLogs} />
             case AITabsEnum.Risk:
                 return !!coordinatorId ? (
                     <VulnerabilitiesRisksTable

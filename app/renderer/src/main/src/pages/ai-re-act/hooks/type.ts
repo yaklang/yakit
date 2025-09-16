@@ -1,3 +1,4 @@
+import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {
     AIChatMessage,
     AIChatReview,
@@ -34,6 +35,7 @@ export interface UseYakExecResultParams {
 
 export interface UseYakExecResultState {
     card: AIChatMessage.AIInfoCard[]
+    yakExecResultLogs: StreamResult.Log[]
 }
 export interface UseYakExecResultEvents extends UseHookBaseEvents {}
 // #endregion

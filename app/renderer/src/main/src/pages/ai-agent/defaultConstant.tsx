@@ -160,7 +160,8 @@ export const defaultChatIPCData: UseChatIPCState = {
         coordinatorId: ""
     },
     yakExecResult: {
-        card: []
+        card: [],
+        yakExecResultLogs: []
     },
     taskChat: {
         coordinatorId: '',
