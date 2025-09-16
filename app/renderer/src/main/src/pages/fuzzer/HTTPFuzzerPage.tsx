@@ -2306,13 +2306,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 status={"warning"}
                                                 title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
                                                 subTitle={
-                                                    <div
-                                                        style={{
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center"
-                                                        }}
-                                                    >
+                                                    <div>
                                                         本栏结果针对模糊测试的多个 HTTP
                                                         请求结果展示做了优化，可以自动识别单个/多个请求的展示。
                                                         {skipSaveHTTPFlow ? (
@@ -2321,7 +2315,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                 <YakitButton
                                                                     type='text'
                                                                     icon={<OutlineCogIcon />}
-                                                                    style={{padding: 0}}
+                                                                    style={{
+                                                                        padding: 0,
+                                                                        height: "auto",
+                                                                        verticalAlign: "top"
+                                                                    }}
                                                                     onClick={() => {
                                                                         emiter.emit(
                                                                             "menuOpenPage",
