@@ -11,21 +11,37 @@
     .review-header {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 8px;
-        svg {
-            width: 24px;
-            height: 24px;
-            color: var(--Colors-Use-Neutral-Text-2-Primary);
+        .review-header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            svg {
+                width: 24px;
+                height: 24px;
+                color: var(--Colors-Use-Neutral-Text-2-Primary);
+            }
+            .title-style {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 14px;
+                font-weight: 600;
+            }
+            .sub-title-style {
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                font-size: 12px;
+                font-weight: 400;
+            }
         }
-        .title-style {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+        .review-header-extra {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 14px;
             font-weight: 600;
-        }
-        .sub-title-style {
-            color: var(--Colors-Use-Neutral-Text-4-Help-text);
-            font-size: 12px;
-            font-weight: 400;
+            .ai-countdown {
+                color: var(--Colors-Use-Main-Primary);
+            }
         }
     }
     .review-container {

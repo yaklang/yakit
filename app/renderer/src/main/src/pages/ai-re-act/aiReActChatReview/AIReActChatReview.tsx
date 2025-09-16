@@ -1,9 +1,9 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {ReactNode, useEffect, useRef, useState} from "react"
 import {AIReActChatReviewProps} from "./AIReActChatReviewType"
 import classNames from "classnames"
 import styles from "./AIReActChatReview.module.scss"
 import {OutlineArrowrightIcon, OutlineHandIcon, OutlineWarpIcon, OutlineXIcon} from "@/assets/icon/outline"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCountDown, useCreation, useMemoizedFn} from "ahooks"
 import {SolidAnnotationIcon, SolidVariableIcon} from "@/assets/icon/solid"
 import {AIChatMessage} from "@/pages/ai-agent/type/aiChat"
 import {Input} from "antd"
@@ -51,7 +51,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     const toolReview = useCreation(() => {
         if (type !== "tool_use_review_require") return null
         const {tool, tool_description, params} = review as AIChatMessage.ToolUseReviewRequire
-
         let paramsValue = "-"
         try {
             paramsValue = !!params ? JSON.stringify(params, null, 2) : "-"
@@ -284,7 +283,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             </>
         )
     }, [review, requireQS])
-
     //#endregion
     // 是否显示继续执行按钮
     const isContinue = useCreation(() => {
@@ -317,6 +315,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 break
         }
     })
+
     const footerNode = useCreation(() => {
         return (
             <div className={styles["btn-group"]}>
@@ -349,6 +348,52 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             </div>
         )
     }, [isContinue, reviewTreeOption, type, aiOptionsLength, isRequireQS, requireLoading])
+    //#region ai评分
+    const [targetDate, setTargetDate] = useState<number>()
+    const [countdown] = useCountDown({
+        targetDate
+    })
+    useEffect(() => {
+        const data = review as AIChatMessage.ToolUseReviewRequire
+        if (!!data?.aiReview?.seconds) {
+            setTargetDate(Date.now() + data.aiReview.seconds * 1000)
+        }
+    }, [review])
+    //#endregion
+    const reviewHeardExtra = useCreation(() => {
+        let node: ReactNode = <></>
+        switch (type) {
+            case "tool_use_review_require":
+                const toolReviewData = review as AIChatMessage.ToolUseReviewRequire
+                if (!!toolReviewData.aiReview) {
+                    node = (
+                        <>
+                            {!!toolReviewData.aiReview.score && (
+                                <div>
+                                    AI评分:
+                                    <span className={styles["ai-countdown"]}>
+                                        {toolReviewData.aiReview.score || 0.1}
+                                    </span>
+                                </div>
+                            )}
+
+                            {!!countdown && (
+                                <div>
+                                    倒计时:
+                                    <span className={styles["ai-countdown"]}>{Math.round(countdown / 1000)}s</span>
+                                </div>
+                            )}
+                        </>
+                    )
+                }
+
+                break
+
+            default:
+                break
+        }
+        return node
+    }, [type, review, countdown])
     return (
         <>
             <div
@@ -361,11 +406,13 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 )}
             >
                 <div className={styles["review-header"]}>
-                    <OutlineHandIcon />
-                    <div className={styles["title-style"]}>{reviewTitle.title || "异常错误"}</div>
-                    <div className={styles["sub-title-style"]}>{reviewTitle.subTitle || ""}</div>
+                    <div className={styles["review-header-title"]}>
+                        <OutlineHandIcon />
+                        <div className={styles["title-style"]}>{reviewTitle.title || "异常错误"}</div>
+                        <div className={styles["sub-title-style"]}>{reviewTitle.subTitle || ""}</div>
+                    </div>
+                    <div className={styles["review-header-extra"]}>{reviewHeardExtra}</div>
                 </div>
-
                 <div className={styles["review-container"]}>
                     <>
                         <div className={styles["review-data"]}>
