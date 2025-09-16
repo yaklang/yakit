@@ -4,7 +4,7 @@ import {ManyMultiSelectForString, SwitchItem} from "@/utils/inputUtil"
 import {Col, Divider, Form, Modal, Row, Slider, Space, Upload} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {yakitInfo, warn, failed, success} from "@/utils/notification"
+import {yakitInfo, warn, failed, success, yakitNotify} from "@/utils/notification"
 import {AutoSpin} from "@/components/AutoSpin"
 import update from "immutability-helper"
 import {useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
@@ -115,6 +115,7 @@ interface ClientCertificatePem {
     CrtPem: TenumBuffer
     KeyPem: TenumBuffer
     CaCertificates: TenumBuffer[]
+    Host: string
 }
 
 interface ClientCertificatePfx {
@@ -285,6 +286,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             yakitInfo("更新配置成功")
             update()
             if (isNtml) setVisible(false)
+        }).catch((err) => {
+            yakitNotify("error", err + "")
         })
     })
 
@@ -343,7 +346,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             ? [StringToUint8Array(values.CaCertificates)]
                             : [],
                     CrtPem: StringToUint8Array(values.CrtPem),
-                    KeyPem: StringToUint8Array(values.CrtPem)
+                    KeyPem: StringToUint8Array(values.CrtPem),
+                    Host: values.Host || ""
                 }
                 const newParams: GlobalNetworkConfig = {
                     ...params,
