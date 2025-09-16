@@ -8,6 +8,7 @@ export interface InstallLlamaServerProps {
     token: string
     onFinished: () => void
     onCancel: () => void
+    getContainer?: HTMLElement
 }
 export interface DownloadLlamaServerModelPromptProps {
     modelName: string
