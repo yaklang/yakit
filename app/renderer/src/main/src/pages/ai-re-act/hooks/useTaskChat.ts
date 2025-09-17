@@ -3,7 +3,7 @@ import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import {AIChatMessage, AIChatReview, AIChatReviewExtra, AIInputEvent, AIOutputEvent} from "@/pages/ai-agent/type/aiChat"
-import {DefaultAIToolResult} from "./defaultConstant"
+import {AIReviewJudgeLevelMap, AIStreamNodeIdToLabel, DefaultAIToolResult} from "./defaultConstant"
 import {UseTaskChatEvents, UseTaskChatParams, UseTaskChatState} from "./type"
 import {
     handleFlatAITree,
@@ -106,6 +106,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 } else {
                     let info: AIChatMessage.AITaskStreamOutput = {
                         NodeId: NodeId,
+                        NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
                         EventUUID: EventUUID,
                         status: "start",
                         timestamp: Timestamp,
@@ -127,6 +128,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 const list: AIChatMessage.AITaskStreamOutput[] = [
                     {
                         NodeId: NodeId,
+                        NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
                         EventUUID: EventUUID,
                         status: "start",
                         timestamp: Timestamp,
@@ -189,6 +191,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 const toolData = getToolResult(callToolId)
                 newValue.push({
                     NodeId: Type,
+                    NodeLabel: "",
                     EventUUID: EventUUID,
                     status: "end",
                     timestamp: Timestamp,
@@ -255,6 +258,7 @@ function useTaskChat(params?: UseTaskChatParams) {
         if (!isTrigger) return
 
         const {interactive_id} = score
+        score.levelLabel = AIReviewJudgeLevelMap[score?.level || ""]?.label || undefined
         const {type, data} = review.current
         if (type === "tool_use_review_require" && data.id === interactive_id) {
             const info = cloneDeep(data) as AIChatMessage.ToolUseReviewRequire

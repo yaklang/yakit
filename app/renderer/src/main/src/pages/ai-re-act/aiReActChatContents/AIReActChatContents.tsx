@@ -11,6 +11,7 @@ import {Tooltip} from "antd"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
+import {AIStreamNodeIdToLabel} from "../hooks/defaultConstant"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -51,6 +52,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                     if (isShowToolColorCard(NodeId)) {
                         const toolCall: AIChatMessage.AITaskStreamOutput = {
                             NodeId,
+                            NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
                             EventUUID: "",
                             timestamp: 0,
                             stream: firstStream,

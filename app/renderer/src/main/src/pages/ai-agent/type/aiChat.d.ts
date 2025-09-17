@@ -4,6 +4,7 @@ import {KVPair} from "@/models/kv"
 import {ExecResult, PaginationSchema} from "@/pages/invoker/schema"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {UseCasualChatState, UseChatIPCState, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
+import {AITokenConsumption} from "@/pages/ai-re-act/hooks/aiRender"
 // #region AI-(Task|Triage)
 export interface McpConfig {
     Type: string
@@ -205,27 +206,6 @@ export interface AIEventQueryResponse {
     Events: AIOutputEvent[]
 }
 export declare namespace AIChatMessage {
-    /** 输出 Token */
-    export interface Consumption {
-        input_consumption: number
-        output_consumption: number
-        consumption_uuid: string
-    }
-
-    /** 上下文压力 */
-    export interface Pressure {
-        current_cost_token_size: number
-        pressure_token_size: number
-        timestamp: number
-    }
-
-    /**  (首字符响应|总对话)耗时 */
-    export interface AICostMS {
-        ms: number
-        second: number
-        timestamp: number
-    }
-
     /** 审阅自动执行后的通知 */
     export interface ReviewRelease {
         id: string
@@ -317,6 +297,11 @@ export declare namespace AIChatMessage {
         score?: number
         /** 多少秒后自动执行 review 的 continue 操作 */
         seconds?: number
+        /** AI 判断的风险阈值 */
+        level?: string
+        levelLabel?: string
+        /** AI 判断使用的意图 */
+        reason?: string
     }
 
     /** 工具审阅请求 */
@@ -408,6 +393,8 @@ export declare namespace AIChatMessage {
 
     export interface AIStreamOutput {
         NodeId: AIOutputEvent["NodeId"]
+        /** NodeId对应的中文，目前只有stream有 */
+        NodeLabel: string
         EventUUID: AIOutputEvent["EventUUID"]
         status: "start" | "end"
         stream: {
@@ -478,7 +465,7 @@ export declare namespace AIReActChatMessage {
         /** 回答 */
         answer?: {
             aiPerfData: {
-                consumption: Record<string, AIChatMessage.Consumption>
+                consumption: AITokenConsumption
                 pressure: AIChatMessage.Pressure[]
                 firstCost: AIChatMessage.AICostMS[]
                 totalCost: AIChatMessage.AICostMS[]

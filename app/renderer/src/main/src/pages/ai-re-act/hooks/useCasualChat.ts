@@ -12,7 +12,7 @@ import {
 } from "./utils"
 import {v4 as uuidv4} from "uuid"
 import {UseCasualChatEvents, UseCasualChatParams, UseCasualChatState} from "./type"
-import {DefaultAIToolResult} from "./defaultConstant"
+import {AIReviewJudgeLevelMap, AIStreamNodeIdToLabel, DefaultAIToolResult} from "./defaultConstant"
 import {yakitNotify} from "@/utils/notification"
 
 // 属于该 hook 处理数据的类型
@@ -64,6 +64,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 } else {
                     const streamsInfo: AIChatMessage.AIStreamOutput = {
                         NodeId,
+                        NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
                         EventUUID,
                         status: "start",
                         stream: {system: "", reason: "", stream: ""}
@@ -263,6 +264,7 @@ function useCasualChat(params?: UseCasualChatParams) {
     // 处理 tool_review 的 ai 判断得分事件
     const handleToolReviewJudgement = useMemoizedFn((score: AIChatMessage.AIToolReviewJudgement) => {
         const {interactive_id} = score
+        score.levelLabel = AIReviewJudgeLevelMap[score?.level || ""]?.label || undefined
         const isTrigger = !isAutoContinueReview(getRequest)
         if (isTrigger) {
             setContents((old) => {

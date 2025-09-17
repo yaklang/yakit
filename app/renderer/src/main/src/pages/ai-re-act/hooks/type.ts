@@ -7,6 +7,8 @@ import {
     AIOutputEvent,
     AIStartParams
 } from "@/pages/ai-agent/type/aiChat"
+import {AITokenConsumption} from "./aiRender"
+import {AIAgentGrpcApi} from "./grpcApi"
 
 /** 公共 hoos 事件 */
 interface UseHookBaseEvents {
@@ -20,10 +22,10 @@ export interface UseAIPerfDataParams {
 }
 
 export interface UseAIPerfDataState {
-    consumption: Record<string, AIChatMessage.Consumption>
-    pressure: AIChatMessage.Pressure[]
-    firstCost: AIChatMessage.AICostMS[]
-    totalCost: AIChatMessage.AICostMS[]
+    consumption: AITokenConsumption
+    pressure: AIAgentGrpcApi.Pressure[]
+    firstCost: AIAgentGrpcApi.AICostMS[]
+    totalCost: AIAgentGrpcApi.AICostMS[]
 }
 export interface UseAIPerfDataEvents extends UseHookBaseEvents {}
 // #endregion

@@ -5,6 +5,8 @@ import cloneDeep from "lodash/cloneDeep"
 import {AIChatMessage, AIOutputEvent} from "@/pages/ai-agent/type/aiChat"
 import {UseAIPerfDataEvents, UseAIPerfDataParams, UseAIPerfDataState} from "./type"
 import {handleGrpcDataPushLog} from "./utils"
+import {AITokenConsumption} from "./aiRender"
+import {AIAgentGrpcApi} from "./grpcApi"
 
 // 属于该 hook 处理数据的类型
 export const UseAIPerfDataTypes = ["consumption", "pressure", "ai_first_byte_cost_ms", "ai_total_cost_ms"]
@@ -20,10 +22,10 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
     })
 
     // 因为可能存在多个 ai 并发输出，所以这里的 token 量是一个集合
-    const [consumption, setConsumption] = useState<Record<string, AIChatMessage.Consumption>>({})
-    const [pressure, setPressure] = useState<AIChatMessage.Pressure[]>([])
-    const [firstCost, setFirstCost] = useState<AIChatMessage.AICostMS[]>([])
-    const [totalCost, setTotalCost] = useState<AIChatMessage.AICostMS[]>([])
+    const [consumption, setConsumption] = useState<AITokenConsumption>({})
+    const [pressure, setPressure] = useState<AIAgentGrpcApi.Pressure[]>([])
+    const [firstCost, setFirstCost] = useState<AIAgentGrpcApi.AICostMS[]>([])
+    const [totalCost, setTotalCost] = useState<AIAgentGrpcApi.AICostMS[]>([])
 
     const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
         try {
@@ -31,7 +33,7 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
 
             if (res.Type === "consumption") {
                 // 消耗Token
-                const data = JSON.parse(ipcContent) as AIChatMessage.Consumption
+                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Consumption
                 const onlyId = data.consumption_uuid || "system"
 
                 setConsumption((old) => {
@@ -52,21 +54,21 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
 
             if (res.Type === "pressure") {
                 // 上下文压力
-                const data = JSON.parse(ipcContent) as AIChatMessage.Pressure
+                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Pressure
                 setPressure((old) => old.concat([{...data, timestamp: Number(res.Timestamp) || 0}]))
                 return
             }
 
             if (res.Type === "ai_first_byte_cost_ms") {
                 // 首字符响应耗时
-                const data = JSON.parse(ipcContent) as AIChatMessage.AICostMS
+                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AICostMS
                 setFirstCost((old) => old.concat([{...data, timestamp: Number(res.Timestamp) || 0}]))
                 return
             }
 
             if (res.Type === "ai_total_cost_ms") {
                 // 总对话耗时
-                const data = JSON.parse(ipcContent) as AIChatMessage.AICostMS
+                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AICostMS
                 setTotalCost((old) => old.concat([{...data, timestamp: Number(res.Timestamp) || 0}]))
                 return
             }

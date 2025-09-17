@@ -13,7 +13,8 @@ import {
     OutlineChevrondownIcon,
     OutlineChevronrightIcon,
     OutlineEngineIcon,
-    OutlineRocketLaunchIcon} from "@/assets/icon/outline"
+    OutlineRocketLaunchIcon
+} from "@/assets/icon/outline"
 import {formatNumberUnits, isShowToolColorCard, isToolSummaryCard} from "../utils"
 // import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -22,7 +23,8 @@ import {
     SolidHashtagIcon,
     SolidLightbulbIcon,
     SolidLightningboltIcon,
-    SolidToolIcon} from "@/assets/icon/solid"
+    SolidToolIcon
+} from "@/assets/icon/solid"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {AITree} from "../aiTree/AITree"
 import {AIChatMessage, AIEventQueryRequest, AIEventQueryResponse} from "../type/aiChat"
@@ -40,6 +42,7 @@ import {
 } from "@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard"
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
+import {AIStreamNodeIdToLabel} from "@/pages/ai-re-act/hooks/defaultConstant"
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks, pressure, cost, card} = props
@@ -387,6 +390,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                     } catch (error) {}
                     const current: AIChatMessage.AITaskStreamOutput = {
                         NodeId: item.NodeId,
+                        NodeLabel: AIStreamNodeIdToLabel[item.NodeId]?.label || "",
                         timestamp: timestamp,
                         stream: {system: "", reason: "", stream: ""},
                         EventUUID: item.EventUUID,
