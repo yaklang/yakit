@@ -226,7 +226,7 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
                         formItemStyle={{marginBottom: 0, width: 200}}
                         label={"模块类型"}
                         data={[
-                            {value: "yak", text: "Yak 原生模块"},
+                            {value: "yak", text: "原生模块"},
                             {value: "nuclei", text: "nuclei Yaml模块"},
                             {value: undefined, text: "全部"},
                         ]}

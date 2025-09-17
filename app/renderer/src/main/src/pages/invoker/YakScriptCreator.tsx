@@ -50,7 +50,7 @@ export const getPluginTypeVerbose = (t: "yak" | "mitm" | "port-scan" | "nuclei" 
         case "nuclei":
             return "Nuclei Yaml模块"
         case "yak":
-            return "Yak 原生模块"
+            return "原生模块"
         case "codec":
             return "Codec 编码模块"
         case "mitm":
@@ -619,7 +619,7 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                 disabled={!!modified}
                 label={"模块类型"}
                 data={[
-                    { value: "yak", text: "Yak 原生模块" },
+                    { value: "yak", text: "原生模块" },
                     { value: "mitm", text: "MITM 模块" },
                     { value: "packet-hack", text: "Packet 检查" },
                     { value: "port-scan", text: "端口扫描插件" },

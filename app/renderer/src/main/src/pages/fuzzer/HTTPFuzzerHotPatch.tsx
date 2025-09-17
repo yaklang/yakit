@@ -47,7 +47,7 @@ const HTTPFuzzerHotPatch_TEMPLATE_DEMO = "HTTPFuzzerHotPatch_TEMPLATE_DEMO"
 
 export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     const [params, setParams, getParams] = useGetState({
-        Template: `{{yak(handle|{{params(test)}})}}`,
+        Template: ``,
         HotPatchCode: !!props.initialHotPatchCode ? props.initialHotPatchCode : HotPatchDefaultContent,
         HotPatchCodeWithParamGetter: !!props.initialHotPatchCodeWithParamGetter ? props.initialHotPatchCodeWithParamGetter : HotPatchParamsGetterDefault,
         TimeoutSeconds: 20,
@@ -57,24 +57,24 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        getRemoteValue(HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG).then(e => {
-            if (e === "1") {
-                setDynamicParam(true)
-            } else {
-                setDynamicParam(false)
-            }
-        })
+        // getRemoteValue(HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG).then(e => {
+        //     if (e === "1") {
+        //         setDynamicParam(true)
+        //     } else {
+        //         setDynamicParam(false)
+        //     }
+        // })
 
-        getRemoteValue(HTTPFuzzerHotPatch_TEMPLATE_DEMO).then(e => {
-            if (!!e) {
-                setParams({...params, Template: e})
-            }
-        })
+        // getRemoteValue(HTTPFuzzerHotPatch_TEMPLATE_DEMO).then(e => {
+        //     if (!!e) {
+        //         setParams({...params, Template: e})
+        //     }
+        // })
         return () => {
-            setRemoteValue(HTTPFuzzerHotPatch_TEMPLATE_DEMO, getParams().Template).then(() => {
-            })
-            setRemoteValue(HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG, getDynamicParam() ? "1" : "0").then(() => {
-            })
+            // setRemoteValue(HTTPFuzzerHotPatch_TEMPLATE_DEMO, getParams().Template).then(() => {
+            // })
+            // setRemoteValue(HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG, getDynamicParam() ? "1" : "0").then(() => {
+            // })
         }
     }, [])
 
@@ -83,7 +83,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             e.preventDefault()
 
             if (props.onSaveCode) props.onSaveCode(params.HotPatchCode);
-            if (props.onSaveHotPatchCodeWithParamGetterCode) props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter);
+            // if (props.onSaveHotPatchCodeWithParamGetterCode) props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter);
 
             setLoading(true)
             ipcRenderer.invoke("StringFuzzer", {...params}).then((response: { Results: Uint8Array[] }) => {
@@ -111,7 +111,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
         layout={"vertical"}
         // labelCol={{span: 5}} wrapperCol={{span: 14}}
     >
-        <Form.Item label={<Space>
+        {/* <Form.Item label={<Space>
             模版内容
             <Button size={"small"} type={"link"} onClick={() => {
                 callCopyToClipboard(params.Template)
@@ -149,7 +149,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     setValue={code => setParams({...params, HotPatchCodeWithParamGetter: code})}
                 />
             </div>
-        </Form.Item>}
+        </Form.Item>} */}
         <Form.Item label={<Space>
             热加载代码
             {props.onSaveCode && <Button type={"primary"} size={"small"} onClick={() => {

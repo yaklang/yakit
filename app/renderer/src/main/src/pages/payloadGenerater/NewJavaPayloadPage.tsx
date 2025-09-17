@@ -1112,7 +1112,7 @@ const CodeType: {value: string; label: string}[] = [
     {value: "base64", label: "BASE64"},
     {value: "hex", label: "HEX"},
     // {value: "javadump", label: "JavaDump"},
-    {value: "yak", label: "YAK"},
+    // {value: "yak", label: "YAK"},
     {value: "dump", label: "DUMP"}
 ]
 

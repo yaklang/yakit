@@ -1082,7 +1082,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         })
                                                     }}
                                                 >
-                                                    插入 yak.fuzz 语法
+                                                    插入fuzz语法
                                                 </Button>
                                             </Form.Item>
                                         </Col>

@@ -82,10 +82,10 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
                 closable={false} type={"error"} message={<>
                 <Space direction={"vertical"}>
                     <div>
-                        由于操作系统与 Yak 内核限制，无法使用原生 MacOS OC/Swift 接口实现设置代理。
+                        由于操作系统限制，无法使用原生 MacOS OC/Swift 接口实现设置代理。
                     </div>
                     <div>
-                        Yak 引擎将弹出 osascript 授权页以改动系统代理，MacOS 用户认证即可。
+                        将弹出 osascript 授权页以改动系统代理，MacOS 用户认证即可。
                     </div>
                 </Space>
             </>}

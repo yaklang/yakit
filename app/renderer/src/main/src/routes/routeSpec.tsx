@@ -186,24 +186,24 @@ export const RouteMenuData: MenuDataProps[] = [
             // {key: Route.Mod_SpaceEngine, label: "空间引擎", icon: <EllipsisOutlined/>, disabled: true},
         ]
     },
-    {
-        key: Route.PoC,
-        label: "专项漏洞检测",
-        icon: <FunctionOutlined />
-    },
+    // {
+    //     key: Route.PoC,
+    //     label: "专项漏洞检测",
+    //     icon: <FunctionOutlined />
+    // },
 
-    {
-        key: Route.ModManagerDetail,
-        label: "插件管理",
-        icon: <AppstoreOutlined />,
-        subMenuData: [
-            { key: Route.ModManager, label: "插件仓库", icon: <AppstoreOutlined /> },
-            { key: Route.BatchExecutorPage, label: "插件批量执行", icon: <AppstoreOutlined /> }
-        ]
-    },
+    // {
+    //     key: Route.ModManagerDetail,
+    //     label: "插件管理",
+    //     icon: <AppstoreOutlined />,
+    //     subMenuData: [
+    //         { key: Route.ModManager, label: "插件仓库", icon: <AppstoreOutlined /> },
+    //         { key: Route.BatchExecutorPage, label: "插件批量执行", icon: <AppstoreOutlined /> }
+    //     ]
+    // },
 
     { key: Route.PayloadManager, label: "Payload 管理", icon: <AuditOutlined /> },
-    { key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined /> },
+    // { key: Route.YakScript, label: "Yak Runner", icon: <CodeOutlined /> },
     {
         key: Route.ReverseManager,
         label: "反连管理",

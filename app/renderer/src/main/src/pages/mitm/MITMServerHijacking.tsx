@@ -434,7 +434,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                             <Button
                                                 type={"link"}
                                                 onClick={() => {
-                                                    saveABSFileToOpen("yakit证书.crt.pem", caCerts.CaCerts)
+                                                    saveABSFileToOpen("证书.crt.pem", caCerts.CaCerts)
                                                     // openABSFileLocated(caCerts.LocalFile)
                                                 }}
                                             >
@@ -448,7 +448,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                             <YakEditor bytes={true} valueBytes={caCerts.CaCerts}/>
                                         </div>
                                     </AutoCard>
-                                    <Alert
+                                    {/* <Alert
                                         message={
                                             <Space>
                                                 在设置代理后访问：
@@ -456,7 +456,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                                 可自动下载证书
                                             </Space>
                                         }
-                                    />
+                                    /> */}
                                 </Space>
                             )
                         })

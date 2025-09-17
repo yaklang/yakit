@@ -83,7 +83,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     return <AutoCard title={<Space>
         DNSLog
         <div style={{color: "#999"}}>
-            使用 Yakit 自带的 DNSLog 反连服务
+            使用自带的 DNSLog 反连服务
         </div>
         <Form onSubmitCapture={e => {
             e.preventDefault()

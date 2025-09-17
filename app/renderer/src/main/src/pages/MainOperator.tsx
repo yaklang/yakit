@@ -1204,9 +1204,9 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                                     {/* <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}} /> */}
                                     CodePecker交互式检测系统
                                 </div>
-                                <Divider type={"vertical"} />
-                                <YakVersion />
-                                <YakitVersion />
+                                {/* <Divider type={"vertical"} /> */}
+                                {/* <YakVersion /> */}
+                                {/* <YakitVersion /> */}
                                 {!hideMenu && (
                                     <Button
                                         style={{marginLeft: 4, color: "#207ee8"}}
