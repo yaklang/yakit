@@ -113,10 +113,13 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                 textAlign: "center",
                 marginLeft: 150, marginRight: 150
             }}>
-                <Image src={YakLogoBanner}
+                {/* <Image src={YakLogoBanner}
                        style={{marginTop: 120, marginBottom: 40}}
                        preview={false} width={400}
-                />
+                /> */}
+                <div style={{fontSize: 40, fontWeight: "bold", margin: '50px 0'}}>
+                    CodePecker交互式检测系统
+                </div>
                 <br/>
                 <Text style={{color: "#999"}}>{isEnterprise?'企业版':'社区专业版'}：{version}</Text>
                 <SelectOne label={" "} colon={false} data={[

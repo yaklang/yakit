@@ -54,7 +54,7 @@ const createWindow = () => {
         if (flag) {
             dialog
                 .showMessageBox(win, {
-                    icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
+                    // icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
                     type: "none",
                     title: "提示",
                     defaultId: 0,

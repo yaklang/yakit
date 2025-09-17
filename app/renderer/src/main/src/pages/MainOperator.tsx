@@ -1200,8 +1200,9 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                     <Row>
                         <Col span={8}>
                             <Space>
-                                <div style={{marginLeft: 18, textAlign: "center", height: 60}}>
-                                    <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}} />
+                                <div style={{marginLeft: 18, textAlign: "center", height: 60, fontSize: 18}}>
+                                    {/* <Image src={YakLogoBanner} preview={false} width={130} style={{marginTop: 6}} /> */}
+                                    CodePecker交互式检测系统
                                 </div>
                                 <Divider type={"vertical"} />
                                 <YakVersion />
@@ -1658,7 +1659,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                     <span style={{fontSize: 18, marginLeft: 15}}>提示</span>
                 </div>
                 <p style={{fontSize: 15, marginLeft: 37}}>
-                    是否要退出yakit操作界面，一旦退出，界面内打开内容除fuzzer页外都会销毁
+                    是否要退出CodePecker交互式检测系统操作界面，一旦退出，界面内打开内容除fuzzer页外都会销毁
                 </p>
                 <div style={{marginLeft: 37}}>
                     <Checkbox
