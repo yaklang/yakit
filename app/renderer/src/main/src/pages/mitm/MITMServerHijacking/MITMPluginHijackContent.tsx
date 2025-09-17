@@ -32,7 +32,7 @@ import {AddHotCodeTemplate, HotCodeTemplate, HotPatchTempItem} from "@/pages/fuz
 import {cloneDeep} from "lodash"
 import {MITMHotPatchTempDefault} from "@/defaultConstants/mitm"
 import {SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
-import {OutlineRefreshIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {OutlineFileUpIcon, OutlineRefreshIcon, OutlineStoreIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {
     grpcClientMITMHooks,
@@ -377,6 +377,28 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(MITMHotPatchTempDefault))
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
     const [hotStatus, setHotStatus] = useState<"success" | "failed" | "end">("end")
+    const tempNameRef = useRef<string>("")
+    const onUpdateTemplate = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("UpdateHotPatchTemplate", {
+                Condition: {
+                    Type: "mitm",
+                    Name: [tempNameRef.current]
+                },
+                Data: {
+                    Type: "mitm",
+                    Content: script.Content,
+                    Name: tempNameRef.current
+                }
+            })
+            .then((res) => {
+                yakitNotify("success", "更新模板 " + tempNameRef.current + " 成功")
+            })
+            .catch((error) => {
+                yakitNotify("error", "更新模板 " + tempNameRef.current + " 失败：" + error)
+            })
+    })
+
     const onRenderHeardExtra = useMemoizedFn(() => {
         switch (curTabKey) {
             case "hot-patch":
@@ -386,8 +408,12 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                             type='mitm'
                             hotPatchTempLocal={hotPatchTempLocal}
                             onSetHotPatchTempLocal={setHotPatchTempLocal}
-                            onClickHotCode={(temp) => {
+                            onClickHotCode={(temp, tempName) => {
+                                tempNameRef.current = tempName || ""
                                 setScript({...HotLoadDefaultData, Content: temp})
+                            }}
+                            onDeleteLocalTempOk={() => {
+                                tempNameRef.current = ""
                             }}
                         ></HotCodeTemplate>
                         <div className={styles["hot-patch-heard-extra"]}>
@@ -402,6 +428,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                             <YakitPopconfirm
                                 title={"确认重置热加载代码？"}
                                 onConfirm={() => {
+                                    tempNameRef.current = ""
                                     setScript(HotLoadDefaultData)
                                 }}
                                 placement='top'
@@ -410,15 +437,31 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                     <OutlineRefreshIcon />
                                 </YakitButton>
                             </YakitPopconfirm>
-                            <YakitButton type='outline1' onClick={() => setAddHotCodeTemplateVisible(true)}>
-                                保存模板
-                            </YakitButton>
+                            <Tooltip title='更新当前模板并保存' placement='top'>
+                                <YakitButton
+                                    disabled={!script.Content || !tempNameRef.current}
+                                    type='text'
+                                    onClick={onUpdateTemplate}
+                                    icon={<OutlineFileUpIcon />}
+                                ></YakitButton>
+                            </Tooltip>
+                            <Tooltip placement='top' title='另存为新模板'>
+                                <YakitButton
+                                    type='text'
+                                    icon={<OutlineStoreIcon />}
+                                    onClick={() => setAddHotCodeTemplateVisible(true)}
+                                ></YakitButton>
+                            </Tooltip>
                             <AddHotCodeTemplate
                                 type='mitm'
+                                title='另存为'
                                 hotPatchTempLocal={hotPatchTempLocal}
                                 hotPatchCode={script.Content}
                                 visible={addHotCodeTemplateVisible}
                                 onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
+                                onSaveHotCodeOk={(tempName) => {
+                                    tempNameRef.current = tempName || ""
+                                }}
                             ></AddHotCodeTemplate>
                             {hotStatus === "success" ? (
                                 <YakitButton
