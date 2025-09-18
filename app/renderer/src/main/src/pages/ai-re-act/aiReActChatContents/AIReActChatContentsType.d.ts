@@ -6,5 +6,5 @@ export interface AIReActChatContentsPProps {
 
 export interface AIStreamChatContentProps {
     stream: string
-    nodeId: string
+    nodeLabel: string
 }

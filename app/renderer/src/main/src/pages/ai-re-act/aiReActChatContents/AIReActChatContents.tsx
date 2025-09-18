@@ -43,26 +43,19 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         switch (uiType) {
             case "stream":
                 if (["question", "answer"].includes(type)) {
-                    const {NodeId, toolAggregation, stream: firstStream} = data as AIChatMessage.AIStreamOutput
+                    const {NodeId, NodeLabel, stream: firstStream} = data as AIChatMessage.AIStreamOutput
                     const {reason, system, stream} = firstStream || {
                         reason: "",
                         system: "",
                         stream: ""
                     }
                     if (isShowToolColorCard(NodeId)) {
-                        const toolCall: AIChatMessage.AITaskStreamOutput = {
-                            NodeId,
-                            NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
-                            EventUUID: "",
-                            timestamp: 0,
-                            stream: firstStream,
-                            status: "end",
-                            /**工具相关输出数据聚合 */
-                            toolAggregation
+                        const toolCall: AIChatMessage.AIStreamOutput = {
+                            ...(data as AIChatMessage.AIStreamOutput)
                         }
                         content = <AIChatToolColorCard toolCall={toolCall} />
                     } else {
-                        content = <AIStreamChatContent stream={stream} nodeId={NodeId} />
+                        content = <AIStreamChatContent stream={stream} nodeLabel={NodeLabel} />
                     }
                 }
                 break
@@ -118,7 +111,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
 })
 
 const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.memo((props) => {
-    const {stream, nodeId} = props
+    const {stream, nodeLabel} = props
     const content = useCreation(() => {
         return stream.slice(-150)
     }, [stream])
@@ -134,7 +127,7 @@ const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.memo((prop
             <div className={styles["ai-stream-chat-content-wrapper"]}>
                 <div className={styles["title"]}>
                     <OutlineSparklesColorsIcon />
-                    {nodeId}...
+                    {nodeLabel}...
                 </div>
                 <div className={styles["ai-stream-content"]}>{content}</div>
             </div>
