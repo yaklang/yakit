@@ -32,10 +32,10 @@ export const saveAuthInfo = (info: YakitAuthInfo, alias?: string) => {
         width: "50%",
         content: <>
             <Alert message={<>
-                注意：Yakit 并不会把历史记录上传到互联网
+                注意：并不会把历史记录上传到互联网
                 <br/>
                 你可以在你的本地目录（客户端目录）下找到远程登录信息
-                <br/>
+                {/* <br/>
                 <br/>
                 <Space>
                     <CopyableField text={"$HOME/yakit-projects/auth/yakit-remote.json"}/>
@@ -47,7 +47,7 @@ export const saveAuthInfo = (info: YakitAuthInfo, alias?: string) => {
                         }}
                         type={"link"}
                     >打开认证信息存储位置</Button>
-                </Space>
+                </Space> */}
             </>}/>
         </>,
         onOk: () => {

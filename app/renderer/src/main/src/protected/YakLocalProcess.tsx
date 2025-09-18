@@ -161,7 +161,7 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                             <Card
                                 title={
                                     <Space>
-                                        <div>本地 Yak 进程管理</div>
+                                        <div>本地进程管理</div>
                                         {!installed && <Tag color={"red"}>引擎未安装</Tag>}
                                         {notWindows && installed && databaseError !== "" && (
                                             <Space size={0}>
@@ -238,7 +238,7 @@ export const YakLocalProcess: React.FC<YakLocalProcessProp> = (props) => {
                                                                 <Space>
                                                                     <Tag color={"green"}>PID: {i.pid}</Tag>
                                                                     <CopyableField
-                                                                        text={`yak grpc --port ${
+                                                                        text={`grpc --port ${
                                                                             i.port === 0 ? "获取中" : i.port
                                                                         }`}
                                                                         width={300}

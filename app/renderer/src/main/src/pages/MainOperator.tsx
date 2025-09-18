@@ -1260,7 +1260,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                                                     })
                                                 }}
                                             >
-                                                <Button type={"link"}>更新 Yakit 插件源</Button>
+                                                <Button type={"link"}>更新插件源</Button>
                                             </Menu.Item>
                                             <Menu.Item
                                                 key={"reverse-global"}

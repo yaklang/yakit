@@ -123,7 +123,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                 <br/>
                 <Text style={{color: "#999"}}>{isEnterprise?'企业版':'社区专业版'}：{version}</Text>
                 <SelectOne label={" "} colon={false} data={[
-                    {value: "local", text: "本地模式（本地启动 Yak gRPC）"},
+                    {value: "local", text: "本地模式（本地启动 gRPC）"},
                     {value: "remote", text: "远程模式（TeamServer 模式）"}
                 ]} value={mode} setValue={setMode}/>
 
@@ -158,13 +158,13 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                             value={name} setValue={setName}
                             help={"可选，如果填写了，将会保存历史记录，之后可以选择该记录"}
                         />}
-                        <FormItem label={"Yak gRPC 主机地址"}>
+                        <FormItem label={"gRPC 主机地址"}>
                             <Input value={host} onChange={e => {
                                 setHost(e.target.value)
                                 props.onAddrChanged(`${e.target.value}:${port}`)
                             }} style={{width: "100%"}}/>
                         </FormItem>
-                        <FormItem label={"Yak gRPC 端口"}>
+                        <FormItem label={"gRPC 端口"}>
                             <InputNumber
                                 min={1} max={65535}
                                 value={port}
@@ -224,10 +224,10 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                             htmlType={"submit"}
                             type={"primary"}
                         >
-                            <p style={{fontSize: 18, marginBottom: 0}}>Yakit 连接 Yak 核心引擎[{host}:{port}]</p>
+                            <p style={{fontSize: 18, marginBottom: 0}}>连接核心引擎[{host}:{port}]</p>
                         </Button>
                     </div>}
-                    <div style={{textAlign: "center"}}>
+                    {/* <div style={{textAlign: "center"}}>
                         <Space style={{
                             color: '#888',
                             marginBottom: tls ? 200 : 0,
@@ -280,7 +280,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                             </Button.Group>
 
                         </Space>
-                    </div>
+                    </div> */}
                 </Form>
             </div>
         </Spin>
