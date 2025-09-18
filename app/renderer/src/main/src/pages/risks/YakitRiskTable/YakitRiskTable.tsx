@@ -1114,6 +1114,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             setSelectList((s) => [...s, selectedRows])
         } else {
             setSelectList((s) => s.filter((ele) => ele.Id !== selectedRows.Id))
+            setAllCheck(false)
         }
     })
     const onSetCurrentRow = useMemoizedFn((val?: Risk) => {
