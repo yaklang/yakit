@@ -65,7 +65,9 @@ export function useI18nNamespaces(namespaces: string[]) {
         if (vars) {
             if (vars.colon === true) {
                 const lang = i18n.language
-                vars.colon = lang === "zh" ? ":" : "：" // 中文紧跟，英文冒号后加空格
+                vars.colon = lang === "zh" ? "：" : ":" // 中文紧跟，英文冒号后加空格
+            } else {
+                vars.colon = ""
             }
 
             Object.keys(vars).forEach((k) => {
