@@ -936,6 +936,7 @@ service Yak {
   // Knowledge Base
   rpc GetKnowledgeBaseNameList(Empty) returns(GetKnowledgeBaseNameListResponse);
   rpc GetKnowledgeBase(GetKnowledgeBaseRequest) returns(GetKnowledgeBaseResponse);
+  rpc GetKnowledgeBaseTypeList(Empty) returns(GetKnowledgeBaseTypeListResponse);
   rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns(GeneralResponse);
   rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns(GeneralResponse);
   rpc UpdateKnowledgeBase(UpdateKnowledgeBaseRequest) returns(GeneralResponse);
@@ -954,6 +955,7 @@ service Yak {
 
   rpc QueryEntity(QueryEntityRequest) returns (QueryEntityResponse);
   rpc QueryRelationship(QueryRelationshipRequest) returns (QueryRelationshipResponse);
+  rpc QuerySubERM(QuerySubERMRequest) returns (QuerySubERMResponse);
   rpc GenerateERMDot(GenerateERMDotRequest) returns (GenerateERMDotResponse);
 }
 
@@ -988,6 +990,7 @@ message EntityFilter {
   repeated string Types = 3;
   repeated string Names = 4;
   repeated string HiddenIndex = 5;
+  repeated string RuntimeID = 7;
 }
 
 message QueryEntityRequest {
@@ -1027,6 +1030,10 @@ message RelationshipFilter {
   repeated string SourceEntityIndex = 7;
   repeated string TargetEntityIndex = 8;
   repeated string AboutEntityIndex = 9; // Source or Target
+
+  repeated string UUIDS = 11;
+
+  repeated string RuntimeID = 12;
 }
 
 message QueryRelationshipRequest {
@@ -1038,6 +1045,16 @@ message QueryRelationshipResponse {
   repeated Relationship Relationships = 1;
   Paging Pagination = 2;
   uint64 Total = 3;
+}
+
+message QuerySubERMRequest {
+  EntityFilter Filter = 1;
+  uint64 Depth = 2;
+}
+
+message QuerySubERMResponse {
+  repeated Entity Entities = 1;
+  repeated Relationship Relationships = 2;
 }
 
 message GenerateERMDotRequest {
@@ -1156,6 +1173,8 @@ message BuildVectorIndexForKnowledgeBaseEntryRequest {
   int32 EfSearch = 9;
   int32 EfConstruct = 10;
   string DistanceFuncType = 11;
+
+  string RelatedEntityUUIDS = 14;
 }
 
 message BuildVectorIndexForKnowledgeBaseRequest {
@@ -1176,6 +1195,16 @@ message BuildVectorIndexForKnowledgeBaseRequest {
 
 message GetKnowledgeBaseNameListResponse {
   repeated string KnowledgeBaseNames = 1;
+}
+
+message KnowledgeBaseType{
+  string Name = 1;
+  string Description = 2;
+  string Value = 3;
+}
+
+message GetKnowledgeBaseTypeListResponse{
+  repeated KnowledgeBaseType KnowledgeBaseTypes = 1;
 }
 
 message GetKnowledgeBaseRequest {
@@ -1280,6 +1309,7 @@ message KnowledgeBaseEntry {
   repeated string PotentialQuestions = 10;
   repeated float PotentialQuestionsVector = 11;
   string HiddenIndex = 12;
+  string RelatedEntityUUIDS = 13;
 }
 
 message DeleteKnowledgeBaseRequest {
@@ -1446,6 +1476,7 @@ message AITool {
   repeated string Keywords = 5;
   bool IsFavorite = 6;
   int64 ID = 7;
+  string VerboseName = 8; // 给用户看的展示名称
 }
 
 message GetAIToolListResponse {
@@ -1655,6 +1686,7 @@ message AIForgeFilter {
   // tag
   repeated string Tag = 4;
   int64 Id = 5;
+  bool ShowTemporary = 6; // 是否展示临时 forge，默认不展示
 }
 
 message AIForge {
@@ -1674,6 +1706,7 @@ message AIForge {
   string PersistentPrompt = 14; // 持久化提示语
   string PlanPrompt = 15; // 计划提示语
   string ResultPrompt = 16; // 结果提示语
+  string ForgeVerboseName = 17; // 给用户看的展示名称
 }
 
 message QueryAIForgeRequest {
