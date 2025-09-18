@@ -48,7 +48,7 @@
     "missingParameter": "Missing parameter",
     "dataUploading": "Data is being uploaded",
     "uploadResult": "{SuccessCount} data entries uploaded successfully, {FailedCount} failed",
-    "advancedFilter": "Advanced Filter",
+    "advancedFilter": "Filter",
     "configured": "Configured",
     "protocolType": "Protocol Type",
     "all": "All",
