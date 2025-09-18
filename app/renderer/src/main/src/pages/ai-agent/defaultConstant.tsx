@@ -145,6 +145,24 @@ export enum AILocalModelTypeEnum {
     SpeechToText = "speech-to-text"
 }
 
+export const AIReviewRuleOptions = [
+    {
+        value: "manual",
+        label: "Manual",
+        describe:'所有审阅都由用户自己操作'
+    },
+    {
+        value: "yolo",
+        label: "Yolo",
+        describe:"所有审阅默认执行，不进行询问"
+    },
+    {
+        value: "ai",
+        label: "AI",
+        describe:"由AI判断审阅风险，低风险默认执行，高风险由用户操作"
+    }
+]
+
 //#region ai hooks 默认值
 export const defaultChatIPCData: UseChatIPCState = {
     execute: false,
@@ -164,7 +182,7 @@ export const defaultChatIPCData: UseChatIPCState = {
         yakExecResultLogs: []
     },
     taskChat: {
-        coordinatorId: '',
+        coordinatorId: "",
         plan: [],
         streams: {}
     }

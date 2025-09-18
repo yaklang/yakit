@@ -5,4 +5,4 @@ export interface AIChatSettingProps {
     setting: AIAgentSetting
     setSetting?: React.Dispatch<React.SetStateAction<AIAgentSetting>>
 }
-export type FormItemSliderProps = SliderSingleProps & {init?: boolean}
+export type FormItemSliderProps = SliderSingleProps

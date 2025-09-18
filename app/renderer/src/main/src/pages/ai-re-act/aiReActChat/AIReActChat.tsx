@@ -18,6 +18,8 @@ import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {ChevrondownButton, ChevronleftButton, RoundedStopButton} from "./AIReActComponent"
 
+const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
+
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const {mode, setMode} = props
 
@@ -137,7 +139,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                     textareaProps={textareaProps}
                                     onSubmit={handleSubmit}
                                     extraFooterRight={execute && <RoundedStopButton onClick={handleStop} />}
-                                    extraFooterLeft={<AIModelSelect disabled={execute} />}
+                                    extraFooterLeft={
+                                        <>
+                                            <AIModelSelect disabled={execute} />
+                                            <React.Suspense fallback={<div>loading...</div>}>
+                                                <AIReviewRuleSelect disabled={execute} />
+                                            </React.Suspense>
+                                        </>
+                                    }
                                 />
                             </div>
                         </div>

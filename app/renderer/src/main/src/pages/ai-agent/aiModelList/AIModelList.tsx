@@ -48,7 +48,7 @@ import {
     OutlinePlussmIcon,
     OutlineRefreshIcon,
     OutlineTrashIcon,
-    SpeechToTextIcon
+    OutlineSpeechToTextIcon
 } from "@/assets/icon/outline"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
@@ -778,7 +778,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             case AILocalModelTypeEnum.SpeechToText:
                 return (
                     <YakitTag size='small' color='bluePurple' className={styles["ai-local-model-type-tag"]}>
-                        <SpeechToTextIcon className={styles["type-icon"]} />
+                        <OutlineSpeechToTextIcon className={styles["type-icon"]} />
                         Speech-to-text
                     </YakitTag>
                 )

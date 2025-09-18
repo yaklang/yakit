@@ -2,17 +2,22 @@ import React, {memo, useEffect, useState} from "react"
 import {AIChatSettingProps, FormItemSliderProps} from "./type"
 import {Form, Slider, Tooltip} from "antd"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
-import {AIAgentSettingDefault} from "../defaultConstant"
+import {AIAgentSettingDefault, AIReviewRuleOptions} from "../defaultConstant"
 
 // import classNames from "classnames"
 import styles from "./AIChatSetting.module.scss"
+import {YakitRadioButtonsProps} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType"
 
+const ReviewPolicyOptions: YakitRadioButtonsProps["options"] = AIReviewRuleOptions.map((item) => ({
+    value: item.value,
+    label: item.label
+}))
 const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
     const {setting, setSetting} = props
     const [form] = Form.useForm()
@@ -57,24 +62,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     <YakitSwitch />
                 </Form.Item>
                 <Form.Item label='Review 规则' name='ReviewPolicy'>
-                    <YakitRadioButtons
-                        buttonStyle='solid'
-                        size={"small"}
-                        options={[
-                            {
-                                value: "manual",
-                                label: "Manual"
-                            },
-                            {
-                                value: "yolo",
-                                label: "Yolo"
-                            },
-                            {
-                                value: "ai",
-                                label: "AI"
-                            }
-                        ]}
-                    />
+                    <YakitRadioButtons buttonStyle='solid' size={"small"} options={ReviewPolicyOptions} />
                 </Form.Item>
                 <Form.Item label='激活系统文件操作权限' name='EnableSystemFileSystemOperator' valuePropName='checked'>
                     <YakitSwitch />
@@ -96,13 +84,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     }
                     name='AIReviewRiskControlScore'
                 >
-                    <FormItemSlider
-                        init={triggerInit}
-                        defaultValue={setting.AIReviewRiskControlScore || 0}
-                        min={0}
-                        max={1}
-                        step={0.01}
-                    />
+                    <FormItemSlider min={0} max={1} step={0.01} />
                 </Form.Item>
                 <Form.Item
                     label={
@@ -229,28 +211,16 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
 
 export default AIChatSetting
 
-const FormItemSlider: React.FC<FormItemSliderProps> = React.memo((props) => {
-    const {init, onChange, defaultValue, ...rest} = props
-
-    const [showValue, setShowValue] = useState(defaultValue || 0)
-    useUpdateEffect(() => {
-        setShowValue(defaultValue || 0)
-    }, [init])
+export const FormItemSlider: React.FC<FormItemSliderProps> = React.memo((props) => {
+    const {value, ...rest} = props
 
     return (
         <div className={styles["form-item-slider"]}>
             <div className={styles["slider-body"]}>
-                <Slider
-                    tooltipVisible={false}
-                    {...rest}
-                    onChange={(value) => {
-                        onChange && onChange(value)
-                        setShowValue(value)
-                    }}
-                />
+                <Slider tooltipVisible={false} value={value} {...rest} />
             </div>
 
-            <div className={styles["slider-value"]}>{showValue}</div>
+            <div className={styles["slider-value"]}>{value}</div>
         </div>
     )
 })

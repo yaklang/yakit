@@ -57,6 +57,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    flex: 1;
     :global {
         .ant-slider {
             margin: 6px;
@@ -70,7 +71,7 @@
     }
     .slider-value {
         width: 30px;
-        color: var(--Colors-Use-Neutral-Text-1-Title, #353639);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 400;
         line-height: 16px;

@@ -5143,18 +5143,18 @@ const OutlineStore = () => (
         <path
             d='M20.25 8.55938V19.5C20.25 19.6989 20.171 19.8897 20.0303 20.0303C19.8897 20.171 19.6989 20.25 19.5 20.25H4.5C4.30109 20.25 4.11032 20.171 3.96967 20.0303C3.82902 19.8897 3.75 19.6989 3.75 19.5V4.5C3.75 4.30109 3.82902 4.11033 3.96967 3.96967C4.11032 3.82902 4.30109 3.75 4.5 3.75H15.4406C15.538 3.74966 15.6345 3.76853 15.7246 3.80553C15.8147 3.84253 15.8966 3.89694 15.9656 3.96563L20.0344 8.03438C20.1031 8.10341 20.1575 8.18532 20.1945 8.27541C20.2315 8.36549 20.2503 8.46199 20.25 8.55938V8.55938Z'
             stroke='currentColor'
-            strokeWidth='2'
+            strokeWidth='1.5'
             strokeLinecap='round'
             strokeLinejoin='round'
         />
         <path
             d='M7.5 20.25V14.25C7.5 14.0511 7.57902 13.8603 7.71967 13.7197C7.86032 13.579 8.05109 13.5 8.25 13.5H15.75C15.9489 13.5 16.1397 13.579 16.2803 13.7197C16.421 13.8603 16.5 14.0511 16.5 14.25V20.25'
             stroke='currentColor'
-            strokeWidth='2'
+            strokeWidth='1.5'
             strokeLinecap='round'
             strokeLinejoin='round'
         />
-        <path d='M14.25 6.75H9' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
+        <path d='M14.25 6.75H9' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
     </svg>
 )
 /**
@@ -5806,6 +5806,44 @@ const SpeechToText = () => (
 /**
  * @description  Outline/Speech-to-text
  */
-export const SpeechToTextIcon = (props: Partial<IconProps>) => {
+export const OutlineSpeechToTextIcon = (props: Partial<IconProps>) => {
     return <Icon component={SpeechToText} {...props} />
+}
+
+const Codepen = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='currentColor'>
+        <path
+            d='M12 2L22 8.5M12 2L2 8.5M12 2V8.5M22 8.5V15.5M22 8.5L12 15.5M22 15.5L12 22M22 15.5L12 8.5M12 22L2 15.5M12 22V15.5M2 15.5V8.5M2 15.5L12 8.5M2 8.5L12 15.5'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Outline/Codepen
+ */
+export const OutlineCodepenIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Codepen} {...props} />
+}
+
+const Siren = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M7 18V12C7 10.6739 7.52678 9.40215 8.46447 8.46447C9.40215 7.52678 10.6739 7 12 7C13.3261 7 14.5979 7.52678 15.5355 8.46447C16.4732 9.40215 17 10.6739 17 12V18M7 18H17M7 18C6.46957 18 5.96086 18.2107 5.58579 18.5858C5.21071 18.9609 5 19.4696 5 20V21C5 21.2652 5.10536 21.5196 5.29289 21.7071C5.48043 21.8946 5.73478 22 6 22H18C18.2652 22 18.5196 21.8946 18.7071 21.7071C18.8946 21.5196 19 21.2652 19 21V20C19 19.4696 18.7893 18.9609 18.4142 18.5858C18.0391 18.2107 17.5304 18 17 18M21 12H22M18.5 4.5L18 5M2 12H3M12 2V3M4.9292 4.92896L5.6362 5.63596M12 12V18'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Outline/Siren
+ */
+export const OutlineSirenIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Siren} {...props} />
 }
