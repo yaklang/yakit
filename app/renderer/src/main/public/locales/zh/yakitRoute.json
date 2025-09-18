@@ -6,7 +6,7 @@
     "yaklangProgramming": "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类",
     "Codec": "Codec",
     "dataProcessingDescription": "可对数据进行各种处理（包括加密、解密、反序列化、Json 处理等等），还可通过插件自定义数据处理方法",
-    "Payload": "Payload",
+    "Payload": "字典管理",
     "customPayload": "通过上传文件、手动删改等，自定义 Payload，可在爆破和 Web Fuzzer 中进行使用",
     "DNSLog": "DNSLog",
     "subdomainAutoGenerate": "自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中",
