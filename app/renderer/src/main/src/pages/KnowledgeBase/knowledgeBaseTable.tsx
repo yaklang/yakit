@@ -1,5 +1,5 @@
-import {FC, useMemo, useRef} from "react"
-import {useRequest, useSafeState, useUpdateEffect} from "ahooks"
+import {FC, memo, useMemo, useRef} from "react"
+import {useGetState, useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 
 import {KnowledgeBaseEntry, SearchKnowledgeEntryParams} from "@/components/playground/knowlegeBase"
@@ -17,8 +17,9 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {failed, success} from "@/utils/notification"
 
-import {getKnowledgeColumns} from "./compoments/KnowledgBaseColumns"
+import {getEntityColumns, getKnowledgeColumns, getVectorColumns} from "./compoments/KnowledgBaseColumns"
 import {KnowledgeModalVisible} from "./compoments/KnowledgeModalVisible"
+import {VectorDetailModal} from "./compoments/VectorDetailModal"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -33,6 +34,21 @@ const defaultParams = {
     Keyword: ""
 }
 
+const tableHeaderGroupOptions = [
+    {
+        value: "Knowledge",
+        label: "知识"
+    },
+    {
+        value: "Entity",
+        label: "实体"
+    },
+    {
+        value: "Vector",
+        label: "向量"
+    }
+]
+
 const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) => {
     const [type, setType] = useSafeState("Knowledge")
     const [tableData, setTableData] = useSafeState<KnowledgeBaseEntry[]>([])
@@ -40,19 +56,52 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
         data: {},
         visible: false
     })
+    const [isRefresh, setIsRefresh] = useSafeState(false)
+    const [tableSearchValue, setTableSearchValue] = useSafeState("")
+    const [vectorDetailModalData, setVectorDetailModalData] = useSafeState({
+        vectorDetailModalVisible: false,
+        selectedEntryDetail: {}
+    })
+    const [changePage, setChangePage, getChangePage] = useGetState(1)
 
-    const {data, loading, runAsync, params} = useRequest(
-        async (params: SearchKnowledgeEntryParams) => {
-            setTableData([])
-            const result = await ipcRenderer.invoke("SearchKnowledgeBaseEntry", params)
-            return result
+    const boxHeightRef = useRef(0)
+
+    const {data, runAsync, params} = useRequest(
+        async (params) => {
+            console.log(params, "params")
+            let resultData
+            if (type === "Knowledge") {
+                const result = await ipcRenderer.invoke("SearchKnowledgeBaseEntry", {
+                    ...params,
+                    KnowledgeBaseId: knowledgeBaseId
+                })
+                resultData = {...result, list: result?.KnowledgeBaseEntries}
+            } else if (type === "Entity") {
+                const result = await ipcRenderer.invoke("QueryEntity", {
+                    ...params,
+                    Filter: {
+                        Names: params.Keyword,
+                        BaseIndex: knowledgeBaseId
+                    },
+                    KnowledgeBaseId: undefined,
+                    Keyword: undefined
+                })
+                resultData = {...result, list: result?.Entities}
+            } else if (type === "Vector") {
+                const result = await ipcRenderer.invoke("ListVectorStoreEntries", {
+                    ...params,
+                    CollectionID: knowledgeBaseId
+                })
+                resultData = {...result, list: result?.Entries}
+            }
+            resultData?.Pagination?.Page == "1" && setIsRefresh((preValue) => !preValue)
+            console.log(resultData.list, "resultData.list")
+            setTableData(resultData.list ?? [])
+            return resultData
         },
         {
             manual: true,
-            defaultParams: [defaultParams],
-            onSuccess: (res) => {
-                setTableData((preValue) => preValue.concat(res?.KnowledgeBaseEntries ?? []))
-            }
+            onError: (err) => failed("查询列表失败" + err)
         }
     )
 
@@ -73,10 +122,57 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
         }
     )
 
+    const updateData = useMemoizedFn(() => {
+        const limitCount: number = boxHeightRef.current > 0 ? Math.ceil(boxHeightRef.current / 28) : 30
+        const preParams = params?.[0]
+        const Requsetparams = {
+            ...defaultParams,
+            ...preParams,
+            Pagination: {
+                ...defaultParams.Pagination,
+                Limit: limitCount
+            },
+            KnowledgeBaseId: knowledgeBaseId
+        }
+        console.log(Requsetparams, "Requsetparams")
+        runAsync(Requsetparams)
+    })
+
     useUpdateEffect(() => {
         setTableData([])
-        runAsync({...defaultParams, KnowledgeBaseId: knowledgeBaseId!})
-    }, [knowledgeBaseId])
+        updateData()
+        setTableSearchValue("")
+        setIsRefresh(!isRefresh)
+        setChangePage(1)
+    }, [knowledgeBaseId, type])
+
+    const onSearch = async (value: string) => {
+        const limitCount: number = boxHeightRef.current > 0 ? Math.ceil(boxHeightRef.current / 28) : 30
+        await runAsync({
+            Pagination: {
+                ...defaultParams.Pagination,
+                Limit: limitCount
+            },
+            Keyword: value
+        })
+    }
+
+    const targetColumns = useMemo(() => {
+        switch (type) {
+            case "Knowledge":
+                return getKnowledgeColumns(deleteRunAsunc, setKnowledgeModalData)
+
+            case "Entity":
+                return getEntityColumns()
+            case "Vector":
+                return getVectorColumns(setVectorDetailModalData)
+
+            default:
+                break
+        }
+        return null
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [type, knowledgeBaseId])
 
     const knowledgeBaseTableRenderTitle = useMemo(() => {
         return (
@@ -88,20 +184,7 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
                 <div className={styles["knowledgeBase-render-header-operate"]}>
                     <YakitRadioButtons
                         buttonStyle='solid'
-                        options={[
-                            {
-                                value: "Knowledge",
-                                label: "知识"
-                            },
-                            {
-                                value: "Entity",
-                                label: "实体"
-                            },
-                            {
-                                value: "Vector",
-                                label: "向量"
-                            }
-                        ]}
+                        options={tableHeaderGroupOptions}
                         value={type}
                         onChange={(e) => {
                             setType(e.target.value)
@@ -110,13 +193,9 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
                     <div>
                         <YakitInput.Search
                             placeholder='请输入关键字搜索'
-                            onSearch={async (value) => {
-                                await runAsync({
-                                    ...defaultParams,
-                                    KnowledgeBaseId: knowledgeBaseId!,
-                                    Keyword: value
-                                })
-                            }}
+                            value={tableSearchValue}
+                            onChange={(e) => setTableSearchValue(e.target.value)}
+                            onSearch={(value) => onSearch(value)}
                         />
                         <YakitButton>添加</YakitButton>
                     </div>
@@ -124,14 +203,21 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
             </div>
         )
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [type])
+    }, [type, tableSearchValue])
 
     return (
-        <div style={{height: "100%"}}>
+        <div className={styles["repository-manage-table"]}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) {
                         return
+                    }
+                    // 窗口由小变大时 重新拉取数据
+                    if (boxHeightRef.current && boxHeightRef.current < height) {
+                        boxHeightRef.current = height
+                        updateData()
+                    } else {
+                        boxHeightRef.current = height
                     }
                 }}
                 handleWidth={true}
@@ -139,28 +225,32 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <TableVirtualResize<KnowledgeBaseEntry>
-                loading={loading}
-                columns={getKnowledgeColumns(deleteRunAsunc, setKnowledgeModalData)}
+            <TableVirtualResize
+                columns={targetColumns as any}
                 data={tableData}
                 renderKey='ID'
-                isRefresh={false}
+                isRefresh={isRefresh}
                 renderTitle={knowledgeBaseTableRenderTitle}
                 pagination={{
                     page: data?.Pagination?.Page,
                     limit: data?.Pagination?.Limit,
-                    total: 20,
-                    onChange: (page, limit) => {
+                    total: data?.Total,
+                    onChange: async (page, limit) => {
                         const oldParams = params?.[0] ?? defaultParams
-                        runAsync({
-                            ...oldParams,
-                            Pagination: {
-                                ...oldParams?.Pagination,
-                                Page: page,
-                                Limit: limit
-                            },
-                            KnowledgeBaseId: knowledgeBaseId!
-                        })
+                        setChangePage(page)
+                        const dat =
+                            oldParams.Pagination.Page != getChangePage()
+                                ? await runAsync({
+                                      ...oldParams,
+                                      Pagination: {
+                                          ...oldParams?.Pagination,
+                                          Page: changePage,
+                                          Limit: limit
+                                      }
+                                  })
+                                : {list: []}
+                        console.log(getChangePage(), page, changePage, "sss")
+                        setTableData(() => [...tableData, ...dat?.list])
                     }
                 }}
             />
@@ -168,8 +258,13 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
                 knowledgeModalData={knowledgeModalData}
                 setKnowledgeModalData={setKnowledgeModalData}
             />
+            <VectorDetailModal
+                vectorDetailModalData={vectorDetailModalData}
+                handleCloseVectorDetailModal={setVectorDetailModalData}
+                knowledgeBaseId={knowledgeBaseId}
+            />
         </div>
     )
 }
 
-export {KnowledgeBaseTable}
+export default memo(KnowledgeBaseTable)

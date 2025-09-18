@@ -114,9 +114,23 @@
         }
     }
     &-table {
-        overflow: hidden;
+        height: calc(100% - 32px);
         width: 100%;
-        height: 100%;
+        :global {
+            .metadata-cell {
+                .metadata-tags {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 4px;
+                }
+
+                .no-metadata {
+                    font-size: 12px;
+                    color: var(--yakit-text-color-3);
+                    font-style: italic;
+                }
+            }
+        }
     }
     .knowledgeBase-render-header {
         display: flex;
@@ -415,6 +429,67 @@
                 .input-actions {
                     align-self: flex-end;
                 }
+            }
+        }
+    }
+}
+
+.vector-detail-modal-footer{
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.entry-detail {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    height: 45vh;
+    overflow: auto;
+    .detail-grid {
+        display: flex;
+        flex-direction: column;
+        border-radius: 4px;
+        flex-wrap: wrap;
+        .detail-row {
+            display: flex;
+            align-items: center;
+            background-color: var(--Colors-Use-Neutral-Bg);
+            padding: 0 8px;
+            .label {
+                min-width: 75px;
+            }
+            .value {
+                margin-left: 4px;
+            }
+        }
+    }
+    .detail-section {
+        background-color: var(--Colors-Use-Neutral-Bg);
+        padding: 8px;
+        border-radius: 4px;
+        .document-display {
+            .row {
+                display: flex;
+                align-items: flex-start;
+
+            }
+
+            .title {
+                width: 68px;
+                flex-shrink: 0;
+            }
+
+            .content {
+                flex: 1;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+        }
+    }
+    div {
+        &:not(:first-child) {
+            h4 {
+                margin-top: 8px; // 你需要的间距
+                margin-bottom: 0px;
             }
         }
     }

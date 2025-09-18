@@ -1,7 +1,7 @@
 import {FC} from "react"
 
 import {KnowledgeBaseManage} from "./KnowledgeBaseManage"
-import {KnowledgeBaseTable} from "./knowledgeBaseTable"
+import KnowledgeBaseTable from "./knowledgeBaseTable"
 
 import styles from "./knowledgeBase.module.scss"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"

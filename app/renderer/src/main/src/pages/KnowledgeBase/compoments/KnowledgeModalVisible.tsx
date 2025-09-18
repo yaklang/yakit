@@ -8,7 +8,7 @@ import form from "antd/lib/form"
 import {FC} from "react"
 
 interface TKnowledgeModalVisibleProps {
-    knowledgeModalData: {data: {}; visible: boolean} 
+    knowledgeModalData: {data: {}; visible: boolean}
     setKnowledgeModalData: (value: {data: {}; visible: boolean}) => void
 }
 
@@ -21,6 +21,7 @@ const KnowledgeModalVisible: FC<TKnowledgeModalVisibleProps> = ({knowledgeModalD
         <YakitModal
             title='编辑知识条目'
             visible={knowledgeModalData.visible}
+            maskClosable={false}
             onCancel={() => {
                 form.resetFields()
                 setKnowledgeModalData({
@@ -46,7 +47,12 @@ const KnowledgeModalVisible: FC<TKnowledgeModalVisibleProps> = ({knowledgeModalD
                     <YakitInput.TextArea placeholder='请输入知识详情' rows={6} maxLength={5000} showCount />
                 </Form.Item>
 
-                <Form.Item label='知识类型' name='KnowledgeType' rules={[{required: true, message: "请输入知识类型"}]} style={{marginTop: 24}}>
+                <Form.Item
+                    label='知识类型'
+                    name='KnowledgeType'
+                    rules={[{required: true, message: "请输入知识类型"}]}
+                    style={{marginTop: 24}}
+                >
                     <YakitInput placeholder='请输入知识类型' />
                 </Form.Item>
 
