@@ -99,7 +99,8 @@ import {
     OutlinePlugsIcon,
     OutlineSearchIcon,
     OutlineFilterIcon,
-    OutlineSwitchhorizontalIcon
+    OutlineSwitchhorizontalIcon,
+    OutlineCogIcon
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
@@ -1940,6 +1941,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         []
     )
 
+    const [skipSaveHTTPFlow, setSkipSaveHTTPFlow] = useState<boolean>(false)
+    useEffect(() => {
+        if (inViewport) {
+            ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((res) => {
+                setSkipSaveHTTPFlow(res.SkipSaveHTTPFlow)
+            })
+        }
+    }, [inViewport])
+
     return (
         <>
             <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
@@ -2203,7 +2213,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
                                 {onlyOneResponse ? (
                                     <ResponseViewer
-                                        keepSearchName="fuzzer-response"
+                                        keepSearchName='fuzzer-response'
                                         isHttps={advancedConfigValue.isHttps}
                                         ref={responseViewerRef}
                                         fuzzerResponse={httpResponse}
@@ -2296,7 +2306,36 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 status={"warning"}
                                                 title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
                                                 subTitle={
-                                                    "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
+                                                    <div>
+                                                        本栏结果针对模糊测试的多个 HTTP
+                                                        请求结果展示做了优化，可以自动识别单个/多个请求的展示。
+                                                        {skipSaveHTTPFlow ? (
+                                                            <>
+                                                                响应数量超过前端限制请确认开启
+                                                                <YakitButton
+                                                                    type='text'
+                                                                    icon={<OutlineCogIcon />}
+                                                                    style={{
+                                                                        padding: 0,
+                                                                        height: "auto",
+                                                                        verticalAlign: "top"
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        emiter.emit(
+                                                                            "menuOpenPage",
+                                                                            JSON.stringify({
+                                                                                route: YakitRoute.Beta_ConfigNetwork
+                                                                            })
+                                                                        )
+                                                                    }}
+                                                                >
+                                                                    保存HTTP流量设置
+                                                                </YakitButton>
+                                                            </>
+                                                        ) : (
+                                                            ""
+                                                        )}
+                                                    </div>
                                                 }
                                             />
                                         )}
