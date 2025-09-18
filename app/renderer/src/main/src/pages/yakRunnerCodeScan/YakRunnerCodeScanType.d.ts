@@ -54,6 +54,7 @@ export interface CodeScanExecuteContentRefProps {
     onSetProject: (v: string) => void
     onStartAuditExecute: () => void
     onStopAuditExecute: () => void
+    onCreateReport: () => void
 }
 
 export interface CodeScaMainExecuteContentProps {
