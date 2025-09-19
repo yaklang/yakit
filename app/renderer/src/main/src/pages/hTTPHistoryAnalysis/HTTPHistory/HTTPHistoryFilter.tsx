@@ -166,27 +166,43 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                     const tabs = JSON.parse(setting)
                     setTabsData((prev) => {
                         prev.forEach((i) => {
-                            if (i.key === tabs.curTabKey) {
-                                i.contShow = tabs.contShow
-                            } else {
+                            if (toWebFuzzer) {
                                 i.contShow = false
+                            } else {
+                                if (i.key === tabs.curTabKey) {
+                                    i.contShow = tabs.contShow
+                                } else {
+                                    i.contShow = false
+                                }
                             }
                         })
                         return [...prev]
                     })
                     setCurTabKey(tabs.curTabKey)
+                    setRemoteValue(
+                        RemoteHistoryGV.HTTPHistoryFilterLeftTabs,
+                        JSON.stringify({contShow: toWebFuzzer ? false : tabs.contShow, curTabKey: tabs.curTabKey})
+                    )
                 } catch (error) {
                     setTabsData((prev) => {
                         prev.forEach((i) => {
-                            if (i.key === "web-tree") {
-                                i.contShow = true
-                            } else {
+                            if (toWebFuzzer) {
                                 i.contShow = false
+                            } else {
+                                if (i.key === "web-tree") {
+                                    i.contShow = true
+                                } else {
+                                    i.contShow = false
+                                }
                             }
                         })
                         return [...prev]
                     })
                     setCurTabKey("web-tree")
+                    setRemoteValue(
+                        RemoteHistoryGV.HTTPHistoryFilterLeftTabs,
+                        JSON.stringify({contShow: toWebFuzzer ? false : true, curTabKey: "web-tree"})
+                    )
                 }
             }
         })
