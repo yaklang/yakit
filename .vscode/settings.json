@@ -1,0 +1,382 @@
+{
+  "workbench.colorTheme": "Default Dark+",
+  "editor.tabSize": 2,
+  "cssrem.rootFontSize": 12,
+  "liveSassCompile.settings.generateMap": false,
+  "liveSassCompile.settings.autoprefix": [
+    "ie >= 6", //ie6以上
+    "firefox >= 8",
+    "chrome >= 24",
+    "Opera>=10"
+  ],
+  "liveSassCompile.settings.excludeList": [
+    "**/node_modules/**",
+    ".vscode/**"
+  ],
+  "liveSassCompile.settings.formats": [
+    {
+      "format": "expanded",
+      "extensionName": ".css",
+      "savePath": "~/../css/"
+    }
+  ],
+  "px-to-rem.px-per-rem": 75,
+  "px-to-rem.number-of-decimals-digits": 4,
+  "window.zoomLevel": 1,
+  "bracket-pair-colorizer-2.depreciation-notice": false,
+  "csscomb.preset": {
+    "remove-empty-rulesets": true,
+    "always-semicolon": true,
+    "color-case": "upper",
+    "block-indent": "  ",
+    "color-shorthand": false,
+    "element-case": "lower",
+    "eof-newline": true,
+    "leading-zero": false,
+    "quotes": "single",
+    "sort-order-fallback": "abc",
+    "space-before-colon": "",
+    "space-after-colon": " ",
+    "space-before-combinator": " ",
+    "space-after-combinator": " ",
+    "space-between-declarations": "\n",
+    "space-before-opening-brace": " ",
+    "space-after-opening-brace": "\n",
+    "space-after-selector-delimiter": " ",
+    "space-before-selector-delimiter": "",
+    "space-before-closing-brace": "\n",
+    "tab-size": true,
+    "lines-between-rulesets": 0,
+    "sort-order": [
+      [
+        "position",
+        "z-index",
+        "top",
+        "right",
+        "bottom",
+        "left",
+        "display",
+        "justify-content",
+        "align-items",
+        "flex-wrap",
+        "visibility",
+        "float",
+        "clear",
+        "overflow",
+        "overflow-x",
+        "overflow-y",
+        "-webkit-overflow-scrolling",
+        "clip",
+        "zoom",
+        "flex-direction",
+        "flex-flow",
+        "flex-order",
+        "flex-pack",
+        "flex-align",
+        "flex",
+        "box-sizing",
+        "width",
+        "min-width",
+        "max-width",
+        "height",
+        "min-height",
+        "max-height",
+        "margin",
+        "margin-top",
+        "margin-right",
+        "margin-bottom",
+        "margin-left",
+        "padding",
+        "padding-top",
+        "padding-right",
+        "padding-bottom",
+        "padding-left",
+        "table-layout",
+        "empty-cells",
+        "caption-side",
+        "border-spacing",
+        "border-collapse",
+        "list-style",
+        "list-style-position",
+        "list-style-type",
+        "list-style-image",
+        "content",
+        "quotes",
+        "counter-reset",
+        "counter-increment",
+        "resize",
+        "cursor",
+        "user-select",
+        "nav-index",
+        "nav-up",
+        "nav-right",
+        "nav-down",
+        "nav-left",
+        "transition",
+        "transition-delay",
+        "transition-timing-function",
+        "transition-duration",
+        "transition-property",
+        "transform",
+        "transform-origin",
+        "animation",
+        "animation-name",
+        "animation-duration",
+        "animation-play-state",
+        "animation-timing-function",
+        "animation-delay",
+        "animation-iteration-count",
+        "animation-direction",
+        "text-align",
+        "text-align-last",
+        "vertical-align",
+        "white-space",
+        "text-decoration",
+        "text-emphasis",
+        "text-emphasis-color",
+        "text-emphasis-style",
+        "text-emphasis-position",
+        "text-indent",
+        "text-justify",
+        "text-transform",
+        "letter-spacing",
+        "word-spacing",
+        "-ms-writing-mode",
+        "text-outline",
+        "text-transform",
+        "text-wrap",
+        "text-overflow",
+        "text-overflow-ellipsis",
+        "text-overflow-mode",
+        "word-wrap",
+        "word-break",
+        "tab-size",
+        "hyphens",
+        "pointer-events",
+        "opacity",
+        "color",
+        "border",
+        "border-collapse",
+        "border-width",
+        "border-style",
+        "border-color",
+        "border-top",
+        "border-top-width",
+        "border-top-style",
+        "border-top-color",
+        "border-right",
+        "border-right-width",
+        "border-right-style",
+        "border-right-color",
+        "border-bottom",
+        "border-bottom-width",
+        "border-bottom-style",
+        "border-bottom-color",
+        "border-left",
+        "border-left-width",
+        "border-left-style",
+        "border-left-color",
+        "border-radius",
+        "border-top-left-radius",
+        "border-top-right-radius",
+        "border-bottom-right-radius",
+        "border-bottom-left-radius",
+        "border-image",
+        "border-image-source",
+        "border-image-slice",
+        "border-image-width",
+        "border-image-outset",
+        "border-image-repeat",
+        "outline",
+        "outline-width",
+        "outline-style",
+        "outline-color",
+        "outline-offset",
+        "background",
+        "background-color",
+        "background-image",
+        "background-repeat",
+        "background-attachment",
+        "background-position",
+        "background-position-x",
+        "background-position-y",
+        "background-clip",
+        "background-origin",
+        "background-size",
+        "box-decoration-break",
+        "box-shadow",
+        "text-shadow",
+        "font",
+        "font-family",
+        "font-size",
+        "font-weight",
+        "font-style",
+        "font-variant",
+        "font-size-adjust",
+        "font-stretch",
+        "font-effect",
+        "font-emphasize",
+        "font-emphasize-position",
+        "font-emphasize-style",
+        "font-smooth",
+        "line-height"
+      ],
+    ]
+  },
+  "todo-tree.tree.showScanModeButton": false,
+  "todo-tree.filtering.excludeGlobs": [
+    "**/node_modules",
+    "*.xml",
+    "*.XML"
+  ],
+  "todo-tree.filtering.ignoreGitSubmodules": true,
+  "todohighlight.keywords": [],
+  "todo-tree.tree.showCountsInTree": true,
+  "todohighlight.keywordsPattern": "TODO:|FIXME:|NOTE:|\\(([^)]+)\\)",
+  "todohighlight.defaultStyle": {},
+  "todohighlight.isEnable": false,
+  "todo-tree.highlights.customHighlight": {
+    "BUG": {
+      "icon": "bug",
+      "foreground": "#F56C6C",
+      "type": "line"
+    },
+    "FIXME": {
+      "icon": "flame",
+      "foreground": "#FF9800",
+      "type": "line"
+    },
+    "TODO": {
+      "foreground": "#FFEB38",
+      "type": "line"
+    },
+    "NOTE": {
+      "icon": "note",
+      "foreground": "#67C23A",
+      "type": "line"
+    },
+    "INFO": {
+      "icon": "info",
+      "foreground": "#909399",
+      "type": "line"
+    },
+    "TAG": {
+      "icon": "tag",
+      "foreground": "#409EFF",
+      "type": "line"
+    },
+    "HACK": {
+      "icon": "versions",
+      "foreground": "#E040FB",
+      "type": "line"
+    },
+    "XXX": {
+      "icon": "unverified",
+      "foreground": "#E91E63",
+      "type": "line"
+    }
+  },
+  "todo-tree.general.tags": [
+    "BUG",
+    "HACK",
+    "FIXME",
+    "TODO",
+    "INFO",
+    "NOTE",
+    "TAG",
+    "XXX"
+  ],
+  "todo-tree.general.statusBar": "total",
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.linkedEditing": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+  "workbench.iconTheme": "vscode-icons",
+  "git.confirmSync": false,
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
+  },
+  "liveServer.settings.donotShowInfoMsg": true,
+  "cssrem.vwDesign": 1920,
+  "editor.fontFamily": "'Hack Nerd Font', 'Hack Nerd Font Mono', 'Hack Nerd Font Propo'",
+  "terminal.integrated.fontFamily": "Hack Nerd Font",
+  // "[typescriptreact]": {
+  // 	"editor.defaultFormatter": "esbenp.prettier-vscode"
+  // },
+  // "[typescript]": {
+  // 	"editor.defaultFormatter": "esbenp.prettier-vscode"
+  // },
+  // "[scss]": {
+  // 	"editor.defaultFormatter": "esbenp.prettier-vscode"
+  // },
+  "githubPullRequests.pullBranch": "never",
+  "unocss.root": "packages/client",
+  // "[json]": {
+  // 	"editor.defaultFormatter": "esbenp.prettier-vscode"
+  // },
+  // "[javascriptreact]": {
+  // 	"editor.defaultFormatter": "esbenp.prettier-vscode"
+  // },
+  "[css]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "gitlens.gitCommands.skipConfirmations": [
+    "fetch:command",
+    "stash-push:command",
+    "switch:command"
+  ],
+  "githubIssues.queries": [
+    {
+      "label": "My Issues",
+      "query": "is:open assignee:${user} repo:${owner}/${repository}",
+      "groupBy": [
+        "milestone"
+      ]
+    },
+    {
+      "label": "Created Issues",
+      "query": "author:${user} state:open repo:${owner}/${repository} sort:created-desc"
+    },
+    {
+      "label": "Recent Issues",
+      "query": "state:open repo:${owner}/${repository} sort:updated-desc"
+    }
+  ],
+  "gitlens.graph.minimap.enabled": false,
+  "extensions.ignoreRecommendations": true,
+  "editor.accessibilitySupport": "off",
+  "files.autoSave": "afterDelay",
+  "workbench.editorAssociations": {
+    "*.icns": "default"
+  },
+  "svg.preview.mode": "svg",
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "i18n-ally.localesPaths": [
+    "app/renderer/src/main/public/locales"
+  ],
+  "i18n-ally.sourceLanguage": "zh",
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.enabledFrameworks": [
+    "react"
+  ]
+}

@@ -887,34 +887,34 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
     })
 
     useEffect(() => {
-        ipcRenderer.invoke("query-latest-notification").then((e: string) => {
-            setNotification(e)
+        // ipcRenderer.invoke("query-latest-notification").then((e: string) => {
+        //     setNotification(e)
 
-            if (e) {
-                success(
-                    <>
-                        <Space direction={"vertical"}>
-                            <span>来自于 yaklang.io 的通知</span>
-                            <Button
-                                type={"link"}
-                                onClick={() => {
-                                    showModal({
-                                        title: "Notification",
-                                        content: (
-                                            <>
-                                                <MDEditor.Markdown source={e} />
-                                            </>
-                                        )
-                                    })
-                                }}
-                            >
-                                点击查看
-                            </Button>
-                        </Space>
-                    </>
-                )
-            }
-        })
+        //     if (e) {
+        //         success(
+        //             <>
+        //                 <Space direction={"vertical"}>
+        //                     <span>来自于 yaklang.io 的通知</span>
+        //                     <Button
+        //                         type={"link"}
+        //                         onClick={() => {
+        //                             showModal({
+        //                                 title: "Notification",
+        //                                 content: (
+        //                                     <>
+        //                                         <MDEditor.Markdown source={e} />
+        //                                     </>
+        //                                 )
+        //                             })
+        //                         }}
+        //                     >
+        //                         点击查看
+        //                     </Button>
+        //                 </Space>
+        //             </>
+        //         )
+        //     }
+        // })
     }, [])
 
     // 新增数据对比页面
@@ -1237,7 +1237,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                                 {status?.addr && <Tag color={"geekblue"}>{status?.addr}</Tag>}
                                 {/* <Tag color={engineStatus === "ok" ? "green" : "red"}>Yak 引擎状态：{engineStatus}</Tag> */}
                                 <ReversePlatformStatus />
-                                <Dropdown
+                                {/* <Dropdown
                                     overlayClassName='setting-menu'
                                     forceRender={true}
                                     overlay={
@@ -1276,8 +1276,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                                                     })
                                                 }}
                                             >
-                                                <Button type={"link"}>配置全局反连</Button>
-                                                {/*<ConfigGlobalReverseButton/>*/}
+ConfigGlobalReverseButton                                                <Button type={"link"}>配置全局反连</Button>
                                             </Menu.Item>
                                             <Menu.Item
                                                 key={"config-system-proxy"}
@@ -1326,7 +1325,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                                     trigger={["click"]}
                                 >
                                     <Button icon={<SettingOutlined />}>配置</Button>
-                                </Dropdown>
+                                </Dropdown> */}
                                 {userInfo.isLogin ? (
                                     <div>
                                         <DropdownMenu
@@ -1388,7 +1387,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                                             setWinCloseShow(true)
                                         } else {
                                             refreshToken(userInfo)
-                                            success("退出当前 Yak 服务器成功")
+                                            // success("退出当前 Yak 服务器成功")
                                             setEngineStatus("error")
                                         }
                                     }}
@@ -1646,7 +1645,7 @@ const Main: React.FC<MainProp> = forwardRef((props,ref) => {
                         key='back'
                         type='primary'
                         onClick={() => {
-                            success("退出当前 Yak 服务器成功")
+                            // success("退出当前 Yak 服务器成功")
                             setEngineStatus("error")
                         }}
                     >
