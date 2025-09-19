@@ -1065,6 +1065,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const onValidateHTTPFuzzer = useMemoizedFn(() => {
+        logger(
+            httpFuzzerLog({
+                title: "运行函数-开始：",
+                content: "onValidateHTTPFuzzer"
+            })
+        )
         if (showMatcherAndExtraction && responseViewerRef.current) {
             responseViewerRef.current
                 .validate()
@@ -1079,10 +1085,22 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 .finally(() => {
                     setTimeout(() => {
                         submitToHTTPFuzzer()
+                        logger(
+                            httpFuzzerLog({
+                                title: "运行函数-结束：",
+                                content: "onValidateHTTPFuzzer"
+                            })
+                        )
                     }, 200)
                 })
         } else {
             submitToHTTPFuzzer()
+            logger(
+                httpFuzzerLog({
+                    title: "运行函数-结束：",
+                    content: "onValidateHTTPFuzzer"
+                })
+            )
         }
     })
 
@@ -1098,6 +1116,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const submitToHTTPFuzzer = useMemoizedFn(() => {
+        logger(
+            httpFuzzerLog({
+                title: "运行函数-开始：",
+                content: "submitToHTTPFuzzer"
+            })
+        )
         resetResponse()
 
         //  更新默认搜索
@@ -1138,6 +1162,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
         }
         onSaveHTTPFuzzerByPageId()
+        logger(
+            httpFuzzerLog({
+                title: "运行函数-结束：",
+                content: "submitToHTTPFuzzer"
+            })
+        )
     })
     /**保存当前页面的历史数据 */
     const onSaveHTTPFuzzerByPageId = useMemoizedFn(() => {
@@ -1846,6 +1876,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     )
 
     const getNewCurrentPage = useMemoizedFn(() => {
+        logger(
+            httpFuzzerLog({
+                title: "运行函数-开始：",
+                content: "getNewCurrentPage"
+            })
+        )
         const params = {
             Pagination: {Limit: 1, Order: "", OrderBy: "", Page: 1},
             Keyword: "",
@@ -1855,6 +1891,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .invoke("QueryHistoryHTTPFuzzerTaskEx", params)
             .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
                 setCurrentPage(Number(data.Total) + 1)
+                logger(
+                    httpFuzzerLog({
+                        title: "运行函数-结束：",
+                        content: "getNewCurrentPage"
+                    })
+                )
             })
     })
     // 跳转插件调试页面
@@ -1932,16 +1974,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 content: "发送请求"
             })
         )
-
+        const {repeatTimes, resNumlimit, concurrent} = advancedConfigValue
         logger(
             httpFuzzerLog({
                 title: "参数",
                 content: JSON.stringify({
-                    pageId: props.id,
-                    advancedConfigValue,
-                    request: requestRef.current,
-                    advancedConfigShow,
-                    hotPatchCode: hotPatchCodeRef.current
+                    repeatTimes,
+                    resNumlimit,
+                    concurrent
                 })
             })
         )
@@ -2257,7 +2297,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
                                 {onlyOneResponse ? (
                                     <ResponseViewer
-                                        keepSearchName="fuzzer-response"
+                                        keepSearchName='fuzzer-response'
                                         isHttps={advancedConfigValue.isHttps}
                                         ref={responseViewerRef}
                                         fuzzerResponse={httpResponse}
