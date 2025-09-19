@@ -2,7 +2,7 @@
   "YakitRoute": {
     "Yakit": "Yakit",
     "Nuclei": "Nuclei",
-    "YakRunner": "Yak Runner",
+    "YakRunner": "Runner",
     "yaklangProgramming": "Program using the unique Yaklang, directly invoking the engine's core capabilities for POC types.",
     "Codec": "Codec",
     "dataProcessingDescription": "Data can be processed in various ways (including encryption, decryption, deserialization, JSON handling, etc.), and custom data processing methods can also be defined via plugins.",

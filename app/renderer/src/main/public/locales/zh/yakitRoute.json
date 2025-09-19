@@ -2,7 +2,7 @@
   "YakitRoute": {
     "Yakit": "Yakit",
     "Nuclei": "Nuclei",
-    "YakRunner": "Yak Runner",
+    "YakRunner": "Runner",
     "yaklangProgramming": "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类",
     "Codec": "Codec",
     "dataProcessingDescription": "可对数据进行各种处理（包括加密、解密、反序列化、Json 处理等等），还可通过插件自定义数据处理方法",
