@@ -65,7 +65,7 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
 
 export const startExecuteYakScript = (script: YakScript, params: YakExecutorParam[]) => {
     showDrawer({
-        title: `正在执行的 Yakit 模块：${script.ScriptName}`,
+        title: `正在执行的模块：${script.ScriptName}`,
         width: "85%",
         mask: false,
         content: (

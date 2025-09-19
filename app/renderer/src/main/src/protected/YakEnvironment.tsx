@@ -80,7 +80,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
 
     const login = (newHost?: string, newPort?: number) => {
         setLocalLoading(true)
-        // info("正在连接 ... Yak 核心引擎")
+        // info("正在连接 ... 核心引擎")
         let params = {
             host: newHost || host,
             port: newPort || port,
@@ -95,7 +95,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                 }
             }
         ).catch(() => {
-            notification["error"]({message: "设置 Yak gRPC 引擎地址失败"})
+            notification["error"]({message: "设置 gRPC 引擎地址失败"})
         }).finally(() => {
             setTimeout(() => {
                 setLocalLoading(false)
@@ -263,7 +263,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                     onClick={() => {
                                         let m = showModal({
                                             keyboard: false,
-                                            title: "Yakit 升级",
+                                            title: "升级",
                                             width: "50%",
                                             content: <>
                                                 <YakitUpgrade onFinished={() => {
@@ -275,7 +275,7 @@ const YakEnvironment: React.FC<YakEnvironmentProp> = (props) => {
                                 >
                                     <p
                                         style={{marginBottom: 0}}
-                                    >Yakit 升级</p>
+                                    >升级</p>
                                 </Button>
                             </Button.Group>
 

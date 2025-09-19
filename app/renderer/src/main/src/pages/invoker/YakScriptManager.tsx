@@ -161,7 +161,7 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
                         title: "操作", fixed: "right", width: 135, render: (i: YakScript) => <Space>
                             <Button size={"small"} onClick={e => {
                                 let m = showDrawer({
-                                    title: "修改当前 Yak 模块", width: "90%", keyboard: false,
+                                    title: "修改当前模块", width: "90%", keyboard: false,
                                     content: <>
                                         <YakScriptCreatorForm
                                             modified={i} onChanged={i => update()}
@@ -212,7 +212,7 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
 
     return <div>
         {!props.onlyViewer && <PageHeader
-            title={"Yak 模块管理器"}
+            title={"模块管理器"}
             subTitle={<Space>
                 <Button
                     icon={<ReloadOutlined/>}
@@ -234,7 +234,7 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
                     />
                 </Form>}
                 <div>
-                    你可以在这里管理 / 添加你的 Yak 模块
+                    你可以在这里管理 / 添加你的模块
                 </div>
             </Space>}
             extra={[
@@ -251,7 +251,7 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
                 </Popconfirm> : undefined,
                 <Button type={"primary"} onClick={e => {
                     let m = showDrawer({
-                        title: "创建新的 Yakit 模块",
+                        title: "创建新的模块",
                         keyboard: false,
                         width: "95%",
                         content: <>

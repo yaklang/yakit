@@ -184,7 +184,7 @@ export const YakVersion: React.FC<YakVersionProp> = (props) => {
     }, [])
 
     if (!version) {
-        return <Spin tip={"正在加载 yak 版本"}/>
+        return <Spin tip={"正在加载版本"}/>
     }
     const isDev = version.toLowerCase().includes("dev");
 
@@ -192,7 +192,7 @@ export const YakVersion: React.FC<YakVersionProp> = (props) => {
 
     if (!newVersion) {
         return <Tag color={isDev ? "red" : "geekblue"}>
-            Yak-{version}
+            {version}
         </Tag>
     }
 
@@ -205,17 +205,17 @@ export const YakVersion: React.FC<YakVersionProp> = (props) => {
                         }
 
                         showModal({
-                            title: "有新的 Yak 核心引擎可升级！",
+                            title: "有新的核心引擎可升级！",
                             content: <>
                                 如果你现在不是很忙
                                 <br/>
                                 我们推荐您退出当前引擎，点击欢迎界面的
                                 <br/>
-                                "安装/升级 Yak 引擎" 来免费升级
+                                "安装/升级引擎" 来免费升级
                             </>
                         })
                     }}>
-                Yak-{version}
+                {version}
             </Button>
         </Badge>
     </div>
@@ -233,14 +233,14 @@ export const YakitVersion: React.FC<YakVersionProp> = (props) => {
     }, [])
 
     if (!version) {
-        return <Spin tip={"正在加载 yakit 版本"}/>
+        return <Spin tip={"正在加载版本"}/>
     }
     const isDev = version.toLowerCase().includes("dev");
     const newVersion = latestVersion !== "" && latestVersion !== version
 
     if (!newVersion) {
         return <Tag color={isDev ? "red" : "geekblue"}>
-            Yakit-{version}
+            {version}
         </Tag>
     }
 
@@ -252,7 +252,7 @@ export const YakitVersion: React.FC<YakVersionProp> = (props) => {
                 }
 
                 showModal({
-                    title: "有新的 Yakit 版本可升级！",
+                    title: "有新的版本可升级！",
                     content: <>
                         如果你现在不是很忙
                         <br/>
@@ -261,12 +261,12 @@ export const YakitVersion: React.FC<YakVersionProp> = (props) => {
                         onClick={() => {
                             openExternalWebsite("https://github.com/yaklang/yakit/releases")
                         }}
-                    >Yakit Github 发布界面</Button> 下载最新版并升级！ */}
+                    >Github 发布界面</Button> 下载最新版并升级！ */}
                         我们推荐您点击右上角退出到启用页升级最新版
                     </>
                 })
             }}>
-                Yakit-{version}
+                {version}
             </Button>
         </Badge>
     </div>
@@ -502,7 +502,7 @@ export const ConfigGlobalReverse = React.memo(() => {
                     <Button type={"link"} size={"small"} onClick={() => {
                         updateIface()
                     }} icon={<ReloadOutlined/>}>
-                        更新 yak 引擎本地 IP
+                        更新 引擎本地 IP
                     </Button>
                 </div>}
             />
@@ -520,24 +520,24 @@ export const ConfigGlobalReverse = React.memo(() => {
                 </Space>}/>
             </Form.Item>
             <InputItem
-                label={"Yak Bridge 地址"} value={addr}
+                label={"Bridge 地址"} value={addr}
                 setValue={setAddr} disable={ok}
                 help={"格式 host:port, 例如 cybertunnel.run:64333"}
             />
             <InputItem
-                label={"Yak Bridge 密码"}
+                label={"Bridge 密码"}
                 setValue={setPassword} value={password}
                 type={"password"} disable={ok}
                 help={`yak bridge 命令的 --secret 参数值`}
             />
-            <Divider orientation={"left"}>Yakit 全局 DNSLog 配置</Divider>
+            <Divider orientation={"left"}>全局 DNSLog 配置</Divider>
             <SwitchItem
-                label={"复用 Yak Bridge 配置"} disabled={ok}
+                label={"复用 Bridge 配置"} disabled={ok}
                 value={inheritBridge} setValue={setInheritBridge}/>
             {!inheritBridge && <InputItem
                 label={"DNSLog 配置"} disable={ok}
                 value={dnslogAddr}
-                help={"配置好 Yak Bridge 的 DNSLog 系统的地址：[ip]:[port]"}
+                help={"配置好 Bridge 的 DNSLog 系统的地址：[ip]:[port]"}
                 setValue={setDNSLogAddr}
             />}
             {!inheritBridge && <InputItem

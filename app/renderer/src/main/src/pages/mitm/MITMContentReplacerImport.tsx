@@ -101,7 +101,7 @@ export const MITMContentReplacerImport: React.FC<MITMContentReplacerImportProp> 
             <Space>
                 <Button type="primary" htmlType="submit"> 导入配置 </Button>
                 <Popconfirm
-                    title={"默认填充配置将会使用 Yakit 内置的简易规则，帮助用户入门"}
+                    title={"默认填充配置将会使用内置的简易规则，帮助用户入门"}
                     onConfirm={() => {
                         setParams({ReplaceAll: true, JsonRaw: Buffer.from(defaultConfig)})
                         setLoading(true)

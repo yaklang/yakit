@@ -9,14 +9,14 @@ yakit_output(MITM_PARAMS)
 ## 例如，如果你设置了一个参数为 url_keyword 的参数，可以通过 MITM_PARAMS 来使用它！
 urlKeyword = MITM_PARAMS["url_keyword"]
 
-# 如何输出给 Yakit 给用户查看？
+# 如何输出给 给用户查看？
 
 yakit_output(i: any) // 可以只输出到 "Console 界面"
 yakit_save(i: any)   // 可以输出并保存到数据库中，在 "插件输出" 中查看
 */
 #----------------MITM Hooks Test And Quick Debug-----------------
 /*
-# __test__ 是 yakit mitm 插件用于调试的函数 【注意：这个函数在 MITM hooks劫持环境下不会被导入】
+# __test__ 是 mitm 插件用于调试的函数 【注意：这个函数在 MITM hooks劫持环境下不会被导入】
 
 在这个函数中，你可以使用 yakit.GenerateYakitMITMHooksParams(method: string, url: string, opts ...http.Option) 来方便的生成可供 hooks 调用的参数，参考代码模版中的用法～
 
@@ -88,7 +88,7 @@ hijackHTTPRequest = func(isHttps, url, req, forward /*func(modifiedRequest []byt
 
 }
 
-# hijackSaveHTTPFlow 是 Yakit 开放的 MITM 存储过程的 Hook 函数
+# hijackSaveHTTPFlow 是开放的 MITM 存储过程的 Hook 函数
 # 这个函数允许用户在 HTTP 数据包存入数据库前进行过滤或者修改，增加字段，染色等
 # 类似 hijackHTTPRequest
 #    1. hijackSaveHTTPFlow 也采用了 JS Promise 的回调处理方案，用户可以在这个方法体内进行修改，修改完通过 modify(flow) 来进行保存
@@ -204,7 +204,7 @@ hijackHTTPRequest = func(isHttps, url, req, forward /*func(modifiedRequest []byt
 
 }
 
-# hijackSaveHTTPFlow 是 Yakit 开放的 MITM 存储过程的 Hook 函数
+# hijackSaveHTTPFlow 是开放的 MITM 存储过程的 Hook 函数
 # 这个函数允许用户在 HTTP 数据包存入数据库前进行过滤或者修改，增加字段，染色等
 # 类似 hijackHTTPRequest
 #    1. hijackSaveHTTPFlow 也采用了 JS Promise 的回调处理方案，用户可以在这个方法体内进行修改，修改完通过 modify(flow) 来进行保存

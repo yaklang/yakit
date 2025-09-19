@@ -269,10 +269,10 @@ function App() {
         }
 
         ipcRenderer.on("client-yak-local-grpc-error", async (e: any, data: any) => {
-            failed("Yak 本地 gRPC 服务器发生错误: " + data)
+            failed("本地 gRPC 服务器发生错误: " + data)
         })
         ipcRenderer.on("client-yak-local-grpc-close", async (e: any, msg: any) => {
-            info("Yak 本地 gRPC 服务器已退出: " + msg)
+            info("本地 gRPC 服务器已退出: " + msg)
         })
 
         return () => {
@@ -286,7 +286,7 @@ function App() {
             if (ok) {
                 // success("Yakit Server 认证成功")
             } else {
-                failed(`Yakit Server 认证失败：${text}`)
+                failed(`Server 认证失败：${text}`)
             }
             setConnected(ok)
             setTimeout(() => setLoading(false), 500)
@@ -360,7 +360,7 @@ function App() {
         <Suspense
             fallback={
                 <div style={{width: "100%", marginTop: 200, textAlign: "center"}}>
-                    <AutoSpin spinning={loading} tip={"Yakit 正在检测 Yak gRPC 核心引擎环境..."} />
+                    <AutoSpin spinning={loading} tip={"正在检测 gRPC 核心引擎环境..."} />
                 </div>
             }
         >

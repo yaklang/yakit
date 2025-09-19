@@ -61,7 +61,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
         }).catch((e: any) => {
             setCurrentVersion("")
             failed(<>
-                获取 Yak 引擎当前版本失败，请按提示安装即可<Popover content={`${e}`}>
+                获取引擎当前版本失败，请按提示安装即可<Popover content={`${e}`}>
                 <Button size={"small"} type={"link"}>错误详情</Button>
             </Popover>
             </>)
@@ -102,7 +102,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
 
     const install = (version: string) => {
         Modal.confirm({
-            title: "Yak 核心引擎下载完毕，将会自动更新到系统目录",
+            title: "核心引擎下载完毕，将会自动更新到系统目录",
             width: "40%",
             content: <>
                 <Space direction={"vertical"}>
@@ -116,13 +116,13 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                     }
                     {platformArch.startsWith("win") && <Tag color={""}>windows 系统下会安装在 {winPath} </Tag>}
                     <p/>
-                    <Tag>选择 Ok 允许 Yakit 操作</Tag>
+                    <Tag>选择 Ok 允许 操作</Tag>
                     <Tag>选择 Cancel 用户可以手动更新 %PATH%</Tag>
                 </Space>
             </>,
             onOk: () => {
                 ipcRenderer.invoke("install-yak-engine", latestVersion).then(() => {
-                    success("安装成功，如未生效，重启 Yakit 即可")
+                    success("安装成功，如未生效，重启即可")
                 }).catch((err: any) => {
                     failed(`安装失败: ${err}`)
                 }).finally(updateCurrent)
@@ -140,7 +140,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
             {platformArch === "darwin-arm64" && <Alert
                 type={"error"}
                 message={<>
-                    当前系统为({platformArch})，如果未安装 Rosetta 2, 无法运行 Yak 核心引擎
+                    当前系统为({platformArch})，如果未安装 Rosetta 2, 无法运行核心引擎
                     <br/>
                     <br/>
                     <div>运行以下命令可手动安装 Rosetta，如已安装可忽略</div>
@@ -149,13 +149,13 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
             />}
             <Spin spinning={loading}>
                 <Alert message={<Space>
-                    当前本地安装的 Yak 核心引擎版本为:
+                    当前本地安装的核心引擎版本为:
                     <Tag
                         color={color}
                     >{currentVersion}</Tag>
                     {isLatest ? <Tag color={"green"}>已是最新</Tag> : <Tag
                         color={"red"}
-                    >Yak 引擎需要更新</Tag>}
+                    >引擎需要更新</Tag>}
                 </Space>}/>
             </Spin>
             <Spin spinning={loading}>
@@ -163,7 +163,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                     type={"success"}
                     message={<Space direction={"vertical"}>
                         <Space>
-                            当前最新的 Yak 引擎版本为
+                            当前最新的引擎版本为
                             <Tag color={"green"}>{latestVersion}</Tag>
                         </Space>
                     </Space>}/>
@@ -189,7 +189,7 @@ export const YakUpgrade: React.FC<YakUpgradeProp> = (props) => {
                             <Button
                                 type={"primary"} disabled={isLatest || loading || latestLoading}
                             >
-                                一键更新 Yak 引擎
+                                一键更新引擎
                             </Button>
                         </Popconfirm>
                         <Button type={"link"} onClick={() => {

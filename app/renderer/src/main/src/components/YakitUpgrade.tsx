@@ -80,13 +80,13 @@ export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
 
     const install = (version: string) => {
         Modal.confirm({
-            title: "Yakit 下载完毕",
+            title: "下载完毕",
             width: "50%",
             content: <>
                 <Space direction={"vertical"}>
-                    <Tag color={"purple"}>Yakit 安装包下载完毕</Tag>
+                    <Tag color={"purple"}>安装包下载完毕</Tag>
                     <p/>
-                    <Tag>选择 Ok/确定 允许打开 Yakit 安装包下载目录，用户双击安装</Tag>
+                    <Tag>选择 Ok/确定 允许打开安装包下载目录，用户双击安装</Tag>
                     <Tag>选择 Cancel 用户自行找到安装包</Tag>
                     <br/>
                     <Tag>linux/macOs 安装包存储在：~/yakit-projects/yak-engine</Tag>
@@ -110,20 +110,20 @@ export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
         <Space direction={"vertical"} style={{width: "100%"}}>
             <Spin spinning={loading}>
                 <Alert message={<Space>
-                    当前 Yakit 版本:
+                    当前版本:
                     <Tag
                         color={color}
                     >{currentVersion}</Tag>
                     {isLatest ? <Tag color={"green"}>已是最新</Tag> : <Tag
                         color={"red"}
-                    >Yakit 需要更新</Tag>}
+                    >需要更新</Tag>}
                 </Space>}/>
             </Spin>
             <Spin spinning={loading}>
                 <Alert
                     type={"success"}
                     message={<Space>
-                        Yakit 最新版本为：
+                        最新版本为：
                         <Tag color={"green"}>{latestVersion}</Tag>
                     </Space>}/>
             </Spin>
@@ -148,7 +148,7 @@ export const YakitUpgrade: React.FC<YakitUpgradeProp> = (props) => {
                             <Button
                                 type={"primary"} disabled={isLatest || loading || latestLoading}
                             >
-                                一键下载最新版 Yakit
+                                一键下载最新版
                             </Button>
                         </Popconfirm>
                         <Button type={"link"} onClick={() => {
