@@ -83,7 +83,7 @@ interface ReverseDetail {
 
 export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) => {
     const {isEngineLink, system} = props
-    const {t, i18n} = useI18nNamespaces(["yakitRoute", "home"])
+    const {t, i18n} = useI18nNamespaces(["yakitRoute", "home", "yakitUi"])
 
     /** 自启全局反连配置(默认指定为本地) */
     useEffect(() => {
