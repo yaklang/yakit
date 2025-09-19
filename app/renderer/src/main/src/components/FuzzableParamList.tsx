@@ -10,6 +10,7 @@ import {ColumnsTypeProps} from "./TableVirtualResize/TableVirtualResizeType"
 import {useCreation} from "ahooks"
 import {v4 as uuidv4} from "uuid"
 import styles from "./hTTPFlowDetail.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
@@ -24,6 +25,7 @@ interface FuzzableParamListData extends FuzzableParams {
     key: string
 }
 export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
+    const {t, i18n} = useI18nNamespaces(["history"])
     const [list, setList] = useState<FuzzableParamListData[]>([])
     useEffect(() => {
         const newList = props.data.map((item, index) => ({
@@ -35,7 +37,7 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
         return [
             {
-                title: "参数名",
+                title: t("FuzzableParamList.parameterName"),
                 dataKey: "ParamName",
                 ellipsis: true,
                 render: (text) => (
@@ -47,7 +49,7 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
                 )
             },
             {
-                title: "参数位置",
+                title: t("FuzzableParamList.parameterLocation"),
                 dataKey: "Position",
                 ellipsis: true,
                 render: (text) => (
@@ -59,7 +61,7 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
                 )
             },
             {
-                title: "参数原值",
+                title: t("FuzzableParamList.originalParameterValue"),
                 dataKey: "OriginValue",
                 render: (text) => {
                     const originValueStr = text ? Buffer.from(text).toString() : ""
@@ -78,14 +80,14 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
                 render: (text) => <YakitTag>{`${text}`}</YakitTag>
             },
             {
-                title: "操作",
+                title: t("FuzzableParamList.action"),
                 dataKey: "Action",
                 fixed: "right",
-                width: 120,
+                width: 150,
                 render: (text, i: FuzzableParamListData) => (
                     <div>
                         <YakitPopconfirm
-                            title={"测试该参数将会暂时进入 Web Fuzzer"}
+                            title={t("FuzzableParamList.testParameterInWebFuzzer")}
                             onConfirm={(e) => {
                                 ipcRenderer.invoke("send-to-tab", {
                                     type: "fuzzer",
@@ -98,14 +100,14 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
                             }}
                         >
                             <YakitButton type={"primary"} size={"small"}>
-                                模糊测试该参数
+                                {t("FuzzableParamList.fuzzTestParameter")}
                             </YakitButton>
                         </YakitPopconfirm>
                     </div>
                 )
             }
         ]
-    }, [])
+    }, [i18n.language])
     return (
         <TableVirtualResize<FuzzableParamListData>
             columns={columns}

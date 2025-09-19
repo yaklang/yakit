@@ -15,6 +15,7 @@ import styles from "./HTTPFlowTableForm.module.scss"
 import {HTTPHistorySourcePageType} from "../HTTPHistory"
 import {RemoteHistoryGV} from "@/enums/history"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface HTTPFlowTableFormConfigurationProps {
     pageType?: HTTPHistorySourcePageType
@@ -66,7 +67,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         excludeKeywords,
         statusCode
     } = props
-
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "history"])
     /** ---------- 高级筛选 Start ---------- */
     // 筛选模式
     const [filterModeVal, setFilterModeVal] = useState<"shield" | "show">("shield")
@@ -226,11 +227,11 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
 
         if (result) {
             Modal.confirm({
-                title: "温馨提示",
+                title: t("HTTPFlowTableFormConfiguration.friendlyReminder"),
                 icon: <ExclamationCircleOutlined />,
-                content: "请问是否要保存高级筛选并关闭弹框？",
-                okText: "保存",
-                cancelText: "不保存",
+                content: t("HTTPFlowTableFormConfiguration.saveAdvancedConfigAndClose"),
+                okText: t("YakitButton.save"),
+                cancelText: t("YakitButton.doNotSave"),
                 closable: true,
                 closeIcon: (
                     <div
@@ -261,13 +262,15 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
             onClose={handleClose}
             title={
                 <div className={styles["advanced-configuration-drawer-title"]}>
-                    <div className={styles["advanced-configuration-drawer-title-text"]}>高级筛选</div>
+                    <div className={styles["advanced-configuration-drawer-title-text"]}>
+                        {t("HTTPFlowTableFormConfiguration.advancedFilter")}
+                    </div>
                     <div className={styles["advanced-configuration-drawer-title-btns"]}>
                         <YakitButton type='outline2' onClick={handleCancel}>
-                            取消
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton type='primary' onClick={handleSave}>
-                            保存
+                            {t("YakitButton.save")}
                         </YakitButton>
                     </div>
                 </div>
@@ -278,9 +281,11 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                 {/* 筛选项 */}
                 <div className={styles["config-item-wrapper"]}>
                     <div className={styles["item-header"]}>
-                        <div className={styles["header-title"]}>高级筛选</div>
+                        <div className={styles["header-title"]}>
+                            {t("HTTPFlowTableFormConfiguration.advancedFilter")}
+                        </div>
                         <YakitButton type='text' onClick={handleAdvancedFiltersReset}>
-                            重置
+                            {t("YakitButton.reset")}
                         </YakitButton>
                     </div>
 
@@ -290,17 +295,21 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                         wrapperCol={{span: 16}}
                         className={styles["mitm-filters-form"]}
                     >
-                        <Form.Item label='筛选模式' name='filterMode' initialValue={"shield"}>
+                        <Form.Item
+                            label={t("HTTPFlowTableFormConfiguration.filterMode")}
+                            name='filterMode'
+                            initialValue={"shield"}
+                        >
                             <YakitRadioButtons
                                 buttonStyle='solid'
                                 options={[
                                     {
                                         value: "shield",
-                                        label: "屏蔽内容"
+                                        label: t("HTTPFlowTableFormConfiguration.blockedContent")
                                     },
                                     {
                                         value: "show",
-                                        label: "只展示"
+                                        label: t("HTTPFlowTableFormConfiguration.displayOnly")
                                     }
                                 ]}
                                 value={filterModeVal}
@@ -313,25 +322,33 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                             <YakitSelect mode='tags'></YakitSelect>
                         </Form.Item>
                         <Form.Item
-                            label='URL路径'
+                            label={t("HTTPFlowTableFormConfiguration.uRLPath")}
                             name='urlPath'
-                            help={"可理解为 URI 匹配，例如 /main/index.php?a=123 或者 /*/index 或 /admin* "}
+                            help={t("HTTPFlowTableFormConfiguration.uRIMatchExplanation")}
                         >
                             <YakitSelect mode='tags'></YakitSelect>
                         </Form.Item>
-                        <Form.Item label={"文件后缀"} name='fileSuffix'>
+                        <Form.Item label={t("HTTPFlowTableFormConfiguration.fileExtension")} name='fileSuffix'>
                             <YakitSelect mode='tags'></YakitSelect>
                         </Form.Item>
-                        <Form.Item label={"响应类型"} name='searchContentType'>
+                        <Form.Item label={t("HTTPFlowTableFormConfiguration.responseType")} name='searchContentType'>
                             <YakitSelect mode='tags' options={responseType}></YakitSelect>
                         </Form.Item>
                         {filterModeVal === "shield" && (
-                            <Form.Item label='关键字' name='excludeKeywords' help={"匹配逻辑与外面搜索关键字逻辑一样"}>
+                            <Form.Item
+                                label={t("HTTPFlowTableFormConfiguration.keyword")}
+                                name='excludeKeywords'
+                                help={t("HTTPFlowTableFormConfiguration.matchingLogicSameAsSearch")}
+                            >
                                 <YakitSelect mode='tags'></YakitSelect>
                             </Form.Item>
                         )}
                         {filterModeVal === "shield" && (
-                            <Form.Item label='状态码' name='statusCode' help={"可输入200或200-204格式,多个用逗号分隔"}>
+                            <Form.Item
+                                label={t("HTTPFlowTableFormConfiguration.statusCode")}
+                                name='statusCode'
+                                help={t("YakitInput.supportInputFormat")}
+                            >
                                 <YakitInput />
                             </Form.Item>
                         )}

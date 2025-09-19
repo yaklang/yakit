@@ -4,10 +4,19 @@ import {YakitDatePickerProps, YakitRangePickerProps} from "./YakitDatePickerType
 import classNames from "classnames"
 import styles from "./YakitDatePicker.module.scss"
 import {OutlineClockIcon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import zhCN from "antd/es/date-picker/locale/zh_CN"
+import enUS from "antd/es/date-picker/locale/en_US"
+import moment from "moment"
+import "moment/locale/zh-cn"
+import "moment/locale/en-gb"
 
 const {RangePicker} = DatePicker
 const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
     const {size, wrapperClassName, className, dropdownClassName, wrapperStyle, ...restProps} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
+    moment.locale(i18n.language === "zh" ? "zh-cn" : "en-gb")
+
     return (
         <div
             className={classNames(
@@ -22,6 +31,7 @@ const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
         >
             <DatePicker
                 {...restProps}
+                locale={i18n.language === "zh" ? zhCN : enUS}
                 suffixIcon={
                     <div className={styles["picker-icon"]}>
                         <OutlineClockIcon />
@@ -40,6 +50,9 @@ const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
 
 const InternalRangePicker: React.FC<YakitRangePickerProps> = (props) => {
     const {size, wrapperClassName, className, dropdownClassName, wrapperStyle, ...restProps} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
+    moment.locale(i18n.language === "zh" ? "zh-cn" : "en-gb")
+
     return (
         <div
             className={classNames(
@@ -54,6 +67,7 @@ const InternalRangePicker: React.FC<YakitRangePickerProps> = (props) => {
         >
             <RangePicker
                 {...restProps}
+                locale={i18n.language === "zh" ? zhCN : enUS}
                 suffixIcon={
                     <div className={styles["picker-icon"]}>
                         <OutlineClockIcon />

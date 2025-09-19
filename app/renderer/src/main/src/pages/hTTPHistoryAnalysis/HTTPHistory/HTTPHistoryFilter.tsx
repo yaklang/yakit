@@ -96,6 +96,7 @@ import {
     GlobalShortcutKey,
     ShortcutKeyFocusType
 } from "@/utils/globalShortcutKey/events/global"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import styles from "./HTTPHistoryFilter.module.scss"
 const {ipcRenderer} = window.require("electron")
@@ -134,7 +135,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         runtimeId,
         sourceType
     } = props
-
+    const {t, i18n} = useI18nNamespaces(["history"])
     // #region 左侧tab
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
     const [curTabKey, setCurTabKey] = useState<tabKeys>("web-tree")
@@ -415,6 +416,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         runtimeId = [],
         sourceType = "mitm"
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "history", "yakitRoute"])
     const {currentPageTabRouteKey} = usePageInfo(
         (s) => ({
             currentPageTabRouteKey: s.currentPageTabRouteKey
@@ -1242,7 +1244,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                     e.stopPropagation()
                                     let m = showYakitDrawer({
                                         width: "80%",
-                                        content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxy),
+                                        content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxy, t),
                                         bodyStyle: {paddingTop: 5}
                                     })
                                 }}
@@ -1457,7 +1459,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 children: availableColors.map((i) => {
                     return {
                         key: i.title,
-                        label: i.render
+                        label: i.render(t)
                     }
                 }),
                 onClickBatch: () => {}
@@ -1516,7 +1518,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 }
             }
         ]
-    }, [data, compareState])
+    }, [data, compareState, i18n.language])
 
     const contextMenuKeybindingHandle = useMemoizedFn((data) => {
         const menus: any = []
@@ -2249,7 +2251,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                             })
                                         }}
                                     >
-                                        {tag.text}
+                                        {tag.text(t)}
                                     </YakitCheckableTag>
                                 ))}
                                 <TableTotalAndSelectNumber

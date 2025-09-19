@@ -6,6 +6,8 @@ import { LineConversionIcon } from "../../assets/icons"
 import styles from "./DataCompare.module.scss";
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
 import { RemoveIcon } from "@/assets/newIcon"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+
 const { ipcRenderer } = window.require("electron")
 
 interface textModelProps {
@@ -60,13 +62,15 @@ interface DataCompareModalProps {
 
 export const DataCompareModal : React.FC<DataCompareModalProps> = (props) => {
     const {onClose,leftCode,rightCode,leftTitle,rightTitle,loadCallBack,readOnly = false} = props
+    const {t, i18n} = useI18nNamespaces(["history"])
+
     useEffect(()=>{
         loadCallBack&&loadCallBack()
     })
     return (
         <div className={styles['data-compare-modal']}>
             <div className={styles['header']}>
-                <div className={styles['title']}>代码对比</div>
+                <div className={styles['title']}>{t("DataCompareModal.codeCompare")}</div>
                 <div className={styles['close']}>
                    <RemoveIcon onClick={()=>onClose()}/> 
                 </div>

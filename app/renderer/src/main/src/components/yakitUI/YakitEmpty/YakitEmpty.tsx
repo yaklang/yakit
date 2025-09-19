@@ -6,6 +6,7 @@ import styles from "./YakitEmpty.module.scss"
 import EmptyPng from "./EmptyPng.png"
 import DarkEmptyPng from "./DarkEmptyPng.png"
 import {useTheme} from "@/hook/useTheme"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 /**
  * @description:YakitEmpty
@@ -13,7 +14,9 @@ import {useTheme} from "@/hook/useTheme"
  */
 export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
     const {theme} = useTheme()
-    const {title = "暂无数据", titleClassName, ...restProps} = props
+    const {title, titleClassName, ...restProps} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
+
     const emptyImageTarget = useMemo(() => {
         if (theme === "dark") {
             return DarkEmptyPng
@@ -39,7 +42,9 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
                     props.descriptionReactNode
                 ) : (
                     <div className={styles["yakit-empty"]}>
-                        <div className={classNames(styles["yakit-empty-title"], titleClassName)}>{title}</div>
+                        <div className={classNames(styles["yakit-empty-title"], titleClassName)}>
+                            {title || t("YakitEmpty.noData")}
+                        </div>
                         <div className={styles["yakit-empty-description"]}>{props.description}</div>
                     </div>
                 )

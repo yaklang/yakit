@@ -20,6 +20,7 @@ import {IMonacoEditor} from "@/utils/editors"
 import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 import {ByteCountTag} from "../fuzzer/HTTPFuzzerPage"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 export interface HTTPFlowForWebsocketViewerProp {
     pageType?: HTTPHistorySourcePageType
     historyId?: string
@@ -28,12 +29,14 @@ export interface HTTPFlowForWebsocketViewerProp {
     highLightItem?: HistoryHighLightText
     highLightFindClass?: string
     showJumpTree?: boolean
-    keepSearchName? : string
+    keepSearchName?: string
 }
 
 export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp> = (props) => {
+    const {t, i18n} = useI18nNamespaces(["history"])
     const [mode, setMode] = useState<"request" | "response">("request")
-    const {flow, historyId, pageType, highLightText, highLightItem, highLightFindClass, showJumpTree, keepSearchName} = props
+    const {flow, historyId, pageType, highLightText, highLightItem, highLightFindClass, showJumpTree, keepSearchName} =
+        props
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
     const resSelectionByteCount = useSelectionByteCount(resEditor, 500)
@@ -75,15 +78,15 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                         buttonStyle='solid'
                         value={mode}
                         options={[
-                            {value: "request", label: "请求"},
-                            {value: "response", label: "响应"}
+                            {value: "request", label: t("HTTPFlowForWebsocketViewer.request")},
+                            {value: "response", label: t("HTTPFlowForWebsocketViewer.response")}
                         ]}
                         onChange={(e) => setMode(e.target.value)}
                     />
                     <YakitTag color={"info"}>
                         {mode === "request"
-                            ? `请求大小：${flow.RequestSizeVerbose}`
-                            : `Body大小: ${flow.BodySizeVerbose}`}
+                            ? `${t("HTTPFlowForWebsocketViewer.requestSizeVerbose")}${flow.RequestSizeVerbose}`
+                            : `${t("HTTPFlowForWebsocketViewer.body_size")}${flow.BodySizeVerbose}`}
                     </YakitTag>
                     {["History"].includes(pageType || "") && showJumpTree && (
                         <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
@@ -145,7 +148,7 @@ interface WebSocketEditorProps {
     contextMenu?: OtherMenuListProps
     highLightText?: HighLightText[]
     highLightFind?: HighLightText[]
-    keepSearchName? : string
+    keepSearchName?: string
     highLightFindClass?: string
     isPositionHighLightCursor?: boolean
     onSetEditor?: (editor: IMonacoEditor) => void
@@ -162,7 +165,7 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
         isPositionHighLightCursor,
         onSetEditor
     } = props
-
+    const {t, i18n} = useI18nNamespaces(["history"])
     // 发送到WS Fuzzer
     const sendWebSocketMenuItem: OtherMenuListProps = useMemo(() => {
         return {
@@ -170,16 +173,16 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
                 menu: [
                     {
                         key: "new-web-socket-tab",
-                        label: "发送到WS Fuzzer",
+                        label: t("HTTPFlowForWebsocketViewer.sendToWSFuzzer"),
                         children: [
                             {
                                 key: "发送并跳转",
-                                label: "发送并跳转",
+                                label: t("HTTPFlowForWebsocketViewer.sendAndRedirect"),
                                 keybindings: YakEditorOptionShortcutKey.CommonSendAndJumpToWebFuzzer
                             },
                             {
                                 key: "仅发送",
-                                label: "仅发送",
+                                label: t("HTTPFlowForWebsocketViewer.sendOnly"),
                                 keybindings: YakEditorOptionShortcutKey.CommonSendToWebFuzzer
                             }
                         ]
@@ -189,7 +192,7 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
                     try {
                         const text = flow.Request
                         if (!Uint8ArrayToString(text)) {
-                            yakitNotify("info", "数据包为空")
+                            yakitNotify("info", t("HTTPFlowForWebsocketViewer.packetEmpty"))
                             return
                         }
                         if (key === "发送并跳转") {
@@ -203,7 +206,7 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
                 }
             }
         }
-    }, [flow.Request, flow.IsHTTPS])
+    }, [flow.Request, flow.IsHTTPS, i18n.language])
 
     return (
         <YakitEditor
