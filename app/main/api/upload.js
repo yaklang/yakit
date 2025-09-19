@@ -50,7 +50,10 @@ module.exports = (win, getClient) => {
                 formData,
                 {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
                 false,
-                percent === 1 && totalChunks > 3 ? 60 * 1000 * 10 : 60 * 1000
+                percent === 1 && totalChunks > 3 ? 60 * 1000 * 10 : 60 * 1000,
+                {
+                    retryCount: 3
+                }
             )
                 .then(async (res) => {
                     const progress = Math.floor(percent * 100)
@@ -58,40 +61,22 @@ module.exports = (win, getClient) => {
                         res,
                         progress
                     })
-
-                    if (res.code !== 200 && postPackageHistory[hash] <= 3) {
-                        // console.log("重传", postPackageHistory[hash])
-                        // 传输失败 重传3次
-                        await postProject({
-                            url,
-                            chunkStream,
-                            chunkIndex,
-                            totalChunks,
-                            fileName,
-                            hash,
-                            fileHash,
-                            type,
-                            token
-                        })
-                    } else if (postPackageHistory[hash] > 3) {
-                        reject(() => {
-                            if (res?.data?.reason) {
-                                return `重传三次失败:code ${res.code}: ${res.data.reason.toString()}`
-                            } else if (res?.data) {
-                                return `重传三次失败:code ${res.code}: ${res.data.toString()}`
-                            } else if (res) {
-                                return `重传三次失败:code ${res.code}: ${res.toString()}`
-                            } else {
-                                return `重传三次失败:未知错误`
-                            }
-                        })
+                    if (res.code !== 200) {
+                        let data = `未知错误`
+                        if (res?.data?.reason) {
+                            data = `code ${res.code}: ${res.data.reason.toString()}`
+                        } else if (res?.data) {
+                            data = `code ${res.code}: ${res.data.toString()}`
+                        } else if (res) {
+                            data = `code ${res.code}: ${res.toString()}`
+                        }
+                        reject(data)
+                        return
                     }
-
                     resolve()
                 })
                 .catch((err) => {
-                    // console.log("catch", err)
-                    reject(`上传失败：${err}`)
+                    reject(`重传三次失败：${err}`)
                 })
         })
     }
