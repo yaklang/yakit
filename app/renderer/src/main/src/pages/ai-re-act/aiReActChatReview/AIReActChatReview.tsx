@@ -265,7 +265,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                     />
                 </div>
             )
-
         return (
             <>
                 {(options || []).map((el) => {
@@ -365,17 +364,22 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         switch (type) {
             case "tool_use_review_require":
                 const toolReviewData = review as AIChatMessage.ToolUseReviewRequire
-
                 if (!!toolReviewData.aiReview) {
-                    const {interactive_id, score} = toolReviewData.aiReview
+                    const {interactive_id, score, level} = toolReviewData.aiReview
                     node = (
                         <>
                             {!!interactive_id && (!score || !countdown) && <div>AI正在评分中...</div>}
                             {!!score && (
                                 <div>
                                     AI风险评分:
-                                    <span className={styles["ai-countdown"]}>
-                                        {toolReviewData.aiReview.score || 0.1}
+                                    <span
+                                        className={classNames(styles["ai-countdown"], {
+                                            [styles["ai-score-low"]]: level === "low",
+                                            [styles["ai-score-middle"]]: level === "middle",
+                                            [styles["ai-score-high"]]: level === "high"
+                                        })}
+                                    >
+                                        {toolReviewData.aiReview.score || 0}
                                     </span>
                                 </div>
                             )}
@@ -397,6 +401,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         }
         return node
     }, [type, review, countdown])
+
     return (
         <>
             <div

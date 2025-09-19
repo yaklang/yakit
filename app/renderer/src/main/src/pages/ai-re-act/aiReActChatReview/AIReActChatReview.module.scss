@@ -42,6 +42,15 @@
             .ai-countdown {
                 color: var(--Colors-Use-Main-Primary);
             }
+            .ai-score-low {
+                color: var(--Colors-Use-Success-Primary);
+            }
+            .ai-score-middle {
+                color: var(--Colors-Use-Warning-Primary);
+            }
+            .ai-score-high {
+                color: var(--Colors-Use-Status-Serious);
+            }
         }
     }
     .review-container {
