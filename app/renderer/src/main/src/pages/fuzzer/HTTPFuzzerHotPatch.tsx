@@ -352,7 +352,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                         </Tooltip>
                         <AddHotCodeTemplate
                             type='fuzzer'
-                            title="另存为"
+                            title='另存为'
                             hotPatchTempLocal={hotPatchTempLocal}
                             hotPatchCode={params.HotPatchCode}
                             visible={addHotCodeTemplateVisible}
@@ -890,7 +890,15 @@ interface AddHotCodeTemplateProps {
     onSaveHotCodeOk?: (tempName?: string) => void
 }
 export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo((props) => {
-    const {title = "保存热加载模板", type, hotPatchTempLocal, hotPatchCode, visible, onSetAddHotCodeTemplateVisible, onSaveHotCodeOk} = props
+    const {
+        title = "保存热加载模板",
+        type,
+        hotPatchTempLocal,
+        hotPatchCode,
+        visible,
+        onSetAddHotCodeTemplateVisible,
+        onSaveHotCodeOk
+    } = props
     const addHotPatchTempNameRef = useRef<string>("")
 
     const onCancel = useMemoizedFn(() => {
