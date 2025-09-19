@@ -365,10 +365,13 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         switch (type) {
             case "tool_use_review_require":
                 const toolReviewData = review as AIChatMessage.ToolUseReviewRequire
+
                 if (!!toolReviewData.aiReview) {
+                    const {interactive_id, score} = toolReviewData.aiReview
                     node = (
                         <>
-                            {!!toolReviewData.aiReview.score && (
+                            {!!interactive_id && (!score || !countdown) && <div>AI正在评分中...</div>}
+                            {!!score && (
                                 <div>
                                     AI风险评分:
                                     <span className={styles["ai-countdown"]}>
