@@ -212,8 +212,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
     }
 
     useEffect(() => {
-        setOpenBottomTabsFlag(!pageInfo.webFuzzer)
-        setCurBottomTab(pageInfo.webFuzzer ? undefined : "rule")
+        onClickFooterTabItem("rule")
     }, [pageInfo.webFuzzer])
 
     return (
