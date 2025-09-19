@@ -9,12 +9,12 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {v4 as uuidv4} from "uuid"
 import {isToolStdout} from "../utils"
 import {OutlineArrownarrowrightIcon} from "@/assets/icon/outline"
 import useAIAgentStore from "../useContext/useStore"
-import {AIChatToolDrawerContent} from "./AIAgentChatTemplate"
+import {AIChatToolDrawerContent, ChatStreamContent} from "./AIAgentChatTemplate"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 const {ipcRenderer} = window.require("electron")
 
 interface AIChatToolProps {
@@ -25,28 +25,9 @@ export const AIChatTool: React.FC<AIChatToolProps> = React.memo((props) => {
 })
 
 interface AIChatToolColorCardProps {
-    toolCall: AIChatStreams
+    toolCall: AIChatMessage.AIStreamOutput
 }
-const OutlineSparklesColorsIcon = () => {
-    const id = uuidv4()
-    return (
-        <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
-            <path
-                d='M3.33333 2V4.66667M2 3.33333H4.66667M4 11.3333V14M2.66667 12.6667H5.33333M8.66667 2L10.1905 6.57143L14 8L10.1905 9.42857L8.66667 14L7.14286 9.42857L3.33333 8L7.14286 6.57143L8.66667 2Z'
-                stroke={`url(#${id})`}
-                strokeLinecap='round'
-                strokeLinejoin='round'
-            />
-            <defs>
-                <linearGradient id={id} x1='2' y1='2' x2='16.3935' y2='6.75561' gradientUnits='userSpaceOnUse'>
-                    <stop stopColor='#DC5CDF' />
-                    <stop offset='0.639423' stopColor='#8862F8' />
-                    <stop offset='1' stopColor='#4493FF' />
-                </linearGradient>
-            </defs>
-        </svg>
-    )
-}
+
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
     "enough-cancel": <OutlineArrownarrowrightIcon />
@@ -54,12 +35,11 @@ const AIToolToIconMap: Record<string, ReactNode> = {
 export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.memo((props) => {
     const {activeChat} = useAIAgentStore()
     const {toolCall} = props
-    const {nodeId, data, toolAggregation} = toolCall
-
+    const {NodeId, stream, toolAggregation} = toolCall
     const title = useCreation(() => {
-        if (nodeId === "call-tools") return "Call-tools：参数生成中..."
-        if (isToolStdout(nodeId)) return `${nodeId}：调用工具中...`
-    }, [nodeId])
+        if (NodeId === "call-tools") return "Call-tools：参数生成中..."
+        if (isToolStdout(NodeId)) return `${NodeId}：调用工具中...`
+    }, [NodeId])
     const onToolExtra = useMemoizedFn((item: AIChatMessage.ReviewSelector) => {
         switch (item.value) {
             case "enough-cancel":
@@ -90,7 +70,7 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                     <OutlineSparklesColorsIcon />
                     <div>{title}</div>
                 </div>
-                {isToolStdout(nodeId) && toolAggregation?.selectors && (
+                {isToolStdout(NodeId) && toolAggregation?.selectors && (
                     <div className={styles["card-extra"]}>
                         {toolAggregation.selectors.map((item) => {
                             return (
@@ -110,24 +90,7 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                 )}
             </div>
             <div className={styles["card-content"]}>
-                {
-                    <>
-                        {(data.reason || data.system || data.stream) && (
-                            <div className={styles["think-wrapper"]}>
-                                {data.reason && <div>{data.reason}</div>}
-                                {data.system && <div>{data.system}</div>}
-                                {data.stream && <div>{data.stream}</div>}
-                            </div>
-                        )}
-                        {/* {data.stream && (
-                            <div className={styles["anwser-wrapper"]}>
-                                <React.Fragment>
-                                    <ChatMarkdown content={data.stream} skipHtml={true} />
-                                </React.Fragment>
-                            </div>
-                        )} */}
-                    </>
-                }
+                <ChatStreamContent stream={stream} />
             </div>
         </div>
     )

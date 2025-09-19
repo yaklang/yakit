@@ -40,7 +40,7 @@ import {
     DefaultForgeTypeList,
     DefaultForgeYakToCode
 } from "../defaultConstant"
-import {AIForge, GetAIToolListRequest} from "@/pages/ai-agent/type/aiChat"
+import {GetAIToolListRequest} from "@/pages/ai-agent/type/aiChat"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
@@ -61,6 +61,7 @@ import {grpcGetAIToolList} from "@/pages/ai-agent/aiToolList/utils"
 import {QSInputTextarea} from "@/pages/ai-agent/template/template"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {AIForge} from "@/pages/ai-agent/AIForge/type"
 
 import classNames from "classnames"
 import styles from "./ForgeEditor.module.scss"
@@ -262,15 +263,15 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                     return
                 }
                 emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
-                setTimeout(() => {
-                    emiter.emit(
-                        "onServerChatEvent",
-                        JSON.stringify({
-                            type: "open-forge-form",
-                            params: {value: forgeData.current}
-                        })
-                    )
-                }, 100)
+                // setTimeout(() => {
+                //     emiter.emit(
+                //         "onServerChatEvent",
+                //         JSON.stringify({
+                //             type: "open-forge-form",
+                //             params: {value: forgeData.current}
+                //         })
+                //     )
+                // }, 100)
             })
             .catch(() => {})
     })

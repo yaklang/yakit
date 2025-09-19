@@ -1,5 +1,6 @@
 import {Dispatch, ForwardedRef, ReactNode, SetStateAction} from "react"
-import {AIForge, AIStartParams} from "../type/aiChat"
+import {AIStartParams} from "../type/aiChat"
+import {AIForge} from "../AIForge/type"
 
 export interface AITriageChatRef {
     /** 开始启动 triage 数据流 */

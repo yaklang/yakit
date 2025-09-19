@@ -1,22 +1,24 @@
-import React, {forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
+import React, {forwardRef, memo, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {AIAgentWelcomeProps} from "./type"
-import {AIForge, AIStartParams, QueryAIForgeRequest} from "../type/aiChat"
-import {grpcGetAIForge, grpcQueryAIForge} from "../grpc"
-import {AIForgeForm, AIForgeInfoOpt} from "../aiTriageChatTemplate/AITriageChatTemplate"
+import {AIStartParams} from "../type/aiChat"
+import {grpcGetAIForge} from "../grpc"
+import {AIForgeForm} from "../aiTriageChatTemplate/AITriageChatTemplate"
 import {AIChatTextarea} from "../template/template"
 import {AIChatTextareaProps} from "../template/type"
 import {yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
+import {AIForge} from "../AIForge/type"
 
 // import classNames from "classnames"
 import AIAgentWelcomebg from "@/assets/aiAgent/ai-agent-welcome-bg.png"
 import AIAgentWelcomePixel from "@/assets/aiAgent/ai-agent-welcome-pixel.png"
 import styles from "./AIAgentWelcome.module.scss"
-import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 
+const AIReviewRuleSelect = React.lazy(() => import("../../ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"))
 export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
     forwardRef((props, ref) => {
         const {
@@ -38,25 +40,25 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
         const wrapperRef = useRef<HTMLDivElement>(null)
 
         // #region  AI-Forge 模板相关逻辑
-        const [forges, setForges] = useState<AIForge[]>([])
-        const fetchForges = useMemoizedFn(() => {
-            const request: QueryAIForgeRequest = {
-                Pagination: {
-                    Page: 1,
-                    Limit: 3,
-                    Order: "desc",
-                    OrderBy: "id"
-                }
-            }
-            grpcQueryAIForge(request)
-                .then((res) => {
-                    setForges(res?.Data || [])
-                })
-                .catch(() => {})
-        })
-        useEffect(() => {
-            fetchForges()
-        }, [])
+        // const [forges, setForges] = useState<AIForge[]>([])
+        // const fetchForges = useMemoizedFn(() => {
+        //     const request: QueryAIForgeRequest = {
+        //         Pagination: {
+        //             Page: 1,
+        //             Limit: 3,
+        //             Order: "desc",
+        //             OrderBy: "id"
+        //         }
+        //     }
+        //     grpcQueryAIForge(request)
+        //         .then((res) => {
+        //             setForges(res?.Data || [])
+        //         })
+        //         .catch(() => {})
+        // })
+        // useEffect(() => {
+        //     fetchForges()
+        // }, [])
         // #endregion
 
         // #region 问题相关逻辑
@@ -144,7 +146,7 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
                                 <div className={styles["sub-title"]}>专注于安全编码与漏洞分析的智能助手</div>
                             </div>
 
-                            <div className={styles["suggestion-forges"]}>
+                            {/* <div className={styles["suggestion-forges"]}>
                                 {forges.map((item) => {
                                     return (
                                         <div key={item.Id} className={styles["suggestion-forge"]}>
@@ -156,7 +158,7 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
                                         </div>
                                     )
                                 })}
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 </div>
@@ -169,7 +171,14 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
                                 setQuestion={setQuestion}
                                 textareaProps={textareaProps}
                                 onSubmit={handleTriageSubmit}
-                                extraFooterLeft={<AIModelSelect />}
+                                extraFooterLeft={
+                                    <>
+                                        <AIModelSelect />
+                                        <React.Suspense fallback={<div>loading...</div>}>
+                                            <AIReviewRuleSelect />
+                                        </React.Suspense>
+                                    </>
+                                }
                             />
                         </div>
 

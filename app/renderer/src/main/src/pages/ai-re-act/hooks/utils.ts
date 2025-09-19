@@ -4,6 +4,26 @@
 
 import {generateTaskChatExecution} from "@/pages/ai-agent/defaultConstant"
 import {AIChatMessage, AIOutputEvent, AIStartParams} from "@/pages/ai-agent/type/aiChat"
+import {Uint8ArrayToString} from "@/utils/str"
+import {v4 as uuidv4} from "uuid"
+
+/** 将接口数据(AIOutputEvent)转换为日志数据(AIChatMessage.Log), 并push到日志队列中 */
+export const handleGrpcDataPushLog = (params: {
+    type: string
+    info: AIOutputEvent
+    pushLog: (log: AIChatMessage.Log) => void
+}) => {
+    try {
+        const {type, info, pushLog} = params
+        let ipcContent = Uint8ArrayToString(info.Content) || ""
+        const logInfo: AIChatMessage.Log = {
+            id: uuidv4(),
+            level: type || "info",
+            message: `${JSON.stringify({...info, Content: ipcContent, StreamDelta: undefined})}`
+        }
+        pushLog(logInfo)
+    } catch (error) {}
+}
 
 /** 将树结构任务列表转换成一维数组 */
 export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMessage.PlanTask) => {
@@ -16,10 +36,17 @@ export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMess
     }
 }
 
-/** 是否为自动执行reivew策略 */
-export const isAutoExecReview = (request?: AIStartParams) => {
-    if (request && request.ReviewPolicy === "yolo") return true
-    return false
+/** 判断接口请求参数里，是否自动继续执行 review 操作 */
+export const isAutoContinueReview = (getFunc?: () => AIStartParams | undefined) => {
+    try {
+        if (getFunc) {
+            const request = getFunc()
+            return request ? request.ReviewPolicy === "yolo" : false
+        }
+        return false
+    } catch (error) {
+        return false
+    }
 }
 /** 不跳过 review 的数据类型 */
 export const noSkipReviewTypes = (type: string) => {
@@ -30,4 +57,11 @@ export const noSkipReviewTypes = (type: string) => {
 export const isToolStdoutStream = (nodeID: string) => {
     if (!nodeID) return false
     return nodeID.startsWith("tool-") && nodeID.endsWith("-stdout")
+}
+/** 判断是否为工具执行的流程类型数据 */
+export const isToolExecStream = (nodeID: string) => {
+    if (nodeID === "execute") return true
+    if (nodeID === "call-tools") return true
+    if (isToolStdoutStream(nodeID)) return true
+    return false
 }

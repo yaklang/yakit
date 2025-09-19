@@ -1,15 +1,3 @@
-.ai-model-select-wrapper {
-    width: fit-content;
-    :global {
-        .ant-select {
-            border-radius: 20px;
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
-        }
-        .ant-select-single .ant-select-selector .ant-select-selection-item {
-            font-size: 11px;
-        }
-    }
-}
 .drop-select-wrapper {
     max-width: 320px;
     :global {
@@ -49,9 +37,6 @@
             height: 12px;
         }
     }
-}
-
-.select-option-online-wrapper {
     svg {
         width: 16px;
         height: 16px;

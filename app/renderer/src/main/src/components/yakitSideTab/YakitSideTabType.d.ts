@@ -17,6 +17,8 @@ export interface YakitSideTabProps {
     type?: "vertical" | "horizontal"
     children?: ReactNode
     onTabPaneRender?: (item: YakitTabsProps) => ReactNode
+
+    className?: string
 }
 
 export interface YakitTabsProps {

@@ -3,6 +3,8 @@ import {StreamResult, HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHol
 import {KVPair} from "@/models/kv"
 import {ExecResult, PaginationSchema} from "@/pages/invoker/schema"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {UseCasualChatState, UseChatIPCState, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
+import {AITokenConsumption} from "@/pages/ai-re-act/hooks/aiRender"
 // #region AI-(Task|Triage)
 export interface McpConfig {
     Type: string
@@ -189,15 +191,10 @@ export interface AIChatInfo {
     request: AIStartParams
     /** 回答 */
     answer?: {
-        pressure: AIChatMessage.Pressure[]
-        firstCost: AIChatMessage.AICostMS[]
-        totalCost: AIChatMessage.AICostMS[]
-        consumption: Record<string, AIChatMessage.Consumption>
-        plans?: AIChatMessage.PlanTask
-        taskList: AIChatMessage.PlanTask[]
-        logs: AIChatMessage.Log[]
-        streams: Record<string, AIChatStreams[]>
-        systemOutputs: AIChatMessage.AIChatSystemOutput[]
+        aiPerfData: UseChatIPCState["aiPerfData"]
+        logs: UseChatIPCState["logs"]
+        casualChat: UseChatIPCState["casualChat"]
+        taskChat: UseChatIPCState["taskChat"]
     }
 }
 /**QueryAIEvent 接口请求 */
@@ -209,27 +206,6 @@ export interface AIEventQueryResponse {
     Events: AIOutputEvent[]
 }
 export declare namespace AIChatMessage {
-    /** 输出 Token */
-    export interface Consumption {
-        input_consumption: number
-        output_consumption: number
-        consumption_uuid: string
-    }
-
-    /** 上下文压力 */
-    export interface Pressure {
-        current_cost_token_size: number
-        pressure_token_size: number
-        timestamp: number
-    }
-
-    /**  (首字符响应|总对话)耗时 */
-    export interface AICostMS {
-        ms: number
-        second: number
-        timestamp: number
-    }
-
     /** 审阅自动执行后的通知 */
     export interface ReviewRelease {
         id: string
@@ -313,6 +289,21 @@ export declare namespace AIChatMessage {
         system: boolean
     }
 
+    /** ai 对 tool_review 判断的数据 */
+    export interface AIToolReviewJudgement {
+        /** 对应 tool_review 的 id */
+        interactive_id: string
+        /** review 操作的得分 */
+        score?: number
+        /** 多少秒后自动执行 review 的 continue 操作 */
+        seconds?: number
+        /** AI 判断的风险阈值 */
+        level?: string
+        levelLabel?: string
+        /** AI 判断使用的意图 */
+        reason?: string
+    }
+
     /** 工具审阅请求 */
     export interface ToolUseReviewRequire {
         id: string
@@ -320,6 +311,7 @@ export declare namespace AIChatMessage {
         selectors: ReviewSelector[]
         tool: string
         tool_description: string
+        aiReview?: AIToolReviewJudgement
     }
 
     /** 任务审阅请求 */
@@ -401,6 +393,8 @@ export declare namespace AIChatMessage {
 
     export interface AIStreamOutput {
         NodeId: AIOutputEvent["NodeId"]
+        /** NodeId对应的中文，目前只有stream有 */
+        NodeLabel: string
         EventUUID: AIOutputEvent["EventUUID"]
         status: "start" | "end"
         stream: {
@@ -420,15 +414,32 @@ export declare namespace AIChatMessage {
         start_timestamp: number
         task_index: string
     }
+
+    export interface AITaskStreamOutput extends AIStreamOutput {
+        timestamp: number
+    }
+
+    export interface AIChatThought {
+        thought: string
+        timestamp: number
+    }
     export interface AIChatResult {
         finished: boolean
         result: string
         success: boolean
         timestamp: number
     }
+
     export interface AIChatToolResult {
         NodeId: AIOutputEvent["NodeId"]
         toolAggregation: AIChatMessage.AIToolData
+    }
+
+    /** 表示启动了任务规划流程，并通过coordinator_id字段标识属于任务规划的流信息 */
+    export interface AIStartPlanAndExecution {
+        coordinator_id: string
+        "re-act_id": string
+        "re-act_task": string
     }
 
     /** 自由对话的问答数据信息 */
@@ -437,22 +448,24 @@ export declare namespace AIChatMessage {
         type: "answer" | "question"
         /**
          * - stream 流式输出 [AIStreamOutput]
+         * - thought 自由问题思考 [string]
          * - result 问题结果 [string]
          * - toolResult 工具执行经过 [AIChatToolResult]
-         * - toolReview 工具 review [ToolUseReviewRequire]
-         * - requireUser AI 人机交互review [AIReviewRequire]
+         * - tool_use_review_require 工具 review [ToolUseReviewRequire]
+         * - require_user_interactive AI 人机交互review [AIReviewRequire]
          */
-        uiType: "stream" | "result" | "toolResult" | "toolReview" | "requireUser"
+        uiType: "stream" | "thought" | "result" | "toolResult" | "tool_use_review_require" | "require_user_interactive"
         Timestamp: AIOutputEvent["Timestamp"]
         data: AIStreamOutput | string | AIChatToolResult | ToolUseReviewRequire | AIReviewRequire
     }
 }
+/**@deprecated */
 export declare namespace AIReActChatMessage {
     export interface AIReActChatItem extends Omit<AIChatInfo, "answer"> {
         /** 回答 */
         answer?: {
             aiPerfData: {
-                consumption: Record<string, AIChatMessage.Consumption>
+                consumption: AITokenConsumption
                 pressure: AIChatMessage.Pressure[]
                 firstCost: AIChatMessage.AICostMS[]
                 totalCost: AIChatMessage.AICostMS[]
@@ -461,62 +474,6 @@ export declare namespace AIReActChatMessage {
             casualChat: {contents: AIChatMessage.AICasualChatQAStream[]}
         }
     }
-}
-// #endregion
-
-// #region AI-Forge
-export interface AIForge {
-    Id: number
-    ForgeName: string
-    // yak type is yak script, config type is empty
-    /** yak 类型为脚本代码, config 类型为空 */
-    ForgeContent?: string
-    // yak or config
-    ForgeType: "yak" | "config"
-    Description?: string
-    // json config for UI
-    ParamsUIConfig?: string
-    // cli parameters
-    Params?: string
-    // for user preferences
-    UserPersistentData?: string
-    /** 可选，列表 */
-    ToolNames?: string[]
-    /** 可选，手输 */
-    ToolKeywords?: string[]
-    Action?: string
-    /** 可选，手输 */
-    Tag?: string[]
-    // 初始提示语
-    InitPrompt?: string
-    // 持久化提示语
-    PersistentPrompt?: string
-    // 计划提示语
-    PlanPrompt?: string
-    // 结果提示语
-    ResultPrompt?: string
-}
-
-export interface AIForgeFilter {
-    /** name 模糊搜索 */
-    ForgeName?: string
-    ForgeNames?: string[]
-    ForgeType?: AIForge["ForgeType"]
-    /** 多个字段的内容进行模糊搜索 */
-    Keyword?: string
-    Tag?: string
-    Id?: number
-}
-
-export interface QueryAIForgeRequest {
-    Pagination: PaginationSchema
-    Filter?: AIForgeFilter
-}
-
-export interface QueryAIForgeResponse {
-    Pagination: PaginationSchema
-    Data: AIForge[]
-    Total: number
 }
 // #endregion
 

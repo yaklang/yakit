@@ -19,6 +19,8 @@ import {generateTaskChatExecution} from "./defaultConstant"
 import {checkStreamValidity, convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {v4 as uuidv4} from "uuid"
+import {AIAgentGrpcApi} from "../ai-re-act/hooks/grpcApi"
+import {AITokenConsumption} from "../ai-re-act/hooks/aiRender"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -63,10 +65,10 @@ function useChatData(params?: UseChatDataParams) {
     const chatRequest = useRef<AIStartParams>()
     const [execute, setExecute, getExecute] = useGetSetState(false)
 
-    const [pressure, setPressure] = useState<AIChatMessage.Pressure[]>([])
-    const [firstCost, setFirstCost] = useState<AIChatMessage.AICostMS[]>([])
-    const [totalCost, setTotalCost] = useState<AIChatMessage.AICostMS[]>([])
-    const [consumption, setConsumption] = useState<Record<string, AIChatMessage.Consumption>>({})
+    const [pressure, setPressure] = useState<AIAgentGrpcApi.Pressure[]>([])
+    const [firstCost, setFirstCost] = useState<AIAgentGrpcApi.AICostMS[]>([])
+    const [totalCost, setTotalCost] = useState<AIAgentGrpcApi.AICostMS[]>([])
+    const [consumption, setConsumption] = useState<AITokenConsumption>({})
 
     const planTree = useRef<AIChatMessage.PlanTask>()
     const fetchPlanTree = useMemoizedFn(() => {
@@ -386,7 +388,7 @@ function useChatData(params?: UseChatDataParams) {
                 // 上下文压力
                 try {
                     if (!res.IsJson) return
-                    const data = JSON.parse(ipcContent) as AIChatMessage.Pressure
+                    const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Pressure
                     setPressure((old) => old.concat([{...data, timestamp: Number(res.Timestamp) || 0}]))
                 } catch (error) {}
                 return
@@ -396,7 +398,7 @@ function useChatData(params?: UseChatDataParams) {
                 // 首字符响应耗时
                 try {
                     if (!res.IsJson) return
-                    const data = JSON.parse(ipcContent) as AIChatMessage.AICostMS
+                    const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AICostMS
                     setFirstCost((old) => old.concat([{...data, timestamp: Number(res.Timestamp) || 0}]))
                 } catch (error) {}
                 return
@@ -406,7 +408,7 @@ function useChatData(params?: UseChatDataParams) {
                 // 总对话耗时
                 try {
                     if (!res.IsJson) return
-                    const data = JSON.parse(ipcContent) as AIChatMessage.AICostMS
+                    const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AICostMS
                     setTotalCost((old) => old.concat([{...data, timestamp: Number(res.Timestamp) || 0}]))
                 } catch (error) {}
                 return
@@ -416,7 +418,7 @@ function useChatData(params?: UseChatDataParams) {
                 // 消耗Token
                 try {
                     if (!res.IsJson) return
-                    const data = JSON.parse(ipcContent) as AIChatMessage.Consumption
+                    const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Consumption
                     const onlyId = data.consumption_uuid || "system"
 
                     setConsumption((old) => {

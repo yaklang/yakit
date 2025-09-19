@@ -81,11 +81,13 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                         })}
                         tabIndex={active !== "history" ? -1 : 1}
                     >
-                        <HistoryChat
-                            onNewChat={() => {
-                                onEmiter("new-chat")
-                            }}
-                        />
+                        <React.Suspense>
+                            <HistoryChat
+                                onNewChat={() => {
+                                    onEmiter("new-chat")
+                                }}
+                            />
+                        </React.Suspense>
                     </div>
                 )}
 
@@ -96,7 +98,9 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                         })}
                         tabIndex={active !== "setting" ? -1 : 1}
                     >
-                        <AIChatSetting setting={setting} setSetting={setSetting} />
+                        <React.Suspense>
+                            <AIChatSetting setting={setting} setSetting={setSetting} />
+                        </React.Suspense>
                     </div>
                 )}
 
@@ -107,7 +111,9 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                         })}
                         tabIndex={active !== "forgeName" ? -1 : 1}
                     >
-                        <ForgeName />
+                        <React.Suspense>
+                            <ForgeName />
+                        </React.Suspense>
                     </div>
                 )}
 
@@ -118,7 +124,9 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                         })}
                         tabIndex={active !== "tool" ? -1 : 1}
                     >
-                        <AIToolList />
+                        <React.Suspense>
+                            <AIToolList />
+                        </React.Suspense>
                     </div>
                 )}
                 {rendered.current.has("AIModel") && (
@@ -128,7 +136,9 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                         })}
                         tabIndex={active !== "AIModel" ? -1 : 1}
                     >
-                        <AIModelList />
+                        <React.Suspense>
+                            <AIModelList />
+                        </React.Suspense>
                     </div>
                 )}
             </div>

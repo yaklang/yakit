@@ -7,31 +7,47 @@ import {AIChatMessage, AIInputEvent, AIOutputEvent, AIStartParams} from "@/pages
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
 import useCasualChat, {UseCasualChatTypes} from "./useCasualChat"
-import useExecCard, {UseExecCardTypes} from "./useExecCard"
+import useYakExecResult, {UseYakExecResultTypes} from "./useYakExecResult"
 import {v4 as uuidv4} from "uuid"
-import {isToolSyncNode} from "@/pages/ai-agent/utils"
+import useTaskChat, {UseTaskChatTypes} from "./useTaskChat"
+import {handleGrpcDataPushLog} from "./utils"
+import {ChatIPCSendType, UseCasualChatEvents, UseChatIPCEvents, UseChatIPCParams, UseChatIPCState} from "./type"
 
 const {ipcRenderer} = window.require("electron")
 
-/** 暂时全算到日志的数据类型 */
-const LogTypes = [
-    "structured|react_task_created",
-    "structured|react_task_enqueue",
-    "structured|react_task_dequeue",
-    "iteration",
-    "thought",
-    "structured|react_task_status_changed"
+/** 任务规划和自由对话共用的类型 */
+const UseCasualAndTaskTypes = [
+    "tool_use_review_require",
+    "require_user_interactive",
+    "review_release",
+    // "stream",
+    "tool_call_start",
+    "tool_call_user_cancel",
+    "tool_call_done",
+    "tool_call_error",
+    "tool_call_watcher",
+    "tool_call_summary",
+    // 对 tool_review 的 ai 评分
+    "ai_review_start",
+    "ai_review_countdown",
+    "ai_review_end"
 ]
 
-export interface useChatIPCParams {
-    setCoordinatorId?: (id: string) => void
-    onReviewRelease?: (id: string) => void
-    onEnd?: () => void
-}
+function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
-function useChatIPC(params?: useChatIPCParams) {
-    const {onReviewRelease, onEnd, setCoordinatorId} = params || {}
+function useChatIPC(params?: UseChatIPCParams) {
+    const {onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onEnd} = params || {}
 
+    // 自由对话-review 信息的自动释放
+    const handleCasualReviewRelease = useMemoizedFn((id: string) => {
+        onReviewRelease && onReviewRelease("casual", id)
+    })
+    // 任务规划-review 信息的自动释放
+    const handleTaskReviewRelease = useMemoizedFn((id: string) => {
+        onReviewRelease && onReviewRelease("task", id)
+    })
+
+    // #region 启动流接口后的相关全局数据
     // 通信的唯一标识符
     const chatID = useRef<string>("")
     const fetchToken = useMemoizedFn(() => {
@@ -45,17 +61,9 @@ function useChatIPC(params?: useChatIPCParams) {
 
     // 通信的状态
     const [execute, setExecute, getExecute] = useGetSetState(false)
+    // #endregion
 
-    // 通信的CoordinatorId(唯一标识ID)
-    const coordinatorId = useRef<{cache: string; sent: string}>({cache: "", sent: ""})
-    const onSetCoordinatorId = useMemoizedFn((CoordinatorId: string) => {
-        coordinatorId.current.cache = CoordinatorId
-        if (coordinatorId.current.sent !== coordinatorId.current.cache && setCoordinatorId) {
-            setCoordinatorId(coordinatorId.current.cache)
-            coordinatorId.current.sent = coordinatorId.current.cache
-        }
-    })
-
+    // #region 单次流执行时的输出展示数据
     // 日志
     const [logs, setLogs] = useState<AIChatMessage.Log[]>([])
     const pushLog = useMemoizedFn((logInfo: AIChatMessage.Log) => {
@@ -63,21 +71,33 @@ function useChatIPC(params?: useChatIPCParams) {
     })
 
     // AI性能相关数据和逻辑
-    const [aiPerfData, aiPerfDataEvent] = useAIPerfData({pushErrorLog: pushLog})
-
+    const [aiPerfData, aiPerfDataEvent] = useAIPerfData({pushLog: pushLog})
     // 执行过程中插件输出的卡片
-    const [card, cardEvent] = useExecCard()
+    const [yakExecResult, yakExecResultEvent] = useYakExecResult({pushLog: pushLog})
+
+    // 设置任务规划的标识ID
+    const planCoordinatorId = useRef<string>("")
 
     // 自由对话相关数据和逻辑
     const [casualChat, casualChatEvent] = useCasualChat({
         getRequest: fetchRequest,
-        pushErrorLog: pushLog,
-        onReviewRelease
+        pushLog,
+        onReviewRelease: handleCasualReviewRelease
     })
+
+    // 任务规划相关数据和逻辑
+    const [taskChat, taskChatEvent] = useTaskChat({
+        getRequest: fetchRequest,
+        pushLog,
+        onReview: onTaskReview,
+        onReviewExtra: onTaskReviewExtra,
+        onReviewRelease: handleTaskReviewRelease
+    })
+    // #endregion
 
     // #region review事件相关方法
     /** review 界面选项触发事件 */
-    const onSend = useMemoizedFn((token: string, type: "casual" | "task", params: AIInputEvent) => {
+    const onSend = useMemoizedFn((token: string, type: ChatIPCSendType, params: AIInputEvent) => {
         try {
             if (!execute) {
                 yakitNotify("warning", "AI 未执行任务，无法发送选项")
@@ -87,47 +107,54 @@ function useChatIPC(params?: useChatIPCParams) {
                 yakitNotify("warning", "该选项非本次 AI 执行的回答选项")
                 return
             }
-            console.log("send-ai-re-act---\n", token, params)
 
-            if (type === "casual") {
-                casualChatEvent.handleSend(params, () => {
-                    ipcRenderer.invoke("send-ai-re-act", token, params)
-                })
-            }
+            const events: UseCasualChatEvents | UseChatIPCEvents = type === "casual" ? casualChatEvent : taskChatEvent
+            events.handleSend(params, () => {
+                console.log("send-ai-re-act---\n", token, params)
+                ipcRenderer.invoke("send-ai-re-act", token, params)
+            })
         } catch (error) {}
     })
     // #endregion
 
     /** 重置所有数据 */
-    const handleReset = useMemoizedFn(() => {
+    const onReset = useMemoizedFn(() => {
         chatID.current = ""
         chatRequest.current = undefined
         setExecute(false)
-        coordinatorId.current = {cache: "", sent: ""}
         setLogs([])
         aiPerfDataEvent.handleResetData()
-        cardEvent.handleResetData()
-        casualChatEvent.handleReset()
+        yakExecResultEvent.handleResetData()
+        planCoordinatorId.current = ""
+        casualChatEvent.handleResetData()
+        taskChatEvent.handleResetData()
     })
 
     const onStart = useMemoizedFn((token: string, params: AIInputEvent) => {
         if (execute) {
-            yakitNotify("warning", "AI任务正在执行中，请稍后再试！")
+            yakitNotify("warning", "useChatIPC AI任务正在执行中，请稍后再试！")
             return
         }
-        handleReset()
+        onReset()
         setExecute(true)
         chatID.current = token
         chatRequest.current = cloneDeep(params.Params)
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
-            console.log("onStart-res", res)
             try {
-                // CoordinatorId
-                if (!!res?.CoordinatorId) {
-                    onSetCoordinatorId(res.CoordinatorId)
+                let ipcContent = Uint8ArrayToString(res.Content) || ""
+                console.log("onStart-res", res, ipcContent)
+                if (res.Type === "start_plan_and_execution") {
+                    // 触发任务规划，并传出任务规划流的标识 coordinator_id
+                    const startInfo = JSON.parse(ipcContent) as AIChatMessage.AIStartPlanAndExecution
+                    if (startInfo.coordinator_id && planCoordinatorId.current !== startInfo.coordinator_id) {
+                        onTaskStart && onTaskStart(startInfo.coordinator_id)
+                        taskChatEvent.handleSetCoordinatorId(startInfo.coordinator_id)
+                        planCoordinatorId.current = startInfo.coordinator_id
+                    }
+                    return
                 }
 
-                let ipcContent = Uint8ArrayToString(res.Content) || ""
+                casualChatEvent.handleSetCoordinatorId(res.CoordinatorId)
 
                 if (UseAIPerfDataTypes.includes(res.Type)) {
                     // AI性能数据处理
@@ -135,114 +162,86 @@ function useChatIPC(params?: useChatIPCParams) {
                     return
                 }
 
-                if (UseExecCardTypes.includes(res.Type)) {
+                if (UseYakExecResultTypes.includes(res.Type)) {
                     // 执行过程中插件输出的卡片
-                    cardEvent.handleSetData(res)
-                    return
-                }
-
-                if (UseCasualChatTypes.includes(res.Type)) {
-                    // 用户问题的答案
-                    casualChatEvent.handleSetData(res)
-                    return
-                }
-
-                if (res.Type === "review_release") {
-                    // review释放通知
-                    if (!res.IsJson) return
-                    const {TaskIndex} = res
-                    if (!TaskIndex) {
-                        casualChatEvent.handleSetData(res)
-                    }
+                    yakExecResultEvent.handleSetData(res)
                     return
                 }
 
                 if (res.Type === "structured") {
-                    try {
-                        if (!res.IsJson) return
+                    const obj = JSON.parse(ipcContent) || ""
+                    if (!obj || typeof obj !== "object") return
 
-                        const {TaskIndex, NodeId} = res
-                        if (!TaskIndex && UseCasualChatTypes.includes(`structured|${NodeId}`)) {
+                    if (obj.level) {
+                        // 执行日志信息
+                        const data = obj as AIChatMessage.Log
+                        pushLog(data)
+                    } else {
+                        // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
+                        if (res.NodeId === "stream-finished") {
                             casualChatEvent.handleSetData(res)
+                            taskChatEvent.handleSetData(res)
                             return
                         }
 
-                        const obj = JSON.parse(ipcContent) || ""
-                        if (!obj || typeof obj !== "object") return
-
-                        if (obj.level) {
-                            // 日志信息
-                            const data = obj as AIChatMessage.Log
-                            setLogs((pre) => pre.concat([{...data, id: uuidv4()}]))
+                        if (planCoordinatorId.current === res.CoordinatorId) {
+                            taskChatEvent.handleSetData(res)
                         } else {
-                            setLogs((pre) =>
-                                pre.concat([{id: uuidv4(), level: "info", message: `task_execute : ${ipcContent}`}])
-                            )
-                            console.log("unkown-structured---\n", ipcContent)
+                            casualChatEvent.handleSetData(res)
                         }
-                    } catch (error) {}
+                    }
                     return
                 }
 
-                if (res.Type === "tool_use_review_require") {
-                    if (!res.IsJson) return
-                    const {TaskIndex} = res
-                    if (!TaskIndex) {
-                        casualChatEvent.handleSetData(res)
+                if (UseCasualChatTypes.includes(res.Type)) {
+                    // 专属自由对话类型的流数据
+                    if (!!planCoordinatorId.current && planCoordinatorId.current === res.CoordinatorId) {
+                        handleGrpcDataPushLog({type: "error", info: res, pushLog: pushLog})
+                        return
                     }
+                    casualChatEvent.handleSetData(res)
                     return
                 }
-                if (res.Type === "require_user_interactive") {
-                    if (!res.IsJson) return
-                    const {TaskIndex} = res
-                    if (!TaskIndex) {
-                        casualChatEvent.handleSetData(res)
+
+                if (UseTaskChatTypes.includes(res.Type)) {
+                    // 专属任务规划类型的流数据
+                    if (!planCoordinatorId.current || planCoordinatorId.current !== res.CoordinatorId) {
+                        handleGrpcDataPushLog({type: "error", info: res, pushLog: pushLog})
+                        return
                     }
+                    taskChatEvent.handleSetData(res)
                     return
                 }
+
+                // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
                 if (res.Type === "stream") {
-                    const {TaskIndex, NodeId} = res
-                    //NOTE - 有些tool（-stdout）有TaskIndex，有些没有
-                    if ((!TaskIndex && UseCasualChatTypes.includes(`stream|${NodeId}`)) || isToolSyncNode(NodeId)) {
-                        // 流式输出
+                    if (planCoordinatorId.current === res.CoordinatorId && !!res.TaskIndex) {
+                        taskChatEvent.handleSetData(res)
+                    } else {
                         casualChatEvent.handleSetData(res)
                     }
-
-                    return
-                }
-                if (res.Type === "tool_call_start") {
-                    casualChatEvent.handleSetData(res)
-                    return
-                }
-                if (res.Type === "tool_call_user_cancel") {
-                    casualChatEvent.handleSetData(res)
                     return
                 }
 
-                if (res.Type === "tool_call_done") {
-                    casualChatEvent.handleSetData(res)
+                if (UseCasualAndTaskTypes.includes(res.Type)) {
+                    // 自由对话和任务规划共用的类型
+                    if (planCoordinatorId.current === res.CoordinatorId) {
+                        taskChatEvent.handleSetData(res)
+                    } else {
+                        casualChatEvent.handleSetData(res)
+                    }
                     return
                 }
 
-                if (res.Type === "tool_call_error") {
-                    casualChatEvent.handleSetData(res)
-                    return
-                }
-
-                if (res.Type === "tool_call_watcher") {
-                    casualChatEvent.handleSetData(res)
-                    return
-                }
-                if (res.Type === "tool_call_summary") {
-                    casualChatEvent.handleSetData(res)
-                    return
-                }
                 console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
-                setLogs((pre) => pre.concat([{id: uuidv4(), level: "info", message: `task_execute : ${ipcContent}`}]))
-            } catch (error) {}
+                setLogs((pre) => pre.concat([{id: uuidv4(), level: "info", message: ipcContent}]))
+            } catch (error) {
+                handleGrpcDataPushLog({type: "error", info: res, pushLog})
+            }
         })
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
             console.log("end", res)
+            taskChatEvent.handleCloseGrpc()
             setExecute(false)
             onEnd && onEnd()
 
@@ -268,7 +267,7 @@ function useChatIPC(params?: useChatIPCParams) {
         if (option?.tip) {
             option.tip()
         } else {
-            yakitNotify("info", "AI 任务已取消")
+            yakitNotify("info", "useChatIPC AI 任务已取消")
         }
     })
 
@@ -276,14 +275,14 @@ function useChatIPC(params?: useChatIPCParams) {
         return () => {
             if (getExecute() && chatID.current) {
                 onClose(chatID.current)
-                handleReset()
+                onReset()
             }
         }
     }, [])
 
     return [
-        {execute, logs, aiPerfData, card, casualChat},
-        {onStart, onSend, onClose, handleReset, fetchToken}
+        {execute, logs, yakExecResult, aiPerfData, casualChat, taskChat},
+        {fetchToken, fetchRequest, onStart, onSend, onClose, onReset}
     ] as const
 }
 

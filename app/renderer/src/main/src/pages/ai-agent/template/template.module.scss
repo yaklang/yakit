@@ -46,10 +46,15 @@ textarea.qs-input-textarea {
     justify-content: space-between;
     align-items: center;
     overflow: hidden;
+    height: 28px;
 
     .footer-left {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
         flex: 1;
-        overflow: hidden;
+        // overflow: hidden;
     }
     .footer-right {
         display: flex;

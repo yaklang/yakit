@@ -1,5 +1,6 @@
 import {RefObject} from "react"
-import {AIForge, AIStartParams} from "../type/aiChat"
+import {AIStartParams} from "../type/aiChat"
+import {AIForge} from "../AIForge/type"
 
 export interface AIForgeInfoOptProps {
     info: AIForge

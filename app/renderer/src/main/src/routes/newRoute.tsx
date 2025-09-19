@@ -166,7 +166,6 @@ import {ShortcutKey} from "@/pages/shortcutKey/ShortcutKey"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 import {ShortcutKeyList} from "@/pages/shortcutKey/ShortcutKey"
 import {AIAgent} from "@/pages/ai-agent/AIAgent"
-import {AIReAct} from "@/pages/ai-re-act/AIReAct"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const MITMHacker = React.lazy(() => import("@/pages/mitm/MITMHacker/MITMHacker"))
@@ -369,7 +368,6 @@ export const YakitRouteToPageInfo: Record<
     "shortcut-key": {label: "快捷键设置", labelUi: "YakitRoute.shortcutSettings"},
     "fingerprint-manage": {label: "指纹库", labelUi: "YakitRoute.fingerprintDatabase"},
     "ai-agent": {label: "AIAgent", labelUi: "YakitRoute.AIAgent"},
-    "ai-re-act": {label: "AI ReAct", labelUi: "YakitRoute.AIReAct"},
     "ssa-result-diff": {label: "ssa-result-diff", labelUi: "YakitRoute.ssa-result-diff"},
     "add-ai-forge": {label: "新建 Forge", labelUi: "YakitRoute.createForge"},
     "modify-ai-forge": {label: "编辑 Forge", labelUi: "YakitRoute.editForge"},
@@ -426,7 +424,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.ModifyAIForge,
     YakitRoute.AddAITool,
     YakitRoute.ModifyAITool,
-    YakitRoute.AI_ReAct
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -478,7 +475,6 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.ModifyAIForge,
     YakitRoute.AddAITool,
     YakitRoute.ModifyAITool,
-    YakitRoute.AI_ReAct
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -828,8 +824,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakJavaDecompiler />
         case YakitRoute.AI_Agent:
             return <AIAgent />
-        case YakitRoute.AI_ReAct:
-            return <AIReAct />
         case YakitRoute.ShortcutKey:
             return <ShortcutKeyList />
         case YakitRoute.FingerprintManage:

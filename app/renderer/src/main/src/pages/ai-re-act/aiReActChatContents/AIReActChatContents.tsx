@@ -1,19 +1,25 @@
 import React, {ReactNode, useEffect, useRef} from "react"
-import {AIReActChatContentsPProps} from "./AIReActChatContentsType.d"
+import {AIReActChatContentsPProps, AIStreamChatContentProps} from "./AIReActChatContentsType.d"
 import styles from "./AIReActChatContents.module.scss"
 import {AIChatMessage, AIChatStreams} from "@/pages/ai-agent/type/aiChat"
 import {AITriageChatContent} from "@/pages/ai-agent/aiTriageChat/AITriageChat"
-import {useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {AIChatToolColorCard, AIChatToolItem} from "@/pages/ai-agent/chatTemplate/AIChatTool"
 import {AIReActChatReview} from "../aiReActChatReview/AIReActChatReview"
 import {isShowToolColorCard} from "@/pages/ai-agent/utils"
+import {Tooltip} from "antd"
+import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
+import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
+import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
+import {AIStreamNodeIdToLabel} from "../hooks/defaultConstant"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
     chatClassName: styles["question-wrapper"]
 }
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {
-    const {chats, onSendAIRequire} = props
+    const {chats} = props
+    const {handleSendCasual} = useChatIPCDispatcher()
     const listRef = useRef<HTMLDivElement>(null)
     useEffect(() => {
         scrollToBottom()
@@ -37,38 +43,19 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         switch (uiType) {
             case "stream":
                 if (["question", "answer"].includes(type)) {
-                    const {NodeId, toolAggregation, stream: firstStream} = data as AIChatMessage.AIStreamOutput
+                    const {NodeId, NodeLabel, stream: firstStream} = data as AIChatMessage.AIStreamOutput
                     const {reason, system, stream} = firstStream || {
                         reason: "",
                         system: "",
                         stream: ""
                     }
                     if (isShowToolColorCard(NodeId)) {
-                        const toolCall: AIChatStreams = {
-                            nodeId: NodeId,
-                            timestamp: 0,
-                            data: firstStream,
-                            /**工具相关输出数据聚合 */
-                            toolAggregation
+                        const toolCall: AIChatMessage.AIStreamOutput = {
+                            ...(data as AIChatMessage.AIStreamOutput)
                         }
                         content = <AIChatToolColorCard toolCall={toolCall} />
                     } else {
-                        content = (
-                            <AITriageChatContent
-                                isAnswer={type === "answer"}
-                                loading={false}
-                                content={
-                                    <div className={styles["think-wrapper"]}>
-                                        {reason && <div>{reason}</div>}
-
-                                        {system && <div>{system}</div>}
-
-                                        {stream && <div>{stream}</div>}
-                                    </div>
-                                }
-                                {...chatContentExtraProps}
-                            />
-                        )
+                        content = <AIStreamChatContent stream={stream} nodeLabel={NodeLabel} />
                     }
                 }
                 break
@@ -82,13 +69,32 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                     />
                 )
                 break
+            case "thought":
+                content = (
+                    <AITriageChatContent
+                        isAnswer={type === "answer"}
+                        loading={false}
+                        content={`思考：${data}`}
+                        {...chatContentExtraProps}
+                    />
+                )
+                break
             case "toolResult":
                 const {toolAggregation} = data as AIChatMessage.AIChatToolResult
                 content = !!toolAggregation ? <AIChatToolItem item={toolAggregation} type='re-act' /> : <></>
                 break
-            case "toolReview":
-            case "requireUser":
-                content = <AIReActChatReview type={uiType} review={data} onSendAIRequire={onSendAIRequire} />
+            case "tool_use_review_require":
+            case "require_user_interactive":
+                content = (
+                    <AIReActChatReview
+                        type={uiType}
+                        review={data}
+                        onSendAI={handleSendCasual}
+                        isEmbedded={true}
+                        expand={true}
+                        className={styles["review-wrapper"]}
+                    />
+                )
                 break
             default:
                 break
@@ -101,5 +107,30 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 {chats.map((item: AIChatMessage.AICasualChatQAStream, index) => renderContent(item))}
             </div>
         </div>
+    )
+})
+
+const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.memo((props) => {
+    const {stream, nodeLabel} = props
+    const content = useCreation(() => {
+        return stream.slice(-150)
+    }, [stream])
+    return (
+        <Tooltip
+            title={
+                <div>
+                    {stream}
+                    <CopyComponents copyText={stream} />
+                </div>
+            }
+        >
+            <div className={styles["ai-stream-chat-content-wrapper"]}>
+                <div className={styles["title"]}>
+                    <OutlineSparklesColorsIcon />
+                    {nodeLabel}...
+                </div>
+                <div className={styles["ai-stream-content"]}>{content}</div>
+            </div>
+        </Tooltip>
     )
 })

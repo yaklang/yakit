@@ -1,6 +1,6 @@
 import {CSSProperties, Dispatch, ReactNode, SetStateAction} from "react"
 import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
-import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIStartParams} from "./type/aiChat"
+import {AIChatInfo, AIChatMessage, AIChatReview, AIInputEvent, AIStartParams} from "./type/aiChat"
 import {AITreeNodeProps} from "./aiTree/type"
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AITabsEnum} from "./defaultConstant"
@@ -96,7 +96,6 @@ export interface AIChatLeftSideProps {
     expand: boolean
     setExpand: Dispatch<SetStateAction<boolean>>
     tasks: AIChatMessage.PlanTask[]
-    onLeafNodeClick?: AITreeNodeProps["onClick"]
     pressure: AIChatMessage.Pressure[]
     cost: AIChatMessage.AICostMS[]
     card: AIChatMessage.AIInfoCard[]
@@ -115,22 +114,21 @@ export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
 }
 
 export interface AIAgentChatStreamProps {
-    scrollToTask?: AIChatMessage.PlanTask
-    setScrollToTask?: Dispatch<SetStateAction<AIChatMessage.PlanTask | undefined>>
-    isStopScroll?: boolean
-    setIsStopScroll?: Dispatch<SetStateAction<boolean>>
     tasks: AIChatMessage.PlanTask[]
-    activeStream: string[]
-    streams: Record<string, AIChatStreams[]>
+    streams: Record<string, AIChatMessage.AITaskStreamOutput[]>
     defaultExpand?: boolean
 }
 export interface ChatStreamCollapseItemProps {
     expandKey: string
-    info: AIChatStreams
+    info: AIChatMessage.AITaskStreamOutput
+    timestamp: number
     secondExpand: boolean
     handleChangeSecondPanel: (expand: boolean, order: string) => void
     className?: string
     defaultExpand?: boolean
+}
+export interface ChatStreamContentProps {
+    stream: AITaskStreamOutput["stream"]
 }
 export interface ChatStreamCollapseProps {
     id?: string
@@ -143,10 +141,7 @@ export interface ChatStreamCollapseProps {
     expand?: boolean
     onChange?: (value: boolean) => void
 }
-export interface AIChatToolSync {
-    syncId: string
-    info: AIChatStreams
-}
+
 export interface AIAgentChatFooterProps {
     /** 正在执行中 */
     execute: boolean
