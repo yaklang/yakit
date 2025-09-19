@@ -4,7 +4,7 @@ import {ManyMultiSelectForString, SwitchItem} from "@/utils/inputUtil"
 import {Col, Divider, Form, Modal, Row, Slider, Space, Upload} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {yakitInfo, warn, failed, success} from "@/utils/notification"
+import {yakitInfo, warn, failed, success, yakitNotify} from "@/utils/notification"
 import {AutoSpin} from "@/components/AutoSpin"
 import update from "immutability-helper"
 import {useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
@@ -40,6 +40,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 import emiter from "@/utils/eventBus/eventBus"
 import {CodeCustomize} from "./CustomizeCode"
+import {OutlineCogIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 
 export interface ConfigNetworkPageProp {}
 
@@ -114,6 +115,7 @@ interface ClientCertificatePem {
     CrtPem: TenumBuffer
     KeyPem: TenumBuffer
     CaCertificates: TenumBuffer[]
+    Host: string
 }
 
 interface ClientCertificatePfx {
@@ -121,6 +123,7 @@ interface ClientCertificatePfx {
     Pkcs12Bytes: TenumBuffer
     Pkcs12Password: TenumBuffer
     password?: boolean
+    Host?: string
 }
 
 interface ClientCertificates {
@@ -129,6 +132,7 @@ interface ClientCertificates {
     CaCertificates: TenumBuffer[]
     Pkcs12Bytes: TenumBuffer
     Pkcs12Password: TenumBuffer
+    Host?: string
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -209,8 +213,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             })
             if (Array.isArray(ClientCertificates) && ClientCertificates.length > 0 && format === 1) {
                 let newArr = ClientCertificates.map((item, index) => {
-                    const {Pkcs12Bytes, Pkcs12Password} = item
-                    return {Pkcs12Bytes, Pkcs12Password, name: `证书${index + 1}`}
+                    const {Pkcs12Bytes, Pkcs12Password, Host} = item
+                    return {Pkcs12Bytes, Pkcs12Password, Host, name: `证书${index + 1}`}
                 })
                 setCertificateParams(newArr)
                 currentIndex.current = ClientCertificates.length
@@ -282,6 +286,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             yakitInfo("更新配置成功")
             update()
             if (isNtml) setVisible(false)
+        }).catch((err) => {
+            yakitNotify("error", err + "")
         })
     })
 
@@ -323,8 +329,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             }
             const certificate = (certificateParams || []).filter((item) => item.password !== true)
             const ClientCertificates = certificate.map((item) => {
-                const {Pkcs12Bytes, Pkcs12Password} = item
-                return {Pkcs12Bytes, Pkcs12Password, ...obj}
+                const {Pkcs12Bytes, Pkcs12Password, Host} = item
+                return {Pkcs12Bytes, Pkcs12Password, Host, ...obj}
             })
             const newParams: GlobalNetworkConfig = {
                 ...params,
@@ -340,7 +346,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             ? [StringToUint8Array(values.CaCertificates)]
                             : [],
                     CrtPem: StringToUint8Array(values.CrtPem),
-                    KeyPem: StringToUint8Array(values.CrtPem)
+                    KeyPem: StringToUint8Array(values.CrtPem),
+                    Host: values.Host || ""
                 }
                 const newParams: GlobalNetworkConfig = {
                     ...params,
@@ -351,6 +358,44 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         }
     })
 
+    const hostRef = useRef<string>("")
+    const handleConfigureHost = (key: number, Host?: string) => {
+        hostRef.current = Host || ""
+        const m = showYakitModal({
+            title: "输入 Host 配置",
+            content: (
+                <div style={{paddingTop: 20}}>
+                    <Form labelCol={{span: 5}} wrapperCol={{span: 18}} size={"small"}>
+                        <Form.Item label={"域名"} help='为该证书指定Host地址'>
+                            <YakitInput
+                                defaultValue={hostRef.current}
+                                placeholder='例如baidu.com或者*.baidu.com'
+                                allowClear
+                                onChange={(e) => {
+                                    const {value} = e.target
+                                    hostRef.current = value
+                                }}
+                            />
+                        </Form.Item>
+                    </Form>
+                </div>
+            ),
+            onCancel: () => {
+                m.destroy()
+            },
+            onOkText: "添加",
+            onOk: () => {
+                if (Array.isArray(certificateParams)) {
+                    certificateParams[key].Host = hostRef.current
+                    let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
+                    setCertificateParams(cache)
+                }
+                m.destroy()
+            },
+            width: 400
+        })
+    }
+
     const closeCard = useMemoizedFn((item: ClientCertificatePfx) => {
         if (Array.isArray(certificateParams)) {
             let cache: ClientCertificatePfx[] = certificateParams.filter((itemIn) => item.name !== itemIn.name)
@@ -360,73 +405,83 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
     const failCard = useMemoizedFn((item: ClientCertificatePfx, key: number) => {
         return (
-            <div key={key} className={classNames(styles["certificate-card"], styles["certificate-fail"])}>
-                <div className={styles["decorate"]}>
-                    <RectangleFailIcon />
+            <div className={styles["certificate-card-item"]} key={key}>
+                <div className={classNames(styles["certificate-card"], styles["certificate-fail"])}>
+                    <div className={styles["decorate"]}>
+                        <RectangleFailIcon />
+                    </div>
+                    <div className={styles["card-hide"]}></div>
+                    <div className={styles["fail-main"]}>
+                        <div className={styles["title"]}>{item.name}</div>
+                        <SolidLockClosedIcon />
+                        <div className={styles["content"]}>未解密</div>
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => {
+                                const m = showYakitModal({
+                                    title: "密码解锁",
+                                    content: (
+                                        <div style={{padding: 20}}>
+                                            <YakitInput.Password
+                                                placeholder='请输入证书密码'
+                                                allowClear
+                                                onChange={(e) => {
+                                                    const {value} = e.target
+                                                    if (Array.isArray(certificateParams)) {
+                                                        certificateParams[key].Pkcs12Password =
+                                                            value.length > 0
+                                                                ? StringToUint8Array(value)
+                                                                : new Uint8Array()
+                                                        let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
+                                                        setCertificateParams(cache)
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    ),
+                                    onCancel: () => {
+                                        m.destroy()
+                                    },
+                                    onOk: () => {
+                                        ipcRenderer
+                                            .invoke("ValidP12PassWord", {
+                                                Pkcs12Bytes: item.Pkcs12Bytes,
+                                                Pkcs12Password: item.Pkcs12Password
+                                            } as IsSetGlobalNetworkConfig)
+                                            .then((result: {IsSetPassWord: boolean}) => {
+                                                if (result.IsSetPassWord) {
+                                                    if (Array.isArray(certificateParams)) {
+                                                        certificateParams[key].password = false
+                                                        let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
+                                                        setCertificateParams(cache)
+                                                        m.destroy()
+                                                    }
+                                                } else {
+                                                    failed(`密码错误`)
+                                                }
+                                            })
+                                    },
+                                    width: 400
+                                })
+                            }}
+                        >
+                            密码解锁
+                        </YakitButton>
+                    </div>
                 </div>
-                <div className={styles["card-hide"]}></div>
-                <div className={styles["fail-main"]}>
-                    <div
-                        className={styles["close"]}
+                <div className={styles["certificate-card-item-footer"]}>
+                    <OutlineCogIcon
+                        className={styles["icon-cog"]}
+                        onClick={() => {
+                            handleConfigureHost(key, item.Host)
+                        }}
+                    />
+                    <OutlineTrashIcon
+                        className={styles["icon-trash"]}
                         onClick={() => {
                             closeCard(item)
                         }}
-                    >
-                        <CloseIcon />
-                    </div>
-                    <div className={styles["title"]}>{item.name}</div>
-                    <SolidLockClosedIcon />
-                    <div className={styles["content"]}>未解密</div>
-                    <YakitButton
-                        type='outline2'
-                        onClick={() => {
-                            const m = showYakitModal({
-                                title: "密码解锁",
-                                content: (
-                                    <div style={{padding: 20}}>
-                                        <YakitInput.Password
-                                            placeholder='请输入证书密码'
-                                            allowClear
-                                            onChange={(e) => {
-                                                const {value} = e.target
-                                                if (Array.isArray(certificateParams)) {
-                                                    certificateParams[key].Pkcs12Password =
-                                                        value.length > 0 ? StringToUint8Array(value) : new Uint8Array()
-                                                    let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
-                                                    setCertificateParams(cache)
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                ),
-                                onCancel: () => {
-                                    m.destroy()
-                                },
-                                onOk: () => {
-                                    ipcRenderer
-                                        .invoke("ValidP12PassWord", {
-                                            Pkcs12Bytes: item.Pkcs12Bytes,
-                                            Pkcs12Password: item.Pkcs12Password
-                                        } as IsSetGlobalNetworkConfig)
-                                        .then((result: {IsSetPassWord: boolean}) => {
-                                            if (result.IsSetPassWord) {
-                                                if (Array.isArray(certificateParams)) {
-                                                    certificateParams[key].password = false
-                                                    let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
-                                                    setCertificateParams(cache)
-                                                    m.destroy()
-                                                }
-                                            } else {
-                                                failed(`密码错误`)
-                                            }
-                                        })
-                                },
-                                width: 400
-                            })
-                        }}
-                    >
-                        密码解锁
-                    </YakitButton>
+                    />
                 </div>
             </div>
         )
@@ -434,28 +489,36 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
     const succeeCard = useMemoizedFn((item: ClientCertificatePfx, key: number) => {
         return (
-            <div key={key} className={classNames(styles["certificate-card"], styles["certificate-succee"])}>
-                <div className={styles["decorate"]}>
-                    <RectangleSucceeIcon />
-                </div>
-                <div className={styles["union"]}>
-                    <UnionIcon />
-                </div>
-                <div className={styles["card-hide"]}></div>
+            <div className={styles["certificate-card-item"]} key={key}>
+                <div className={classNames(styles["certificate-card"], styles["certificate-succee"])}>
+                    <div className={styles["decorate"]}>
+                        <RectangleSucceeIcon />
+                    </div>
+                    <div className={styles["union"]}>
+                        <UnionIcon />
+                    </div>
+                    <div className={styles["card-hide"]}></div>
 
-                <div className={styles["success-main"]}>
-                    <div
-                        className={styles["close"]}
+                    <div className={styles["success-main"]}>
+                        <div className={styles["title"]}>{item.name}</div>
+                        <SolidCheckCircleIcon />
+                        <div className={styles["content"]}>可用</div>
+                        <div className={styles["password"]}>******</div>
+                    </div>
+                </div>
+                <div className={styles["certificate-card-item-footer"]}>
+                    <OutlineCogIcon
+                        className={styles["icon-cog"]}
+                        onClick={() => {
+                            handleConfigureHost(key, item.Host)
+                        }}
+                    />
+                    <OutlineTrashIcon
+                        className={styles["icon-trash"]}
                         onClick={() => {
                             closeCard(item)
                         }}
-                    >
-                        <CloseIcon />
-                    </div>
-                    <div className={styles["title"]}>{item.name}</div>
-                    <SolidCheckCircleIcon />
-                    <div className={styles["content"]}>可用</div>
-                    <div className={styles["password"]}>******</div>
+                    />
                 </div>
             </div>
         )
@@ -782,13 +845,16 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 </Form.Item>
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     自定义代码片段
-                                        <div className={styles["form-rule-code-customize-describe"]}>
-                                            配置后编写代码时自动补全将会提示，并且选中后可使用自己的代码片段
-                                        </div>
+                                    <div className={styles["form-rule-code-customize-describe"]}>
+                                        配置后编写代码时自动补全将会提示，并且选中后可使用自己的代码片段
+                                    </div>
                                 </Divider>
 
-
-                                <Form.Item label='代码片段' name='code-customize' className={styles["form-rule-code-customize-item"]}>
+                                <Form.Item
+                                    label='代码片段'
+                                    name='code-customize'
+                                    className={styles["form-rule-code-customize-item"]}
+                                >
                                     <CodeCustomize />
                                 </Form.Item>
 

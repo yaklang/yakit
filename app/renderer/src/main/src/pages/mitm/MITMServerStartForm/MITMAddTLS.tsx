@@ -129,6 +129,9 @@ export const InputCertificateForm: React.FC<InputCertificateFormProp> = React.fo
                     noWordWrap={true}
                 />
             </Form.Item>
+            <Form.Item label={"指定host地址"} name={"Host"}>
+                <YakitInput placeholder='例如baidu.com或者*.baidu.com' />
+            </Form.Item>
         </Form>
     )
 })
