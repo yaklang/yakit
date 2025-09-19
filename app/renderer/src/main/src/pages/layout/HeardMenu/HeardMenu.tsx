@@ -45,6 +45,7 @@ import {
     PrivateExpertRouteMenu,
     PrivateScanRouteMenu,
     PrivateSimpleRouteMenu,
+    ResidentPluginName,
     databaseConvertData
 } from "@/routes/newRoute"
 import {RouteToPageProps} from "../publicMenu/PublicMenu"
@@ -65,12 +66,14 @@ import {SolidPayloadIcon} from "@/assets/icon/solid"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {usePluginToId} from "@/store/publicMenu"
 
 const {ipcRenderer} = window.require("electron")
 
 const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const {defaultExpand, onRouteMenuSelect, setRouteToLabel} = props
     const {t, i18n} = useI18nNamespaces(["layout", "yakitRoute", "yakitUi"])
+    const {setNewPluginToId, pluginToId} = usePluginToId()
     // 专家模式菜单数据
     const ExpertMenus = useMemo(() => {
         return privateExchangeProps(PrivateExpertRouteMenu)
@@ -161,10 +164,33 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         }
     }, [])
 
+    // 获取 基础工具菜单下的4个插件 是否存在于本地库内
+    const fetchPluginToolInfo = useMemoizedFn(() => {
+        /** 基础工具菜单下的4个插件 */
+        const pluginTool = [
+            ResidentPluginName.SubDomainCollection,
+            ResidentPluginName.BasicCrawler,
+            ResidentPluginName.DirectoryScanning
+        ]
+        ipcRenderer
+            .invoke("QueryYakScriptByNames", {YakScriptName: pluginTool})
+            .then((res: {Data: YakScript[]}) => {
+                const {Data} = res
+                const info: Record<string, number> = {}
+                for (let item of Data) info[item.ScriptName] = +(item.Id || 0) || 0
+                const pluginToIds: Record<string, number> = {}
+                for (let name of pluginTool) pluginToIds[name] = info[name] || 0
+                setNewPluginToId(pluginToIds)
+            })
+            .catch((err) => {})
+    })
+
     useEffect(() => {
+        fetchPluginToolInfo()
         // 除简易版本外 更新菜单
         if (!isEnpriTraceAgent()) {
             ipcRenderer.on("fetch-new-main-menu", (e) => {
+                fetchPluginToolInfo()
                 init(getPatternMenu())
             })
             return () => {
@@ -397,13 +423,25 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     /** 更新前端菜单数据(单项) */
     const updateSingleMenu = useMemoizedFn((info: {pluginName: string; pluginId: number}) => {
         const menus = [...routeMenu]
+        const pluginTool = [
+            ResidentPluginName.SubDomainCollection,
+            ResidentPluginName.BasicCrawler,
+            ResidentPluginName.DirectoryScanning
+        ]
+        const pluginToIds: Record<string, number> = {}
         menus.forEach((item) => {
             ;(item.children || []).forEach((subItem) => {
                 if (subItem.yakScripName === info.pluginName) {
                     subItem.yakScriptId = info.pluginId
+
+                    if (pluginTool.includes(info.pluginName as ResidentPluginName)) {
+                        pluginToIds[info.pluginName] = +(subItem.yakScriptId || 0) || 0
+                    }
                 }
             })
         })
+
+        setNewPluginToId(pluginToIds)
         setRouteMenu(menus)
     })
     /** 插件菜单未下载提示框 */
