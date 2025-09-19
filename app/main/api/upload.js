@@ -30,11 +30,8 @@ module.exports = (win, getClient) => {
         return fileData.toString("base64")
     })
 
-    // 上传次数缓存
-    let postPackageHistory = {}
     const postProject = ({url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, type, token}) => {
         return new Promise((resolve, reject) => {
-            postPackageHistory[hash] ? (postPackageHistory[hash] += 1) : (postPackageHistory[hash] = 1)
             const percent = (chunkIndex + 1) / totalChunks
             const formData = new FormData()
             formData.append("file", chunkStream)
@@ -158,7 +155,6 @@ module.exports = (win, getClient) => {
                     }
                 }
             }
-            postPackageHistory = {}
             resolve(TaskStatus)
         })
     })
