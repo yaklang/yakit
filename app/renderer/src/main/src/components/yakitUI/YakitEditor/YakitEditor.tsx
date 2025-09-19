@@ -1098,19 +1098,21 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
 
         deltaDecorationsRef.current = () => {
-            if (!model) return
             current = model.deltaDecorations(current, generateDecorations())
         }
 
         let lastValue = model.getValue()
         editor.onDidChangeModelContent((e) => {
-            if (!model) return
-            const newValue = model.getValue()
-            if (newValue === lastValue) {
-                return
-            }
-            lastValue = newValue
-            current = model.deltaDecorations(current, generateDecorations())
+            // 问题：使用 onDidChangeModelContent 生命周期钩子时，执行 model.deltaDecorations 有时可能不起作用。
+            // 这通常是因为在更新装饰器时，可能存在多次渲染/更新的时机问题，特别是当 Monaco 编辑器的模型（model）内容还没有完全渲染或更新时。
+            setTimeout(() => {
+                const newValue = model.getValue()
+                if (newValue === lastValue) {
+                    return
+                }
+                lastValue = newValue
+                current = model.deltaDecorations(current, generateDecorations())
+            }, 0)
         })
         current = model.deltaDecorations(current, generateDecorations())
 
