@@ -8,18 +8,18 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {useSafeState} from "ahooks"
 
 const KnowledgeBase: FC = () => {
-    const [knowledgeBaseId, setKnowledgeBaseId] = useSafeState<number>()
+    const [knowledgeBaseitems, setKnowledgeBaseItems] = useSafeState<{id: number, name: string}>()
     return (
         <div className={styles["repository-manage"]}>
             <YakitResizeBox
                 firstNodeStyle={{padding: 0}}
                 lineStyle={{display: "none"}}
                 firstNode={
-                    <KnowledgeBaseManage setKnowledgeBaseId={setKnowledgeBaseId} knowledgeBaseId={knowledgeBaseId} />
+                    <KnowledgeBaseManage setKnowledgeBaseItems={setKnowledgeBaseItems} knowledgeBaseitems={knowledgeBaseitems} />
                 }
                 firstRatio='300px'
                 firstMinSize={300}
-                secondNode={<KnowledgeBaseTable knowledgeBaseId={knowledgeBaseId} />}
+                secondNode={<KnowledgeBaseTable knowledgeBaseitems={knowledgeBaseitems} />}
             />
         </div>
     )

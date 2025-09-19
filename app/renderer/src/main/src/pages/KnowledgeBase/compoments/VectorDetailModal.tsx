@@ -48,7 +48,7 @@ const VectorDetailModal: FC<TVectorDetailModalProps> = ({
     useEffect(() => {
         selectedEntryDetail?.ID && run()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [vectorDetailModalVisible])
+    }, [selectedEntryDetail])
 
     return (
         <YakitModal

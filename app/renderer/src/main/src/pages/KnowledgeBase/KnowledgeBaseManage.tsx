@@ -34,9 +34,15 @@ const createMenuList = [
     }
 ]
 
-const KnowledgeBaseManage: FC<{setKnowledgeBaseId: (val: number) => void; knowledgeBaseId?: number}> = ({
-    setKnowledgeBaseId,
-    knowledgeBaseId
+const KnowledgeBaseManage: FC<{setKnowledgeBaseItems: (val: {
+    id: number;
+    name: string;
+}) => void; knowledgeBaseitems?: {
+    id: number;
+    name: string;
+}}> = ({
+     setKnowledgeBaseItems,
+     knowledgeBaseitems
 }) => {
     const [visible, setVisible] = useSafeState(false)
     const [menuOpenKey, setMenuOpenKey] = useSafeState(-1)
@@ -57,7 +63,10 @@ const KnowledgeBaseManage: FC<{setKnowledgeBaseId: (val: number) => void; knowle
         {
             onSuccess: (value) => {
                 if (Array.isArray(value) && value.length > 0) {
-                    setKnowledgeBaseId(value?.[0]?.ID)
+                    setKnowledgeBaseItems({
+                        id: value?.[0]?.ID,
+                        name: value?.[0]?.KnowledgeBaseName
+                    })
                 }
             }
         }
@@ -115,10 +124,13 @@ const KnowledgeBaseManage: FC<{setKnowledgeBaseId: (val: number) => void; knowle
                 {knowledgeBasesData?.map((it) => (
                     <div
                         className={classNames(styles["repository-manage-box"], {
-                            [styles["repository-manage-box-selected"]]: knowledgeBaseId === it.ID
+                            [styles["repository-manage-box-selected"]]: knowledgeBaseitems?.id === it.ID
                         })}
                         key={it.ID}
-                        onClick={() => setKnowledgeBaseId(it.ID)}
+                        onClick={() => setKnowledgeBaseItems({
+                            id: it.ID,
+                            name: it.KnowledgeBaseName
+                        })}
                     >
                         <div className={styles["repository-manage-box-content"]}>
                             <div>

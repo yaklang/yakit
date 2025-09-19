@@ -1,17 +1,10 @@
 import {FC, memo, useMemo, useRef} from "react"
-import {useGetState, useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 
-import {KnowledgeBaseEntry, SearchKnowledgeEntryParams} from "@/components/playground/knowlegeBase"
+import {KnowledgeBaseEntry} from "@/components/playground/knowlegeBase"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {OutlinePencilaltIcon} from "@/assets/icon/outline"
-import {SolidPlayIcon} from "@/assets/icon/solid"
-import {TrashIcon} from "@/assets/newIcon"
-import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {Space} from "antd"
 import styles from "./knowledgeBase.module.scss"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -20,6 +13,7 @@ import {failed, success} from "@/utils/notification"
 import {getEntityColumns, getKnowledgeColumns, getVectorColumns} from "./compoments/KnowledgBaseColumns"
 import {KnowledgeModalVisible} from "./compoments/KnowledgeModalVisible"
 import {VectorDetailModal} from "./compoments/VectorDetailModal"
+import {AddKnowledgenBaseModal} from "./compoments/AddKnowledgenBaseModal"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -27,7 +21,7 @@ const defaultParams = {
     KnowledgeBaseId: -1,
     Pagination: {
         Page: 1,
-        Limit: 10,
+        Limit: 30,
         OrderBy: "id",
         Order: "desc" as const
     },
@@ -49,31 +43,42 @@ const tableHeaderGroupOptions = [
     }
 ]
 
-const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) => {
+const KnowledgeBaseTable: FC<{
+    knowledgeBaseitems?: {
+        id: number
+        name: string
+    }
+}> = ({knowledgeBaseitems}) => {
     const [type, setType] = useSafeState("Knowledge")
     const [tableData, setTableData] = useSafeState<KnowledgeBaseEntry[]>([])
+    const [isRefresh, setIsRefresh] = useSafeState(false)
+    const [tableSearchValue, setTableSearchValue] = useSafeState("")
+
     const [knowledgeModalData, setKnowledgeModalData] = useSafeState({
         data: {},
         visible: false
     })
-    const [isRefresh, setIsRefresh] = useSafeState(false)
-    const [tableSearchValue, setTableSearchValue] = useSafeState("")
     const [vectorDetailModalData, setVectorDetailModalData] = useSafeState({
         vectorDetailModalVisible: false,
         selectedEntryDetail: {}
     })
-    const [changePage, setChangePage, getChangePage] = useGetState(1)
+    const [pagination, setPagination] = useSafeState(defaultParams.Pagination)
+    const [total, setTotal] = useSafeState(0)
+    const [addKnowledgenBaseModal, setAddKnowledgenBaseModal] = useSafeState({
+        addKnowledgenBaseModalVisible: false,
+        knowledgeBaseId: knowledgeBaseitems?.id,
+        KnowledgeBaseName: knowledgeBaseitems?.name
+    })
 
     const boxHeightRef = useRef(0)
 
     const {data, runAsync, params} = useRequest(
         async (params) => {
-            console.log(params, "params")
             let resultData
             if (type === "Knowledge") {
                 const result = await ipcRenderer.invoke("SearchKnowledgeBaseEntry", {
                     ...params,
-                    KnowledgeBaseId: knowledgeBaseId
+                    KnowledgeBaseId: knowledgeBaseitems?.id
                 })
                 resultData = {...result, list: result?.KnowledgeBaseEntries}
             } else if (type === "Entity") {
@@ -81,7 +86,7 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
                     ...params,
                     Filter: {
                         Names: params.Keyword,
-                        BaseIndex: knowledgeBaseId
+                        BaseIndex: knowledgeBaseitems?.id
                     },
                     KnowledgeBaseId: undefined,
                     Keyword: undefined
@@ -90,18 +95,22 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
             } else if (type === "Vector") {
                 const result = await ipcRenderer.invoke("ListVectorStoreEntries", {
                     ...params,
-                    CollectionID: knowledgeBaseId
+                    CollectionID: knowledgeBaseitems?.id
                 })
                 resultData = {...result, list: result?.Entries}
             }
-            resultData?.Pagination?.Page == "1" && setIsRefresh((preValue) => !preValue)
-            console.log(resultData.list, "resultData.list")
-            setTableData(resultData.list ?? [])
+            setTotal(resultData?.Total)
             return resultData
         },
         {
             manual: true,
-            onError: (err) => failed("查询列表失败" + err)
+            onError: (err) => failed("查询列表失败" + err),
+            onSuccess: (values) => {
+                setTableData((preList) => {
+                    const list = [...preList, ...values?.list]
+                    return Array.from(new Map(list.map((item) => [item.ID, item])).values())
+                })
+            }
         }
     )
 
@@ -132,21 +141,31 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
                 ...defaultParams.Pagination,
                 Limit: limitCount
             },
-            KnowledgeBaseId: knowledgeBaseId
+            KnowledgeBaseId: knowledgeBaseitems?.id
         }
-        console.log(Requsetparams, "Requsetparams")
         runAsync(Requsetparams)
     })
 
     useUpdateEffect(() => {
         setTableData([])
-        updateData()
         setTableSearchValue("")
         setIsRefresh(!isRefresh)
-        setChangePage(1)
-    }, [knowledgeBaseId, type])
+        setTotal(0)
+        setPagination((preValue) => ({...preValue, Page: 1}))
+    }, [knowledgeBaseitems?.id, type])
 
+    useUpdateEffect(() => {
+        setTotal(0)
+        runAsync({
+            Pagination: pagination,
+            Keyword: tableSearchValue
+        })
+    }, [pagination])
+
+    // 搜索表格功能
     const onSearch = async (value: string) => {
+        setIsRefresh(!isRefresh)
+        setTableData([])
         const limitCount: number = boxHeightRef.current > 0 ? Math.ceil(boxHeightRef.current / 28) : 30
         await runAsync({
             Pagination: {
@@ -156,6 +175,11 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
             Keyword: value
         })
     }
+
+    // 表格头部 知识/实体/向量选择功能
+    const onChangeType = useMemoizedFn(async (value: string) => {
+        setType(value)
+    })
 
     const targetColumns = useMemo(() => {
         switch (type) {
@@ -171,8 +195,15 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
                 break
         }
         return null
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [type, knowledgeBaseId])
+    }, [type, knowledgeBaseitems?.id])
+
+    const handAddKnowledgenBase = useMemoizedFn(() => {
+        setAddKnowledgenBaseModal({
+            addKnowledgenBaseModalVisible: true,
+            knowledgeBaseId: knowledgeBaseitems?.id,
+            KnowledgeBaseName: knowledgeBaseitems?.name
+        })
+    })
 
     const knowledgeBaseTableRenderTitle = useMemo(() => {
         return (
@@ -186,9 +217,7 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
                         buttonStyle='solid'
                         options={tableHeaderGroupOptions}
                         value={type}
-                        onChange={(e) => {
-                            setType(e.target.value)
-                        }}
+                        onChange={(e) => onChangeType(e.target.value)}
                     />
                     <div>
                         <YakitInput.Search
@@ -197,13 +226,15 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
                             onChange={(e) => setTableSearchValue(e.target.value)}
                             onSearch={(value) => onSearch(value)}
                         />
-                        <YakitButton>添加</YakitButton>
+                        <YakitButton onClick={handAddKnowledgenBase}>添加</YakitButton>
                     </div>
                 </div>
             </div>
         )
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [type, tableSearchValue])
+    }, [type, tableSearchValue, knowledgeBaseitems?.id])
+
+    // grpcFetchLocalPluginDetail({Name: "核心引擎性能采样"}, true)
 
     return (
         <div className={styles["repository-manage-table"]}>
@@ -234,23 +265,13 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
                 pagination={{
                     page: data?.Pagination?.Page,
                     limit: data?.Pagination?.Limit,
-                    total: data?.Total,
+                    total: total,
                     onChange: async (page, limit) => {
-                        const oldParams = params?.[0] ?? defaultParams
-                        setChangePage(page)
-                        const dat =
-                            oldParams.Pagination.Page != getChangePage()
-                                ? await runAsync({
-                                      ...oldParams,
-                                      Pagination: {
-                                          ...oldParams?.Pagination,
-                                          Page: changePage,
-                                          Limit: limit
-                                      }
-                                  })
-                                : {list: []}
-                        console.log(getChangePage(), page, changePage, "sss")
-                        setTableData(() => [...tableData, ...dat?.list])
+                        setPagination((preValue) => ({
+                            ...preValue,
+                            Limit: limit,
+                            Page: page
+                        }))
                     }
                 }}
             />
@@ -261,7 +282,11 @@ const KnowledgeBaseTable: FC<{knowledgeBaseId?: number}> = ({knowledgeBaseId}) =
             <VectorDetailModal
                 vectorDetailModalData={vectorDetailModalData}
                 handleCloseVectorDetailModal={setVectorDetailModalData}
-                knowledgeBaseId={knowledgeBaseId}
+                knowledgeBaseId={knowledgeBaseitems?.id}
+            />
+            <AddKnowledgenBaseModal
+                addKnowledgenBaseModal={addKnowledgenBaseModal}
+                setAddKnowledgenBaseModal={setAddKnowledgenBaseModal}
             />
         </div>
     )
