@@ -82,7 +82,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     continueExe = false
                     setLog([
                         `获取可用端口失败: ${err}`,
-                        builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复` : ""
+                        builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复或手动切换端口` : ""
                     ])
                     setYakitStatus("engine-error")
                     return
@@ -104,7 +104,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     continueExe = false
                     setLog([
                         `获取可用端口失败: ${err}`,
-                        builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复` : ""
+                        builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复或手动切换端口` : ""
                     ])
                     setYakitStatus("engine-error")
                 }
@@ -116,7 +116,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     continueExe = false
                     setLog([
                         `获取可用端口失败: ${err}`,
-                        builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复` : ""
+                        builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复或手动切换端口` : ""
                     ])
                     setYakitStatus("engine-error")
                 }
