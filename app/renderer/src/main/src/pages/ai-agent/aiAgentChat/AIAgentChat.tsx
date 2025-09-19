@@ -45,14 +45,9 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     // #endregion
 
     // #region ai-re-act-chat 相关逻辑
-    /** tirage对话是否存在 */
-    const isTriageChatExist = useRef(false)
     const handleStartTriageChat = useMemoizedFn((qs: string) => {
         setMode("re-act")
-        setTimeout(() => {
-            handleStart(qs)
-            isTriageChatExist.current = true
-        }, 100)
+        handleStart(qs)
     })
 
     // #region ai-task-chat 相关逻辑
@@ -69,9 +64,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     ForgeParams: request.ForgeParams
                 }
             })
-        setTimeout(() => {
-            handleStart("")
-        }, 100)
+        handleStart("")
     })
 
     /**自由对话中触发任务开始 */
@@ -192,7 +185,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 })
         }
     })
-
     const handleStart = useMemoizedFn((qs: string) => {
         const request: AIStartParams = {
             ...formatAIAgentSetting(setting),
@@ -236,10 +228,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             InteractiveId: id,
             InteractiveJSONInput: value
         }
-        setTimeout(() => {
-            events.onSend(activeID, type, info)
-            handleStopAfterChangeState()
-        }, 50)
+        events.onSend(activeID, type, info)
+        handleStopAfterChangeState()
     })
     const onStop = useMemoizedFn(() => {
         if (execute && activeID) {
