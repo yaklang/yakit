@@ -61,7 +61,6 @@ import {IMonacoEditor, NewHTTPPacketEditor} from "@/utils/editors"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
 import {Uint8ArrayToString} from "@/utils/str"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {HTTPHistoryFilter} from "./HTTPHistory/HTTPHistoryFilter"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
@@ -85,10 +84,10 @@ import {
 } from "../fuzzer/MatcherAndExtractionCard/constants"
 import {Divider, Tooltip} from "antd"
 import {YakitPopover, YakitPopoverProp} from "@/components/yakitUI/YakitPopover/YakitPopover"
-
-import styles from "./HTTPHistoryAnalysis.module.scss"
 import {getAction, ByteCountTag} from "../fuzzer/HTTPFuzzerPage"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
+
+import styles from "./HTTPHistoryAnalysis.module.scss"
 const MITMRule = React.lazy(() => import("../mitm/MITMRule/MITMRule"))
 const {ipcRenderer} = window.require("electron")
 interface HTTPHistoryAnalysisProps {
@@ -235,6 +234,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                             toWebFuzzer={pageInfo.webFuzzer}
                             runtimeId={pageInfo.runtimeId}
                             sourceType={pageInfo.sourceType}
+                            webFuzzerPageId={pageInfo.pageId}
                         />
                     </div>
                 }

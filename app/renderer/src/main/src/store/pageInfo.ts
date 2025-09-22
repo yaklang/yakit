@@ -118,6 +118,7 @@ export interface HTTPHistoryAnalysisPageInfo {
     webFuzzer?: boolean
     runtimeId?: string[]
     sourceType?: string
+    pageId?: string
 }
 
 export interface PluginBatchExecutorPageInfoProps {
