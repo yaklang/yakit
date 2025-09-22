@@ -34,7 +34,8 @@ export const AIStreamNodeIdToLabel: Record<string, {label: string}> = {
     plan: {label: "任务规划"},
     decision: {label: "决策"},
     output: {label: "通用输出"},
-    forge: {label: "智能应用"}
+    forge: {label: "智能应用"},
+    "re-act-loop-thought": {label: "思考"}
 }
 
 /** AI 判断 review 的风险阈值等级对应的展示内容 */

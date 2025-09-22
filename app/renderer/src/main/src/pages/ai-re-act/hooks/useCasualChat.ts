@@ -16,7 +16,7 @@ import {AIReviewJudgeLevelMap, AIStreamNodeIdToLabel, DefaultAIToolResult} from 
 import {yakitNotify} from "@/utils/notification"
 
 // 属于该 hook 处理数据的类型
-export const UseCasualChatTypes = ["thought", "result"]
+export const UseCasualChatTypes = ["thought", "result", "exec_aiforge_review_require"]
 
 function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
@@ -227,49 +227,22 @@ function useCasualChat(params?: UseCasualChatParams) {
 
             return newArr
         })
-    })
-
-    // 补全工具执行结果UI内的执行总结
-    const handleToolResultSummary = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
-        setContents((old) => {
-            let newArr = old.map((item) => {
-                if (item.uiType === "toolResult") {
-                    const resultInfo = item.data as AIChatMessage.AIChatToolResult
-                    if (resultInfo.toolAggregation.callToolId === callToolId) {
-                        const toolResult = getToolResult(callToolId)
-                        return {
-                            ...item,
-                            data: {
-                                ...resultInfo,
-                                toolAggregation: {
-                                    ...toolResult,
-                                    toolStdoutContent: resultInfo?.toolAggregation?.toolStdoutContent || {
-                                        ...DefaultAIToolResult.toolStdoutContent
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                return item
-            })
-            return newArr
-        })
         onRemoveToolResult(callToolId)
         toolStdOutSelectors.current = cloneDeep(DefaultAIToolResult)
     })
     // #endregion
 
     // #region review事件转换成UI处理逻辑
-    // 处理 tool_review 的 ai 判断得分事件
+    // 处理 tool_review和forge_view 的 ai 判断得分事件
     const handleToolReviewJudgement = useMemoizedFn((score: AIChatMessage.AIToolReviewJudgement) => {
         const {interactive_id} = score
         score.levelLabel = AIReviewJudgeLevelMap[score?.level || ""]?.label || undefined
         const isTrigger = !isAutoContinueReview(getRequest)
         if (isTrigger) {
+            const hint = ["tool_use_review_require", "exec_aiforge_review_require"]
             setContents((old) => {
                 return old.map((item) => {
-                    if (item.uiType === "tool_use_review_require" && item.data) {
+                    if (hint.includes(item.uiType) && item.data) {
                         const data = item.data as AIChatMessage.ToolUseReviewRequire
                         if (
                             data.id === interactive_id &&
@@ -327,6 +300,26 @@ function useCasualChat(params?: UseCasualChatParams) {
             })
         }
     )
+
+    // forge_review 事件处理
+    const handleExecForgeReview = useMemoizedFn((params: {Timestamp: number; data: AIChatMessage.ExecForgeReview}) => {
+        const {Timestamp, data} = params
+        review.current = cloneDeep({type: "exec_aiforge_review_require", data: data})
+        const isTrigger = !isAutoContinueReview(getRequest) || noSkipReviewTypes("exec_aiforge_review_require")
+        if (isTrigger) {
+            setContents((old) => {
+                const newArr = [...old]
+                newArr.push({
+                    id: uuidv4(),
+                    type: "answer",
+                    uiType: "exec_aiforge_review_require",
+                    Timestamp,
+                    data: cloneDeep(data)
+                })
+                return newArr
+            })
+        }
+    })
 
     // 释放当前review信息
     const handleReviewRelease = useMemoizedFn((id: string) => {
@@ -454,6 +447,20 @@ function useCasualChat(params?: UseCasualChatParams) {
                 return
             }
 
+            if (res.Type === "exec_aiforge_review_require") {
+                const data = JSON.parse(ipcContent) as AIChatMessage.ExecForgeReview
+                if (!data?.id) {
+                    handleGrpcDataPushLog({
+                        type: "error",
+                        info: res,
+                        pushLog: handlePushLog
+                    })
+                    return
+                }
+                handleExecForgeReview({Timestamp: res.Timestamp, data})
+                return
+            }
+
             if (res.Type === "tool_call_start") {
                 // 工具调用开始
                 const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
@@ -507,19 +514,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 return
             }
             if (res.Type === "tool_call_summary") {
-                // 工具调用总结
-                const data = JSON.parse(ipcContent) as AIChatMessage.AIToolCall
-                const currentToolData = getToolResult(data.call_tool_id)
-                if (currentToolData.status === "user_cancelled") {
-                    currentToolData.summary = "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
-                } else {
-                    currentToolData.summary = data.summary || ""
-                }
-                onSetToolResult(data?.call_tool_id, {
-                    summary: currentToolData.summary,
-                    time: res.Timestamp
-                })
-                handleToolResultSummary(res, data?.call_tool_id || "")
+                // 自由对话的 tool 执行没有 summary 这一步
                 return
             }
         } catch (error) {

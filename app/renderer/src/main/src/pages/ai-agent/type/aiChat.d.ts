@@ -149,12 +149,18 @@ export interface AIOutputEvent {
 
 /** UI 渲染, Review相关信息 */
 export interface AIChatReview {
-    type: "plan_review_require" | "tool_use_review_require" | "task_review_require" | "require_user_interactive"
+    type:
+        | "plan_review_require"
+        | "tool_use_review_require"
+        | "task_review_require"
+        | "require_user_interactive"
+        | "exec_aiforge_review_require"
     data:
         | AIChatMessage.PlanReviewRequire
         | AIChatMessage.ToolUseReviewRequire
         | AIChatMessage.TaskReviewRequire
         | AIChatMessage.AIReviewRequire
+        | AIChatMessage.ExecForgeReview
 }
 
 export interface AIChatReviewExtra {
@@ -453,10 +459,29 @@ export declare namespace AIChatMessage {
          * - toolResult 工具执行经过 [AIChatToolResult]
          * - tool_use_review_require 工具 review [ToolUseReviewRequire]
          * - require_user_interactive AI 人机交互review [AIReviewRequire]
+         * - exec_aiforge_review_require Forge的 reivew [ExecForgeReview]
          */
-        uiType: "stream" | "thought" | "result" | "toolResult" | "tool_use_review_require" | "require_user_interactive"
+        uiType:
+            | "stream"
+            | "thought"
+            | "result"
+            | "toolResult"
+            | "tool_use_review_require"
+            | "require_user_interactive"
+            | "exec_aiforge_review_require"
         Timestamp: AIOutputEvent["Timestamp"]
-        data: AIStreamOutput | string | AIChatToolResult | ToolUseReviewRequire | AIReviewRequire
+        data: AIStreamOutput | string | AIChatToolResult | ToolUseReviewRequire | AIReviewRequire | ExecForgeReview
+    }
+
+    /** forge_review */
+    export interface ExecForgeReview {
+        id: string
+        forge_name: string
+        forge_verbose_name: string
+        forge_desc: string
+        forge_params: Record<string, any>
+        selectors: ReviewSelector[]
+        aiReview?: AIToolReviewJudgement
     }
 }
 /**@deprecated */
