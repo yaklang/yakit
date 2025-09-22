@@ -68,3 +68,8 @@
         justify-content: flex-end;
     }
 }
+
+.tooltip-stream-content {
+    max-height: 40vh;
+    overflow: auto;
+}

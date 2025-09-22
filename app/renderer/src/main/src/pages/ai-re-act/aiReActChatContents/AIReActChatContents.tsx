@@ -118,7 +118,7 @@ const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.memo((prop
     return (
         <Tooltip
             title={
-                <div>
+                <div className={styles["tooltip-stream-content"]}>
                     {stream}
                     <CopyComponents copyText={stream} />
                 </div>
