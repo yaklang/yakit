@@ -586,7 +586,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         downstreamProxyStr = "",
         noShowHex = true
     } = props
-    const {t, i18n} = useI18nNamespaces(["history"])
+    const {t, i18n} = useI18nNamespaces(["history", "yakitUi"])
     const [strValue, setStrValue] = useState(originValue)
     const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array()) // 只有切换到hex时才会用这个值，目前切换得时候会把最新得编辑器中得值赋值到该变量里面
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
@@ -820,7 +820,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             setTypeOptions([
                                 {
                                     value: "beautify",
-                                    label: t("NewHTTPPacketEditor.beautify")
+                                    label: t("YakitButton.beautify")
                                 },
                                 {
                                     value: "hex",
@@ -844,7 +844,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             setTypeOptions([
                                 {
                                     value: "beautify",
-                                    label: t("NewHTTPPacketEditor.beautify")
+                                    label: t("YakitButton.beautify")
                                 },
                                 {
                                     value: "hex",
@@ -866,7 +866,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     setTypeOptions([
                         {
                             value: "beautify",
-                            label: t("NewHTTPPacketEditor.beautify")
+                            label: t("YakitButton.beautify")
                         },
                         {
                             value: "hex",
@@ -1061,9 +1061,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                                 formItemStyle={{marginBottom: 4}}
                                                                 label={t("NewHTTPPacketEditor.fontSize")}
                                                                 data={[
-                                                                    {text: t("NewHTTPPacketEditor.small"), value: 12},
-                                                                    {text: t("NewHTTPPacketEditor.medium"), value: 16},
-                                                                    {text: t("NewHTTPPacketEditor.large"), value: 20}
+                                                                    {text: t("YakitEditor.small"), value: 12},
+                                                                    {text: t("YakitEditor.medium"), value: 16},
+                                                                    {text: t("YakitEditor.large"), value: 20}
                                                                 ]}
                                                                 oldTheme={false}
                                                                 value={fontSize}

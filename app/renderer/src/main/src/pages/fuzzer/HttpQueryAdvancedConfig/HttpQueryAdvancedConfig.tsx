@@ -57,6 +57,7 @@ import {
 } from "../MatcherAndExtractionCard/constants"
 import {defaultAdvancedConfigValue, DefFuzzerConcurrent} from "@/defaultConstants/HTTPFuzzerPage"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -935,7 +936,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <Form.Item label='重试次数' name='maxRetryTimes'>
                                     <YakitInputNumber type='horizontal' size='small' min={0} />
                                 </Form.Item>
-                                <YakitCollapse activeKey={retryActive} destroyInactivePanel={true} >
+                                <YakitCollapse activeKey={retryActive} destroyInactivePanel={true}>
                                     <YakitPanel
                                         header={
                                             <Form.Item name='retry' noStyle valuePropName='checked'>
@@ -1102,7 +1103,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             activeKey={activeKey}
                             onChange={(key) => onSwitchCollapse(key)}
                             destroyInactivePanel={true}
-                            className={styles['rule-collapse']}
+                            className={styles["rule-collapse"]}
                         >
                             <MatchersPanel
                                 key='匹配器'
@@ -1475,6 +1476,7 @@ interface MatchersListProps {
 /**匹配器 */
 export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
     const {matcherValue, onAdd, onRemove, onEdit, onChangeMatcher} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const {matchersList} = matcherValue
     return (
         <>
@@ -1488,7 +1490,7 @@ export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                                         <div className={styles["matchers-heard-left"]}>
                                             <YakitRadioButtons
                                                 buttonStyle='solid'
-                                                options={filterModeOptions}
+                                                options={filterModeOptions(t)}
                                                 size='small'
                                                 value={matcherItem.filterMode}
                                                 onChange={(e) => {
@@ -1535,8 +1537,9 @@ export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                                                     <span className={styles["item-label"]}>
                                                         [
                                                         {
-                                                            matcherTypeList.find((e) => e.value === subItem.MatcherType)
-                                                                ?.label
+                                                            matcherTypeList(t).find(
+                                                                (e) => e.value === subItem.MatcherType
+                                                            )?.label
                                                         }
                                                         ]
                                                     </span>

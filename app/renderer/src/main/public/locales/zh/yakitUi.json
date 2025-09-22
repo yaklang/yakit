@@ -1,15 +1,21 @@
 {
     "YakitButton": {
         "ok": "确定",
+        "confirm": "确认",
         "cancel": "取消",
         "save": "保存",
+        "save_as": "另存为",
         "doNotSave": "不保存",
+        "save_template": "保存模板",
         "edit": "编辑",
         "delete": "删除",
         "new": "新建",
         "add": "添加",
         "added": "已添加",
+        "add_new": "新增",
         "import": "导入",
+        "importResources": "导入资源",
+        "importPlugin": "导入插件",
         "export": "导出",
         "exportJson": "导出 JSON",
         "exportExcel": "导出Excel",
@@ -25,6 +31,7 @@
         "back": "返回",
         "finish": "完成",
         "apply": "应用",
+        "do_not_apply": "不应用",
         "open": "打开",
         "close": "关闭",
         "remindMeLater": "稍后再说",
@@ -38,8 +45,17 @@
         "batchOperation": "批量操作",
         "clear": "清空",
         "disable": "禁用",
+        "disable_all": "全部禁用",
         "enable": "启用",
-        "detail": "详情"
+        "detail": "详情",
+        "stop": "停止",
+        "continue": "继续",
+        "exit": "退出",
+        "replace": "替换",
+        "do_not_replace": "不替换",
+        "more": "更多",
+        "custom": "自定义",
+        "beautify": "美化"
     },
     "YakitNotification": {
         "success": "操作成功",
@@ -70,7 +86,8 @@
         "copySuccess": "复制成功",
         "loadFailed": "加载失败{colon}",
         "sendSuccess": "发送成功",
-        "executeFailed": "执行失败{colon}"
+        "executeFailed": "执行失败{colon}",
+        "search_failed": "搜索失败{colon}"
     },
     "YakitFormDragger": {
         "filePath": "文件路径",
@@ -95,6 +112,7 @@
         "filePathCountError": "文件路径数识别错误,请以逗号进行分割"
     },
     "YakitInput": {
+        "please_enter": "请输入...",
         "searchKeyWordPlaceholder": "请输入关键词搜索",
         "supportInputFormat": "支持输入200,200-204格式，多个用逗号分隔"
     },
@@ -106,6 +124,38 @@
         "oneMinute": "1分钟",
         "oneHour": "1小时",
         "oneDay": "1天"
+    },
+    "YakitTable": {
+        "order": "序号",
+        "action": "操作",
+        "red": "红色",
+        "green": "绿色",
+        "blue": "蓝色",
+        "yellow": "黄色",
+        "orange": "橙色",
+        "purple": "紫色",
+        "cyan": "青色",
+        "grey": "灰色"
+    },
+    "YakitModal": {
+        "friendlyReminder": "温馨提示"
+    },
+    "YakitTag": {
+        "critical": "严重",
+        "high": "高危",
+        "warning": "中危",
+        "low": "低危"
+    },
+    "YakitSpin": {
+        "loading": "加载中"
+    },
+    "YakitForm": {
+        "requiredField": "该项为必填项"
+    },
+    "YakitSelect": {
+        "YakitSelectCustom": {
+            "cache_field_save_error": "缓存字段保存失败："
+        }
     },
     "YakitEditor": {
         "getPlugin": "获取插件",

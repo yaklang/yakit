@@ -88,6 +88,7 @@ import {getAction, ByteCountTag} from "../fuzzer/HTTPFuzzerPage"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 
 import styles from "./HTTPHistoryAnalysis.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const MITMRule = React.lazy(() => import("../mitm/MITMRule/MITMRule"))
 const {ipcRenderer} = window.require("electron")
 interface HTTPHistoryAnalysisProps {
@@ -95,6 +96,7 @@ interface HTTPHistoryAnalysisProps {
 }
 export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.memo((props) => {
     const {pageId} = props
+    const {t, i18n} = useI18nNamespaces(["HTTPHistoryAnalysis"])
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById
@@ -262,7 +264,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                 {...ResizeBoxProps}
             />
             <div className={styles["HTTPHistoryAnalysis-footer-tab"]}>
-                {footerTabs.map((item) => (
+                {footerTabs(t).map((item) => (
                     <div
                         className={styles["footer-tab-item"]}
                         key={item.key}
@@ -331,6 +333,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         firstHttpFlow,
         downstreamProxy
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "HTTPHistoryAnalysis", "webFuzzer"])
 
     useEffect(() => {
         onSetRules()
@@ -358,7 +361,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     })
     const onSaveHotCode = useMemoizedFn((notifyFlag: boolean = true) => {
         setRemoteValue(RemoteHistoryGV.HistoryAnalysisHotPatchCodeSave, JSON.stringify({code: getCurHotPatch()}))
-        notifyFlag && yakitNotify("success", "保存成功")
+        notifyFlag && yakitNotify("success", t("YakitNotification.saved"))
     })
     // #endregion
 
@@ -738,7 +741,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                 setExecuteStatus("finished")
             })
             .catch((e: any) => {
-                yakitNotify("error", "取消流量分析出错:" + e)
+                yakitNotify("error", t("AnalysisMain.cancel_traffic_analysis_error") + e)
             })
     }
 
@@ -767,7 +770,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         <div className={styles["AnalysisMain"]}>
             <div className={styles["AnalysisMain-header"]}>
                 <div className={styles["AnalysisMain-header-left"]}>
-                    {footerTabs.map((item) => (
+                    {footerTabs(t).map((item) => (
                         <div
                             className={classNames(styles["header-tab-item"], {
                                 [styles["tab-item-active"]]: curBottomTab === item.key
@@ -837,7 +840,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                             </div>
                                             <div className={styles["hotPatch-header-right"]}>
                                                 <YakitPopconfirm
-                                                    title={"确认重置热加载代码？"}
+                                                    title={t("AnalysisMain.confirm_reset_hot_reload_code")}
                                                     onConfirm={() => {
                                                         setCurHotPatch(HotPatchDefaultContent)
                                                     }}
@@ -851,7 +854,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                     type='outline1'
                                                     onClick={() => setAddHotCodeTemplateVisible(true)}
                                                 >
-                                                    保存模板
+                                                    {t("YakitButton.save_template")}
                                                 </YakitButton>
                                                 <AddHotCodeTemplate
                                                     type='httpflow-analyze'
@@ -861,7 +864,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                     onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
                                                 ></AddHotCodeTemplate>
                                                 <YakitButton type='outline1' onClick={() => onSaveHotCode()}>
-                                                    保存
+                                                    {t("YakitButton.save")}
                                                 </YakitButton>
                                                 {fullScreenFirstNode ? (
                                                     <OutlineArrowscollapseIcon
@@ -904,14 +907,18 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                 >
                                     <div className={styles["AnalysisMain-right-default-header"]}>
                                         <div className={styles["title-wrapper"]}>
-                                            <span className={styles["title"]}>执行结果</span>{" "}
+                                            <span className={styles["title"]}>
+                                                {t("AnalysisMain.execution_result")}
+                                            </span>{" "}
                                             <span className={styles["content"]}>
-                                                设置好热加载或规则后，即可点击执行进行处理
+                                                {t("AnalysisMain.set_hot_reload_or_rules_then_execute")}
                                             </span>
                                         </div>
                                     </div>
                                     <div className={styles["exec-form-item"]}>
-                                        <span className={styles["exec-form-item-label"]}>数据类型：</span>
+                                        <span className={styles["exec-form-item-label"]}>
+                                            {t("AnalysisMain.data_type")}
+                                        </span>
                                         <YakitRadioButtons
                                             value={sourceType}
                                             onChange={(e) => setSourceType(e.target.value)}
@@ -919,11 +926,11 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                             options={[
                                                 {
                                                     value: "database",
-                                                    label: "筛选流量"
+                                                    label: t("AnalysisMain.filter_traffic")
                                                 },
                                                 {
                                                     value: "rawpacket",
-                                                    label: "数据包"
+                                                    label: t("AnalysisMain.packet")
                                                 }
                                             ]}
                                             size={"middle"}
@@ -939,7 +946,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                             <>
                                                 <span className={styles["exec-form-item-label"]}></span>
                                                 <span style={{color: "var(--Colors-Use-Main-Primary)"}}>
-                                                    筛选上面流量勾选后进行分析，未勾选默认跑所有流量
+                                                    {t("AnalysisMain.filter_traffic_analysis_tip")}
                                                 </span>
                                             </>
                                         ) : (
@@ -965,7 +972,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                                         beautifyCode("req", rawRequest)
                                                                     }}
                                                                 >
-                                                                    美化
+                                                                    {t("YakitButton.beautify")}
                                                                 </YakitButton>
                                                             }
                                                             noMinimap={true}
@@ -1007,7 +1014,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                                         beautifyCode("res", rawResponse)
                                                                     }}
                                                                 >
-                                                                    美化
+                                                                    {t("YakitButton.beautify")}
                                                                 </YakitButton>
                                                             }
                                                             isResponse={true}
@@ -1027,7 +1034,9 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                         )}
                                     </div>
                                     <div className={styles["exec-form-item"]}>
-                                        <span className={styles["exec-form-item-label"]}>并发：</span>
+                                        <span className={styles["exec-form-item-label"]}>
+                                            {t("AnalysisMain.concurrency")}
+                                        </span>
                                         <YakitInputNumber
                                             type='horizontal'
                                             size='small'
@@ -1036,14 +1045,16 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                         />
                                     </div>
                                     <div className={styles["exec-form-item"]}>
-                                        <span className={styles["exec-form-item-label"]}>单条记录内数据去重：</span>
+                                        <span className={styles["exec-form-item-label"]}>
+                                            {t("AnalysisMain.deduplicate_within_single_record")}
+                                        </span>
                                         <YakitSwitch checked={enableDeduplicate} onChange={setEnableDeduplicate} />
                                     </div>
                                     {sourceType === "database" && (
                                         <div className={styles["exec-form-item"]}>
                                             <span className={styles["exec-form-item-label"]}>
-                                                匹配器
-                                                <Tooltip title='[丢弃/保留]不会删除History流量数据，而用来决定流量是否会进入流量分析'>
+                                                {t("AnalysisMain.matcher")}
+                                                <Tooltip title={t("AnalysisMain.discard_or_keep_traffic_analysis_tip")}>
                                                     <OutlineInformationcircleIcon className={styles["info-icon"]} />
                                                 </Tooltip>
                                                 ：
@@ -1057,7 +1068,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                         icon={<OutlinePlusIcon />}
                                                         disabled={httpFlowLoading || httpFlowRequest === ""}
                                                     >
-                                                        新增
+                                                        {t("YakitButton.add_new")}
                                                     </YakitButton>
                                                 ) : (
                                                     <>
@@ -1070,7 +1081,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                                     <div className={styles["matchers-heard-left"]}>
                                                                         <YakitRadioButtons
                                                                             buttonStyle='solid'
-                                                                            options={filterModeOptions}
+                                                                            options={filterModeOptions(t)}
                                                                             size='small'
                                                                             value={matcherItem.filterMode}
                                                                             onChange={(e) => {
@@ -1142,7 +1153,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                                             <span>
                                                                                 [
                                                                                 {
-                                                                                    matcherTypeList.find(
+                                                                                    matcherTypeList(t).find(
                                                                                         (e) =>
                                                                                             e.value ===
                                                                                             subItem.MatcherType
@@ -1198,7 +1209,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                             onClick={onStartExecute}
                                             style={{width: 100}}
                                         >
-                                            执行
+                                            {t("YakitButton.execute")}
                                         </YakitButton>
                                     </div>
                                 </div>
@@ -1206,7 +1217,9 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                 <div className={styles["AnalysisMain-right-noDefault"]}>
                                     {/* 执行结果 */}
                                     <div className={styles["AnalysisMain-header"]}>
-                                        <div className={styles["AnalysisMain-header-text"]}>执行结果</div>
+                                        <div className={styles["AnalysisMain-header-text"]}>
+                                            {t("AnalysisMain.execution_result")}
+                                        </div>
                                         <div className={styles["AnalysisMain-execStatus-wrapper"]}>
                                             {streamInfo.progressState.length === 1 && (
                                                 <div className={styles["crash-log-progress"]}>
@@ -1218,19 +1231,19 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                             )}
                                             <YakitButton onClick={onOperateClick} danger={executeStatus === "process"}>
                                                 {["finished", "error"].includes(executeStatus)
-                                                    ? "执行"
+                                                    ? t("YakitButton.execute")
                                                     : executeStatus === "process"
-                                                    ? "停止"
+                                                    ? t("YakitButton.stop")
                                                     : executeStatus === "paused"
-                                                    ? "继续"
-                                                    : "退出"}
+                                                    ? t("YakitButton.continue")
+                                                    : t("YakitButton.exit")}
                                             </YakitButton>
                                             <YakitButton
                                                 type='outline2'
                                                 icon={<OutlineReplyIcon />}
                                                 onClick={exitReturn}
                                             >
-                                                返回
+                                                {t("YakitButton.back")}
                                             </YakitButton>
                                             {fullScreenSecondNode ? (
                                                 <OutlineArrowscollapseIcon
@@ -1289,6 +1302,7 @@ interface MatchersAndExtractorsListItemOperateProps {
 const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListItemOperateProps> = React.memo(
     (props) => {
         const {onRemove, onEdit, popoverContent} = props
+        const {t, i18n} = useI18nNamespaces(["HTTPHistoryAnalysis"])
         const [visiblePopover, setVisiblePopover] = useState<boolean>(false)
         return (
             <div
@@ -1298,7 +1312,7 @@ const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListIt
             >
                 <OutlineTrashIcon className={styles["trash-icon"]} onClick={onRemove} />
 
-                <Tooltip title='调试'>
+                <Tooltip title={t("MatchersAndExtractorsListItemOperate.debug")}>
                     <OutlineLightningboltIcon className={styles["hollow-lightningBolt-icon"]} onClick={onEdit} />
                 </Tooltip>
                 <TerminalPopover
@@ -1476,6 +1490,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
         executeStatus,
         onRowDoubleClick
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "HTTPHistoryAnalysis", "history"])
 
     const tableRef = useRef<any>(null)
     const [loading, setLoading] = useState<boolean>(false)
@@ -1613,7 +1628,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                     }
                 }
             } catch (error) {
-                yakitNotify("error", "搜索失败:" + error)
+                yakitNotify("error", t("YakitNotification.search_failed", {colon: true}) + error)
             }
         },
         {wait: 300}
@@ -1631,7 +1646,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                 }
             })
                 .catch((e) => {
-                    yakitNotify("error", "搜索失败:" + e)
+                    yakitNotify("error", t("YakitNotification.search_failed", {colon: true}) + e)
                 })
                 .finally(() => {
                     setTimeout(() => {
@@ -1683,7 +1698,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                 width: 180,
                 data: [
                     {
-                        label: "在新窗口打开",
+                        label: t("HTTPFlowTable.RowContextMenu.openInNewWindow"),
                         key: "在新窗口打开"
                     }
                 ],
@@ -1701,7 +1716,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
     const ruleColumns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
         return [
             {
-                title: "序号",
+                title: t("YakitTable.order"),
                 dataKey: "Id",
                 fixed: "left",
                 width: 100,
@@ -1711,14 +1726,14 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                 }
             },
             {
-                title: "数据包ID",
+                title: t("HttpRuleTable.packet_id"),
                 dataKey: "HTTPFlowId",
                 width: 100
             },
             {
-                title: "方法",
+                title: t("HttpRuleTable.method"),
                 dataKey: "Method",
-                width: 80,
+                width: 100,
                 filterProps: {
                     filterKey: "Methods",
                     filtersType: "select",
@@ -1748,15 +1763,15 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                 }
             },
             {
-                title: "状态码",
+                title: t("HttpRuleTable.statusCode"),
                 dataKey: "StatusCode",
-                width: 100,
+                width: 140,
                 filterProps: {
                     filterKey: "StatusCode",
                     filtersType: "input",
                     filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />,
                     filterInputProps: {
-                        placeholder: "支持输入200,200-204格式，多个用逗号分隔",
+                        placeholder: t("YakitInput.supportInputFormat"),
                         wrapperStyle: {width: 270},
                         onRegular: (value) => {
                             // 只允许输入数字、逗号和连字符，去掉所有其他字符
@@ -1781,7 +1796,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                 width: 200
             },
             {
-                title: "规则名",
+                title: t("HttpRuleTable.rule_name"),
                 dataKey: "RuleVerboseName",
                 width: 300,
                 filterProps: {
@@ -1791,7 +1806,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                 }
             },
             {
-                title: "规则数据",
+                title: t("HttpRuleTable.rule_data"),
                 dataKey: "ExtractedContent",
                 filterProps: {
                     filterKey: "ExtractedContent",
@@ -1800,7 +1815,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                 }
             }
         ]
-    }, [])
+    }, [i18n.language])
 
     const [exportToken, setExportToken] = useState<string>("")
     const [exportPercentVisible, setExportPercentVisible] = useState<boolean>(false)
@@ -1845,7 +1860,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                             onClick={exportMITMRuleExtractedData}
                             disabled={executeStatus === "process"}
                         >
-                            导出
+                            {t("YakitButton.export")}
                         </YakitButton>
                     </>
                 }
@@ -1879,8 +1894,8 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                         document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
                     }
                     visible={exportPercentVisible}
-                    title='导出规则数据'
-                    subTitle='查询数据库中'
+                    title={t("HttpRuleTable.export_rule_data")}
+                    subTitle={t("HttpRuleTable.query_in_database")}
                     token={exportToken}
                     apiKey='ExportMITMRuleExtractedDataStream'
                     onClose={(finish, streamData) => {
@@ -1889,9 +1904,9 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                             const path = streamData[streamData.length - 1]?.ExportFilePath
                             if (path) {
                                 openABSFileLocated(path)
-                                yakitNotify("success", "导出成功")
+                                yakitNotify("success", t("YakitNotification.exportSuccess"))
                             } else {
-                                yakitNotify("error", "导出失败，路径找不到")
+                                yakitNotify("error", t("HttpRuleTable.export_failed_path_not_found"))
                             }
                         }
                     }}

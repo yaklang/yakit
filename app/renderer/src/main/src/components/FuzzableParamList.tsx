@@ -25,7 +25,7 @@ interface FuzzableParamListData extends FuzzableParams {
     key: string
 }
 export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
-    const {t, i18n} = useI18nNamespaces(["history"])
+    const {t, i18n} = useI18nNamespaces(["history", "yakitUi"])
     const [list, setList] = useState<FuzzableParamListData[]>([])
     useEffect(() => {
         const newList = props.data.map((item, index) => ({
@@ -80,7 +80,7 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
                 render: (text) => <YakitTag>{`${text}`}</YakitTag>
             },
             {
-                title: t("FuzzableParamList.action"),
+                title: t("YakitTable.action"),
                 dataKey: "Action",
                 fixed: "right",
                 width: 150,

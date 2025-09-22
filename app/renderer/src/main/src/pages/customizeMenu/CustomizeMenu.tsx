@@ -489,7 +489,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
             onClose()
         } else {
             Modal.confirm({
-                title: t("CustomizeMenu.friendlyReminder"),
+                title: t("YakitModal.friendlyReminder"),
                 icon: <ExclamationCircleOutlined />,
                 content: t("CustomizeMenu.saveMenuConfirm"),
                 okText: t("YakitButton.save"),

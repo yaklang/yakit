@@ -20,7 +20,93 @@
   "HTTPFuzzerRangeReadOnlyEditorMenu": {
     "decode": "解码"
   },
-  "DecodeCopyReplace": {
-    "replace": "替换"
+  "HotCodeTemplate": {
+    "fetch_online_template_list_failed": "线上模板列表获取失败：",
+    "online_delete_success": "线上删除成功",
+    "online_delete_failed": "线上删除失败：",
+    "overwrite_same_name_prompt": "同名覆盖提示",
+    "online_same_name_template_prompt": "线上有同名模板，上传会覆盖，确定上传吗？",
+    "online_template_exists_same_name": "线上存在同名模板",
+    "check_hot_reload_template_online_failed": "查询热加载模板名线上是否存在失败：",
+    "local_same_name_template_prompt": "本地有同名模板，下载会覆盖，确定下载吗？",
+    "local_template_exists_same_name": "本地存在同名模板",
+    "local_template": "本地模板",
+    "online_template": "线上模板",
+    "confirm_overwrite_hot_reload_code": "是否确认覆盖当前热加载代码",
+    "code_template": "代码模板"
+  },
+  "AddHotCodeTemplate": {
+    "hot_reload_template_name_empty": "热加载模板名为空",
+    "hot_reload_template_name_exists": "热加载模板名已存在",
+    "enter_hot_reload_template_name": "请为热加载模板取个名字...",
+    "save_hot_reload_template": "保存热加载模板"
+  },
+  "MatcherAndExtraction": {
+    "apply_changes_prompt": "是否应用修改的内容",
+    "empty_matcher_exists": "已有空匹配器条件",
+    "no_valid_extractor": "没有有效提取器（都为空）",
+    "no_valid_match_found": "匹配不到有效结果",
+    "data_extraction_error": "数据提取报错：",
+    "duplicate_name_error": "【{namesElement}】名称重复，请修改后再应用",
+    "matcher": "匹配器",
+    "extractor": "提取器",
+    "addMatcher": "添加匹配器",
+    "addCondition": "添加条件",
+    "debugExecute": "调试执行"
+  },
+  "MatcherCollapse": {
+    "emptyMatcherConditionExists": "该匹配器已有空匹配器条件",
+    "addMatcherConditionFailed": "添加匹配器条件失败：",
+    "allMatcherConditionsEmpty": "所有匹配条件均为空，请先设置条件",
+    "matchSuccess": "匹配成功",
+    "matchFailed": "匹配失败",
+    "matchError": "匹配报错：",
+    "onRemoveSubMatcherFailed": "onRemoveSubMatcher 失败：",
+    "multipleMatchersExplanation": "多个匹配器是为了同时达到多个功能效果，比如染不同颜色或丢包的同时染色，如需要转成yaml只能配置一个匹配器",
+    "matcherApplicationFlow": "应用匹配器后，流量先经过匹配器条件过滤后，再根据规则/热加载配置进一步处理",
+    "filter_mode": "过滤器模式",
+    "condition_relation": "条件关系",
+    "addCondition": "添加条件",
+    "debugExecute": "调试执行",
+    "no_condition_set": "暂未设置条件",
+    "keyword": "关键字",
+    "regex": "正则表达式",
+    "status_code": "状态码",
+    "hex": "十六进制",
+    "expression": "表达式",
+    "discard": "丢弃",
+    "match": "保留",
+    "onlyMatch": "仅匹配"
+  },
+  "MatcherItem": {
+    "match_type": "匹配类型",
+    "match_position": "匹配位置",
+    "status_code": "状态码",
+    "response_header": "响应头",
+    "response_body": "响应体",
+    "all_responses": "全部响应",
+    "condition_relation": "条件关系",
+    "no_match_invert": "不匹配（取反）",
+    "complete_conditions_before_adding": "请将已添加条件配置完成后再新增"
+  },
+  "MatcherAndExtractionValueList": {
+    "add_match_content": "添加匹配内容"
+  },
+  "ExtractorCollapse": {
+    "max_length_20": "字符长度不超过20",
+    "edit_name": "修改名称",
+    "no_condition_set": "暂未设置条件"
+  },
+  "ExtractorItem": {
+    "match_regex_group": "匹配正则分组",
+    "xpath_parameters": "XPath 参数",
+    "extraction_type": "提取类型",
+    "extraction_scope": "提取范围",
+    "response_header": "响应头",
+    "response_body": "响应体",
+    "complete_conditions_before_adding": "请将已添加条件配置完成后再新增"
+  },
+  "ColorSelect": {
+    "hit_color": "命中颜色"
   }
 }

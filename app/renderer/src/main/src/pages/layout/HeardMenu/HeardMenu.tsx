@@ -806,7 +806,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                             icon={<CursorClickIcon />}
                                         >
                                             <div className={style["heard-menu-customize-content"]}>
-                                                {t("Layout.HeardMenu.custom")}
+                                                {t("YakitButton.custom")}
                                                 {(customizeVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
                                             </div>
                                         </YakitButton>
@@ -1032,7 +1032,7 @@ const SubMenu: React.FC<SubMenuProps> = (props) => {
 /** 宽度影响展示时的更多菜单 */
 const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
     const {menuData, moreLeft, isExpand, onMenuSelect} = props
-    const {t, i18n} = useI18nNamespaces(["yakitRoute", "layout"])
+    const {t, i18n} = useI18nNamespaces(["yakitRoute", "yakitUi"])
 
     const [show, setShow] = useState<boolean>(false)
 
@@ -1066,7 +1066,7 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
                         [style["heard-menu-item-flex-start"]]: isExpand
                     })}
                 >
-                    {t("Layout.CollapseMenu.more")}
+                    {t("YakitButton.more")}
                     {(show && <ChevronUpIcon />) || <ChevronDownIcon />}
                 </div>
             </YakitPopover>

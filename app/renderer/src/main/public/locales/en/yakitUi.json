@@ -1,15 +1,21 @@
 {
     "YakitButton": {
         "ok": "OK",
+        "confirm": "Confirm",
         "cancel": "Cancel",
         "save": "Save",
+        "save_as": "Save As",
         "doNotSave": "Do Not Save",
+        "save_template": "Save Template",
         "edit": "Edit",
         "delete": "Delete",
         "new": "New",
         "add": "Add",
         "added": "Added",
+        "add_new": "Add New",
         "import": "Import",
+        "importResources": "Import Resource",
+        "importPlugin": "Import Plugin",
         "export": "Export",
         "exportJson": "Export JSON",
         "exportExcel": "Export Excel",
@@ -25,6 +31,7 @@
         "back": "Back",
         "finish": "Finish",
         "apply": "Apply",
+        "do_not_apply": "Do Not Apply",
         "open": "Open",
         "close": "Close",
         "remindMeLater": "Remind Me Later",
@@ -38,38 +45,49 @@
         "batchOperation": "Batch Operation",
         "clear": "Clear",
         "disable": "Disable",
+        "disable_all": "Disable All",
         "enable": "Enable",
-        "detail": "Detail"
+        "detail": "Detail",
+        "stop": "Stop",
+        "continue": "Continue",
+        "exit": "Exit",
+        "replace": "Replace",
+        "do_not_replace": "Do Not Replace",
+        "more": "More",
+        "custom": "Custom",
+        "beautify": "Beautify"
     },
     "YakitNotification": {
-        "success": "Success",
-        "failed": "Failed{colon}",
-        "imported": "Imported",
-        "importFailed": "Import Failed{colon}",
-        "exportSuccess": "Export Successful",
-        "saved": "Saved",
-        "saveFailed": "Save Failed{colon}",
-        "deleted": "Deleted",
-        "deleteFailed": "Delete Failed{colon}",
-        "uploaded": "Uploaded",
-        "uploadFailed": "Upload Failed{colon}",
-        "downloaded": "Downloaded",
-        "downloadFailed": "Download Failed{colon}",
-        "updated": "Updated",
-        "updateFailed": "Update Failed{colon}",
-        "networkError": "Network Error{colon}",
-        "invalidParameter": "Invalid Parameter{colon}",
-        "dataNotFound": "Data Not Found{colon}",
-        "permissionDenied": "Permission Denied{colon}",
-        "invalidFileFormat": "Invalid File Format{colon}",
-        "fileTooLarge": "File Too Large{colon}",
-        "pleaseSelectFile": "Please Select a File{colon}",
-        "generationFailed": "Generation Failed{colon}",
+        "success": "Operation successful",
+        "failed": "Operation failed{colon}",
+        "imported": "Import successful",
+        "importFailed": "Import failed{colon}",
+        "exportSuccess": "Export successful",
+        "exportFailed": "Export failed{colon}",
+        "saved": "Saved successfully",
+        "saveFailed": "Save failed{colon}",
+        "deleted": "Deleted successfully",
+        "deleteFailed": "Deletion failed{colon}",
+        "uploaded": "Uploaded successfully",
+        "uploadFailed": "Upload failed{colon}",
+        "downloaded": "Downloaded successfully",
+        "downloadFailed": "Download failed{colon}",
+        "updated": "Updated successfully",
+        "updateFailed": "Update failed{colon}",
+        "networkError": "Network error{colon}",
+        "invalidParameter": "Invalid parameter{colon}",
+        "dataNotFound": "Data not found{colon}",
+        "permissionDenied": "Permission denied{colon}",
+        "invalidFileFormat": "Invalid file format{colon}",
+        "fileTooLarge": "File is too large{colon}",
+        "pleaseSelectFile": "Please select a file first{colon}",
+        "generationFailed": "Generation failed{colon}",
         "dataFetchFailed": "Data fetch failed{colon}",
         "copySuccess": "Copied successfully",
         "loadFailed": "Load failed{colon}",
-        "sendSuccess": "Sent Successfully",
-        "executeFailed": "Execution failed{colon}"
+        "sendSuccess": "Sent successfully",
+        "executeFailed": "Execution failed{colon}",
+        "search_failed": "Search failed{colon}"
     },
     "YakitFormDragger": {
         "filePath": "File Path",
@@ -94,6 +112,7 @@
         "filePathCountError": "File path count error, please separate paths with commas"
     },
     "YakitInput": {
+        "please_enter": "Please enter...",
         "searchKeyWordPlaceholder": "Please enter keywords to search",
         "supportInputFormat": "Supports input in formats like 200, 200-204, multiple values separated by commas"
     },
@@ -105,6 +124,38 @@
         "oneMinute": "1 Minute",
         "oneHour": "1 Hour",
         "oneDay": "1 Day"
+    },
+    "YakitTable": {
+        "order": "Order",
+        "action": "Action",
+        "red": "Red",
+        "green": "Green",
+        "blue": "Blue",
+        "yellow": "Yellow",
+        "orange": "Orange",
+        "purple": "Purple",
+        "cyan": "Cyan",
+        "grey": "Grey"
+    },
+    "YakitModal": {
+        "friendlyReminder": "Friendly Reminder"
+    },
+    "YakitTag": {
+        "critical": "critical",
+        "high": "high",
+        "warning": "warning",
+        "low": "low"
+    },
+    "YakitSpin": {
+        "loading": "loading"
+    },
+    "YakitForm": {
+        "requiredField": "This is a required field"
+    },
+    "YakitSelect": {
+        "YakitSelectCustom": {
+            "cache_field_save_error": " Error saving data in cache field:"
+        }
     },
     "YakitEditor": {
         "getPlugin": "Get Plugin",

@@ -7,7 +7,6 @@
     "menuNameDuplicate": "The name 【{repeatMenu}】 is duplicate, please modify",
     "saveMenuFailed": "Failed to save menu:",
     "updateMenuFailed": "Failed to update menu:",
-    "friendlyReminder": "Friendly Reminder",
     "saveMenuConfirm": "Do you want to save the menu and close the page?",
     "editCommonPlugins": "Edit Common Plugins",
     "editExpertMode": "Edit Expert Mode",

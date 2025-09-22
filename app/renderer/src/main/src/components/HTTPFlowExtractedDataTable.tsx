@@ -59,7 +59,7 @@ export interface QueryMITMRuleExtractedDataRequest extends QueryGeneralRequest {
 }
 
 export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp> = React.forwardRef((props, ref) => {
-    const {t, i18n} = useI18nNamespaces(["history"])
+    const {t, i18n} = useI18nNamespaces(["history", "yakitUi"])
     const [pagination, setPagination] = useState<Paging>(genDefaultPagination())
     const [loading, setLoading] = useState(false)
     const [data, setData] = useControllableValue<HTTPFlowExtractedData[]>(props, {
@@ -319,7 +319,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             )
         },
         {
-            title: t("HTTPFlowExtractedDataTable.action"),
+            title: t("YakitTable.action"),
             width: 55,
             align: "center",
             render: (i: HTTPFlowExtractedData, record) => {

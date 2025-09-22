@@ -227,7 +227,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
 
         if (result) {
             Modal.confirm({
-                title: t("HTTPFlowTableFormConfiguration.friendlyReminder"),
+                title: t("YakitModal.friendlyReminder"),
                 icon: <ExclamationCircleOutlined />,
                 content: t("HTTPFlowTableFormConfiguration.saveAdvancedConfigAndClose"),
                 okText: t("YakitButton.save"),

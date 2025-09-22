@@ -7,7 +7,6 @@
     "menuNameDuplicate": "【{repeatMenu}】名称重复，请修改",
     "saveMenuFailed": "保存菜单失败：",
     "updateMenuFailed": "更新菜单失败：",
-    "friendlyReminder": "温馨提示",
     "saveMenuConfirm": "请问是否要保存菜单并关闭页面？",
     "editCommonPlugins": "编辑常用插件",
     "editExpertMode": "编辑专家模式",
