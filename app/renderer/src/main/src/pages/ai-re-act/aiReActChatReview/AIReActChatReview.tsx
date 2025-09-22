@@ -6,15 +6,15 @@ import {OutlineArrowrightIcon, OutlineHandIcon, OutlineWarpIcon, OutlineXIcon} f
 import {useCountDown, useCreation, useMemoizedFn} from "ahooks"
 import {SolidAnnotationIcon, SolidVariableIcon} from "@/assets/icon/solid"
 import {AIChatMessage} from "@/pages/ai-agent/type/aiChat"
-import {Input} from "antd"
+import {Input, RadioChangeEvent} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {QSInputTextarea} from "@/pages/ai-agent/template/template"
 import {yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import AIPlanReviewTree from "@/pages/ai-agent/aiPlanReviewTree/AIPlanReviewTree"
 import {handleFlatAITree} from "../hooks/utils"
 import {reviewListToTrees} from "@/pages/ai-agent/utils"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
     const {type, review, onSendAI, planReviewTreeKeywordsMap, isEmbedded, renderFooterExtra, expand, className} = props
@@ -25,15 +25,27 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     const initReviewTreesRef = useRef<AIChatMessage.PlanTask[]>([])
 
     useEffect(() => {
-        if (type === "plan_review_require") {
-            const data = review as AIChatMessage.PlanReviewRequire
-            const list: AIChatMessage.PlanTask[] = []
-            handleFlatAITree(list, data.plans.root_task)
-            initReviewTreesRef.current = [...list]
-            setReviewTrees(list)
-            setCurrentPlansId(data.plans_id)
+        switch (type) {
+            case "plan_review_require":
+                const data = review as AIChatMessage.PlanReviewRequire
+                const list: AIChatMessage.PlanTask[] = []
+                handleFlatAITree(list, data.plans.root_task)
+                initReviewTreesRef.current = [...list]
+                setReviewTrees(list)
+                setCurrentPlansId(data.plans_id)
+                break
+            case "require_user_interactive":
+                const {options} = review as AIChatMessage.AIReviewRequire
+                if (options && options.length > 0) {
+                    const value = options[0].prompt || options[0].prompt_title
+                    setRequireQS(value ? `${value}:` : "")
+                    setAIOptionsSelect(value)
+                }
+                break
+            default:
+                break
         }
-    }, [review])
+    }, [type, review])
     const reviewTitle = useCreation(() => {
         switch (type) {
             case "tool_use_review_require":
@@ -206,6 +218,8 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     // #region 审阅选项-AI交互用户相关逻辑
     const [requireLoading, setRequireLoading] = useState(false)
     const [requireQS, setRequireQS] = useState("")
+    const [aiOptionsSelect, setAIOptionsSelect] = useState<string>()
+
     const isRequireQS = useCreation(() => {
         return !!(requireQS && requireQS.trim())
     }, [requireQS])
@@ -216,14 +230,14 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             return
         }
         setRequireLoading(false)
-        onSendAIByType(requireQS)
+        handleAIRequireOpSend(requireQS)
         setTimeout(() => {
             setRequireLoading(false)
             setRequireQS("")
         }, 300)
     })
-    const handleAIRequireOpSend = useMemoizedFn((info: AIChatMessage.AIRequireOption) => {
-        const jsonInput: Record<string, string> = {suggestion: info.prompt || info.prompt_title}
+    const handleAIRequireOpSend = useMemoizedFn((qs: string) => {
+        const jsonInput: Record<string, string> = {suggestion: qs}
         onSendAIByType(JSON.stringify(jsonInput))
     })
     /**审阅模式提交树,type: plan_review_require */
@@ -248,40 +262,42 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             return 0
         }
     }, [review])
+    const onSetAIOptionsSelect = useMemoizedFn((e: RadioChangeEvent) => {
+        const {value} = e.target
+        setAIOptionsSelect(value)
+        setRequireQS(`${value}:`)
+    })
     const aiOptions = useCreation(() => {
         if (type !== "require_user_interactive") {
             return null
         }
         const {options} = review as AIChatMessage.AIReviewRequire
-
-        if (!options || options.length === 0)
-            return (
+        const newOptions = (options || [])
+            .filter((el) => el.prompt || el.prompt_title)
+            .map((ele) => ({
+                label: ele.prompt || ele.prompt_title,
+                value: ele.prompt || ele.prompt_title
+            }))
+        return (
+            <>
+                <YakitRadioButtons
+                    buttonStyle='solid'
+                    value={aiOptionsSelect}
+                    options={newOptions}
+                    onChange={onSetAIOptionsSelect}
+                />
                 <div className={styles["ai-require-input"]}>
-                    <QSInputTextarea
-                        className={styles["textarea-style"]}
+                    <Input.TextArea
+                        bordered={false}
                         placeholder='请告诉我更多信息...'
+                        autoSize={{minRows: 4, maxRows: 4}}
                         value={requireQS}
                         onChange={(e) => setRequireQS(e.target.value)}
                     />
                 </div>
-            )
-        return (
-            <>
-                {(options || []).map((el) => {
-                    if (!el.prompt && !el.prompt_title) return null
-                    return (
-                        <YakitButton
-                            key={el.prompt || el.prompt_title}
-                            type='outline2'
-                            onClick={() => handleAIRequireOpSend(el)}
-                        >
-                            {el.prompt || el.prompt_title}
-                        </YakitButton>
-                    )
-                })}
             </>
         )
-    }, [review, requireQS])
+    }, [review, requireQS, aiOptionsSelect])
     //#endregion
     // 是否显示继续执行按钮
     const isContinue = useCreation(() => {
@@ -339,7 +355,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                         )}
                     </>
                 )}
-                {type === "require_user_interactive" && !aiOptionsLength && (
+                {type === "require_user_interactive" && (
                     <YakitButton disabled={!isRequireQS} loading={requireLoading} onClick={handleAIRequireQSSend}>
                         提交
                     </YakitButton>

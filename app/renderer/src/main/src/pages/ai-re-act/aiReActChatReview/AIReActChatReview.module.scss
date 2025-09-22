@@ -122,15 +122,10 @@
     margin-bottom: 0;
 }
 .ai-require-input {
-    padding: 8px 12px;
     border-radius: 8px;
     border: 1px solid var(--Colors-Use-Neutral-Border);
     background: var(--Colors-Use-Basic-Background);
-    .textarea-style {
-        min-height: 90px;
-        max-height: 90px;
-        flex-shrink: 0;
-    }
+    margin-top: 8px;
 }
 .review-task-tool-data {
     padding: 12px;
