@@ -131,17 +131,18 @@ let cancelTokenSource = null
 /**
  * @param {Object} argParams - 额外参数
  * @param {Boolean} argParams.cancelInterrupt - 是否取消主动中断操作
+ * @param {Boolean} argParams.cancelToken - 取消操作
  * @param {Number} argParams.retryCount - 最大重试次数（默认 1）
  * @param {Number} argParams.retryDelay - 重试间隔（ms，默认 1000）
  */
-function httpApi(method, url, params, headers, isAddParams = true, timeout = DefaultTimeOut, argParams) {
+function httpApi({method, url, params, data, headers, timeout = DefaultTimeOut, cancelToken, argParams}) {
     const {cancelInterrupt, retryCount = 1, retryDelay = 1000} = argParams || {}
     if (!["get", "post"].includes(method)) {
         return Promise.reject(`call yak echo failed: ${method}`)
     }
 
     let attempt = 0
-
+    let newCancelToken = cancelToken ?? cancelTokenSource.token
     const doRequest = () => {
         // 如果有当前的请求，取消它
         if (cancelTokenSource) {
@@ -150,13 +151,13 @@ function httpApi(method, url, params, headers, isAddParams = true, timeout = Def
         // 创建一个新的CancelToken
         cancelTokenSource = axios.CancelToken.source()
         return service({
-            url: url,
-            method: method,
+            url,
+            method,
             headers,
-            params: isAddParams ? params : undefined,
-            data: method === "post" ? params : undefined,
+            params,
+            data,
             timeout,
-            cancelToken: !!cancelInterrupt ? undefined : cancelTokenSource.token
+            cancelToken: cancelInterrupt ? undefined : newCancelToken
         }).finally(() => {
             // 请求完成后清理cancelTokenSource
             cancelTokenSource = null
@@ -164,20 +165,18 @@ function httpApi(method, url, params, headers, isAddParams = true, timeout = Def
     }
     const requestWithRetry = () => {
         return doRequest().catch((error) => {
-            attempt++;
+            attempt++
             // console.log("attempt---",attempt,retryCount);
             if (attempt < retryCount) {
                 // 等待一段时间再重试
-                return new Promise((resolve) =>
-                    setTimeout(resolve, retryDelay)
-                ).then(requestWithRetry);
+                return new Promise((resolve) => setTimeout(resolve, retryDelay)).then(requestWithRetry)
             }
             // 超过最大重试次数，抛出错误
-            return Promise.reject(error);
-        });
-    };
+            return Promise.reject(error)
+        })
+    }
 
-    return requestWithRetry();
+    return requestWithRetry()
 }
 
 module.exports = {

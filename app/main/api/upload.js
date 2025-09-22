@@ -17,7 +17,12 @@ module.exports = (win, getClient) => {
             const headers = {
                 "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`
             }
-            const res = httpApi("post", "update/plugins/group", formData, headers, false)
+            const res = httpApi({
+                method: "post",
+                url: "update/plugins/group",
+                data: formData,
+                headers
+            })
             return res
         } catch (error) {
             throw error
@@ -41,17 +46,16 @@ module.exports = (win, getClient) => {
             formData.append("fileName", fileName)
             formData.append("type", type)
             // console.log("参数---", fileName, fileHash)
-            httpApi(
-                "post",
+            httpApi({
+                method: "post",
                 url,
-                formData,
-                {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
-                false,
-                percent === 1 && totalChunks > 3 ? 60 * 1000 * 10 : 60 * 1000,
-                {
+                data: formData,
+                headers: {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+                timeout: percent === 1 && totalChunks > 3 ? 60 * 1000 * 10 : 60 * 1000,
+                argParams: {
                     retryCount: 3
                 }
-            )
+            })
                 .then(async (res) => {
                     const progress = Math.floor(percent * 100)
                     win.webContents.send(`callback-split-upload-${token}`, {
@@ -64,6 +68,8 @@ module.exports = (win, getClient) => {
                             data = `code ${res.code}: ${res.data.reason.toString()}`
                         } else if (res?.data) {
                             data = `code ${res.code}: ${res.data.toString()}`
+                        } else if (res?.message?.message) {
+                            data = `code ${res.code}: ${res.message.message.toString()}`
                         } else if (res) {
                             data = `code ${res.code}: ${res.toString()}`
                         }
@@ -180,15 +186,13 @@ module.exports = (win, getClient) => {
             })
         }
         formData.append("file_name", readerStream)
-        const res = httpApi(
-            "post",
-            "upload/img",
-            formData,
-            {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
-            false,
-            undefined,
-            {cancelInterrupt: true}
-        )
+        const res = httpApi({
+            method: "post",
+            url: "upload/img",
+            data: formData,
+            headers: {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+            argParams: {cancelInterrupt: true}
+        })
         return res
     })
     // http-上传图片-通过base64上传
@@ -213,15 +217,13 @@ module.exports = (win, getClient) => {
             })
         }
         formData.append("file_name", readable, {...imgInfo})
-        const res = await httpApi(
-            "post",
-            "upload/img",
-            formData,
-            {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
-            false,
-            undefined,
-            {cancelInterrupt: true}
-        )
+        const res = await httpApi({
+            method: "post",
+            url: "upload/img",
+            data: formData,
+            headers: {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+            argParams: {cancelInterrupt: true}
+        })
 
         return res
     })
@@ -239,7 +241,13 @@ module.exports = (win, getClient) => {
             const headers = {
                 "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`
             }
-            const res = httpApi("post", "upload/file", formData, headers, false, undefined, {cancelInterrupt: true})
+            const res = httpApi({
+                method: "post",
+                url: "upload/file",
+                data: formData,
+                headers,
+                argParams: {cancelInterrupt: true}
+            })
             return res
         } catch (error) {
             throw error
