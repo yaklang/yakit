@@ -265,9 +265,15 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
                         <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefresh} />
                     </Tooltip>
                     <Divider type='vertical' />
-                    <YakitButton type='text' danger onClick={onClear}>
-                        清空
-                    </YakitButton>
+                    <YakitPopconfirm
+                        placement='right'
+                        title={`是否确认清空所有${modelType === "local" ? "本地" : "线上"}模型配置`}
+                        onConfirm={onClear}
+                    >
+                        <YakitButton type='text' danger>
+                            清空
+                        </YakitButton>
+                    </YakitPopconfirm>
                 </div>
             </div>
             {modelType === "online" ? (
