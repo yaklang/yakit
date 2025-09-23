@@ -983,6 +983,7 @@ message Entity {
 message EntityFilter {
   uint64  BaseID = 1;
   string BaseIndex = 6;
+  string ReposName = 8;
   repeated uint64 IDs = 2;
   repeated string Types = 3;
   repeated string Names = 4;
