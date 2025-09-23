@@ -173,15 +173,7 @@
         stroke-width: 1.5;
     }
 
-    &.yakit-hover-button {
-        background: var(--Colors-Use-Basic-Background);
-        color: fetch-color($type, "color-5");
-        border-color: fetch-color($type, "color-5");
-        svg {
-            color: fetch-color($type, "color-5");
-        }
-    }
-    &.yakit-active-button {
+    &:focus {
         background: var(--Colors-Use-Basic-Background);
         color: fetch-color($type, "color-6");
         border-color: fetch-color($type, "color-6");
@@ -190,14 +182,6 @@
         }
     }
 
-    &:focus {
-        background: var(--Colors-Use-Basic-Background);
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        border-color: var(--Colors-Use-Neutral-Border);
-        svg {
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        }
-    }
     &:hover {
         background: var(--Colors-Use-Basic-Background);
         color: fetch-color($type, "color-5");
@@ -207,6 +191,23 @@
         }
     }
     &:active {
+        background: var(--Colors-Use-Basic-Background);
+        color: fetch-color($type, "color-6");
+        border-color: fetch-color($type, "color-6");
+        svg {
+            color: fetch-color($type, "color-6");
+        }
+    }
+    &.yakit-hover-button {
+        background: var(--Colors-Use-Basic-Background);
+        color: fetch-color($type, "color-5");
+        border-color: fetch-color($type, "color-5");
+        svg {
+            color: fetch-color($type, "color-5");
+        }
+    }
+
+    &.yakit-active-button {
         background: var(--Colors-Use-Basic-Background);
         color: fetch-color($type, "color-6");
         border-color: fetch-color($type, "color-6");

@@ -273,16 +273,19 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         return (
             <>
                 <div className={styles["ai-require-btns-wrapper"]}>
-                    {(options || []).map((ele) => (
-                        <YakitButton
-                            key={ele.prompt || ele.prompt_title}
-                            type='outline2'
-                            onClick={() => onSetAIOptionsSelect(ele.prompt || ele.prompt_title)}
-                            isHover={aiOptionsSelect === (ele.prompt || ele.prompt_title)}
-                        >
-                            {ele.prompt || ele.prompt_title}
-                        </YakitButton>
-                    ))}
+                    {(options || []).map((ele) => {
+                        const isHover = aiOptionsSelect === (ele.prompt || ele.prompt_title)
+                        return (
+                            <YakitButton
+                                key={ele.prompt || ele.prompt_title}
+                                type='outline2'
+                                onClick={() => onSetAIOptionsSelect(ele.prompt || ele.prompt_title)}
+                                isHover={isHover}
+                            >
+                                {ele.prompt || ele.prompt_title}
+                            </YakitButton>
+                        )
+                    })}
                 </div>
                 <div className={styles["ai-require-input"]}>
                     <Input.TextArea
