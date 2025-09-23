@@ -6,7 +6,7 @@ import {OutlineArrowrightIcon, OutlineHandIcon, OutlineWarpIcon, OutlineXIcon} f
 import {useCountDown, useCreation, useMemoizedFn} from "ahooks"
 import {SolidAnnotationIcon, SolidVariableIcon} from "@/assets/icon/solid"
 import {AIChatMessage} from "@/pages/ai-agent/type/aiChat"
-import {Input, RadioChangeEvent} from "antd"
+import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
@@ -14,7 +14,6 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import AIPlanReviewTree from "@/pages/ai-agent/aiPlanReviewTree/AIPlanReviewTree"
 import {handleFlatAITree} from "../hooks/utils"
 import {reviewListToTrees} from "@/pages/ai-agent/utils"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
     const {type, review, onSendAI, planReviewTreeKeywordsMap, isEmbedded, renderFooterExtra, expand, className} = props
@@ -262,30 +261,29 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             return 0
         }
     }, [review])
-    const onSetAIOptionsSelect = useMemoizedFn((e: RadioChangeEvent) => {
-        const {value} = e.target
+    const onSetAIOptionsSelect = useMemoizedFn((value?: string) => {
         setAIOptionsSelect(value)
-        setRequireQS(`${value}:`)
+        setRequireQS(value ? `${value}:` : "")
     })
     const aiOptions = useCreation(() => {
         if (type !== "require_user_interactive") {
             return null
         }
         const {options} = review as AIChatMessage.AIReviewRequire
-        const newOptions = (options || [])
-            .filter((el) => el.prompt || el.prompt_title)
-            .map((ele) => ({
-                label: ele.prompt || ele.prompt_title,
-                value: ele.prompt || ele.prompt_title
-            }))
         return (
             <>
-                <YakitRadioButtons
-                    buttonStyle='solid'
-                    value={aiOptionsSelect}
-                    options={newOptions}
-                    onChange={onSetAIOptionsSelect}
-                />
+                <div className={styles["ai-require-btns-wrapper"]}>
+                    {(options || []).map((ele) => (
+                        <YakitButton
+                            key={ele.prompt || ele.prompt_title}
+                            type='outline2'
+                            onClick={() => onSetAIOptionsSelect(ele.prompt || ele.prompt_title)}
+                            isHover={aiOptionsSelect === (ele.prompt || ele.prompt_title)}
+                        >
+                            {ele.prompt || ele.prompt_title}
+                        </YakitButton>
+                    ))}
+                </div>
                 <div className={styles["ai-require-input"]}>
                     <Input.TextArea
                         bordered={false}

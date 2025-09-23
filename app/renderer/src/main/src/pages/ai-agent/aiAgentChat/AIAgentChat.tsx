@@ -219,6 +219,9 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const handleSendTask = useMemoizedFn((value: string, id: string) => {
         handleSendAIRequire(value, id, "task")
     })
+    const handleSend = useMemoizedFn((value: string, id: string) => {
+        handleSendAIRequire(value, id, "")
+    })
     const handleSendAIRequire = useMemoizedFn((value: string, id: string, type: ChatIPCSendType) => {
         if (!activeID) return
         if (!id) return
@@ -285,7 +288,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleSendTask,
             handleSaveChatInfo,
             handleStart,
-            handleStop: onStop
+            handleStop: onStop,
+            handleSend
         }
     }, [events])
     useEffect(() => {

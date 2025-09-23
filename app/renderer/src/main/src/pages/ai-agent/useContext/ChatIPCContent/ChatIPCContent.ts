@@ -17,6 +17,7 @@ export interface ChatIPCContextDispatcher {
     handleSendTask: (value: string, id: string) => void
     handleStart: (qs: string) => void
     handleStop: () => void
+    handleSend: (value: string, id: string) => void
 }
 
 export interface ChatIPCContextValue {
@@ -42,6 +43,7 @@ export default createContext<ChatIPCContextValue>({
         },
         handleSendCasual: (value: string, id: string) => {},
         handleSendTask: (value: string, id: string) => {},
+        handleSend: (value: string, id: string) => {},
         handleStart: (qs: string) => {},
         handleStop: () => {}
     }

@@ -108,11 +108,21 @@ function useChatIPC(params?: UseChatIPCParams) {
                 return
             }
 
-            const events: UseCasualChatEvents | UseChatIPCEvents = type === "casual" ? casualChatEvent : taskChatEvent
-            events.handleSend(params, () => {
-                console.log("send-ai-re-act---\n", token, params)
-                ipcRenderer.invoke("send-ai-re-act", token, params)
-            })
+            switch (type) {
+                case "casual":
+                case "task":
+                    const events: UseCasualChatEvents | UseChatIPCEvents =
+                        type === "casual" ? casualChatEvent : taskChatEvent
+                    events.handleSend(params, () => {
+                        console.log("send-ai-re-act---\n", token, params)
+                        ipcRenderer.invoke("send-ai-re-act", token, params)
+                    })
+                    break
+
+                default:
+                    ipcRenderer.invoke("send-ai-re-act", token, params)
+                    break
+            }
         } catch (error) {}
     })
     // #endregion

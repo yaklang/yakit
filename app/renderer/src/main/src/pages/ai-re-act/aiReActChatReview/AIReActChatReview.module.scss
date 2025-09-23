@@ -121,6 +121,12 @@
     padding: 0;
     margin-bottom: 0;
 }
+.ai-require-btns-wrapper {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
 .ai-require-input {
     border-radius: 8px;
     border: 1px solid var(--Colors-Use-Neutral-Border);

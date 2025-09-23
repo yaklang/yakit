@@ -96,7 +96,7 @@ export interface UseTaskChatEvents extends UseHookBaseEvents {
 // #endregion
 
 // #region useChatIPC相关定义
-export type ChatIPCSendType = "casual" | "task"
+export type ChatIPCSendType = "casual" | "task" | ""
 export interface UseChatIPCParams {
     /** 出现任务规划的触发回调(id 是 coordinatorId) */
     onTaskStart?: (id: string) => void

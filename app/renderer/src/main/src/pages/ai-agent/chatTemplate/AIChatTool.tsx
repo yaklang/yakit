@@ -1,5 +1,5 @@
-import React, {ReactNode, useRef, useState} from "react"
-import {AIChatMessage, AIChatStreams, AIInputEvent} from "../type/aiChat"
+import React, {ReactNode} from "react"
+import {AIChatMessage} from "../type/aiChat"
 import styles from "./AIChatTool.module.scss"
 // import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import {SolidToolIcon} from "@/assets/icon/solid"
@@ -11,18 +11,10 @@ import {useCreation, useMemoizedFn} from "ahooks"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {isToolStdout} from "../utils"
 import {OutlineArrownarrowrightIcon} from "@/assets/icon/outline"
-import useAIAgentStore from "../useContext/useStore"
 import {AIChatToolDrawerContent, ChatStreamContent} from "./AIAgentChatTemplate"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
-const {ipcRenderer} = window.require("electron")
-
-interface AIChatToolProps {
-    item: AIChatMessage.AIToolData
-}
-export const AIChatTool: React.FC<AIChatToolProps> = React.memo((props) => {
-    return <div>总结</div>
-})
+import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 
 interface AIChatToolColorCardProps {
     toolCall: AIChatMessage.AIStreamOutput
@@ -33,7 +25,7 @@ const AIToolToIconMap: Record<string, ReactNode> = {
     "enough-cancel": <OutlineArrownarrowrightIcon />
 }
 export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.memo((props) => {
-    const {activeChat} = useAIAgentStore()
+    const {handleSend} = useChatIPCDispatcher()
     const {toolCall} = props
     const {NodeId, stream, toolAggregation} = toolCall
     const title = useCreation(() => {
@@ -50,18 +42,11 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
         }
     })
     const onSkip = useMemoizedFn((item: AIChatMessage.ReviewSelector) => {
-        if (!activeChat) return
         if (!toolAggregation?.interactiveId) return
-        const token = activeChat.id
         const jsonInput = {
             suggestion: item.value
         }
-        const info: AIInputEvent = {
-            IsInteractiveMessage: true,
-            InteractiveId: toolAggregation.interactiveId, // reviewData.data.id
-            InteractiveJSONInput: JSON.stringify(jsonInput)
-        }
-        ipcRenderer.invoke("send-ai-task", token, info)
+        handleSend(JSON.stringify(jsonInput), toolAggregation.interactiveId)
     })
     return (
         <div className={styles["ai-chat-tool-card"]}>
