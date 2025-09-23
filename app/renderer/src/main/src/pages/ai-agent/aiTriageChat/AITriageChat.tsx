@@ -238,7 +238,7 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                 return
             }
 
-            grpcGetAIForge(forgeID)
+            grpcGetAIForge({ID:forgeID})
                 .then((res) => {
                     const forgeInfo = cloneDeep(res)
                     if (!activeForge) setActiveForge(forgeInfo)

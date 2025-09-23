@@ -119,7 +119,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
             }
             console.log("handleModifyInit-fetchCacheID", id)
 
-            grpcGetAIForge(id)
+            grpcGetAIForge({ID:id})
                 .then((res) => {
                     if (!res) {
                         yakitNotify("error", `未获取到待编辑模板的详情, 请关闭页面重试`)

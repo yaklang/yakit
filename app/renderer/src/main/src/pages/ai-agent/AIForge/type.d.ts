@@ -56,3 +56,7 @@ export interface QueryAIForgeResponse {
     Data: AIForge[]
     Total: number
 }
+export interface GetAIForgeRequest {
+    ID?: number
+    ForgeName?: string
+}

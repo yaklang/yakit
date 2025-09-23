@@ -216,7 +216,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
         const findIndex = forgesArr.findIndex((item) => Number(item.Id) === Number(id))
         if (findIndex !== -1) {
             // 存在数据则局部更新
-            grpcGetAIForge(Number(id))
+            grpcGetAIForge({ID:Number(id)})
                 .then((res) => {
                     console.log("ForgeName-grpcGetAIForge-res", res)
                     setData((old) => {

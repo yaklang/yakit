@@ -98,7 +98,7 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
                 return
             }
 
-            grpcGetAIForge(forgeID)
+            grpcGetAIForge({ID:forgeID})
                 .then((res) => {
                     const forgeInfo = cloneDeep(res)
                     if (!activeForge) setActiveForge(forgeInfo)
