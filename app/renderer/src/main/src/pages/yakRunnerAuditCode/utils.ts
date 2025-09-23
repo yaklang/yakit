@@ -121,11 +121,11 @@ export const grpcFetchRiskOrRuleTree: (
         search?: string
         task_id?: string
         result_id?: string
-        compare?: string
+        increment?: boolean
     }
 ) => Promise<{res: RequestYakURLResponse; data: FileNodeMapProps[]}> = (
     path,
-    {program, type, search, task_id, result_id, compare}
+    {program, type, search, task_id, result_id, increment}
 ) => {
     return new Promise(async (resolve, reject) => {
         // ssadb path为/时 展示最近编译
@@ -155,12 +155,14 @@ export const grpcFetchRiskOrRuleTree: (
                         Key: "result_id",
                         Value: result_id
                     },
-                    {
-                        Key: "compare",
-                        Value: compare
-                    }
                 ]
             }
+        }
+        if(increment){
+            params.Url.Query.push({
+                Key: "increment",
+                Value: "true"
+            })
         }
         try {
             const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
