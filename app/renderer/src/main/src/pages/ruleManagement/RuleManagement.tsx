@@ -1072,6 +1072,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                 columns={columns}
                                 query={filters}
                                 onChange={onTableFilterChange}
+                                enableDrag={true}
                             />
                         </>
                     ) : (
@@ -1166,6 +1167,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                 columns={onlineColumns}
                                 query={onlineFilters}
                                 onChange={onTableOnlineFilterChange}
+                                enableDrag={true}
                             />
                         </>
                     )}
