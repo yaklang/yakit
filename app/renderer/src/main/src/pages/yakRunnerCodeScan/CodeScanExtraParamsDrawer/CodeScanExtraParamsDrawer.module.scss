@@ -1,0 +1,15 @@
+.code-scan-execute-extra-params-drawer {
+    :global {
+        .ant-collapse-item:first-child > .ant-collapse-header {
+            border-top: 0;
+        }
+    }
+}
+
+.to-end {
+    text-align: center;
+    color: var(--Colors-Use-Neutral-Disable);
+    font-size: 11px;
+    padding-top: 12px;
+    padding-bottom: 24px;
+}

@@ -9,6 +9,7 @@ import {
     SyntaxFlowRuleFilter,
     SyntaxFlowRuleInput
 } from "../ruleManagement/RuleManagementType"
+import { CodeScanExtraParam } from "./CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer";
 
 export interface YakRunnerCodeScanProps {
     pageId: string
@@ -85,6 +86,8 @@ export interface CodeScaMainExecuteContentProps {
     continueLoading: boolean
     setContinueLoading: (v: boolean) => void
     setPageInfo: (v: CodeScanPageInfoProps) => void
+    setExtraParamsVisible: (v: boolean) => void
+    extraParamsValue: CodeScanExtraParam
 }
 
 export interface FlowRuleDetailsListItemProps {
@@ -106,6 +109,9 @@ export interface SyntaxFlowScanRequest {
 
     /** 规则源码调试使用参数字段 */
     RuleInput?: SyntaxFlowRuleInput
+    /** 并发，默认5 */
+    Concurrency?: number
+    Memory?: boolean
 }
 
 export type SyntaxFlowScanStatus = "executing" | "done" | "paused" | "error"
@@ -195,6 +201,7 @@ export interface CodeScanAuditExecuteFormProps {
     setExecuteStatus: (value: SyntaxFlowScanExecuteState) => void
     resetStreamInfo: () => void
     setAuditError: (v: boolean) => void
+    openExtraPropsDrawer: () => void
 }
 
 interface ErrorProps {

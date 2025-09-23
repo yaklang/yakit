@@ -94,7 +94,8 @@ import {DefaultRuleGroupFilterPageMeta} from "@/defaultConstants/RuleManagement"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RuleDebugAuditDetail} from "../ruleManagement/template"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import { CreateReportContentProps, onCreateReportModal } from "../portscan/CreateReport"
+import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateReport"
+import CodeScanExtraParamsDrawer, { CodeScanExtraParam } from "./CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -503,6 +504,13 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     const [continueLoading, setContinueLoading] = useState<boolean>(false)
     // 任务列表抽屉
     const [visibleScanList, setVisibleScanList] = useState<boolean>(false)
+    /**额外参数弹出框 */
+    const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
+    const [extraParamsValue, setExtraParamsValue] = useState<CodeScanExtraParam>({
+        Concurrency: 5,
+        Memory: false
+    })
+
     const isExecuting = useCreation(() => {
         if (executeStatus === "process") return true
         if (executeStatus === "paused") return true
@@ -559,6 +567,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                     let language = item.Extra.find((item) => item.Key === "Language")?.Value || ""
                     return {label: item.ResourceName, value: item.ResourceName, language}
                 })
+                setExecuteType("old")
                 setAuditCodeList(list)
             }
         } catch (error) {}
@@ -587,6 +596,14 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                 return true
         }
     }, [executeStatus])
+
+    /**保存额外参数 */
+    const onSaveExtraParams = useMemoizedFn((v: CodeScanExtraParam) => {
+        setExtraParamsValue({
+            ...v,
+        } as CodeScanExtraParam)
+        setExtraParamsVisible(false)
+    })
     return (
         <>
             {isShowFlowRule && (
@@ -773,10 +790,17 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         continueLoading={continueLoading}
                         setContinueLoading={setContinueLoading}
                         setPageInfo={setPageInfo}
+                        setExtraParamsVisible={setExtraParamsVisible}
+                        extraParamsValue={extraParamsValue}
                     />
                 </div>
             </div>
             <React.Suspense fallback={<>loading...</>}>
+                <CodeScanExtraParamsDrawer
+                    extraParamsValue={extraParamsValue}
+                    visible={extraParamsVisible}
+                    onSave={onSaveExtraParams}
+                />
                 {visibleScanList && (
                     <CodeScanTaskListDrawer visible={visibleScanList} setVisible={setVisibleScanList} />
                 )}
@@ -850,7 +874,9 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             onSetSelectGroupListByKeyWord,
             pageInfo,
             pageId,
-            setPageInfo
+            setPageInfo,
+            setExtraParamsVisible,
+            extraParamsValue
         } = props
 
         const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
@@ -1129,7 +1155,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 type: "codeScan"
             }
             onCreateReportModal(params, {
-                getContainer: document.getElementById(`main-operator-page-body-${YakitRoute.YakRunner_Code_Scan}`) || undefined
+                getContainer:
+                    document.getElementById(`main-operator-page-body-${YakitRoute.YakRunner_Code_Scan}`) || undefined
             })
         })
 
@@ -1250,6 +1277,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 form.setFieldsValue({project})
             }
             const params: SyntaxFlowScanRequest = {
+                ...extraParamsValue,
                 ControlMode: "start",
                 ProgramName: project,
                 Filter: {
@@ -1399,6 +1427,10 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             handleCancelDetail()
         })
 
+        const openExtraPropsDrawer = useMemoizedFn(() => {
+            setExtraParamsVisible(true)
+        })
+
         // 数组去重
         const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
@@ -1448,6 +1480,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                             setExecuteStatus={setExecuteStatus}
                             resetStreamInfo={resetStreamInfo}
                             setAuditError={setAuditError}
+                            openExtraPropsDrawer={openExtraPropsDrawer}
                         />
                     ) : (
                         <Form
@@ -1528,6 +1561,14 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                             </YakitButton>
                                         </>
                                     )}
+                                    <YakitButton
+                                        type='text'
+                                        onClick={openExtraPropsDrawer}
+                                        disabled={isAuditExecuting}
+                                        size='large'
+                                    >
+                                        额外参数
+                                    </YakitButton>
                                 </div>
                             </Form.Item>
                         </Form>
@@ -1609,7 +1650,8 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             setIsExpand,
             setExecuteStatus,
             resetStreamInfo,
-            setAuditError
+            setAuditError,
+            openExtraPropsDrawer
         } = props
         const [form] = Form.useForm()
         // 是否表单校验中
@@ -1986,6 +2028,14 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                     {isVerifyForm ? "正在校验" : "开始编译"}
                                 </YakitButton>
                             )}
+                            <YakitButton
+                                type='text'
+                                onClick={openExtraPropsDrawer}
+                                disabled={isAuditExecuting}
+                                size='large'
+                            >
+                                额外参数
+                            </YakitButton>
                         </div>
                     </Form.Item>
                 </Form>
@@ -2002,7 +2052,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
 )
 
 /**@name 代码扫描中规则列表的item */
-export const FlowRuleDetailsListItem: (props: FlowRuleDetailsListItemProps) => any = React.memo((props) => {
+export const FlowRuleDetailsListItem: React.FC<FlowRuleDetailsListItemProps> = React.memo((props) => {
     const {data} = props
     return (
         <div className={styles["flow-rule-item-wrapper"]}>
