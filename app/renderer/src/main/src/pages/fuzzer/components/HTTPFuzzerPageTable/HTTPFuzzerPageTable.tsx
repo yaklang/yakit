@@ -704,7 +704,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         }
                         // 关键字搜索
                         if (query?.keyWord) {
-                            const responseString = Uint8ArrayToString(record.ResponseRaw)
+                            const responseString = Uint8ArrayToString(record.ResponseRaw || new Uint8Array())
                             const payloadsString = (record.Payloads || []).join("")
                             let extractedResultsString = ""
                             if (extractedMap.size > 0) {

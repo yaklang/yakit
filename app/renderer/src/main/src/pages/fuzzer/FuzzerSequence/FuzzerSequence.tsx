@@ -370,6 +370,27 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const errToken = `${token}-error`
         const endToken = `${token}-end`
 
+        const releaseQueue: FuzzerResponse[] = []
+        let releaseTimer: NodeJS.Timeout | null = null
+        const scheduleRelease = (item: FuzzerResponse) => {
+            releaseQueue.push(item)
+            if (!releaseTimer) {
+                releaseTimer = setInterval(() => {
+                    if (releaseQueue.length === 0) {
+                        clearInterval(releaseTimer!)
+                        releaseTimer = null
+                        return
+                    }
+                    // 每次释放 20 条旧数据
+                    for (let i = 0; i < 20 && releaseQueue.length > 0; i++) {
+                        const obj = releaseQueue.shift()!
+                        obj.RequestRaw = null as unknown as Uint8Array
+                        obj.ResponseRaw = null as unknown as Uint8Array
+                    }
+                }, 1000)
+            }
+        }
+
         ipcRenderer.on(dataToken, (e: any, data: FuzzerSequenceResponse) => {
             const {Response, Request} = data
             const {FuzzerIndex = ""} = Request
@@ -435,10 +456,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     successList.push(r)
                     // 超过最大显示 展示最新数据
                     if (successList.length > fuzzerTableMaxData) {
-                        successList[0].RequestRaw = null as unknown as Uint8Array
-                        successList[0].ResponseRaw = null as unknown as Uint8Array
-                        successList[0] = null as any
-                        successList.shift()
+                        const oldest = successList.shift()
+                        if (oldest) scheduleRelease(oldest)
                     }
                     successBufferRef.current.set(FuzzerIndex, successList)
                 } else {
