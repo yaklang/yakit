@@ -3,7 +3,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import styles from "./AIReActChat.module.scss"
 import {AIReActChatProps, AIReActLogProps} from "./AIReActChatType"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
-import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
+import {AIReActChatContents, AIStreamChatContent} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaProps} from "@/pages/ai-agent/template/type"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
@@ -189,7 +189,7 @@ const AIReActLog: React.FC<AIReActLogProps> = React.memo((props) => {
             </div>
             <div ref={logListRef} className={styles["ai-re-act-log-list"]}>
                 {logs.map((row) => {
-                    const {id, type, Timestamp, data} = row
+                    const {id, type, data} = row
                     switch (type) {
                         case "log":
                             const {level, message} = data
@@ -199,11 +199,10 @@ const AIReActLog: React.FC<AIReActLogProps> = React.memo((props) => {
                                 </div>
                             )
                         case "stream":
-                            // 这里需要增加一行的流式输出 UI，主要输出的都是 system 和 reason 数据
-                            return null
+                            return <AIStreamChatContent key={id} stream={data.content} nodeLabel={data.NodeLabel} />
 
                         default:
-                            break
+                            return <React.Fragment key={id}></React.Fragment>
                     }
                 })}
                 <div className={styles["ai-re-act-log-no-more"]}>暂无更多数据</div>

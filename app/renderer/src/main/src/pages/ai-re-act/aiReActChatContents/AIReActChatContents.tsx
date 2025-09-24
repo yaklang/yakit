@@ -122,7 +122,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     )
 })
 
-const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.memo((props) => {
+export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.memo((props) => {
     const {stream, nodeLabel} = props
     const content = useCreation(() => {
         return stream.slice(-150)
