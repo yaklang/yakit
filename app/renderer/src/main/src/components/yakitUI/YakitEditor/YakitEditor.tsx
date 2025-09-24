@@ -1299,7 +1299,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 editor && editor.trigger("keyboard", "type", {text: v.Label})
             } else if (v.DefaultDescription === "插入文件-fixed") {
                 editor && insertFileFuzzTag((i) => monacoEditorWrite(editor, i), "file:line")
-            } else if (v.DefaultDescription === "插入Payload-fixed") {
+            } else if (v.DefaultDescription === "插入字典-fixed") {
                 editor &&
                     showDictsAndSelect((i) => {
                         monacoEditorWrite(editor, i, editor.getSelection())

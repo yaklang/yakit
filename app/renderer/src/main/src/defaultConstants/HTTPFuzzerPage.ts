@@ -452,8 +452,8 @@ export const defaultLabel: LabelDataProps[] = [
         Label: "{{int(1-10)}}"
     },
     {
-        DefaultDescription: "插入Payload-fixed",
-        Description: "插入Payload"
+        DefaultDescription: "插入字典-fixed",
+        Description: "插入字典"
     },
     {
         DefaultDescription: "插入临时字典-fixed",
