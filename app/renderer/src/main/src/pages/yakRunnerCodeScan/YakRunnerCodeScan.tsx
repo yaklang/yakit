@@ -567,7 +567,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                     let language = item.Extra.find((item) => item.Key === "Language")?.Value || ""
                     return {label: item.ResourceName, value: item.ResourceName, language}
                 })
-                setExecuteType("old")
+                // setExecuteType("old")
                 setAuditCodeList(list)
             }
         } catch (error) {}
