@@ -1314,7 +1314,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
             <div className={styles["new-payload-list"]}>
                 <div className={styles["header"]}>
                     <div className={styles["title-box"]}>
-                        <div className={styles["title"]}>{onlyInsert ? "选择想要插入的字典" : "Payload 字典管理"}</div>
+                        <div className={styles["title"]}>{onlyInsert ? "选择想要插入的字典" : "字典管理"}</div>
                         <div className={styles["count"]}>{getPayloadCount}</div>
                         {!onlyInsert && (
                             <YakitButton
@@ -1329,7 +1329,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                     <div className={styles["extra"]}>
                         {onlyInsert ? (
                             <>
-                                <Tooltip title={"前往 Payload 字典管理"}>
+                                <Tooltip title={"前往 字典管理"}>
                                     <YakitButton
                                         type='text2'
                                         icon={<OutlineCogIcon />}
