@@ -16,10 +16,10 @@
     --input-number-hover-color: var(--Colors-Use-Main-Hover);
     --input-number-hover-error-color: var(--Colors-Use-Error-Primary);
 
-    --input-number-background-disabled-color: var(--Colors-Use-Neutral-Bg);
+    --input-number-background-disabled-color: var(--Colors-Use-Neutral-Bg-Hover);
 
     :global {
-        .ant-input-number {
+        .ant-input-number:not(.ant-input-number-disabled) {
             border-color: var(--input-number-border-color);
             background-color: var(--Colors-Use-Basic-Background);
             color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -69,14 +69,15 @@
             color: var(--Colors-Use-Neutral-Text-1-Title);
             background-color: var(--Colors-Use-Neutral-Bg);
         }
-        // .ant-input-number-disabled {
-        //     background-color: var(--input-number-background-disabled-color);
-        //     cursor: not-allowed;
-        //     border-color: var(--input-number-border-disabled-color);
-        //     svg {
-        //         color: var(--input-number-icon-disabled-color);
-        //     }
-        // }
+        .ant-input-number-disabled {
+            background-color: var(--input-number-background-disabled-color);
+            cursor: not-allowed;
+            border-color: var(--input-number-border-disabled-color);
+            color: var(--input-number-icon-disabled-color);
+            svg {
+                color: var(--input-number-icon-disabled-color);
+            }
+        }
     }
 }
 .yakit-input-number-wrapper-small {
@@ -178,6 +179,13 @@
     color: var(--Colors-Use-Neutral-Disable);
     svg {
         color: var(--input-number-icon-disabled-color);
+    }
+    :global {
+        .ant-input[disabled] {
+            background: var(--input-number-background-disabled-color);
+            border-color: var(--input-number-border-disabled-color);
+            color: var(--Colors-Use-Neutral-Disable);
+        }
     }
 }
 
