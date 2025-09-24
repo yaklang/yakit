@@ -1910,7 +1910,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     webFuzzer: true,
                     runtimeId: runtimeIdRef.current.split(","),
                     sourceType: "scan",
-                    verbose: currentItem?.pageName ? `${currentItem?.pageName}-全部流量` : ""
+                    verbose: currentItem?.pageName ? `${currentItem?.pageName}-全部流量` : "",
+                    pageId: currentItem?.pageId || ""
                 }
             })
         )

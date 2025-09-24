@@ -15,6 +15,7 @@ import {
     OutlineCogIcon,
     OutlineLog2Icon,
     OutlineRefreshIcon,
+    OutlineReplyIcon,
     OutlineSearchIcon,
     OutlineSelectorIcon,
     OutlineTerminalIcon
@@ -41,7 +42,6 @@ import {
     onExpandHTTPFlow,
     onRemoveCalloutColor,
     onSendToTab,
-    RangeInputNumberTable,
     RangeInputNumberTableWrapper,
     SourceType,
     YakQueryHTTPFlowResponse
@@ -55,7 +55,6 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {minWinSendToChildWin, openExternalWebsite, openPacketNewWindow, saveABSFileToOpen} from "@/utils/openWebsite"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -73,7 +72,7 @@ import {isEqual} from "lodash"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {randomString} from "@/utils/randomUtil"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
-import {usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {ExportSelect} from "@/components/DataExport/DataExport"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -100,6 +99,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import styles from "./HTTPHistoryFilter.module.scss"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {YakitRoute} from "@/enums/yakitRoute"
 const {ipcRenderer} = window.require("electron")
 
 type tabKeys = "web-tree" | "process"
@@ -121,6 +121,7 @@ interface HTTPHistoryFilterProps {
     toWebFuzzer?: boolean
     runtimeId?: string[]
     sourceType?: string
+    webFuzzerPageId?: string
 }
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((props) => {
     const {
@@ -134,7 +135,8 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         downstreamProxy,
         toWebFuzzer,
         runtimeId,
-        sourceType
+        sourceType,
+        webFuzzerPageId
     } = props
     const {t, i18n} = useI18nNamespaces(["history"])
     // #region 左侧tab
@@ -367,6 +369,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             toWebFuzzer={toWebFuzzer}
                             runtimeId={runtimeId}
                             sourceType={sourceType}
+                            webFuzzerPageId={webFuzzerPageId}
                         />
                     </div>
                 }
@@ -414,6 +417,7 @@ interface HTTPFlowTableProps {
     toWebFuzzer?: boolean
     runtimeId?: string[]
     sourceType?: string
+    webFuzzerPageId?: string
 }
 const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
     const {
@@ -431,12 +435,14 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         inMouseEnterTable = false,
         toWebFuzzer = false,
         runtimeId = [],
-        sourceType = "mitm"
+        sourceType = "mitm",
+        webFuzzerPageId
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "history", "yakitRoute"])
-    const {currentPageTabRouteKey} = usePageInfo(
+    const {currentPageTabRouteKey, queryPagesDataById} = usePageInfo(
         (s) => ({
-            currentPageTabRouteKey: s.currentPageTabRouteKey
+            currentPageTabRouteKey: s.currentPageTabRouteKey,
+            queryPagesDataById: s.queryPagesDataById
         }),
         shallow
     )
@@ -2285,6 +2291,32 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                 />
                             </div>
                             <div className={styles["http-history-table-right"]}>
+                                {webFuzzerPageId && toWebFuzzer && (
+                                    <YakitButton
+                                        icon={<OutlineReplyIcon />}
+                                        size='small'
+                                        onClick={() => {
+                                            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+                                                YakitRoute.HTTPFuzzer,
+                                                webFuzzerPageId
+                                            )
+                                            if (currentItem) {
+                                                emiter.emit(
+                                                    "switchSubMenuItem",
+                                                    JSON.stringify({pageId: webFuzzerPageId, forceRefresh: true})
+                                                )
+                                                emiter.emit(
+                                                    "switchMenuItem",
+                                                    JSON.stringify({route: YakitRoute.HTTPFuzzer})
+                                                )
+                                            } else {
+                                                yakitNotify("info", "目标页面已不存在")
+                                            }
+                                        }}
+                                    >
+                                        返回
+                                    </YakitButton>
+                                )}
                                 <YakitButton
                                     type='text'
                                     onClick={() => {

@@ -1162,7 +1162,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                         webFuzzer: true,
                         runtimeId: allRuntimeIds(),
                         sourceType: "scan",
-                        verbose: currentItem?.pageName ? `${currentItem?.pageName}-全部流量` : ""
+                        verbose: currentItem?.pageName ? `${currentItem?.pageName}-全部流量` : "",
+                        pageId: currentItem?.pageId || ""
                     }
                 })
             )
@@ -1188,7 +1189,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     sourceType: "scan",
                     verbose: currentItem?.pageName
                         ? `${currentItem?.pageName}-${currentSequenceItem.name}-全部流量`
-                        : ""
+                        : "",
+                    pageId: currentItem?.pageId || ""
                 }
             })
         )
