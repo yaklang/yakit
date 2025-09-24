@@ -105,6 +105,8 @@
     "conditionBlocked": "已屏蔽条件"
   },
   "RangeInputNumberTableWrapper": {
+    "asc": "升序",
+    "desc": "降序",
     "filter": "筛选",
     "greaterThanZeroOnly": "仅看大于0"
   },

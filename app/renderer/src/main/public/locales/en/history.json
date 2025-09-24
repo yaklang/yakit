@@ -105,6 +105,8 @@
     "conditionBlocked": "Blocked Condition"
   },
   "RangeInputNumberTableWrapper": {
+    "asc": "Asc",
+    "desc": "Desc",
     "filter": "Filter",
     "greaterThanZeroOnly": "Only show > 0"
   },
