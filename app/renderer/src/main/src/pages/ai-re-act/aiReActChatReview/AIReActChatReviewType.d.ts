@@ -12,3 +12,5 @@ export interface AIReActChatReviewProps {
     expand: boolean
     className?: string
 }
+
+export interface ForgeReviewFormProps extends AIChatMessage.ExecForgeReview {}

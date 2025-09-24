@@ -157,3 +157,32 @@
         }
     }
 }
+.forge-wrapper {
+    display: flex;
+    flex-direction: column;
+    border-radius: 4px;
+    background: var(--Colors-Use-Neutral-Border);
+
+    .name {
+        padding: 8px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 4px 4px 0 0;
+    }
+    .forge-form-body {
+        width: 100%;
+        flex: 1;
+        overflow: hidden auto;
+        display: flex;
+        align-items: center;
+        background-color: var(--Colors-Use-Basic-Background);
+        border-radius: 0 0 4px 4px;
+        padding: 16px 12px 0 12px;
+        :global {
+            .ant-form {
+                flex: 1;
+            }
+        }
+    }
+}

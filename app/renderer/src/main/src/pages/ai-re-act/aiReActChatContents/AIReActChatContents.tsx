@@ -85,6 +85,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 break
             case "tool_use_review_require":
             case "require_user_interactive":
+            case "exec_aiforge_review_require":
                 content = (
                     <AIReActChatReview
                         type={uiType}

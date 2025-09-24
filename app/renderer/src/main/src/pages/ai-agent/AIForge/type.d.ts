@@ -12,7 +12,7 @@ export interface AIForge {
     Description?: string
     // json config for UI
     ParamsUIConfig?: string
-    // cli parameters
+    /** @deprecated cli parameters */
     Params?: string
     // for user preferences
     UserPersistentData?: string
@@ -31,6 +31,8 @@ export interface AIForge {
     PlanPrompt?: string
     // 结果提示语
     ResultPrompt?: string
+    /**给用户看的展示名称 */
+    ForgeVerboseName?: string
 }
 
 /** forge 相关的过滤条件 */

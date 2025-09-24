@@ -85,18 +85,6 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
             })
     })
 
-    // 点击使用 Forge
-    const handleOnClick = useMemoizedFn((info: AIForge) => {
-        emiter.emit(
-            "onServerChatEvent",
-            JSON.stringify({
-                type: "open-forge-form",
-                params: {value: info}
-            })
-        )
-    })
-    // #endregion
-
     // #region AI-Forge 列表数据
     const [total, setTotal] = useState(0)
     const [loading, setLoading] = useState(false)
@@ -284,7 +272,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                 <div ref={wrapperRef} className={styles["list-wrapper"]} onScroll={onScrollCapture}>
                     <div ref={containerRef}>
                         {list.map(({data, index}) => {
-                            const {Id, ForgeName, Description, ToolNames} = data
+                            const {Id, ForgeName, Description, ToolNames,ForgeVerboseName} = data
                             const key = Number(Id) || index
                             const tools = ToolNames ? ToolNames.filter(Boolean) : []
                             const delLoading = delStatus.includes(Number(Id))
@@ -301,9 +289,9 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                                         styles["detail-name"],
                                                         "yakit-content-single-ellipsis"
                                                     )}
-                                                    title={ForgeName}
+                                                    title={ForgeVerboseName || ForgeName}
                                                 >
-                                                    {ForgeName}
+                                                    {ForgeVerboseName || ForgeName}
                                                 </div>
 
                                                 <div className={styles["detail-content"]}>
@@ -338,16 +326,15 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                     >
                                         <div
                                             className={styles["forge-list-opt"]}
-                                            // onClick={() => handleOnClick(data)}
                                         >
                                             <div
                                                 className={classNames(
                                                     styles["opt-title"],
                                                     "yakit-content-single-ellipsis"
                                                 )}
-                                                title={ForgeName}
+                                                title={ForgeVerboseName||ForgeName}
                                             >
-                                                {ForgeName}
+                                                {ForgeVerboseName||ForgeName}
                                             </div>
 
                                             <div className={styles["item-extra"]}>

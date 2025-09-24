@@ -511,6 +511,7 @@ export interface AITool {
     Keywords: string[]
     IsFavorite: boolean
     ID: number
+    VerboseName: string
 }
 export interface GetAIToolListRequest {
     Query: string

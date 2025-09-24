@@ -278,7 +278,7 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                     <div className={styles["ai-tool-list-item-heard"]}>
                         <div className={styles["ai-tool-list-item-heard-name"]}>
                             <SolidToolIcon className={styles["tool-icon"]} />
-                            <span className={styles["ai-tool-list-item-heard-name-text"]}>{item.Name}</span>
+                            <span className={styles["ai-tool-list-item-heard-name-text"]}>{item.VerboseName||item.Name}</span>
                         </div>
                         <div className={styles["ai-tool-list-item-heard-extra"]}>
                             {item.IsFavorite ? (

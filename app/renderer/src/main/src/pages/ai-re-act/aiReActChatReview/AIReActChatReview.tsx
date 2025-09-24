@@ -1,12 +1,12 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {AIReActChatReviewProps} from "./AIReActChatReviewType"
+import {AIReActChatReviewProps, ForgeReviewFormProps} from "./AIReActChatReviewType"
 import classNames from "classnames"
 import styles from "./AIReActChatReview.module.scss"
 import {OutlineArrowrightIcon, OutlineHandIcon, OutlineWarpIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {useCountDown, useCreation, useMemoizedFn} from "ahooks"
 import {SolidAnnotationIcon, SolidVariableIcon} from "@/assets/icon/solid"
 import {AIChatMessage} from "@/pages/ai-agent/type/aiChat"
-import {Input} from "antd"
+import {Form, Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
@@ -14,6 +14,13 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import AIPlanReviewTree from "@/pages/ai-agent/aiPlanReviewTree/AIPlanReviewTree"
 import {handleFlatAITree} from "../hooks/utils"
 import {reviewListToTrees} from "@/pages/ai-agent/utils"
+import {grpcGetAIForge} from "@/pages/ai-agent/grpc"
+import {AIForge} from "@/pages/ai-agent/AIForge/type"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakParamProps} from "@/pages/plugins/pluginsType"
+import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {getValueByType} from "@/pages/plugins/editDetails/utils"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
     const {type, review, onSendAI, planReviewTreeKeywordsMap, isEmbedded, renderFooterExtra, expand, className} = props
@@ -55,6 +62,8 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 return {title: "计划审阅", subTitle: "请审核是否要按以下计划继续执行？"}
             case "task_review_require":
                 return {title: "任务审阅", subTitle: "请审核是否要继续执行任务？"}
+            case "exec_aiforge_review_require":
+                return {title: "forge审阅", subTitle: "请审核是否要继续执行？"}
             default:
                 return {title: "异常错误", subTitle: ""}
         }
@@ -82,6 +91,11 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 </div>
             </div>
         )
+    }, [review])
+    const forgeReview = useCreation(() => {
+        if (type !== "exec_aiforge_review_require") return null
+        const data = review as AIChatMessage.ExecForgeReview
+        return <ForgeReviewForm {...data} />
     }, [review])
     const aiRequireReview = useCreation(() => {
         if (type === "require_user_interactive") {
@@ -177,12 +191,18 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     })
 
     const noAIOptions = useCreation(() => {
-        if (!["tool_use_review_require", "plan_review_require", "task_review_require"].includes(type)) {
+        if (
+            ![
+                "tool_use_review_require",
+                "plan_review_require",
+                "task_review_require",
+                "exec_aiforge_review_require"
+            ].includes(type)
+        ) {
             return null
         }
         const {selectors} = review as AIChatMessage.ToolUseReviewRequire
         const showList = (selectors || []).filter((item) => item.value !== "continue")
-
         return (
             <div className={styles["review-selectors-wrapper"]}>
                 {showList.map((el) => {
@@ -327,6 +347,9 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             case "task_review_require":
                 onSendAI(value, (review as AIChatMessage.TaskReviewRequire).id)
                 break
+            case "exec_aiforge_review_require":
+                onSendAI(value, (review as AIChatMessage.ExecForgeReview).id)
+                break
             default:
                 break
         }
@@ -380,12 +403,14 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         let node: ReactNode = <></>
         switch (type) {
             case "tool_use_review_require":
+            case "exec_aiforge_review_require":
+                /**NOTE 定义问题 */
                 const toolReviewData = review as AIChatMessage.ToolUseReviewRequire
                 if (!!toolReviewData.aiReview) {
                     const {interactive_id, score, level} = toolReviewData.aiReview
                     node = (
                         <>
-                            {!!interactive_id && (!score || !countdown) && <div>AI正在评分中...</div>}
+                            {!!interactive_id && !score && !countdown && <div>AI正在评分中...</div>}
                             {!!score && (
                                 <div>
                                     AI风险评分:
@@ -444,6 +469,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                             {planReview}
                             {taskReview}
                             {toolReview}
+                            {forgeReview}
                             {aiRequireReview}
                         </div>
                         {!reviewTreeOption && (
@@ -487,5 +513,110 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             </div>
             {renderFooterExtra && renderFooterExtra(footerNode)}
         </>
+    )
+})
+
+const handleFetchParams = (jsonValue: string) => {
+    try {
+        const parseValue = JSON.parse(jsonValue)
+        if (Array.isArray(parseValue)) {
+            return parseValue as YakParamProps[]
+        } else {
+            return handleFetchParams(parseValue as string)
+        }
+    } catch (error) {
+        return []
+    }
+}
+const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo((props) => {
+    const {forge_name, forge_verbose_name, forge_desc, forge_params} = props
+    const [loading, setLoading] = useState<boolean>(false)
+    const [forge, setForge] = useState<AIForge>()
+    const [form] = Form.useForm()
+
+    useEffect(() => {
+        getGrpcGetAIForge()
+    }, [forge_name])
+    const getGrpcGetAIForge = useMemoizedFn(() => {
+        setLoading(true)
+        grpcGetAIForge({ForgeName: forge_name})
+            .then(setForge)
+            .finally(() =>
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            )
+    })
+    const params: YakParamProps[] | null = useCreation(() => {
+        if (!forge) return null
+        const {ParamsUIConfig} = forge
+
+        if (!ParamsUIConfig) {
+            return [
+                {
+                    Field: "query",
+                    FieldVerbose: "query",
+                    TypeVerbose: "text",
+                    DefaultValue: forge_params["query"] || "",
+                    Help: ""
+                }
+            ]
+        }
+        try {
+            const param: YakParamProps[] = handleFetchParams(ParamsUIConfig)
+            return param
+        } catch (error) {
+            return null
+        }
+    }, [forge, forge_params])
+    useEffect(() => {
+        if (!params) return
+        initRequiredFormValue()
+    }, [params])
+    const initRequiredFormValue = useMemoizedFn(() => {
+        if (!params) return
+        // 必填参数
+        let initRequiredFormValue: CustomPluginExecuteFormValue = {}
+        params.forEach((ele) => {
+            const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
+            initRequiredFormValue = {
+                ...initRequiredFormValue,
+                [ele.Field]: value
+            }
+        })
+        if (!form) return
+        form.resetFields()
+        form.setFieldsValue({...initRequiredFormValue})
+    })
+    return (
+        <YakitSpin spinning={loading} tip='加载中...'>
+            <div className={styles["forge-wrapper"]}>
+                <div className={styles["name"]}>
+                    forge名称:{forge?.ForgeVerboseName || forge?.ForgeName || forge_name || forge_verbose_name}
+                </div>
+
+                <div className={classNames(styles["forge-form-body"])}>
+                    <Form
+                        form={form}
+                        labelWrap={true}
+                        labelCol={{span: 6}}
+                        wrapperCol={{span: 14}}
+                        validateMessages={{
+                            /* eslint-disable no-template-curly-in-string */
+                            required: "${label} 是必填字段"
+                        }}
+                        disabled={true}
+                    >
+                        {params && (
+                            <ExecuteEnterNodeByPluginParams
+                                paramsList={params}
+                                pluginType={"yak"}
+                                isExecuting={false}
+                            />
+                        )}
+                    </Form>
+                </div>
+            </div>
+        </YakitSpin>
     )
 })

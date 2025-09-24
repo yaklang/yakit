@@ -144,7 +144,9 @@ export const AIForgeInfoOpt: React.FC<AIForgeInfoOptProps> = memo((props) => {
     )
 })
 
-/** @name 可选择的 forge 模块选项 */
+/** 
+ * @deprecated
+ * @name 可选择的 forge 模块选项 */
 export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
     const {wrapperRef, info, onBack, onSubmit} = props
 
