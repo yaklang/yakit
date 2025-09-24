@@ -69,6 +69,8 @@ import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {HTTPHistorySourcePageType} from "../HTTPHistory"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {
+    OutlineArrownarrowdownIcon,
+    OutlineArrownarrowupIcon,
     OutlineBanIcon,
     OutlineCogIcon,
     OutlineFilterIcon,
@@ -1049,7 +1051,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ...prev,
                     ...filter,
                     Tags: [...tagsFilter],
-                    bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
+                    bodyLength: !!(afterBodyLength || beforeBodyLength || checkBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
                 }
                 return newParams
             })
@@ -4787,11 +4789,25 @@ export const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
 }
 
 interface RangeInputNumberTableWrapperProps extends RangeInputNumberProps {
+    showSort?: boolean
+    bodyLengthSort?: "asc" | "desc" | false
+    onBodyLengthSort?: (s: "asc" | "desc") => void
     checkBodyLength: boolean
     onCheckThan0: DebouncedFunc<(check: boolean) => void>
 }
 export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapperProps> = React.memo((props) => {
-    const {checkBodyLength, onCheckThan0, minNumber, maxNumber, onSure, onReset, ...reset} = props
+    const {
+        showSort = false,
+        bodyLengthSort,
+        onBodyLengthSort,
+        checkBodyLength,
+        onCheckThan0,
+        minNumber,
+        maxNumber,
+        onSure,
+        onReset,
+        ...reset
+    } = props
     const {t, i18n} = useI18nNamespaces(["history"])
     const [show, setShow] = useState<boolean>(false)
 
@@ -4813,6 +4829,32 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
                 />
             ) : (
                 <>
+                    {showSort && (
+                        <>
+                            <div
+                                className={classNames(style["body-length-filter"], {
+                                    [style["body-length-filter-active"]]: bodyLengthSort === "asc"
+                                })}
+                                onClick={() => {
+                                    onBodyLengthSort?.("asc")
+                                }}
+                            >
+                                <OutlineArrownarrowupIcon className={style["outlineFilterIcon"]} />{" "}
+                                {t("RangeInputNumberTableWrapper.asc")}
+                            </div>
+                            <div
+                                className={classNames(style["body-length-filter"], {
+                                    [style["body-length-filter-active"]]: bodyLengthSort === "desc"
+                                })}
+                                onClick={() => {
+                                    onBodyLengthSort?.("desc")
+                                }}
+                            >
+                                <OutlineArrownarrowdownIcon className={style["outlineFilterIcon"]} />{" "}
+                                {t("RangeInputNumberTableWrapper.desc")}
+                            </div>
+                        </>
+                    )}
                     <div
                         className={classNames(style["body-length-filter"], {
                             [style["body-length-filter-active"]]:

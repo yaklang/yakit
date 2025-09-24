@@ -99,6 +99,7 @@ import {
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import styles from "./HTTPHistoryFilter.module.scss"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 const {ipcRenderer} = window.require("electron")
 
 type tabKeys = "web-tree" | "process"
@@ -703,6 +704,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     /** ---- tags end ----*/
 
     /** ---- 响应长度 start ----*/
+    const [bodyLengthSort, setBodyLengthSort, getBodyLengthSort] = useGetSetState<"asc" | "desc" | false>(false)
     const [checkBodyLength, setCheckBodyLength] = useState<boolean>(false)
     const [afterBodyLength, setAfterBodyLength] = useState<number>()
     const [beforeBodyLength, setBeforeBodyLength] = useState<number>()
@@ -724,29 +726,35 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         }),
         {wait: 200}
     ).run
+    const onBodyLengthSort = useMemoizedFn((sort) => {
+        const newSort = bodyLengthSort === sort ? false : sort
+        setBodyLengthSort(newSort)
+        sorterTableRef.current = {
+            orderBy: newSort ? "body_length" : "Id",
+            order: newSort || "desc"
+        }
+    })
     /** ---- 响应长度 end ----*/
 
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-        if (newSort.order === "none") {
-            newSort.order = "desc"
+        if (!getBodyLengthSort()) {
+            if (newSort.order === "none") {
+                newSort.order = "desc"
+            }
+            if (newSort.orderBy === "DurationMs") {
+                newSort.orderBy = "duration"
+            }
+            if (newSort.orderBy === "RequestSizeVerbose") {
+                newSort.orderBy = "request_length"
+            }
+            sorterTableRef.current = newSort
         }
-        if (newSort.orderBy === "DurationMs") {
-            newSort.orderBy = "duration"
-        }
-        if (newSort.orderBy === "BodyLength") {
-            newSort.orderBy = "body_length"
-        }
-        if (newSort.orderBy === "RequestSizeVerbose") {
-            newSort.orderBy = "request_length"
-        }
-        sorterTableRef.current = newSort
-
         setQuery((prev) => {
             const newQuery = {
                 ...prev,
                 ...filter,
                 Tags: [...tagsFilter],
-                bodyLength: !!(afterBodyLength || beforeBodyLength) // 主要是用来响应长度icon显示颜色
+                bodyLength: !!(afterBodyLength || beforeBodyLength || getBodyLengthSort() || checkBodyLength) // 主要是用来响应长度icon显示颜色
             }
 
             if (filter["ContentType"]) {
@@ -1038,14 +1046,14 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 title: "响应长度",
                 dataKey: "BodyLength",
                 width: 120,
-                sorterProps: {
-                    sorter: true
-                },
                 filterProps: {
                     filterKey: "bodyLength",
                     filterIcon: <OutlineSelectorIcon className={styles["filter-icon"]} />,
                     filterRender: (closePopover: () => void) => (
                         <RangeInputNumberTableWrapper
+                            showSort={true}
+                            bodyLengthSort={getBodyLengthSort()}
+                            onBodyLengthSort={onBodyLengthSort}
                             checkBodyLength={checkBodyLength}
                             onCheckThan0={onCheckThan0}
                             minNumber={afterBodyLength}
