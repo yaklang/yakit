@@ -733,6 +733,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             orderBy: newSort ? "body_length" : "Id",
             order: newSort || "desc"
         }
+        queyChangeUpdateData()
     })
     /** ---- 响应长度 end ----*/
 
