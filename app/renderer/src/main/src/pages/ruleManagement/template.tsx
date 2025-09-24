@@ -653,7 +653,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             }
             return () => {
                 // 重置基础信息
-                setExpand(true)
+                setExpand(false)
                 setGroups([])
                 setActiveTab(undefined)
                 setProject([])
@@ -673,7 +673,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     }, [visible])
 
     /** ---------- 展开|收起 Start ---------- */
-    const [expand, setExpand] = useState<boolean>(true)
+    const [expand, setExpand] = useState<boolean>(false)
     const handleSetExpand = useMemoizedFn(() => {
         setExpand((val) => !val)
         setInfoTooltipShow(false)
