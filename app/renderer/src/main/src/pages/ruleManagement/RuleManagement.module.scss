@@ -458,41 +458,9 @@
                 .tab-pane-execute {
                     padding: 0 12px 6px 12px;
                 }
-                .tab-pane-empty {
-                    flex: 1;
-                    display: flex;
-                    justify-content: center;
-                }
-            }
-
-            .code-params {
-                width: 301px;
-                display: flex;
-                flex-direction: column;
-                border-left: 1px solid var(--Colors-Use-Neutral-Border);
-                background: var(--Colors-Use-Neutral-Bg);
-                .params-header {
-                    padding: 12px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-                    .header-title {
-                        color: var(--Colors-Use-Neutral-Text-1-Title);
-                        font-size: 12px;
-                        font-weight: 500;
-                        line-height: 16px;
-                    }
-                }
-
                 .params-container {
                     flex: 1;
-                    overflow: hidden;
-                    padding: 8px 12px 0 12px;
-                    .params-form {
-                        height: 100%;
-                        overflow: hidden auto;
-                    }
+                    padding: 20px;
                 }
             }
         }
@@ -822,12 +790,11 @@
         border-top: none;
         border-radius: 4px;
         margin-bottom: 8px;
-        :global{
-            .ant-collapse-header-text{
+        :global {
+            .ant-collapse-header-text {
                 overflow: hidden;
                 padding-right: 12px;
             }
-            
         }
         .severity {
             display: flex;
