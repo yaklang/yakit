@@ -1,6 +1,6 @@
 import {RefObject} from "react"
-import {AIStartParams} from "../type/aiChat"
 import {AIForge} from "../AIForge/type"
+import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 
 export interface AIForgeInfoOptProps {
     info: AIForge

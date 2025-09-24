@@ -1,10 +1,11 @@
 import {useEffect, useRef} from "react"
 import {yakitNotify} from "@/utils/notification"
 import {useMemoizedFn} from "ahooks"
-import {AIOutputEvent, AIStartParams, AITriageInputEvent} from "./type/aiChat"
+import {AITriageInputEvent} from "./type/aiChat"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
+import {AIOutputEvent, AIStartParams} from "../ai-re-act/hooks/grpcApi"
 
 const {ipcRenderer} = window.require("electron")
 

@@ -2,12 +2,13 @@ import {createContext} from "react"
 import {defaultChatIPCData} from "../../defaultConstant"
 import {cloneDeep} from "lodash"
 import {UseChatIPCEvents, UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
-import {AIChatReview, AIChatMessage} from "../../type/aiChat"
+import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIChatReview} from "@/pages/ai-re-act/hooks/aiRender"
 
 export interface ChatIPCContextStore {
     chatIPCData: UseChatIPCState
     reviewInfo?: AIChatReview
-    planReviewTreeKeywordsMap: Map<string, AIChatMessage.PlanReviewRequireExtra>
+    planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
     reviewExpand: boolean
 }
 

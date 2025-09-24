@@ -1,7 +1,7 @@
-import {AIChatMessage} from "../type/aiChat"
+import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
 
 export interface AITreeProps {
-    tasks: AIChatMessage.PlanTask[]
+    tasks: AIAgentGrpcApi.PlanTask[]
     onNodeClick?: AITreeNodeProps["onClick"]
 }
 
@@ -9,8 +9,8 @@ export interface AITreeNodeProps {
     order: number
     index: string
     preIndex: string
-    data: AIChatMessage.PlanTask
-    onClick?: (info: AIChatMessage.PlanTask) => void
+    data: AIAgentGrpcApi.PlanTask
+    onClick?: (info: AIAgentGrpcApi.PlanTask) => void
 }
 export interface AITreeNodeInfo {
     nodeLevel: number
@@ -19,7 +19,7 @@ export interface AITreeNodeInfo {
 
 export interface AITreeEmptyNodeProps {
     isNode?: boolean
-    type?: AIChatMessage.PlanTask["progress"] | ""
+    type?: AIAgentGrpcApi.PlanTask["progress"] | ""
     level: number
     levelDiff: number
     isStartEnd?: string

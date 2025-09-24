@@ -8,12 +8,12 @@ import {useClickAway, useCreation, useMemoizedFn} from "ahooks"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {AIAgentSettingDefault, AIReviewRuleOptions} from "@/pages/ai-agent/defaultConstant"
 import {OutlineCodepenIcon, OutlineSirenIcon} from "@/assets/icon/outline"
-import {AIStartParams} from "@/pages/ai-agent/type/aiChat"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {FormItemSlider} from "@/pages/ai-agent/AIChatSetting/AIChatSetting"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
+import {AIStartParams} from "../hooks/grpcApi"
 
 const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props) => {
     const {disabled} = props

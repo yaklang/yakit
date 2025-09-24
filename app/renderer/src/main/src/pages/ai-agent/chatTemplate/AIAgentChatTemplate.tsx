@@ -15,8 +15,7 @@ import {
     OutlineEngineIcon,
     OutlineRocketLaunchIcon
 } from "@/assets/icon/outline"
-import {formatNumberUnits, isShowToolColorCard, isToolSummaryCard} from "../utils"
-// import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
+import {formatNumberUnits, isShowToolColorCard} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     SolidCursorclickIcon,
@@ -27,14 +26,11 @@ import {
 } from "@/assets/icon/solid"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {AITree} from "../aiTree/AITree"
-import {AIChatMessage, AIEventQueryRequest, AIEventQueryResponse} from "../type/aiChat"
+import {AIEventQueryRequest, AIEventQueryResponse} from "../type/aiChat"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "./AIEcharts"
 import {formatTime, formatTimestamp} from "@/utils/timeUtil"
-
-import classNames from "classnames"
-import styles from "./AIAgentChatTemplate.module.scss"
 import {AIChatToolColorCard, AIChatToolItem} from "./AIChatTool"
 import {
     HorizontalScrollCardItemInfoMultiple,
@@ -43,6 +39,12 @@ import {
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
 import {AIStreamNodeIdToLabel} from "@/pages/ai-re-act/hooks/defaultConstant"
+import {v4 as uuidv4} from "uuid"
+import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
+
+import classNames from "classnames"
+import styles from "./AIAgentChatTemplate.module.scss"
+
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const {tasks, pressure, cost, card} = props
@@ -265,25 +267,33 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                             [styles["chat-stream-collapse-expand-first"]]: true // firstExpand
                         })}
                     >
-                        {(streams[taskName] || []).map((info: AIChatMessage.AITaskStreamOutput, index) => {
-                            const {NodeId, EventUUID, timestamp, toolAggregation} = info
-                            if (isShowToolColorCard(NodeId)) {
-                                return <AIChatToolColorCard key={EventUUID} toolCall={{...info}} />
+                        {(streams[taskName] || []).map((info) => {
+                            const {id, Timestamp, type, data} = info
+                            switch (type) {
+                                case "stream":
+                                    const {NodeId, EventUUID, selectors} = data
+                                    if (isShowToolColorCard(NodeId)) {
+                                        return <AIChatToolColorCard key={id} toolCall={data} />
+                                    }
+
+                                    return (
+                                        <ChatStreamCollapseItem
+                                            key={id}
+                                            info={data}
+                                            expandKey={EventUUID}
+                                            secondExpand={false}
+                                            handleChangeSecondPanel={() => {}}
+                                            defaultExpand={defaultExpand}
+                                            timestamp={Timestamp}
+                                        />
+                                    )
+
+                                case "tool_result":
+                                    return <AIChatToolItem key={id} time={Timestamp} item={data} />
+
+                                default:
+                                    break
                             }
-                            if (isToolSummaryCard(NodeId) && toolAggregation) {
-                                return <AIChatToolItem key={toolAggregation.callToolId} item={toolAggregation} />
-                            }
-                            return (
-                                <ChatStreamCollapseItem
-                                    key={EventUUID}
-                                    info={info}
-                                    expandKey={EventUUID}
-                                    secondExpand={false}
-                                    handleChangeSecondPanel={() => {}}
-                                    defaultExpand={defaultExpand}
-                                    timestamp={timestamp}
-                                />
-                            )
                         })}
                     </ChatStreamCollapse>
                 )
@@ -293,7 +303,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 })
 const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo((props) => {
     const {expandKey, info, className, defaultExpand, timestamp} = props
-    const {NodeId, stream} = info
+    const {NodeId, NodeLabel, content} = info
     return (
         <ChatStreamCollapse
             key={expandKey}
@@ -302,32 +312,20 @@ const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo
             title={
                 <div className={styles["task-type-header"]}>
                     {taskAnswerToIconMap[NodeId] || <SolidLightningboltIcon />}
-                    <div className={styles["task-type-header-title"]}>{NodeId}</div>
+                    <div className={styles["task-type-header-title"]}>{NodeLabel}</div>
                     <div className={styles["task-type-header-time"]}>{formatTimestamp(timestamp)}</div>
                 </div>
             }
             className={classNames(styles["chat-stream-collapse-expand"], className || "")}
         >
-            <ChatStreamContent stream={stream} />
+            <ChatStreamContent stream={content} />
         </ChatStreamCollapse>
     )
 })
 
 export const ChatStreamContent: React.FC<ChatStreamContentProps> = (props) => {
     const {stream} = props
-    return (
-        <>
-            {(stream.reason || stream.system || stream.stream) && (
-                <div className={styles["think-wrapper"]}>
-                    {stream.reason && <div>{stream.reason}</div>}
-
-                    {stream.system && <div>{stream.system}</div>}
-
-                    {stream.stream && <div>{stream.stream}</div>}
-                </div>
-            )}
-        </>
-    )
+    return <div className={styles["think-wrapper"]}>{stream || ""}</div>
 }
 
 /** @name 回答信息折叠组件 */
@@ -362,7 +360,7 @@ export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props
 export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = memo((props) => {
     const {callToolId} = props
     const [secondExpand, setSecondExpand] = useState<string[]>([])
-    const [toolList, setToolList] = useState<AIChatMessage.AITaskStreamOutput[]>([])
+    const [toolList, setToolList] = useState<AIChatQSData[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     useEffect(() => {
         getList()
@@ -377,32 +375,36 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
         grpcQueryAIEvent(params)
             .then((res: AIEventQueryResponse) => {
                 const {Events} = res
-                const list: AIChatMessage.AITaskStreamOutput[] = []
+                const list: AIChatQSData[] = []
                 Events.filter((ele) => ele.Type === "stream").forEach((item) => {
-                    const type = item.IsSystem ? "systemStream" : item.IsReason ? "reasonStream" : "stream"
-
-                    const timestamp = item.Timestamp
+                    const Timestamp = item.Timestamp
                     let ipcContent = ""
                     let ipcStreamDelta = ""
                     try {
                         ipcContent = Uint8ArrayToString(item.Content) || ""
                         ipcStreamDelta = Uint8ArrayToString(item.StreamDelta) || ""
                     } catch (error) {}
-                    const current: AIChatMessage.AITaskStreamOutput = {
-                        NodeId: item.NodeId,
-                        NodeLabel: AIStreamNodeIdToLabel[item.NodeId]?.label || "",
-                        timestamp: timestamp,
-                        stream: {system: "", reason: "", stream: ""},
-                        EventUUID: item.EventUUID,
-                        status: "end"
+                    const current: AIChatQSData = {
+                        id: uuidv4(),
+                        type: "stream",
+                        Timestamp: Timestamp,
+                        data: {
+                            NodeId: item.NodeId,
+                            NodeLabel: AIStreamNodeIdToLabel[item.NodeId]?.label || "",
+                            content: ipcContent + ipcStreamDelta,
+                            EventUUID: item.EventUUID,
+                            status: "end"
+                        }
                     }
-                    if (type === "systemStream") current.stream.system = ipcContent + ipcStreamDelta
-                    if (type === "reasonStream") current.stream.reason = ipcContent + ipcStreamDelta
-                    if (type === "stream") current.stream.stream = ipcContent + ipcStreamDelta
                     list.push(current)
                 })
                 setToolList(list)
-                setSecondExpand(list.map((ele) => ele.EventUUID))
+                setSecondExpand(
+                    list.map((ele) => {
+                        if (ele.type === "stream" && ele.data) return ele.data.EventUUID
+                        return ""
+                    })
+                )
             })
             .finally(() => {
                 setTimeout(() => {
@@ -426,22 +428,28 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                 <YakitSpin />
             ) : (
                 <>
-                    {toolList.map((info: AIChatMessage.AITaskStreamOutput) => {
-                        const {EventUUID, timestamp} = info
-                        const expand = secondExpand.includes(EventUUID)
-                        return (
-                            <ChatStreamCollapseItem
-                                key={EventUUID}
-                                expandKey={EventUUID}
-                                info={info}
-                                secondExpand={expand}
-                                handleChangeSecondPanel={handleChangeSecondPanel}
-                                className={classNames({
-                                    [styles["ai-tool-collapse-expand"]]: expand
-                                })}
-                                timestamp={timestamp}
-                            />
-                        )
+                    {toolList.map((info) => {
+                        const {id, Timestamp, type, data} = info
+                        switch (type) {
+                            case "stream":
+                                const {EventUUID} = data
+                                const expand = secondExpand.includes(EventUUID)
+                                return (
+                                    <ChatStreamCollapseItem
+                                        key={id}
+                                        expandKey={EventUUID}
+                                        info={data}
+                                        secondExpand={expand}
+                                        handleChangeSecondPanel={handleChangeSecondPanel}
+                                        className={classNames({
+                                            [styles["ai-tool-collapse-expand"]]: expand
+                                        })}
+                                        timestamp={Timestamp}
+                                    />
+                                )
+                            default:
+                                break
+                        }
                     })}
                 </>
             )}

@@ -9,7 +9,6 @@ import {
 } from "./type"
 import {AIChatTextarea} from "../template/template"
 import {useMemoizedFn} from "ahooks"
-import {AIStartParams} from "../type/aiChat"
 import {AIForgeForm, AIForgeInfoOpt} from "../aiTriageChatTemplate/AITriageChatTemplate"
 import useChatTriage, {AITriageChatContentInfo} from "../useChatTriage"
 import useAIAgentStore from "../useContext/useStore"
@@ -26,6 +25,7 @@ import {AIChatTextareaProps} from "../template/type"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {AIForge, QueryAIForgeRequest} from "../AIForge/type"
+import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 
 import classNames from "classnames"
 import styles from "./AITriageChat.module.scss"
@@ -238,7 +238,7 @@ const AITriageChat: React.FC<AITriageChatProps> = memo(
                 return
             }
 
-            grpcGetAIForge({ID:forgeID})
+            grpcGetAIForge({ID: forgeID})
                 .then((res) => {
                     const forgeInfo = cloneDeep(res)
                     if (!activeForge) setActiveForge(forgeInfo)

@@ -1,5 +1,5 @@
 import {AIAgentChatMode} from "@/pages/ai-agent/aiAgentChat/type"
-import {AIChatMessage} from "@/pages/ai-agent/type/aiChat"
+import {AIChatQSData} from "../hooks/aiRender"
 
 export interface AIReActChatProps {
     mode: AIAgentChatMode
@@ -7,6 +7,6 @@ export interface AIReActChatProps {
 }
 
 export interface AIReActLogProps {
-    logs: AIChatMessage.Log[]
+    logs: AIChatQSData[]
     setLogVisible: (visible: boolean) => void
 }

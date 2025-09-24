@@ -1,7 +1,7 @@
-import {AIChatMessage} from "@/pages/ai-agent/type/aiChat"
+import {AIChatQSData} from "../hooks/aiRender"
 
 export interface AIReActChatContentsPProps {
-    chats: AIChatMessage.AICasualChatQAStream[]
+    chats: AIChatQSData[]
 }
 
 export interface AIStreamChatContentProps {

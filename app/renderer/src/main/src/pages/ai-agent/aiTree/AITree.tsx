@@ -4,11 +4,11 @@ import {TaskErrorIcon, TaskInProgressIcon, TaskSuccessIcon, TaskWaitIcon} from "
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {useMemoizedFn} from "ahooks"
-import {AIChatMessage} from "../type/aiChat"
 import cloneDeep from "lodash/cloneDeep"
 
 import classNames from "classnames"
 import styles from "./AITree.module.scss"
+import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
 
 export const AITree: React.FC<AITreeProps> = memo((props) => {
     const {tasks, onNodeClick} = props
@@ -36,7 +36,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo((props) => {
 
     const [infoShow, setInfoShow] = React.useState(false)
 
-    const handleFindLeafNode = useMemoizedFn((info: AIChatMessage.PlanTask) => {
+    const handleFindLeafNode = useMemoizedFn((info: AIAgentGrpcApi.PlanTask) => {
         if (data.subtasks && data.subtasks.length > 0) {
             return handleFindLeafNode(data.subtasks[0])
         } else {

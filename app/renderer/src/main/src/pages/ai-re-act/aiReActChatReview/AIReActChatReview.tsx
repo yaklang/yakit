@@ -1,11 +1,8 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
 import {AIReActChatReviewProps, ForgeReviewFormProps} from "./AIReActChatReviewType"
-import classNames from "classnames"
-import styles from "./AIReActChatReview.module.scss"
 import {OutlineArrowrightIcon, OutlineHandIcon, OutlineWarpIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {useCountDown, useCreation, useMemoizedFn} from "ahooks"
 import {SolidAnnotationIcon, SolidVariableIcon} from "@/assets/icon/solid"
-import {AIChatMessage} from "@/pages/ai-agent/type/aiChat"
 import {Form, Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {yakitNotify} from "@/utils/notification"
@@ -21,27 +18,39 @@ import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {getValueByType} from "@/pages/plugins/editDetails/utils"
+import {AIAgentGrpcApi} from "../hooks/grpcApi"
+
+import classNames from "classnames"
+import styles from "./AIReActChatReview.module.scss"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
-    const {type, review, onSendAI, planReviewTreeKeywordsMap, isEmbedded, renderFooterExtra, expand, className} = props
+    const {
+        info: {type, data: review},
+        onSendAI,
+        planReviewTreeKeywordsMap,
+        isEmbedded,
+        renderFooterExtra,
+        expand,
+        className
+    } = props
 
-    const [reviewTreeOption, setReviewTreeOption] = useState<AIChatMessage.ReviewSelector>()
-    const [reviewTrees, setReviewTrees] = useState<AIChatMessage.PlanTask[]>([])
+    const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
+    const [reviewTrees, setReviewTrees] = useState<AIAgentGrpcApi.PlanTask[]>([])
     const [currentPlansId, setCurrentPlansId] = useState<string>("")
-    const initReviewTreesRef = useRef<AIChatMessage.PlanTask[]>([])
+    const initReviewTreesRef = useRef<AIAgentGrpcApi.PlanTask[]>([])
 
     useEffect(() => {
         switch (type) {
             case "plan_review_require":
-                const data = review as AIChatMessage.PlanReviewRequire
-                const list: AIChatMessage.PlanTask[] = []
+                const data = review as AIAgentGrpcApi.PlanReviewRequire
+                const list: AIAgentGrpcApi.PlanTask[] = []
                 handleFlatAITree(list, data.plans.root_task)
                 initReviewTreesRef.current = [...list]
                 setReviewTrees(list)
                 setCurrentPlansId(data.plans_id)
                 break
             case "require_user_interactive":
-                const {options} = review as AIChatMessage.AIReviewRequire
+                const {options} = review as AIAgentGrpcApi.AIReviewRequire
                 if (options && options.length > 0) {
                     const value = options[0].prompt || options[0].prompt_title
                     setRequireQS(value ? `${value}:` : "")
@@ -70,7 +79,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     }, [type])
     const toolReview = useCreation(() => {
         if (type !== "tool_use_review_require") return null
-        const {tool, tool_description, params} = review as AIChatMessage.ToolUseReviewRequire
+        const {tool, tool_description, params} = review as AIAgentGrpcApi.ToolUseReviewRequire
         let paramsValue = "-"
         try {
             paramsValue = !!params ? JSON.stringify(params, null, 2) : "-"
@@ -94,12 +103,12 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     }, [review])
     const forgeReview = useCreation(() => {
         if (type !== "exec_aiforge_review_require") return null
-        const data = review as AIChatMessage.ExecForgeReview
+        const data = review as AIAgentGrpcApi.ExecForgeReview
         return <ForgeReviewForm {...data} />
     }, [review])
     const aiRequireReview = useCreation(() => {
         if (type === "require_user_interactive") {
-            const data = review as AIChatMessage.AIReviewRequire
+            const data = review as AIAgentGrpcApi.AIReviewRequire
             const {prompt} = data
             return <div className={styles["ai-require-ask"]}>{prompt}</div>
         }
@@ -108,7 +117,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
 
     const taskReview = useCreation(() => {
         if (type === "task_review_require") {
-            const data = review as AIChatMessage.TaskReviewRequire
+            const data = review as AIAgentGrpcApi.TaskReviewRequire
             const {task, short_summary, long_summary} = data
             return (
                 <div className={styles["review-task-tool-data"]}>
@@ -163,7 +172,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
 
     // #region 审阅选项-plan|task|tool相关逻辑
     const [editShow, setEditShow] = useState(false)
-    const editInfo = useRef<AIChatMessage.ReviewSelector>()
+    const editInfo = useRef<AIAgentGrpcApi.ReviewSelector>()
     const [reviewQS, setReviewQS] = useState("")
 
     const handleCallbackEdit = useMemoizedFn((cb: boolean) => {
@@ -171,7 +180,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             const {value, allow_extra_prompt} = editInfo.current
             const jsonInput: Record<string, string> = {suggestion: value}
             if (allow_extra_prompt && reviewQS) jsonInput.extra_prompt = reviewQS
-            onSendAI(JSON.stringify(jsonInput), (review as AIChatMessage.ToolUseReviewRequire).id)
+            onSendAI(JSON.stringify(jsonInput), (review as AIAgentGrpcApi.ToolUseReviewRequire).id)
         }
         editInfo.current = undefined
         setReviewQS("")
@@ -181,13 +190,13 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     /** 继续执行 */
     const handleContinue = useMemoizedFn(() => {
         if (!isContinue) return
-        const find = ((review as AIChatMessage.ToolUseReviewRequire)?.selectors || []).find(
+        const find = ((review as AIAgentGrpcApi.ToolUseReviewRequire)?.selectors || []).find(
             (item) => item.value === "continue"
         )
         if (!find) return
         const {value} = find
         const jsonInput: Record<string, string> = {suggestion: value}
-        onSendAI(JSON.stringify(jsonInput), (review as AIChatMessage.ToolUseReviewRequire).id)
+        onSendAI(JSON.stringify(jsonInput), (review as AIAgentGrpcApi.ToolUseReviewRequire).id)
     })
 
     const noAIOptions = useCreation(() => {
@@ -201,7 +210,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         ) {
             return null
         }
-        const {selectors} = review as AIChatMessage.ToolUseReviewRequire
+        const {selectors} = review as AIAgentGrpcApi.ToolUseReviewRequire
         const showList = (selectors || []).filter((item) => item.value !== "continue")
         return (
             <div className={styles["review-selectors-wrapper"]}>
@@ -215,7 +224,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             </div>
         )
     }, [review])
-    const handleShowEdit = useMemoizedFn((info: AIChatMessage.ReviewSelector) => {
+    const handleShowEdit = useMemoizedFn((info: AIAgentGrpcApi.ReviewSelector) => {
         switch (info.value) {
             case "freedom-review":
                 setReviewTreeOption(info)
@@ -224,7 +233,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 if (editShow) return
                 if (!info.allow_extra_prompt) {
                     const jsonInput: Record<string, string> = {suggestion: info.value}
-                    onSendAI(JSON.stringify(jsonInput), (review as AIChatMessage.ToolUseReviewRequire).id)
+                    onSendAI(JSON.stringify(jsonInput), (review as AIAgentGrpcApi.ToolUseReviewRequire).id)
                     return
                 }
                 editInfo.current = cloneDeep(info)
@@ -274,7 +283,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         if (type !== "require_user_interactive") return 0
 
         try {
-            const {options} = review as AIChatMessage.AIReviewRequire
+            const {options} = review as AIAgentGrpcApi.AIReviewRequire
             if (!options || options.length === 0) return 0
             return options.length
         } catch (error) {
@@ -289,7 +298,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         if (type !== "require_user_interactive") {
             return null
         }
-        const {options} = review as AIChatMessage.AIReviewRequire
+        const {options} = review as AIAgentGrpcApi.AIReviewRequire
         return (
             <>
                 <div className={styles["ai-require-btns-wrapper"]}>
@@ -325,10 +334,10 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         if (type === "require_user_interactive") return false
 
         if (!review) return
-        const {selectors} = review as AIChatMessage.ToolUseReviewRequire
+        const {selectors} = review as AIAgentGrpcApi.ToolUseReviewRequire
         if (!selectors || !Array.isArray(selectors) || selectors.length === 0) return false
 
-        const findIndex = (review as AIChatMessage.ToolUseReviewRequire).selectors.findIndex(
+        const findIndex = (review as AIAgentGrpcApi.ToolUseReviewRequire).selectors.findIndex(
             (item) => item.value === "continue"
         )
         return findIndex !== -1
@@ -336,19 +345,19 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     const onSendAIByType = useMemoizedFn((value: string) => {
         switch (type) {
             case "tool_use_review_require":
-                onSendAI(value, (review as AIChatMessage.ToolUseReviewRequire).id)
+                onSendAI(value, (review as AIAgentGrpcApi.ToolUseReviewRequire).id)
                 break
             case "require_user_interactive":
-                onSendAI(value, (review as AIChatMessage.AIReviewRequire).id)
+                onSendAI(value, (review as AIAgentGrpcApi.AIReviewRequire).id)
                 break
             case "plan_review_require":
-                onSendAI(value, (review as AIChatMessage.PlanReviewRequire).id)
+                onSendAI(value, (review as AIAgentGrpcApi.PlanReviewRequire).id)
                 break
             case "task_review_require":
-                onSendAI(value, (review as AIChatMessage.TaskReviewRequire).id)
+                onSendAI(value, (review as AIAgentGrpcApi.TaskReviewRequire).id)
                 break
             case "exec_aiforge_review_require":
-                onSendAI(value, (review as AIChatMessage.ExecForgeReview).id)
+                onSendAI(value, (review as AIAgentGrpcApi.ExecForgeReview).id)
                 break
             default:
                 break
@@ -393,7 +402,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         targetDate
     })
     useEffect(() => {
-        const data = review as AIChatMessage.ToolUseReviewRequire
+        const data = review as AIAgentGrpcApi.ToolUseReviewRequire
         if (!!data?.aiReview?.seconds) {
             setTargetDate(Date.now() + data.aiReview.seconds * 1000)
         }
@@ -405,7 +414,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             case "tool_use_review_require":
             case "exec_aiforge_review_require":
                 /**NOTE 定义问题 */
-                const toolReviewData = review as AIChatMessage.ToolUseReviewRequire
+                const toolReviewData = review as AIAgentGrpcApi.ToolUseReviewRequire
                 if (!!toolReviewData.aiReview) {
                     const {interactive_id, score, level} = toolReviewData.aiReview
                     node = (

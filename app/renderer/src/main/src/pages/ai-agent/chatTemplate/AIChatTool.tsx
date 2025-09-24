@@ -1,5 +1,4 @@
 import React, {ReactNode} from "react"
-import {AIChatMessage} from "../type/aiChat"
 import styles from "./AIChatTool.module.scss"
 // import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import {SolidToolIcon} from "@/assets/icon/solid"
@@ -15,9 +14,11 @@ import {AIChatToolDrawerContent, ChatStreamContent} from "./AIAgentChatTemplate"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
+import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIStreamOutput, AIToolResult} from "@/pages/ai-re-act/hooks/aiRender"
 
 interface AIChatToolColorCardProps {
-    toolCall: AIChatMessage.AIStreamOutput
+    toolCall: AIStreamOutput
 }
 
 /** @name AI工具按钮对应图标 */
@@ -27,12 +28,12 @@ const AIToolToIconMap: Record<string, ReactNode> = {
 export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.memo((props) => {
     const {handleSend} = useChatIPCDispatcher()
     const {toolCall} = props
-    const {NodeId, stream, toolAggregation} = toolCall
+    const {NodeId, content, selectors} = toolCall
     const title = useCreation(() => {
         if (NodeId === "call-tools") return "Call-tools：参数生成中..."
         if (isToolStdout(NodeId)) return `${NodeId}：调用工具中...`
     }, [NodeId])
-    const onToolExtra = useMemoizedFn((item: AIChatMessage.ReviewSelector) => {
+    const onToolExtra = useMemoizedFn((item: AIAgentGrpcApi.ReviewSelector) => {
         switch (item.value) {
             case "enough-cancel":
                 onSkip(item)
@@ -41,12 +42,12 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                 break
         }
     })
-    const onSkip = useMemoizedFn((item: AIChatMessage.ReviewSelector) => {
-        if (!toolAggregation?.interactiveId) return
+    const onSkip = useMemoizedFn((item: AIAgentGrpcApi.ReviewSelector) => {
+        if (!selectors?.InteractiveId) return
         const jsonInput = {
             suggestion: item.value
         }
-        handleSend(JSON.stringify(jsonInput), toolAggregation.interactiveId)
+        handleSend(JSON.stringify(jsonInput), selectors.InteractiveId)
     })
     return (
         <div className={styles["ai-chat-tool-card"]}>
@@ -55,9 +56,9 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                     <OutlineSparklesColorsIcon />
                     <div>{title}</div>
                 </div>
-                {isToolStdout(NodeId) && toolAggregation?.selectors && (
+                {isToolStdout(NodeId) && selectors?.selectors && (
                     <div className={styles["card-extra"]}>
-                        {toolAggregation.selectors.map((item) => {
+                        {selectors.selectors.map((item) => {
                             return (
                                 <YakitPopconfirm
                                     title='跳过会取消工具调用，使用当前输出结果进行后续工作决策，是否确认跳过'
@@ -75,18 +76,19 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                 )}
             </div>
             <div className={styles["card-content"]}>
-                <ChatStreamContent stream={stream} />
+                <ChatStreamContent stream={content} />
             </div>
         </div>
     )
 })
 
 interface AIChatToolItemProps {
-    item: AIChatMessage.AIToolData
+    time: number
+    item: AIToolResult
     type?: "re-act"
 }
 export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) => {
-    const {item, type} = props
+    const {time, item, type} = props
     const handleDetails = useMemoizedFn(() => {
         if (!item?.callToolId) return
         const m = showYakitDrawer({
@@ -158,7 +160,7 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
                     <SolidToolIcon />
                     <div>{item.toolName}</div>
                     {tag}
-                    <div className={styles["item-time"]}>{+item.time ? formatTimestamp(+item.time) : "-"}</div>
+                    <div className={styles["item-time"]}>{+time ? formatTimestamp(+time) : "-"}</div>
                 </div>
                 <YakitButton type='text'>查看详情</YakitButton>
             </div>

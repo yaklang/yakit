@@ -2,7 +2,7 @@ import React, {memo, useEffect, useRef, useState} from "react"
 import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps} from "./type"
 import {AIAgentWelcome} from "../AIAgentWelcome/AIAgentWelcome"
 import {useCreation, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {AIChatInfo, AIChatMessage, AIChatReview, AIChatReviewExtra, AIInputEvent, AIStartParams} from "../type/aiChat"
+import {AIChatInfo, AIChatReviewExtra} from "../type/aiChat"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
@@ -26,6 +26,8 @@ import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon} from "@/assets
 import {ChatIPCSendType} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
+import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIChatReview} from "@/pages/ai-re-act/hooks/aiRender"
 
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
@@ -119,7 +121,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     // review数据中树的数据中需要的解释和关键词工具
     const [planReviewTreeKeywordsMap, {set: setPlanReviewTreeKeywords, reset: resetPlanReviewTreeKeywords}] = useMap<
         string,
-        AIChatMessage.PlanReviewRequireExtra
+        AIAgentGrpcApi.PlanReviewRequireExtra
     >(new Map())
 
     const [reviewInfo, setReviewInfo] = useState<AIChatReview>()
@@ -360,8 +362,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
             >
                 <div className={styles["review-wrapper"]}>
                     <AIReActChatReview
-                        type={reviewInfo.type}
-                        review={reviewInfo.data}
+                        info={reviewInfo}
                         onSendAI={handleSendTask}
                         planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
                         renderFooterExtra={renderFooter}

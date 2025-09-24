@@ -1,17 +1,19 @@
-import {AIChatMessage} from "@/pages/ai-agent/type/aiChat"
+import {AIToolResult, ToolStreamSelectors} from "./aiRender"
 
-export const DefaultAIToolResult: AIChatMessage.AIToolData = {
+export const DefaultAIToolResult: AIToolResult = {
     callToolId: "",
     toolName: "-",
     status: "default",
     summary: "",
-    time: 0,
-    selectors: [],
-    interactiveId: "",
     toolStdoutContent: {
         content: "",
         isShowAll: false
     }
+}
+export const DefaultToolStdOutSelectors: ToolStreamSelectors = {
+    callToolId: "",
+    InteractiveId: "",
+    selectors: []
 }
 
 /** AI 流式输出中, NodeId 对应展示的内容 */
@@ -35,7 +37,8 @@ export const AIStreamNodeIdToLabel: Record<string, {label: string}> = {
     decision: {label: "决策"},
     output: {label: "通用输出"},
     forge: {label: "智能应用"},
-    "re-act-loop-thought": {label: "思考"}
+    "re-act-loop-thought": {label: "思考"},
+    "re-act-loop-answer-payload": {label: "AI 响应"}
 }
 
 /** AI 判断 review 的风险阈值等级对应的展示内容 */

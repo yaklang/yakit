@@ -1,6 +1,6 @@
 import {Dispatch, ForwardedRef, ReactNode, SetStateAction} from "react"
-import {AIStartParams} from "../type/aiChat"
 import {AIForge} from "../AIForge/type"
+import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 
 export interface AITriageChatRef {
     /** 开始启动 triage 数据流 */

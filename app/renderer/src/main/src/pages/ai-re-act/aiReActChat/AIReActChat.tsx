@@ -7,7 +7,6 @@ import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaProps} from "@/pages/ai-agent/template/type"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
-import {AIInputEvent} from "@/pages/ai-agent/type/aiChat"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ColorsChatIcon} from "@/assets/icon/colors"
 import {OutlineNewspaperIcon, OutlineXIcon} from "@/assets/icon/outline"
@@ -17,6 +16,7 @@ import classNames from "classnames"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {ChevrondownButton, ChevronleftButton, RoundedStopButton} from "./AIReActComponent"
+import {AIInputEvent} from "../hooks/grpcApi"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
@@ -188,11 +188,24 @@ const AIReActLog: React.FC<AIReActLogProps> = React.memo((props) => {
                 <YakitButton type='text' icon={<OutlineXIcon />} onClick={() => setLogVisible(false)} />
             </div>
             <div ref={logListRef} className={styles["ai-re-act-log-list"]}>
-                {logs.map((row) => (
-                    <div className={styles["ai-re-act-log-row"]} key={row.id}>
-                        • {row.level}:{row.message}
-                    </div>
-                ))}
+                {logs.map((row) => {
+                    const {id, type, Timestamp, data} = row
+                    switch (type) {
+                        case "log":
+                            const {level, message} = data
+                            return (
+                                <div className={styles["ai-re-act-log-row"]} key={id}>
+                                    • {level}:{message}
+                                </div>
+                            )
+                        case "stream":
+                            // 这里需要增加一行的流式输出 UI，主要输出的都是 system 和 reason 数据
+                            return null
+
+                        default:
+                            break
+                    }
+                })}
                 <div className={styles["ai-re-act-log-no-more"]}>暂无更多数据</div>
             </div>
         </div>

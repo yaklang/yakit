@@ -14,7 +14,7 @@ import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePlussmIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {AIChatMessage, GetAIToolListRequest, GetAIToolListResponse} from "../type/aiChat"
+import {GetAIToolListRequest, GetAIToolListResponse} from "../type/aiChat"
 import {yakitNotify} from "@/utils/notification"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -23,10 +23,11 @@ import {genDefaultPagination} from "@/pages/invoker/schema"
 import {grpcGetAIToolList} from "../aiToolList/utils"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {generateTaskChatExecution} from "../defaultConstant"
+import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
 
 const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => {
     const {editable, planReviewTreeKeywordsMap, currentPlansId} = props
-    const [list, setList] = useControllableValue<AIChatMessage.PlanTask[]>(props, {
+    const [list, setList] = useControllableValue<AIAgentGrpcApi.PlanTask[]>(props, {
         defaultValue: [],
         valuePropName: "list",
         trigger: "setList"
@@ -37,7 +38,7 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
      * @param parentIndex 父任务的 index（如 "1-1"）
      * @returns 最大的子任务编号（如 1、2、3），如果没有子任务则返回 0
      */
-    const getMaxChildIndex = (data: AIChatMessage.PlanTask[], parentIndex: string): number => {
+    const getMaxChildIndex = (data: AIAgentGrpcApi.PlanTask[], parentIndex: string): number => {
         const childPrefix = `${parentIndex}-`
         const children = data
             .filter((task) => task.index.startsWith(childPrefix))
@@ -49,12 +50,12 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
         return children.length > 0 ? Math.max(...children) : 0
     }
     /**添加子节点 */
-    const onAddSubNode = useMemoizedFn((item: AIChatMessage.PlanTask) => {
+    const onAddSubNode = useMemoizedFn((item: AIAgentGrpcApi.PlanTask) => {
         const parentIndex = item.index
         const maxChildIndex = getMaxChildIndex(list, parentIndex)
         const newChildIndex = `${parentIndex}-${maxChildIndex + 1}`
 
-        const newChildTask: AIChatMessage.PlanTask = {
+        const newChildTask: AIAgentGrpcApi.PlanTask = {
             ...generateTaskChatExecution(),
             index: newChildIndex,
             isUserAdd: true
@@ -75,7 +76,7 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
      * @param parentIndex 父级 index（如 "1"、"1-1"）
      * @returns 该层级的最后一个兄弟节点的 index（如 "3"、"1-2"）
      */
-    const getLastSiblingIndex = (data: AIChatMessage.PlanTask[], siblingOfIndex: string): string | null => {
+    const getLastSiblingIndex = (data: AIAgentGrpcApi.PlanTask[], siblingOfIndex: string): string | null => {
         const parts = siblingOfIndex.split("-")
         const parentIndex = parts.slice(0, -1).join("-") // 父级 index(如 "1-1" → "1")
 
@@ -103,7 +104,7 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
      * 添加兄弟节点
      * @description 目前根节点不允许添加兄弟元素，前端逻辑已做，不删
      * */
-    const onAddBrotherNode = useMemoizedFn((item: AIChatMessage.PlanTask) => {
+    const onAddBrotherNode = useMemoizedFn((item: AIAgentGrpcApi.PlanTask) => {
         const siblingOfIndex = item.index
 
         const lastSiblingIndex = getLastSiblingIndex(list, siblingOfIndex)
@@ -115,7 +116,7 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
             : parseInt(parts[parts.length - 1]) + 1
         const newSiblingIndex = parentIndex ? `${parentIndex}-${newSiblingNum}` : `${newSiblingNum}`
 
-        const newSiblingTask: AIChatMessage.PlanTask = {
+        const newSiblingTask: AIAgentGrpcApi.PlanTask = {
             ...generateTaskChatExecution(),
             index: newSiblingIndex,
             isUserAdd: true
@@ -146,7 +147,7 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
         onFocusAfterAddNode(newSiblingTask)
     })
     /**新增节点后，聚焦在该节点上 */
-    const onFocusAfterAddNode = useMemoizedFn((item: AIChatMessage.PlanTask) => {
+    const onFocusAfterAddNode = useMemoizedFn((item: AIAgentGrpcApi.PlanTask) => {
         setTimeout(() => {
             // 新增的节点如果没在显示区域内，需要滚动到节点的位置
             const dom = document.getElementById(item.index)
@@ -174,7 +175,7 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
             observer.observe(dom)
         }, 200)
     })
-    const onRemoveNode = useMemoizedFn((item: AIChatMessage.PlanTask) => {
+    const onRemoveNode = useMemoizedFn((item: AIAgentGrpcApi.PlanTask) => {
         const newList = list.map((ele) => {
             if (ele.index.startsWith(item.index)) {
                 ele.isRemove = true
@@ -183,9 +184,9 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
         })
         setList([...newList])
     })
-    const setItem = useMemoizedFn((item: AIChatMessage.PlanTask, option: SetItemOption) => {
+    const setItem = useMemoizedFn((item: AIAgentGrpcApi.PlanTask, option: SetItemOption) => {
         const {label, value} = option
-        const newList = list.map((ele: AIChatMessage.PlanTask) => {
+        const newList = list.map((ele: AIAgentGrpcApi.PlanTask) => {
             if (ele.index === item.index) {
                 ele = {
                     ...ele,
@@ -344,7 +345,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
         setItem(item, {label: "goal", value})
     })
     //#region 关联工具及其解释说明
-    const extraInfo: AIChatMessage.PlanReviewRequireExtra | undefined = useCreation(() => {
+    const extraInfo: AIAgentGrpcApi.PlanReviewRequireExtra | undefined = useCreation(() => {
         const info = planReviewTreeKeywordsMap.get(item.index)
         if (info?.plans_id === currentPlansId) {
             return info
@@ -531,7 +532,9 @@ const ContentEditableDiv: React.FC<ContentEditableDivProps> = React.memo((props)
             suppressContentEditableWarning={true}
             spellCheck={false}
             data-placeholder={placeholder}
-        >{value}</div>
+        >
+            {value}
+        </div>
     )
 })
 /**树的每一项的线 */
