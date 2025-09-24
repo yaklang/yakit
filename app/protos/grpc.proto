@@ -1734,7 +1734,6 @@ message QueryAIForgeResponse {
 
 message GetAIForgeRequest {
   int64 ID = 1;
-  string ForgeName = 2;
 }
 
 message StartMcpServerRequest {
@@ -7461,8 +7460,6 @@ message SSARisksFilter {
   int64 AfterCreatedAt = 16;
   repeated string LatestDisposalStatus = 17;  // not_set | is_issue | not_issue | suspicious
   SSARiskDiffRequest SSARiskDiffRequest = 18;
-  // 增量查询
-  bool Incremental = 19;
 }
 
 message QuerySSARisksRequest {
