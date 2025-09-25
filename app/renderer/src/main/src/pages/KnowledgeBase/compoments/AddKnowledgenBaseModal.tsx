@@ -15,6 +15,7 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 
 interface TAddKnowledgenBaseModalProps {
     addKnowledgenBaseModal: {
@@ -28,6 +29,7 @@ interface TAddKnowledgenBaseModalProps {
         KnowledgeBaseName: string | undefined
     }) => void
     token: MutableRefObject<string>
+    lastTokenRef: MutableRefObject<string>
     setIsRefresh: Dispatch<SetStateAction<boolean>>
     runAsync: (params: any) => Promise<any>
     params?: any
@@ -37,6 +39,7 @@ const AddKnowledgenBaseModal: FC<TAddKnowledgenBaseModalProps> = ({
     addKnowledgenBaseModal,
     setAddKnowledgenBaseModal,
     token,
+    lastTokenRef,
     setIsRefresh,
     runAsync,
     params
@@ -45,22 +48,19 @@ const AddKnowledgenBaseModal: FC<TAddKnowledgenBaseModalProps> = ({
 
     const [executeStatus, setExecuteStatus] = useSafeState<ExpandAndRetractExcessiveState>("default")
     const [runtimeId, setRuntimeId] = useState<string>("")
+    const [_, setSreamStatus, getSreamStatus] = useGetSetState({
+        error: false,
+        success: false
+    })
+    const [targetToken, setTargetToken, getTargetToken] = useGetSetState<string>("")
 
-    const {run} = useRequest(
-        async (executeParams, Params) =>
-            await apiDebugPlugin({
-                params: executeParams,
-                token: token.current,
-                pluginCustomParams: Params
-            }),
-        {
-            manual: true,
-            onSuccess: () => {
-                setExecuteStatus("process")
-                debugPluginStreamEvent.start()
-            }
+    const {run} = useRequest(async (params) => await apiDebugPlugin(params), {
+        manual: true,
+        onSuccess: () => {
+            setExecuteStatus("process")
+            debugPluginStreamEvent.start()
         }
-    )
+    })
 
     const beforeUploadFun = useDebounceFn(
         (fileList: any[]) => {
@@ -85,31 +85,119 @@ const AddKnowledgenBaseModal: FC<TAddKnowledgenBaseModalProps> = ({
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
         taskName: "debug-plugin",
         apiKey: "DebugPlugin",
-        token: token.current,
+        token: getTargetToken(),
+        onError: () =>
+            setSreamStatus({
+                error: true,
+                success: false
+            }),
         onEnd: async () => {
-            debugPluginStreamEvent.stop()
-            await runAsync(params)
-            onCancel()
-            setTimeout(() => {
-                setExecuteStatus("finished")
-            }, 300)
-            apiCancelDebugPlugin(token.current).then(() => {
-                setRuntimeId("")
-                token.current = ""
-                debugPluginStreamEvent.reset()
-                setAddKnowledgenBaseModal({
-                    addKnowledgenBaseModalVisible: false,
-                    knowledgeBaseId: addKnowledgenBaseModal.knowledgeBaseId,
-                    KnowledgeBaseName: addKnowledgenBaseModal.KnowledgeBaseName
+            const {error, success} = getSreamStatus()
+            if (error && !success) {
+                debugPluginStreamEvent.stop()
+                await runAsync(params)
+                onCancel()
+                setTimeout(() => {
+                    setExecuteStatus("finished")
+                }, 300)
+                apiCancelDebugPlugin(getTargetToken()).then(() => {
+                    setRuntimeId("")
+                    token.current = ""
+                    lastTokenRef.current = ""
+                    debugPluginStreamEvent.reset()
+                    setAddKnowledgenBaseModal({
+                        addKnowledgenBaseModalVisible: false,
+                        knowledgeBaseId: addKnowledgenBaseModal.knowledgeBaseId,
+                        KnowledgeBaseName: addKnowledgenBaseModal.KnowledgeBaseName
+                    })
+                    setIsRefresh((prev) => !prev)
+                    setSreamStatus({
+                        success: false,
+                        error: false
+                    })
                 })
-                setIsRefresh((prev) => !prev)
-            })
+            } else if (!error && !success) {
+                setSreamStatus((pre) => ({...pre, success: true}))
+                setTargetToken(lastTokenRef.current)
+
+                const pluginData = await grpcFetchLocalPluginDetail({Name: "构建知识条目"}, true)
+                let executeParams = {
+                    params: {
+                        Code: "",
+                        PluginType: "yak",
+                        PluginName: "构建知识条目",
+                        ExecParams: [
+                            {
+                                Key: "kbName",
+                                Value: addKnowledgenBaseModal.KnowledgeBaseName!
+                            },
+                            {
+                                Key: "query",
+                                Value: ""
+                            },
+                            {
+                                Key: "entrylen",
+                                Value: "1000"
+                            },
+                            {
+                                Key: "k",
+                                Value: "0"
+                            },
+                            {
+                                Key: "kmin",
+                                Value: "2"
+                            },
+                            {
+                                Key: "kmax",
+                                Value: "4"
+                            }
+                        ]
+                    },
+                    pluginCustomParams: pluginData?.Params
+                }
+                run({
+                    ...executeParams,
+                    token: lastTokenRef.current
+                })
+            } else {
+                debugPluginStreamEvent.stop()
+                await runAsync(params)
+                onCancel()
+                setTimeout(() => {
+                    setExecuteStatus("finished")
+                }, 300)
+                apiCancelDebugPlugin(getTargetToken()).then(() => {
+                    setRuntimeId("")
+                    token.current = ""
+                    lastTokenRef.current = ""
+                    debugPluginStreamEvent.reset()
+                    setAddKnowledgenBaseModal({
+                        addKnowledgenBaseModalVisible: false,
+                        knowledgeBaseId: addKnowledgenBaseModal.knowledgeBaseId,
+                        KnowledgeBaseName: addKnowledgenBaseModal.KnowledgeBaseName
+                    })
+                    setIsRefresh((prev) => !prev)
+                    setSreamStatus({
+                        success: false,
+                        error: false
+                    })
+                })
+            }
         },
         setRuntimeId: (rId) => {
             yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
             setRuntimeId(rId)
         }
     })
+
+    const isExecuting = useCreation(() => {
+        if (executeStatus === "process") return true
+        return false
+    }, [executeStatus])
+
+    const isShowResult = useCreation(() => {
+        return isExecuting || runtimeId
+    }, [isExecuting, runtimeId])
 
     const handleOk = async () => {
         if (!uploadList.length) {
@@ -118,6 +206,7 @@ const AddKnowledgenBaseModal: FC<TAddKnowledgenBaseModalProps> = ({
         }
         if (uploadList.length > 0 && !isShowResult) {
             const pathStr = uploadList.map((it) => it.path).join(",")
+            setTargetToken(token.current)
             const plugin = await grpcFetchLocalPluginDetail({Name: "构建知识库"}, true)
 
             let executeParams: DebugPluginRequest = {
@@ -161,24 +250,24 @@ const AddKnowledgenBaseModal: FC<TAddKnowledgenBaseModalProps> = ({
                 ],
                 PluginName: plugin.ScriptName
             }
-            run(executeParams, plugin.Params)
+            run({
+                params: executeParams,
+                token: token.current,
+                pluginCustomParams: plugin.Params
+            })
         }
     }
 
-    const isExecuting = useCreation(() => {
-        if (executeStatus === "process") return true
-        return false
-    }, [executeStatus])
-
-    const isShowResult = useCreation(() => {
-        return isExecuting || runtimeId
-    }, [isExecuting, runtimeId])
-
+    // 关闭弹窗事件
     const onCancel = () => {
         setUploadList([])
         setExecuteStatus("default")
         if (isShowResult) {
-            apiCancelDebugPlugin(token.current).then(() => {
+            setSreamStatus({
+                error: true,
+                success: false
+            })
+            apiCancelDebugPlugin(getTargetToken()).then(() => {
                 debugPluginStreamEvent.stop()
             })
         } else {
@@ -188,6 +277,17 @@ const AddKnowledgenBaseModal: FC<TAddKnowledgenBaseModalProps> = ({
                 KnowledgeBaseName: addKnowledgenBaseModal.KnowledgeBaseName
             })
         }
+    }
+
+    // 手动停止
+    const headleStop = () => {
+        setSreamStatus({
+            error: true,
+            success: false
+        })
+        apiCancelDebugPlugin(getTargetToken()).then(() => {
+            debugPluginStreamEvent.stop()
+        })
     }
 
     return (
@@ -211,22 +311,7 @@ const AddKnowledgenBaseModal: FC<TAddKnowledgenBaseModalProps> = ({
                             确定
                         </YakitButton>
                     ) : (
-                        <YakitButton
-                            colors={"danger"}
-                            key='vectorDatailClose'
-                            onClick={() => {
-                                apiCancelDebugPlugin(token.current).then(() => {
-                                    debugPluginStreamEvent.stop()
-                                    setExecuteStatus("paused")
-                                    debugPluginStreamEvent.cancel()
-                                    setAddKnowledgenBaseModal({
-                                        addKnowledgenBaseModalVisible: false,
-                                        knowledgeBaseId: addKnowledgenBaseModal.knowledgeBaseId,
-                                        KnowledgeBaseName: addKnowledgenBaseModal.KnowledgeBaseName
-                                    })
-                                })
-                            }}
-                        >
+                        <YakitButton colors={"danger"} key='vectorDatailClose' onClick={headleStop}>
                             停止
                         </YakitButton>
                     )}

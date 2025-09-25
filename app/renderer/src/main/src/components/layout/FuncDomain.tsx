@@ -1008,7 +1008,6 @@ const GetUIOpSettingMenu = () => {
                 },
                 {key: "mcp", label: "Yak Mcp"},
                 {key: "ai-agent", label: "AI Agent"},
-                {key: "ai-re-act", label: "AI ReAct"},
                 {key: "ssa-result-diff", label: "ssa-result-diff"},
                 {key: "ai-repository", label: "知识库"}
             ]

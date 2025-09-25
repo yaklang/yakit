@@ -109,7 +109,6 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                             }
                             lastMessage.entries.push(...toAppend)
                         } catch (error) {
-                            console.error("解析结果数据失败:", error)
                             // @ts-ignore
                             lastMessage.processLog =
                                 ((lastMessage as any).processLog || "") + `结果数据解析失败: ${String(Data)}\n`
@@ -265,7 +264,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                     return newMessages
                 })
             } catch (error) {
-                console.error("停止查询失败:", error)
+                failed(`停止查询失败:${error}`)
             } finally {
                 setLoading(false)
                 ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-data`)

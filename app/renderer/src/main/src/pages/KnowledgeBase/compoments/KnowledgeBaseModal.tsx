@@ -8,6 +8,7 @@ import {FC, useEffect, useMemo} from "react"
 import {v4 as uuidv4} from "uuid"
 import {TKnowledgeBaseProps} from "../TKnowledgeBase"
 import styles from "../knowledgeBase.module.scss"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -21,9 +22,24 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseProps> = ({
     const [form] = Form.useForm()
 
     useEffect(() => {
+        visible && runAsync()
         form.setFieldsValue(itemsData)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [visible])
+
+    const {data, runAsync} = useRequest(
+        async () => {
+            const result = await ipcRenderer.invoke("GetKnowledgeBaseTypeList")
+            return result?.KnowledgeBaseTypes?.map((it) => ({
+                value: it?.Name,
+                label: it?.Name
+            }))
+        },
+        {
+            manual: true,
+            onError: (error) => failed(`获取知识库类型失败: ${error}`)
+        }
+    )
 
     const targetStatusMemo = useMemo(() => (title?.includes("编辑") ? "edit" : "add"), [title])
 
@@ -87,13 +103,12 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseProps> = ({
             visible={visible}
             onCancel={() => removeFormValue()}
             width={600}
-            getContainer={document.getElementById("repository-manage") || document.body}
             destroyOnClose
             maskClosable={false}
             okText='确认'
             footer={[
                 <div className={styles["knowledge-base-modal-footer"]} key={uuidv4}>
-                    <YakitButton key='cancel' onClick={() => removeFormValue()}>
+                    <YakitButton type='outline1' key='cancel' onClick={() => removeFormValue()}>
                         取消
                     </YakitButton>
                     <YakitButton
@@ -123,14 +138,14 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseProps> = ({
                     name='KnowledgeBaseType'
                     rules={[{required: true, message: "请输入知识库类型"}]}
                 >
-                    <YakitInput placeholder='请输入知识库类型' />
+                    <YakitSelect options={data} placeholder='请选择' />
                 </Form.Item>
                 <Form.Item
                     label='知识库描述'
                     name='KnowledgeBaseDescription'
                     rules={[{max: 500, message: "描述最多 500 个字符"}]}
                 >
-                    <YakitInput.TextArea placeholder='请输入知识库描述' rows={3} showCount />
+                    <YakitInput.TextArea maxLength={500} placeholder='请输入知识库描述' rows={3} showCount />
                 </Form.Item>
             </Form>
         </YakitModal>

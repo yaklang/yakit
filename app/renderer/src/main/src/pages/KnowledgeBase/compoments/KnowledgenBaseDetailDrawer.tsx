@@ -1,4 +1,4 @@
-import  {useState, type FC} from "react"
+import {useState, type FC} from "react"
 import classNames from "classnames"
 
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
@@ -12,6 +12,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {v4 as uuidv4} from "uuid"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 interface TAddKnowledgenBaseDetailDrawerProps {
     knowledgeDetailModalData: {
@@ -53,7 +54,7 @@ export interface GraphData {
     links: GraphLink[]
 }
 
-const transform = (data) => {
+export const transform = (data) => {
     const {nodes, links} = data
 
     // 生成 childrenMap 和 parentMap
@@ -123,11 +124,11 @@ const KnowledgenBaseDetailDrawer: FC<TAddKnowledgenBaseDetailDrawerProps> = ({
     }
 
     const [depth, setDepth] = useState(2)
-    const [relatedEntityUUIDS, setRelatedEntityUUIDS] = useState("")
     const [resultData, setResultData] = useState<GraphData>()
+    const [relatedEntityUUIDS, setRelatedEntityUUIDS] = useState("")
     const [informationType, setInformationType] = useState("KnowledgeInformation")
 
-    const {runAsync} = useRequest(
+    const {runAsync, loading} = useRequest(
         async (HiddenIndex: string, Depth?: number) => {
             const response = await ipcRenderer.invoke("QuerySubERM", {
                 Filter: {
@@ -168,7 +169,8 @@ const KnowledgenBaseDetailDrawer: FC<TAddKnowledgenBaseDetailDrawerProps> = ({
         {
             manual: true,
             onError: (err) => failed(`获取实体关系图失败: ${err}`),
-            debounceWait: 1000
+            debounceWait: 1000,
+            debounceLeading: true
         }
     )
 
@@ -218,32 +220,34 @@ const KnowledgenBaseDetailDrawer: FC<TAddKnowledgenBaseDetailDrawerProps> = ({
             destroyOnClose={true}
             className={classNames(styles["knowledgen-baseDetail-drawer"])}
         >
-            <div className={styles["knowledgen-base-grap"]}>
-                <div className={styles["header"]}>
-                    <div className={styles["title"]}>实体关系图</div>
-                    <div className={styles["depth"]}>
-                        <div>深度</div>{" "}
-                        <YakitInputNumber
-                            value={depth}
-                            onChange={async (e) => {
-                                await runAsync(relatedEntityUUIDS, e as number)
-                                setDepth(e as number)
-                            }}
-                            min={1}
-                        />
+            <YakitSpin spinning={loading}>
+                <div className={styles["knowledgen-base-grap"]}>
+                    <div className={styles["header"]}>
+                        <div className={styles["title"]}>实体关系图</div>
+                        <div className={styles["depth"]}>
+                            <div>深度</div>{" "}
+                            <YakitInputNumber
+                                value={depth}
+                                onChange={async (e) => {
+                                    await runAsync(relatedEntityUUIDS, e as number)
+                                    setDepth(e as number)
+                                }}
+                                min={1}
+                            />
+                        </div>
+                    </div>
+                    <div className={styles["knowledge-base-grap"]}>
+                        {resultData?.links &&
+                        resultData?.links.length > 0 &&
+                        resultData?.nodes &&
+                        resultData?.nodes.length > 0 ? (
+                            <GraphDemo data={resultData} />
+                        ) : (
+                            <YakitEmpty title='暂无数据' />
+                        )}
                     </div>
                 </div>
-                <div className={styles["knowledge-base-grap"]}>
-                    {resultData?.links &&
-                    resultData?.links.length > 0 &&
-                    resultData?.nodes &&
-                    resultData?.nodes.length > 0 ? (
-                        <GraphDemo data={resultData} />
-                    ) : (
-                        <YakitEmpty title='暂无数据' />
-                    )}
-                </div>
-            </div>
+            </YakitSpin>
             <div className={styles["drawer-detail"]}>
                 <YakitRadioButtons
                     buttonStyle='solid'

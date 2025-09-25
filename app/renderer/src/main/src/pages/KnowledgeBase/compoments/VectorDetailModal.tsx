@@ -5,7 +5,7 @@ import {FC, useEffect} from "react"
 
 import styles from "../knowledgeBase.module.scss"
 import {useRequest, useSafeState} from "ahooks"
-import {failed} from "@/utils/notification"
+import {failed, info} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 
 const {ipcRenderer} = window.require("electron")
@@ -37,13 +37,14 @@ const VectorDetailModal: FC<TVectorDetailModalProps> = ({
         },
         {
             manual: true,
-            onError: (error) => failed(`获取文档内容失败: ${error}`)
+            onError: (_) => info("暂无关联知识条目")
+            // failed(`获取文档内容失败: ${error}`)
         }
     )
     const handClose = () =>
         handleCloseVectorDetailModal({
             vectorDetailModalVisible: false,
-            selectedVectorDetail 
+            selectedVectorDetail
         })
 
     useEffect(() => {
@@ -53,7 +54,7 @@ const VectorDetailModal: FC<TVectorDetailModalProps> = ({
 
     return (
         <YakitModal
-            getContainer={document.getElementById("repository-manage") || document.body}
+            // getContainer={document.getElementById("repository-manage") || document.body}
             title='向量存储条目详情'
             visible={vectorDetailModalVisible}
             onCancel={handClose}

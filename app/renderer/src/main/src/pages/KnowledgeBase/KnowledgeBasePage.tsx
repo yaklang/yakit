@@ -7,6 +7,9 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {KnowledgeBaseManage} from "./KnowledgeBaseManage"
 import KnowledgeBaseTable from "./knowledgeBaseTable"
 import styles from "./knowledgeBase.module.scss"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {CloudDownloadIcon} from "@/assets/newIcon"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -78,7 +81,7 @@ const KnowledgeBase: FC = () => {
             onSuccess: (result) => {
                 if (result.length !== 0) {
                     success(`获取所需安装插件成功，共 ${result.length} 个`)
-                    runInstallAll()
+                    // runInstallAll()
                     setInstallPlug(true)
                 }
             },
@@ -93,7 +96,7 @@ const KnowledgeBase: FC = () => {
     }, [])
 
     // 并发安装所有
-    const {run: runInstallAll} = useRequest(
+    const {run: runInstallAll, loading} = useRequest(
         async () => {
             if (!binariesToInstall || binariesToInstall.length === 0) {
                 return
@@ -141,12 +144,10 @@ const KnowledgeBase: FC = () => {
             }
 
             const onError = (_, error) => {
-                console.error(`[InstallThirdPartyBinary][${token}] error: ${error}`)
+                failed(`下载失败:${error}`)
             }
 
-            const onEnd = () => {
-                console.log(`[InstallThirdPartyBinary][${token}] finished`)
-            }
+            const onEnd = () => {}
 
             ipcRenderer.on(`${token}-data`, onData)
             ipcRenderer.on(`${token}-error`, onError)
@@ -180,13 +181,21 @@ const KnowledgeBase: FC = () => {
                 />
             ) : (
                 <div className={styles["install-box"]}>
-                    <div className={styles["install-title"]}>知识库插件安装</div>
-                    <div>
-                        <div className={styles["install-desc"]}>正在安装知识库所需插件，请稍候...</div>
-                    </div>
-                    <div className={styles["install-content"]}>
-                        <Progress percent={overallProgress} />
-                    </div>
+                    <YakitEmpty title='暂无数据' description='请点击下载，在创建知识库' />
+                    {overallProgress ? (
+                        <div className={styles["install-content"]}>
+                            <Progress percent={overallProgress} />
+                        </div>
+                    ) : (
+                        <YakitButton
+                            type='outline1'
+                            icon={<CloudDownloadIcon />}
+                            onClick={() => runInstallAll()}
+                            loading={loading}
+                        >
+                            一键下载
+                        </YakitButton>
+                    )}
                 </div>
             )}
         </div>

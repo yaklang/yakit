@@ -18,7 +18,7 @@ const KnowledgeModalVisible: FC<TKnowledgeModalVisibleProps> = ({knowledgeModalD
     }, [knowledgeModalData.visible])
     return (
         <YakitModal
-            getContainer={document.getElementById("repository-manage") || document.body}
+            // getContainer={document.getElementById("repository-manage") || document.body}
             title='编辑知识条目'
             visible={knowledgeModalData.visible}
             maskClosable={false}

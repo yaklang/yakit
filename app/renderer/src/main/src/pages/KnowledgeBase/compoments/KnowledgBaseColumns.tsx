@@ -81,7 +81,7 @@ const getKnowledgeColumns: TgetKnowledgeColumnsProps = (
                         编辑
                     </YakitButton>
                     <YakitPopconfirm
-                        title='删除后无法恢复，确认删除此知识库吗？'
+                        title='确认删除此条知识吗？'
                         onConfirm={(e) => {
                             e?.stopPropagation()
                             handleDelete(item)

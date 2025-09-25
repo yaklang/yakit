@@ -1,5 +1,10 @@
 import ReactECharts from "echarts-for-react"
 import {memo, useEffect, useRef, useState} from "react"
+import {getCssVar} from "@/utils/tool"
+
+const backgroundColor = getCssVar("--Colors-Use-Main-Primary")
+const textColor = getCssVar("--Colors-Use-Neutral-Text-1-Title")
+const lineTextColor = getCssVar("--Colors-Use-Neutral-Text-2-Primary")
 
 const GraphDemo = ({data}) => {
     const chartRef = useRef<any>(null)
@@ -52,7 +57,7 @@ const GraphDemo = ({data}) => {
                 data: data?.nodes?.map((node) => ({
                     ...node,
                     itemStyle: {
-                        color: "#3399ff",
+                        color: backgroundColor,
                         borderWidth: 0
                     },
                     label: {
@@ -60,11 +65,11 @@ const GraphDemo = ({data}) => {
                         formatter: `{name|${node.level}}`,
                         fontSize: 12,
                         fontWeight: "bold",
-                        color: "#fff",
+                        color: textColor,
                         rich: {
                             name: {
                                 fontSize: 12,
-                                color: "#fff",
+                                color: textColor,
                                 align: "center"
                             }
                         }
@@ -77,7 +82,7 @@ const GraphDemo = ({data}) => {
                     show: true,
                     formatter: (params) => params.data.type || "",
                     fontSize: 12,
-                    color: "#666",
+                    color: lineTextColor,
                     borderRadius: 3,
                     padding: [2, 4]
                 },

@@ -1,4 +1,4 @@
-import {FC, memo, useMemo, useRef} from "react"
+import {FC, memo, useEffect, useMemo, useRef} from "react"
 import {useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 
@@ -16,7 +16,8 @@ import {VectorDetailModal} from "./compoments/VectorDetailModal"
 import {AddKnowledgenBaseModal} from "./compoments/AddKnowledgenBaseModal"
 import {randomString} from "@/utils/randomUtil"
 import {KnowledgenBaseDetailDrawer} from "./compoments/KnowledgenBaseDetailDrawer"
-import { EntryDetailModal } from "./compoments/EntryDetailModal"
+import {EntryDetailModal} from "./compoments/EntryDetailModal"
+import {result} from "lodash"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -82,12 +83,15 @@ const KnowledgeBaseTable: FC<{
     })
 
     const tokenRef = useRef("")
+    const lastTokenRef = useRef("")
     const boxHeightRef = useRef(0)
+    const limitCountRef = useRef(0)
 
     const {data: knowledgeBaseIndex, runAsync: knowledgeBaseIndexRun} = useRequest(
         async () => {
             const result = await ipcRenderer.invoke("ListEntityRepository", {})
-            const targetBaseIndex = result?.EntityRepositories?.find((it) => it.ID === knowledgeBaseitems?.id)
+
+            const targetBaseIndex = result?.EntityRepositories?.find((it) => it.Name === knowledgeBaseitems?.name)
                 ?.HiddenIndex
             return targetBaseIndex
         },
@@ -111,7 +115,7 @@ const KnowledgeBaseTable: FC<{
                     const result = await ipcRenderer.invoke("QueryEntity", {
                         ...params,
                         Filter: {
-                            Names: params.Keyword,
+                            Names: params.Keyword && params.Keyword.length > 0 ? [params.Keyword] : [],
                             BaseIndex: knowledgeBaseIndex
                         },
                         KnowledgeBaseId: undefined,
@@ -170,6 +174,7 @@ const KnowledgeBaseTable: FC<{
 
     const updateData = useMemoizedFn(() => {
         const limitCount: number = boxHeightRef.current > 0 ? Math.ceil(boxHeightRef.current / 28) : 30
+        limitCountRef.current = limitCount
         const preParams = params?.[0]
         const Requsetparams = {
             ...defaultParams,
@@ -183,20 +188,23 @@ const KnowledgeBaseTable: FC<{
         runAsync(Requsetparams)
     })
 
-    useUpdateEffect(() => {
+    useEffect(() => {
         setTableData([])
         setTableSearchValue("")
         setIsRefresh(!isRefresh)
         setTotal(0)
-        setPagination((preValue) => ({...preValue, Page: 1}))
+        setPagination((preValue) => ({...preValue, Page: 1, Limit: 100}))
     }, [knowledgeBaseitems?.id, type])
 
     useUpdateEffect(() => {
-        setTotal(0)
-        runAsync({
-            Pagination: pagination,
-            Keyword: tableSearchValue
-        })
+        ;(async () => {
+            setTotal(0)
+            await knowledgeBaseIndexRun()
+            await runAsync({
+                Pagination: pagination,
+                Keyword: tableSearchValue
+            })
+        })()
     }, [pagination])
 
     // 搜索表格功能
@@ -215,7 +223,11 @@ const KnowledgeBaseTable: FC<{
 
     // 表格头部 知识/实体/向量选择功能
     const onChangeType = useMemoizedFn(async (value: string) => {
-        setType(value)
+        value === "Entity"
+            ? knowledgeBaseIndexRun().then(() => {
+                  setType(value)
+              })
+            : setType(value)
     })
 
     const targetColumns = useMemo(() => {
@@ -240,7 +252,9 @@ const KnowledgeBaseTable: FC<{
             knowledgeBaseId: knowledgeBaseitems?.id,
             KnowledgeBaseName: knowledgeBaseitems?.name
         })
-        tokenRef.current = randomString(50)
+        const firstToken = randomString(50)
+        tokenRef.current = firstToken
+        lastTokenRef.current = firstToken + randomString(50)
     })
 
     const knowledgeBaseTableRenderTitle = useMemo(() => {
@@ -255,13 +269,7 @@ const KnowledgeBaseTable: FC<{
                         buttonStyle='solid'
                         options={tableHeaderGroupOptions}
                         value={type}
-                        onChange={(e) => {
-                            e.target.value === "Entity"
-                                ? knowledgeBaseIndexRun().then(() => {
-                                      onChangeType(e.target.value)
-                                  })
-                                : onChangeType(e.target.value)
-                        }}
+                        onChange={(e) => onChangeType(e.target.value)}
                     />
                     <div>
                         <YakitInput.Search
@@ -339,6 +347,7 @@ const KnowledgeBaseTable: FC<{
                 setIsRefresh={setIsRefresh}
                 runAsync={runAsync}
                 params={params?.[0]}
+                lastTokenRef={lastTokenRef}
             />
 
             <KnowledgenBaseDetailDrawer
