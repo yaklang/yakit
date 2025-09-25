@@ -385,13 +385,14 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 {options.length > 1 && (
                     <div className={styles["compare-select-box"]}>
                         <YakitCheckbox
-                            checked={checkItem === "" ? false : isShowCompare}
+                            checked={isShowCompare}
                             onChange={(e) => {
                                 setShowCompare(e.target.checked)
                             }}
-                            disabled={checkItem === "" || options.length <= 1}
                         >
-                            <span style={{fontSize: 12, whiteSpace: "nowrap"}}>只看新增</span>
+                            <span style={{fontSize: 12, whiteSpace: "nowrap"}}>
+                                {checkItem === "" ? "查看未处置" : "只看新增"}
+                            </span>
                         </YakitCheckbox>
                     </div>
                 )}
