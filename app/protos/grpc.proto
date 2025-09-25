@@ -824,6 +824,12 @@ service Yak {
   // SSA Report
   rpc GenerateSSAReport(GenerateSSAReportRequest) returns (GenerateSSAReportResponse);
 
+  // SSA Project CRUD
+  rpc CreateSSAProject(CreateSSAProjectRequest) returns (CreateSSAProjectResponse);
+  rpc UpdateSSAProject(UpdateSSAProjectRequest) returns (UpdateSSAProjectResponse);
+  rpc DeleteSSAProject(DeleteSSAProjectRequest) returns (DeleteSSAProjectResponse);
+  rpc QuerySSAProject(QuerySSAProjectRequest) returns (QuerySSAProjectResponse);
+
   rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
   rpc QueryPluginEnv(QueryPluginEnvRequest) returns (PluginEnvData);
   rpc CreatePluginEnv(PluginEnvData) returns (Empty); // create
@@ -1203,6 +1209,7 @@ message KnowledgeBaseType{
   string Value = 3;
 }
 
+
 message GetKnowledgeBaseTypeListResponse{
   repeated KnowledgeBaseType KnowledgeBaseTypes = 1;
 }
@@ -1337,6 +1344,7 @@ message ListVectorStoreEntriesRequest {
   int64 CollectionID = 1;
   string Keyword = 2;
   Paging Pagination = 3;
+  string CollectionName = 4;
 }
 
 message CreateVectorStoreEntryRequest {
@@ -1352,6 +1360,7 @@ message VectorStoreEntry {
   string Metadata = 4;
   repeated float Embedding = 5;
 }
+
 
 message ListVectorStoreEntriesResponse {
   repeated VectorStoreEntry Entries = 1;
@@ -1722,6 +1731,7 @@ message QueryAIForgeResponse {
 
 message GetAIForgeRequest {
   int64 ID = 1;
+  string ForgeName = 2;
 }
 
 message StartMcpServerRequest {
@@ -7182,6 +7192,8 @@ message SyntaxFlowScanRequest{
 
   // compile data only in memory 
   bool Memory = 8;
+  // 根据项目扫描
+  uint64 SSAProjectId = 9;
 }
 
 message QuerySyntaxFlowScanTaskRequest{
@@ -7446,6 +7458,8 @@ message SSARisksFilter {
   int64 AfterCreatedAt = 16;
   repeated string LatestDisposalStatus = 17;  // not_set | is_issue | not_issue | suspicious
   SSARiskDiffRequest SSARiskDiffRequest = 18;
+  // 增量查询
+  bool Incremental = 19;
 }
 
 message QuerySSARisksRequest {
@@ -8053,4 +8067,87 @@ message GenerateSSAReportResponse {
   bool Success = 1;         // 是否成功
   string Message = 2;       // 消息
   string ReportData = 3;    // 报告数据（当格式不是yakit时）
+}
+
+// SSA Project Messages
+message SSAProject {
+  int64 ID = 1;
+  int64 CreatedAt = 2;
+  int64 UpdatedAt = 3;
+  // 项目基础信息
+  string ProjectName = 4;
+  string Language = 5;
+  string Description = 6;
+  repeated string Tags = 7;
+  // 源代码来源
+  string CodeSourceConfig = 8;
+  // 编译配置选项
+  SSAProjectCompileConfig CompileConfig = 9;
+  // 扫描配置选项
+  SSAProjectScanConfig ScanConfig=10;
+  // 规则策略配置
+  SSAProjectScanRuleConfig RuleConfig =11;
+}
+
+message SSAProjectCompileConfig{
+  bool StrictMode = 1;
+  int64 PeepholeSize = 2;
+  repeated string ExcludeFiles = 3;
+  bool ReCompile = 4;
+  bool Memory = 5;
+  uint32  Concurrency = 6;
+}
+
+message SSAProjectScanConfig{
+  uint32 Concurrency = 1;
+  bool Memory = 2;
+  bool IgnoreLanguage = 3;
+}
+
+message SSAProjectScanRuleConfig{
+    SyntaxFlowRuleFilter RuleFilter =1;
+}
+
+message SSAProjectFilter {
+  repeated int64 IDs = 1;
+  repeated string ProjectNames = 2;
+  string SearchKeyword = 3;
+  repeated string Languages = 4;
+}
+
+message CreateSSAProjectRequest {
+  SSAProject Project = 1;
+}
+
+message CreateSSAProjectResponse {
+  SSAProject Project = 1;
+  DbOperateMessage Message = 2;
+}
+
+message UpdateSSAProjectRequest {
+  SSAProject Project = 1;
+}
+
+message UpdateSSAProjectResponse {
+  SSAProject Project = 1;
+  DbOperateMessage Message = 2;
+}
+
+message DeleteSSAProjectRequest {
+  SSAProjectFilter Filter = 1;
+}
+
+message DeleteSSAProjectResponse {
+  DbOperateMessage Message = 1;
+}
+
+message QuerySSAProjectRequest {
+  SSAProjectFilter Filter = 1;
+  Paging Pagination = 2;
+}
+
+message QuerySSAProjectResponse {
+  repeated SSAProject Projects = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
 }

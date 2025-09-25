@@ -132,7 +132,7 @@ const KnowledgeBaseTable: FC<{
             } else if (type === "Vector") {
                 const result = await ipcRenderer.invoke("ListVectorStoreEntries", {
                     ...params,
-                    CollectionID: knowledgeBaseitems?.id
+                    CollectionName: knowledgeBaseitems?.name
                 })
                 resultData = {...result, list: result?.Entries}
             }
