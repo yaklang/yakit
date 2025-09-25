@@ -102,12 +102,22 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         setVisible(true)
     })
 
+    const onRefreshFileOrRuleTreeFun = useMemoizedFn(() => {
+        if (active === "file") {
+            setFileRefresh(!fileRefresh)
+        } else if (active === "rule") {
+            setRuleRefresh(!ruleRefresh)
+        }
+    })
+
     useEffect(() => {
         emiter.on("onCodeAuditDefaultExpanded", onDefaultExpanded)
         emiter.on("onCodeAuditHistoryExpanded", onCodeAuditHistoryExpandedFun)
+        emiter.on("onRefreshFileOrRuleTree", onRefreshFileOrRuleTreeFun)
         return () => {
             emiter.off("onCodeAuditDefaultExpanded", onDefaultExpanded)
             emiter.off("onCodeAuditHistoryExpanded", onCodeAuditHistoryExpandedFun)
+            emiter.off("onRefreshFileOrRuleTree", onRefreshFileOrRuleTreeFun)
         }
     }, [])
 
