@@ -44,6 +44,7 @@ import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
+import {AIMarkdown} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -271,11 +272,13 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                             const {id, Timestamp, type, data} = info
                             switch (type) {
                                 case "stream":
-                                    const {NodeId, EventUUID, selectors} = data
+                                    const {NodeId, EventUUID, content, NodeLabel} = data
                                     if (isShowToolColorCard(NodeId)) {
                                         return <AIChatToolColorCard key={id} toolCall={data} />
                                     }
-
+                                    if (NodeId === "re-act-loop-answer-payload") {
+                                        return <AIMarkdown stream={content} nodeLabel={NodeLabel} />
+                                    }
                                     return (
                                         <ChatStreamCollapseItem
                                             key={id}

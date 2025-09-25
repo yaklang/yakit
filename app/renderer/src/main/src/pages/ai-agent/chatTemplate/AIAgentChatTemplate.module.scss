@@ -504,42 +504,7 @@
 }
 
 .task-review-wrapper {
-    .task-summary {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        .summary-header {
-            height: 16px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: var(--Colors-Use-Neutral-Text-4-Help-text, #9ca3b1);
-            font-size: 12px;
-            font-weight: 400;
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-        }
-        .summary-content {
-            color: var(--Colors-Use-Neutral-Text-4-Help-text, #9ca3b1);
-            font-size: 12px;
-            font-weight: 400;
-            line-height: 16px;
-        }
-        .summary-detail {
-            display: flex;
-            align-items: center;
-            .detail-style {
-                color: var(--Colors-Use-Main-Primary, #f28c45);
-                font-size: 11px;
-                font-weight: 500;
-                line-height: 14px;
-                letter-spacing: 0.5px;
-                cursor: pointer;
-            }
-        }
-    }
+   
 }
 .task-review-summary-popover {
     .task-long-summary {
@@ -566,36 +531,7 @@
 }
 
 .tool-review-wrapper {
-    .tool-params {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        .params-title {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: var(--Colors-Use-Neutral-Text-4-Help-text, #9ca3b1);
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-            font-size: 12px;
-            font-weight: 400;
-        }
-        .params-content {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
-            background: var(--Colors-Use-Neutral-Bg, #f8f9fa);
-            word-break: break-all;
-            color: var(--Colors-Use-Neutral-Text-3-Secondary, #868c97);
-            font-size: 14px;
-            font-weight: 400;
-            line-height: 22px;
-            letter-spacing: 0.1px;
-            white-space: pre-wrap;
-        }
-    }
+   
 }
 
 .ai-require-review-wrapper {

@@ -226,7 +226,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
 
     const noAIOptionsAllowShowInput = useCreation(() => {
         return (
-            noAIOptionsList.allowShowInput.length && (
+            !!noAIOptionsList.allowShowInput.length && (
                 <div className={styles["review-selectors-wrapper"]}>
                     {noAIOptionsList.allowShowInput.map((el) => {
                         return (
@@ -395,7 +395,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                             </>
                         ) : (
                             <>
-                                {noAIOptionsList.showButton.length && (
+                                {!!noAIOptionsList.showButton.length && (
                                     <div className={styles["review-selectors-showButton-wrapper"]}>
                                         {noAIOptionsList.showButton.map((el) => {
                                             return (
