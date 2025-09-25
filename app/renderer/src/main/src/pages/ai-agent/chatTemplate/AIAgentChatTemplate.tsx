@@ -396,7 +396,8 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                             NodeLabel: AIStreamNodeIdToLabel[item.NodeId]?.label || "",
                             content: ipcContent + ipcStreamDelta,
                             EventUUID: item.EventUUID,
-                            status: "end"
+                            status: "end",
+                            DisableMarkdown: item.DisableMarkdown
                         }
                     }
                     list.push(current)

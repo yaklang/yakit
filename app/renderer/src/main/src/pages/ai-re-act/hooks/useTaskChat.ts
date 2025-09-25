@@ -96,7 +96,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     // #region 流数据处理相关逻辑
     // 接受流式输出数据并处理
     const handleStreams = useMemoizedFn((res: AIOutputEvent) => {
-        const {IsSystem, IsReason, NodeId, TaskIndex, Timestamp, EventUUID, Content, StreamDelta} = res
+        const {IsSystem, IsReason, NodeId, TaskIndex, Timestamp, EventUUID, Content, StreamDelta, DisableMarkdown} = res
         let ipcContent = Uint8ArrayToString(Content) || ""
         let ipcStreamDelta = Uint8ArrayToString(StreamDelta) || ""
         const content = ipcContent + ipcStreamDelta
@@ -125,7 +125,8 @@ function useTaskChat(params?: UseTaskChatParams) {
                                 NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
                                 EventUUID: EventUUID,
                                 status: "start",
-                                content: content
+                                content: content,
+                                DisableMarkdown: DisableMarkdown
                             }
                         }
                         if (isToolStdoutStream(NodeId)) info.data.selectors = {...toolStdOutSelectors.current}
@@ -152,7 +153,8 @@ function useTaskChat(params?: UseTaskChatParams) {
                                 NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
                                 EventUUID: EventUUID,
                                 status: "start",
-                                content: content
+                                content: content,
+                                DisableMarkdown: DisableMarkdown
                             }
                         }
                     ]
@@ -182,7 +184,8 @@ function useTaskChat(params?: UseTaskChatParams) {
                             NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
                             EventUUID,
                             status: "start",
-                            content: content
+                            content: content,
+                            DisableMarkdown: DisableMarkdown
                         },
                         Timestamp: Timestamp
                     }
@@ -220,7 +223,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
 
     const handleToolResultStatus = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
-        const {Type, EventUUID, TaskIndex, Timestamp} = res
+        const {TaskIndex, Timestamp} = res
         if (!TaskIndex) {
             onCloseByErrorTaskIndexData(res)
             return
@@ -243,7 +246,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 newValue.push({
                     id: uuidv4(),
                     type: "tool_result",
-                    Timestamp: res.Timestamp,
+                    Timestamp: Timestamp,
                     data: {
                         ...toolResult,
                         toolStdoutContent: {

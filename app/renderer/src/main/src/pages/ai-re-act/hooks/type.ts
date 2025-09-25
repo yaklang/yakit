@@ -118,6 +118,14 @@ export interface UseChatIPCState {
     /** 任务规划相关数据 */
     taskChat: UseTaskChatState
 }
+
+/** 执行流途中发送消息的参数 */
+export interface AIChatSendParams {
+    token: string
+    type: ChatIPCSendType
+    params: AIInputEvent
+}
+
 export interface UseChatIPCEvents {
     /** 获取当前执行接口流的唯一标识符 */
     fetchToken: () => string
@@ -126,7 +134,7 @@ export interface UseChatIPCEvents {
     /** 开始执行接口流 */
     onStart: (token: string, params: AIInputEvent) => void
     /** 向执行中的接口流主动输入信息 */
-    onSend: (token: string, type: ChatIPCSendType, params: AIInputEvent) => void
+    onSend: (AIChatSendParams) => void
     /** 主动结束正在执行中的接口流 */
     onClose: (
         token: string,

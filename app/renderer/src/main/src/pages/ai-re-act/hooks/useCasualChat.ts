@@ -46,8 +46,7 @@ function useCasualChat(params?: UseCasualChatParams) {
     // #region 流式输出处理的相关逻辑
     const handleStreams = useMemoizedFn((res: AIOutputEvent) => {
         try {
-            const {IsSystem, IsReason, NodeId, Timestamp, EventUUID, Content, StreamDelta} = res
-            const type = IsSystem ? "systemStream" : IsReason ? "reasonStream" : "stream"
+            const {IsSystem, IsReason, NodeId, Timestamp, EventUUID, Content, StreamDelta, DisableMarkdown} = res
             let ipcContent = Uint8ArrayToString(Content) || ""
             let ipcStreamDelta = Uint8ArrayToString(StreamDelta) || ""
             const content = ipcContent + ipcStreamDelta
@@ -74,7 +73,8 @@ function useCasualChat(params?: UseCasualChatParams) {
                                 NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
                                 EventUUID,
                                 status: "start",
-                                content: content
+                                content: content,
+                                DisableMarkdown: DisableMarkdown
                             },
                             Timestamp: Timestamp
                         }

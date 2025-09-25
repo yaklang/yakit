@@ -21,6 +21,8 @@ export interface AIStreamOutput {
     status: "start" | "end"
     content: string
     selectors?: ToolStreamSelectors
+    /** 是否禁用 markdown 渲染 */
+    DisableMarkdown: AIOutputEvent["DisableMarkdown"]
 }
 
 /** 工具结果的信息内容 */

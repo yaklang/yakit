@@ -233,7 +233,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             InteractiveId: id,
             InteractiveJSONInput: value
         }
-        events.onSend(activeID, type, info)
+        events.onSend({token: activeID, type, params: info})
         handleStopAfterChangeState()
     })
     const onStop = useMemoizedFn(() => {

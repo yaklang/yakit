@@ -120,10 +120,13 @@ export interface AIOutputEvent {
     IsReason: boolean
     StreamDelta: Uint8Array
     IsJson: boolean
+    IsResult: boolean
     Content: Uint8Array
     Timestamp: number
     // 任务索引
     TaskIndex: string
+    /** 是否禁用 markdown 渲染 UI */
+    DisableMarkdown: boolean
     /** 是否是同步消息 */
     IsSync: boolean
     /**用于同步消息的 ID */
@@ -178,6 +181,7 @@ export declare namespace AIAgentGrpcApi {
         finished: boolean
         result: string
         success: boolean
+        timestamp: number
     }
 
     /** structured|stream-finished 代表一个流式输出已经结束 */
@@ -235,8 +239,7 @@ export declare namespace AIAgentGrpcApi {
         type: string
     }
     /** 更新任务状态、收集任务总结 */
-    // 想改这个名，等全局替换时，再改
-    export interface UpdateTask {
+    export interface UpdateTaskInfo {
         task: {
             executed: boolean
             executing: boolean
@@ -279,7 +282,6 @@ export declare namespace AIAgentGrpcApi {
     }
 
     /** AI 对 review 数据的风险评估 */
-    // 原字段为AIToolReviewJudgement
     export interface AIReviewJudgement {
         /** 对应 tool_review 的 id */
         interactive_id: string
