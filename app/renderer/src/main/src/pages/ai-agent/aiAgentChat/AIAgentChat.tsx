@@ -17,6 +17,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {randomString} from "@/utils/randomUtil"
 import {formatAIAgentSetting} from "../utils"
 import ChatIPCContent, {
+    AIChatIPCSendParams,
     ChatIPCContextDispatcher,
     ChatIPCContextStore
 } from "../useContext/ChatIPCContent/ChatIPCContent"
@@ -215,13 +216,16 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         }
         events.onStart(newChat.id, startParams)
     })
-    const handleSendCasual = useMemoizedFn((value: string, id: string) => {
+    const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
+        const {value, id} = params
         handleSendAIRequire(value, id, "casual")
     })
-    const handleSendTask = useMemoizedFn((value: string, id: string) => {
+    const handleSendTask = useMemoizedFn((params: AIChatIPCSendParams) => {
+        const {value, id} = params
         handleSendAIRequire(value, id, "task")
     })
-    const handleSend = useMemoizedFn((value: string, id: string) => {
+    const handleSend = useMemoizedFn((params: AIChatIPCSendParams) => {
+        const {value, id} = params
         handleSendAIRequire(value, id, "")
     })
     const handleSendAIRequire = useMemoizedFn((value: string, id: string, type: ChatIPCSendType) => {
@@ -320,7 +324,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                                 <AIReActTaskChat execute={execute} onStop={onStop} />
                             </React.Suspense>
                         )}
-                        <AIReActChat mode={mode} setMode={setMode} />
+                        <AIReActChat mode={mode} />
                     </div>
                 </ChatIPCContent.Provider>
             )}

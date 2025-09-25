@@ -12,13 +12,18 @@ export interface ChatIPCContextStore {
     reviewExpand: boolean
 }
 
+export interface AIChatIPCSendParams {
+    /**InteractiveJSONInput */
+    value: string
+    id: string
+}
 export interface ChatIPCContextDispatcher {
     chatIPCEvents: UseChatIPCEvents
-    handleSendCasual: (value: string, id: string) => void
-    handleSendTask: (value: string, id: string) => void
+    handleSendCasual: (params: AIChatIPCSendParams) => void
+    handleSendTask: (params: AIChatIPCSendParams) => void
     handleStart: (qs: string) => void
     handleStop: () => void
-    handleSend: (value: string, id: string) => void
+    handleSend: (params: AIChatIPCSendParams) => void
 }
 
 export interface ChatIPCContextValue {
@@ -42,10 +47,10 @@ export default createContext<ChatIPCContextValue>({
             onClose: () => {},
             onReset: () => {}
         },
-        handleSendCasual: (value: string, id: string) => {},
-        handleSendTask: (value: string, id: string) => {},
-        handleSend: (value: string, id: string) => {},
-        handleStart: (qs: string) => {},
+        handleSendCasual: () => {},
+        handleSendTask: () => {},
+        handleSend: () => {},
+        handleStart: () => {},
         handleStop: () => {}
     }
 })

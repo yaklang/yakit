@@ -21,7 +21,7 @@ import {AIInputEvent} from "../hooks/grpcApi"
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
-    const {mode, setMode} = props
+    const {mode} = props
 
     const {chatIPCData} = useChatIPCStore()
     const {chatIPCEvents, handleStart, handleStop} = useChatIPCDispatcher()
@@ -66,9 +66,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                 IsFreeInput: true,
                 FreeInput: qs
             }
-
             // 发送到服务端
-            chatIPCEvents.onSend(activeChat.id, "casual", chatMessage)
+            chatIPCEvents.onSend({token: activeChat.id, type: "casual", params: chatMessage})
         } catch (error) {}
     })
 

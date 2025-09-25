@@ -16,6 +16,7 @@ import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIStreamOutput, AIToolResult} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIChatIPCSendParams} from "../useContext/ChatIPCContent/ChatIPCContent"
 
 interface AIChatToolColorCardProps {
     toolCall: AIStreamOutput
@@ -47,7 +48,11 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
         const jsonInput = {
             suggestion: item.value
         }
-        handleSend(JSON.stringify(jsonInput), selectors.InteractiveId)
+        const params: AIChatIPCSendParams = {
+            value: JSON.stringify(jsonInput),
+            id: selectors.InteractiveId
+        }
+        handleSend(params)
     })
     return (
         <div className={styles["ai-chat-tool-card"]}>

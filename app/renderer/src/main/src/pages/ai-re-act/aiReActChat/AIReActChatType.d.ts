@@ -3,7 +3,6 @@ import {AIChatQSData} from "../hooks/aiRender"
 
 export interface AIReActChatProps {
     mode: AIAgentChatMode
-    setMode: (mode: AIAgentChatMode) => void
 }
 
 export interface AIReActLogProps {

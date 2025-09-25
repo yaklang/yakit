@@ -22,6 +22,7 @@ import {AIAgentGrpcApi} from "../hooks/grpcApi"
 
 import classNames from "classnames"
 import styles from "./AIReActChatReview.module.scss"
+import {AIChatIPCSendParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
     const {
@@ -180,7 +181,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             const {value, allow_extra_prompt} = editInfo.current
             const jsonInput: Record<string, string> = {suggestion: value}
             if (allow_extra_prompt && reviewQS) jsonInput.extra_prompt = reviewQS
-            onSendAI(JSON.stringify(jsonInput), (review as AIAgentGrpcApi.ToolUseReviewRequire).id)
+            onSendAIByValue(JSON.stringify(jsonInput))
         }
         editInfo.current = undefined
         setReviewQS("")
@@ -196,7 +197,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         if (!find) return
         const {value} = find
         const jsonInput: Record<string, string> = {suggestion: value}
-        onSendAI(JSON.stringify(jsonInput), (review as AIAgentGrpcApi.ToolUseReviewRequire).id)
+        onSendAIByValue(JSON.stringify(jsonInput))
     })
 
     const noAIOptionsList = useCreation(() => {
@@ -248,7 +249,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 if (editShow) return
                 if (!info.allow_extra_prompt) {
                     const jsonInput: Record<string, string> = {suggestion: info.value}
-                    onSendAI(JSON.stringify(jsonInput), (review as AIAgentGrpcApi.ToolUseReviewRequire).id)
+                    onSendAIByValue(JSON.stringify(jsonInput))
                     return
                 }
                 editInfo.current = cloneDeep(info)
@@ -281,7 +282,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     })
     const handleAIRequireOpSend = useMemoizedFn((qs: string) => {
         const jsonInput: Record<string, string> = {suggestion: qs}
-        onSendAIByType(JSON.stringify(jsonInput))
+        onSendAIByValue(JSON.stringify(jsonInput))
     })
     /**审阅模式提交树,type: plan_review_require */
     const handleSubmitReviewTree = useMemoizedFn(() => {
@@ -291,7 +292,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 suggestion: reviewTreeOption.value,
                 "reviewed-task-tree": tree[0]
             }
-            onSendAIByType(JSON.stringify(jsonInput))
+            onSendAIByValue(JSON.stringify(jsonInput))
         }
     })
     const aiOptionsLength = useCreation(() => {
@@ -357,26 +358,12 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         )
         return findIndex !== -1
     }, [review])
-    const onSendAIByType = useMemoizedFn((value: string) => {
-        switch (type) {
-            case "tool_use_review_require":
-                onSendAI(value, (review as AIAgentGrpcApi.ToolUseReviewRequire).id)
-                break
-            case "require_user_interactive":
-                onSendAI(value, (review as AIAgentGrpcApi.AIReviewRequire).id)
-                break
-            case "plan_review_require":
-                onSendAI(value, (review as AIAgentGrpcApi.PlanReviewRequire).id)
-                break
-            case "task_review_require":
-                onSendAI(value, (review as AIAgentGrpcApi.TaskReviewRequire).id)
-                break
-            case "exec_aiforge_review_require":
-                onSendAI(value, (review as AIAgentGrpcApi.ExecForgeReview).id)
-                break
-            default:
-                break
+    const onSendAIByValue = useMemoizedFn((value: string) => {
+        const params: AIChatIPCSendParams = {
+            value,
+            id: review.id
         }
+        onSendAI(params)
     })
 
     const footerNode = useCreation(() => {
