@@ -159,4 +159,5 @@ export interface AuditResultHistoryProps {
     setShowType?: (type: "detail" | "code" | "history") => void
     setLatestDisposalStatus?: (info: SSARisk,status: string) => void
     style?: React.CSSProperties
+    getSSARiskDisposal?: (info: SSARisk) => void
 }
