@@ -85,6 +85,7 @@ export const apiFetchPortAssetFromSpaceEngine: (params: SpaceEngineStartParams, 
     token
 ) => {
     return new Promise((resolve, reject) => {
+        console.log("准备发送到后端的参数:", {...params})
         ipcRenderer
             .invoke("FetchPortAssetFromSpaceEngine", {...params}, token)
             .then(() => {
