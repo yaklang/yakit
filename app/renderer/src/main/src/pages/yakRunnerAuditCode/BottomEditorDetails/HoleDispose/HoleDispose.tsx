@@ -10,6 +10,7 @@ import {AuditResultHistory} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable
 import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {RightBugAuditResultHeader} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import styles from "./HoleDispose.module.scss"
+import emiter from "@/utils/eventBus/eventBus"
 export interface HoleDisposeProps {
     RiskHash: string
     info?: SSARisk
@@ -40,6 +41,9 @@ export const HoleDispose: React.FC<HoleDisposeProps> = (props) => {
                         setDisposalData={setDisposalData}
                         style={{padding: 12}}
                         getSSARiskDisposal={getSSARiskDisposal}
+                        refreshFileOrRuleTree={()=>{
+                            emiter.emit("onRefreshFileOrRuleTree")
+                        }}
                     />
                 </>
             )}

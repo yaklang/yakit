@@ -1205,7 +1205,6 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                     info={info}
                     disposalData={disposalData}
                     setDisposalData={setDisposalData}
-                    setShowType={setShowType}
                     setLatestDisposalStatus={setLatestDisposalStatus}
                     getSSARiskDisposal={getSSARiskDisposal}
                 />
@@ -1215,7 +1214,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
 })
 
 export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props) => {
-    const {info, setShowType, setLatestDisposalStatus, style, getSSARiskDisposal} = props
+    const {info, setLatestDisposalStatus, style, getSSARiskDisposal,refreshFileOrRuleTree} = props
     const [disposalData, setDisposalData] = useControllableValue<SSARiskDisposalData[]>(props, {
         defaultValue: [],
         valuePropName: "disposalData",
@@ -1233,13 +1232,10 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
         apiDeleteSSARiskDisposals({Filter: {ID: [id]}})
             .then(() => {
                 const newDisposalData = disposalData.filter((item) => item.Id !== id)
-                // 删除完毕后跳转至漏洞详情
-                // if (newDisposalData.length === 0) {
-                //     setShowType && setShowType("detail")
-                // }
                 setLatestDisposalStatus &&
                     setLatestDisposalStatus(info, newDisposalData.length > 0 ? newDisposalData[0].Status : "not_set")
                 setDisposalData(newDisposalData)
+                refreshFileOrRuleTree?.()
                 yakitNotify("success", "删除成功")
             })
             .catch((e) => {
@@ -1333,6 +1329,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
             setSelectValue("")
             setLoading(false)
             yakitNotify("success", "处置成功")
+            refreshFileOrRuleTree?.()
         })
     })
     /** ----------  操作相关 Start ---------- */
