@@ -108,7 +108,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                             Timestamp: Timestamp,
                             data: {
                                 NodeId: NodeId,
-                                NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
+                                NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || NodeId,
                                 EventUUID: EventUUID,
                                 status: "start",
                                 content: content,
@@ -136,7 +136,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                             Timestamp: Timestamp,
                             data: {
                                 NodeId: NodeId,
-                                NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
+                                NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || NodeId,
                                 EventUUID: EventUUID,
                                 status: "start",
                                 content: content,
@@ -167,7 +167,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                         type: "stream",
                         data: {
                             NodeId,
-                            NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
+                            NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || NodeId,
                             EventUUID,
                             status: "start",
                             content: content,

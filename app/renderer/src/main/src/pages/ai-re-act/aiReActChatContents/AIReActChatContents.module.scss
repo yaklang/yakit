@@ -31,7 +31,7 @@
     align-items: center;
     justify-content: flex-start;
     max-width: 100%;
-    gap: 8px;
+    gap: 4px;
 
     border-radius: 8px;
     background: var(--Colors-Use-Neutral-Bg-Hover);
@@ -66,6 +66,20 @@
         overflow: hidden;
         display: flex;
         justify-content: flex-end;
+        position: relative;
+        .ai-mask {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            background: linear-gradient(
+                to right,
+                var(--Colors-Use-Neutral-Bg-Hover) 0%,
+                rgba(255, 255, 255, 0) 20%,
+                rgba(255, 255, 255, 0) 80%,
+                transparent 100%
+            );
+        }
     }
 }
 
@@ -106,6 +120,7 @@
     }
     .ai-milkdown-code {
         white-space: pre-wrap;
+        word-wrap: break-word;
     }
 }
 

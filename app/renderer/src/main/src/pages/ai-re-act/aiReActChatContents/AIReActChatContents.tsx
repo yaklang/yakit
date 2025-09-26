@@ -145,9 +145,12 @@ export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.mem
             <div className={styles["ai-stream-chat-content-wrapper"]}>
                 <div className={styles["title"]}>
                     <OutlineSparklesColorsIcon />
-                    {nodeLabel}...
+                    {nodeLabel}
                 </div>
-                <div className={styles["ai-stream-content"]}>{content}</div>
+                <div className={styles["ai-stream-content"]}>
+                    <div className={styles["ai-mask"]} />
+                    {content}
+                </div>
             </div>
         </Tooltip>
     )

@@ -70,7 +70,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                             type: "stream",
                             data: {
                                 NodeId,
-                                NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || "",
+                                NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || NodeId,
                                 EventUUID,
                                 status: "start",
                                 content: content,
