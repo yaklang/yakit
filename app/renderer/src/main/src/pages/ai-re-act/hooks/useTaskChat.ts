@@ -79,20 +79,6 @@ function useTaskChat(params?: UseTaskChatParams) {
         setCoordinatorId((old) => (old === id ? old : id))
     })
 
-    const onCloseByErrorTaskIndexData = useMemoizedFn((res: AIOutputEvent) => {
-        // onClose(chatID.current, {
-        //     tip: () =>
-        //         yakitNotify(
-        //             "error",
-        //             `TaskIndex数据异常:${JSON.stringify({
-        //                 ...res,
-        //                 Content: new Uint8Array(),
-        //                 StreamDelta: new Uint8Array()
-        //             })}`
-        //         )
-        // })
-    })
-
     // #region 流数据处理相关逻辑
     // 接受流式输出数据并处理
     const handleStreams = useMemoizedFn((res: AIOutputEvent) => {
@@ -225,7 +211,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     const handleToolResultStatus = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
         const {TaskIndex, Timestamp} = res
         if (!TaskIndex) {
-            onCloseByErrorTaskIndexData(res)
+            handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
             return
         }
         setStreams((old) => {
@@ -264,7 +250,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     const handleToolResultSummary = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
         const {TaskIndex} = res
         if (!TaskIndex) {
-            onCloseByErrorTaskIndexData(res)
+            handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
             return
         }
         setStreams((old) => {

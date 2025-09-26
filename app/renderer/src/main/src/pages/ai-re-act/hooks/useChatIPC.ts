@@ -188,7 +188,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                     if (obj.level) {
                         // 执行日志信息
                         const data = obj as AIAgentGrpcApi.Log
-                        pushLog({id: uuidv4(), type: "log", data: obj, Timestamp: res.Timestamp})
+                        pushLog({id: uuidv4(), type: "log", data: data, Timestamp: res.Timestamp})
                     } else if (res.NodeId === "timeline") {
                         const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineDump
                         onTimelineMessage && onTimelineMessage(data.dump)
