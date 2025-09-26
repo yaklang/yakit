@@ -1356,7 +1356,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                     })
                                                 }
                                             >
-                                                <div className={styles["risk-text"]}>{t("HomeCom.critical")}</div>
+                                                <div className={styles["risk-text"]}>{t("YakitTag.critical")}</div>
                                                 <div className={styles["risk-num"]}>{riskLevelTotal("严重")}</div>
                                             </div>
                                         ) : null}
@@ -1370,7 +1370,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                     })
                                                 }
                                             >
-                                                <div className={styles["risk-text"]}>{t("HomeCom.high")}</div>
+                                                <div className={styles["risk-text"]}>{t("YakitTag.high")}</div>
                                                 <div className={styles["risk-num"]}>{riskLevelTotal("高危")}</div>
                                             </div>
                                         ) : null}
@@ -1384,7 +1384,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                     })
                                                 }
                                             >
-                                                <div className={styles["risk-text"]}>{t("HomeCom.warning")}</div>
+                                                <div className={styles["risk-text"]}>{t("YakitTag.warning")}</div>
                                                 <div className={styles["risk-num"]}>{riskLevelTotal("中危")}</div>
                                             </div>
                                         ) : null}
@@ -1398,7 +1398,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                     })
                                                 }
                                             >
-                                                <div className={styles["risk-text"]}>{t("HomeCom.low")}</div>
+                                                <div className={styles["risk-text"]}>{t("YakitTag.low")}</div>
                                                 <div className={styles["risk-num"]}>{riskLevelTotal("低危")}</div>
                                             </div>
                                         ) : null}

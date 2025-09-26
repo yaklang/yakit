@@ -7,6 +7,7 @@ import {
     clickEngineConsoleFlag,
     engineConsoleWindowHash
 } from "@/components/layout/hooks/useEngineConsole/useEngineConsole"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -18,7 +19,7 @@ export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
     if (childWindowHash) {
         minWinSendToChildWin({type: "openPacketNewWindow", data})
     } else {
-        yakitNotify("info", "新窗口打开中...")
+        yakitNotify("info", i18n.language === "zh" ? "新窗口打开中..." : "Opening new window...")
         ipcRenderer.send("open-new-child-window", {
             type: "openPacketNewWindow",
             data: data

@@ -10,11 +10,13 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useMemoizedFn} from "ahooks"
 import defaultConfig from "./yakitMitmReplacerRulesConfig.json"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
 export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
     const {visible, setVisible} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "mitm"])
     const [value, setValue] = useState<Uint8Array>(new Uint8Array())
     const [loading, setLoading] = useState(true)
     useEffect(() => {
@@ -24,16 +26,16 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
                 setValue(r.JsonRaw)
             })
             .catch((e) => {
-                failed(`导出失败：${e}`)
+                failed(`${t("YakitNotification.exportFailed", {colon: true})}${e}`)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     }, [visible])
     return (
         <YakitModal
-            title='导出配置 JSON'
+            title={t("RuleExportAndImportButton.export_configuration_json")}
             visible={visible}
             onCancel={() => setVisible(false)}
-            okText='另存为'
+            okText={t("YakitButton.save_as")}
             width={960}
             closable={true}
             onOk={() => {
@@ -52,6 +54,7 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
 
 export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
     const {visible, setVisible, onOk, isUseDefRules} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "mitm"])
     const [params, setParams] = useState<{JsonRaw: Uint8Array; ReplaceAll: boolean}>({
         JsonRaw: new Uint8Array(),
         ReplaceAll: false
@@ -62,7 +65,7 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
     const [loading, setLoading] = useState(false)
     const onImport = useMemoizedFn(() => {
         if (!new Buffer(params.JsonRaw).toString("utf8")) {
-            failed("请填入数据!")
+            failed(t("MITMRuleImport.please_enter_data"))
             return
         }
         try {
@@ -78,13 +81,13 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
                     } else {
                         setVisible(false)
                     }
-                    info("导入成功")
+                    info(t("YakitNotification.imported"))
                 })
                 .catch((e) => {
-                    failed("导入失败:" + e)
+                    failed(t("YakitNotification.importFailed", {colon: true}) + e)
                 })
         } catch (error) {
-            failed("导入失败:" + error)
+            failed(t("YakitNotification.importFailed", {colon: true}) + error)
         }
     })
     const onUseDefaultConfig = useMemoizedFn(() => {
@@ -95,24 +98,24 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
     })
     return (
         <YakitModal
-            title='从 JSON 中导入'
+            title={t("MITMRuleImport.import_from_json")}
             subTitle={
                 <div className={styles["modal-subTitle"]}>
-                    <span>可复制 JSON 代码到方框区域内</span>
+                    <span>{t("MITMRuleImport.copy_json_into_box_tip")}</span>
                     <YakitButton type='text' onClick={() => onUseDefaultConfig()}>
-                        使用默认配置
+                        {t("MITMRuleImport.use_default_configuration")}
                     </YakitButton>
                 </div>
             }
             visible={visible}
             onCancel={() => setVisible(false)}
-            okText='导入'
+            okText={t("YakitButton.import")}
             width={960}
             closable={true}
             onOk={() => onImport()}
             footerExtra={
                 <div className={styles["modal-footer-extra"]}>
-                    <span className={styles["modal-footer-extra-text"]}>覆盖现有规则</span>
+                    <span className={styles["modal-footer-extra-text"]}>{t("MITMRuleImport.overwrite_existing_rules")}</span>
                     <YakitSwitch
                         onChange={(ReplaceAll) => setParams({...params, ReplaceAll})}
                         checked={params.ReplaceAll}

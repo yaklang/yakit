@@ -381,7 +381,7 @@ export const availableColors = [
         render: (t) => (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-red")}></div>
-                {t("HTTPFlowTable.red")}
+                {t("YakitTable.red")}
             </div>
         )
     },
@@ -393,7 +393,7 @@ export const availableColors = [
         render: (t) => (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-green")}></div>
-                {t("HTTPFlowTable.green")}
+                {t("YakitTable.green")}
             </div>
         )
     },
@@ -405,7 +405,7 @@ export const availableColors = [
         render: (t) => (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-blue")}></div>
-                {t("HTTPFlowTable.blue")}
+                {t("YakitTable.blue")}
             </div>
         )
     },
@@ -417,7 +417,7 @@ export const availableColors = [
         render: (t) => (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-yellow")}></div>
-                {t("HTTPFlowTable.yellow")}
+                {t("YakitTable.yellow")}
             </div>
         )
     },
@@ -429,7 +429,7 @@ export const availableColors = [
         render: (t) => (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-orange")}></div>
-                {t("HTTPFlowTable.orange")}
+                {t("YakitTable.orange")}
             </div>
         )
     },
@@ -441,7 +441,7 @@ export const availableColors = [
         render: (t) => (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-purple")}></div>
-                {t("HTTPFlowTable.purple")}
+                {t("YakitTable.purple")}
             </div>
         )
     },
@@ -453,7 +453,7 @@ export const availableColors = [
         render: (t) => (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-cyan")}></div>
-                {t("HTTPFlowTable.cyan")}
+                {t("YakitTable.cyan")}
             </div>
         )
     },
@@ -465,7 +465,7 @@ export const availableColors = [
         render: (t) => (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-grey")}></div>
-                {t("HTTPFlowTable.grey")}
+                {t("YakitTable.grey")}
             </div>
         )
     }
@@ -1776,7 +1776,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         // ⚠️ 注意：此处新增或删除列请务必同步 流量分析页面，还有处理 defalutColumnsOrder 变量，这个变量是存的全部的列默认顺序key
         const columnArr: ColumnsTypeProps[] = [
             {
-                title: t("HTTPFlowTable.order"),
+                title: t("YakitTable.order"),
                 dataKey: "Id",
                 fixed: idFixed ? "left" : undefined,
                 ellipsis: false,
@@ -2133,7 +2133,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 width: 120
             },
             {
-                title: t("HTTPFlowTable.action"),
+                title: t("YakitTable.action"),
                 dataKey: "action",
                 width: 80,
                 fixed: "right",
@@ -2471,23 +2471,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     /**
      * @description 导出为Excel
      */
-    const initExcelData = (resolve, newExportData: HTTPFlow[], rsp) => {
+    const initExcelData = (resolve, newExportData: HTTPFlow[], rsp, arrList) => {
         let exportData: any = []
         const header: string[] = []
         const filterVal: string[] = []
         exportDataKey.map((item) => {
+            const title = arrList.filter((i) => i.dataKey === item)[0]?.title || item
+            header.push(title)
             if (item === "request") {
-                header.push(item)
                 filterVal.push("Request")
             } else if (item === "response") {
-                header.push(item)
                 filterVal.push("Response")
             } else if (item === "Id") {
-                header.push(item)
                 filterVal.push("Id")
             } else {
                 const itemData = configColumnRef.current.filter((itemIn) => itemIn.dataKey === item)[0]
-                header.push(item)
                 filterVal.push(itemData.dataKey)
             }
         })
@@ -2514,7 +2512,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             // 这里的key值为数据库的key
             const arrList = [
                 {
-                    title: t("HTTPFlowTable.order"),
+                    title: t("YakitTable.order"),
                     key: "id",
                     dataKey: "Id"
                 },
@@ -2652,7 +2650,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 if (message.length > 0) {
                     yakitNotify("warning", `${t("HTTPFlowTable.partialExportMissing")}${message}`)
                 }
-                initExcelData(resolve, rsp.Data, rsp)
+                initExcelData(resolve, rsp.Data, rsp, arrList)
             })
         })
     })
@@ -4532,7 +4530,7 @@ interface ColorSearchProps {
 
 export const ColorSearch = React.memo((props: ColorSearchProps) => {
     const {color, setColor, onReset, onSure, setIsShowColor} = props
-    const {t, i18n} = useI18nNamespaces(["history"])
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const onMouseLeave = useMemoizedFn(() => {
         setIsShowColor(false)
         onSure()
@@ -5367,7 +5365,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
 
         if (result) {
             Modal.confirm({
-                title: t("AdvancedSet.friendlyReminder"),
+                title: t("YakitModal.friendlyReminder"),
                 icon: <ExclamationCircleOutlined />,
                 content: t("AdvancedSet.saveAdvancedConfigAndClose"),
                 okText: t("YakitButton.save"),

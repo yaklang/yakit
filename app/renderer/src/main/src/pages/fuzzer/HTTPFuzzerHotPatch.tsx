@@ -42,6 +42,7 @@ import {isEnpriTrace} from "@/utils/envfile"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {openConsoleNewWindow} from "@/utils/openWebsite"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 interface HTTPFuzzerHotPatchProp {
     pageId: string
     onInsert: (s: string) => any
@@ -481,6 +482,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
         refreshList,
         onDeleteLocalTempOk
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const [hotCodeTempVisible, setHotCodeTempVisible] = useState<boolean>(false)
     const [tab, setTab] = useState<"local" | "online">("local")
     const [viewCurHotCode, setViewCurrHotCode] = useState<string>("")
@@ -536,7 +538,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                         setHotPatchTempOnline(list)
                     })
                     .catch((err) => {
-                        yakitNotify("error", "线上模板列表获取失败：" + err)
+                        yakitNotify("error", t("HotCodeTemplate.fetch_online_template_list_failed") + err)
                     })
             }
         }
@@ -584,7 +586,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                 .invoke("DeleteHotPatchTemplate", params)
                 .then((res: {Message: DbOperateMessage}) => {
                     onSetHotPatchTempLocal(hotPatchTempLocal.filter((i) => i.name !== item.name))
-                    yakitNotify("success", "删除成功")
+                    yakitNotify("success", t("YakitNotification.deleted"))
                     onDeleteLocalTempOk && onDeleteLocalTempOk()
                 })
                 .catch((error) => {
@@ -602,11 +604,11 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                 .then((res) => {
                     if (res.ok) {
                         setHotPatchTempOnline(hotPatchTempOnline.filter((i) => i.name !== item.name))
-                        yakitNotify("success", "线上删除成功")
+                        yakitNotify("success", t("HotCodeTemplate.online_delete_success"))
                     }
                 })
                 .catch((err) => {
-                    yakitNotify("error", "线上删除失败：" + err)
+                    yakitNotify("error", t("HotCodeTemplate.online_delete_failed") + err)
                 })
         }
     }
@@ -629,13 +631,13 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                         if (d.length) {
                             setHotCodeTempVisible(false)
                             sameNameHintInfoRef.current = {
-                                title: "同名覆盖提示",
-                                content: "线上有同名模板，上传会覆盖，确定上传吗？",
+                                title: t("HotCodeTemplate.overwrite_same_name_prompt"),
+                                content: t("HotCodeTemplate.online_same_name_template_prompt"),
                                 onOk: () => {
                                     resolve(true)
                                 },
                                 onCancel: () => {
-                                    reject("线上存在同名模板")
+                                    reject(t("HotCodeTemplate.online_template_exists_same_name"))
                                 }
                             }
                             setSameNameHint(true)
@@ -644,20 +646,20 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                         }
                     })
                     .catch((err) => {
-                        yakitNotify("error", "查询热加载模板名线上是否存在失败：" + err)
+                        yakitNotify("error", t("HotCodeTemplate.check_hot_reload_template_online_failed") + err)
                     })
             } else {
                 const index = hotPatchTempLocal.findIndex((i) => i.name === item.name)
                 if (index !== -1) {
                     setHotCodeTempVisible(false)
                     sameNameHintInfoRef.current = {
-                        title: "同名覆盖提示",
-                        content: "本地有同名模板，下载会覆盖，确定下载吗？",
+                        title: t("HotCodeTemplate.overwrite_same_name_prompt"),
+                        content: t("HotCodeTemplate.local_same_name_template_prompt"),
                         onOk: () => {
                             resolve(true)
                         },
                         onCancel: () => {
-                            reject("本地存在同名模板")
+                            reject(t("HotCodeTemplate.local_template_exists_same_name"))
                         }
                     }
                     setSameNameHint(true)
@@ -678,10 +680,10 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                         Name: item.name
                     })
                     .then((res) => {
-                        yakitNotify("success", "上传成功")
+                        yakitNotify("success", t("YakitNotification.uploaded"))
                     })
                     .catch((error) => {
-                        yakitNotify("error", "上传失败：" + error)
+                        yakitNotify("error", t("YakitNotification.uploadFailed", {colon: true}) + error)
                     })
             })
             .catch(() => {})
@@ -700,10 +702,10 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                             // 手动删除本地数据，这里不需要删掉数据库里面的
                             onSetHotPatchTempLocal(hotPatchTempLocal.filter((i) => i.name !== item.name))
                         }
-                        yakitNotify("success", "下载成功")
+                        yakitNotify("success", t("YakitNotification.downloaded"))
                     })
                     .catch((error) => {
-                        yakitNotify("error", "下载失败：" + error)
+                        yakitNotify("error", t("YakitNotification.downloadFailed", {colon: true}) + error)
                     })
             })
             .catch(() => {})
@@ -739,11 +741,11 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                         options={[
                             {
                                 value: "local",
-                                label: "本地模板"
+                                label: t("HotCodeTemplate.local_template")
                             },
                             {
                                 value: "online",
-                                label: "线上模板"
+                                label: t("HotCodeTemplate.online_template")
                             }
                         ]}
                         onChange={(e) => {
@@ -770,7 +772,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                                     zIndex={9999}
                                 >
                                     <YakitPopconfirm
-                                        title={"是否确认覆盖当前热加载代码"}
+                                        title={t("HotCodeTemplate.confirm_overwrite_hot_reload_code")}
                                         onConfirm={(e) => {
                                             onClickHotCodeName(item, true)
                                         }}
@@ -853,7 +855,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     trigger={["click"]}
                     overlay={overlayCont}
                 >
-                    <YakitButton type='text'>代码模板</YakitButton>
+                    <YakitButton type='text'>{t("HotCodeTemplate.code_template")}</YakitButton>
                 </Dropdown>
             ) : (
                 <div style={{width: 250}}>{overlayCont}</div>
@@ -890,15 +892,9 @@ interface AddHotCodeTemplateProps {
     onSaveHotCodeOk?: (tempName?: string) => void
 }
 export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo((props) => {
-    const {
-        title = "保存热加载模板",
-        type,
-        hotPatchTempLocal,
-        hotPatchCode,
-        visible,
-        onSetAddHotCodeTemplateVisible,
-        onSaveHotCodeOk
-    } = props
+    const {title, type, hotPatchTempLocal, hotPatchCode, visible, onSetAddHotCodeTemplateVisible, onSaveHotCodeOk} =
+        props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const addHotPatchTempNameRef = useRef<string>("")
 
     const onCancel = useMemoizedFn(() => {
@@ -908,13 +904,13 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
 
     const onOk = useMemoizedFn(() => {
         if (!addHotPatchTempNameRef.current) {
-            yakitNotify("info", "热加载模板名为空")
+            yakitNotify("info", t("AddHotCodeTemplate.hot_reload_template_name_empty"))
             return
         }
 
         const index = hotPatchTempLocal.findIndex((item) => item.name === addHotPatchTempNameRef.current)
         if (index !== -1) {
-            yakitNotify("info", "热加载模板名已存在")
+            yakitNotify("info", t("AddHotCodeTemplate.hot_reload_template_name_exists"))
             return
         }
 
@@ -926,7 +922,7 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
         ipcRenderer
             .invoke("CreateHotPatchTemplate", params)
             .then((res) => {
-                yakitNotify("success", "保存成功")
+                yakitNotify("success", t("YakitNotification.saved"))
                 onSaveHotCodeOk && onSaveHotCodeOk(addHotPatchTempNameRef.current)
                 onSetAddHotCodeTemplateVisible(false)
                 addHotPatchTempNameRef.current = ""
@@ -939,17 +935,17 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
     return (
         <YakitModal
             visible={visible}
-            title={title}
+            title={title || t("AddHotCodeTemplate.save_hot_reload_template")}
             width={400}
             onCancel={onCancel}
-            okText='保存'
+            okText={t("YakitButton.save")}
             onOk={onOk}
             destroyOnClose
             footer={null}
         >
             <div className={styles["hotCodeTemp-save"]}>
                 <YakitInput.TextArea
-                    placeholder='请为热加载模板取个名字...'
+                    placeholder={t("AddHotCodeTemplate.enter_hot_reload_template_name")}
                     showCount
                     maxLength={50}
                     onChange={(e) => {
@@ -958,10 +954,10 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
                 />
                 <div className={styles["btn-box"]}>
                     <YakitButton type='outline2' onClick={onCancel}>
-                        取消
+                        {t("YakitButton.cancel")}
                     </YakitButton>
                     <YakitButton type='primary' onClick={onOk}>
-                        保存
+                        {t("YakitButton.save")}
                     </YakitButton>
                 </div>
             </div>

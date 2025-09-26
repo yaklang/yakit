@@ -771,7 +771,7 @@ interface DecodeCopyReplaceProps {
 
 export const DecodeCopyReplace: React.FC<DecodeCopyReplaceProps> = (props) => {
     const {item, index, isShowBorder, isReadOnly, replace} = props
-    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const itemStr: string = new Buffer(item.Result).toString("utf8")
     return (
         <div className={styles["decode-copy-replace"]}>
@@ -800,7 +800,7 @@ export const DecodeCopyReplace: React.FC<DecodeCopyReplaceProps> = (props) => {
                                 replace && replace(itemStr)
                             }}
                         >
-                            {t("DecodeCopyReplace.replace")}
+                            {t("YakitButton.replace")}
                         </YakitButton>
                     )}
                 </div>

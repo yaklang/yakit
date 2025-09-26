@@ -27,7 +27,9 @@ export const HotPatchDefaultContent = `analyzeHTTPFlow = func(flow /* *yakit.HTT
 }
 `
 
-export const footerTabs = [
-    {key: "rule", label: "规则"},
-    {key: "hot-patch", label: "热加载"}
-]
+export const footerTabs = (t: (text: string) => string) => {
+    return [
+        {key: "rule", label: t("AnalysisMain.rule")},
+        {key: "hot-patch", label: t("AnalysisMain.hot_reload")}
+    ]
+}

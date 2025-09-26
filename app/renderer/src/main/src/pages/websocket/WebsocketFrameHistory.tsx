@@ -196,7 +196,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                         style={{width: i18n.language === "zh" ? 50 : 80}}
                         className={classNames(styles["header-cell"], styles["base-cell"])}
                     >
-                        {t("WebsocketFrameHistory.order")}
+                        {t("YakitTable.order")}
                     </div>
                     <div
                         style={{width: i18n.language === "zh" ? 100 : 150}}
@@ -211,7 +211,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                         {t("WebsocketFrameHistory.preview")}
                     </div>
                     <div style={{width: 63}} className={classNames(styles["header-cell"], styles["base-cell"])}>
-                        {t("WebsocketFrameHistory.action")}
+                        {t("YakitTable.action")}
                     </div>
                 </div>
 

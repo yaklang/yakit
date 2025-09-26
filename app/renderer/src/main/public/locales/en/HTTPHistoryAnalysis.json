@@ -1,0 +1,31 @@
+{
+  "AnalysisMain": {
+    "cancel_traffic_analysis_error": "Error canceling traffic analysis:",
+    "confirm_reset_hot_reload_code": "Confirm resetting hot-reload code?",
+    "execution_result": "Execution Result",
+    "set_hot_reload_or_rules_then_execute": "Set up hot-reload or rules, then click 'Execute' to process",
+    "data_type": "Data Type:",
+    "filter_traffic": "Filter Traffic",
+    "packet": "Packet",
+    "filter_traffic_analysis_tip": "Check the traffic above to analyze; if nothing is checked, all traffic will be analyzed by default",
+    "concurrency": "Concurrency:",
+    "deduplicate_within_single_record": "Deduplicate data within a single record:",
+    "matcher": "Matcher",
+    "discard_or_keep_traffic_analysis_tip": "[Discard/Keep] does not delete History traffic data, but determines whether traffic will enter the traffic analysis",
+    "rule": "Rule",
+    "hot_reload": "Hot Reload"
+  },
+  "HttpRuleTable": {
+    "packet_id": "Packet ID",
+    "method": "Method",
+    "statusCode": "Status Code",
+    "rule_name": "Rule Name",
+    "rule_data": "Rule Data",
+    "export_rule_data": "Export Rule Data",
+    "query_in_database": "Querying in database",
+    "export_failed_path_not_found": "Export failed, path not found"
+  },
+  "MatchersAndExtractorsListItemOperate": {
+    "debug": "Debug"
+  }
+}

@@ -26,6 +26,7 @@ import {OneLine} from "@/utils/inputUtil"
 import classNames from "classnames"
 import {useHotkeys} from "react-hotkeys-hook"
 import styles from "./WebsocketFuzzer.module.scss"
+import i18n from "@/i18n/i18n"
 const {ipcRenderer} = window.require("electron")
 
 interface WebsocketFuzzerProp {
@@ -611,6 +612,6 @@ export const newWebsocketFuzzerTab = (
             data: {tls: isHttps, request: request, openFlag, toServer}
         })
         .then(() => {
-            openFlag === false && yakitNotify("info", "发送成功")
+            openFlag === false && yakitNotify("info", i18n.language === "zh" ? "发送成功" : "Sent Successfully")
         })
 }

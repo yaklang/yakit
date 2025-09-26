@@ -6,18 +6,9 @@
   },
   "HTTPFlowTable": {
     "requestDetailsNotFound": "Request details not found",
-    "red": "Red",
-    "green": "Green",
-    "blue": "Blue",
-    "yellow": "Yellow",
-    "orange": "Orange",
-    "purple": "Purple",
-    "cyan": "Cyan",
-    "grey": "Grey",
     "crawler": "Crawler",
     "plugin": "Plugin",
     "loadBlockedParamsFailed": "Failed to load blocked parameters:",
-    "order": "Order",
     "method": "Method",
     "statusCode": "Status Code",
     "fromPlugin": "Related Plugin",
@@ -31,7 +22,6 @@
     "responsePacket": "Response Packet",
     "exportFields": "Export Fields",
     "partialExportMissing": "Partial export content missing:",
-    "action": "Action",
     "have": "Have",
     "none": "None",
     "pleaseSelectData": "Please select data",
@@ -121,7 +111,6 @@
     "multipleTagsComma": "Separate multiple tags with commas"
   },
   "AdvancedSet": {
-    "friendlyReminder": "Friendly Reminder",
     "saveAdvancedConfigAndClose": "Do you want to save the advanced configuration and close the pop-up window?",
     "advancedConfig": "Advanced Configuration",
     "refreshConfig": "Refresh Configuration",
@@ -131,7 +120,6 @@
     "listDisplayConfigTips": "Click to disable a field from being displayed in the list. The display order of the fields is from top to bottom and can be adjusted by dragging. This configuration applies to all traffic tables and traffic analysis tables executed by plugins"
   },
   "HTTPFlowTableFormConfiguration": {
-    "friendlyReminder": "Friendly Reminder",
     "saveAdvancedConfigAndClose": "Do you want to save the advanced configuration and close the pop-up window?",
     "advancedFilter": "Advanced Filter",
     "filterMode": "Filter Mode",
@@ -165,7 +153,6 @@
   "HTTPFlowExtractedDataTable": {
     "ruleName": "Rule Name",
     "ruleData": "Rule Data",
-    "action": "Action",
     "locate": "Locate",
     "binaryStreamLocateError": "Cannot locate data packets containing binary streams"
   },
@@ -173,7 +160,6 @@
     "parameterName": "Parameter Name",
     "parameterLocation": "Parameter Location",
     "originalParameterValue": "Original Parameter Value",
-    "action": "Action",
     "testParameterInWebFuzzer": "Testing this parameter will temporarily move you to Web Fuzzer",
     "fuzzTestParameter": "Fuzz Test Parameter"
   },
@@ -208,14 +194,10 @@
   },
   "NewHTTPPacketEditor": {
     "render": "Render",
-    "beautify": "Beautify",
     "compare": "Compare",
     "noWrap": "No Wrap",
     "configureEditor": "Configure Editor",
     "fontSize": "Font Size",
-    "small": "Small",
-    "medium": "Medium",
-    "large": "Large",
     "fullScreen": "Full Screen",
     "showLineBreaks": "Show line breaks"
   },
@@ -224,10 +206,8 @@
   },
   "WebsocketFrameHistory": {
     "websocket_data_frame": "Websocket Data Frame",
-    "order": "Order",
     "data_direction": "Data Direction",
     "preview": "Preview",
-    "action": "Action",
     "server_response": "Server Response",
     "client_request": "Client Request",
     "data_frame_details": "Data Frame Details"

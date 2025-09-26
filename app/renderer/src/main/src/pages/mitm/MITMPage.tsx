@@ -1139,7 +1139,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             wrapperCol={{span: wrapperColSpan}}
                             name='nucleiGitUrl'
                             label={t("MitmPage.ImportLocalPlugin.pluginSource")}
-                            rules={[{required: true, message: t("MitmPage.ImportLocalPlugin.requiredField")}]}
+                            rules={[{required: true, message: t("YakitForm.requiredField")}]}
                             initialValue='https://github.com/projectdiscovery/nuclei-templates'
                         >
                             <YakitSelect

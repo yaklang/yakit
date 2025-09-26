@@ -63,10 +63,6 @@
     "HomeCom": {
         "projectDatabase": "项目数据库",
         "databaseTooLarge": "数据库过大，为避免影响使用，建议创建新项目。",
-        "vulnerabilityData": "漏洞数据",
-        "critical": "严重",
-        "high": "高危",
-        "warning": "中危",
-        "low": "低危"
+        "vulnerabilityData": "漏洞数据"
     }
 }

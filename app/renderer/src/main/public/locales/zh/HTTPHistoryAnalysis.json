@@ -1,0 +1,31 @@
+{
+  "AnalysisMain": {
+    "cancel_traffic_analysis_error": "取消流量分析出错：",
+    "confirm_reset_hot_reload_code": "确认重置热加载代码？",
+    "execution_result": "执行结果",
+    "set_hot_reload_or_rules_then_execute": "设置好热加载或规则后，即可点击执行进行处理",
+    "data_type": "数据类型：",
+    "filter_traffic": "筛选流量",
+    "packet": "数据包",
+    "filter_traffic_analysis_tip": "筛选上面流量勾选后进行分析，未勾选默认跑所有流量",
+    "concurrency": "并发：",
+    "deduplicate_within_single_record": "单条记录内数据去重：",
+    "matcher": "匹配器",
+    "discard_or_keep_traffic_analysis_tip": "[丢弃/保留]不会删除History流量数据，而用来决定流量是否会进入流量分析",
+    "rule": "规则",
+    "hot_reload": "热加载"
+  },
+  "HttpRuleTable": {
+    "packet_id": "数据包ID",
+    "method": "方法",
+    "statusCode": "状态码",
+    "rule_name": "规则名",
+    "rule_data": "规则数据",
+    "export_rule_data": "导出规则数据",
+    "query_in_database": "查询数据库中",
+    "export_failed_path_not_found": "导出失败，路径找不到"
+  },
+  "MatchersAndExtractorsListItemOperate": {
+    "debug": "调试"
+  }
+}

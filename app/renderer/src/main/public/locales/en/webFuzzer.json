@@ -3,13 +3,13 @@
     "ShareImport": {
       "shareNeedPassword": "This share requires a password!",
       "passwordVerifyFailed": "Password verification failed:",
-      "getShareDataFailed": "Failed to get shared data:",
+      "getShareDataFailed": "Failed to get share data:",
       "openWebFuzzerFailed": "Failed to open Web Fuzzer:",
       "saveHttpHistoryShareFailed": "Failed to save HttpHistory share data:",
       "shareId": "Share ID",
-      "pleaseEnterShareId": "Please enter Share ID",
+      "pleaseEnterShareId": "Please enter the share ID",
       "password": "Password",
-      "pleaseEnterPassword": "Please enter Password",
+      "pleaseEnterPassword": "Please enter the password",
       "thisFieldIsRequired": "This field is required"
     }
   },
@@ -20,7 +20,93 @@
   "HTTPFuzzerRangeReadOnlyEditorMenu": {
     "decode": "Decode"
   },
-  "DecodeCopyReplace": {
-    "replace": "Replace"
+  "HotCodeTemplate": {
+    "fetch_online_template_list_failed": "Failed to fetch online template list:",
+    "online_delete_success": "Online deletion successful",
+    "online_delete_failed": "Online deletion failed:",
+    "overwrite_same_name_prompt": "Overwrite same-name prompt",
+    "online_same_name_template_prompt": "An online template with the same name exists. Do you want to overwrite it?",
+    "online_template_exists_same_name": "An online template with the same name exists",
+    "check_hot_reload_template_online_failed": "Failed to check if the hot-reload template name exists online:",
+    "local_same_name_template_prompt": "A local template with the same name exists. Do you want to download and overwrite it?",
+    "local_template_exists_same_name": "A local template with the same name exists",
+    "local_template": "Local Template",
+    "online_template": "Online Template",
+    "confirm_overwrite_hot_reload_code": "Confirm overwriting the current hot-reload code?",
+    "code_template": "Code Template"
+  },
+  "AddHotCodeTemplate": {
+    "hot_reload_template_name_empty": "Hot-reload template name is empty",
+    "hot_reload_template_name_exists": "Hot-reload template name already exists",
+    "enter_hot_reload_template_name": "Please name the hot-reload template...",
+    "save_hot_reload_template": "Save Hot-Reload Template"
+  },
+  "MatcherAndExtraction": {
+    "apply_changes_prompt": "Apply the modified content?",
+    "empty_matcher_exists": "An empty matcher condition already exists",
+    "no_valid_extractor": "No valid extractor (all are empty)",
+    "no_valid_match_found": "No valid match found",
+    "data_extraction_error": "Data extraction error:",
+    "duplicate_name_error": "The name '{namesElement}' is duplicated. Please modify it before applying.",
+    "matcher": "Matcher",
+    "extractor": "Extractor",
+    "addMatcher": "Add Matcher",
+    "addCondition": "Add Condition",
+    "debugExecute": "Debug Execute"
+  },
+  "MatcherCollapse": {
+    "emptyMatcherConditionExists": "This matcher already has an empty condition",
+    "addMatcherConditionFailed": "Failed to add matcher condition:",
+    "allMatcherConditionsEmpty": "All matching conditions are empty. Please set a condition first.",
+    "matchSuccess": "Match successful",
+    "matchFailed": "Match failed",
+    "matchError": "Match error:",
+    "onRemoveSubMatcherFailed": "onRemoveSubMatcher failed:",
+    "multipleMatchersExplanation": "Multiple matchers are for achieving multiple effects at the same time, such as coloring different colors or dropping packets while coloring. If you need to convert to YAML, you can only configure one matcher",
+    "matcherApplicationFlow": "After applying the matcher, traffic is first filtered by the matcher conditions and then processed further based on the rule/hot-reload configuration",
+    "filter_mode": "Filter Mode",
+    "condition_relation": "Condition Relation",
+    "addCondition": "Add Condition",
+    "debugExecute": "Debug Execute",
+    "no_condition_set": "No conditions set yet",
+    "keyword": "Keyword",
+    "regex": "Regular Expression",
+    "status_code": "Status Code",
+    "hex": "Hexadecimal",
+    "expression": "Expression",
+    "discard": "Discard",
+    "match": "Keep",
+    "onlyMatch": "Only Match"
+  },
+  "MatcherItem": {
+    "match_type": "Match Type",
+    "match_position": "Match Position",
+    "status_code": "Status Code",
+    "response_header": "Response Header",
+    "response_body": "Response Body",
+    "all_responses": "All Responses",
+    "condition_relation": "Condition Relation",
+    "no_match_invert": "No Match (Invert)",
+    "complete_conditions_before_adding": "Please complete the configuration of the existing conditions before adding new ones"
+  },
+  "MatcherAndExtractionValueList": {
+    "add_match_content": "Add Match Content"
+  },
+  "ExtractorCollapse": {
+    "max_length_20": "Character length should not exceed 20",
+    "edit_name": "Edit Name",
+    "no_condition_set": "No conditions set yet"
+  },
+  "ExtractorItem": {
+    "match_regex_group": "Match Regex Group",
+    "xpath_parameters": "XPath Parameters",
+    "extraction_type": "Extraction Type",
+    "extraction_scope": "Extraction Scope",
+    "response_header": "Response Header",
+    "response_body": "Response Body",
+    "complete_conditions_before_adding": "Please complete the configuration of the existing conditions before adding new ones"
+  },
+  "ColorSelect": {
+    "hit_color": "Hit Color"
   }
 }

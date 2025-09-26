@@ -40,16 +40,11 @@
       "type": "类型",
       "remoteIP": "远端IP",
       "time": "时间",
-      "acticon": "操作",
-      "detail": "详情",
       "useCallbackService": "使用 {v1} 自带 {v2} 反连服务",
       "generateDomain": "生成域名",
-      "viewAccessRecords": "查看访问记录",
-      "loading": "加载中"
+      "viewAccessRecords": "查看访问记录"
     },
     "ExtraMenu": {
-      "importResources": "导入资源",
-      "importPlugin": "导入插件",
       "localPlugin": "本地插件",
       "pluginID": "插件 ID",
       "online": "线上",
@@ -64,7 +59,6 @@
     "HeardMenu": {
       "editMenu": "编辑菜单",
       "importJsonConfig": "导入 JSON 配置",
-      "custom": "自定义",
       "scanMode": "扫描模式",
       "resetScanMode": "复原扫描模式",
       "expertMode": "专家模式",
@@ -83,11 +77,7 @@
       "importDataFailed": "处理导入数据失败：",
       "pluginMissingDownload": "插件丢失，点击下载"
     },
-    "CollapseMenu": {
-      "more": "更多"
-    },
     "MenuPlugin": {
-      "custom": "自定义",
       "restoreMenu": "复原菜单",
       "restoreMenuTip": "复原菜单提醒",
       "confirmRestoreMenu": "确认复原后，将重置常用插件菜单栏。是否确认复原？",

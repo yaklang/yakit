@@ -127,7 +127,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 data={[
                     {
                         key: "import-plugin",
-                        label: t("Layout.ExtraMenu.importPlugin"),
+                        label: t("YakitButton.importPlugin"),
                         children: [
                             {key: "local", label: t("Layout.ExtraMenu.localPlugin")},
                             {key: "uploadId", label: t("Layout.ExtraMenu.pluginID")},
@@ -183,7 +183,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                             onClick={(e) => e.preventDefault()}
                             icon={<OutlineSaveIcon />}
                         >
-                            {t("Layout.ExtraMenu.importResources")}
+                            {t("YakitButton.importResources")}
                         </YakitButton>
                     </YakitPopover>
                     <YakitButton

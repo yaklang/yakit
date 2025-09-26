@@ -53,69 +53,78 @@ import MITMContext from "../Context/MITMContext"
 import ReactResizeDetector from "react-resize-detector"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
 const HitColor = {
     red: {
         title: "红色",
+        titleUi: "YakitTable.red",
         value: "red",
         className: "color-bg-red"
     },
     green: {
         title: "绿色",
+        titleUi: "YakitTable.green",
         value: "green",
         className: "color-bg-green"
     },
     blue: {
         title: "蓝色",
+        titleUi: "YakitTable.blue",
         value: "blue",
         className: "color-bg-blue"
     },
     yellow: {
         title: "黄色",
+        titleUi: "YakitTable.yellow",
         value: "yellow",
         className: "color-bg-yellow"
     },
     orange: {
         title: "橙色",
+        titleUi: "YakitTable.orange",
         value: "orange",
         className: "color-bg-orange"
     },
     purple: {
         title: "紫色",
+        titleUi: "YakitTable.purple",
         value: "purple",
         className: "color-bg-purple"
     },
     cyan: {
         title: "青色",
+        titleUi: "YakitTable.cyan",
         value: "cyan",
         className: "color-bg-cyan"
     },
     grey: {
         title: "灰色",
+        titleUi: "YakitTable.grey",
         value: "grey",
         className: "color-bg-grey"
     }
 }
 
-const batchMenuData = (excludeBatchMenuKey: string) => {
+const batchMenuData = (excludeBatchMenuKey: string, t: (text: string) => string) => {
     const arr = [
         {
             key: "ban",
-            label: "禁用"
+            label: t("YakitButton.disable")
         },
         {
             key: "no-replace",
-            label: "不替换"
+            label: t("YakitButton.do_not_replace")
         },
         {
             key: "replace",
-            label: "替换"
+            label: t("YakitButton.replace")
         },
         {
             key: "remove",
-            label: "删除"
+            label: t("YakitButton.delete")
         }
     ]
     try {
@@ -126,18 +135,20 @@ const batchMenuData = (excludeBatchMenuKey: string) => {
     }
 }
 
-export const colorSelectNode = (
-    <>
-        {Object.values(HitColor).map((item) => (
-            <YakitSelect.Option value={item.value} key={item.value}>
-                <div className={classNames(styles["table-hit-color-content"])}>
-                    <div className={classNames(styles["table-hit-color"], item.className)} />
-                    {item.title}
-                </div>
-            </YakitSelect.Option>
-        ))}
-    </>
-)
+export const colorSelectNode = (t: (text: string) => string) => {
+    return (
+        <>
+            {Object.values(HitColor).map((item) => (
+                <YakitSelect.Option value={item.value} key={item.value}>
+                    <div className={classNames(styles["table-hit-color-content"])}>
+                        <div className={classNames(styles["table-hit-color"], item.className)} />
+                        {item.titleUi ? t(item.titleUi) : item.title}
+                    </div>
+                </YakitSelect.Option>
+            ))}
+        </>
+    )
+}
 
 const MITMRule: React.FC<MITMRuleProp> = React.memo(
     React.forwardRef((props, ref) => {
@@ -159,6 +170,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             onRefreshCom,
             inMouseEnterTable = false
         } = props
+        const {t, i18n} = useI18nNamespaces(["yakitUi", "mitm"])
         const mitmContent = useContext(MITMContext)
 
         const mitmVersion = useCreation(() => {
@@ -323,11 +335,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         const rulesRangeList = useCreation(() => {
             return [
                 {
-                    label: "请求",
+                    label: t("MITMRule.request"),
                     value: "EnableForRequest"
                 },
                 {
-                    label: "响应",
+                    label: t("MITMRule.response"),
                     value: "EnableForResponse"
                 },
                 {
@@ -343,33 +355,33 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     value: "EnableForBody"
                 }
             ]
-        }, [])
+        }, [i18n.language])
 
         const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
             const columnArr: ColumnsTypeProps[] = [
                 {
-                    title: "执行顺序",
+                    title: t("MITMRule.execution_order"),
                     dataKey: "Index",
                     fixed: "left",
-                    width: 130
+                    width: 150
                 },
                 {
-                    title: "规则名称",
+                    title: t("MITMRule.rule_name"),
                     dataKey: "VerboseName",
                     fixed: "left",
                     width: 150
                 },
                 {
-                    title: "规则内容",
+                    title: t("MITMRule.rule_content"),
                     dataKey: "Rule",
                     width: 240
                 },
                 {
-                    title: "替换结果",
+                    title: t("MITMRule.replacement_result"),
                     dataKey: "NoReplace",
                     width: 350,
-                    tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
-                    beforeIconExtra: <div className={styles["table-result-extra"]}>开/关</div>,
+                    tip: t("MITMRule.http_header_cookie_priority_tip"),
+                    beforeIconExtra: <div className={styles["table-result-extra"]}>{t("MITMRule.on_off")}</div>,
                     render: (_, i: MITMContentReplacerRule) => (
                         <YakitSwitchMemo
                             ExtraCookies={i.ExtraCookies}
@@ -384,10 +396,10 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     )
                 },
                 {
-                    title: "丢弃结果",
+                    title: t("MITMRule.discard_result"),
                     dataKey: "Drop",
                     width: 110,
-                    tip: "设置开启替代之后，可丢弃当前请求/响应",
+                    tip: t("MITMRule.enable_substitute_then_discard_tip"),
                     render: (_, i: MITMContentReplacerRule) => (
                         <YakitProtoSwitch
                             checked={i.Drop}
@@ -403,10 +415,10 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     )
                 },
                 {
-                    title: "自动重发",
+                    title: t("MITMRule.auto_resend"),
                     dataKey: "ExtraRepeat",
                     width: 110,
-                    tip: "设置改选项后，将不会替换（请求）数据包，会把替换后的结果进行额外发包",
+                    tip: t("MITMRule.option_no_replace_request_tip"),
                     render: (_, i: MITMContentReplacerRule) => (
                         <YakitProtoSwitch
                             disabled={i.Disabled}
@@ -422,9 +434,9 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     )
                 },
                 {
-                    title: "规则作用范围",
+                    title: t("MITMRule.rule_scope"),
                     dataKey: "EnableForRequest",
-                    tip: "选择请求或响应后，Header和Body至少选择一个",
+                    tip: t("MITMRule.select_request_or_response_header_body_tip"),
                     width: 280,
                     render: (_, record: MITMContentReplacerRule) => {
                         return (
@@ -446,24 +458,24 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     }
                 },
                 {
-                    title: "生效url",
+                    title: t("MITMRule.effective_url"),
                     dataKey: "EffectiveURL",
                     width: 240
                 },
                 {
-                    title: "命中颜色",
+                    title: t("MITMRule.hit_color"),
                     dataKey: "Color",
                     ellipsis: false,
                     width: 85,
                     render: (text, record: MITMContentReplacerRule) => (
                         <div className={classNames(styles["table-hit-color-content"])}>
                             <div className={classNames(styles["table-hit-color"], HitColor[text]?.className)} />
-                            {HitColor[text]?.title || "-"}
+                            {(HitColor[text]?.titleUi ? t(HitColor[text]?.titleUi) : HitColor[text]?.title) || "-"}
                         </div>
                     )
                 },
                 {
-                    title: "追加 Tag",
+                    title: t("MITMRule.append_tag"),
                     dataKey: "ExtraTag",
                     minWidth: 120,
                     render: (text, record: MITMContentReplacerRule) => (
@@ -477,7 +489,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     )
                 },
                 {
-                    title: "操作",
+                    title: t("YakitTable.action"),
                     dataKey: "action",
                     fixed: "right",
                     width: 128,
@@ -521,7 +533,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             } catch (error) {
                 return columnArr
             }
-        }, [excludeColumnsKey])
+        }, [excludeColumnsKey, i18n.language])
 
         const onEditRuleAction = useMemoizedFn((checked: boolean, record: MITMContentReplacerRule, item) => {
             record[item.value] = checked
@@ -664,12 +676,12 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                         if (saveOk) {
                             saveOk()
                         } else {
-                            success("保存成功")
+                            success(t("YakitNotification.saved"))
                         }
                         onRefreshCurrentRules()
                     })
                     .catch((e) => {
-                        failed(`保存失败: ${e}`)
+                        failed(`${t("YakitNotification.saveFailed", {colon: true})}${e}`)
                     })
             } else {
                 // 开启劫持
@@ -678,11 +690,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 )
                 if (ruleUse === "mitm" && findOpenRepRule !== undefined) {
                     Modal.confirm({
-                        title: "温馨提示",
+                        title: t("YakitModal.friendlyReminder"),
                         icon: <ExclamationCircleOutlined />,
-                        content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
-                        okText: "确认",
-                        cancelText: "取消",
+                        content: t("MITMRule.replace_rule_effect_warning"),
+                        okText: t("YakitButton.confirm"),
+                        cancelText: t("YakitButton.cancel"),
                         closable: true,
                         centered: true,
                         closeIcon: (
@@ -711,12 +723,12 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                                     if (saveOk) {
                                         saveOk()
                                     } else {
-                                        success("保存成功")
+                                        success(t("YakitNotification.saved"))
                                     }
                                     onRefreshCurrentRules()
                                 })
                                 .catch((e) => {
-                                    failed(`保存失败: ${e}`)
+                                    failed(`${t("YakitNotification.saveFailed", {colon: true})}${e}`)
                                 })
                         }
                     })
@@ -733,12 +745,12 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                             if (saveOk) {
                                 saveOk()
                             } else {
-                                success("保存成功")
+                                success(t("YakitNotification.saved"))
                             }
                             onRefreshCurrentRules()
                         })
                         .catch((e) => {
-                            failed(`保存失败: ${e}`)
+                            failed(`${t("YakitNotification.saveFailed", {colon: true})}${e}`)
                         })
                 }
             }
@@ -838,7 +850,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 // PS: 未屏蔽的规则仅能在未屏蔽的规则中进行拖拽 屏蔽的规则仅能在屏蔽的规则中进行拖拽
                 if (prevRules[dragIndex].Disabled !== prevRules[hoverIndex].Disabled || !isAlowMoveRef.current) {
                     if (isAlowMoveRef.current) {
-                        warn("拖拽已失效，只能在同一状态下的规则中进行拖拽")
+                        warn(t("MITMRule.drag_disabled_tip"))
                     }
                     isAlowMoveRef.current = false
                     return prevRules
@@ -870,11 +882,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         const onClose = useMemoizedFn(() => {
             if (JSON.stringify(originalRules) !== JSON.stringify(rules)) {
                 Modal.confirm({
-                    title: "温馨提示",
+                    title: t("YakitModal.friendlyReminder"),
                     icon: <ExclamationCircleOutlined />,
-                    content: "请问是否要保存规则内容并关闭弹框？",
-                    okText: "保存",
-                    cancelText: "不保存",
+                    content: t("MITMRule.save_rule_and_close_prompt"),
+                    okText: t("YakitButton.save"),
+                    cancelText: t("YakitButton.doNotSave"),
                     closable: true,
                     closeIcon: (
                         <div
@@ -902,18 +914,22 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         })
 
         const title = () => {
-            return <div className={styles["heard-title"]}>内容规则配置</div>
+            return <div className={styles["heard-title"]}>{t("MITMRule.content_rule_configuration")}</div>
         }
         const extra = () => {
             return (
                 <div className={styles["heard-right-operation"]}>
                     <RuleExportAndImportButton onOkImport={onOkImport} />
                     <YakitButton type='primary' className={styles["button-save"]} onClick={() => onSaveToDataBase()}>
-                        保存
+                        {t("YakitButton.save")}
                     </YakitButton>
                     {ruleUse === "mitm" && (
                         <>
-                            <Tooltip title='官方网站' placement='top' overlayClassName={styles["question-tooltip"]}>
+                            <Tooltip
+                                title={t("MITMRule.official_website")}
+                                placement='top'
+                                overlayClassName={styles["question-tooltip"]}
+                            >
                                 <YakitButton
                                     type='outline2'
                                     className={styles["button-question"]}
@@ -995,7 +1011,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             return (
                 <YakitInput.Search
                     size='small'
-                    placeholder='请输入关键字搜索'
+                    placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                     allowClear
                     style={{maxWidth: 200}}
                     value={valueSearch}
@@ -1009,7 +1025,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     }}
                 />
             )
-        }, [valueSearch])
+        }, [valueSearch, i18n.language])
 
         const content = () => {
             return (
@@ -1030,9 +1046,9 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                         titleHeight={42}
                         title={
                             <div className={styles["table-title-body"]}>
-                                <div className={styles["table-title"]}>现有 MITM 内容规则</div>
+                                <div className={styles["table-title"]}>{t("MITMRule.existing_mitm_content_rules")}</div>
                                 <div className={styles["table-total"]}>
-                                    共 <span>{rules.length}</span> 条规则
+                                    {t("MITMRule.total_rules_count", {count: rules.length})}
                                 </div>
                             </div>
                         }
@@ -1054,14 +1070,16 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                                     </>
                                 </div>
                                 <div className={styles["table-switch"]}>
-                                    <span className={styles["switch-text"]}>全部禁用</span>
+                                    <span className={styles["switch-text"]}>{t("YakitButton.disable_all")}</span>
                                     <YakitSwitch checked={isAllBan} onChange={(c) => onAllBan(c)} />
                                 </div>
                                 {ruleUse === "mitm" && (
                                     <>
                                         <Divider type='vertical' style={{margin: "0 16px"}} />
                                         <div className={styles["table-switch"]}>
-                                            <span className={styles["switch-text"]}>全部不替换</span>
+                                            <span className={styles["switch-text"]}>
+                                                {t("MITMRule.no_replace_all")}
+                                            </span>
                                             <YakitSwitch checked={isNoReplace} onChange={(c) => onAllNoReplace(c)} />
                                         </div>
                                     </>
@@ -1071,7 +1089,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                                     arrowPointAtCenter={true}
                                     content={
                                         <YakitMenu
-                                            data={batchMenuData(excludeBatchMenuKey)}
+                                            data={batchMenuData(excludeBatchMenuKey, t)}
                                             selectedKeys={[]}
                                             width={92}
                                             onSelect={({key}) => onMenuSelect(key)}
@@ -1085,14 +1103,14 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                                         disabled={selectedRowKeys.length === 0}
                                         className={classNames(styles["button-batch-remove"])}
                                     >
-                                        批量操作
+                                        {t("YakitButton.batchOperation")}
                                         <ChevronDownIcon />
                                     </YakitButton>
                                 </YakitPopover>
                                 <YakitButton type='primary' onClick={() => onOpenOrCloseModal(true)}>
                                     <div className={styles["button-add-rule"]}>
                                         <PlusIcon />
-                                        新增规则
+                                        {t("MITMRule.add_rule")}
                                     </div>
                                 </YakitButton>
                                 {ruleUse === "historyAnalysis" && (
@@ -1182,6 +1200,7 @@ export default MITMRule
 
 export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps> = React.forwardRef((props, ref) => {
     const {onOkImport, onBeforeNode, isUseDefRules, setIsUseDefRules} = props
+    const {t, i18n} = useI18nNamespaces(["mitm"])
     const [exportVisible, setExportVisible] = useState<boolean>(false)
     const [importVisible, setImportVisible] = useState<boolean>(false)
     const onOk = useMemoizedFn(() => {
@@ -1210,7 +1229,7 @@ export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps>
         <>
             {onBeforeNode}
             <YakitButton type='text' icon={<SaveIcon />} onClick={() => setImportVisible(true)}>
-                导入配置
+                {t("RuleExportAndImportButton.import_configuration")}
             </YakitButton>
             <Divider type='vertical' style={{margin: "0 4px"}} />
             <YakitButton
@@ -1221,7 +1240,7 @@ export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps>
                     setExportVisible(true)
                 }}
             >
-                导出配置
+                {t("RuleExportAndImportButton.export_configuration")}
             </YakitButton>
             {exportVisible && <MITMRuleExport visible={exportVisible} setVisible={setExportVisible} />}
             {importVisible && (

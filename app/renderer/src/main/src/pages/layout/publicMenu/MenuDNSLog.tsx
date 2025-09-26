@@ -318,7 +318,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                             {t("Layout.MenuDNSLog.time")}
                         </div>
                         <div className={classNames(styles["opt-style"], styles["opt-btn"])}>
-                            {t("Layout.MenuDNSLog.acticon")}
+                            {t("YakitTable.action")}
                         </div>
                     </div>
                     <div className={styles["body-container"]}>
@@ -339,7 +339,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                                             className={classNames(styles["opt-style"], styles["opt-btn"])}
                                             onClick={() => onInfoDetails(item)}
                                         >
-                                            {t("Layout.MenuDNSLog.detail")}
+                                            {t("YakitButton.detail")}
                                         </div>
                                     </div>
                                 )
@@ -401,7 +401,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                             <>
                                 {loading ? (
                                     <>
-                                        {t("Layout.MenuDNSLog.loading")}&nbsp;&nbsp;
+                                        {t("YakitSpin.loading")}&nbsp;&nbsp;
                                         <LoadingOutlined style={{color: "var(--Colors-Use-Main-Primary)"}} />
                                     </>
                                 ) : (

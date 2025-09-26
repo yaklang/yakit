@@ -63,10 +63,6 @@
     "HomeCom": {
         "projectDatabase": "Project Database",
         "databaseTooLarge": "The database is too large. To avoid performance issues, it is recommended to create a new project.",
-        "vulnerabilityData": "Vulnerability Data",
-        "critical": "critical",
-        "high": "high",
-        "warning": "warning",
-        "low": "low"
+        "vulnerabilityData": "Vulnerability Data"
     }
 }

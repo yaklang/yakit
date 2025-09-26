@@ -31,6 +31,7 @@ import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {toMITMHacker} from "@/pages/hacker/httpHacker"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -66,6 +67,7 @@ export interface ClientCertificate {
 const defHost = "127.0.0.1"
 const defPort = "8083"
 export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["mitm"])
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById,
@@ -431,7 +433,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                 </div>
                             </div>
                         </div>
-                        <div className={styles["form-rule-button"]}>
+                        <div
+                            className={styles["form-rule-button"]}
+                            style={{right: i18n.language === "zh" ? -185 : -320}}
+                        >
                             <RuleExportAndImportButton
                                 ref={ruleButtonRef}
                                 isUseDefRules={isUseDefRules}

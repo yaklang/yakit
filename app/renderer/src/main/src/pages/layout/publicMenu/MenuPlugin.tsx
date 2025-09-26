@@ -28,7 +28,7 @@ interface MenuPluginProps {
 
 export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
     const {loading, pluginList, onMenuSelect, onRestore: restoreCallback} = props
-    const {t, i18n} = useI18nNamespaces(["yakitRoute", "layout"])
+    const {t, i18n} = useI18nNamespaces(["yakitRoute", "layout", "yakitUi"])
 
     /** 转换成菜单组件统一处理的数据格式，插件是否下载的验证由菜单组件处理，这里不处理 */
     const onMenu = useMemoizedFn((pluginId: number, pluginName: string) => {
@@ -157,7 +157,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
                 <div className={styles["list-custom"]}>
                     <div className={classNames(styles["btn-style"], styles["add-list"])} onClick={onCustom}>
                         <SMViewGridAddIcon />
-                        {t("Layout.MenuPlugin.custom")}...
+                        {t("YakitButton.custom")}...
                     </div>
                     <div className={classNames(styles["btn-style"], styles["restore-style"])} onClick={onClickRestore}>
                         {t("Layout.MenuPlugin.restoreMenu")}

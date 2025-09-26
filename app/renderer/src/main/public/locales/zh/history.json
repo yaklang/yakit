@@ -6,18 +6,9 @@
   },
   "HTTPFlowTable": {
     "requestDetailsNotFound": "找不到该请求详情",
-    "red": "红色",
-    "green": "绿色",
-    "blue": "蓝色",
-    "yellow": "黄色",
-    "orange": "橙色",
-    "purple": "紫色",
-    "cyan": "青色",
-    "grey": "灰色",
     "crawler": "爬虫",
     "plugin": "插件",
     "loadBlockedParamsFailed": "加载屏蔽参数失败：",
-    "order": "序号",
     "method": "方法",
     "statusCode": "状态码",
     "fromPlugin": "相关插件",
@@ -31,7 +22,6 @@
     "responsePacket": "响应包",
     "exportFields": "导出字段",
     "partialExportMissing": "部分导出内容缺失：",
-    "action": "操作",
     "have": "有",
     "none": "无",
     "pleaseSelectData": "请选择数据",
@@ -121,7 +111,6 @@
     "multipleTagsComma": "多个tag请用逗号分割"
   },
   "AdvancedSet": {
-    "friendlyReminder": "温馨提示",
     "saveAdvancedConfigAndClose": "请问是否要保存高级配置并关闭弹框？",
     "advancedConfig": "高级配置",
     "refreshConfig": "刷新配置",
@@ -131,7 +120,6 @@
     "listDisplayConfigTips": "点击禁用则不在列表展示，列表字段展示顺序为从上到下的顺序，可拖拽调整，该配置对插件执行流量表、流量分析表全部生效"
   },
   "HTTPFlowTableFormConfiguration": {
-    "friendlyReminder": "温馨提示",
     "saveAdvancedConfigAndClose": "请问是否要保存高级配置并关闭弹框？",
     "advancedFilter": "高级筛选",
     "filterMode": "筛选模式",
@@ -165,7 +153,6 @@
   "HTTPFlowExtractedDataTable": {
     "ruleName": "规则名",
     "ruleData": "规则数据",
-    "action": "操作",
     "locate": "定位",
     "binaryStreamLocateError": "含有二进制流的数据包无法定位"
   },
@@ -173,7 +160,6 @@
     "parameterName": "参数名",
     "parameterLocation": "参数位置",
     "originalParameterValue": "参数原值",
-    "action": "操作",
     "testParameterInWebFuzzer": "测试该参数将会暂时进入 Web Fuzzer",
     "fuzzTestParameter": "模糊测试该参数"
   },
@@ -208,14 +194,10 @@
   },
   "NewHTTPPacketEditor": {
     "render": "渲染",
-    "beautify": "美化",
     "compare": "对比",
     "noWrap": "不自动换行",
     "configureEditor": "配置编辑器",
     "fontSize": "字号",
-    "small": "小",
-    "medium": "中",
-    "large": "大",
     "fullScreen": "全屏",
     "showLineBreaks": "是否显示换行符"
   },
@@ -224,10 +206,8 @@
   },
   "WebsocketFrameHistory": {
     "websocket_data_frame": "Websocket 数据帧",
-    "order": "序号",
     "data_direction": "数据方向",
     "preview": "预览",
-    "action": "操作",
     "server_response": "服务端响应",
     "client_request": "客户端请求",
     "data_frame_details": "数据帧详情"
