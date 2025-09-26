@@ -367,4 +367,17 @@ export declare namespace AIAgentGrpcApi {
     export interface AICard extends StreamResult.Card {}
     export interface AICacheCard extends HoldGRPCStreamProps.CacheCard {}
     export interface AIInfoCard extends HoldGRPCStreamProps.InfoCards {}
+
+    /** structured|timeline 类型数据结构 */
+    export interface TimelineDumpOpt {
+        timestamp: string
+        type: string
+        content: string
+    }
+    export interface TimelineDump {
+        dump: string
+        entries: TimelineDumpOpt[]
+        limit: number
+        total_entries: number
+    }
 }

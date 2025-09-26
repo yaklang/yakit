@@ -100,6 +100,8 @@ export interface UseChatIPCParams {
     onTaskReviewExtra?: (data: AIChatReviewExtra) => void
     /** 主动 review-release 的回调事件 */
     onReviewRelease?: (type: ChatIPCSendType, id: string) => void
+    /** timeline 时间线消息回调事件 */
+    onTimelineMessage?: (message: string) => void
     /** 接口结束断开的回调事件 */
     onEnd?: () => void
 }

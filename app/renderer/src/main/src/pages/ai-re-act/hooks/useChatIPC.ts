@@ -37,7 +37,7 @@ const UseCasualAndTaskTypes = [
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
 function useChatIPC(params?: UseChatIPCParams) {
-    const {onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onEnd} = params || {}
+    const {onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onTimelineMessage, onEnd} = params || {}
 
     // 自由对话-review 信息的自动释放
     const handleCasualReviewRelease = useMemoizedFn((id: string) => {
@@ -189,6 +189,9 @@ function useChatIPC(params?: UseChatIPCParams) {
                         // 执行日志信息
                         const data = obj as AIAgentGrpcApi.Log
                         pushLog({id: uuidv4(), type: "log", data: obj, Timestamp: res.Timestamp})
+                    } else if (res.NodeId === "timeline") {
+                        const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineDump
+                        onTimelineMessage && onTimelineMessage(data.dump)
                     } else {
                         // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
                         if (res.NodeId === "stream-finished") {
