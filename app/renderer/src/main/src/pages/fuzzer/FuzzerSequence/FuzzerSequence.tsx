@@ -880,7 +880,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             ...item,
             ...extraSetting
         }))
-        setSequenceList([...newSequenceList])
+        setSequenceList([...newSequenceList]) 
         yakitNotify("success", "应用成功")
     })
     const onRemoveNode = useMemoizedFn((index: number) => {

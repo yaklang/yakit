@@ -163,6 +163,7 @@ import {debugToPrintLog} from "@/utils/logCollection"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {formatTimeYMD} from "@/utils/timeUtil"
 import {type LoggerData, useLogger} from "@/hook/useLogger/useLogger"
+import i18n from "@/i18n/i18n"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -584,23 +585,30 @@ export const newWebFuzzerTab = (params: {
 /**@description 插入 yak.fuzz 语法 */
 export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
     const m = showYakitModal({
-        title: "Fuzzer Tag 调试工具",
+        title: i18n.language === "zh" ? "Fuzzer Tag 调试工具" : "Fuzzer Tag Debug Tool",
         width: "70%",
         footer: null,
         subTitle:
-            "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag",
+            i18n.language === "zh"
+                ? "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag"
+                : 'Debug mode is suitable for generating or modifying payloads. Nesting defaults to the outermost level, but you can select a position to nest. "Insert" simply inserts the fuzztag at the cursor position.',
         content: (
             <StringFuzzer
                 insertCallback={(template: string) => {
                     if (!template) {
-                        yakitNotify("warning", "Payload 为空 / Fuzz 模版为空")
+                        yakitNotify(
+                            "warning",
+                            i18n.language === "zh"
+                                ? "Payload 为空 / Fuzz 模版为空"
+                                : "Payload is empty / Fuzz template is empty"
+                        )
                     } else {
                         if (reqEditor && template) {
                             reqEditor.trigger("keyboard", "type", {
                                 text: template
                             })
                         } else {
-                            yakitNotify("error", "BUG: 编辑器失效")
+                            yakitNotify("error", i18n.language === "zh" ? "BUG: 编辑器失效" : "BUG: Editor not working")
                         }
                         m.destroy()
                     }

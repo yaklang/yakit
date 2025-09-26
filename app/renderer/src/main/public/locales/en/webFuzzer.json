@@ -13,6 +13,128 @@
       "thisFieldIsRequired": "This field is required"
     }
   },
+  "HttpQueryAdvancedConfig": {
+    "force_https": "Force HTTPS",
+    "tls_config": "TLS Configuration",
+    "guomi_tls": "Guomi TLS",
+    "random_tls": "Random TLS",
+    "real_host": "Real Host",
+    "host_collision_tip": "For Host collision, please configure the real Host",
+    "set_proxy": "Set Proxy",
+    "multi_proxy_tip": "When multiple proxies are set, the system will intelligently choose an available proxy for sending packets",
+    "proxy_auth_config": "Configure Proxy Authentication",
+    "disable_system_proxy": "Disable System Proxy",
+    "frontend_render_count": "Frontend Render Count",
+    "frontend_render_tip": "Does not affect the number of packets sent, only affects the number displayed on the frontend. The remaining packets can be viewed by clicking 'View All' in the table",
+    "response_body_limit": "Response Body Length Limit",
+    "sni_config": "SNI Configuration",
+    "force_sni": "Force SNI",
+    "request_config": "Request Packet Configuration",
+    "fuzztag_helper": "Fuzztag Helper",
+    "insert_yak_fuzz": "Insert yak.fuzz syntax",
+    "render_fuzz": "Render Fuzz",
+    "compat_mode_tip": "In compatibility mode, inner curly braces can be omitted when nested, e.g., {{base64(url(www.example.com))}}. In standard mode, they cannot be omitted. Fuzztag will be disabled if this is turned off.",
+    "render_mode": "Render Mode",
+    "disable_hot_reload": "Disable Hot Reload",
+    "no_fix_length": "Do not fix length",
+    "timeout_duration": "Timeout Duration",
+    "connection": "Connection",
+    "response": "Response",
+    "batch_target": "Batch Target",
+    "configured": "Configured",
+    "configure_batch_target": "Configure Batch Target",
+    "random_chunk_transfer": "Random Chunk Transfer",
+    "chunk_length": "Chunk Length",
+    "random_delay": "Random Delay",
+    "concurrency_config": "Concurrency Configuration",
+    "disable_connection_pool": "Disable Connection Pool",
+    "repeat_send": "Repeat Send",
+    "concurrency_test_tip": "Generally used to test race conditions or high concurrency scenarios",
+    "concurrent_threads": "Concurrent Threads",
+    "random_delay2": "Random Delay",
+    "retry_config": "Retry Configuration",
+    "retry_count": "Retry Count",
+    "retry_conditions": "Retry Conditions",
+    "status_code": "Status Code",
+    "no_retry_conditions": "No Retry Conditions",
+    "redirect_config": "Redirect Configuration",
+    "disable_redirect": "Disable Redirect",
+    "redirect_count": "Redirect Count",
+    "js_redirect": "JS Redirect",
+    "dns_config": "DNS Configuration",
+    "dns_server": "DNS Server",
+    "specify_dns_server": "Specify DNS Server",
+    "hosts_config": "Hosts Configuration",
+    "add_hosts_mapping": "Add Hosts Mapping",
+    "get_params": "GET Parameters",
+    "post_params": "POST Parameters",
+    "collapse_active_key_error": "Failed to get the active key for the collapse panel:",
+    "open_matcher_extraction_error": "Failed to parse data for openMatcherAndExtraction",
+    "auto": "Auto",
+    "force": "Force",
+    "clear": "Clear",
+    "cross_product": "Cross Product",
+    "fork_sync": "Fork/Sync",
+    "close": "Close",
+    "standard": "Standard",
+    "compatibility": "Compatibility"
+  },
+  "BatchTargetModal": {
+    "configure_batch_target": "Configure Batch Target",
+    "scan_target": "Scan Target",
+    "please_enter_scan_target": "Please enter scan targets, separated by 'commas' or new lines",
+    "drag_files_tip": "You can drag TXT or Excel files into the box or"
+  },
+  "StringFuzzer": {
+    "fuzz_template_empty": "Fuzz template is empty",
+    "payload_test_result": "Payload Test Result",
+    "total": "Total:",
+    "tag_add_success": "Tag added successfully",
+    "description": "Description:",
+    "example": "Example:",
+    "parameter_type_info": "Parameter Type Info:",
+    "parameter_name": "Parameter Name",
+    "default_value": "Default Value",
+    "optional_parameter": "Optional Parameter",
+    "array_parameter": "Array Parameter",
+    "delimiter": "Delimiter",
+    "nesting": "Nesting",
+    "insert": "Insert",
+    "viewGeneratedPayload": "View generated Payload",
+    "insertTagPosition": "Insert Tag Position",
+    "confirmResetDictionary": "Confirm you want to reset your Payload?",
+    "addToFavoriteTags": "Add to favorite tags",
+    "tag": "Tag "
+  },
+  "HTTPFuzzerHostInput": {
+    "domainRequired": "Domain cannot be empty",
+    "domain": "Domain",
+    "domainExample": "E.g.: oa.com",
+    "ipExample": "E.g.: 10.0.0.1"
+  },
+  "MatchersPanel": {
+    "matcher": "Matcher",
+    "add_debug": "Add/Debug"
+  },
+  "MatchersAndExtractorsListItemOperate": {
+    "debug": "Debug"
+  },
+  "SetVariableItem": {
+    "variableName": "Variable Name",
+    "variableValue": "Variable Value"
+  },
+  "ExtractorsPanel": {
+    "dataExtractor": "Data Extractor",
+    "add_debug": "Add/Debug"
+  },
+  "VariablePanel": {
+    "renderedVariableContent": "Rendered Variable Content",
+    "previewFailed": "Preview failed:",
+    "setVariable": "Set Variable"
+  },
+  "VariableList": {
+    "variable": "Variable"
+  },
   "DecodeComponent": {
     "smartDecode": "Smart Decode",
     "noDecodeInfo": "No decode information"
@@ -52,7 +174,9 @@
     "extractor": "Extractor",
     "addMatcher": "Add Matcher",
     "addCondition": "Add Condition",
-    "debugExecute": "Debug Execute"
+    "debugExecute": "Debug Execute",
+    "matching_extraction_tip": "Added <count>{{num}}</count> items",
+    "extractionResult": "Extraction Result"
   },
   "MatcherCollapse": {
     "emptyMatcherConditionExists": "This matcher already has an empty condition",
@@ -104,7 +228,10 @@
     "extraction_scope": "Extraction Scope",
     "response_header": "Response Header",
     "response_body": "Response Body",
-    "complete_conditions_before_adding": "Please complete the configuration of the existing conditions before adding new ones"
+    "complete_conditions_before_adding": "Please complete the configuration of the existing conditions before adding new ones",
+    "regex": "Regular Expression",
+    "keyValuePair": "Key-Value Pair",
+    "expression": "Expression"
   },
   "ColorSelect": {
     "hit_color": "Hit Color"

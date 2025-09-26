@@ -55,9 +55,11 @@
         "do_not_replace": "Do Not Replace",
         "more": "More",
         "custom": "Custom",
-        "beautify": "Beautify"
+        "beautify": "Beautify",
+        "preview": "Preview"
     },
     "YakitNotification": {
+        "unknown_error": "Unknown Error",
         "success": "Operation successful",
         "failed": "Operation failed{colon}",
         "imported": "Import successful",
@@ -87,7 +89,8 @@
         "loadFailed": "Load failed{colon}",
         "sendSuccess": "Sent successfully",
         "executeFailed": "Execution failed{colon}",
-        "search_failed": "Search failed{colon}"
+        "search_failed": "Search failed{colon}",
+        "complete_variable_before_add": "Please complete the settings for Variable {index} before adding another one"
     },
     "YakitFormDragger": {
         "filePath": "File Path",
@@ -111,6 +114,16 @@
         "autoFilteredData": "Data that does not meet the criteria has been automatically filtered",
         "filePathCountError": "File path count error, please separate paths with commas"
     },
+    "YakitDraggerContent": {
+        "file_too_large": "File is too large to process",
+        "unsupported_file_type": "Unsupported file type",
+        "multi_file_single_process": "Only one of the selected files will be processed",
+        "file_read_error": "File data read exception:",
+        "single_file_only": "Only single file upload is supported",
+        "data_fetch_failed": "Data fetch failed:",
+        "drag_file_tip": "You can drag files into the box or ",
+        "click_here": "click here"
+    },
     "YakitInput": {
         "please_enter": "Please enter...",
         "searchKeyWordPlaceholder": "Please enter keywords to search",
@@ -118,7 +131,8 @@
     },
     "YakitEmpty": {
         "noData": "No data available",
-        "noMoreData": "No More Data"
+        "noMoreData": "No More Data",
+        "end_of_list": "You've reached the end~"
     },
     "YakitDatePicker": {
         "oneMinute": "1 Minute",

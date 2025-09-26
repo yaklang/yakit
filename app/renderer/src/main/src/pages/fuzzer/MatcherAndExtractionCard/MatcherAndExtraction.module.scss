@@ -46,15 +46,8 @@
             gap: 8px;
             flex-shrink: 0;
         }
-        .matching-extraction-title-tip {
-            font-weight: 400;
-            font-size: 12px;
-            line-height: 16px;
-            color: var(--Colors-Use-Neutral-Text-4-Help-text);
-            .primary-number {
-                color: var(--Colors-Use-Main-Primary);
-                margin: 0 4px;
-            }
+        .primary-number {
+            color: var(--Colors-Use-Main-Primary);
         }
         .matching-extraction-extra {
             @extend .flex-space-between-and-center;
@@ -250,7 +243,6 @@
     color: var(--Colors-Use-Neutral-Text-1-Title);
     min-height: 24px;
     .label {
-        width: 104px;
         margin-right: 4px;
         height: 24px;
         @extend .flex-center;
