@@ -7,6 +7,7 @@ import {StatusCodeToColor} from "../../components/HTTPFlowTable/HTTPFlowTable";
 import {CopyableField} from "../../utils/inputUtil";
 import ReactResizeDetector from "react-resize-detector";
 import {useMemoizedFn} from "ahooks";
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces";
 
 export interface FuzzerResponseTableProp {
     content: FuzzerResponse[]
@@ -21,6 +22,7 @@ const sortAsNumber = (a: any, b: any) => parseInt(a) > parseInt(b) ? 1 : -1
 
 export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = React.memo((props) => {
     const {content, setRequest} = props;
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
     const [tableHeight, setTableHeight] = useState(0);
 
     const successResponseOperationHandler = useMemoizedFn((v: any, _, index: number) => {
@@ -30,14 +32,14 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = React.me
                 if ((res || []).length > 0) {
                     analyzeFuzzerResponse(res[0], index, content)
                 }
-            }}>详情</a>
+            }}>{t("YakitButton.detail")}</a>
         </>
     })
 
     const getArtColumns = useMemoizedFn((): ArtColumn[] => {
         return props.success ? [
             {
-                name: "请求", code: "Count", features: {
+                name: t("FuzzerResponseTableEx.request"), code: "Count", features: {
                     sortable: sortAsNumber,
                 },
                 width: 70,
@@ -54,7 +56,7 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = React.me
                 render: v => <div style={{color: StatusCodeToColor(v)}}>{`${v}`}</div>, width: 100,
             },
             {
-                name: "响应大小",
+                name: t("FuzzerResponseTableEx.responseSize"),
                 code: "BodyLength",
                 render: v => v,
                 features: {
@@ -63,7 +65,7 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = React.me
                 width: 100,
             },
             {
-                name: "响应相似度",
+                name: t("FuzzerResponseTableEx.responseSimilarity"),
                 code: "BodySimilarity",
                 render: v => {
                     const text = parseFloat(`${v}`).toFixed(3);
@@ -76,7 +78,7 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = React.me
                 width: 100,
             },
             {
-                name: "HTTP头相似度",
+                name: t("FuzzerResponseTableEx.httpHeaderSimilarity"),
                 code: "HeaderSimilarity",
                 render: v => parseFloat(`${v}`).toFixed(3),
                 features: {
@@ -93,7 +95,7 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = React.me
                 }, width: 300,
             },
             {
-                name: "延迟(ms)",
+                name: t("FuzzerResponseTableEx.latencyMs"),
                 code: "DurationMs",
                 render: (value: any, row: any, rowIndex: number) => {
                     return value
@@ -116,7 +118,7 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = React.me
                 render: v => `${formatTimestamp(v)}`, width: 165,
             },
             {
-                name: "操作", code: "UUID", render: successResponseOperationHandler,
+                name: t("YakitTable.action"), code: "UUID", render: successResponseOperationHandler,
                 width: 80, lock: true,
             }
         ] : [
@@ -126,11 +128,11 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = React.me
                 }
             },
             {
-                name: "失败原因", code: "Reason", render: (v) => {
+                name: t("FuzzerResponseTableEx.failureReason"), code: "Reason", render: (v) => {
                     return v ? <CopyableField style={{color: "red"}} noCopy={true} text={v}/> : "-"
                 }, features: {
                     tips: <>
-                        如果请求失败才会有内容~
+                        {t("FuzzerResponseTableEx.failureContentNotice")}
                     </>
                 }
             },

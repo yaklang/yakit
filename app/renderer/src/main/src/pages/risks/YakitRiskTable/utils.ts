@@ -3,7 +3,7 @@ import {QueryRisksRequest, QueryRisksResponse} from "./YakitRiskTableType"
 import {Risk} from "../schema"
 import {FieldName, Fields} from "../RiskTable"
 import {defQueryRisksRequest} from "./constants"
-
+import i18n from "@/i18n/i18n"
 const {ipcRenderer} = window.require("electron")
 /** QueryRisks */
 export const apiQueryRisks: (query?: QueryRisksRequest) => Promise<QueryRisksResponse> = (query) => {
@@ -12,7 +12,7 @@ export const apiQueryRisks: (query?: QueryRisksRequest) => Promise<QueryRisksRes
             .invoke("QueryRisks", query)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `查询失败: ${e}`)
+                yakitNotify("error", i18n.language === "zh" ? "查询失败：" : "Query failed:" + `${e}`)
                 reject(e)
             })
     })
@@ -33,7 +33,12 @@ export const apiQueryRisksTotalByRuntimeId: (RuntimeId: string) => Promise<Query
             .invoke("QueryRisks", params)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `QueryRisks 获取总数失败: ${e}`)
+                yakitNotify(
+                    "error",
+                    i18n.language === "zh"
+                        ? "QueryRisks 获取总数失败："
+                        : "Failed to get total count in QueryRisks:" + `${e}`
+                )
                 reject(e)
             })
     })
@@ -58,7 +63,7 @@ export const apiNewRiskRead: (query?: NewRiskReadRequest) => Promise<null> = (qu
             .invoke("set-risk-info-read", query)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `已读失败: ${e}`)
+                yakitNotify("error", i18n.language === "zh" ? "已读失败：" : "Mark as read failed:" + `${e}`)
                 reject(e)
             })
     })
@@ -79,7 +84,7 @@ export const apiDeleteRisk: (query?: DeleteRiskRequest) => Promise<null> = (quer
             .invoke("DeleteRisk", query)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `删除失败: ${e}`)
+                yakitNotify("error", i18n.language === "zh" ? "删除失败：" : "Delete failed:" + `${e}`)
                 reject(e)
             })
     })
@@ -96,7 +101,7 @@ export const apiExportHtml: (params: ExportHtmlProps) => Promise<string> = (para
             .invoke("export-risk-html", params)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `导出失败: ${e}`)
+                yakitNotify("error", i18n.language === "zh" ? "导出失败：" : "Export failed:" + `${e}`)
                 reject(e)
             })
     })
@@ -116,7 +121,10 @@ export const apiQueryRiskTags: () => Promise<QueryRiskTagsResponse> = () => {
             .invoke("QueryRiskTags")
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `查询QueryRiskTags失败: ${e}`)
+                yakitNotify(
+                    "error",
+                    i18n.language === "zh" ? "查询QueryRiskTags失败：" : "Query QueryRiskTags failed:" + `${e}`
+                )
                 reject(e)
             })
     })
@@ -137,7 +145,10 @@ export const apiQueryAvailableRiskType: () => Promise<FieldName[]> = () => {
                 }
             })
             .catch((e) => {
-                yakitNotify("error", `查询QueryRiskTags失败: ${e}`)
+                yakitNotify(
+                    "error",
+                    i18n.language === "zh" ? "查询QueryRiskTags失败：" : "Query QueryRiskTags failed:" + `${e}`
+                )
                 reject(e)
             })
     })
@@ -155,7 +166,7 @@ export const apiSetTagForRisk: (params: SetTagForRiskRequest) => Promise<SetTagF
             .invoke("SetTagForRisk", params)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `设置失败: ${e}`)
+                yakitNotify("error", i18n.language === "zh" ? "设置失败：" : "Setting failed:" + `${e}`)
                 reject(e)
             })
     })
@@ -173,7 +184,7 @@ export const apiRiskFieldGroup: () => Promise<RiskFieldGroupResponse> = () => {
             .invoke("RiskFieldGroup")
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `查询失败: ${e}`)
+                yakitNotify("error", i18n.language === "zh" ? "查询失败：" : "Query failed:" + `${e}`)
                 reject(e)
             })
     })
@@ -191,7 +202,7 @@ export const apiRiskFeedbackToOnline: (params: UploadRiskToOnlineRequest) => Pro
             .invoke("RiskFeedbackToOnline", params)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `反馈失败: ${e}`)
+                yakitNotify("error", i18n.language === "zh" ? "反馈失败：" : "Feedback failed:" + `${e}`)
                 reject(e)
             })
     })

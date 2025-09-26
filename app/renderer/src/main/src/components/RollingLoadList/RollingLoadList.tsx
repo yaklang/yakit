@@ -3,6 +3,7 @@ import ReactResizeDetector from "react-resize-detector"
 import {useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList, useDeepCompareEffect} from "ahooks"
 import {LoadingOutlined} from "@ant-design/icons"
 import "./RollingLoadList.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface RollingLoadListProps<T> {
     rowKey?: string
@@ -52,6 +53,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         recalculation,
         targetRef
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [vlistHeigth, setVListHeight] = useState(600)
     const [col, setCol] = useState<number>()
     const [computeOriginalList, setComputeOriginalList] = useState(false)
@@ -250,7 +252,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                         </div>
                     )}
                     {!loading && !hasMore && (page || 0) > 0 && (
-                        <div className='grid-block text-center no-more-text'>暂无更多数据</div>
+                        <div className='grid-block text-center no-more-text'>{t("YakitEmpty.noMoreData")}</div>
                     )}
                 </div>
             </div>

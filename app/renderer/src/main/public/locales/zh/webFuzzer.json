@@ -13,6 +13,473 @@
       "thisFieldIsRequired": "该项为必填"
     }
   },
+  "WebFuzzerPage": {
+    "config": "配置",
+    "rule": "规则",
+    "sequence": "序列"
+  },
+  "PacketScanButton": {
+    "packetScan": "数据包扫描"
+  },
+  "WebFuzzerResponseExtractor": {
+    "cannotGenerateExtractionRule": "无法生成数据提取规则：",
+    "autoGenerateExtractionRule": "自动生成提取规则",
+    "regexExtractWithPrefixSuffix": "前后缀正则提取",
+    "singleRegexExtract": "单正则提取",
+    "responseCount": "共{responses}个响应",
+    "extractData": "提取数据",
+    "prefixRegex": "前缀（正则）：",
+    "suffixRegex": "后缀（正则）：",
+    "noExtractionRuleSelected": "未选中提取规则",
+    "autoExtractRegex": "自动提取正则：",
+    "extractedTotal": "已提/总量：",
+    "confirmClearExtractedData": "确定要清除已提取数据？",
+    "downloadFile": "下载文件",
+    "displayInTable": "在表中展示",
+    "dataSentSuccessfully": "数据发送成功",
+    "dataSendFailed": "数据发送失败："
+  },
+  "GeneralExporterForm": {
+    "generateExportFile": "生成导出文件",
+    "exportFields": "导出字段",
+    "exportJson": "导出 JSON",
+    "exportCsv": "导出 CSV",
+    "outputToDirectory": "输出到目录",
+    "optionalDefaultYakitTempDir": "可为空，默认为 {yakit} 临时目录",
+    "fileName": "文件名",
+    "asteriskAsRandom": "'*' 可作为随机字符串填空，不需要填写后缀",
+    "generateDataToLocalFile": "生成数据到本地文件",
+    "requestPacket": "请求包",
+    "responsePacket": "响应包"
+  },
+  "GeneralExporter": {
+    "exportFinished": "导出结束",
+    "sendGeneratedFileConfigSuccess": "发送生成文件配置成功...",
+    "getGeneratedFileClickToOpen": "获取生成的文件（点击打开文件位置）"
+  },
+  "HTTPFuzzerPage": {
+    "closeMenuPrompt": "关闭一级菜单会关闭一级菜单下的所有二级菜单？",
+    "clearOldDataFailed": "清空老数据失败：",
+    "wfHistoryDataRestoreFailed": "WF历史数据恢复失败：",
+    "fuzzTestRequestFailed": "提交模糊测试请求失败：",
+    "hotReload": "热加载",
+    "buildRequest": "构造请求",
+    "syncConfig": "同步配置",
+    "allTraffic": "全部流量",
+    "response_overflow": "响应数量超过{maxData}，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击",
+    "view_all_suffix": "查看所有数据",
+    "advanced_filter_suggestion": "需要进行高级筛选，多条件组合查询或其他复杂操作时，建议点击跳转到",
+    "performAction": "进行操作",
+    "webFuzzerDemo": "WebFuzzer 爆破动画演示",
+    "bruteForceExample": "爆破示例",
+    "followRedirects": "跟随重定向",
+    "generatePathTemplate": "生成为 Path 模板",
+    "generateRawTemplate": "生成为 Raw 模板",
+    "generateYamlTemplate": "生成 Yaml 模板",
+    "editAndSendRequest": "请在左边编辑并发送一个 HTTP 请求/模糊测试",
+    "fuzzTestResultsInfo": "本栏结果针对模糊测试的多个 HTTP请求结果展示做了优化，可以自动识别单个/多个请求的展示。",
+    "responseLimitExceeded": "响应数量超过前端限制请确认开启",
+    "saveHttpTrafficSettings": "保存HTTP流量设置",
+    "matchingInProgress": "匹配中",
+    "run_function_start": "运行函数-开始：",
+    "run_function_end": "运行函数-结束：",
+    "send_complete": "发送完成",
+    "success_and_failure_length": "成功与失败的长度",
+    "success_failure_count": "成功：{success}——失败：${failed}",
+    "send_request": "发送请求",
+    "parameter": "参数"
+  },
+  "FuzzerExtraShow": {
+    "responsesDiscarded": "已丢弃[{droppedCount}]个响应",
+    "proxy": "代理：",
+    "systemProxy": "系统代理：",
+    "realHost": "真实Host：",
+    "matchSuccess": "匹配成功",
+    "matchFailed": "匹配失败",
+    "enableChunkedTransfer": "开启分块传输"
+  },
+  "SecondNodeExtra": {
+    "enterTargetResponse": "请输入定位响应",
+    "viewExtractionResults": "查看提取结果",
+    "viewHeader": "查看Header",
+    "viewBody": "查看Body",
+    "targetFileNotExist": "目标文件已不存在!",
+    "fullResponse": "完整响应",
+    "hideResponseInfo": "隐藏响应信息",
+    "showResponseInfo": "显示响应信息",
+    "highlightColor": "标注颜色",
+    "statusCode": "状态码",
+    "responseSize": "响应大小",
+    "latency": "延迟",
+    "extractData": "提取数据",
+    "matchOnly": "仅匹配",
+    "matchOnlyConfirm": "操作仅匹配会结束暂停状态，是否确定操作？",
+    "noWebFuzzerResponse": "无 Web Fuzzer Response 以供提取信息",
+    "extractResponseData": "提取响应数据",
+    "exportData": "导出数据",
+    "exportAll": "导出所有",
+    "exportPayloadOnly": "仅导出 Payload",
+    "extractFromResponsePacket": "提取响应数据包中内容"
+  },
+  "SecondNodeTitle": {
+    "oversizedResponse": "超大响应",
+    "contentTypeModified": "Content-Type被修改，修改前的内容展示在对应字段旁",
+    "success": "成功[{count}]",
+    "failure": "失败[{count}]",
+    "concurrencyLoad": "并发/负载"
+  },
+  "EditorOverlayWidget": {
+    "dnsTime": "DNS耗时：",
+    "remoteAddress": "远端地址：",
+    "proxy": "代理：",
+    "responseTime": "响应时间：",
+    "totalTime": "总耗时："
+  },
+  "ResponseViewer": {
+    "hideResponseInfo": "隐藏响应信息",
+    "showResponseInfo": "显示响应信息",
+    "matcher": "匹配器",
+    "extractor": "提取器",
+    "copyUrlFailed": "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整",
+    "requestFailedOrServerError": "请求失败或服务端（代理）异常",
+    "networkTimeout": "网络超时（请检查目标主机是否在线？）",
+    "dnsOrHostError": "DNS 错误或主机错误 (请检查域名是否可以被正常解析？)",
+    "cannotSetProxy": "无法设置代理（请检查代理是否可用）",
+    "serverNoResponse": "服务端没有任何返回数据",
+    "detailedReason": "详细原因：",
+    "xContentTypeOptionsNotice": "返回包中设置了X-Content-Type-Options字段，content-type是否应该被修复请关注此字段",
+    "unknownReason": "未知原因"
+  },
+  "ResponseViewerSecondNode": {
+    "extractContent": "提取内容",
+    "none": "暂无"
+  },
+  "BlastingAnimationAemonstration": {
+    "bruteForceId": "爆破 ID",
+    "bruteForcePassword": "爆破密码",
+    "bruteForceAccount": "爆破账号"
+  },
+  "InsertFileFuzzTag": {
+    "selectedFilenameEmpty": "选中的文件名为空",
+    "fileContent": "文件内容",
+    "readFileByLine": "按行读取文件",
+    "allInFolder": "文件夹内所有",
+    "selectPath": "选择路径",
+    "confirmSelection": "确定所选内容"
+  },
+  "InsertTextToFuzzTag": {
+    "generateTempDictionaryFile": "生成临时字典文件：",
+    "generateTempDictionaryFailed": "生成临时字典失败：",
+    "fileContent": "文件内容",
+    "readFileByLine": "按行读取文件",
+    "text": "文本",
+    "confirmInsertTag": "确定插入标签"
+  },
+  "HTTPFuzzerHotPatch": {
+    "enableModifiedHotReload": "是否启用修改的热加载代码和配置",
+    "updateTemplateSuccess": "更新模板 {tempName} 成功",
+    "updateTemplateFailed": "更新模板 {tempName} 失败：",
+    "debugInsertHotReload": "调试 / 插入热加载代码",
+    "resultDisplay": "结果展示",
+    "copyFuzzResult": "复制 Fuzz 结果",
+    "copyFuzzTag": "复制 Fuzz 标签",
+    "templateContent": "模版内容",
+    "clickToCopy": "点击复制",
+    "insertAtEditorPosition": "插入编辑器位置",
+    "hotReloadCode": "热加载代码",
+    "resetHotReloadWarning": "点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作",
+    "expandEditor": "扩大编辑器",
+    "sharedHotReloadCode": "共用热加载代码",
+    "webFuzzerHotReloadNotice": "打开以后webfuzzer标签将共用当前热加载代码，但只对新建标签页生效",
+    "updateAndSaveTemplate": "更新当前模板并保存",
+    "saveTemplate": "保存模板",
+    "enableSuccess": "启用成功",
+    "debugNotice": "调试须知: 调试执行将会仅最多执行20秒 或 渲染 Payload 最多 300 条",
+    "engineConsole": "引擎Console",
+    "bruteforce_aes_cbc": "爆破 AES-CBC",
+    "bruteforce_rsa_oaep": "爆破 RSA-OAEP",
+    "bruteforce_csrf_with_token": "爆破 CSRF（带有保护用 token）",
+    "crack_signature": "破解 Signature",
+    "third_party_captcha_bypass": "第三方验证码绕过"
+  },
+  "HTTPFuzzerHistorySelector": {
+    "confirmDeletePackets": "将会删除数据包与缓存数据，确定删除吗？",
+    "quickSearch": "快速搜索：",
+    "totalFlows": "共{HTTPFlowTotal}个",
+    "successCount": "成功：{HTTPFlowSuccessCount}个"
+  },
+  "HTTPFuzzerClickEditorMenu": {
+    "insertTag": "插入标签",
+    "aiTool": "AI工具",
+    "commonTags": "常用标签",
+    "save_codec_flow": "调用codec模块保存的codec flow",
+    "reverse_regex_single": "反向正则（单个）",
+    "reverse_regex_all": "反向正则（全部）",
+    "timestamp_seconds": "时间戳（秒）",
+    "captcha": "验证码",
+    "random_number": "随机数",
+    "random_string": "随机字符串",
+    "integer_range": "整数范围",
+    "insert_dictionary": "插入字典",
+    "insert_temp_dictionary": "插入临时字典",
+    "insert_file": "插入文件"
+  },
+  "AIPluginComponent": {
+    "getPlugin": "获取插件"
+  },
+  "EncodeComponent": {
+    "md5Encode": "Md5 编码",
+    "base64Encode": "Base64 编码",
+    "base64ThenUrlEncode": "先 Base64 后 URL 编码",
+    "hexEncode": "HEX 编码（十六进制编码）",
+    "htmlEncode": "HTML 编码",
+    "urlEncode": "URL 编码",
+    "urlEncodeSpecial": "URL 编码（只编码特殊字符）"
+  },
+  "DecodeLableComponent": {
+    "base64Decode": "Base64解码",
+    "doubleUrlDecode": "双重URL解码",
+    "hexDecode": "十六进制解码",
+    "htmlDecode": "HTML解码",
+    "urlForceDecode": "URL强制解码",
+    "unicodeChineseDecode": "Unicode中文解码"
+  },
+  "HTTPFuzzerRangeEditorMenu": {
+    "encode": "编码",
+    "decode": "解码",
+    "smartDecode": "智能解码"
+  },
+  "FuzzerResponseTableEx": {
+    "request": "请求",
+    "responseSize": "响应大小",
+    "responseSimilarity": "响应相似度",
+    "httpHeaderSimilarity": "HTTP头相似度",
+    "latencyMs": "延迟（ms）",
+    "failureReason": "失败原因",
+    "failureContentNotice": "如果请求失败才会有内容~"
+  },
+  "WebFuzzerNewEditor": {
+    "insertTagOrDictionary": "插入标签/字典",
+    "insertEmptyByteTag": "插入空字节标签：{{hexd(00)}}",
+    "insertTempDictionary": "插入临时字典",
+    "insertFuzzDictionaryTag": "插入模糊测试字典标签",
+    "insertHotReloadTag": "插入热加载标签",
+    "insertFileTag": "插入文件标签",
+    "copyUrlFailed": "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整"
+  },
+  "EncodeTag": {
+    "encodeTagIntro": "编码标签介绍"
+  },
+  "FuzzerPageSetting": {
+    "getSequenceConfigKeyFailed": "获取序列配置折叠面板的激活key失败："
+  },
+  "RpsAndCpsLineChart": {
+    "currentPacketCount": "当前发包数：",
+    "currentConnectionCount": "当前连接数："
+  },
+  "RequestDelayStackedAreaChart": {
+    "tlsHandshake": "TLS握手",
+    "tcpConnection": "TCP连接",
+    "totalDuration": "总时长",
+    "requestLatency": "请求时延"
+  },
+  "FuzzerConcurrentLoad": {
+    "packetsPerSecond5min": "每秒发包数（5min）",
+    "connectionsPerSecond5min": "每秒连接数（5min）",
+    "responseLatency": "响应时延"
+  },
+  "WebFuzzerSynSetting": {
+    "wfPageDataEmpty": "WF页面数据为空",
+    "syncDataPageNotFound": "同步数据页面未找到",
+    "dataSourcePageTagName": "数据来源页面标签名：",
+    "syncContent": "同步内容",
+    "pleaseSelectSyncContent": "请选中同步的内容",
+    "syncScope": "同步范围",
+    "pleaseSelectPageToSync": "请选择需要同步的页面",
+    "sync": "同步",
+    "config": "配置",
+    "rule": "规则",
+    "allPages": "所有页面",
+    "customPage": "自定义页面"
+  },
+  "ShareImportExportData": {
+    "sharePacketId": "分享数据包 ID",
+    "exportAsPathTemplate": "导出为 Path 模板",
+    "exportAsRawTemplate": "导出为 Raw 模板",
+    "exportYamlSuccess": "导出Yaml成功",
+    "importPacketId": "导入数据包 ID",
+    "importYamlFile": "导入Yaml文件",
+    "uploadOrPasteCode": "上传，也支持直接粘贴代码",
+    "pleaseSelectOrPasteFile": "请选择或粘贴要导入的文件",
+    "getPathFailed": "获取路径失败"
+  },
+  "MultimodeImportYaml": {
+    "uploadFileFormatError": "上传文件格式错误，请重新上传"
+  },
+  "ShareModal": {
+    "pleaseLoginToShare": "请登录后分享",
+    "shareDataConversionFailed": "分享数据转换失败：",
+    "setExpiration": "设置有效期：",
+    "fiveMinutes": "5分钟",
+    "fifteenMinutes": "15分钟",
+    "oneHour": "1小时",
+    "oneDay": "1天",
+    "password": "密码：",
+    "limitShareCount": "限制分享次数：",
+    "timesValue": "{value}次",
+    "shareId": "分享id：",
+    "generateShareToken": "生成分享密令",
+    "copiedToClipboard": "已复制到粘贴板",
+    "copyShare": "复制分享"
+  },
+  "PluginDebugDrawer": {
+    "noBaseInfoParsed": "未解析到相关基础信息",
+    "pluginDebug": "插件调试",
+    "saveAsPlugin": "存为插件"
+  },
+  "HTTPFuzzerPageTable": {
+    "request": "请求",
+    "status": "状态",
+    "responseSize": "响应大小",
+    "latencyMs": "延迟（ms）",
+    "extractData": "提取数据",
+    "responseSimilarity": "响应相似度",
+    "httpHeaderSimilarity": "HTTP头相似度",
+    "debug": "调试",
+    "failureReason": "失败原因",
+    "extractionResult": "提取结果",
+    "hideResponseInfo": "隐藏响应信息",
+    "showResponseInfo": "显示响应信息",
+    "copyUrlFailed": "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整",
+    "quickPreview": "快速预览",
+    "response": "响应",
+    "oversizedResponse": "超大响应",
+    "viewHeader": "查看Header",
+    "viewBody": "查看Body",
+    "targetFileNotExist": "目标文件已不存在!",
+    "fullResponse": "完整响应"
+  },
+  "HttpQueryAdvancedConfig": {
+    "force_https": "强制 HTTPS",
+    "tls_config": "TLS配置",
+    "guomi_tls": "国密TLS",
+    "random_tls": "随机TLS",
+    "real_host": "真实Host",
+    "host_collision_tip": "如需Host碰撞，请配置真实Host",
+    "set_proxy": "设置代理",
+    "multi_proxy_tip": "设置多个代理时，会智能选择能用的代理进行发包",
+    "proxy_auth_config": "配置代理认证",
+    "disable_system_proxy": "禁用系统代理",
+    "frontend_render_count": "前端渲染数量",
+    "frontend_render_tip": "不影响发包数量，只影响前端渲染展示数量，超出的数量可通过点击表格的查看全部进行查看",
+    "response_body_limit": "响应体长度限制",
+    "sni_config": "SNI 配置",
+    "force_sni": "强制SNI",
+    "request_config": "请求包配置",
+    "fuzztag_helper": "Fuzztag 辅助",
+    "insert_yak_fuzz": "插入 yak.fuzz 语法",
+    "render_fuzz": "渲染 Fuzz",
+    "compat_mode_tip": "兼容模式支持嵌套使用时内层大括号省略 {{base64(url(www.example.com))}}，但标准模式不可省略，关闭后Fuzztag将失效。",
+    "render_mode": "渲染模式",
+    "disable_hot_reload": "禁用热更新",
+    "no_fix_length": "不修复长度",
+    "timeout_duration": "超时时长",
+    "connection": "连接",
+    "response": "响应",
+    "batch_target": "批量目标",
+    "configured": "已配置",
+    "configure_batch_target": "配置批量目标",
+    "random_chunk_transfer": "随机分块传输",
+    "chunk_length": "分块长度",
+    "random_delay": "随机延时",
+    "concurrency_config": "并发配置",
+    "disable_connection_pool": "禁用连接池",
+    "repeat_send": "重复发包",
+    "concurrency_test_tip": "一般用来测试条件竞争或者大并发的情况",
+    "concurrent_threads": "并发线程",
+    "random_delay2": "随机延迟",
+    "retry_config": "重试配置",
+    "retry_count": "重试次数",
+    "retry_conditions": "重试条件",
+    "status_code": "状态码",
+    "no_retry_conditions": "不重试条件",
+    "redirect_config": "重定向配置",
+    "disable_redirect": "禁用重定向",
+    "redirect_count": "重定向次数",
+    "js_redirect": "JS重定向",
+    "dns_config": "DNS配置",
+    "dns_server": "DNS服务器",
+    "specify_dns_server": "指定DNS服务器",
+    "hosts_config": "Hosts配置",
+    "add_hosts_mapping": "添加 Hosts 映射",
+    "get_params": "GET 参数",
+    "post_params": "POST 参数",
+    "collapse_active_key_error": "获取折叠面板的激活key失败：",
+    "open_matcher_extraction_error": "openMatcherAndExtraction 解析数据失败",
+    "auto": "自动",
+    "force": "强制",
+    "clear": "清空",
+    "cross_product": "交叉乘积",
+    "fork_sync": "草叉/同步",
+    "close": "关闭",
+    "standard": "标准",
+    "compatibility": "兼容"
+  },
+  "BatchTargetModal": {
+    "configure_batch_target": "配置批量目标",
+    "scan_target": "扫描目标",
+    "please_enter_scan_target": "请输入扫描目标，多个目标用“英文逗号”或换行分隔"
+  },
+  "StringFuzzer": {
+    "fuzz_template_empty": "Fuzz模版为空",
+    "payload_test_result": "字典管理测试结果",
+    "total": "总量：",
+    "tag_add_success": "标签添加成功",
+    "description": "描述{colon}",
+    "example": "示例：",
+    "parameter_type_info": "参数类型信息：",
+    "parameter_name": "参数名",
+    "default_value": "默认值",
+    "optional_parameter": "可选参数",
+    "array_parameter": "数组参数",
+    "delimiter": "分隔符",
+    "nesting": "嵌套",
+    "insert": "插入",
+    "viewGeneratedPayload": "查看生成后的字典管理",
+    "insertTagPosition": "插入标签所在位置",
+    "confirmResetDictionary": "确认要重置你的字典管理吗？",
+    "addToFavoriteTags": "添加到常用标签",
+    "tag": "标签"
+  },
+  "HTTPFuzzerHostInput": {
+    "domainRequired": "域名不能为空",
+    "domain": "域名",
+    "domainExample": "例如：oa.com",
+    "ipExample": "例如：10.0.0.1"
+  },
+  "MatchersPanel": {
+    "matcher": "匹配器",
+    "add_debug": "添加/调试"
+  },
+  "MatchersAndExtractorsListItemOperate": {
+    "debug": "调试"
+  },
+  "SetVariableItem": {
+    "variableName": "变量名",
+    "variableValue": "变量值"
+  },
+  "ExtractorsPanel": {
+    "dataExtractor": "数据提取器",
+    "add_debug": "添加/调试"
+  },
+  "VariablePanel": {
+    "renderedVariableContent": "渲染后变量内容",
+    "previewFailed": "预览失败：",
+    "setVariable": "设置变量"
+  },
+  "VariableList": {
+    "variable": "变量"
+  },
   "DecodeComponent": {
     "smartDecode": "智能解码",
     "noDecodeInfo": "无解码信息"
@@ -52,7 +519,9 @@
     "extractor": "提取器",
     "addMatcher": "添加匹配器",
     "addCondition": "添加条件",
-    "debugExecute": "调试执行"
+    "debugExecute": "调试执行",
+    "matching_extraction_tip": "已添加 <count>{{num}}</count> 条",
+    "extractionResult": "提取结果"
   },
   "MatcherCollapse": {
     "emptyMatcherConditionExists": "该匹配器已有空匹配器条件",
@@ -104,9 +573,51 @@
     "extraction_scope": "提取范围",
     "response_header": "响应头",
     "response_body": "响应体",
-    "complete_conditions_before_adding": "请将已添加条件配置完成后再新增"
+    "complete_conditions_before_adding": "请将已添加条件配置完成后再新增",
+    "regex": "正则表达式",
+    "keyValuePair": "键值对",
+    "expression": "表达式"
   },
   "ColorSelect": {
     "hit_color": "命中颜色"
+  },
+  "FuzzerSequence": {
+    "fuzz_request_fail": "提交模糊测试请求失败：",
+    "execute_after_sequence": "请配置序列后再执行",
+    "configure_before_adding": "已有空节点，请配置后再添加",
+    "application_success": "应用成功",
+    "select_after_configuring_sequence": "请配置序列后再选中",
+    "please_select_page": "请选择页面",
+    "allTraffic": "全部流量",
+    "webfuzzer_sequence_demo": "WebFuzzer 序列动画演示",
+    "official_documentation": "官方帮助文档",
+    "sequence_configuration": "序列配置",
+    "add_node": "添加节点",
+    "force_stop": "强制停止",
+    "config": "配置",
+    "select_webfuzzer_with_sequence_tip": "请选择 Web Fuzzer（如需使用序列，请将其他标签页拖入该分组）"
+  },
+  "SequenceItem": {
+    "variable": "变量",
+    "edit_name": "修改名称",
+    "name_cannot_be_empty": "名称不能为空",
+    "max_20_characters": "不超过20个字符",
+    "node_configuration": "节点配置",
+    "apply_to_other_nodes": "应用到其他节点",
+    "inherit_variables": "继承变量",
+    "inherit_cookie": "继承 Cookie",
+    "go_to_fuzzer_configuration": "前往Fuzzer配置",
+    "please_select_page": "请选择页面"
+  },
+  "SequenceResponseHeard": {
+    "generatePathTemplate": "生成为 Path 模板",
+    "generateRawTemplate": "生成为 Raw 模板",
+    "generateYamlTemplate": "生成 Yaml 模板",
+    "show_all_responses": "展示全部响应"
+  },
+  "SequenceResponse": {
+    "matcher_extractor_validation_failed": "匹配器和提取器验证失败：",
+    "hotReload": "热加载",
+    "view_after_executing_sequence": "请执行序列后进行查看"
   }
 }

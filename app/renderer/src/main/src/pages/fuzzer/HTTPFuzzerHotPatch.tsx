@@ -70,6 +70,7 @@ const HotPatchParamsGetterDefault = `__getParams__ = func() {
 const {ipcRenderer} = window.require("electron")
 
 export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById
@@ -143,8 +144,8 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             let m = YakitModalConfirm({
                 width: 420,
                 type: "white",
-                onCancelText: "取消",
-                onOkText: "确认",
+                onCancelText: t("YakitButton.cancel"),
+                onOkText: t("YakitButton.confirm"),
                 icon: <ExclamationCircleOutlined />,
                 style: {top: "20%"},
                 onOk: () => {
@@ -159,7 +160,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     props.onCancel()
                     m.destroy()
                 },
-                content: "是否启用修改的热加载代码和配置"
+                content: t("HTTPFuzzerHotPatch.enableModifiedHotReload")
             })
         } else {
             props.onCancel()
@@ -180,17 +181,17 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 }
             })
             .then((res) => {
-                yakitNotify("success", "更新模板 " + tempNameRef.current + " 成功")
+                yakitNotify("success", t("HTTPFuzzerHotPatch.updateTemplateSuccess", {tempName: tempNameRef.current}))
             })
             .catch((error) => {
-                yakitNotify("error", "更新模板 " + tempNameRef.current + " 失败：" + error)
+                yakitNotify("error", t("HTTPFuzzerHotPatch.updateTemplateFailed", {tempName: tempNameRef.current}) + error)
             })
     })
 
     return (
         <div className={styles["http-fuzzer-hotPatch"]}>
             <div className={styles["http-fuzzer-hotPatch-heard"]}>
-                <span>调试 / 插入热加载代码</span>
+                <span>{t("HTTPFuzzerHotPatch.debugInsertHotReload")}</span>
                 <OutlineXIcon onClick={onClose} />
             </div>
             <Form
@@ -216,7 +217,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                         bordered={false}
                                         title={
                                             <span style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
-                                                结果展示
+                                                {t("HTTPFuzzerHotPatch.resultDisplay")}
                                             </span>
                                         }
                                         extra={
@@ -227,7 +228,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                                         setClipboardText(data.join("\n"))
                                                     }}
                                                 >
-                                                    复制 Fuzz 结果
+                                                    {t("HTTPFuzzerHotPatch.copyFuzzResult")}
                                                 </YakitButton>
                                                 <YakitButton
                                                     type='text'
@@ -236,7 +237,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                                     }}
                                                 >
                                                     {" "}
-                                                    复制 Fuzz 标签
+                                                    {t("HTTPFuzzerHotPatch.copyFuzzTag")}
                                                 </YakitButton>
                                             </Space>
                                         }
@@ -253,7 +254,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             >
                 <div className={styles["http-fuzzer-hotPatch-label"]}>
                     <Space>
-                        模版内容
+                        {t("HTTPFuzzerHotPatch.templateContent")}
                         <YakitButton
                             type='text'
                             onClick={(e) => {
@@ -261,7 +262,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                 setClipboardText(params.Template)
                             }}
                         >
-                            点击复制
+                            {t("HTTPFuzzerHotPatch.clickToCopy")}
                         </YakitButton>
                         {props.onInsert && (
                             <YakitButton
@@ -270,7 +271,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                     props.onInsert(params.Template)
                                 }}
                             >
-                                插入编辑器位置
+                                {t("HTTPFuzzerHotPatch.insertAtEditorPosition")}
                             </YakitButton>
                         )}
                     </Space>
@@ -286,9 +287,9 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 </Form.Item>
                 <div className={styles["http-fuzzer-hotPatch-label"]}>
                     <Space style={{lineHeight: "16px"}}>
-                        热加载代码
+                        {t("HTTPFuzzerHotPatch.hotReloadCode")}
                         <YakitPopconfirm
-                            title={"点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作"}
+                            title={t("HTTPFuzzerHotPatch.resetHotReloadWarning")}
                             onConfirm={(e) => {
                                 tempNameRef.current = ""
                                 setParams({...params, HotPatchCode: HotPatchDefaultContent})
@@ -297,7 +298,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                             <YakitButton icon={<RefreshIcon />} type='text' />
                         </YakitPopconfirm>
                         <YakitPopover
-                            title={"扩大编辑器"}
+                            title={t("HTTPFuzzerHotPatch.expandEditor")}
                             content={
                                 <>
                                     <YakitRadioButtons
@@ -309,15 +310,15 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                         options={[
                                             {
                                                 value: 250,
-                                                label: "小"
+                                                label: t("YakitEditor.small")
                                             },
                                             {
                                                 value: 400,
-                                                label: "中"
+                                                label: t("YakitEditor.medium")
                                             },
                                             {
                                                 value: 600,
-                                                label: "大"
+                                                label: t("YakitEditor.large")
                                             }
                                         ]}
                                     />
@@ -327,8 +328,8 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                             <YakitButton icon={<FullscreenOutlined />} type='text' />
                         </YakitPopover>
                         <div className={styles["hotPatchCodeOpen"]}>
-                            <span style={{fontSize: 12}}>共用热加载代码</span>
-                            <Tooltip title='打开以后webfuzzer标签将共用当前热加载代码，但只对新建标签页生效'>
+                            <span style={{fontSize: 12}}>{t("HTTPFuzzerHotPatch.sharedHotReloadCode")}</span>
+                            <Tooltip title={t("HTTPFuzzerHotPatch.webFuzzerHotReloadNotice")}>
                                 <InformationCircleIcon className={styles["info-icon"]} />
                             </Tooltip>
                             ：<YakitSwitch checked={hotPatchCodeOpen} onChange={setHotPatchCodeOpen}></YakitSwitch>
@@ -340,20 +341,20 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                             type='outline1'
                             onClick={() => setAddHotCodeTemplateVisible(true)}
                         >
-                            另存为
+                            {t("YakitButton.save_as")}
                         </YakitButton>
-                        <Tooltip title='更新当前模板并保存'>
+                        <Tooltip title={t("HTTPFuzzerHotPatch.updateAndSaveTemplate")}>
                             <YakitButton
                                 disabled={!params.HotPatchCode || !tempNameRef.current}
                                 type='outline1'
                                 onClick={onUpdateTemplate}
                             >
-                                保存模板
+                                {t("HTTPFuzzerHotPatch.saveTemplate")}
                             </YakitButton>
                         </Tooltip>
                         <AddHotCodeTemplate
                             type='fuzzer'
-                            title='另存为'
+                            title={t("YakitButton.save_as")}
                             hotPatchTempLocal={hotPatchTempLocal}
                             hotPatchCode={params.HotPatchCode}
                             visible={addHotCodeTemplateVisible}
@@ -368,12 +369,12 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                             onClick={() => {
                                 saveCode(params.HotPatchCode)
                                 setTimeout(() => {
-                                    yakitNotify("success", "启用成功")
+                                    yakitNotify("success", t("HTTPFuzzerHotPatch.enableSuccess"))
                                     props.onCancel()
                                 }, 100)
                             }}
                         >
-                            确认
+                            {t("YakitButton.confirm")}
                         </YakitButton>
                     </Space>
                 </div>
@@ -402,11 +403,11 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                         </div>
                     </div>
                 </Form.Item>
-                <Form.Item help={"调试须知: 调试执行将会仅最多执行20秒 或 渲染 Payload 最多 300 条"}>
+                <Form.Item help={t("HTTPFuzzerHotPatch.debugNotice")}>
                     <YakitButton loading={loading} type='primary' htmlType='submit'>
-                        调试执行
+                        {t("YakitButton.debugExecution")}
                     </YakitButton>
-                    <Tooltip placement='bottom' title='引擎Console'>
+                    <Tooltip placement='bottom' title={t("HTTPFuzzerHotPatch.engineConsole")}>
                         <YakitButton
                             type='text'
                             onClick={openConsoleNewWindow}
@@ -452,6 +453,7 @@ interface QueryHotPatchTemplateResponse {
 
 export interface HotPatchTempItem {
     name: string
+    nameUi?: string
     temp: string
     isDefault: boolean
 }
@@ -789,9 +791,9 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                                         >
                                             <div
                                                 className={classNames(styles["hotCode-item-name"], "content-ellipsis")}
-                                                title={item.name}
+                                                title={t(item.nameUi || item.name)}
                                             >
-                                                {item.name}
+                                                {t(item.nameUi || item.name)}
                                             </div>
                                             <div className={styles["extra-opt-btns"]}>
                                                 {/* 本地上传 */}

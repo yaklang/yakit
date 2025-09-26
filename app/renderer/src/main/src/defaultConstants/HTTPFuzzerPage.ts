@@ -279,6 +279,7 @@ customFailureChecker = func(https, req, rsp, fail) {
 export const HotPatchTempDefault = [
     {
         name: "爆破 AES-CBC",
+        nameUi: "HTTPFuzzerHotPatch.bruteforce_aes_cbc",
         temp: `decode = func(param) {
     key = codec.DecodeHex("31323334313233343132333431323334")~ /* 加密密钥 */
     iv = codec.DecodeHex("03395d68979ed8632646813f4c0bbdb3")~ /* 初始化向量 */
@@ -300,6 +301,7 @@ export const HotPatchTempDefault = [
     },
     {
         name: "爆破 RSA-OAEP",
+        nameUi: "HTTPFuzzerHotPatch.bruteforce_rsa_oaep",
         temp: `decode2 = func(param) {
     publicKey64 = \`LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUFvVlRNNjNuRXE3YXpGQ0Yza2lEKwpuMGgyMnlvWmd2eU92TDJaS001NDg0SWZ0TFFERGdLUjFGTGhBOHJpZDkzRUdYVTRwNVNKZHVHdmhLRmxqR2s1ClFXYmFDcWNOdVNqM3NuYi9RRXU0TXZ2ZmFTMStWd3R4Vk84Z0lIdTVMRCs4ZXNTT1FMdTZaY1Q4dVJ3Wm00c00KNEh0ZXltc2Fjc1lGZmpWME5vMklnMnNVSVJaOTBYR2NzK01CMVFlMFQzcHBHa2V1WGhORnpjMldzS3ZreXBRSApZUDlUeENXejUwR1VhV3YzK2xnUDJzUTZtcFd6SWRDeUZ2OWRlU1NWeE1uRlJQQzU0R0s1endFNmJ3blBhRHJJClhzS0IxN2VnK1NES0FFVHpEYi9YSGxXamZqcWo3aWlabUw5bHJxK3pTU2F0R2llMzM4NVdQMlpUVlZHcDZlSnQKd1FJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t\` /* base64格式的publicKey */
     publicKey = codec.DecodeBase64(publicKey64)~ 
@@ -325,6 +327,7 @@ export const HotPatchTempDefault = [
     },
     {
         name: "爆破 CSRF（带有保护用 token）",
+        nameUi: "HTTPFuzzerHotPatch.bruteforce_csrf_with_token",
         temp: `beforeRequest = func(req) { /* beforeRequest将在请求发起之前执行 */
     // 发送GET请求，获取响应
     rsp, _, err = poc.HTTP(\`\`) /* 这里可以替换为你需要的请求 */
@@ -353,6 +356,7 @@ export const HotPatchTempDefault = [
     },
     {
         name: "破解 Signature",
+        nameUi: "HTTPFuzzerHotPatch.crack_signature",
         temp: `decode3 = func(param) {
     key = \`1234123412341234\`
     usernameDict = ["admin"] /* 用户字典 */
@@ -379,6 +383,7 @@ export const HotPatchTempDefault = [
     },
     {
         name: "第三方验证码绕过",
+        nameUi: "HTTPFuzzerHotPatch.third_party_captcha_bypass",
         temp: `beforeRequest = func(req) {
     img_packet = \`\`
     img_packet_rsp, _ = poc.HTTP(img_packet, poc.https(true))~
@@ -414,53 +419,64 @@ export const defaultLabel: LabelDataProps[] = [
     {
         DefaultDescription: "调用codec模块保存的codec flow-fixed",
         Description: "调用codec模块保存的codec flow",
+        DescriptionUi: "HTTPFuzzerClickEditorMenu.save_codec_flow",
         Label: "{{codecflow(name|abc)}}"
     },
     {
         DefaultDescription: "反向正则（单个）-fixed",
         Description: "反向正则（单个）",
+        DescriptionUi: "HTTPFuzzerClickEditorMenu.reverse_regex_single",
         Label: "{{regen:one([0-9a-f]{3})}}"
     },
     {
         DefaultDescription: "反向正则（全部）-fixed",
         Description: "反向正则（全部）",
+        DescriptionUi: "HTTPFuzzerClickEditorMenu.reverse_regex_all",
         Label: "{{regen([0-9a-f]{3})}}"
     },
     {
         DefaultDescription: "时间戳（秒）-fixed",
         Description: "时间戳（秒）",
+        DescriptionUi: "HTTPFuzzerClickEditorMenu.timestamp_seconds",
         Label: "{{timestamp(seconds)}}"
     },
     {
         DefaultDescription: "验证码-fixed",
         Description: "验证码",
+        DescriptionUi: "HTTPFuzzerClickEditorMenu.captcha",
         Label: "{{int(0000-9999)}}"
     },
     {
         DefaultDescription: "随机数-fixed",
         Description: "随机数",
+        DescriptionUi: "HTTPFuzzerClickEditorMenu.random_number",
         Label: "{{randint(0,10)}}"
     },
     {
         DefaultDescription: "随机字符串-fixed",
         Description: "随机字符串",
+        DescriptionUi: "HTTPFuzzerClickEditorMenu.random_string",
         Label: "{{randstr}}"
     },
     {
         DefaultDescription: "整数范围-fixed",
         Description: "整数范围",
+        DescriptionUi: "HTTPFuzzerClickEditorMenu.integer_range",
         Label: "{{int(1-10)}}"
     },
     {
         DefaultDescription: "插入字典-fixed",
-        Description: "插入字典"
+        Description: "插入字典",
+        DescriptionUi: "HTTPFuzzerClickEditorMenu.insert_dictionary",
     },
     {
         DefaultDescription: "插入临时字典-fixed",
-        Description: "插入临时字典"
+        Description: "插入临时字典",
+        DescriptionUi: "HTTPFuzzerClickEditorMenu.insert_temp_dictionary",
     },
     {
         DefaultDescription: "插入文件-fixed",
-        Description: "插入文件"
+        Description: "插入文件",
+        DescriptionUi: "HTTPFuzzerClickEditorMenu.insert_file",
     }
 ]

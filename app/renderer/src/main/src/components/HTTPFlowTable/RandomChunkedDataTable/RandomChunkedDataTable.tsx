@@ -5,9 +5,11 @@ import {useCreation} from "ahooks"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {RandomChunkedResponse} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const RandomChunkedDataTable: React.FC<RandomChunkedDataTableProps> = React.memo((props) => {
     const {data} = props
+    const {t, i18n} = useI18nNamespaces(["history"])
     const columns: ColumnsTypeProps[] = useCreation(() => {
         return [
             {
@@ -16,7 +18,7 @@ const RandomChunkedDataTable: React.FC<RandomChunkedDataTableProps> = React.memo
                 width: 100
             },
             {
-                title: "内容",
+                title: t("RandomChunkedDataTable.content"),
                 dataKey: "Data",
                 render: (text) => {
                     const originValueStr = text ? Buffer.from(text).toString() : ""
@@ -33,25 +35,25 @@ const RandomChunkedDataTable: React.FC<RandomChunkedDataTableProps> = React.memo
                 }
             },
             {
-                title: "分块长度",
+                title: t("RandomChunkedDataTable.chunkLength"),
                 dataKey: "ChunkedLength",
-                width: 100
+                width: 140
             },
             {
-                title: "单个耗时(ms)",
+                title: t("RandomChunkedDataTable.singleDurationMs"),
                 dataKey: "CurrentChunkedDelayTime",
-                width: 120
+                width: 160
             },
             {
-                title: "总耗时(ms)",
+                title: t("RandomChunkedDataTable.totalDurationMs"),
                 dataKey: "TotalDelayTime",
-                width: 100
+                width: 160
             }
         ]
-    }, [])
+    }, [i18n.language])
     return (
         <div className={styles["chunked-table-container-wrapper"]}>
-            <div className={styles["chunked-table-container-title"]}>分块详情</div>
+            <div className={styles["chunked-table-container-title"]}>{t("RandomChunkedDataTable.chunkDetails")}</div>
             <TableVirtualResize<RandomChunkedResponse>
                 isRefresh={false}
                 titleHeight={0.01}

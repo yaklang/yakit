@@ -283,7 +283,6 @@ module.exports = (win, getClient) => {
                 if (e.Filename) {
                     const fileName = e.Filename
                     handleSaveFileSystem({
-                        title: "保存文件",
                         defaultPath: fileName
                     })
                         .then((file) => {

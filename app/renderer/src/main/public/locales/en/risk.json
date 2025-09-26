@@ -1,0 +1,104 @@
+{
+  "RiskQuery": {
+    "advanced_query": "Advanced Query",
+    "collapseFilter": "Collapse Filter"
+  },
+  "IPList": {
+    "ipStatistics": "IP Statistics"
+  },
+  "VulnerabilityLevel": {
+    "vulnerabilityLevel": "Vulnerability Level"
+  },
+  "VulnerabilityType": {
+    "top10VulnerabilityTypes": "Vulnerability Types Top 10",
+    "resetTipAfterManualSelection": "After manually selecting all vulnerability types, click reset to view all data"
+  },
+  "YakitRiskTable": {
+    "title": "Title",
+    "type": "Type",
+    "level": "Level",
+    "disposal_status": "Disposal Status",
+    "discovery_time": "Discovery Time",
+    "port_colon": "Port",
+    "vulnerability_description": "Vulnerability Description",
+    "solution": "Solution",
+    "source": "Source",
+    "reverse_token": "Reverse Token",
+    "parameter": "Parameter",
+    "retest": "Retest",
+    "false_positive_feedback": "False Positive Feedback",
+    "please_login_first": "Please log in first",
+    "feedback_success": "Feedback successful",
+    "vulnerability_not_scanned_by_plugin": "This vulnerability was not scanned by a plugin",
+    "select_export_fields": "Select Export Fields",
+    "risk_and_vulnerabilities": "Risks and Vulnerabilities",
+    "export_html_failed": "Export HTML failed:",
+    "delete_duplicate_title_data": "Delete duplicate title data",
+    "expand_filter": "Expand Filter",
+    "all": "All",
+    "unread": "Unread",
+    "mark_all_as_read": "Mark All as Read",
+    "export_as": "Export as...",
+    "confirm_delete_all_risks": "Are you sure you want to delete all risks and vulnerabilities? This cannot be undone.",
+    "confirm_delete_selected_risks": "Are you sure you want to delete the selected risks and vulnerabilities? This cannot be undone.",
+    "false_positive_feedback_reminder": "False Positive Feedback Reminder",
+    "confirm_feedback_prompt": "After confirming the feedback, the entire vulnerability information will be uploaded to the backend, and developers will use the information to fix the false positive. Do you confirm the feedback?",
+    "export_csv": "Export CSV",
+    "export_html": "Export HTML",
+    "vulnerability_detection": "Vulnerability Detection"
+  },
+  "YakitRiskSelectTag": {
+    "false_positive": "False Positive",
+    "ignore": "Ignore",
+    "processed": "Processed",
+    "pending": "Pending"
+  },
+  "YakitRiskDetails": {
+    "vulnerability_details": "Vulnerability Details",
+    "data_packet": "Data Packet",
+    "port_colon": "Port:",
+    "discovery_time_colon": "Discovery Time:",
+    "no_data_packet": "No data packet",
+    "retest": "Retest",
+    "type": "Type",
+    "source": "Source",
+    "vulnerability_detection": "Vulnerability Detection",
+    "reverse_token": "Reverse Token",
+    "verification_status": "Verification Status",
+    "verified": "Verified",
+    "not_verified": "Not Verified",
+    "vulnerability_description": "Vulnerability Description",
+    "solution": "Solution",
+    "details": "Details"
+  },
+  "YakitRiskDetailContent": {
+    "related_code_snippet": "Related Code Snippet"
+  },
+  "YakitCodeScanRiskDetails": {
+    "project": "Project:",
+    "discovery_time_colon": "Discovery Time:",
+    "open_in_code_audit": "Open in Code Audit",
+    "related_data_deleted": "Related data has been deleted"
+  },
+  "AuditResultDescribe": {
+    "vulnerability_detection": "Vulnerability Detection",
+    "type": "Type",
+    "scan_rules": "Scan Rules",
+    "vulnerability_description": "Vulnerability Description",
+    "solution": "Solution"
+  },
+  "RightBugAuditResultHeader": {
+    "discovery_time_colon": "Discovery Time:",
+    "project": "Project:"
+  },
+  "RightBugAuditResult": {
+    "vulnerability_detection": "Vulnerability Detection",
+    "type": "Type",
+    "scan_rules": "Scan Rules",
+    "vulnerability_description": "Vulnerability Description",
+    "solution": "Solution"
+  },
+  "AuditResultCollapse": {
+    "open_in_code_audit": "Open in Code Audit"
+  }
+}

@@ -4812,7 +4812,7 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
         onReset,
         ...reset
     } = props
-    const {t, i18n} = useI18nNamespaces(["history"])
+    const {t, i18n} = useI18nNamespaces(["history", "yakitUi"])
     const [show, setShow] = useState<boolean>(false)
 
     return (
@@ -4844,7 +4844,7 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
                                 }}
                             >
                                 <OutlineArrownarrowupIcon className={style["outlineFilterIcon"]} />{" "}
-                                {t("RangeInputNumberTableWrapper.asc")}
+                                {t("YakitTable.asc")}
                             </div>
                             <div
                                 className={classNames(style["body-length-filter"], {
@@ -4855,7 +4855,7 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
                                 }}
                             >
                                 <OutlineArrownarrowdownIcon className={style["outlineFilterIcon"]} />{" "}
-                                {t("RangeInputNumberTableWrapper.desc")}
+                                {t("YakitTable.desc")}
                             </div>
                         </>
                     )}

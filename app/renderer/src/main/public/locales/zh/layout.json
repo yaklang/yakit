@@ -88,5 +88,11 @@
       "and": "与",
       "unauthorizedCheck": "未授权检测"
     }
+  },
+  "MainOperatorContent": {
+    "save_fuzzer_history_success": "保存fuzzer历史成功",
+    "SubTabs": {
+      "save_webfuzzer_history": "保存WebFuzzer历史数据"
+    }
   }
 }
