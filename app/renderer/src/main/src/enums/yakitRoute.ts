@@ -115,5 +115,7 @@ export enum YakitRoute {
     /**AI 工具新增 */
     AddAITool = "add-ai-tool",
     /**AI 工具编辑 */
-    ModifyAITool = "modify-ai-tool"
+    ModifyAITool = "modify-ai-tool",
+    /** AI 知识库 */
+    AI_REPOSITORY = "ai-repository"
 }

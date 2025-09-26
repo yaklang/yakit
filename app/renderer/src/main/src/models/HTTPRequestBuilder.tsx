@@ -4,7 +4,7 @@ export interface HTTPRequestBuilderParams {
     IsHttps: boolean
 
     IsRawHTTPRequest: boolean
-    RawHTTPRequest: Uint8Array
+    RawHTTPRequest: Uint8Array | Buffer
 
     Method: string
     Input?: string

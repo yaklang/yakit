@@ -151,7 +151,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
     const [height, setHeight] = useState<number>(300) //表格所在div高度
     const [bodyHeight, setBodyHeight] = useState<number>(73) //表格body高度
-
     const [defColumns, setDefColumns] = useState<ColumnsTypeProps[]>(props.columns) // 表头
     const [columns, setColumns, getColumns] = useGetState<ColumnsTypeProps[]>(props.columns) // 表头
     const [lineLeft, setLineLeft] = useState<number>(0) // 拖拽线 left
@@ -402,28 +401,34 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             })
         }
     }, [pagination.page, pagination.total])
+
     useDeepCompareEffect(() => {
         const newColumns = props.columns.map((ele) => {
             const defColumnItem = columns.find((c) => c.dataKey === ele.dataKey)
             if (!defColumnItem) {
                 return ele
             }
+            const targetItemsWidth = ele.fixed && ele?.width ? ele?.width : defColumnItem.width || ele.width
             // 如果 columns 更新，保持之前的columnsItem的宽度
-            return {...ele, width: defColumnItem.width || ele.width}
+            return {...ele, width: targetItemsWidth}
         })
         setColumns([...newColumns])
         setDefColumns([...newColumns])
     }, [props.columns])
+
     useDeepCompareEffect(() => {
         getLeftOrRightFixedWidth()
     }, [columns])
+
     useEffect(() => {
         // if (!width) return
         getTableWidthAndColWidth(0)
-    }, [width])
+    }, [width, isRefresh])
+
     useEffect(() => {
         getTableRef(containerRef.current)
     }, [containerRef.current])
+
     useEffect(() => {
         setTimeout(() => {
             if (tableRef.current && tableRef.current.getBoundingClientRect()) {
@@ -431,13 +436,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             }
         }, 200)
     }, [tableRef.current, width])
+
     useClickAway(() => {
         setSelectedRows([])
         preSelectRef.current = undefined
     }, [wrapperRef])
+
     // 计算左右宽度以及固定列
     const getLeftOrRightFixedWidth = useMemoizedFn(() => {
-        // 改为回调模式解决拿不到最新的columns数据
         setColumns((oldColumns) => {
             const newColumns: ColumnsTypeProps[] = []
             oldColumns.forEach((l, index) => {

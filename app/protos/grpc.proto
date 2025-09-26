@@ -824,6 +824,12 @@ service Yak {
   // SSA Report
   rpc GenerateSSAReport(GenerateSSAReportRequest) returns (GenerateSSAReportResponse);
 
+  // SSA Project CRUD
+  rpc CreateSSAProject(CreateSSAProjectRequest) returns (CreateSSAProjectResponse);
+  rpc UpdateSSAProject(UpdateSSAProjectRequest) returns (UpdateSSAProjectResponse);
+  rpc DeleteSSAProject(DeleteSSAProjectRequest) returns (DeleteSSAProjectResponse);
+  rpc QuerySSAProject(QuerySSAProjectRequest) returns (QuerySSAProjectResponse);
+
   rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
   rpc QueryPluginEnv(QueryPluginEnvRequest) returns (PluginEnvData);
   rpc CreatePluginEnv(PluginEnvData) returns (Empty); // create
@@ -936,6 +942,7 @@ service Yak {
   // Knowledge Base
   rpc GetKnowledgeBaseNameList(Empty) returns(GetKnowledgeBaseNameListResponse);
   rpc GetKnowledgeBase(GetKnowledgeBaseRequest) returns(GetKnowledgeBaseResponse);
+  rpc GetKnowledgeBaseTypeList(Empty) returns(GetKnowledgeBaseTypeListResponse);
   rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns(GeneralResponse);
   rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns(GeneralResponse);
   rpc UpdateKnowledgeBase(UpdateKnowledgeBaseRequest) returns(GeneralResponse);
@@ -954,6 +961,7 @@ service Yak {
 
   rpc QueryEntity(QueryEntityRequest) returns (QueryEntityResponse);
   rpc QueryRelationship(QueryRelationshipRequest) returns (QueryRelationshipResponse);
+  rpc QuerySubERM(QuerySubERMRequest) returns (QuerySubERMResponse);
   rpc GenerateERMDot(GenerateERMDotRequest) returns (GenerateERMDotResponse);
 }
 
@@ -983,10 +991,12 @@ message Entity {
 message EntityFilter {
   uint64  BaseID = 1;
   string BaseIndex = 6;
+  string ReposName = 8;
   repeated uint64 IDs = 2;
   repeated string Types = 3;
   repeated string Names = 4;
   repeated string HiddenIndex = 5;
+  repeated string RuntimeID = 7;
 }
 
 message QueryEntityRequest {
@@ -1026,6 +1036,10 @@ message RelationshipFilter {
   repeated string SourceEntityIndex = 7;
   repeated string TargetEntityIndex = 8;
   repeated string AboutEntityIndex = 9; // Source or Target
+
+  repeated string UUIDS = 11;
+
+  repeated string RuntimeID = 12;
 }
 
 message QueryRelationshipRequest {
@@ -1037,6 +1051,16 @@ message QueryRelationshipResponse {
   repeated Relationship Relationships = 1;
   Paging Pagination = 2;
   uint64 Total = 3;
+}
+
+message QuerySubERMRequest {
+  EntityFilter Filter = 1;
+  uint64 Depth = 2;
+}
+
+message QuerySubERMResponse {
+  repeated Entity Entities = 1;
+  repeated Relationship Relationships = 2;
 }
 
 message GenerateERMDotRequest {
@@ -1155,6 +1179,8 @@ message BuildVectorIndexForKnowledgeBaseEntryRequest {
   int32 EfSearch = 9;
   int32 EfConstruct = 10;
   string DistanceFuncType = 11;
+
+  string RelatedEntityUUIDS = 14;
 }
 
 message BuildVectorIndexForKnowledgeBaseRequest {
@@ -1175,6 +1201,17 @@ message BuildVectorIndexForKnowledgeBaseRequest {
 
 message GetKnowledgeBaseNameListResponse {
   repeated string KnowledgeBaseNames = 1;
+}
+
+message KnowledgeBaseType{
+  string Name = 1;
+  string Description = 2;
+  string Value = 3;
+}
+
+
+message GetKnowledgeBaseTypeListResponse{
+  repeated KnowledgeBaseType KnowledgeBaseTypes = 1;
 }
 
 message GetKnowledgeBaseRequest {
@@ -1279,6 +1316,7 @@ message KnowledgeBaseEntry {
   repeated string PotentialQuestions = 10;
   repeated float PotentialQuestionsVector = 11;
   string HiddenIndex = 12;
+  string RelatedEntityUUIDS = 13;
 }
 
 message DeleteKnowledgeBaseRequest {
@@ -1306,6 +1344,7 @@ message ListVectorStoreEntriesRequest {
   int64 CollectionID = 1;
   string Keyword = 2;
   Paging Pagination = 3;
+  string CollectionName = 4;
 }
 
 message CreateVectorStoreEntryRequest {
@@ -1321,6 +1360,7 @@ message VectorStoreEntry {
   string Metadata = 4;
   repeated float Embedding = 5;
 }
+
 
 message ListVectorStoreEntriesResponse {
   repeated VectorStoreEntry Entries = 1;
@@ -1445,6 +1485,7 @@ message AITool {
   repeated string Keywords = 5;
   bool IsFavorite = 6;
   int64 ID = 7;
+  string VerboseName = 8; // 给用户看的展示名称
 }
 
 message GetAIToolListResponse {
@@ -1654,6 +1695,7 @@ message AIForgeFilter {
   // tag
   repeated string Tag = 4;
   int64 Id = 5;
+  bool ShowTemporary = 6; // 是否展示临时 forge，默认不展示
 }
 
 message AIForge {
@@ -1673,6 +1715,7 @@ message AIForge {
   string PersistentPrompt = 14; // 持久化提示语
   string PlanPrompt = 15; // 计划提示语
   string ResultPrompt = 16; // 结果提示语
+  string ForgeVerboseName = 17; // 给用户看的展示名称
 }
 
 message QueryAIForgeRequest {
@@ -1688,6 +1731,7 @@ message QueryAIForgeResponse {
 
 message GetAIForgeRequest {
   int64 ID = 1;
+  string ForgeName = 2;
 }
 
 message StartMcpServerRequest {
@@ -7148,6 +7192,8 @@ message SyntaxFlowScanRequest{
 
   // compile data only in memory 
   bool Memory = 8;
+  // 根据项目扫描
+  uint64 SSAProjectId = 9;
 }
 
 message QuerySyntaxFlowScanTaskRequest{
@@ -7412,6 +7458,8 @@ message SSARisksFilter {
   int64 AfterCreatedAt = 16;
   repeated string LatestDisposalStatus = 17;  // not_set | is_issue | not_issue | suspicious
   SSARiskDiffRequest SSARiskDiffRequest = 18;
+  // 增量查询
+  bool Incremental = 19;
 }
 
 message QuerySSARisksRequest {
@@ -8019,4 +8067,87 @@ message GenerateSSAReportResponse {
   bool Success = 1;         // 是否成功
   string Message = 2;       // 消息
   string ReportData = 3;    // 报告数据（当格式不是yakit时）
+}
+
+// SSA Project Messages
+message SSAProject {
+  int64 ID = 1;
+  int64 CreatedAt = 2;
+  int64 UpdatedAt = 3;
+  // 项目基础信息
+  string ProjectName = 4;
+  string Language = 5;
+  string Description = 6;
+  repeated string Tags = 7;
+  // 源代码来源
+  string CodeSourceConfig = 8;
+  // 编译配置选项
+  SSAProjectCompileConfig CompileConfig = 9;
+  // 扫描配置选项
+  SSAProjectScanConfig ScanConfig=10;
+  // 规则策略配置
+  SSAProjectScanRuleConfig RuleConfig =11;
+}
+
+message SSAProjectCompileConfig{
+  bool StrictMode = 1;
+  int64 PeepholeSize = 2;
+  repeated string ExcludeFiles = 3;
+  bool ReCompile = 4;
+  bool Memory = 5;
+  uint32  Concurrency = 6;
+}
+
+message SSAProjectScanConfig{
+  uint32 Concurrency = 1;
+  bool Memory = 2;
+  bool IgnoreLanguage = 3;
+}
+
+message SSAProjectScanRuleConfig{
+    SyntaxFlowRuleFilter RuleFilter =1;
+}
+
+message SSAProjectFilter {
+  repeated int64 IDs = 1;
+  repeated string ProjectNames = 2;
+  string SearchKeyword = 3;
+  repeated string Languages = 4;
+}
+
+message CreateSSAProjectRequest {
+  SSAProject Project = 1;
+}
+
+message CreateSSAProjectResponse {
+  SSAProject Project = 1;
+  DbOperateMessage Message = 2;
+}
+
+message UpdateSSAProjectRequest {
+  SSAProject Project = 1;
+}
+
+message UpdateSSAProjectResponse {
+  SSAProject Project = 1;
+  DbOperateMessage Message = 2;
+}
+
+message DeleteSSAProjectRequest {
+  SSAProjectFilter Filter = 1;
+}
+
+message DeleteSSAProjectResponse {
+  DbOperateMessage Message = 1;
+}
+
+message QuerySSAProjectRequest {
+  SSAProjectFilter Filter = 1;
+  Paging Pagination = 2;
+}
+
+message QuerySSAProjectResponse {
+  repeated SSAProject Projects = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
 }
