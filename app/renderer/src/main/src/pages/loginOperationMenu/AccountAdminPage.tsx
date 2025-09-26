@@ -1457,12 +1457,12 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
         setLoading(true)
         const {user_name, department, role_id} = values
         // 编辑
-        const departmentId: number = department[department.length - 1]
+        // const departmentId: number = department[department.length - 1]
         if (editInfo) {
             const params: API.EditUrmRequest = {
                 uid: editInfo.uid,
                 user_name,
-                department: departmentId,
+                department,
                 role_id: role_id?.key || role_id
             }
             NetWorkApi<API.EditUrmRequest, API.ActionSucceeded>({
@@ -1471,7 +1471,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                 data: params
             })
                 .then((res: API.ActionSucceeded) => {
-                    refresh(departmentId, editInfo?.department_id)
+                    refresh(department, editInfo?.department_id)
                     onCancel()
                 })
                 .catch((err) => {
@@ -1485,7 +1485,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
         else {
             const params: API.NewUrmRequest = {
                 user_name,
-                department: departmentId,
+                department,
                 role_id
             }
             NetWorkApi<API.NewUrmRequest, API.NewUrmResponse>({
@@ -1496,7 +1496,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                 .then((res: API.NewUrmResponse) => {
                     const {user_name, password} = res
                     onCancel()
-                    refresh(departmentId)
+                    refresh(department)
                     showYakitModal({
                         title: "账号信息",
                         content: (
@@ -1529,22 +1529,31 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
         }
     })
 
+    const filterOption = (input: string, option) => {
+        return (option!.children as unknown as string).toLowerCase().includes(input.toLowerCase())
+    }
+    
     return (
         <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
             <Form.Item name='user_name' label='用户名' rules={[{required: true, message: "该项为必填"}]}>
                 <YakitInput placeholder='请输入用户名' allowClear />
             </Form.Item>
             <Form.Item name='department' label='组织架构' rules={[{required: true, message: "该项为必填"}]}>
-                <YakitCascader options={depData} loadData={loadData} placeholder='请选择组织架构' changeOnSelect />
+                {/* <YakitCascader options={depData} loadData={loadData} placeholder='请选择组织架构' changeOnSelect /> */}
+                <YakitSelect showSearch placeholder='请选择组织架构' filterOption={filterOption}>
+                    {depData.map((item) => (
+                        <YakitSelect.Option key={item.value} value={item.value}>
+                            {item.label}
+                        </YakitSelect.Option>
+                    ))}
+                </YakitSelect>
             </Form.Item>
             <Form.Item name='role_id' label='角色' rules={[{required: true, message: "该项为必填"}]}>
                 <YakitSelect
                     showSearch
                     placeholder='请选择角色'
                     optionFilterProp='children'
-                    filterOption={(input, option) =>
-                        (option!.children as unknown as string).toLowerCase().includes(input.toLowerCase())
-                    }
+                    filterOption={filterOption}
                     onPopupScroll={(e) => {
                         const {target} = e
                         const ref: HTMLDivElement = target as unknown as HTMLDivElement
