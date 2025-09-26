@@ -89,7 +89,11 @@ module.exports = {
                         authWindow.close()
                         return
                     }
-                    httpApi("get", typeApi[type], {code: wxCode})
+                    httpApi({
+                        method: "get",
+                        url: typeApi[type],
+                        params: {code: wxCode}
+                    })
                         .then((res) => {
                             if (!authWindow) return
                             if (res.code !== 200) {
@@ -143,12 +147,12 @@ module.exports = {
                                 return
                             }
                             await new Promise((resolve, reject) => {
-                                httpApi(
-                                    "get",
-                                    typeApi[type],
-                                    {code: ghCode},
-                                    {headers: {Accept: "application/json, text/plain, */*"}}
-                                )
+                                httpApi({
+                                    method: "get",
+                                    url: typeApi[type],
+                                    params: {code: ghCode},
+                                    headers: {Accept: "application/json, text/plain, */*"}
+                                })
                                     .then((resp) => {
                                         if (resp.code !== 200) {
                                             win.webContents.send("fetch-signin-data", {

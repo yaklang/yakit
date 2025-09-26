@@ -2,7 +2,7 @@
  * TODO: OSS上传,后期需要整合
  * LINK - ./upload.js#split-upload
  */
-const {service} = require("../httpServer")
+const {httpApi} = require("../httpServer")
 const {ipcMain} = require("electron")
 const fs = require("fs")
 const customPath = require("path")
@@ -13,8 +13,6 @@ const PATH = require("path")
 
 module.exports = (win, getClient) => {
     const streamOSSplitSUpload = new Map()
-    // 上传次数缓存
-    let ossPostPackageHistory = {}
     // 分片上传 oss版本
     ipcMain.handle("oss-split-upload", (event, params) => {
         return new Promise(async (resolve, reject) => {
@@ -69,7 +67,6 @@ module.exports = (win, getClient) => {
                     }
                 }
                 win.webContents.send(`oss-split-upload-${token}-end`)
-                ossPostPackageHistory = {}
                 cancelTokenSource && cancelTokenSource.cancel()
                 streamOSSplitSUpload.delete(token)
                 resolve()
@@ -106,7 +103,6 @@ module.exports = (win, getClient) => {
         cancelToken
     }) => {
         return new Promise((resolve, reject) => {
-            ossPostPackageHistory[hash] ? (ossPostPackageHistory[hash] += 1) : (ossPostPackageHistory[hash] = 1)
             const percent = (chunkIndex + 1) / totalChunks
             const formData = new FormData()
             formData.append("file", chunkStream)
@@ -115,14 +111,16 @@ module.exports = (win, getClient) => {
             formData.append("hash", fileHashTime)
             formData.append("filedHash", filedHash)
             formData.append("type", type)
-
-            service({
+            httpApi({
                 url,
                 method: "post",
                 headers: {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
                 data: formData,
                 timeout: percent === 1 && totalChunks > 3 ? 60 * 1000 * 10 : 60 * 1000,
-                cancelToken
+                cancelToken,
+                argParams: {
+                    retryCount: 3
+                }
             })
                 .then(async (res) => {
                     if (res.code === 200) {
@@ -131,32 +129,24 @@ module.exports = (win, getClient) => {
                             res,
                             progress
                         })
-                    }
-                    if (res.code !== 200 && ossPostPackageHistory[hash] <= 3) {
-                        try {
-                            // 传输失败 重传3次
-                            await ossUploadBigFile({
-                                url,
-                                chunkStream,
-                                chunkIndex,
-                                totalChunks,
-                                fileName,
-                                hash,
-                                fileHashTime,
-                                filedHash,
-                                type,
-                                token,
-                                cancelToken
-                            })
-                        } catch (error) {
-                            reject(error)
+                        resolve()
+                    } else {
+                        let data = `未知错误`
+                        if (res?.data?.reason) {
+                            data = `code ${res.code}: ${res.data.reason.toString()}`
+                        } else if (res?.data) {
+                            data = `code ${res.code}: ${res.data.toString()}`
+                        } else if (res?.message?.message) {
+                            data = `code ${res.code}: ${res.message.message.toString()}`
+                        } else if (res) {
+                            data = `code ${res.code}: ${res.toString()}`
                         }
-                    } else if (ossPostPackageHistory[hash] > 3) {
-                        reject(res.data.reason)
+                        reject(data)
                     }
-                    resolve()
                 })
-                .catch(reject)
+                .catch((err) => {
+                    reject(`重传三次失败：${err}`)
+                })
         })
     }
 
