@@ -343,7 +343,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 <div
                                                     style={{
                                                         width: "calc(50% - 8px)",
-                                                        backgroundColor: "#f7f7f7",
+                                                        backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
                                                         padding: 16,
                                                         borderRadius: 8
                                                     }}
@@ -386,7 +386,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 <div
                                                     style={{
                                                         width: "calc(50% - 8px)",
-                                                        backgroundColor: "#f7f7f7",
+                                                        backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
                                                         padding: 16,
                                                         borderRadius: 8
                                                     }}
@@ -420,7 +420,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 <div
                                                     style={{
                                                         width: "calc(50% - 8px)",
-                                                        backgroundColor: "#f7f7f7",
+                                                        backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
                                                         padding: 16,
                                                         borderRadius: 8
                                                     }}
@@ -444,7 +444,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 <div
                                                     style={{
                                                         width: "calc(50% - 8px)",
-                                                        backgroundColor: "#f7f7f7",
+                                                        backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
                                                         padding: 16,
                                                         borderRadius: 8
                                                     }}
@@ -478,7 +478,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 style={{
                                                     marginTop: 16,
                                                     padding: 12,
-                                                    backgroundColor: "#f5f5f5",
+                                                    backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
                                                     borderRadius: 4
                                                 }}
                                             >

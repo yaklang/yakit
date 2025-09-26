@@ -589,6 +589,17 @@
 // cascader组件下拉框
 .cascader-dropdown-body {
     width: 400px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    :global {
+        .ant-cascader-menu-item {
+            &:hover {
+                background-color: var(--Colors-Use-Neutral-Bg);
+            }
+            &-active {
+                background-color: var(--Colors-Use-Neutral-Bg);
+            }
+        }
+    }
 }
 
 // .cascader-dropdown-wrapper {
