@@ -9,3 +9,7 @@ export interface AIReActLogProps {
     logs: AIChatQSData[]
     setLogVisible: (visible: boolean) => void
 }
+
+export interface AIReActTimelineMessageProps {
+    message?: string
+}

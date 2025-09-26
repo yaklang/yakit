@@ -1,11 +1,11 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 
 import styles from "./AIReActChat.module.scss"
-import {AIReActChatProps, AIReActLogProps} from "./AIReActChatType"
+import {AIReActChatProps, AIReActLogProps, AIReActTimelineMessageProps} from "./AIReActChatType"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
 import {AIReActChatContents, AIStreamChatContent} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaProps} from "@/pages/ai-agent/template/type"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ColorsChatIcon} from "@/assets/icon/colors"
@@ -17,20 +17,25 @@ import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {ChevrondownButton, ChevronleftButton, RoundedStopButton} from "./AIReActComponent"
 import {AIInputEvent} from "../hooks/grpcApi"
+import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const {mode} = props
 
-    const {chatIPCData} = useChatIPCStore()
-    const {chatIPCEvents, handleStart, handleStop} = useChatIPCDispatcher()
+    const {chatIPCData, timelineMessage} = useChatIPCStore()
+    const {chatIPCEvents, handleStart, handleStop, setTimelineMessage} = useChatIPCDispatcher()
     const {execute, logs, casualChat} = chatIPCData
 
     const wrapperRef = useRef<HTMLDivElement>(null)
 
     const [logVisible, setLogVisible] = useState<boolean>(false)
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true)
+
+    const [timelineVisible, setTimelineVisible] = useState<boolean>(false)
 
     const {activeChat, setting} = useAIAgentStore()
 
@@ -60,7 +65,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     /**自由对话 */
     const handleSend = useMemoizedFn((qs: string) => {
-        if (!activeChat) return
+        if (!activeChat?.id) return
         try {
             const chatMessage: AIInputEvent = {
                 IsFreeInput: true,
@@ -93,6 +98,25 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     }, [mode, showFreeChat])
     const handleCancelExpand = useMemoizedFn(() => {
         setShowFreeChat(false)
+    })
+    const onViewContext = useDebounceFn(
+        useMemoizedFn(() => {
+            if (!execute) return
+            if (!activeChat?.id) return
+            const info: AIInputEvent = {
+                IsSyncMessage: true,
+                SyncType: "timeline",
+                InteractiveJSONInput: ""
+            }
+            chatIPCEvents.onSend({token: activeChat.id, type: "", params: info})
+
+            setTimelineVisible(true)
+        }),
+        {wait: 300, leading: true}
+    ).run
+    const onClose = useMemoizedFn(() => {
+        setTimelineVisible(false)
+        setTimelineMessage("")
     })
     return (
         <>
@@ -144,6 +168,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                             <React.Suspense fallback={<div>loading...</div>}>
                                                 <AIReviewRuleSelect disabled={execute} />
                                             </React.Suspense>
+                                            {execute && (
+                                                <YakitButton type='text' onClick={onViewContext}>
+                                                    查看上下文
+                                                </YakitButton>
+                                            )}
                                         </>
                                     }
                                 />
@@ -157,6 +186,16 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                 </div>
             </div>
             {logVisible && <AIReActLog logs={uiLogs} setLogVisible={setLogVisible} />}
+            <YakitDrawer
+                title='上下文信息'
+                visible={timelineVisible}
+                onClose={onClose}
+                destroyOnClose
+                bodyStyle={{padding: 0}}
+                width={720}
+            >
+                <AIReActTimelineMessage message={timelineMessage} />
+            </YakitDrawer>
         </>
     )
 })
@@ -207,5 +246,22 @@ const AIReActLog: React.FC<AIReActLogProps> = React.memo((props) => {
                 <div className={styles["ai-re-act-log-no-more"]}>暂无更多数据</div>
             </div>
         </div>
+    )
+})
+const AIReActTimelineMessage: React.FC<AIReActTimelineMessageProps> = React.memo((props) => {
+    const {message} = props
+
+    return (
+        <YakitSpin spinning={!message}>
+            {!!message ? (
+                <>
+                    <pre className={styles["timeline-message"]}>
+                        <code>{message}</code>
+                    </pre>
+                </>
+            ) : (
+                <YakitEmpty />
+            )}
+        </YakitSpin>
     )
 })

@@ -10,6 +10,7 @@ export interface ChatIPCContextStore {
     reviewInfo?: AIChatReview
     planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
     reviewExpand: boolean
+    timelineMessage?: string
 }
 
 export interface AIChatIPCSendParams {
@@ -24,6 +25,7 @@ export interface ChatIPCContextDispatcher {
     handleStart: (qs: string) => void
     handleStop: () => void
     handleSend: (params: AIChatIPCSendParams) => void
+    setTimelineMessage: React.Dispatch<React.SetStateAction<string | undefined>>
 }
 
 export interface ChatIPCContextValue {
@@ -36,7 +38,8 @@ export default createContext<ChatIPCContextValue>({
         chatIPCData: cloneDeep(defaultChatIPCData),
         reviewInfo: undefined,
         planReviewTreeKeywordsMap: new Map(),
-        reviewExpand: false
+        reviewExpand: false,
+        timelineMessage: undefined
     },
     dispatcher: {
         chatIPCEvents: {
@@ -51,6 +54,7 @@ export default createContext<ChatIPCContextValue>({
         handleSendTask: () => {},
         handleSend: () => {},
         handleStart: () => {},
-        handleStop: () => {}
+        handleStop: () => {},
+        setTimelineMessage: () => {}
     }
 })

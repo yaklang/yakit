@@ -1,7 +1,7 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps} from "./type"
 import {AIAgentWelcome} from "../AIAgentWelcome/AIAgentWelcome"
-import {useCreation, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceFn, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AIChatInfo, AIChatReviewExtra} from "../type/aiChat"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
@@ -43,17 +43,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const [mode, setMode, getMode] = useGetSetState<AIAgentChatMode>("welcome")
 
-    // #region ai-agent-welcome 相关逻辑
-    const welcomeRef = useRef<AIAgentWelcomeRef>(null)
-    // #endregion
-
-    // #region ai-re-act-chat 相关逻辑
     const handleStartTriageChat = useMemoizedFn((qs: string) => {
         setMode("re-act")
         handleStart(qs)
     })
-
-    // #region ai-task-chat 相关逻辑
     const [isShowTask, setIsShowTask] = useState<boolean>(false)
 
     /**欢迎页中 Forge 启动ai */
@@ -76,7 +69,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setIsShowTask(true)
     })
 
-    // #region 外部元素触发的通信事件处理
     // 储存 replaceForgeNoPrompt 存放到缓存里值，阻止多次设置重复值
     const replaceForgeNoPromptCache = useRef(false)
     // 是否直接替换当前使用的forge模板，而不出现二次确认框
@@ -115,9 +107,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             emiter.off("onServerChatEvent", onEvents)
         }
     }, [])
-    // #endregion
-
-    //#region review
 
     // review数据中树的数据中需要的解释和关键词工具
     const [planReviewTreeKeywordsMap, {set: setPlanReviewTreeKeywords, reset: resetPlanReviewTreeKeywords}] = useMap<
@@ -127,6 +116,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     const [reviewInfo, setReviewInfo] = useState<AIChatReview>()
     const [reviewExpand, setReviewExpand] = useState<boolean>(true)
+
+    const [timelineMessage, setTimelineMessage] = useState<string>()
 
     const handleShowReview = useMemoizedFn((info: AIChatReview) => {
         console.log("reviewInfo", info)
@@ -145,9 +136,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleStopAfterChangeState()
         }
     })
-    //#endregion
-
-    //#region re-act版本的
+    const handleTimelineMessage = useDebounceFn(
+        useMemoizedFn((value: string) => {
+            setTimelineMessage(value)
+        }),
+        {wait: 300, leading: true}
+    ).run
     /** 当前对话唯一ID */
     const activeID = useCreation(() => {
         return activeChat?.id
@@ -162,7 +156,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onTaskReview: handleShowReview,
         onTaskReviewExtra: handleShowReviewExtra,
         onReviewRelease: handleReleaseReview,
-        onTaskStart: handleTaskStart
+        onTaskStart: handleTaskStart,
+        onTimelineMessage: handleTimelineMessage
     })
     const {execute, aiPerfData, logs, casualChat, taskChat} = chatIPCData
 
@@ -253,7 +248,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         resetPlanReviewTreeKeywords()
         setReviewExpand(true)
     })
-    // #endregion
 
     useEffect(() => {
         // ai-re-act 页面左侧侧边栏向 chatUI 发送的事件
@@ -289,10 +283,9 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         }
     })
 
-    //#region
     const store: ChatIPCContextStore = useCreation(() => {
-        return {chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand}
-    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand])
+        return {chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage}
+    }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage])
     const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
         return {
             chatIPCEvents: events,
@@ -301,20 +294,19 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleSaveChatInfo,
             handleStart,
             handleStop: onStop,
-            handleSend
+            handleSend,
+            setTimelineMessage
         }
     }, [events])
     useEffect(() => {
         console.log("chatIPCData", chatIPCData)
     }, [chatIPCData])
 
-    //#endregion
     return (
         <div className={styles["ai-agent-chat"]}>
             {mode === "welcome" ? (
                 <div className={styles["chat-body"]}>
                     <AIAgentWelcome
-                        ref={welcomeRef}
                         replaceForgeNoPrompt={replaceForgeNoPrompt}
                         setReplaceForgeNoPrompt={setReplaceForgeNoPrompt}
                         setCacheReplaceForgeNoPrompt={handleSetReplaceForgeNoPrompt}
