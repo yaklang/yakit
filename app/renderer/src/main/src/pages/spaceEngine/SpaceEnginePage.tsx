@@ -26,7 +26,9 @@ import {
     defaultParams
 } from "@/components/configNetwork/ConfigNetworkPage"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {OutputFormComponentsByType} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {
+    OutputFormComponentsByType
+} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {YakParamProps} from "../plugins/pluginsType"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
@@ -43,6 +45,7 @@ interface SpaceEnginePageProps {
     /**页面id */
     pageId: string
 }
+
 export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props) => {
     const {pageId} = props
     const {queryPagesDataById} = usePageInfo(
@@ -124,8 +127,11 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
         const params: SpaceEngineStartParams = {
             ...value,
             PageSize: 100,
-            Concurrent: 20
+            Concurrent: 20,
+            RandomDelay: value?.RandomDelay ?? 0,
+            RetryTimes: value?.RetryTimes ?? 3
         }
+        console.log("SpaceEngine 执行参数:", params)
         apiFetchPortAssetFromSpaceEngine(params, tokenRef.current).then(() => {
             setIsExecuting(true)
             setIsExpand(false)
@@ -163,18 +169,18 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                 <div>
                     {isExecuting
                         ? !isExpand && (
-                              <>
-                                  <YakitButton danger onClick={onStopExecute}>
-                                      停止
-                                  </YakitButton>
-                              </>
-                          )
+                        <>
+                            <YakitButton danger onClick={onStopExecute}>
+                                停止
+                            </YakitButton>
+                        </>
+                    )
                         : !isExpand && (
-                              <>
-                                  <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
-                                  <div className={styles["divider-style"]}></div>
-                              </>
-                          )}
+                        <>
+                            <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
+                            <div className={styles["divider-style"]}></div>
+                        </>
+                    )}
                 </div>
             </ExpandAndRetract>
             <div className={styles["space-engine-content"]}>
@@ -195,7 +201,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                         labelWrap={true}
                         initialValues={getDefaultSpaceEngineStartParams()}
                     >
-                        <SpaceEngineFormContent disabled={isExecuting} inViewport={inViewport} />
+                        <SpaceEngineFormContent disabled={isExecuting} inViewport={inViewport}/>
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                             <div className={styles["space-engine-form-operate"]}>
                                 {isExecuting ? (
@@ -216,16 +222,18 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                     </Form>
                 </div>
                 {isShowResult && (
-                    <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting} />
+                    <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting}/>
                 )}
             </div>
         </div>
     )
 })
+
 interface SpaceEngineFormContentProps {
     disabled: boolean
     inViewport: boolean
 }
+
 const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo((props) => {
     const {disabled, inViewport} = props
     const [globalNetworkConfig, setGlobalNetworkConfig] = useState<GlobalNetworkConfig>(defaultParams)
@@ -337,7 +345,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                 剩余额度：{Number(engineStatus.Remain) === -1 ? "无限制" : engineStatus.Remain}
                 {engineStatus.Type === "zoomeye" && (
                     <span className={styles["engine-help-zoomeye"]} onClick={() => onOpenHelpModal()}>
-                        <span>ZoomEye 基础语法</span> <OutlineQuestionmarkcircleIcon />
+                        <span>ZoomEye 基础语法</span> <OutlineQuestionmarkcircleIcon/>
                     </span>
                 )}
             </span>
@@ -349,10 +357,10 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             type: "white",
             width: "60vw",
             cancelButtonProps: {style: {display: "none"}},
-            onOkText: "我知道了",
+            okText: "我知道了",
             onOk: () => m.destroy(),
             bodyStyle: {padding: "8px 24px"},
-            content: <ZoomeyeHelp />
+            content: <ZoomeyeHelp/>
         })
     })
     return (
@@ -370,12 +378,22 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                     disabled={disabled}
                 />
             </Form.Item>
-            <OutputFormComponentsByType item={codecItem} codeType='plaintext' disabled={disabled} />
+            <OutputFormComponentsByType item={codecItem} codeType='plaintext' disabled={disabled}/>
             <Form.Item name='MaxPage' label='最大页数' rules={[{required: true}]}>
-                <YakitInputNumber min={1} type='horizontal' disabled={disabled} />
+                <YakitInputNumber min={1} type='horizontal' disabled={disabled}/>
             </Form.Item>
             <Form.Item name='MaxRecord' label='最大记录数' rules={[{required: true}]}>
-                <YakitInputNumber min={1} type='horizontal' disabled={disabled} />
+                <YakitInputNumber min={1} type='horizontal' disabled={disabled}/>
+            </Form.Item>
+            <Form.Item name='RandomDelay' label='随机延迟(秒)' rules={[{required: true}]}
+                       tooltip={{
+                           icon: <OutlineInformationcircleIcon/>,
+                           title: "随机延迟范围（秒），0 表示无延"
+                       }}>
+                <YakitInputNumber min={0} type='horizontal' disabled={disabled}/>
+            </Form.Item>
+            <Form.Item name='RetryTimes' label='重试次数' rules={[{required: true}]}>
+                <YakitInputNumber min={0} type='horizontal' disabled={disabled}/>
             </Form.Item>
             <Form.Item
                 name='ScanBeforeSave'
@@ -383,11 +401,11 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                 rules={[{required: true}]}
                 valuePropName='checked'
                 tooltip={{
-                    icon: <OutlineInformationcircleIcon />,
+                    icon: <OutlineInformationcircleIcon/>,
                     title: "开启扫描后会用Yakit的端口扫描进行验证"
                 }}
             >
-                <YakitSwitch size='large' disabled={disabled} />
+                <YakitSwitch size='large' disabled={disabled}/>
             </Form.Item>
         </>
     )

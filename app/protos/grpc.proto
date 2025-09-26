@@ -1749,6 +1749,8 @@ message FetchPortAssetFromSpaceEngineRequest {
   bool ScanBeforeSave = 6;
   string Proxy = 7;
   int64 Concurrent = 8;
+  uint32 RandomDelay = 9;
+  uint32 RetryTimes = 10;
 }
 
 message DeleteHybridScanTaskRequest {

@@ -97,6 +97,7 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
                 bodyStyle={{paddingLeft: 6, paddingRight: 4, paddingTop: 4, paddingBottom: 4}}
                 extra={<Space>
                     <YakitButton disabled={loading} onClick={() => {
+                        console.log("SpaceEngineOperator 执行参数:", params)
                         ipcRenderer.invoke("FetchPortAssetFromSpaceEngine", params, token).then(() => {
                             setLoading(true)
                         })
@@ -134,6 +135,10 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
                                       value={params.MaxPage}/>
                         <InputInteger label={"最大记录数"} setValue={MaxRecord => setParams({...params, MaxRecord})}
                                       value={params.MaxRecord}/>
+                        <InputInteger label={"随机延迟(秒)"} setValue={RandomDelay => setParams({...params, RandomDelay})}
+                                      value={params.RandomDelay || 0}/>
+                        <InputInteger label={"重试次数"} setValue={RetryTimes => setParams({...params, RetryTimes})}
+                                      value={params.RetryTimes || 3}/>
                     </Form>}
             </AutoCard>}
             firstMinSize={`350px`}
