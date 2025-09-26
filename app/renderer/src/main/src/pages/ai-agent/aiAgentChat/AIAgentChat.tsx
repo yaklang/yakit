@@ -277,11 +277,17 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     }, [])
 
     useUpdateEffect(() => {
+        onHistoryAfter()
+    }, [activeChat, execute])
+
+    /**切换历史后的处理逻辑 */
+    const onHistoryAfter = useMemoizedFn(() => {
         const token = events.fetchToken()
+        if (mode === "welcome") setMode("re-act")
         if (execute && activeChat?.id !== token) {
             events.onClose(token)
         }
-    }, [activeChat, execute])
+    })
 
     //#region
     const store: ChatIPCContextStore = useCreation(() => {
