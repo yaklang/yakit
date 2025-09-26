@@ -461,6 +461,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
     // 表格相关变量
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
+    const [isReset, setIsReset] = useState<boolean>(false)
     const [loading, setLoading] = useState(false)
     const sorterTableRef = useRef<SortProps>()
     const [data, setData] = useState<HTTPFlow[]>([])
@@ -734,6 +735,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     ).run
     const onBodyLengthSort = useMemoizedFn((sort) => {
         const newSort = bodyLengthSort === sort ? false : sort
+        if (newSort) {
+            setIsReset((prev) => !prev)
+        }
         setBodyLengthSort(newSort)
         sorterTableRef.current = {
             orderBy: newSort ? "body_length" : "Id",
@@ -744,7 +748,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     /** ---- 响应长度 end ----*/
 
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-        if (!getBodyLengthSort()) {
+        if (!getBodyLengthSort() || newSort.orderBy !== "") {
             if (newSort.order === "none") {
                 newSort.order = "desc"
             }
@@ -755,6 +759,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 newSort.orderBy = "request_length"
             }
             sorterTableRef.current = newSort
+            setBodyLengthSort(false)
         }
         setQuery((prev) => {
             const newQuery = {
@@ -2283,6 +2288,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 query={query}
                 loading={loading}
                 isRefresh={isRefresh}
+                isReset={isReset}
                 isShowTitle={true}
                 renderTitle={
                     <div className={styles["http-history-table-title"]}>
