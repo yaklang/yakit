@@ -2,8 +2,8 @@ import {yakitNotify} from "@/utils/notification"
 import {AIAgentSetting, RenderResourcesTemplates, RenderTools, RenderToolsParam} from "./aiAgentType"
 import cloneDeep from "lodash/cloneDeep"
 import isNil from "lodash/isNil"
-import {AIChatMessage} from "./type/aiChat"
 import {AIAgentSettingDefault} from "./defaultConstant"
+import {AIAgentGrpcApi} from "../ai-re-act/hooks/grpcApi"
 
 /** 处理默认值不同数据类型 */
 const handleDefaultValue = (value: any): string => {
@@ -175,13 +175,13 @@ export const convertMCPTools = (key: string, data: RenderToolsParam[], newData: 
  */
 /**
  * 将扁平数组转换为树形结构
- * @param {AIChatMessage.PlanTask[]} items 扁平数据数组
- * @returns {AIChatMessage.PlanTask[]} 树形结构数组
+ * @param {AIAgentGrpcApi.PlanTask[]} items 扁平数据数组
+ * @returns {AIAgentGrpcApi.PlanTask[]} 树形结构数组
  */
-export const reviewListToTrees = (items: AIChatMessage.PlanTask[]): AIChatMessage.PlanTask[] => {
+export const reviewListToTrees = (items: AIAgentGrpcApi.PlanTask[]): AIAgentGrpcApi.PlanTask[] => {
     // 创建映射表，以id为键存储所有节点
     const map = {}
-    const tree: AIChatMessage.PlanTask[] = []
+    const tree: AIAgentGrpcApi.PlanTask[] = []
 
     // 首先构建所有节点的映射
     items.forEach((item) => {
@@ -193,7 +193,7 @@ export const reviewListToTrees = (items: AIChatMessage.PlanTask[]): AIChatMessag
 
     // 构建树结构
     items.forEach((item) => {
-        const node: AIChatMessage.PlanTask = map[item.index]
+        const node: AIAgentGrpcApi.PlanTask = map[item.index]
         if (!node) return // 如果节点不存在，跳过
         const parentId = getParentId(item.index)
         // 如果有父节点，则添加到父节点的children中

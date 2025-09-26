@@ -253,11 +253,12 @@
         @extend %display-column-center;
         width: 100%;
         overflow-y: auto;
+        padding: 0 8px;
+        gap: 8px;
     }
     &-row {
         @extend %display-flex-center;
         width: 100%;
-        padding: 4px 6px;
         color: var(--Colors-Use-Neutral-Text-2-Primary);
         font-size: 12px;
         line-height: 16px;
@@ -277,4 +278,14 @@
 .side-header-btn {
     border-radius: 50%;
     background: var(--Colors-Use-Basic-Background);
+}
+.timeline-message {
+    width: 100%;
+    height: 100%;
+
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    padding: 8px;
+    margin: 0;
+    font-size: 12px;
 }

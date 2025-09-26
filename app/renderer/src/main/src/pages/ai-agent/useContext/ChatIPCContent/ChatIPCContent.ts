@@ -2,21 +2,30 @@ import {createContext} from "react"
 import {defaultChatIPCData} from "../../defaultConstant"
 import {cloneDeep} from "lodash"
 import {UseChatIPCEvents, UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
-import {AIChatReview, AIChatMessage} from "../../type/aiChat"
+import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIChatReview} from "@/pages/ai-re-act/hooks/aiRender"
 
 export interface ChatIPCContextStore {
     chatIPCData: UseChatIPCState
     reviewInfo?: AIChatReview
-    planReviewTreeKeywordsMap: Map<string, AIChatMessage.PlanReviewRequireExtra>
+    planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
     reviewExpand: boolean
+    timelineMessage?: string
 }
 
+export interface AIChatIPCSendParams {
+    /**InteractiveJSONInput */
+    value: string
+    id: string
+}
 export interface ChatIPCContextDispatcher {
     chatIPCEvents: UseChatIPCEvents
-    handleSendCasual: (value: string, id: string) => void
-    handleSendTask: (value: string, id: string) => void
+    handleSendCasual: (params: AIChatIPCSendParams) => void
+    handleSendTask: (params: AIChatIPCSendParams) => void
     handleStart: (qs: string) => void
     handleStop: () => void
+    handleSend: (params: AIChatIPCSendParams) => void
+    setTimelineMessage: React.Dispatch<React.SetStateAction<string | undefined>>
 }
 
 export interface ChatIPCContextValue {
@@ -29,7 +38,8 @@ export default createContext<ChatIPCContextValue>({
         chatIPCData: cloneDeep(defaultChatIPCData),
         reviewInfo: undefined,
         planReviewTreeKeywordsMap: new Map(),
-        reviewExpand: false
+        reviewExpand: false,
+        timelineMessage: undefined
     },
     dispatcher: {
         chatIPCEvents: {
@@ -40,9 +50,11 @@ export default createContext<ChatIPCContextValue>({
             onClose: () => {},
             onReset: () => {}
         },
-        handleSendCasual: (value: string, id: string) => {},
-        handleSendTask: (value: string, id: string) => {},
-        handleStart: (qs: string) => {},
-        handleStop: () => {}
+        handleSendCasual: () => {},
+        handleSendTask: () => {},
+        handleSend: () => {},
+        handleStart: () => {},
+        handleStop: () => {},
+        setTimelineMessage: () => {}
     }
 })

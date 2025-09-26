@@ -12,9 +12,9 @@ import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {getValueByType, getYakExecutorParam} from "@/pages/plugins/editDetails/utils"
 import {QSInputTextarea} from "../template/template"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {AIStartParams} from "../type/aiChat"
 import {yakitNotify} from "@/utils/notification"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 
 import classNames from "classnames"
 import styles from "./AITriageChatTemplate.module.scss"
@@ -144,7 +144,9 @@ export const AIForgeInfoOpt: React.FC<AIForgeInfoOptProps> = memo((props) => {
     )
 })
 
-/** @name 可选择的 forge 模块选项 */
+/** 
+ * @deprecated
+ * @name 可选择的 forge 模块选项 */
 export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
     const {wrapperRef, info, onBack, onSubmit} = props
 

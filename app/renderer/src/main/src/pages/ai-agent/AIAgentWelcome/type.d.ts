@@ -1,5 +1,5 @@
+import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import {Dispatch, ForwardedRef, SetStateAction} from "react"
-import {AIStartParams} from "../type/aiChat"
 
 export interface AIAgentWelcomeRef {
     /** 外接触发使用 forge 模板的功能 */

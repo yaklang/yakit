@@ -13,13 +13,16 @@ import {AIAgentSettingDefault, AIReviewRuleOptions} from "../defaultConstant"
 // import classNames from "classnames"
 import styles from "./AIChatSetting.module.scss"
 import {YakitRadioButtonsProps} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType"
+import useAIAgentStore from "../useContext/useStore"
+import useAIAgentDispatcher from "../useContext/useDispatcher"
 
 const ReviewPolicyOptions: YakitRadioButtonsProps["options"] = AIReviewRuleOptions.map((item) => ({
     value: item.value,
     label: item.label
 }))
 const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
-    const {setting, setSetting} = props
+    const {setting} = useAIAgentStore()
+    const {setSetting} = useAIAgentDispatcher()
     const [form] = Form.useForm()
 
     useEffect(() => {
@@ -30,11 +33,9 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
         setSetting && setSetting((old) => ({...old, ...changedValues}))
     })
 
-    const [triggerInit, setTriggerInit] = useState(false)
     const handeReset = useMemoizedFn(() => {
         form && form.setFieldsValue(cloneDeep(AIAgentSettingDefault))
         setSetting && setSetting(cloneDeep(AIAgentSettingDefault))
-        setTriggerInit((old) => !old)
     })
 
     // AI主动问用户问题相关逻辑

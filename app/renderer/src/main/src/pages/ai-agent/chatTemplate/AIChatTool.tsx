@@ -1,5 +1,4 @@
-import React, {ReactNode, useRef, useState} from "react"
-import {AIChatMessage, AIChatStreams, AIInputEvent} from "../type/aiChat"
+import React, {ReactNode} from "react"
 import styles from "./AIChatTool.module.scss"
 // import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import {SolidToolIcon} from "@/assets/icon/solid"
@@ -11,21 +10,16 @@ import {useCreation, useMemoizedFn} from "ahooks"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {isToolStdout} from "../utils"
 import {OutlineArrownarrowrightIcon} from "@/assets/icon/outline"
-import useAIAgentStore from "../useContext/useStore"
 import {AIChatToolDrawerContent, ChatStreamContent} from "./AIAgentChatTemplate"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
-const {ipcRenderer} = window.require("electron")
-
-interface AIChatToolProps {
-    item: AIChatMessage.AIToolData
-}
-export const AIChatTool: React.FC<AIChatToolProps> = React.memo((props) => {
-    return <div>总结</div>
-})
+import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
+import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIStreamOutput, AIToolResult} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIChatIPCSendParams} from "../useContext/ChatIPCContent/ChatIPCContent"
 
 interface AIChatToolColorCardProps {
-    toolCall: AIChatMessage.AIStreamOutput
+    toolCall: AIStreamOutput
 }
 
 /** @name AI工具按钮对应图标 */
@@ -33,14 +27,14 @@ const AIToolToIconMap: Record<string, ReactNode> = {
     "enough-cancel": <OutlineArrownarrowrightIcon />
 }
 export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.memo((props) => {
-    const {activeChat} = useAIAgentStore()
+    const {handleSend} = useChatIPCDispatcher()
     const {toolCall} = props
-    const {NodeId, stream, toolAggregation} = toolCall
+    const {NodeId, content, selectors} = toolCall
     const title = useCreation(() => {
         if (NodeId === "call-tools") return "Call-tools：参数生成中..."
         if (isToolStdout(NodeId)) return `${NodeId}：调用工具中...`
     }, [NodeId])
-    const onToolExtra = useMemoizedFn((item: AIChatMessage.ReviewSelector) => {
+    const onToolExtra = useMemoizedFn((item: AIAgentGrpcApi.ReviewSelector) => {
         switch (item.value) {
             case "enough-cancel":
                 onSkip(item)
@@ -49,19 +43,16 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                 break
         }
     })
-    const onSkip = useMemoizedFn((item: AIChatMessage.ReviewSelector) => {
-        if (!activeChat) return
-        if (!toolAggregation?.interactiveId) return
-        const token = activeChat.id
+    const onSkip = useMemoizedFn((item: AIAgentGrpcApi.ReviewSelector) => {
+        if (!selectors?.InteractiveId) return
         const jsonInput = {
             suggestion: item.value
         }
-        const info: AIInputEvent = {
-            IsInteractiveMessage: true,
-            InteractiveId: toolAggregation.interactiveId, // reviewData.data.id
-            InteractiveJSONInput: JSON.stringify(jsonInput)
+        const params: AIChatIPCSendParams = {
+            value: JSON.stringify(jsonInput),
+            id: selectors.InteractiveId
         }
-        ipcRenderer.invoke("send-ai-task", token, info)
+        handleSend(params)
     })
     return (
         <div className={styles["ai-chat-tool-card"]}>
@@ -70,9 +61,9 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                     <OutlineSparklesColorsIcon />
                     <div>{title}</div>
                 </div>
-                {isToolStdout(NodeId) && toolAggregation?.selectors && (
+                {isToolStdout(NodeId) && selectors?.selectors && (
                     <div className={styles["card-extra"]}>
-                        {toolAggregation.selectors.map((item) => {
+                        {selectors.selectors.map((item) => {
                             return (
                                 <YakitPopconfirm
                                     title='跳过会取消工具调用，使用当前输出结果进行后续工作决策，是否确认跳过'
@@ -90,18 +81,19 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                 )}
             </div>
             <div className={styles["card-content"]}>
-                <ChatStreamContent stream={stream} />
+                <ChatStreamContent stream={content} />
             </div>
         </div>
     )
 })
 
 interface AIChatToolItemProps {
-    item: AIChatMessage.AIToolData
+    time: number
+    item: AIToolResult
     type?: "re-act"
 }
 export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) => {
-    const {item, type} = props
+    const {time, item, type} = props
     const handleDetails = useMemoizedFn(() => {
         if (!item?.callToolId) return
         const m = showYakitDrawer({
@@ -173,7 +165,7 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
                     <SolidToolIcon />
                     <div>{item.toolName}</div>
                     {tag}
-                    <div className={styles["item-time"]}>{+item.time ? formatTimestamp(+item.time) : "-"}</div>
+                    <div className={styles["item-time"]}>{+time ? formatTimestamp(+time) : "-"}</div>
                 </div>
                 <YakitButton type='text'>查看详情</YakitButton>
             </div>

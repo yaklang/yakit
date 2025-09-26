@@ -1,39 +1,67 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {AIReActChatReviewProps} from "./AIReActChatReviewType"
-import classNames from "classnames"
-import styles from "./AIReActChatReview.module.scss"
+import {AIReActChatReviewProps, ForgeReviewFormProps} from "./AIReActChatReviewType"
 import {OutlineArrowrightIcon, OutlineHandIcon, OutlineWarpIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {useCountDown, useCreation, useMemoizedFn} from "ahooks"
 import {SolidAnnotationIcon, SolidVariableIcon} from "@/assets/icon/solid"
-import {AIChatMessage} from "@/pages/ai-agent/type/aiChat"
-import {Input} from "antd"
+import {Form, Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {QSInputTextarea} from "@/pages/ai-agent/template/template"
 import {yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import AIPlanReviewTree from "@/pages/ai-agent/aiPlanReviewTree/AIPlanReviewTree"
 import {handleFlatAITree} from "../hooks/utils"
 import {reviewListToTrees} from "@/pages/ai-agent/utils"
+import {grpcGetAIForge} from "@/pages/ai-agent/grpc"
+import {AIForge} from "@/pages/ai-agent/AIForge/type"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakParamProps} from "@/pages/plugins/pluginsType"
+import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {getValueByType} from "@/pages/plugins/editDetails/utils"
+import {AIAgentGrpcApi} from "../hooks/grpcApi"
+
+import classNames from "classnames"
+import styles from "./AIReActChatReview.module.scss"
+import {AIChatIPCSendParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
-    const {type, review, onSendAI, planReviewTreeKeywordsMap, isEmbedded, renderFooterExtra, expand, className} = props
+    const {
+        info: {type, data: review},
+        onSendAI,
+        planReviewTreeKeywordsMap,
+        isEmbedded,
+        renderFooterExtra,
+        expand,
+        className
+    } = props
 
-    const [reviewTreeOption, setReviewTreeOption] = useState<AIChatMessage.ReviewSelector>()
-    const [reviewTrees, setReviewTrees] = useState<AIChatMessage.PlanTask[]>([])
+    const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
+    const [reviewTrees, setReviewTrees] = useState<AIAgentGrpcApi.PlanTask[]>([])
     const [currentPlansId, setCurrentPlansId] = useState<string>("")
-    const initReviewTreesRef = useRef<AIChatMessage.PlanTask[]>([])
+    const initReviewTreesRef = useRef<AIAgentGrpcApi.PlanTask[]>([])
 
     useEffect(() => {
-        if (type === "plan_review_require") {
-            const data = review as AIChatMessage.PlanReviewRequire
-            const list: AIChatMessage.PlanTask[] = []
-            handleFlatAITree(list, data.plans.root_task)
-            initReviewTreesRef.current = [...list]
-            setReviewTrees(list)
-            setCurrentPlansId(data.plans_id)
+        switch (type) {
+            case "plan_review_require":
+                const data = review as AIAgentGrpcApi.PlanReviewRequire
+                const list: AIAgentGrpcApi.PlanTask[] = []
+                handleFlatAITree(list, data.plans.root_task)
+                initReviewTreesRef.current = [...list]
+                setReviewTrees(list)
+                setCurrentPlansId(data.plans_id)
+                break
+            case "require_user_interactive":
+                const {options} = review as AIAgentGrpcApi.AIReviewRequire
+                if (options && options.length > 0) {
+                    const value = options[0].prompt || options[0].prompt_title
+                    setRequireQS(value ? `${value}:` : "")
+                    setAIOptionsSelect(value)
+                }
+                break
+            default:
+                break
         }
-    }, [review])
+    }, [type, review])
     const reviewTitle = useCreation(() => {
         switch (type) {
             case "tool_use_review_require":
@@ -44,13 +72,15 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 return {title: "计划审阅", subTitle: "请审核是否要按以下计划继续执行？"}
             case "task_review_require":
                 return {title: "任务审阅", subTitle: "请审核是否要继续执行任务？"}
+            case "exec_aiforge_review_require":
+                return {title: "启动智能应用", subTitle: "请审核是否要继续执行？"}
             default:
                 return {title: "异常错误", subTitle: ""}
         }
     }, [type])
     const toolReview = useCreation(() => {
         if (type !== "tool_use_review_require") return null
-        const {tool, tool_description, params} = review as AIChatMessage.ToolUseReviewRequire
+        const {tool, tool_description, params} = review as AIAgentGrpcApi.ToolUseReviewRequire
         let paramsValue = "-"
         try {
             paramsValue = !!params ? JSON.stringify(params, null, 2) : "-"
@@ -72,9 +102,14 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             </div>
         )
     }, [review])
+    const forgeReview = useCreation(() => {
+        if (type !== "exec_aiforge_review_require") return null
+        const data = review as AIAgentGrpcApi.ExecForgeReview
+        return <ForgeReviewForm {...data} />
+    }, [review])
     const aiRequireReview = useCreation(() => {
         if (type === "require_user_interactive") {
-            const data = review as AIChatMessage.AIReviewRequire
+            const data = review as AIAgentGrpcApi.AIReviewRequire
             const {prompt} = data
             return <div className={styles["ai-require-ask"]}>{prompt}</div>
         }
@@ -83,7 +118,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
 
     const taskReview = useCreation(() => {
         if (type === "task_review_require") {
-            const data = review as AIChatMessage.TaskReviewRequire
+            const data = review as AIAgentGrpcApi.TaskReviewRequire
             const {task, short_summary, long_summary} = data
             return (
                 <div className={styles["review-task-tool-data"]}>
@@ -138,7 +173,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
 
     // #region 审阅选项-plan|task|tool相关逻辑
     const [editShow, setEditShow] = useState(false)
-    const editInfo = useRef<AIChatMessage.ReviewSelector>()
+    const editInfo = useRef<AIAgentGrpcApi.ReviewSelector>()
     const [reviewQS, setReviewQS] = useState("")
 
     const handleCallbackEdit = useMemoizedFn((cb: boolean) => {
@@ -146,7 +181,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             const {value, allow_extra_prompt} = editInfo.current
             const jsonInput: Record<string, string> = {suggestion: value}
             if (allow_extra_prompt && reviewQS) jsonInput.extra_prompt = reviewQS
-            onSendAI(JSON.stringify(jsonInput), (review as AIChatMessage.ToolUseReviewRequire).id)
+            onSendAIByValue(JSON.stringify(jsonInput))
         }
         editInfo.current = undefined
         setReviewQS("")
@@ -156,35 +191,56 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     /** 继续执行 */
     const handleContinue = useMemoizedFn(() => {
         if (!isContinue) return
-        const find = ((review as AIChatMessage.ToolUseReviewRequire)?.selectors || []).find(
+        const find = ((review as AIAgentGrpcApi.ToolUseReviewRequire)?.selectors || []).find(
             (item) => item.value === "continue"
         )
         if (!find) return
         const {value} = find
         const jsonInput: Record<string, string> = {suggestion: value}
-        onSendAI(JSON.stringify(jsonInput), (review as AIChatMessage.ToolUseReviewRequire).id)
+        onSendAIByValue(JSON.stringify(jsonInput))
     })
 
-    const noAIOptions = useCreation(() => {
-        if (!["tool_use_review_require", "plan_review_require", "task_review_require"].includes(type)) {
-            return null
+    const noAIOptionsList = useCreation(() => {
+        const {selectors} = review as AIAgentGrpcApi.ToolUseReviewRequire
+        const allowShowInput: AIAgentGrpcApi.ReviewSelector[] = []
+        const showButton: AIAgentGrpcApi.ReviewSelector[] = []
+        if (
+            [
+                "tool_use_review_require",
+                "plan_review_require",
+                "task_review_require",
+                "exec_aiforge_review_require"
+            ].includes(type)
+        ) {
+            selectors
+                ?.filter((item) => item.value !== "continue")
+                ?.forEach((el) => {
+                    if (el.allow_extra_prompt) {
+                        allowShowInput.push(el)
+                    } else {
+                        showButton.push(el)
+                    }
+                })
         }
-        const {selectors} = review as AIChatMessage.ToolUseReviewRequire
-        const showList = (selectors || []).filter((item) => item.value !== "continue")
-
-        return (
-            <div className={styles["review-selectors-wrapper"]}>
-                {showList.map((el) => {
-                    return (
-                        <YakitButton key={el.value} type='outline2' onClick={() => handleShowEdit(el)}>
-                            {el.prompt || el.value}
-                        </YakitButton>
-                    )
-                })}
-            </div>
-        )
+        return {allowShowInput, showButton}
     }, [review])
-    const handleShowEdit = useMemoizedFn((info: AIChatMessage.ReviewSelector) => {
+
+    const noAIOptionsAllowShowInput = useCreation(() => {
+        return (
+            !!noAIOptionsList.allowShowInput.length && (
+                <div className={styles["review-selectors-wrapper"]}>
+                    {noAIOptionsList.allowShowInput.map((el) => {
+                        return (
+                            <YakitButton key={el.value} type='outline2' onClick={() => handleShowEdit(el)}>
+                                {el.prompt || el.value}
+                            </YakitButton>
+                        )
+                    })}
+                </div>
+            )
+        )
+    }, [noAIOptionsList.allowShowInput])
+    const handleShowEdit = useMemoizedFn((info: AIAgentGrpcApi.ReviewSelector) => {
         switch (info.value) {
             case "freedom-review":
                 setReviewTreeOption(info)
@@ -193,7 +249,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 if (editShow) return
                 if (!info.allow_extra_prompt) {
                     const jsonInput: Record<string, string> = {suggestion: info.value}
-                    onSendAI(JSON.stringify(jsonInput), (review as AIChatMessage.ToolUseReviewRequire).id)
+                    onSendAIByValue(JSON.stringify(jsonInput))
                     return
                 }
                 editInfo.current = cloneDeep(info)
@@ -206,6 +262,8 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     // #region 审阅选项-AI交互用户相关逻辑
     const [requireLoading, setRequireLoading] = useState(false)
     const [requireQS, setRequireQS] = useState("")
+    const [aiOptionsSelect, setAIOptionsSelect] = useState<string>()
+
     const isRequireQS = useCreation(() => {
         return !!(requireQS && requireQS.trim())
     }, [requireQS])
@@ -216,15 +274,15 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             return
         }
         setRequireLoading(false)
-        onSendAIByType(requireQS)
+        handleAIRequireOpSend(requireQS)
         setTimeout(() => {
             setRequireLoading(false)
             setRequireQS("")
         }, 300)
     })
-    const handleAIRequireOpSend = useMemoizedFn((info: AIChatMessage.AIRequireOption) => {
-        const jsonInput: Record<string, string> = {suggestion: info.prompt || info.prompt_title}
-        onSendAIByType(JSON.stringify(jsonInput))
+    const handleAIRequireOpSend = useMemoizedFn((qs: string) => {
+        const jsonInput: Record<string, string> = {suggestion: qs}
+        onSendAIByValue(JSON.stringify(jsonInput))
     })
     /**审阅模式提交树,type: plan_review_require */
     const handleSubmitReviewTree = useMemoizedFn(() => {
@@ -234,85 +292,78 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 suggestion: reviewTreeOption.value,
                 "reviewed-task-tree": tree[0]
             }
-            onSendAIByType(JSON.stringify(jsonInput))
+            onSendAIByValue(JSON.stringify(jsonInput))
         }
     })
     const aiOptionsLength = useCreation(() => {
         if (type !== "require_user_interactive") return 0
 
         try {
-            const {options} = review as AIChatMessage.AIReviewRequire
+            const {options} = review as AIAgentGrpcApi.AIReviewRequire
             if (!options || options.length === 0) return 0
             return options.length
         } catch (error) {
             return 0
         }
     }, [review])
+    const onSetAIOptionsSelect = useMemoizedFn((value?: string) => {
+        setAIOptionsSelect(value)
+        setRequireQS(value ? `${value}:` : "")
+    })
     const aiOptions = useCreation(() => {
         if (type !== "require_user_interactive") {
             return null
         }
-        const {options} = review as AIChatMessage.AIReviewRequire
-
-        if (!options || options.length === 0)
-            return (
+        const {options} = review as AIAgentGrpcApi.AIReviewRequire
+        return (
+            <>
+                <div className={styles["ai-require-btns-wrapper"]}>
+                    {(options || []).map((ele) => {
+                        const isHover = aiOptionsSelect === (ele.prompt || ele.prompt_title)
+                        return (
+                            <YakitButton
+                                key={ele.prompt || ele.prompt_title}
+                                type='outline2'
+                                onClick={() => onSetAIOptionsSelect(ele.prompt || ele.prompt_title)}
+                                isHover={isHover}
+                            >
+                                {ele.prompt || ele.prompt_title}
+                            </YakitButton>
+                        )
+                    })}
+                </div>
                 <div className={styles["ai-require-input"]}>
-                    <QSInputTextarea
-                        className={styles["textarea-style"]}
+                    <Input.TextArea
+                        bordered={false}
                         placeholder='请告诉我更多信息...'
+                        autoSize={{minRows: 4, maxRows: 4}}
                         value={requireQS}
                         onChange={(e) => setRequireQS(e.target.value)}
                     />
                 </div>
-            )
-        return (
-            <>
-                {(options || []).map((el) => {
-                    if (!el.prompt && !el.prompt_title) return null
-                    return (
-                        <YakitButton
-                            key={el.prompt || el.prompt_title}
-                            type='outline2'
-                            onClick={() => handleAIRequireOpSend(el)}
-                        >
-                            {el.prompt || el.prompt_title}
-                        </YakitButton>
-                    )
-                })}
             </>
         )
-    }, [review, requireQS])
+    }, [review, requireQS, aiOptionsSelect])
     //#endregion
     // 是否显示继续执行按钮
     const isContinue = useCreation(() => {
         if (type === "require_user_interactive") return false
 
         if (!review) return
-        const {selectors} = review as AIChatMessage.ToolUseReviewRequire
+        const {selectors} = review as AIAgentGrpcApi.ToolUseReviewRequire
         if (!selectors || !Array.isArray(selectors) || selectors.length === 0) return false
 
-        const findIndex = (review as AIChatMessage.ToolUseReviewRequire).selectors.findIndex(
+        const findIndex = (review as AIAgentGrpcApi.ToolUseReviewRequire).selectors.findIndex(
             (item) => item.value === "continue"
         )
         return findIndex !== -1
     }, [review])
-    const onSendAIByType = useMemoizedFn((value: string) => {
-        switch (type) {
-            case "tool_use_review_require":
-                onSendAI(value, (review as AIChatMessage.ToolUseReviewRequire).id)
-                break
-            case "require_user_interactive":
-                onSendAI(value, (review as AIChatMessage.AIReviewRequire).id)
-                break
-            case "plan_review_require":
-                onSendAI(value, (review as AIChatMessage.PlanReviewRequire).id)
-                break
-            case "task_review_require":
-                onSendAI(value, (review as AIChatMessage.TaskReviewRequire).id)
-                break
-            default:
-                break
+    const onSendAIByValue = useMemoizedFn((value: string) => {
+        const params: AIChatIPCSendParams = {
+            value,
+            id: review.id
         }
+        onSendAI(params)
     })
 
     const footerNode = useCreation(() => {
@@ -331,6 +382,21 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                             </>
                         ) : (
                             <>
+                                {!!noAIOptionsList.showButton.length && (
+                                    <div className={styles["review-selectors-showButton-wrapper"]}>
+                                        {noAIOptionsList.showButton.map((el) => {
+                                            return (
+                                                <YakitButton
+                                                    key={el.value}
+                                                    type='outline2'
+                                                    onClick={() => handleShowEdit(el)}
+                                                >
+                                                    {el.prompt || el.value}
+                                                </YakitButton>
+                                            )
+                                        })}
+                                    </div>
+                                )}
                                 <YakitButton onClick={handleContinue}>
                                     继续执行
                                     <OutlineWarpIcon />
@@ -339,21 +405,21 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                         )}
                     </>
                 )}
-                {type === "require_user_interactive" && !aiOptionsLength && (
+                {type === "require_user_interactive" && (
                     <YakitButton disabled={!isRequireQS} loading={requireLoading} onClick={handleAIRequireQSSend}>
                         提交
                     </YakitButton>
                 )}
             </div>
         )
-    }, [isContinue, reviewTreeOption, type, aiOptionsLength, isRequireQS, requireLoading])
+    }, [isContinue, reviewTreeOption, type, aiOptionsLength, isRequireQS, requireLoading, noAIOptionsList.showButton])
     //#region ai评分
     const [targetDate, setTargetDate] = useState<number>()
     const [countdown] = useCountDown({
         targetDate
     })
     useEffect(() => {
-        const data = review as AIChatMessage.ToolUseReviewRequire
+        const data = review as AIAgentGrpcApi.ToolUseReviewRequire
         if (!!data?.aiReview?.seconds) {
             setTargetDate(Date.now() + data.aiReview.seconds * 1000)
         }
@@ -363,12 +429,14 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         let node: ReactNode = <></>
         switch (type) {
             case "tool_use_review_require":
-                const toolReviewData = review as AIChatMessage.ToolUseReviewRequire
+            case "exec_aiforge_review_require":
+                /**NOTE 定义问题 */
+                const toolReviewData = review as AIAgentGrpcApi.ToolUseReviewRequire
                 if (!!toolReviewData.aiReview) {
                     const {interactive_id, score, level} = toolReviewData.aiReview
                     node = (
                         <>
-                            {!!interactive_id && (!score || !countdown) && <div>AI正在评分中...</div>}
+                            {!!interactive_id && !score && !countdown && <div>评估中...</div>}
                             {!!score && (
                                 <div>
                                     AI风险评分:
@@ -427,12 +495,13 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                             {planReview}
                             {taskReview}
                             {toolReview}
+                            {forgeReview}
                             {aiRequireReview}
                         </div>
-                        {!reviewTreeOption && (
+                        {!reviewTreeOption && (aiOptions || noAIOptionsAllowShowInput) ? (
                             <div className={styles["reivew-options"]}>
                                 {aiOptions}
-                                {!!noAIOptions &&
+                                {!!noAIOptionsAllowShowInput &&
                                     (editShow ? (
                                         <div className={styles["review-input"]}>
                                             <Input.TextArea
@@ -460,15 +529,121 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                             </div>
                                         </div>
                                     ) : (
-                                        noAIOptions
+                                        noAIOptionsAllowShowInput
                                     ))}
                             </div>
-                        )}
+                        ) : null}
                     </>
                 </div>
                 {isEmbedded && <div className={styles["review-footer"]}>{footerNode}</div>}
             </div>
             {renderFooterExtra && renderFooterExtra(footerNode)}
         </>
+    )
+})
+
+const handleFetchParams = (jsonValue: string) => {
+    try {
+        const parseValue = JSON.parse(jsonValue)
+        if (Array.isArray(parseValue)) {
+            return parseValue as YakParamProps[]
+        } else {
+            return handleFetchParams(parseValue as string)
+        }
+    } catch (error) {
+        return []
+    }
+}
+const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo((props) => {
+    const {forge_name, forge_verbose_name, forge_desc, forge_params} = props
+    const [loading, setLoading] = useState<boolean>(false)
+    const [forge, setForge] = useState<AIForge>()
+    const [form] = Form.useForm()
+
+    useEffect(() => {
+        getGrpcGetAIForge()
+    }, [forge_name])
+    const getGrpcGetAIForge = useMemoizedFn(() => {
+        setLoading(true)
+        grpcGetAIForge({ForgeName: forge_name})
+            .then(setForge)
+            .finally(() =>
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            )
+    })
+    const params: YakParamProps[] | null = useCreation(() => {
+        if (!forge) return null
+        const {ParamsUIConfig} = forge
+
+        if (!ParamsUIConfig) {
+            return [
+                {
+                    Field: "query",
+                    FieldVerbose: "query",
+                    TypeVerbose: "text",
+                    DefaultValue: forge_params["query"] || "",
+                    Help: ""
+                }
+            ]
+        }
+        try {
+            const param: YakParamProps[] = handleFetchParams(ParamsUIConfig)
+            return param
+        } catch (error) {
+            return null
+        }
+    }, [forge, forge_params])
+    useEffect(() => {
+        if (!params) return
+        initRequiredFormValue()
+    }, [params])
+    const initRequiredFormValue = useMemoizedFn(() => {
+        if (!params) return
+        // 必填参数
+        let initRequiredFormValue: CustomPluginExecuteFormValue = {}
+        params.forEach((ele) => {
+            const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
+            initRequiredFormValue = {
+                ...initRequiredFormValue,
+                [ele.Field]: value
+            }
+        })
+        if (!form) return
+        form.resetFields()
+        form.setFieldsValue({...initRequiredFormValue})
+    })
+    return (
+        <YakitSpin spinning={loading} tip='加载中...'>
+            <div className={styles["forge-wrapper"]}>
+                <div className={styles["name"]}>
+                    智能应用:{forge?.ForgeVerboseName || forge_verbose_name || forge?.ForgeName || forge_name}
+                </div>
+
+                <div className={classNames(styles["forge-form-body"])}>
+                    <div className={styles["description"]}>描述:{forge?.Description || forge_desc}</div>
+                    <Form
+                        form={form}
+                        labelWrap={true}
+                        labelCol={{span: 6}}
+                        wrapperCol={{span: 14}}
+                        validateMessages={{
+                            /* eslint-disable no-template-curly-in-string */
+                            required: "${label} 是必填字段"
+                        }}
+                        disabled={true}
+                    >
+                        {params && (
+                            <ExecuteEnterNodeByPluginParams
+                                paramsList={params}
+                                pluginType={"yak"}
+                                isExecuting={false}
+                            />
+                        )}
+                    </Form>
+                </div>
+            </div>
+        </YakitSpin>
     )
 })

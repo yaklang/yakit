@@ -1,9 +1,11 @@
 import {CSSProperties, Dispatch, ReactNode, SetStateAction} from "react"
 import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
-import {AIChatInfo, AIChatMessage, AIChatReview, AIInputEvent, AIStartParams} from "./type/aiChat"
+import {AIChatInfo} from "./type/aiChat"
 import {AITreeNodeProps} from "./aiTree/type"
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AITabsEnum} from "./defaultConstant"
+import {AIAgentGrpcApi, AIStartParams} from "../ai-re-act/hooks/grpcApi"
+import {AIChatQSData, AIStreamOutput} from "../ai-re-act/hooks/aiRender"
 
 export interface AIAgentProps {}
 
@@ -95,14 +97,14 @@ export interface ServerInfoModalProps {
 export interface AIChatLeftSideProps {
     expand: boolean
     setExpand: Dispatch<SetStateAction<boolean>>
-    tasks: AIChatMessage.PlanTask[]
-    pressure: AIChatMessage.Pressure[]
-    cost: AIChatMessage.AICostMS[]
-    card: AIChatMessage.AIInfoCard[]
+    tasks: AIAgentGrpcApi.PlanTask[]
+    pressure: AIAgentGrpcApi.Pressure[]
+    cost: AIAgentGrpcApi.AICostMS[]
+    card: AIAgentGrpcApi.AIInfoCard[]
 }
 
 export interface AICardListProps {
-    list: AIChatMessage.AIInfoCard[]
+    list: AIAgentGrpcApi.AIInfoCard[]
 }
 
 // 对话框回答
@@ -114,13 +116,13 @@ export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
 }
 
 export interface AIAgentChatStreamProps {
-    tasks: AIChatMessage.PlanTask[]
-    streams: Record<string, AIChatMessage.AITaskStreamOutput[]>
+    tasks: AIAgentGrpcApi.PlanTask[]
+    streams: Record<string, AIChatQSData[]>
     defaultExpand?: boolean
 }
 export interface ChatStreamCollapseItemProps {
     expandKey: string
-    info: AIChatMessage.AITaskStreamOutput
+    info: AIStreamOutput
     timestamp: number
     secondExpand: boolean
     handleChangeSecondPanel: (expand: boolean, order: string) => void
@@ -128,7 +130,7 @@ export interface ChatStreamCollapseItemProps {
     defaultExpand?: boolean
 }
 export interface ChatStreamContentProps {
-    stream: AITaskStreamOutput["stream"]
+    stream: string
 }
 export interface ChatStreamCollapseProps {
     id?: string
@@ -154,23 +156,6 @@ export interface AIAgentChatFooterProps {
     onPositon: () => void
     onReExe: () => void
     onNewChat: () => void
-}
-
-// 审阅内容
-export interface AIAgentChatReviewProps {
-    expand: boolean
-    setExpand: Dispatch<SetStateAction<boolean>>
-    delayLoading: boolean
-    review: AIChatReview
-    planReviewTreeKeywordsMap: Map<string, AIChatMessage.PlanReviewRequireExtra>
-    onSend: (info: AIChatMessage.ReviewSelector, qs?: string) => void
-    onSendAIRequire: (value: string) => void
-}
-
-// 对话框日志
-export interface AIChatLogsProps {
-    logs: AIChatMessage.Log[]
-    onClose: () => void
 }
 // #endregion
 

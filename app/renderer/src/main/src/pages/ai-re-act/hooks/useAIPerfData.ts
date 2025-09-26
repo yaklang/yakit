@@ -2,11 +2,10 @@ import {useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
-import {AIChatMessage, AIOutputEvent} from "@/pages/ai-agent/type/aiChat"
 import {UseAIPerfDataEvents, UseAIPerfDataParams, UseAIPerfDataState} from "./type"
 import {handleGrpcDataPushLog} from "./utils"
-import {AITokenConsumption} from "./aiRender"
-import {AIAgentGrpcApi} from "./grpcApi"
+import {AIChatQSData, AITokenConsumption} from "./aiRender"
+import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 
 // 属于该 hook 处理数据的类型
 export const UseAIPerfDataTypes = ["consumption", "pressure", "ai_first_byte_cost_ms", "ai_total_cost_ms"]
@@ -15,8 +14,8 @@ function useAIPerfData(params?: UseAIPerfDataParams): [UseAIPerfDataState, UseAI
 
 /** 提供 AI 硬件相关性能数据 */
 function useAIPerfData(params?: UseAIPerfDataParams) {
-    const handlePushLog = useMemoizedFn((log: AIChatMessage.Log) => {
-        if (params?.pushLog) {
+    const handlePushLog = useMemoizedFn((log: AIChatQSData) => {
+        if (!!params?.pushLog) {
             params.pushLog(log)
         }
     })

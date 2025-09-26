@@ -1,7 +1,6 @@
 import React, {forwardRef, memo, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {AIAgentWelcomeProps} from "./type"
-import {AIStartParams} from "../type/aiChat"
 import {grpcGetAIForge} from "../grpc"
 import {AIForgeForm} from "../aiTriageChatTemplate/AITriageChatTemplate"
 import {AIChatTextarea} from "../template/template"
@@ -12,6 +11,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
 import {AIForge} from "../AIForge/type"
+import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 
 // import classNames from "classnames"
 import AIAgentWelcomebg from "@/assets/aiAgent/ai-agent-welcome-bg.png"
@@ -38,28 +38,6 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
         )
 
         const wrapperRef = useRef<HTMLDivElement>(null)
-
-        // #region  AI-Forge 模板相关逻辑
-        // const [forges, setForges] = useState<AIForge[]>([])
-        // const fetchForges = useMemoizedFn(() => {
-        //     const request: QueryAIForgeRequest = {
-        //         Pagination: {
-        //             Page: 1,
-        //             Limit: 3,
-        //             Order: "desc",
-        //             OrderBy: "id"
-        //         }
-        //     }
-        //     grpcQueryAIForge(request)
-        //         .then((res) => {
-        //             setForges(res?.Data || [])
-        //         })
-        //         .catch(() => {})
-        // })
-        // useEffect(() => {
-        //     fetchForges()
-        // }, [])
-        // #endregion
 
         // #region 问题相关逻辑
         const textareaProps: AIChatTextareaProps["textareaProps"] = useMemo(() => {
@@ -91,6 +69,7 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
             setReplaceShow(false)
         })
 
+        /**@deprecated */
         const handleReplaceActiveForge = useMemoizedFn((id: number) => {
             const forgeID = Number(id) || 0
             if (!forgeID) {
@@ -98,7 +77,7 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
                 return
             }
 
-            grpcGetAIForge(forgeID)
+            grpcGetAIForge({ID: forgeID})
                 .then((res) => {
                     const forgeInfo = cloneDeep(res)
                     if (!activeForge) setActiveForge(forgeInfo)
@@ -123,9 +102,6 @@ export const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = memo(
                 .catch(() => {})
         })
 
-        const handleActiveForge = useMemoizedFn((forge: AIForge) => {
-            handleReplaceActiveForge(forge.Id)
-        })
         const handleClearActiveForge = useMemoizedFn(() => {
             setActiveForge(undefined)
         })

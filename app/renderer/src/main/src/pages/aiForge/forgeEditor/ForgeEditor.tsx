@@ -119,7 +119,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
             }
             console.log("handleModifyInit-fetchCacheID", id)
 
-            grpcGetAIForge(id)
+            grpcGetAIForge({ID:id})
                 .then((res) => {
                     if (!res) {
                         yakitNotify("error", `未获取到待编辑模板的详情, 请关闭页面重试`)
@@ -262,16 +262,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                     yakitNotify("warning", "保存成功但未获取到执行的模板数据")
                     return
                 }
-                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
-                // setTimeout(() => {
-                //     emiter.emit(
-                //         "onServerChatEvent",
-                //         JSON.stringify({
-                //             type: "open-forge-form",
-                //             params: {value: forgeData.current}
-                //         })
-                //     )
-                // }, 100)
+                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))    
             })
             .catch(() => {})
     })

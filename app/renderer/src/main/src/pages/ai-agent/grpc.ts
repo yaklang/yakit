@@ -3,7 +3,7 @@ import {yakitNotify} from "@/utils/notification"
 import {RenderMCPClientInfo} from "./aiAgentType"
 import {MCPCallToolRequest, MCPClientResource} from "./type/mcpClient"
 import {AIEventQueryRequest, AIEventQueryResponse} from "./type/aiChat"
-import {AIForge, AIForgeFilter, QueryAIForgeRequest, QueryAIForgeResponse} from "./AIForge/type"
+import {AIForge, AIForgeFilter, GetAIForgeRequest, QueryAIForgeRequest, QueryAIForgeResponse} from "./AIForge/type"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -138,20 +138,13 @@ export const grpcQueryAIForge: APIFunc<QueryAIForgeRequest, QueryAIForgeResponse
     })
 }
 /** @name 查询 AI-Forge 单个详情 */
-export const grpcGetAIForge: APIFunc<number, AIForge> = (param, hiddenError) => {
+export const grpcGetAIForge: APIFunc<GetAIForgeRequest, AIForge> = (param, hiddenError) => {
     return new Promise(async (resolve, reject) => {
-        const id = Number(param) || 0
-        if (!id) {
-            if (!hiddenError) yakitNotify("error", `获取Forge详情失败: ID(${param})数据异常`)
-            reject(new Error("`获取Forge详情失败: ID(${param})数据异常`"))
-            return
-        }
-
         ipcRenderer
-            .invoke("GetAIForge", {ID: id})
+            .invoke("GetAIForge", param)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "查询Forge详情失败:" + e)
+                if (!hiddenError) yakitNotify("error", "grpcGetAIForge 查询Forge详情失败:" + e)
                 reject(e)
             })
     })

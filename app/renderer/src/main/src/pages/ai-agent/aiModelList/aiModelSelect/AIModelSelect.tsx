@@ -28,17 +28,21 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         () => {
             getAIModelList().then((res) => {
                 setAIModelOptions(res)
-                if (!setting?.AIService) {
-                    if (res && res.onlineModels.length > 0) {
-                        onSelectModel((res.onlineModels[0].Type as string) || "")
-                    } else if (res && res.localModels.length > 0) {
-                        onSelectModel((res.localModels[0].Name as string) || "")
-                    }
-                }
+                onInitValue(res)
             })
         },
         {wait: 200, leading: true}
     ).run
+
+    const onInitValue = useMemoizedFn((res) => {
+        if (!setting?.AIService) {
+            if (res && res.onlineModels.length > 0) {
+                onSelectModel((res.onlineModels[0].Type as string) || "")
+            } else if (res && res.localModels.length > 0) {
+                onSelectModel((res.localModels[0].Name as string) || "")
+            }
+        }
+    })
 
     const onSelectModel = useMemoizedFn((value: string) => {
         setSetting && setSetting((old) => ({...old, AIService: value}))

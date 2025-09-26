@@ -3,10 +3,11 @@ import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import {checkStreamValidity, convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatMessage, AIOutputEvent} from "@/pages/ai-agent/type/aiChat"
 import {UseYakExecResultEvents, UseYakExecResultParams, UseYakExecResultState} from "./type"
 import {handleGrpcDataPushLog} from "./utils"
 import {v4 as uuidv4} from "uuid"
+import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
+import {AIChatQSData} from "./aiRender"
 
 // 属于该 hook 处理数据的类型
 export const UseYakExecResultTypes = ["yak_exec_result"]
@@ -14,21 +15,21 @@ export const UseYakExecResultTypes = ["yak_exec_result"]
 function useYakExecResult(params?: UseYakExecResultParams): [UseYakExecResultState, UseYakExecResultEvents]
 
 function useYakExecResult(params?: UseYakExecResultParams) {
-    const handlePushLog = useMemoizedFn((log: AIChatMessage.Log) => {
+    const handlePushLog = useMemoizedFn((log: AIChatQSData) => {
         if (params?.pushLog) {
             params.pushLog(log)
         }
     })
 
     // card
-    const cardKVPair = useRef<Map<string, AIChatMessage.AICacheCard>>(new Map<string, AIChatMessage.AICacheCard>())
+    const cardKVPair = useRef<Map<string, AIAgentGrpcApi.AICacheCard>>(new Map<string, AIAgentGrpcApi.AICacheCard>())
     const cardTimeRef = useRef<NodeJS.Timeout | null>(null)
-    const [card, setCard] = useState<AIChatMessage.AIInfoCard[]>([])
+    const [card, setCard] = useState<AIAgentGrpcApi.AIInfoCard[]>([])
     const [yakExecResultLogs, setYakExecResultLogs] = useState<StreamResult.Log[]>([]) // log:目前只有file
 
-    const onHandleCard = useMemoizedFn((value: AIChatMessage.AICardMessage) => {
+    const onHandleCard = useMemoizedFn((value: AIAgentGrpcApi.AICardMessage) => {
         const logData = value.content as StreamResult.Log
-        const checkInfo: AIChatMessage.AICard = checkStreamValidity(value.content as StreamResult.Log)
+        const checkInfo: AIAgentGrpcApi.AICard = checkStreamValidity(value.content as StreamResult.Log)
         if (!checkInfo) return
         const {id, data, tags} = checkInfo
         const {timestamp} = logData
@@ -47,7 +48,7 @@ function useYakExecResult(params?: UseYakExecResultParams) {
     const onSetCard = useMemoizedFn(() => {
         if (cardTimeRef.current) return
         cardTimeRef.current = setTimeout(() => {
-            const cacheCard: AIChatMessage.AIInfoCard[] = convertCardInfo(cardKVPair.current)
+            const cacheCard: AIAgentGrpcApi.AIInfoCard[] = convertCardInfo(cardKVPair.current)
             setCard(() => [...cacheCard])
             cardTimeRef.current = null
         }, 500)
@@ -58,7 +59,7 @@ function useYakExecResult(params?: UseYakExecResultParams) {
             let ipcContent = Uint8ArrayToString(res.Content) || ""
 
             if (res.Type === "yak_exec_result") {
-                const data = JSON.parse(ipcContent) as AIChatMessage.AIPluginExecResult
+                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIPluginExecResult
                 onHandleYakExecResult(data)
                 return
             }
@@ -66,11 +67,11 @@ function useYakExecResult(params?: UseYakExecResultParams) {
             handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
         }
     })
-    const onHandleYakExecResult = useMemoizedFn((value: AIChatMessage.AIPluginExecResult) => {
+    const onHandleYakExecResult = useMemoizedFn((value: AIAgentGrpcApi.AIPluginExecResult) => {
         try {
             if (!value?.IsMessage) return
             const message = value?.Message || ""
-            const obj: AIChatMessage.AICardMessage = JSON.parse(Buffer.from(message, "base64").toString("utf8"))
+            const obj: AIAgentGrpcApi.AICardMessage = JSON.parse(Buffer.from(message, "base64").toString("utf8"))
 
             if (obj.type !== "log") return
             const content = obj.content as StreamResult.Log
@@ -89,7 +90,7 @@ function useYakExecResult(params?: UseYakExecResultParams) {
     /**
      * @description 该方法可以记录yak_exec_result中所有的日志，但是目前只对接level:file;后续根据可需求更改
      */
-    const onHandleYakExecResultLogs = useMemoizedFn((obj: AIChatMessage.AICardMessage) => {
+    const onHandleYakExecResultLogs = useMemoizedFn((obj: AIAgentGrpcApi.AICardMessage) => {
         const log = obj.content as StreamResult.Log
         setYakExecResultLogs((perLog) => [...perLog, {...log, id: uuidv4()}])
     })

@@ -3,30 +3,35 @@
  */
 
 import {generateTaskChatExecution} from "@/pages/ai-agent/defaultConstant"
-import {AIChatMessage, AIOutputEvent, AIStartParams} from "@/pages/ai-agent/type/aiChat"
 import {Uint8ArrayToString} from "@/utils/str"
 import {v4 as uuidv4} from "uuid"
+import {AIAgentGrpcApi, AIOutputEvent, AIStartParams} from "./grpcApi"
+import {AIChatQSData} from "./aiRender"
 
-/** 将接口数据(AIOutputEvent)转换为日志数据(AIChatMessage.Log), 并push到日志队列中 */
+/** 将接口数据(AIOutputEvent)转换为日志数据(AIAgentGrpcApi.Log), 并push到日志队列中 */
 export const handleGrpcDataPushLog = (params: {
     type: string
     info: AIOutputEvent
-    pushLog: (log: AIChatMessage.Log) => void
+    pushLog: (log: AIChatQSData) => void
 }) => {
     try {
         const {type, info, pushLog} = params
         let ipcContent = Uint8ArrayToString(info.Content) || ""
-        const logInfo: AIChatMessage.Log = {
+        const logInfo: AIChatQSData = {
             id: uuidv4(),
-            level: type || "info",
-            message: `${JSON.stringify({...info, Content: ipcContent, StreamDelta: undefined})}`
+            type: "log",
+            data: {
+                level: type || "info",
+                message: `${JSON.stringify({...info, Content: ipcContent, StreamDelta: undefined})}`
+            },
+            Timestamp: info.Timestamp
         }
         pushLog(logInfo)
     } catch (error) {}
 }
 
 /** 将树结构任务列表转换成一维数组 */
-export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMessage.PlanTask) => {
+export const handleFlatAITree = (sum: AIAgentGrpcApi.PlanTask[], task: AIAgentGrpcApi.PlanTask) => {
     if (!Array.isArray(sum)) return null
     sum.push(generateTaskChatExecution(task))
     if (task.subtasks && task.subtasks.length > 0) {

@@ -2,7 +2,6 @@ import {ReactNode} from "react"
 import {AIAgentSetting, AIAgentTab} from "./aiAgentType"
 import {MCPTransportType} from "./type/mcpClient"
 import {OutlineCogIcon, OutlineSparklesIcon, OutlineTemplateIcon, OutlineWrenchIcon} from "@/assets/icon/outline"
-import {AIChatMessage} from "./type/aiChat"
 import {YakitSideTabProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {genDefaultPagination, PaginationSchema} from "../invoker/schema"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
@@ -20,6 +19,7 @@ import {
     YakIcon
 } from "./aiModelList/icon"
 import {UseAIPerfDataState, UseChatIPCState} from "../ai-re-act/hooks/type"
+import {AIAgentGrpcApi} from "../ai-re-act/hooks/grpcApi"
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
@@ -63,11 +63,11 @@ export const MCPTransportTypeList: {value: MCPTransportType; label: string}[] = 
 ]
 
 /**
- * @name 生成一个[AIChatMessage.PlanTask]任务信息
+ * @name 生成一个[AIAgentGrpcApi.PlanTask]任务信息
  * @description 生成的信息内不存在subtasks字段值
  */
-export const generateTaskChatExecution: (info?: AIChatMessage.PlanTask) => AIChatMessage.PlanTask = (info) => {
-    let data: AIChatMessage.PlanTask = {
+export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAgentGrpcApi.PlanTask = (info) => {
+    let data: AIAgentGrpcApi.PlanTask = {
         index: "",
         name: "",
         goal: "",
@@ -149,17 +149,17 @@ export const AIReviewRuleOptions = [
     {
         value: "manual",
         label: "Manual",
-        describe:'所有审阅都由用户自己操作'
+        describe: "所有审阅都由用户自己操作"
     },
     {
         value: "yolo",
         label: "Yolo",
-        describe:"所有审阅默认执行，不进行询问"
+        describe: "所有审阅默认执行，不进行询问"
     },
     {
         value: "ai",
         label: "AI",
-        describe:"由AI判断审阅风险，低风险默认执行，高风险由用户操作"
+        describe: "由AI判断审阅风险，低风险默认执行，高风险由用户操作"
     }
 ]
 

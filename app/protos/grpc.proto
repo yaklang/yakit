@@ -1209,7 +1209,10 @@ message KnowledgeBaseType{
   string Value = 3;
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8031d5d38 (update proto file)
 message GetKnowledgeBaseTypeListResponse{
   repeated KnowledgeBaseType KnowledgeBaseTypes = 1;
 }
