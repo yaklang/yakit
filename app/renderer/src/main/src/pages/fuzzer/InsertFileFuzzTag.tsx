@@ -10,6 +10,8 @@ import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import i18n from "@/i18n/i18n"
 
 interface InsertFileFuzzTagProp {
     onFinished: (i: string) => any
@@ -20,6 +22,7 @@ type ModeProps = "file" | "file:line" | "file:dir"
 
 const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
     const {defaultMode} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
     const [filename, setFilename] = useState("")
     const [mode, setMode] = useState<ModeProps>(defaultMode || "file")
     const configBaseUrlRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
@@ -34,13 +37,13 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
             onSubmitCapture={(e) => {
                 e.preventDefault()
                 if (!filename) {
-                    info("选中的文件名为空")
+                    info(t("InsertFileFuzzTag.selectedFilenameEmpty"))
                     return
                 }
                 const index = filename.lastIndexOf(".")
                 if (mode === "file:dir") {
                     if (index !== -1) {
-                        failed("请输入正确的路径")
+                        failed(t("YakitFormDragger.enterValidPath"))
                         return
                     }
                 }
@@ -66,15 +69,15 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                     options={[
                         {
                             value: "file",
-                            label: "文件内容"
+                            label: t("InsertFileFuzzTag.fileContent")
                         },
                         {
                             value: "file:line",
-                            label: "按行读取文件"
+                            label: t("InsertFileFuzzTag.readFileByLine")
                         },
                         {
                             value: "file:dir",
-                            label: "文件夹内所有"
+                            label: t("InsertFileFuzzTag.allInFolder")
                         }
                     ]}
                     value={mode}
@@ -86,7 +89,7 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
             <YakitFormDragger
                 formItemProps={{
                     name: "filename",
-                    label: "选择路径",
+                    label: t("InsertFileFuzzTag.selectPath"),
                     labelCol: {span: 5},
                     wrapperCol: {span: 14}
                 }}
@@ -106,7 +109,7 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
             />
             <Form.Item label={<></>} colon={false}>
                 <YakitButton type='primary' htmlType='submit' size={"large"}>
-                    确定所选内容
+                    {t("InsertFileFuzzTag.confirmSelection")}
                 </YakitButton>
             </Form.Item>
         </Form>
@@ -116,6 +119,7 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
 const {ipcRenderer} = window.require("electron")
 
 const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
     const [content, setContent] = useState("")
     const [loading, setLoading] = useState(false)
     const [mode, setMode] = useState<"file" | "file:line" | "file:dir">("file:line")
@@ -130,7 +134,7 @@ const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                 ipcRenderer
                     .invoke("SaveTextToTemporalFile", {Text: StringToUint8Array(content)})
                     .then((rsp: {FileName: string}) => {
-                        info("生成临时字典文件:" + rsp.FileName)
+                        info(t("InsertTextToFuzzTag.generateTempDictionaryFile") + rsp.FileName)
                         const filename = rsp.FileName
                         switch (mode) {
                             case "file":
@@ -142,7 +146,7 @@ const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                         }
                     })
                     .catch((e) => {
-                        failed(`生成临时字典失败:${e}`)
+                        failed(`${t("InsertTextToFuzzTag.generateTempDictionaryFailed")}${e}`)
                     })
             }}
         >
@@ -152,11 +156,11 @@ const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                     options={[
                         {
                             value: "file",
-                            label: "文件内容"
+                            label: t("InsertTextToFuzzTag.fileContent")
                         },
                         {
                             value: "file:line",
-                            label: "按行读取文件"
+                            label: t("InsertTextToFuzzTag.readFileByLine")
                         }
                     ]}
                     value={mode}
@@ -165,11 +169,17 @@ const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                     }}
                 />
             </Form.Item>
-            <InputItem label={"文本"} textarea={true} textareaRow={8} value={content} setValue={setContent} />
-            <Form.Item colon={false} label={" "} style={{textAlign: 'right'}}>
-                <YakitButton type='primary' htmlType='submit' size="large">
+            <InputItem
+                label={t("InsertTextToFuzzTag.text")}
+                textarea={true}
+                textareaRow={8}
+                value={content}
+                setValue={setContent}
+            />
+            <Form.Item colon={false} label={" "} style={{textAlign: "right"}}>
+                <YakitButton type='primary' htmlType='submit' size='large'>
                     {" "}
-                    确定插入标签{" "}
+                    {t("InsertTextToFuzzTag.confirmInsertTag")}{" "}
                 </YakitButton>
             </Form.Item>
         </Form>
@@ -178,7 +188,7 @@ const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
 
 export const insertFileFuzzTag = (onInsert: (i: string) => any, defaultMode?: ModeProps) => {
     let m = showYakitModal({
-        title: "选择文件并插入",
+        title: i18n.language === "zh" ? "选择文件并插入" : "Select File and Insert",
         width: "800px",
         content: (
             <>
@@ -197,7 +207,7 @@ export const insertFileFuzzTag = (onInsert: (i: string) => any, defaultMode?: Mo
 
 export const insertTemporaryFileFuzzTag = (onInsert: (i: string) => any) => {
     let m = showYakitModal({
-        title: "复制你想要作为字典的文本",
+        title: i18n.language === "zh" ? "复制你想要作为字典的文本" : "Copy the text you want to use as a dictionary",
         width: "40%",
         content: (
             <>

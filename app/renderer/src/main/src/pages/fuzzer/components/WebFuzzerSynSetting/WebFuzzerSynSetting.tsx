@@ -13,6 +13,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {yakitNotify} from "@/utils/notification"
 import {AdvancedConfigValueProps} from "../../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {toolDelInvalidKV} from "@/utils/tool"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const rangeList = [
     {
@@ -69,6 +70,7 @@ const WebFuzzerSynSetting: React.FC<WebFuzzerSynSettingProps> = React.memo((prop
         shallow
     )
     const {pageId, onClose} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
     const [loading, setLoading] = useState<boolean>(false)
     const [currentSelectPage, setCurrentSelectPage] = useState<PageNodeItemProps>()
     const [pageList, setPageList] = useState<PageNodeItemProps[]>([])
@@ -92,7 +94,7 @@ const WebFuzzerSynSetting: React.FC<WebFuzzerSynSettingProps> = React.memo((prop
         form.validateFields().then((value: WebFuzzerSynSettingFormValueProps) => {
             const wfPageList: PageProps | undefined = pages.get(YakitRoute.HTTPFuzzer)
             if (!wfPageList) {
-                yakitNotify("error", "WF页面数据为空")
+                yakitNotify("error", t("WebFuzzerSynSetting.wfPageDataEmpty"))
                 return
             }
             if (
@@ -102,7 +104,7 @@ const WebFuzzerSynSetting: React.FC<WebFuzzerSynSettingProps> = React.memo((prop
                     currentSelectPage.pageParamsInfo.webFuzzerPageInfo
                 )
             ) {
-                yakitNotify("error", "同步数据页面未找到")
+                yakitNotify("error", t("WebFuzzerSynSetting.syncDataPageNotFound"))
                 return
             }
             setLoading(true)
@@ -156,7 +158,7 @@ const WebFuzzerSynSetting: React.FC<WebFuzzerSynSettingProps> = React.memo((prop
     }, [pageList])
     return (
         <div className={styles["wf-syn-setting"]}>
-            <div className={styles["tip"]}>数据来源页面标签名:{currentSelectPage?.pageName || "-"}</div>
+            <div className={styles["tip"]}>{t("WebFuzzerSynSetting.dataSourcePageTagName")}{currentSelectPage?.pageName || "-"}</div>
             <div className={styles["wf-syn-setting-content"]}>
                 <Form
                     form={form}
@@ -169,9 +171,9 @@ const WebFuzzerSynSetting: React.FC<WebFuzzerSynSettingProps> = React.memo((prop
                     }}
                 >
                     <Form.Item
-                        label='同步内容'
+                        label={t("WebFuzzerSynSetting.syncContent")}
                         name='type'
-                        rules={[{required: true, message: `请选中同步的内容`}]}
+                        rules={[{required: true, message: t("WebFuzzerSynSetting.pleaseSelectSyncContent")}]}
                         className={styles["setting-type-form-item"]}
                     >
                         <Checkbox.Group>
@@ -185,14 +187,14 @@ const WebFuzzerSynSetting: React.FC<WebFuzzerSynSettingProps> = React.memo((prop
                         </Checkbox.Group>
                     </Form.Item>
                     <Form.Item
-                        label='同步范围'
+                        label={t("WebFuzzerSynSetting.syncScope")}
                         name='range'
                         extra={
                             range === "batch" && (
                                 <Form.Item
                                     name='ids'
                                     style={{marginTop: 8}}
-                                    rules={[{required: true, message: `请选择需要同步的页面`}]}
+                                    rules={[{required: true, message: t("WebFuzzerSynSetting.pleaseSelectPageToSync")}]}
                                 >
                                     <YakitSelect
                                         allowClear
@@ -217,10 +219,10 @@ const WebFuzzerSynSetting: React.FC<WebFuzzerSynSettingProps> = React.memo((prop
                 </Form>
                 <div className={styles["setting-footer"]}>
                     <YakitButton type='outline1' onClick={onCancel}>
-                        取消
+                        {t("YakitButton.cancel")}
                     </YakitButton>
                     <YakitButton type='primary' onClick={onSyn} loading={loading}>
-                        同步
+                        {t("WebFuzzerSynSetting.sync")}
                     </YakitButton>
                 </div>
             </div>

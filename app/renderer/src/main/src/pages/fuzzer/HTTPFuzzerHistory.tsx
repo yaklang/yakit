@@ -18,6 +18,7 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {DeleteFuzzerConfigRequest, apiDeleteFuzzerConfig} from "../layout/mainOperatorContent/utils"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface HTTPFuzzerHistorySelectorProp {
     currentSelectId?: number
@@ -53,6 +54,7 @@ export interface HTTPFuzzerTaskDetail {
 
 export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> = React.memo((props) => {
     const {currentSelectId, fuzzerTabIndex} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
     const [tasks, setTasks] = useState<HTTPFuzzerTaskDetail[]>([])
     const [loading, setLoading] = useState(false)
     const [paging, setPaging] = useState<PaginationSchema>({Limit: 10, Order: "", OrderBy: "", Page: 1})
@@ -136,7 +138,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                         }}
                     />
                     <YakitPopconfirm
-                        title={"将会删除数据包与缓存数据，确定删除吗"}
+                        title={t("HTTPFuzzerHistorySelector.confirmDeletePackets")}
                         onConfirm={() => {
                             deleteAll()
                         }}
@@ -175,7 +177,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                 </Form.Item>
             </Form> */}
             <div style={{display: "flex", alignItems: "center", gap: 8}}>
-                <span>快速搜索：</span>
+                <span>{t("HTTPFuzzerHistorySelector.quickSearch")}</span>
                 <YakitInput.Search
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
@@ -183,7 +185,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                     onPressEnter={() => reload(1, limit)}
                 />
                 <span>
-                    查看全部
+                    {t("YakitButton.view_all_button")}
                     <YakitSwitch checked={showAll} onChange={onSwitchShowAll} />
                 </span>
             </div>
@@ -278,9 +280,17 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                                                 </YakitTag>
                                             </div>
 
-                                            <YakitTag>共{i.HTTPFlowTotal}个</YakitTag>
+                                            <YakitTag>
+                                                {t("HTTPFuzzerHistorySelector.totalFlows", {
+                                                    HTTPFlowTotal: i.HTTPFlowTotal
+                                                })}
+                                            </YakitTag>
                                             {i.HTTPFlowSuccessCount != i.HTTPFlowTotal && (
-                                                <YakitTag>成功:{i.HTTPFlowSuccessCount}个</YakitTag>
+                                                <YakitTag>
+                                                    {t("HTTPFuzzerHistorySelector.successCount", {
+                                                        HTTPFlowSuccessCount: i.HTTPFlowSuccessCount
+                                                    })}
+                                                </YakitTag>
                                             )}
                                             {currentSelectId == i.Id && <CheckIcon className={styles["check-icon"]} />}
                                         </div>

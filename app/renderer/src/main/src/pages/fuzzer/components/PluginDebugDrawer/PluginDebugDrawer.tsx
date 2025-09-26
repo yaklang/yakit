@@ -17,9 +17,11 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {useMenuHeight} from "@/store/menuHeight"
 import yaml from "js-yaml"
 import {yakitNotify} from "@/utils/notification"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) => {
     const {route, defaultCode, visible, getContainer, setVisible} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const {menuBodyHeight} = useMenuHeight(
         (s) => ({
             menuBodyHeight: s.menuBodyHeight
@@ -48,7 +50,7 @@ const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) =
             codeObject = yaml.load(code)
             if (typeof codeObject !== "object") {
                 codeObject = {}
-                yakitNotify("info", "未解析到相关基础信息")
+                yakitNotify("info", t("PluginDebugDrawer.noBaseInfoParsed"))
             }
         } catch (e) {
             yakitNotify("error", "Error parsing YAML: " + e)
@@ -86,11 +88,11 @@ const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) =
             height={heightDrawer}
             visible={visible}
             className={classNames(styles["plugin-debugger-drawer"])}
-            title='插件调试'
+            title={t("PluginDebugDrawer.pluginDebug")}
             extra={
                 <div className={styles["header-extra-wrapper"]}>
                     <YakitButton type='primary' icon={<SolidStoreIcon />} onClick={handleSkipAddYakitScriptPage}>
-                        存为插件
+                        {t("PluginDebugDrawer.saveAsPlugin")}
                     </YakitButton>
                     <YakitButton type='text2' icon={<OutlineXIcon />} onClick={onClose} />
                 </div>

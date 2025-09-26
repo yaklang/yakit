@@ -104,5 +104,17 @@
     "use_right_tool_generate_regex": "可用右侧辅助工具，自动生成正则",
     "auto_extract_regex": "自动提取正则",
     "select_in_editor_generate_regex": "在编译器中选中内容，即可自动生成正则"
+  },
+  "AgentConfigModal": {
+    "proxy_auth_config": "配置代理认证",
+    "protocol": "协议",
+    "address": "地址",
+    "please_enter_address": "请输入地址",
+    "invalid_address_format": "输入地址格式不正确",
+    "example_address": "例如：127.0.0.1:7890",
+    "username": "用户名",
+    "please_enter_username": "请输入用户名",
+    "password": "密码",
+    "please_enter_password": "请输入密码"
   }
 }

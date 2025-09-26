@@ -119,7 +119,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
         segmentedTypeReset,
         onClickSegmentedType
     } = props
-
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
     const {direction, top = 0, left = 0, bottom = 0, right = 0, scrollTop = 0} = editorInfo || {}
     const [labelData, setLabelData] = useState<QueryFuzzerLabelResponseProps[]>([])
     const [selectLabel, setSelectLabel] = useState<string>()
@@ -287,7 +287,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                         }}
                     >
                         <IconSolidTagIcon className={styles["tag"]} />
-                        {right - left < 550 ? <></> : <div className={styles["content"]}>插入标签</div>}
+                        {right - left < 550 ? <></> : <div className={styles["content"]}>{t("HTTPFuzzerClickEditorMenu.insertTag")}</div>}
                         {segmentedType === "insert-tag" ? (
                             <ChevronUpIcon className={styles["up"]} />
                         ) : (
@@ -307,7 +307,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                         }}
                     >
                         <IconSolidAIIcon className={styles["tag"]} />
-                        {right - left < 550 ? <></> : <div className={styles["content"]}>AI工具</div>}
+                        {right - left < 550 ? <></> : <div className={styles["content"]}>{t("HTTPFuzzerClickEditorMenu.aiTool")}</div>}
                         {segmentedType === "aiplugin" ? (
                             <ChevronUpIcon className={styles["up"]} />
                         ) : (
@@ -338,7 +338,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                 >
                     <div className={styles["menu-header"]}>
                         <div className={styles["menu-header-left"]}>
-                            常用标签
+                            {t("HTTPFuzzerClickEditorMenu.commonTags")}
                             {!(menuWidth && menuWidth < 220) && (
                                 <span className={styles["menu-header-left-count"]}>{labelData.length || ""}</span>
                             )}
@@ -349,11 +349,11 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                 type='text'
                                 onClick={() => addLabel()}
                             >
-                                添加 <PlusOutlined />
+                                {t("YakitButton.add")} <PlusOutlined />
                             </YakitButton>
                             <div className={styles["line"]}></div>
                             <YakitButton type='text2' style={{color: "#85899E"}} onClick={() => reset()}>
-                                复原
+                                {t("YakitButton.restore")}
                             </YakitButton>
                         </div>
                     </div>
@@ -468,7 +468,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                                                 }
                                                                             }}
                                                                         >
-                                                                            确认
+                                                                            {t("YakitButton.confirm")}
                                                                         </YakitButton>
                                                                     ) : (
                                                                         <>
@@ -546,6 +546,7 @@ export interface AIPluginComponentProps {
 
 export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
     const {toOpenAiChat} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const [loading, setLoading] = useState<boolean>(false)
     const [dataSource, setDataSource] = useState<{key: string; value: string}[]>([])
     useEffect(() => {
@@ -576,7 +577,7 @@ export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
                         : [
                               {
                                   key: "aiplugin-Get*plug-in",
-                                  value: "获取插件"
+                                  value: t("AIPluginComponent.getPlugin")
                               }
                           ]
                 )
@@ -622,53 +623,54 @@ interface decodeDataProps {
 }
 const EncodeComponent: React.FC<EncodeComponentProps> = (props) => {
     const {insert} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const decodeData = useRef<decodeDataProps[]>([
         {
             color: "rgba(136, 99, 247, 0.6)",
             avatar: "m",
-            title: "Md5 编码",
+            title: t("EncodeComponent.md5Encode"),
             sub_title: "md5",
             encode: (v: string) => `{{md5(${v})}}`
         },
         {
             color: "rgba(74, 148, 248, 0.6)",
             avatar: "b",
-            title: "Base64 编码",
+            title: t("EncodeComponent.base64Encode"),
             sub_title: "base64enc",
             encode: (v: string) => `{{base64enc(${v})}}`
         },
         {
             color: "rgba(74, 148, 248, 0.6)",
             avatar: "b",
-            title: "先 Base64 后 URL 编码",
+            title: t("EncodeComponent.base64ThenUrlEncode"),
             sub_title: "{{urlenc(base64enc(xxx))}}",
             encode: (v: string) => `{{urlenc(base64enc(${v}))}}`
         },
         {
             color: "rgba(86, 201, 145, 0.6)",
             avatar: "h",
-            title: "HEX 编码（十六进制编码）",
+            title: t("EncodeComponent.hexEncode"),
             sub_title: "hexenc",
             encode: (v: string) => `{{hexenc(${v})}}`
         },
         {
             color: "rgba(244, 115, 107, 0.6)",
             avatar: "h",
-            title: "HTML 编码",
+            title: t("EncodeComponent.htmlEncode"),
             sub_title: "htmlenc",
             encode: (v: string) => `{{htmlenc(${v})}}`
         },
         {
             color: "rgba(255, 182, 96, 0.6)",
             avatar: "u",
-            title: "URL 编码",
+            title: t("EncodeComponent.urlEncode"),
             sub_title: "urlenc",
             encode: (v: string) => `{{urlenc(${v})}}`
         },
         {
             color: "rgba(218, 95, 221, 0.6)",
             avatar: "u",
-            title: "URL 编码（只编码特殊字符）",
+            title: t("EncodeComponent.urlEncodeSpecial"),
             sub_title: "urlescape",
             encode: (v: string) => `{{urlescape(${v})}}`
         }
@@ -695,46 +697,47 @@ const EncodeComponent: React.FC<EncodeComponentProps> = (props) => {
 
 const DecodeLableComponent: React.FC<EncodeComponentProps> = (props) => {
     const {insert} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const decodeData = useRef<decodeDataProps[]>([
         {
             color: "rgba(136, 99, 247, 0.6)",
             avatar: "b",
-            title: "Base64解码",
+            title: t("DecodeLableComponent.base64Decode"),
             sub_title: "base64dec",
             encode: (v: string) => `{{base64dec(${v})}}`
         },
         {
             color: "rgba(74, 148, 248, 0.6)",
             avatar: "d",
-            title: "双重URL解码",
+            title: t("DecodeLableComponent.doubleUrlDecode"),
             sub_title: "doubleurldec",
             encode: (v: string) => `{{doubleurldec(${v})}}`
         },
         {
             color: "rgba(74, 148, 248, 0.6)",
             avatar: "h",
-            title: "十六进制解码",
+            title: t("DecodeLableComponent.hexDecode"),
             sub_title: "hexdec",
             encode: (v: string) => `{{hexdec(${v})}}`
         },
         {
             color: "rgba(86, 201, 145, 0.6)",
             avatar: "h",
-            title: "HTML解码",
+            title: t("DecodeLableComponent.htmlDecode"),
             sub_title: "htmldec",
             encode: (v: string) => `{{htmldec(${v})}}`
         },
         {
             color: "rgba(244, 115, 107, 0.6)",
             avatar: "u",
-            title: "URL强制解码",
+            title: t("DecodeLableComponent.urlForceDecode"),
             sub_title: "urldec",
             encode: (v: string) => `{{urldec(${v})}}`
         },
         {
             color: "rgba(255, 182, 96, 0.6)",
             avatar: "u",
-            title: "Unicode中文解码",
+            title: t("DecodeLableComponent.unicodeChineseDecode"),
             sub_title: "unicode:decode",
             encode: (v: string) => `{{unicode:decode(${v})}}`
         }
@@ -915,6 +918,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
         fizzRangeTimeoutId,
         toOpenAiChat
     } = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     // 菜单显示宽度
     const [menuWidth, setMenuWidth] = useState<number>()
@@ -996,7 +1000,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                             }}
                         >
                             <IconSolidCodeIcon className={styles["tag"]} />
-                            {right - left < 550 ? <></> : <div className={styles["content"]}>编码</div>}
+                            {right - left < 550 ? <></> : <div className={styles["content"]}>{t("HTTPFuzzerRangeEditorMenu.encode")}</div>}
                             {segmentedType === "encode" ? (
                                 <ChevronUpIcon className={styles["up"]} />
                             ) : (
@@ -1016,7 +1020,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                             }}
                         >
                             <IconSolidSparklesIcon />
-                            {right - left < 550 ? <></> : <div className={styles["content"]}>解码</div>}
+                            {right - left < 550 ? <></> : <div className={styles["content"]}>{t("HTTPFuzzerRangeEditorMenu.decode")}</div>}
                             {segmentedType === "decodeLabel" ? (
                                 <ChevronUpIcon className={styles["up"]} />
                             ) : (
@@ -1036,7 +1040,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                             }}
                         >
                             <IconSolidSparklesIcon />
-                            {right - left < 550 ? <></> : <div className={styles["content"]}>智能解码</div>}
+                            {right - left < 550 ? <></> : <div className={styles["content"]}>{t("HTTPFuzzerRangeEditorMenu.smartDecode")}</div>}
                         </div>
                     </div>
                 </div>

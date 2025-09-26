@@ -7,6 +7,7 @@ import {useMemoizedFn, useThrottleFn} from "ahooks"
 import {ConcurrentLoad, concurrentLoad} from "@/utils/duplex/duplex"
 import {formatTime} from "@/utils/timeUtil"
 import { getCssVar } from "@/utils/tool"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 const lineDefaultOption: echarts.EChartsOption = {
     title: {
@@ -67,6 +68,7 @@ interface RpsAndCpsLineChartProps {
 
 const RpsAndCpsLineChart: React.FC<RpsAndCpsLineChartProps> = React.memo((props) => {
     const {type, inViewportCurrent, lineChartOption} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const chartRef = useRef<any>(null)
     const optionRef = useRef<echarts.EChartsOption>(merge({}, lineDefaultOption, lineChartOption))
     // const lastIndexRef = useRef(0)
@@ -112,7 +114,7 @@ const RpsAndCpsLineChart: React.FC<RpsAndCpsLineChartProps> = React.memo((props)
                     ],
                     title: {
                         subtext:
-                            (type === "rps" ? "当前发包数：" : "当前连接数：") +
+                            (type === "rps" ? t("RpsAndCpsLineChart.currentPacketCount") : t("RpsAndCpsLineChart.currentConnectionCount")) +
                             (dataArr[dataArr.length - 1]?.number || 0)
                     }
                 },
@@ -166,6 +168,7 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
     inViewportCurrent,
     fuzzerResChartData
 }) => {
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const chartRef = useRef<any>(null)
     const optionRef = useRef<echarts.EChartsOption>({
         tooltip: {
@@ -180,7 +183,7 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
         legend: {
             top: "3%",
             left: "45%",
-            data: ["TLS握手", "TCP连接", "总时长"],
+            data: [t("RequestDelayStackedAreaChart.tlsHandshake"), t("RequestDelayStackedAreaChart.tcpConnection"), t("RequestDelayStackedAreaChart.totalDuration")],
             textStyle: {
                 color: getCssVar("--Colors-Use-Neutral-Text-1-Title")
             }
@@ -199,7 +202,7 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
         yAxis: [
             {
                 type: "value",
-                name: "请求时延",
+                name: t("RequestDelayStackedAreaChart.requestLatency"),
                 nameLocation: "end",
                 nameGap: 30,
                 nameTextStyle: {
@@ -222,7 +225,7 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
         ],
         series: [
             {
-                name: "TLS握手",
+                name: t("RequestDelayStackedAreaChart.tlsHandshake"),
                 type: "line",
                 stack: "Total",
                 areaStyle: {},
@@ -232,7 +235,7 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
                 data: []
             },
             {
-                name: "TCP连接",
+                name: t("RequestDelayStackedAreaChart.tcpConnection"),
                 type: "line",
                 stack: "Total",
                 areaStyle: {},
@@ -242,7 +245,7 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
                 data: []
             },
             {
-                name: "总时长",
+                name: t("RequestDelayStackedAreaChart.totalDuration"),
                 type: "line",
                 stack: "Total",
                 areaStyle: {},
@@ -406,6 +409,7 @@ interface FuzzerConcurrentLoadProps {
 }
 export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = React.memo((props) => {
     const {inViewportCurrent, fuzzerResChartData} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     return (
         <>
             <RpsAndCpsLineChart
@@ -413,7 +417,7 @@ export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = React.m
                 inViewportCurrent={inViewportCurrent}
                 lineChartOption={{
                     yAxis: {
-                        name: "每秒发包数（5min）"
+                        name: t("FuzzerConcurrentLoad.packetsPerSecond5min")
                     },
                     series: [
                         {
@@ -432,7 +436,7 @@ export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = React.m
                 inViewportCurrent={inViewportCurrent}
                 lineChartOption={{
                     yAxis: {
-                        name: "每秒连接数（5min）"
+                        name: t("FuzzerConcurrentLoad.connectionsPerSecond5min")
                     },
                     series: [
                         {
@@ -455,7 +459,7 @@ export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = React.m
                 inViewportCurrent={inViewportCurrent}
                 lineChartOption={{
                     yAxis: {
-                        name: "响应时延"
+                        name: t("FuzzerConcurrentLoad.responseLatency")
                     },
                     series: [
                         {
