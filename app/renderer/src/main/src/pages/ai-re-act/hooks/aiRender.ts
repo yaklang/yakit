@@ -38,6 +38,7 @@ export interface AIToolResult {
     /**tool stdout 内容展示前200个字符 */
     toolStdoutContent: {
         content: string
+        /**@deprecated UI展示不显示 */
         isShowAll: boolean
     }
 }

@@ -5,7 +5,7 @@ import {AIReActChatProps, AIReActLogProps, AIReActTimelineMessageProps} from "./
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
 import {AIReActChatContents, AIStreamChatContent} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaProps} from "@/pages/ai-agent/template/type"
-import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ColorsChatIcon} from "@/assets/icon/colors"
@@ -36,6 +36,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true)
 
     const [timelineVisible, setTimelineVisible] = useState<boolean>(false)
+    const [timelineVisibleLoading, setTimelineVisibleLoading] = useState<boolean>(false)
 
     const {activeChat, setting} = useAIAgentStore()
 
@@ -101,22 +102,24 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     })
     const onViewContext = useDebounceFn(
         useMemoizedFn(() => {
+            setTimelineVisible(true)
+
             if (!execute) return
             if (!activeChat?.id) return
+            if (!timelineVisibleLoading) {
+                setTimelineVisibleLoading(true)
+            }
             const info: AIInputEvent = {
                 IsSyncMessage: true,
                 SyncType: "timeline",
                 InteractiveJSONInput: ""
             }
             chatIPCEvents.onSend({token: activeChat.id, type: "", params: info})
-
-            setTimelineVisible(true)
         }),
         {wait: 300, leading: true}
     ).run
     const onClose = useMemoizedFn(() => {
         setTimelineVisible(false)
-        setTimelineMessage("")
     })
     return (
         <>
@@ -168,11 +171,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                             <React.Suspense fallback={<div>loading...</div>}>
                                                 <AIReviewRuleSelect disabled={execute} />
                                             </React.Suspense>
-                                            {execute && (
-                                                <YakitButton type='text' onClick={onViewContext}>
-                                                    查看上下文
-                                                </YakitButton>
-                                            )}
+                                            <YakitButton type='text' onClick={onViewContext}>
+                                                查看上下文
+                                            </YakitButton>
                                         </>
                                     }
                                 />
@@ -194,7 +195,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                 bodyStyle={{padding: 0}}
                 width={720}
             >
-                <AIReActTimelineMessage message={timelineMessage} />
+                <AIReActTimelineMessage
+                    message={timelineMessage}
+                    loading={timelineVisibleLoading}
+                    setLoading={setTimelineVisibleLoading}
+                />
             </YakitDrawer>
         </>
     )
@@ -250,9 +255,16 @@ const AIReActLog: React.FC<AIReActLogProps> = React.memo((props) => {
 })
 const AIReActTimelineMessage: React.FC<AIReActTimelineMessageProps> = React.memo((props) => {
     const {message} = props
-
+    const [loading, setLoading] = useControllableValue<boolean>(props, {
+        defaultValue: false,
+        valuePropName: "loading",
+        trigger: "setLoading"
+    })
+    useEffect(() => {
+        if (!!message) setLoading(false)
+    }, [message])
     return (
-        <YakitSpin spinning={!message}>
+        <YakitSpin spinning={loading}>
             {!!message ? (
                 <>
                     <pre className={styles["timeline-message"]}>

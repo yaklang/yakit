@@ -2,7 +2,7 @@ import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHol
 import {KVPair} from "@/models/kv"
 import {ExecResult} from "@/pages/invoker/schema"
 
-// #region 接口请求和响应结构
+// #region 双工接口请求和响应结构
 export interface McpConfig {
     Type: string
     Key: string
@@ -182,6 +182,8 @@ export declare namespace AIAgentGrpcApi {
         result: string
         success: boolean
         timestamp: number
+        /** 在流中已经输出显示了如果为 true, 代表不展示 */
+        after_stream: boolean
     }
 
     /** structured|stream-finished 代表一个流式输出已经结束 */
@@ -381,3 +383,14 @@ export declare namespace AIAgentGrpcApi {
         total_entries: number
     }
 }
+
+// #region AI相关普通接口的请求和定义结构
+/** QueryAIEvent 接口请求 */
+export interface AIEventQueryRequest {
+    ProcessID: string
+}
+/** QueryAIEvent 接口响应 */
+export interface AIEventQueryResponse {
+    Events: AIOutputEvent[]
+}
+// #endregion

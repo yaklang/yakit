@@ -26,7 +26,6 @@ import {
 } from "@/assets/icon/solid"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {AITree} from "../aiTree/AITree"
-import {AIEventQueryRequest, AIEventQueryResponse} from "../type/aiChat"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "./AIEcharts"
@@ -41,10 +40,11 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {AIStreamNodeIdToLabel} from "@/pages/ai-re-act/hooks/defaultConstant"
 import {v4 as uuidv4} from "uuid"
 import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIMarkdown} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
+import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks/grpcApi"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
-import {AIMarkdown} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {

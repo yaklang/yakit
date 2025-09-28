@@ -349,8 +349,9 @@ function useCasualChat(params?: UseCasualChatParams) {
                 return
             }
             if (res.Type === "result") {
-                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIChatResult
-                handleResult({Timestamp: res.Timestamp, result: data.result})
+                const {result, after_stream} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIChatResult
+                if (!!after_stream) return
+                handleResult({Timestamp: res.Timestamp, result: result})
                 return
             }
 
