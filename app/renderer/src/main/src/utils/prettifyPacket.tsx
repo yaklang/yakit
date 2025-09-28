@@ -21,16 +21,94 @@ interface PacketPrettifyHelperResponse {
     Body: Uint8Array
 }
 
-const safeRenderBody = (body: string, onFinished: (data: string) => any) => {
+/**
+ * 安全渲染 HTML，保留样式，禁止 JS 执行
+ */
+export const safeRenderBody = (body: string, onFinished: (html: string) => void) => {
     try {
-        onFinished(
-            DOMPurify.sanitize(body, {
-                KEEP_CONTENT: true
-            })
-        )
+        // hook 1: 替换 <a> 为 <span>
+        DOMPurify.addHook("afterSanitizeElements", (node) => {
+            if (node.tagName && node.tagName.toLowerCase() === "a") {
+                const span = document.createElement("span")
+                span.innerHTML = node.innerHTML
+
+                // 保留基本样式，让它看起来像链接（可自定义）
+                span.setAttribute(
+                    "style",
+                    node.getAttribute("style") || "color: blue; text-decoration: underline; cursor: pointer;"
+                )
+
+                node.parentNode?.replaceChild(span, node)
+            }
+        })
+
+        // hook 2: 额外保险，清理 href/src 中的危险协议
+        DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+            if ("href" in node) {
+                const href = node.getAttribute("href") || ""
+                if (/^(javascript|vbscript|data):/i.test(href.trim())) {
+                    node.removeAttribute("href")
+                }
+            }
+            if ("src" in node) {
+                const src = node.getAttribute("src") || ""
+                if (/^(javascript|vbscript|data):/i.test(src.trim())) {
+                    node.removeAttribute("src")
+                }
+            }
+        })
+
+        const purify = DOMPurify.sanitize(body, {
+            ALLOWED_ATTR: [
+                "class",
+                "style",
+                "id",
+                "src",
+                "alt",
+                "title",
+                "width",
+                "height",
+                "colspan",
+                "rowspan",
+                "align",
+                "valign",
+                "border",
+                "cellpadding",
+                "cellspacing",
+                "href"
+            ],
+            FORBID_TAGS: ["script", "iframe", "object", "embed", "link", "meta"],
+            FORBID_ATTR: [
+                "onerror",
+                "onclick",
+                "onload",
+                "onmouseover",
+                "onfocus",
+                "onmouseenter",
+                "onmouseleave",
+                "onsubmit"
+            ],
+            SANITIZE_DOM: true
+        })
+
+        // 生成安全 HTML
+        const iframeHtml = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    ${purify}
+  </body>
+</html>`
+
+        onFinished(iframeHtml)
     } catch (e) {
-        onFinished(body)
-        yakitFailed(`Render Failed: ${e}`)
+        const fallback = `<!doctype html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`
+        onFinished(fallback)
+    } finally {
+        // 清理 hook，避免污染其他地方
+        DOMPurify.removeAllHooks()
     }
 }
 

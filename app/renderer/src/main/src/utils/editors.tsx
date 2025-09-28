@@ -927,7 +927,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             setTypeLoading(true)
             let renderValue = await prettifyPacketRender(originalPackage || StringToUint8Array(originValue))
             setRenderHTML(
-                <iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} />
+                <iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} sandbox="" />
             )
             setTypeLoading(false)
         }),
