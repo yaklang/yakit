@@ -143,9 +143,6 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
     const toolStdoutShowContent = useCreation(() => {
         return item?.toolStdoutContent?.content || ""
     }, [item.toolStdoutContent])
-    const isShowAll = useCreation(() => {
-        return !!item?.toolStdoutContent?.isShowAll
-    }, [item.toolStdoutContent])
     return (
         <div
             className={classNames(styles["ai-chat-tool-item"], {
@@ -177,18 +174,9 @@ export const AIChatToolItem: React.FC<AIChatToolItemProps> = React.memo((props) 
                             e.stopPropagation()
                         }}
                     >
-                        {toolStdoutShowContent}
-                        {isShowAll && (
-                            <span
-                                className={styles["item-stdout-show-all"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleDetails()
-                                }}
-                            >
-                                查看全部
-                            </span>
-                        )}
+                        <pre className={styles["stdout-pre"]}>
+                            <code>{toolStdoutShowContent}</code>
+                        </pre>
                     </div>
                 )}
                 <div

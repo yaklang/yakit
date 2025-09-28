@@ -12,4 +12,6 @@ export interface AIReActLogProps {
 
 export interface AIReActTimelineMessageProps {
     message?: string
+    loading: boolean
+    setLoading: (loading: boolean) => void
 }
