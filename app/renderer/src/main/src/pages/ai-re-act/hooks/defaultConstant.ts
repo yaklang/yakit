@@ -38,7 +38,8 @@ export const AIStreamNodeIdToLabel: Record<string, {label: string}> = {
     output: {label: "通用输出"},
     forge: {label: "智能应用"},
     "re-act-loop-thought": {label: "思考"},
-    "re-act-loop-answer-payload": {label: "AI 响应"}
+    "re-act-loop-answer-payload": {label: "AI 响应"},
+    "enhance-query": {label: "知识增强"}
 }
 
 /** AI 判断 review 的风险阈值等级对应的展示内容 */
