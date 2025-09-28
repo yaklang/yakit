@@ -7,18 +7,6 @@ import {UseCasualChatState, UseChatIPCState, UseTaskChatState} from "@/pages/ai-
 import {AIAgentGrpcApi, AIOutputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 // #region AI-(Task|Triage)
 
-export interface AITriageInputEvent {
-    IsStart?: boolean
-    Params?: AIStartParams // 上下文AI配置
-
-    IsInteractiveMessage?: boolean // 暂无用
-    InteractiveId?: string // 暂无用
-    InteractiveJSONInput?: string // 暂无用
-
-    IsFreeInput?: boolean
-    FreeInput?: string
-}
-
 export interface AIChatReviewExtra {
     type: "plan_task_analysis"
     data: AIAgentGrpcApi.PlanReviewRequireExtra
@@ -43,14 +31,6 @@ export interface AIChatInfo {
         casualChat: UseChatIPCState["casualChat"]
         taskChat: UseChatIPCState["taskChat"]
     }
-}
-/**QueryAIEvent 接口请求 */
-export interface AIEventQueryRequest {
-    ProcessID: string
-}
-/**QueryAIEvent 接口返回 */
-export interface AIEventQueryResponse {
-    Events: AIOutputEvent[]
 }
 // #endregion
 

@@ -2,8 +2,8 @@ import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {RenderMCPClientInfo} from "./aiAgentType"
 import {MCPCallToolRequest, MCPClientResource} from "./type/mcpClient"
-import {AIEventQueryRequest, AIEventQueryResponse} from "./type/aiChat"
 import {AIForge, AIForgeFilter, GetAIForgeRequest, QueryAIForgeRequest, QueryAIForgeResponse} from "./AIForge/type"
+import {AIEventQueryRequest, AIEventQueryResponse} from "../ai-re-act/hooks/grpcApi"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -74,7 +74,10 @@ export const grpcMCPClientCancelCallTool: APIFunc<string, string> = (token, hidd
     })
 }
 
-/**@name 查询AI事件 */
+/**
+ * @name 查询AI事件
+ * - 查执行工具的 call_tool 和 tool_stdout
+ */
 export const grpcQueryAIEvent: APIFunc<AIEventQueryRequest, AIEventQueryResponse> = (param, hiddenError) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer

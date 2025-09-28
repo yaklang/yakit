@@ -9,7 +9,6 @@ import {AIChatInfo} from "./type/aiChat"
 import {useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
 import {AIAgentSettingDefault, YakitAIAgentPageID} from "./defaultConstant"
 import cloneDeep from "lodash/cloneDeep"
-import {AITriageChatData} from "./aiTriageChat/type"
 import {AIAgentChat} from "./aiAgentChat/AIAgentChat"
 
 import classNames from "classnames"
@@ -24,11 +23,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // const [servers, setServers, getServers] = useGetSetState<RenderMCPClientInfo[]>([])
     // ai-agent-chat 全局配置
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
-
-    // 当前连接中的 triage 对话集合
-    const [triages, setTriages, getTriages] = useGetSetState<AITriageChatData[]>([])
-    // 当前展示的 triage 对话
-    const [activeTriage, setActiveTriage] = useState<AITriageChatData>()
 
     // 历史对话
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
@@ -47,19 +41,14 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const store: AIAgentContextStore = useMemo(() => {
         return {
             setting: setting,
-            triages: triages,
-            activeTriage: activeTriage,
             chats: chats,
             activeChat: activeChat
         }
-    }, [setting, triages, activeTriage, chats, activeChat])
+    }, [setting, chats, activeChat])
     const dispatcher: AIAgentContextDispatcher = useMemo(() => {
         return {
             getSetting: getSetting,
             setSetting: setSetting,
-            setTriages: setTriages,
-            getTriages: getTriages,
-            setActiveTriage: setActiveTriage,
             setChats: setChats,
             getChats: getChats,
             setActiveChat: setActiveChat
