@@ -142,7 +142,6 @@ function httpApi({method, url, params, data, headers, timeout = DefaultTimeOut, 
     }
 
     let attempt = 0
-    let newCancelToken = cancelToken ?? cancelTokenSource.token
     const doRequest = () => {
         // 如果有当前的请求，取消它
         if (cancelTokenSource) {
@@ -150,6 +149,7 @@ function httpApi({method, url, params, data, headers, timeout = DefaultTimeOut, 
         }
         // 创建一个新的CancelToken
         cancelTokenSource = axios.CancelToken.source()
+        let newCancelToken = cancelToken ?? cancelTokenSource.token
         return service({
             url,
             method,
