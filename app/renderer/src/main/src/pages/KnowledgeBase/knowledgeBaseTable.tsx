@@ -261,7 +261,7 @@ const KnowledgeBaseTable: FC<{
         return (
             <div className={styles["knowledgeBase-render-header"]}>
                 <div className={styles["knowledgeBase-render-header-title"]}>
-                    <div>WebFuzzer 知识库</div>
+                    <div>{knowledgeBaseitems?.name ?? "-"}</div>
                     <div>{/* <YakitButton>从实体生成</YakitButton> */}</div>
                 </div>
                 <div className={styles["knowledgeBase-render-header-operate"]}>
