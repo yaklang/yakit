@@ -63,6 +63,15 @@ const createWindow = () => {
         frame: false,
         titleBarStyle: "hidden"
     })
+    win.webContents.setWindowOpenHandler(({url}) => {
+        console.log("prevent new-window in main window, u: ", url)
+        return {action: "deny"}
+    })
+    win.webContents.on("new-window", (e) => {
+        console.log("prevent new-window in main window")
+        e.preventDefault()
+    })
+
     // 监听渲染端的崩溃事件
     win.webContents.on("render-process-gone", (event, details) => {
         // 发送渲染端崩溃事件
