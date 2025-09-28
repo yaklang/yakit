@@ -1293,7 +1293,9 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     })
     const onSetRenderHTML = useMemoizedFn(async () => {
         let renderValue = await prettifyPacketRender(StringToUint8Array(modifiedPacket))
-        setRenderHtml(<iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} />)
+        setRenderHtml(
+            <iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} sandbox='' />
+        )
     })
     useEffect(() => {
         if (renderAndHexTag === "render") {

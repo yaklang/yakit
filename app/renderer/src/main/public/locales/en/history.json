@@ -104,7 +104,7 @@
     "keyword": "Keyword",
     "request": "Request",
     "response": "Response",
-    "fuzzSearchExplanation": "Yakit's search function, whenever it calls the backend FuzzSearch, uses a LIKE search. This means if a user wants to search for..."
+    "fuzzSearchExplanation": "In Yakit, the search feature uses a LIKE search whenever calling the backend FuzzSearch. This means users need to manually escape text like `email_`."
   },
   "EditTagsModal": {
     "editTag": "Edit Tag",
