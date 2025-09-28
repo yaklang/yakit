@@ -129,7 +129,17 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseProps> = ({
                 <Form.Item
                     label='知识库名称'
                     name='KnowledgeBaseName'
-                    rules={[{required: true, message: "请输入知识库名称"}]}
+                    rules={[
+                        {required: true, message: "请输入知识库名称"},
+                        {
+                            validator: (_, value) => {
+                                if (typeof value === "string" && value.length > 0 && value.trim() === "") {
+                                    return Promise.reject(new Error("知识库名称不能为空字符串"))
+                                }
+                                return Promise.resolve()
+                            }
+                        }
+                    ]}
                 >
                     <YakitInput placeholder='请输入知识库名称' />
                 </Form.Item>
