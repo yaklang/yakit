@@ -53,6 +53,7 @@ import {YakScript} from "../invoker/schema"
 import {ExpandAndRetract} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {
     ExecuteEnterNodeByPluginParams,
+    FormContentItemByType,
     PluginExecuteProgress
 } from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {randomString} from "@/utils/randomUtil"
@@ -95,7 +96,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RuleDebugAuditDetail} from "../ruleManagement/template"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateReport"
-import CodeScanExtraParamsDrawer, { CodeScanExtraParam } from "./CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer"
+import CodeScanExtraParamsDrawer, {CodeScanExtraParam} from "./CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -600,7 +601,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     /**保存额外参数 */
     const onSaveExtraParams = useMemoizedFn((v: CodeScanExtraParam) => {
         setExtraParamsValue({
-            ...v,
+            ...v
         } as CodeScanExtraParam)
         setExtraParamsVisible(false)
     })
@@ -1663,10 +1664,21 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
 
         /** 选填参数 */
         const groupParams = useMemo(() => {
-            const arr = plugin?.Params.filter((item) => !item.Required) || []
-            const showArr = arr.filter((item) => (item.Group || "").length > 0)
+            const arr =
+                plugin?.Params.filter(
+                    (item) => !item.Required && (item.Group || "").length > 0 && item.Group !== "significant"
+                ) || []
 
-            return ParamsToGroupByGroupName(showArr)
+            return ParamsToGroupByGroupName(arr)
+        }, [plugin?.Params])
+
+        /** 必填参数（头部展示） */
+        const groupParamsHeader = useMemo(() => {
+            const arr =
+                plugin?.Params.filter(
+                    (item) => item.Required && (item.Group || "").length > 0 && item.Group === "significant"
+                ) || []
+            return ParamsToGroupByGroupName(arr)
         }, [plugin?.Params])
 
         /** 自定义控件数据 */
@@ -1936,6 +1948,20 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                             // accept=""
                         />
                     </Form.Item>
+
+                    {groupParamsHeader.length > 0 && (
+                        <>
+                            {groupParamsHeader.map((item, index) => (
+                                <>
+                                    {item.data?.map((formItem) => (
+                                        <React.Fragment key={formItem.Field + formItem.FieldVerbose}>
+                                            <FormContentItemByType item={formItem} pluginType={"yak"} />
+                                        </React.Fragment>
+                                    ))}
+                                </>
+                            ))}
+                        </>
+                    )}
 
                     {/* <ExecuteEnterNodeByPluginParams
                         paramsList={requiredParams}
