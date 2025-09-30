@@ -7,7 +7,6 @@ import RehypeKatex from "rehype-katex"
 import RemarkGfm from "remark-gfm"
 import RehypeHighlight from "rehype-highlight"
 import mermaid from "mermaid"
-import rehypeRaw from "rehype-raw"
 import {CopyComponents} from "../yakitUI/YakitTag/YakitTag"
 import rehypeSanitize from "rehype-sanitize"
 
@@ -112,7 +111,6 @@ function _MarkDownContent(props: ChatMarkdownBaseProps) {
             remarkPlugins={[RemarkMath, RemarkGfm, RemarkBreaks]}
             rehypePlugins={[
                 RehypeKatex,
-                rehypeRaw,
                 [
                     RehypeHighlight,
                     {
