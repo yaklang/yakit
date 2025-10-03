@@ -190,11 +190,23 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         </div>
     )
 
+    const renderSecretManualConnectButton = () => (
+        <YakitButton
+            className={styles["btn-style"]}
+            size='max'
+            loading={restartLoading}
+            onClick={() => btnClickCallback("secret-local")}
+        >
+            连接引擎（随机密码）
+        </YakitButton>
+    )
+
     const btns = useMemo(() => {
         // checkError, break, error 状态的按钮组合
         if (["checkError", "break", "error"].includes(yakitStatus)) {
             return (
                 <>
+                    {renderSecretManualConnectButton()}
                     {renderManualConnectButton(yakitStatus)}
                     {renderSwitchModeButton()}
                     {renderLogAndPortButtons()}

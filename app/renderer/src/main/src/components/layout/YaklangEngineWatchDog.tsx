@@ -3,7 +3,7 @@ import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {isEngineConnectionAlive, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
 import {EngineWatchDogCallbackType, YaklangEngineMode} from "@/yakitGVDefine"
 import {EngineModeVerbose} from "@/components/basics/YakitLoading"
-import {failed} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {setRemoteValue} from "@/utils/kv"
 import {useStore, yakitDynamicStatus} from "@/store"
 import {remoteOperation} from "@/pages/dynamicControl/DynamicControl"
@@ -153,6 +153,12 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         props.onKeepaliveShouldChange(true)
                     }
                 }, 600)
+
+                yakitNotify("info", "启动模式：" + mode)
+                if (mode === "secret-local") {
+                    yakitNotify("info", "随机密码模式启动中")
+                    return
+                }
 
                 ipcRenderer
                     .invoke("is-port-available", props.credential.Port)
