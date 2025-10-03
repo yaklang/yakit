@@ -116,6 +116,68 @@ module.exports = (win, callback, getClient, newClient) => {
         return await asyncIsPortAvailable(port)
     })
 
+    const asyncStartSecretLocalYakEngineServer = (win, params) => {
+        const {version} = params
+        engineCount += 1
+
+        const {isEnpriTraceAgent, isIRify} = params
+
+        return new Promise((resolve, reject) => {
+            engineLogOutputFileAndUI(win, `----- 启动本地引擎进程(Random Local Password) -----`)
+            if (isIRify) {
+                dbFile = ["--profile-db", "irify-profile-rule.db", "--project-db", "default-irify.db"]
+            }
+            
+            try {
+                const grpcParams = ["grpc", "--local-password", "admin123", "--frontend", `${version || "yakit"}`]
+                const extraParams = dbFile ? [...grpcParams, ...dbFile] : grpcParams
+                const resultParams = isEnpriTraceAgent ? [...extraParams, "--disable-output"] : extraParams
+
+                engineLogOutputFileAndUI(win, `启动命令: ${getLocalYaklangEngine()} ${resultParams.join(" ")}`)
+                const subprocess = childProcess.spawn(getLocalYaklangEngine(), resultParams, {
+                    detached: false,
+                    windowsHide: true,
+                    stdio: ["ignore", "pipe", "pipe"],
+                    env: {
+                        ...process.env,
+                        YAKIT_HOME: YakitProjectPath
+                    }
+                })
+
+                subprocess.unref()
+                process.on("exit", () => {
+                    // 终止子进程
+                    subprocess.kill()
+                })
+                subprocess.on("error", (err) => {
+                    engineLogOutputFileAndUI(win, `----- 本地引擎遭遇错误，错误原因 -----`)
+                    engineLogOutputFileAndUI(win, err)
+                    win.webContents.send("start-yaklang-engine-error", `本地引擎遭遇错误，错误原因为：${err}`)
+                    reject(err)
+                })
+                subprocess.on("close", async (e) => {
+                    engineLogOutputFileAndUI(win, `----- 本地引擎退出，退出码为：${e} -----`)
+                })
+
+                subprocess.stdout.on("data", (data) => {
+                    try {
+                        // const match = data.toString("utf-8").match(/\[\w+:\d+]\s+(.*)/)[1]
+                        engineLogOutputFileAndUI(win, `${data.toString("utf-8")}`)
+                    } catch (error) {}
+                })
+                subprocess.stderr.on("data", (data) => {
+                    try {
+                        // const match = data.toString("utf-8").match(/\[\w+:\d+]\s+(.*)/)[1]
+                        engineLogOutputFileAndUI(win, `${data.toString("utf-8")}`)
+                    } catch (error) {}
+                })
+                resolve()
+            } catch (e) {
+                reject(e)
+            }
+        })
+    }
+
     /**
      * @name 手动启动yaklang引擎进程
      * @param {Object} params
@@ -183,6 +245,10 @@ module.exports = (win, callback, getClient, newClient) => {
             }
         })
     }
+
+    ipcMain.handle("start-secret-local-yaklang-engine", async(e, params) => {
+        return await asyncStartSecretLocalYakEngineServer(win, params)
+    })
 
     /** 本地启动yaklang引擎 */
     ipcMain.handle("start-local-yaklang-engine", async (e, params) => {

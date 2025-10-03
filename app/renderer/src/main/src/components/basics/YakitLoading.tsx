@@ -137,137 +137,83 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         )
     }
 
+    // 手动连接引擎按钮
+    const renderManualConnectButton = (status: YakitStatusType) => (
+        <YakitButton
+            className={styles["btn-style"]}
+            size='max'
+            loading={restartLoading}
+            onClick={() => btnClickCallback(status)}
+        >
+            手动连接引擎
+        </YakitButton>
+    )
+
+    // 重置引擎版本按钮
+    const renderResetEngineButton = () => (
+        <YakitButton
+            className={styles["btn-style"]}
+            size='max'
+            loading={restartLoading}
+            onClick={() => btnClickCallback("engine-error")}
+        >
+            重置引擎版本
+        </YakitButton>
+    )
+
+    // 切换模式按钮
+    const renderSwitchModeButton = () => (
+        <YakitButton
+            className={styles["btn-style"]}
+            size='max'
+            type='outline2'
+            loading={restartLoading}
+            onClick={() => btnClickCallback(engineMode === "local" ? "remote" : "local")}
+        >
+            切换为{engineMode === "local" ? "远程" : "本地"}模式
+        </YakitButton>
+    )
+
+    // 查看日志按钮
+    const renderLogButton = () => (
+        <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
+            {showEngineLog ? "隐藏日志" : "查看日志"}
+        </YakitButton>
+    )
+
+    // 查看日志和修改端口按钮组
+    const renderLogAndPortButtons = () => (
+        <div>
+            {renderLogButton()}
+            <Divider type='vertical' style={{margin: 0}} />
+            {changePortBtn()}
+        </div>
+    )
+
     const btns = useMemo(() => {
-        if (yakitStatus === "checkError") {
+        // checkError, break, error 状态的按钮组合
+        if (["checkError", "break", "error"].includes(yakitStatus)) {
             return (
                 <>
-                    <YakitButton
-                        className={styles["btn-style"]}
-                        size='max'
-                        loading={restartLoading}
-                        onClick={() => btnClickCallback("checkError")}
-                    >
-                        手动连接引擎
-                    </YakitButton>
-
-                    <YakitButton
-                        className={styles["btn-style"]}
-                        size='max'
-                        type='outline2'
-                        loading={restartLoading}
-                        onClick={() => btnClickCallback(engineMode === "local" ? "remote" : "local")}
-                    >
-                        切换为{engineMode === "local" ? "远程" : "本地"}模式
-                    </YakitButton>
-
-                    <div>
-                        <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
-                            {showEngineLog ? "隐藏日志" : "查看日志"}
-                        </YakitButton>
-                        <Divider type='vertical' style={{margin: 0}} />
-                        {changePortBtn()}
-                    </div>
+                    {renderManualConnectButton(yakitStatus)}
+                    {renderSwitchModeButton()}
+                    {renderLogAndPortButtons()}
                 </>
             )
         }
 
-        if (yakitStatus === "break") {
-            return (
-                <>
-                    <YakitButton
-                        className={styles["btn-style"]}
-                        size='max'
-                        loading={restartLoading}
-                        onClick={() => btnClickCallback("break")}
-                    >
-                        手动连接引擎
-                    </YakitButton>
-
-                    <YakitButton
-                        className={styles["btn-style"]}
-                        size='max'
-                        type='outline2'
-                        loading={restartLoading}
-                        onClick={() => btnClickCallback(engineMode === "local" ? "remote" : "local")}
-                    >
-                        切换为{engineMode === "local" ? "远程" : "本地"}模式
-                    </YakitButton>
-
-                    <div>
-                        <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
-                            {showEngineLog ? "隐藏日志" : "查看日志"}
-                        </YakitButton>
-                        <Divider type='vertical' style={{margin: 0}} />
-                        {changePortBtn()}
-                    </div>
-                </>
-            )
-        }
-        if (yakitStatus === "error") {
-            return (
-                <>
-                    <YakitButton
-                        className={styles["btn-style"]}
-                        size='max'
-                        loading={restartLoading}
-                        onClick={() => btnClickCallback("error")}
-                    >
-                        手动连接引擎
-                    </YakitButton>
-
-                    <YakitButton
-                        className={styles["btn-style"]}
-                        size='max'
-                        type='outline2'
-                        loading={restartLoading}
-                        onClick={() => btnClickCallback(engineMode === "local" ? "remote" : "local")}
-                    >
-                        切换为{engineMode === "local" ? "远程" : "本地"}模式
-                    </YakitButton>
-
-                    <div>
-                        <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
-                            {showEngineLog ? "隐藏日志" : "查看日志"}
-                        </YakitButton>
-                        <Divider type='vertical' style={{margin: 0}} />
-                        {changePortBtn()}
-                    </div>
-                </>
-            )
-        }
+        // engine-error 状态的按钮组合
         if (yakitStatus === "engine-error") {
             return (
                 <>
-                    <YakitButton
-                        className={styles["btn-style"]}
-                        size='max'
-                        loading={restartLoading}
-                        onClick={() => btnClickCallback("engine-error")}
-                    >
-                        重置引擎版本
-                    </YakitButton>
-
-                    <YakitButton
-                        className={styles["btn-style"]}
-                        size='max'
-                        type='outline2'
-                        loading={restartLoading}
-                        onClick={() => btnClickCallback(engineMode === "local" ? "remote" : "local")}
-                    >
-                        切换为{engineMode === "local" ? "远程" : "本地"}模式
-                    </YakitButton>
-
-                    <div>
-                        <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
-                            {showEngineLog ? "隐藏日志" : "查看日志"}
-                        </YakitButton>
-                        <Divider type='vertical' style={{margin: 0}} />
-                        {changePortBtn()}
-                    </div>
+                    {renderResetEngineButton()}
+                    {renderSwitchModeButton()}
+                    {renderLogAndPortButtons()}
                 </>
             )
         }
 
+        // control-remote 状态的按钮组合
         if (yakitStatus === "control-remote") {
             return (
                 <>
@@ -292,6 +238,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             )
         }
 
+        // control-remote-timeout 状态的按钮组合
         if (yakitStatus === "control-remote-timeout") {
             return (
                 <YakitButton
@@ -306,11 +253,10 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             )
         }
 
+        // 默认状态的按钮组合
         return (
             <div>
-                <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
-                    {showEngineLog ? "隐藏日志" : "查看日志"}
-                </YakitButton>
+                {renderLogButton()}
                 {!["ready", "link"].includes(yakitStatus) && (
                     <>
                         <Divider type='vertical' style={{margin: 0}} />

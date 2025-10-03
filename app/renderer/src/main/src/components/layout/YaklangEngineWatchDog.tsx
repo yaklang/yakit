@@ -188,6 +188,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         outputToWelcomeConsole(`错误原因为: ${e}`)
                         debugToPrintLog(`[ERROR] 新引擎进程启动出错: 端口被占用: ${e}`)
                     })
+
             },
             [autoStartProgress, props.onKeepaliveShouldChange, props.credential],
             {leading: false, wait: 1000}
