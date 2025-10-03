@@ -96,6 +96,10 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                             outputToWelcomeConsole("尝试启动本地进程")
                             setAutoStartProgress(true)
                             return
+                        case "secret-local":
+                            outputToWelcomeConsole("尝试启动随机密码本地进程")
+                            setAutoStartProgress(true)
+                            return
                         case "remote":
                             outputToWelcomeConsole("远程模式不自动启动本地引擎")
                             if (isDynamicControl) {
@@ -104,6 +108,9 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                                 props.failedCallback("remote-connect-failed")
                             }
                             failed(`${e}`)
+                            return
+                        default:
+                            yakitNotify("error", "未知模式(测试引擎是否连接): " + mode)
                             return
                     }
                 })

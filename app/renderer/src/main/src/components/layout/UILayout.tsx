@@ -390,7 +390,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const handleLinkLocalMode = useMemoizedFn((isSecretLocal?: boolean) => {
         if (isEngineInstalled.current) {
             if (!isInitLocalLink.current) {
-                setLinkLocalEngine()
+                setLinkLocalEngine(isSecretLocal)
                 return
             }
             setCheckLog(["检查本地是否已安装引擎..."])
@@ -622,7 +622,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             case "checkError":
                 // 引擎权限错误-手动重启引擎
                 setTimeoutLoading(setRestartLoading)
-                setLinkLocalEngine()
+                // 保持当前模式（可能是 local 或 secret-local）
+                setLinkLocalEngine(getEngineMode() === "secret-local")
                 return
             case "error":
                 // 引擎连接超时
@@ -657,6 +658,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 handleLinkLocalMode()
                 return
             case "secret-local":
+                debugToPrintLog(`------ User clicked secret-local button ------`)
                 handleLinkLocalMode(true)
                 return
 
