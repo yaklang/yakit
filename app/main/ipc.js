@@ -54,14 +54,22 @@ function newClient() {
     } 
     // 非 TLS 连接（可能需要密码认证，例如 secret-local 模式）
     else if (global.password && global.password !== "") {
-        const creds = grpc.credentials.createFromMetadataGenerator((params, callback) => {
-            return callback(null, md)
-        })
-        return new Yak(
-            global.defaultYakGRPCAddr,
-            grpc.credentials.combineChannelCredentials(grpc.credentials.createInsecure(), creds),
-            options
-        )
+        // 对于非 TLS 连接，不能使用 combineChannelCredentials
+        // 需要通过拦截器在每次调用时添加 metadata
+        const optionsWithInterceptors = {
+            ...options,
+            interceptors: [
+                (options, nextCall) => {
+                    return new grpc.InterceptingCall(nextCall(options), {
+                        start: function(metadata, listener, next) {
+                            metadata.set("authorization", `bearer ${global.password}`)
+                            next(metadata, listener)
+                        }
+                    })
+                }
+            ]
+        }
+        return new Yak(global.defaultYakGRPCAddr, grpc.credentials.createInsecure(), optionsWithInterceptors)
     }
     // 普通非 TLS 连接（无密码）
     else {

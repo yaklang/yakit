@@ -351,13 +351,19 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     setTimeout(() => {
                         handleChangeLinkMode(true)
                     }, 1000)
-
                     return
                 case "local":
                     setCheckLog((arr) => arr.concat(["获取连接模式成功——本地模式"]))
                     debugToPrintLog(`------ 连接引擎的模式: local ------`)
                     setTimeout(() => {
                         handleChangeLinkMode()
+                    }, 1000)
+                    return
+                case "secret-local":
+                    setCheckLog((arr) => arr.concat(["获取连接模式成功——随机密码模式"]))
+                    debugToPrintLog(`------ 连接引擎的模式: secret-local ------`)
+                    setTimeout(() => {
+                        handleLinkLocalMode(true)
                     }, 1000)
                     return
                 default:

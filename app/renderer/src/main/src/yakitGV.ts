@@ -1,6 +1,6 @@
 /** 本地文件缓存数据-键值变量 */
 export enum LocalGV {
-    /** @name 获取缓存数据里引擎的启动模式("local"|"remote") */
+    /** @name 获取缓存数据里引擎的启动模式("local"|"remote"|"secret-local") */
     YaklangEngineMode = "yaklang-engine-mode",
     /** @name 获取缓存数据里引擎启动配置 */
     YaklangEnginePort = "yaklang-engine-port",
