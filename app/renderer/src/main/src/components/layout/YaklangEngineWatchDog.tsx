@@ -155,8 +155,32 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 }, 600)
 
                 yakitNotify("info", "启动模式：" + mode)
+                
+                // secret-local 模式：启动带随机密码的本地引擎
                 if (mode === "secret-local") {
                     yakitNotify("info", "随机密码模式启动中")
+                    if (startingUp.current) {
+                        return
+                    }
+                    startingUp.current = true
+                    ipcRenderer
+                        .invoke("start-secret-local-yaklang-engine", {
+                            version: fetchEnv(),
+                            isEnpriTraceAgent: isEnpriTraceAgent(),
+                            isIRify: isIRify()
+                        })
+                        .then(() => {
+                            outputToWelcomeConsole("随机密码引擎启动成功！")
+                            debugToPrintLog(`[INFO] secret-local 引擎进程启动成功`)
+                        })
+                        .catch((e) => {
+                            console.info(e)
+                            outputToWelcomeConsole("随机密码引擎启动失败:" + e)
+                            debugToPrintLog(`[ERROR] secret-local 引擎进程启动失败: ${e}`)
+                        })
+                        .finally(() => {
+                            startingUp.current = false
+                        })
                     return
                 }
 

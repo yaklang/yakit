@@ -543,6 +543,26 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 开始本地连接引擎
     const handleLinkLocalEngine = useMemoizedFn((port: number) => {
+        const currentMode = getEngineMode()
+        
+        // secret-local 模式：使用随机密码连接，固定端口 9011
+        if (currentMode === "secret-local") {
+            debugToPrintLog(`------ 开始启动随机密码引擎 (固定端口: 9011) ------`)
+            setCheckLog([`本地随机密码引擎模式，开始启动本地引擎 (端口: 9011)`])
+            setCredential({
+                Host: "127.0.0.1",
+                IsTLS: false,
+                Password: "admin123",
+                PemBytes: undefined,
+                Port: 9011, // secret-local 模式使用固定端口 9011
+                Mode: "secret-local"
+            })
+            setYakitStatus("ready")
+            onStartLinkEngine()
+            return
+        }
+        
+        // 普通本地模式
         debugToPrintLog(`------ 开始启动引擎, 指定端口: ${port} ------`)
         setCheckLog([`本地普通权限引擎模式，开始启动本地引擎-端口: ${port}`])
         setCredential({

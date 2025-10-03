@@ -121,9 +121,10 @@ module.exports = (win, callback, getClient, newClient) => {
         engineCount += 1
 
         const {isEnpriTraceAgent, isIRify} = params
+        const SECRET_LOCAL_PORT = 9011
 
         return new Promise((resolve, reject) => {
-            engineLogOutputFileAndUI(win, `----- 启动本地引擎进程(Random Local Password) -----`)
+            engineLogOutputFileAndUI(win, `----- 启动本地引擎进程(Random Local Password, Port: ${SECRET_LOCAL_PORT}) -----`)
             if (isIRify) {
                 dbFile = ["--profile-db", "irify-profile-rule.db", "--project-db", "default-irify.db"]
             }
@@ -133,7 +134,7 @@ module.exports = (win, callback, getClient, newClient) => {
                 const extraParams = dbFile ? [...grpcParams, ...dbFile] : grpcParams
                 const resultParams = isEnpriTraceAgent ? [...extraParams, "--disable-output"] : extraParams
 
-                engineLogOutputFileAndUI(win, `启动命令: ${getLocalYaklangEngine()} ${resultParams.join(" ")}`)
+                engineLogOutputFileAndUI(win, `Start command: ${getLocalYaklangEngine()} ${resultParams.join(" ")}`)
                 const subprocess = childProcess.spawn(getLocalYaklangEngine(), resultParams, {
                     detached: false,
                     windowsHide: true,
@@ -150,24 +151,22 @@ module.exports = (win, callback, getClient, newClient) => {
                     subprocess.kill()
                 })
                 subprocess.on("error", (err) => {
-                    engineLogOutputFileAndUI(win, `----- 本地引擎遭遇错误，错误原因 -----`)
+                    engineLogOutputFileAndUI(win, `----- Engine encountered an error -----`)
                     engineLogOutputFileAndUI(win, err)
-                    win.webContents.send("start-yaklang-engine-error", `本地引擎遭遇错误，错误原因为：${err}`)
+                    win.webContents.send("start-yaklang-engine-error", `Engine encountered an error: ${err}`)
                     reject(err)
                 })
                 subprocess.on("close", async (e) => {
-                    engineLogOutputFileAndUI(win, `----- 本地引擎退出，退出码为：${e} -----`)
+                    engineLogOutputFileAndUI(win, `----- Engine process exited with code: ${e} -----`)
                 })
 
                 subprocess.stdout.on("data", (data) => {
                     try {
-                        // const match = data.toString("utf-8").match(/\[\w+:\d+]\s+(.*)/)[1]
                         engineLogOutputFileAndUI(win, `${data.toString("utf-8")}`)
                     } catch (error) {}
                 })
                 subprocess.stderr.on("data", (data) => {
                     try {
-                        // const match = data.toString("utf-8").match(/\[\w+:\d+]\s+(.*)/)[1]
                         engineLogOutputFileAndUI(win, `${data.toString("utf-8")}`)
                     } catch (error) {}
                 })
