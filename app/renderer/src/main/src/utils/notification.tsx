@@ -82,7 +82,9 @@ export const yakitNotify = (
     props: ArgsProps | string | React.ReactNode
 ) => {
     let newProps: ArgsProps = {
-        message: ""
+        message: "",
+        maxCount: 3,
+        duration: 2.5,
     }
     if (typeof props === "string") {
         newProps.message = props

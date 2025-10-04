@@ -129,6 +129,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             if (!checkAllowSecretLocalFinished) {
                 ipcRenderer.invoke("check-allow-secret-local-yaklang-engine").then((res) => {
                     if (res) {
+                        yakitNotify("info", "允许引擎随机密码模式启动")
                         setAllowSecretLocal(true)
                         if (props.onAllowSecretLocal) {
                             props.onAllowSecretLocal(true)
