@@ -128,10 +128,15 @@ const fetchGeneralYakProcess = () => {
                     .map((i) => {
                         // 上一步筛选了 yak.*grpc 的命令, 所以没有 --port 的就是默认 grpc 启动的 8087 端口
                         let portsRaw = "8087"
+
                         try {
-                            portsRaw = new RegExp(/port\s+(\d+)/).exec(i.cmd)[1]
+                            if (i.cmd.includes("--local-password")) {
+                                portsRaw = "9011"
+                            } else {
+                                portsRaw = new RegExp(/port\s+(\d+)/).exec(i.cmd)[1]
+                            }
                         } catch (e) {
-                            console.info(i.cmd)
+                            console.info("can't get port from cmd[" + `${i.cmd}` + "]", e)
                         }
                         return {
                             port: portsRaw,

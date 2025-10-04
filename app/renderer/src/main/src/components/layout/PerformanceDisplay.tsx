@@ -208,6 +208,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
 
     return (
         <YakitPopover
+            trigger={"click"}
             visible={show}
             overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-engine-list-dropdown"])}
             placement={"bottomRight"}

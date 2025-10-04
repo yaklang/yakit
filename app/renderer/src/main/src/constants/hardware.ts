@@ -23,8 +23,8 @@ interface SystemInfoProps {
     architecture?: Architecture
     /** 是否为开发环境 */
     isDev?: boolean
-    /** 本地模式或者远程模式 */
-    mode?: "local" | "remote" | undefined
+    /** 本地模式 / 远程模式 / 随机密码本地模式 */
+    mode?: "local" | "remote" | "secret-local" | undefined
 }
 
 export const SystemInfo: SystemInfoProps = {
