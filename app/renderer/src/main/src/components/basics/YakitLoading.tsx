@@ -161,6 +161,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         </YakitButton>
     )
 
+    const isLocalMode = useMemo(() => engineMode === "local" || engineMode === "secret-local", [engineMode])
     // 切换模式按钮
     const renderSwitchModeButton = () => (
         <YakitButton
@@ -168,9 +169,9 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             size='max'
             type='outline2'
             loading={restartLoading}
-            onClick={() => btnClickCallback(engineMode === "local" ? "remote" : "local")}
+            onClick={() => btnClickCallback(isLocalMode ? "remote" : "local")}
         >
-            切换为{engineMode === "local" ? "远程" : "本地"}模式
+            切换为{isLocalMode ? "远程" : "本地"}模式
         </YakitButton>
     )
 
@@ -267,7 +268,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
 
         // 默认状态的按钮组合
         return (
-            <div>
+            <>
+                {renderSwitchModeButton()}
                 {renderLogButton()}
                 {!["ready", "link"].includes(yakitStatus) && (
                     <>
@@ -275,7 +277,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         {changePortBtn()}
                     </>
                 )}
-            </div>
+            </>
         )
     }, [yakitStatus, restartLoading, remoteControlRefreshLoading, engineMode, showEngineLog])
 
