@@ -28,15 +28,6 @@ const ossDomains = [
     "yaklang.oss-accelerate.aliyuncs.com"
 ]
 
-const getHttpsAgentByDomain = (domain) => {
-    // if (domain.endsWith('.yaklang.com')) {
-    //     console.info(`use ssl ca-bundle for ${domain}`);
-    //     return new https.Agent({ca: caBundle, rejectUnauthorized: true}) // unsafe...
-    // }
-    console.info(`skip ssl ca-bundle for ${domain}`)
-    return undefined
-}
-
 const config = {
     initializedOSSDomain: false,
     currentOSSDomain: "",
@@ -87,7 +78,6 @@ async function getAvailableOSSDomain() {
                 try {
                     console.info(`start to do axios.get to ${url}`)
                     const response = await axios.get(url, {
-                        httpsAgent: getHttpsAgentByDomain(domain),
                         ...(agent ? {httpsAgent: agent, proxy: false} : {})
                     })
                     if (response.status !== 200) {
@@ -161,7 +151,7 @@ const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
             }
 
             axios
-                .get(url, {...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(url)})
+                .get(url, {...(requestConfig || {})})
                 .then((response) => {
                     const versionData = Buffer.from(response.data).toString("utf8")
                     if (versionData.length > 0) {
@@ -194,7 +184,6 @@ const fetchLatestYakEngineVersion = async () => {
     const versionUrl = `https://${domain}/yak/latest/version.txt`
     return axios
         .get(versionUrl, {
-            httpsAgent: getHttpsAgentByDomain(domain),
             ...(agent ? {httpsAgent: agent, proxy: false} : {})
         })
         .then((response) => {
@@ -213,7 +202,6 @@ const fetchLatestYakitVersion = async (requestConfig) => {
     return axios
         .get(versionUrl, {
             ...(requestConfig || {}),
-            httpsAgent: getHttpsAgentByDomain(domain),
             ...(agent ? {httpsAgent: agent, proxy: false} : {})
         })
         .then((response) => {
@@ -232,7 +220,6 @@ const fetchLatestYakitEEVersion = async (requestConfig) => {
     return axios
         .get(versionUrl, {
             ...(requestConfig || {}),
-            httpsAgent: getHttpsAgentByDomain(domain),
             ...(agent ? {httpsAgent: agent, proxy: false} : {})
         })
         .then((response) => {
@@ -251,7 +238,6 @@ const fetchLatestYakitIRifyVersion = async (requestConfig) => {
     return axios
         .get(versionUrl, {
             ...(requestConfig || {}),
-            httpsAgent: getHttpsAgentByDomain(domain),
             ...(agent ? {httpsAgent: agent, proxy: false} : {})
         })
         .then((response) => {
@@ -270,7 +256,6 @@ const fetchLatestYakitIRifyEEVersion = async (requestConfig) => {
     return axios
         .get(versionUrl, {
             ...(requestConfig || {}),
-            httpsAgent: getHttpsAgentByDomain(domain),
             ...(agent ? {httpsAgent: agent, proxy: false} : {})
         })
         .then((response) => {
@@ -374,7 +359,7 @@ const downloadYakEngine = async (version, destination, progressHandler, onFinish
         downloadUrl,
         destination,
         {
-            httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host)
+            httpsAgent: undefined
         },
         progressHandler,
         onFinished,
@@ -389,7 +374,7 @@ const downloadYakitCommunity = async (version, isIRify, destination, progressHan
         downloadUrl,
         destination,
         {
-            httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host)
+            httpsAgent: undefined
         },
         progressHandler,
         onFinished,
@@ -403,7 +388,7 @@ const downloadYakitEE = async (version, isIRify, destination, progressHandler, o
         downloadUrl,
         destination,
         {
-            httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host)
+            httpsAgent: undefined
         },
         progressHandler,
         onFinished,
@@ -420,7 +405,7 @@ const downloadIntranetYakit = async (filePath, destination, progressHandler, onF
         downloadUrl,
         destination,
         {
-            httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host)
+            httpsAgent: undefined
         },
         progressHandler,
         onFinished,
