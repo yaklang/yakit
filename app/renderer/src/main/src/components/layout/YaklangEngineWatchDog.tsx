@@ -1,15 +1,15 @@
-import React, {useEffect, useRef, useState} from "react"
-import {useDebounceEffect, useMemoizedFn} from "ahooks"
-import {isEngineConnectionAlive, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
-import {EngineWatchDogCallbackType, YaklangEngineMode} from "@/yakitGVDefine"
-import {EngineModeVerbose} from "@/components/basics/YakitLoading"
-import {failed, yakitNotify} from "@/utils/notification"
-import {setRemoteValue} from "@/utils/kv"
-import {useStore, yakitDynamicStatus} from "@/store"
-import {remoteOperation} from "@/pages/dynamicControl/DynamicControl"
-import {fetchEnv, getRemoteHttpSettingGV, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
+import React, { useEffect, useRef, useState } from "react"
+import { useDebounceEffect, useMemoizedFn } from "ahooks"
+import { isEngineConnectionAlive, outputToWelcomeConsole } from "@/components/layout/WelcomeConsoleUtil"
+import { EngineWatchDogCallbackType, YaklangEngineMode } from "@/yakitGVDefine"
+import { EngineModeVerbose } from "@/components/basics/YakitLoading"
+import { failed, yakitNotify } from "@/utils/notification"
+import { setRemoteValue } from "@/utils/kv"
+import { useStore, yakitDynamicStatus } from "@/store"
+import { remoteOperation } from "@/pages/dynamicControl/DynamicControl"
+import { fetchEnv, getRemoteHttpSettingGV, isEnpriTraceAgent, isIRify } from "@/utils/envfile"
 import emiter from "@/utils/eventBus/eventBus"
-import {debugToPrintLog} from "@/utils/logCollection"
+import { debugToPrintLog } from "@/utils/logCollection"
 
 export interface YaklangEngineWatchDogCredential {
     Mode?: YaklangEngineMode
@@ -24,7 +24,7 @@ export interface YaklangEngineWatchDogCredential {
     Password?: string
 }
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 export interface YaklangEngineWatchDogProps {
     credential: YaklangEngineWatchDogCredential
@@ -34,18 +34,22 @@ export interface YaklangEngineWatchDogProps {
     onReady?: () => any
     onFailed?: (failedCount: number) => any
     onKeepaliveShouldChange?: (keepalive: boolean) => any
+    onAllowSecretLocal?: (allowSecretLocal: boolean) => any
 
     failedCallback: (type: EngineWatchDogCallbackType) => any
 }
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo(
     (props: YaklangEngineWatchDogProps) => {
+        const [ checkAllowSecretLocalFinished, setCheckAllowSecretLocalFinished ] = useState(false);
+        const [ allowSecretLocal, setAllowSecretLocal ] = useState(false);
+
         // 是否自动重启引擎进程
         const [autoStartProgress, setAutoStartProgress] = useState(false)
         // 是否正在重启引擎进程
         const startingUp = useRef<boolean>(false)
-        const {dynamicStatus, setDynamicStatus} = yakitDynamicStatus()
-        const {userInfo} = useStore()
+        const { dynamicStatus, setDynamicStatus } = yakitDynamicStatus()
+        const { userInfo } = useStore()
 
         /** 引擎信息认证 */
         const engineTest = useMemoizedFn((isDynamicControl?: boolean) => {
@@ -81,10 +85,10 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     // 如果为远程控制 则修改私有域为
                     if (isDynamicControl) {
                         // 远程控制生效
-                        setDynamicStatus({...dynamicStatus, isDynamicStatus: true})
+                        setDynamicStatus({ ...dynamicStatus, isDynamicStatus: true })
                         remoteOperation(true, dynamicStatus, userInfo)
                         if (dynamicStatus.baseUrl && dynamicStatus.baseUrl.length > 0) {
-                            setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({BaseUrl: dynamicStatus.baseUrl}))
+                            setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({ BaseUrl: dynamicStatus.baseUrl }))
                         }
                     }
                 })
@@ -121,6 +125,28 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
         /** 接受连接引擎的指令 */
         useEffect(() => {
+            // 检查是否允许随机密码模式
+            if (!checkAllowSecretLocalFinished) {
+                ipcRenderer.invoke("check-allow-secret-local-yaklang-engine").then((res) => {
+                    if (res) {
+                        setAllowSecretLocal(true)
+                        if (props.onAllowSecretLocal) {
+                            props.onAllowSecretLocal(true)
+                        }
+                    } else {
+                        if (props.onAllowSecretLocal) {
+                            props.onAllowSecretLocal(false)
+                        }
+                    }
+                }).catch((e) => {
+                    if (props.onAllowSecretLocal) {
+                        props.onAllowSecretLocal(false)
+                    }
+                }).finally(() => {
+                    setCheckAllowSecretLocalFinished(true)
+                })
+            }
+
             emiter.on("startAndCreateEngineProcess", (v?: boolean) => {
                 engineTest(!!v)
             })
@@ -129,7 +155,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             }
         }, [])
 
-        // 这个 hook
+        // 这个 hook 检查启动进程
         useDebounceEffect(
             () => {
                 const mode = props.credential.Mode
@@ -150,6 +176,15 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     return
                 }
 
+                if (!props.onAllowSecretLocal) {
+                    yakitNotify("error", "Check Allow Secret Local not found")
+                    return
+                }
+
+                if (!checkAllowSecretLocalFinished) {
+                    return
+                }
+
                 debugToPrintLog(`[INFO] 尝试启动新的引擎进程 port:${props.credential.Port}`)
 
                 // 只有普通模式才涉及到引擎启动的流程
@@ -162,7 +197,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 }, 600)
 
                 yakitNotify("info", "启动模式：" + mode)
-                
+
                 // secret-local 模式：启动带随机密码的本地引擎
                 if (mode === "secret-local") {
                     yakitNotify("info", "随机密码模式启动中")
@@ -227,8 +262,13 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     })
 
             },
-            [autoStartProgress, props.onKeepaliveShouldChange, props.credential],
-            {leading: false, wait: 1000}
+            [
+                autoStartProgress, 
+                props.onKeepaliveShouldChange, 
+                props.credential, props.onAllowSecretLocal,
+                checkAllowSecretLocalFinished,
+            ],
+            { leading: false, wait: 1000 }
         )
 
         useEffect(() => {

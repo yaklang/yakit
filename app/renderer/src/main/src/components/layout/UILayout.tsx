@@ -155,6 +155,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** yakit使用状态 */
     const [yakitStatus, setYakitStatus, getYakitStatus] = useGetSetState<YakitStatusType>("")
 
+    /** 是否允许随机密码模式 */
+    const [allowSecretLocal, setAllowSecretLocal] = useState<boolean>(false)
+
     /** 当前引擎连接状态 */
     const [engineLink, setEngineLink, getEngineLink] = useGetSetState<boolean>(false)
 
@@ -1643,6 +1646,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             <div className={styles["ui-layout-container"]}>
                 <div className={styles["container-wrapper"]}>
                     <YaklangEngineWatchDog
+                        onAllowSecretLocal={setAllowSecretLocal}
                         credential={credential}
                         /* keepalive 开启之后才会触发 Ready 和 Failed */
                         keepalive={keepalive}
@@ -1873,6 +1877,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         {!engineLink && !isRemoteEngine && (
                             <YakitLoading
                                 checkLog={checkLog}
+                                allowSecretLocal={allowSecretLocal}
                                 yakitStatus={yakitStatus}
                                 engineMode={engineMode || "local"}
                                 restartLoading={restartLoading}

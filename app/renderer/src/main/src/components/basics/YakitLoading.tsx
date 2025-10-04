@@ -58,6 +58,10 @@ export const EngineModeVerbose = (m: YaklangEngineMode, n?: DynamicStatusProps) 
 export interface YakitLoadingProp {
     /** yakit模式 */
     yakitStatus: YakitStatusType
+
+    /** 是否允许随机密码模式 */
+    allowSecretLocal: boolean
+
     /** 引擎模式 */
     engineMode: YaklangEngineMode
 
@@ -79,6 +83,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     const {
         yakitStatus,
         engineMode,
+        allowSecretLocal,
         showEngineLog,
         setShowEngineLog,
         restartLoading,
@@ -207,7 +212,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         if (["checkError", "break", "error"].includes(yakitStatus)) {
             return (
                 <>
-                    {renderSecretManualConnectButton()}
+                    {allowSecretLocal && renderSecretManualConnectButton()}
                     {renderManualConnectButton(yakitStatus)}
                     {renderSwitchModeButton()}
                     {renderLogAndPortButtons()}

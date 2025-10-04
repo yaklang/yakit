@@ -245,6 +245,79 @@ module.exports = (win, callback, getClient, newClient) => {
         })
     }
 
+    const asyncAllowSecretLocal = () => {
+        return new Promise((resolve, reject) => {
+            try {
+                const command = getLocalYaklangEngine()
+                const args = ['check-secret-local-grpc']
+                engineLogOutputFileAndUI(win, `----- 检查本地随机密码模式支持 -----`)
+                engineLogOutputFileAndUI(win, `执行命令: ${command} ${args.join(' ')}`)
+
+                const subprocess = childProcess.spawn(command, args, {
+                    stdio: ['ignore', 'pipe', 'pipe'],
+                    env: {
+                        ...process.env,
+                        YAKIT_HOME: YakitProjectPath
+                    }
+                })
+
+                let stdout = ''
+                let stderr = ''
+                let timeoutId = setTimeout(() => {
+                    subprocess.kill()
+                    engineLogOutputFileAndUI(win, `----- 检查随机密码模式超时 -----`)
+                    reject('检查随机密码模式超时')
+                }, 30000) // 30秒超时
+
+                subprocess.stdout.on('data', (data) => {
+                    const output = data.toString('utf-8')
+                    stdout += output
+                    engineLogOutputFileAndUI(win, output)
+                })
+
+                subprocess.stderr.on('data', (data) => {
+                    const output = data.toString('utf-8')
+                    stderr += output
+                    engineLogOutputFileAndUI(win, output)
+                })
+
+                subprocess.on('error', (error) => {
+                    clearTimeout(timeoutId)
+                    engineLogOutputFileAndUI(win, `----- 检查随机密码模式失败 -----`)
+                    engineLogOutputFileAndUI(win, `错误: ${error.message}`)
+                    reject(`${error.message}`)
+                })
+
+                subprocess.on('close', (code) => {
+                    clearTimeout(timeoutId)
+                    const combinedOutput = stdout + stderr
+
+                    if (code !== 0) {
+                        engineLogOutputFileAndUI(win, `----- 检查随机密码模式失败，退出码: ${code} -----`)
+                        reject(combinedOutput)
+                        return
+                    }
+
+                    // 检查输出是否包含成功标志
+                    if (combinedOutput.includes('[SUCCESS] Local GRPC server with secret authentication test passed')) {
+                        engineLogOutputFileAndUI(win, `----- 随机密码模式检查通过 -----`)
+                        resolve(true)
+                    } else {
+                        engineLogOutputFileAndUI(win, `----- 随机密码模式检查失败，输出不符合预期 -----`)
+                        reject(combinedOutput)
+                    }
+                })
+            } catch (e) {
+                engineLogOutputFileAndUI(win, `----- 执行检查命令时发生异常 -----`)
+                engineLogOutputFileAndUI(win, `${e}`)
+                reject(`${e}`)
+            }
+        })
+    }
+    ipcMain.handle("check-allow-secret-local-yaklang-engine", async (e) => {
+        return await asyncAllowSecretLocal()
+    })
+
     ipcMain.handle("start-secret-local-yaklang-engine", async(e, params) => {
         return await asyncStartSecretLocalYakEngineServer(win, params)
     })
