@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react"
-import { AutoCard } from "@/components/AutoCard"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
-import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
-import { YakitPopconfirm } from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import { YakitEmpty } from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
-import { Form, Space, Divider, message, Pagination } from "antd"
-import { useMemoizedFn } from "ahooks"
-import { failed, success } from "@/utils/notification"
+import React, {useEffect, useState} from "react"
+import {AutoCard} from "@/components/AutoCard"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {Form, Space, Divider, message, Pagination} from "antd"
+import {useMemoizedFn} from "ahooks"
+import {failed, success} from "@/utils/notification"
 import {
     KnowledgeBase,
     KnowledgeBaseListProps,
@@ -18,11 +18,11 @@ import {
     StreamStatus
 } from "./types"
 import styles from "./KnowledgeBaseList.module.scss"
-import { PlusIcon, TrashIcon } from "@/assets/newIcon"
-import { OutlinePencilaltIcon, OutlineChatalt2Icon } from "@/assets/icon/outline"
-import { SolidPlayIcon } from "@/assets/icon/solid"
+import {PlusIcon, TrashIcon} from "@/assets/newIcon"
+import {OutlinePencilaltIcon, OutlineChatalt2Icon} from "@/assets/icon/outline"
+import {SolidPlayIcon} from "@/assets/icon/solid"
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
     selectedKbId,
@@ -47,12 +47,12 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
     const fetchKnowledgeBases = useMemoizedFn(async (resetPage = false) => {
         setLoading(true)
         try {
-            const currentPagination = resetPage ? { ...pagination, Page: 1 } : pagination
+            const currentPagination = resetPage ? {...pagination, Page: 1} : pagination
             if (resetPage) {
                 setPagination(currentPagination)
             }
 
-            const response: GetKnowledgeBaseResponse = await ipcRenderer.invoke("GetKnowledgeBase", {
+            const response: GetKnowledgeBaseResponse = await ipcRenderer.invoke("CreateKnowledgeBaseV2", {
                 Keyword: searchKeyword || undefined,
                 Pagination: currentPagination
             })
@@ -224,7 +224,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
             <AutoCard
                 title='知识库列表'
                 size='small'
-                bodyStyle={{ padding: 12 }}
+                bodyStyle={{padding: 12}}
                 extra={
                     <Space>
                         <YakitInput.Search
@@ -232,7 +232,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                             value={searchKeyword}
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             onSearch={handleSearch}
-                            style={{ width: 200 }}
+                            style={{width: 200}}
                             size='small'
                         />
                         <YakitButton type='primary' size='small' icon={<PlusIcon />} onClick={handleOpenCreate}>
@@ -249,8 +249,9 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                             {knowledgeBases.map((kb) => (
                                 <div
                                     key={kb.ID}
-                                    className={`${styles["kb-item"]} ${selectedKbId === kb.ID ? styles["selected"] : ""
-                                        }`}
+                                    className={`${styles["kb-item"]} ${
+                                        selectedKbId === kb.ID ? styles["selected"] : ""
+                                    }`}
                                     onClick={() => onSelectKb(kb)}
                                 >
                                     <div className={styles["kb-info"]}>
@@ -354,7 +355,9 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                             total={total}
                             showSizeChanger={true}
                             showQuickJumper={true}
-                            showTotal={(total) => <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>共 {total} 条记录</div>}
+                            showTotal={(total) => (
+                                <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>共 {total} 条记录</div>
+                            )}
                             onChange={handlePageChange}
                             pageSizeOptions={["10", "20", "50", "100"]}
                         />
@@ -375,11 +378,11 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                 okText='确认'
                 cancelText='取消'
             >
-                <Form form={form} layout='vertical' style={{ marginTop: 16 }}>
+                <Form form={form} layout='vertical' style={{marginTop: 16}}>
                     <Form.Item
                         label='知识库名称'
                         name='KnowledgeBaseName'
-                        rules={[{ required: true, message: "请输入知识库名称" }]}
+                        rules={[{required: true, message: "请输入知识库名称"}]}
                     >
                         <YakitInput placeholder='请输入知识库名称' />
                     </Form.Item>
@@ -389,7 +392,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                     <Form.Item
                         label='知识库类型'
                         name='KnowledgeBaseType'
-                        rules={[{ required: true, message: "请输入知识库类型" }]}
+                        rules={[{required: true, message: "请输入知识库类型"}]}
                     >
                         <YakitInput placeholder='请输入知识库类型' />
                     </Form.Item>

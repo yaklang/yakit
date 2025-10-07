@@ -1,5 +1,14 @@
-import type {KnowledgeBase} from "@/components/playground/knowlegeBase"
-import type {TRepositoryManageProps} from "./KnowledgeBaseManage"
+import type {GetKnowledgeBaseResponse, KnowledgeBase} from "@/components/playground/knowlegeBase"
+import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+interface KnowledgeBaseFile {
+    path: string
+    fileType: string
+}
+
+interface TRepositoryManageProps {
+    knowledgeBasesData?: GetKnowledgeBaseResponse["KnowledgeBases"]
+    knowledgeBasesRunAsync: () => Promise<KnowledgeBase[]>
+}
 
 interface TKnowledgeBaseProps {
     refreshAsync: Pick<TRepositoryManageProps, "knowledgeBasesRunAsync">["knowledgeBasesRunAsync"]
@@ -16,6 +25,40 @@ interface TDeleteConfirmProps extends Required<Pick<TKnowledgeBaseProps, "refres
     onVisible: (v: boolean) => void
 }
 
+interface CreateKnowledgeBaseData {
+    KnowledgeBaseFile: KnowledgeBaseFile[]
+    KnowledgeBaseName: string
+    KnowledgeBaseType: string
+    KnowledgeBaseDescription: string
+    KnowledgeBaseLength: number
+    streamToken: string
+    streamstep: 1 | 2 | "success"
+}
 
+interface TListThirdPartyBinaryResponse {
+    Binaries: {
+        Name: string
+        SupportCurrentPlatform: boolean
+        Description: string
+        InstallPath: string
+        DownloadURL: string
+    }[]
+}
 
-export type {TKnowledgeBaseProps, TDeleteConfirmProps}
+interface KnowledgeBaseContentProps {
+    KnowledgeBases?: (CreateKnowledgeBaseData & {ID: string})[]
+}
+
+type TExistsKnowledgeBaseAsync = {
+    existsKnowledgeBaseAsync: (Keyword?: string) => Promise<any>
+}
+
+export type {
+    TKnowledgeBaseProps,
+    TDeleteConfirmProps,
+    KnowledgeBaseFile,
+    CreateKnowledgeBaseData,
+    KnowledgeBaseContentProps,
+    TExistsKnowledgeBaseAsync,
+    TListThirdPartyBinaryResponse
+}

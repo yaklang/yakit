@@ -1,0 +1,322 @@
+import Icon from "@ant-design/icons"
+import {CustomIconComponentProps} from "@ant-design/icons/lib/components/Icon"
+import React from "react"
+
+interface IconProps extends CustomIconComponentProps {
+    onClick: (e: React.MouseEvent) => void
+}
+
+const Crab = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#C0ABFF' />
+        <path
+            d='M118 205H86V185H118V205ZM170 205H138V185H170V205ZM100 89H156V69H176V89H196V109H214V129H230V185H210V149H190V185H170V165H86V185H66V149H46V185H26V129H42V109H60V89H80V69H100V89ZM80 109V129H100V109H80ZM156 109V129H176V109H156ZM80 69H60V49H80V69ZM196 69H176V49H196V69Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 螃蟹
+export const CrabIcon = (props: Partial<IconProps>) => <Icon component={Crab} {...props} />
+
+const SleepingCat = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#D6CAC6' />
+        <path
+            d='M154 69H162V85H170V93H189V85H198V77H206V69H214V60H222V69H230V136H240V180H230V189H222V195H112V189H94V179H68V170H42V179H16V155H26V146H68V155H76V121H86V111H94V103H112V93H120V85H128V77H138V69H146V60H154V69ZM138 154V162H162V154H138ZM198 154V162H222V154H198ZM146 85H136V93H128V103H146V93H154V76H146V85ZM214 85H205V93H214V103H222V76H214V85Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 睡觉猫咪
+export const SleepingCatIcon = (props: Partial<IconProps>) => <Icon component={SleepingCat} {...props} />
+
+const Tiger = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#CFFF82' />
+        <path
+            d='M94 82H162V48H174V82H184V94H196V106H208V60H220V162H208V174H172V196H160V208H148V220H108V208H96V196H84V174H48V162H36V60H48V106H60V94H72V82H82V48H94V82ZM106 174V184H117V196H139V184H150V174H106ZM84 174H94V164H84V174ZM162 174H172V164H162V174ZM95 106V126H60V138H83V150H105V106H95ZM151 116V150H173V138H196V126H161V116H151ZM60 60H48V48H60V60ZM208 60H196V48H208V60ZM82 48H60V36H82V48ZM196 48H174V36H196V48Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 老虎
+export const TigerIcon = (props: Partial<IconProps>) => <Icon component={Tiger} {...props} />
+
+const Cat = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <g clipPath='url(#clip0_46163_26594)'>
+            <rect width='256' height='256' fill='#83E1FF' />
+            <path
+                d='M175.871 220.13H139.742V193.033H127.097V220.13H103.613V205.677H90.9678V220.13H67.4844V182.194H80.1299V169.549H175.871V220.13ZM56.6455 220.129H44V205.677H56.6455V220.129ZM114.452 193.033H127.097V180.387H114.452V193.033ZM139.742 193.033H152.388V180.387H139.742V193.033ZM92.7734 50.322H102.709V62.9675H153.29V50.322H163.225V35.8708H188.516V75.613H199.354V86.4519H212V147.871H199.354V158.71H56.6455V147.871H44V86.4519H56.6455V75.613H67.4834V35.8708H92.7734V50.322ZM128 146.064H140.646V133.419H128V146.064ZM90.9678 133.419H103.613V109.935H90.9678V133.419ZM163.226 133.419H175.871V109.935H163.226V133.419Z'
+                fill='#171717'
+            />
+        </g>
+        <defs>
+            <clipPath id='clip0_46163_26594'>
+                <rect width='256' height='256' fill='white' />
+            </clipPath>
+        </defs>
+    </svg>
+)
+
+// 猫咪
+export const CatIcon = (props: Partial<IconProps>) => <Icon component={Cat} {...props} />
+
+const Octopus = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <g clipPath='url(#clip0_46163_26598)'>
+            <rect width='256' height='256' fill='#F79BFF' />
+            <path
+                d='M166 54.1309H176V118H191.957V45H211.957V128H202V138H176.392V192H191.957V155.392H211.957V201.392H201.305V212H156.305V138H138.044V212H117.957V138H99.6953V212H54.6953V201.392H44.0439V155.392H64.0439V192H79.6084V138H54V128H44.0439V45H64.0439V118H80V54.1309H90V44H166V54.1309ZM99.6953 69V85.4346H117.956V69H99.6953ZM138.044 69V85.4346H156.305V69H138.044Z'
+                fill='#171717'
+            />
+        </g>
+        <defs>
+            <clipPath id='clip0_46163_26598'>
+                <rect width='256' height='256' fill='white' />
+            </clipPath>
+        </defs>
+    </svg>
+)
+
+// 章鱼
+export const OctopusIcon = (props: Partial<IconProps>) => <Icon component={Octopus} {...props} />
+
+const Pig = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#A5FFAB' />
+        <path
+            d='M55.8428 57.6475H70.2744V68.4707H81.0977V81.0986H91.9209V68.4707H164.078V81.0986H174.901V68.4707H185.726V57.6475H200.157V45.0195H210.98V57.6475H220V93.7256H210.98V68.4707H200.156V93.7256H210.98V104.549H200.156V115.372H209.177V128H220V173.098H209.177V185.726H200.157V198.353H187.529V210.98H68.4707V198.353H55.8428V185.726H46.8232V173.098H36V128H46.8232V115.372H55.8428V104.549H45.0195V93.7256H55.8428V68.4707H45.0195V93.7256H36V57.6475H45.0195V45.0195H55.8428V57.6475ZM104.549 185.726V196.549H151.451V185.726H104.549ZM93.7256 174.902V185.726H104.549V174.902H93.7256ZM151.451 174.902V185.726H162.274V174.902H151.451ZM82.9023 150.549V174.902H93.7256V150.549H82.9023ZM104.549 150.549V174.902H115.372V150.549H104.549ZM140.627 150.549V174.902H151.451V150.549H140.627ZM162.274 150.549V174.902H173.098V150.549H162.274ZM93.7256 139.726V150.549H104.549V139.726H93.7256ZM151.451 139.726V150.549H162.274V139.726H151.451ZM104.549 128.902V139.726H151.451V128.902H104.549ZM81.0977 116.274V127.098H91.9219V116.274H81.0977ZM164.078 116.274V127.098H174.902V116.274H164.078Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 猪
+export const PigIcon = (props: Partial<IconProps>) => <Icon component={Pig} {...props} />
+
+const Dog = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#FFD58F' />
+        <path
+            d='M53 48H63V36H109V48H119V36H129V58H141V80H163V92H185V102H218V69H224V167H218V212H206V220H196V190H173V212H161V220H151V190H107V212H95V220H85V190H63V212H53V220H43V179H32V69H43V36H53V48ZM63 91V113H53V123H97V113H73V101H85V91H63ZM43 103V113H53V103H43ZM97 103V113H107V103H97ZM53 70V80H63V70H53ZM87 70V80H97V70H87Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 狗
+export const DogIcon = (props: Partial<IconProps>) => <Icon component={Dog} {...props} />
+
+const Rabbit = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#F79BFF' />
+        <path
+            d='M106 48H122V120H134V48H150V36H178V48H192V134H208V148H220V192H208V206H192V220H64V206H48V192H36V148H48V134H64V48H78V36H106V48ZM122 178V192H134V178H122ZM94 148V178H106V148H94ZM150 148V178H162V148H150Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 兔子
+export const RabbitIcon = (props: Partial<IconProps>) => <Icon component={Rabbit} {...props} />
+
+const JumpingDragon = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#83E1FF' />
+        <path
+            d='M215 41.4121H224V80.9414H176V90.3525H206V99.7646H167V118.588H186V135.529H176V128H167V157.177H158V170.353H148V179.765H139V214.588H149V224H129V198.588H119V189.177H110V198.588H100V208H92V214.588H102V224H82V189.177H72V179.765H62V170.353H52V161.883H42V152.471H32V99.7646H42V116.706H52V125.177H62V134.588H82V128H92V118.588H105V109.177H119V99.7646H130V41.4121H139V32H215V41.4121ZM148 43V53H158V43H148Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 跳跳龙
+export const JumpingDragonIcon = (props: Partial<IconProps>) => <Icon component={JumpingDragon} {...props} />
+
+const Batman = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#C0ABFF' />
+        <path
+            d='M93 80H87V92H93V106H99V112H105V106H112V86H118V92H138V86H144V106H151V112H157V106H163V92H169V80H163V68H186V74H198V80H210V86H216V92H222V98H228V104H234V118H240V144H234V138H228V132H216V126H198V132H192V150H186V144H163V150H157V169H151V163H138V177H131V195H125V177H118V163H105V169H99V150H93V144H70V150H64V132H58V126H40V132H28V138H22V144H16V118H22V104H28V98H34V92H40V86H46V80H58V74H70V68H93V80ZM117 112V118H123V112H117ZM133 112V118H139V112H133Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 蝙蝠侠
+export const BatmanIcon = (props: Partial<IconProps>) => <Icon component={Batman} {...props} />
+
+const Skeleton = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#FF819A' />
+        <path
+            d='M82.9023 196.55H72.0781V220H49.5293V209.177H36V185.726H61.2549V174.902H82.9023V196.55ZM194.745 185.726H220V209.177H206.471V220H183.922V196.55H173.098V174.902H194.745V185.726ZM72.0781 59.4512H82.9023V70.2744H72.0781V81.0977H82.9023V70.2744H93.7256V57.6475H162.274V70.2744H173.098V59.4512H183.922V36H207.373V46.8232H220V70.2744H194.745V81.0977H185.726V93.7256H196.549V149.647H185.726V162.274H162.274V196.549H151.45V183.922H140.627V196.549H117.176V183.922H106.353V196.549H93.7256V162.274H70.2744V149.647H59.4512V93.7256H70.2744V81.0977H61.2549V70.2744H36V46.8232H48.627V36H72.0781V59.4512ZM128.901 140.628V151.451H118.078V162.275H139.726V140.628H128.901ZM82.9014 105.451V116.274H72.0781V137.922H82.9014V148.745H104.549V137.922H115.372V116.274H104.549V105.451H82.9014ZM151.45 105.451V116.274H140.627V137.922H151.45V148.745H173.098V137.922H183.921V116.274H173.098V105.451H151.45ZM173.098 81.0977H183.922V70.2744H173.098V81.0977Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 骷髅
+export const SkeletonIcon = (props: Partial<IconProps>) => <Icon component={Skeleton} {...props} />
+
+const MeasuringCup = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#6FFFEB' />
+        <path
+            d='M205.568 220H50.4316V205.568H205.568V220ZM50.4316 205.568H36V162.274H50.4316V205.568ZM220 205.568H205.568V162.274H220V205.568ZM79.2939 191.138H64.8623V176.706H79.2939V191.138ZM176.706 176.706H147.843V147.843H176.706V176.706ZM64.8623 162.274H50.4316V147.843H64.8623V162.274ZM205.568 162.274H191.138V147.843H205.568V162.274ZM79.2939 147.843H64.8623V133.412H79.2939V147.843ZM191.138 147.843H176.706V133.412H191.138V147.843ZM147.843 104.549H162.274V118.98H176.706V133.412H79.2939V118.98H93.7256V104.549H108.157V50.4316H93.7256V36H162.274V50.4316H147.843V104.549Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 量杯
+export const MeasuringCupIcon = (props: Partial<IconProps>) => <Icon component={MeasuringCup} {...props} />
+
+const Car = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#D6CAC6' />
+        <path
+            d='M77 166H166V152H178V166H214V178H191V190H177V202H91V190H77V176H53V190H39V202H27V164H53V152H65V140H77V166ZM77 202H53V190H77V202ZM214 202H191V190H214V202ZM226 190H214V178H226V190ZM214 90H230V166H214V152H178V90H166V78H214V90ZM53 152H27V78H53V152ZM166 152H154V140H166V152ZM154 66H166V78H154V140H77V66H65V54H154V66ZM65 78H53V66H65V78Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 车
+export const CarIcon = (props: Partial<IconProps>) => <Icon component={Car} {...props} />
+
+const TV = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <g clipPath='url(#clip0_46163_26578)'>
+            <rect width='256' height='256' fill='#A5FFAB' />
+            <path
+                d='M187 58H197V68H207V78H217V194H207V204H197V224H177V204H81V224H61V204H51V194H41V78H51V68H61V58H71V48H187V58ZM181 164V184H197V164H181ZM61 88V166H161V88H61ZM181 126V146H197V126H181ZM181 88V108H197V88H181Z'
+                fill='#171717'
+            />
+        </g>
+        <defs>
+            <clipPath id='clip0_46163_26578'>
+                <rect width='256' height='256' fill='white' />
+            </clipPath>
+        </defs>
+    </svg>
+)
+
+// 电视
+export const TVIcon = (props: Partial<IconProps>) => <Icon component={TV} {...props} />
+
+const Headphones = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#6FFFEB' />
+        <path
+            d='M171 48H191V57H203V68H215V111H225V133H230V177H225V199H215V210H203V220H171V122H193V134H203V81H191V68H179V60H159V48H97V60H77V68H65V81H53V134H63V122H85V220H53V210H41V199H31V177H26V133H31V111H41V68H53V57H65V48H85V36H171V48Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 耳机
+export const HeadphonesIcon = (props: Partial<IconProps>) => <Icon component={Headphones} {...props} />
+
+const SmileyFace = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#FFF27B' />
+        <path
+            d='M168 48H188V58H198V68H208V88H220V168H208V188H198V198H188V208H168V220H88V208H68V198H58V188H48V168H36V88H48V68H58V58H68V48H88V36H168V48ZM106 169V179H150V169H106ZM88 159V169H106V159H88ZM150 159V169H168V159H150ZM78 149V159H88V149H78ZM168 149V159H178V149H168ZM87 90V99H78V109H87V118H97V109H106V99H97V90H87ZM159 90V99H150V109H159V118H169V109H178V99H169V90H159Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 笑脸
+export const SmileyFaceIcon = (props: Partial<IconProps>) => <Icon component={SmileyFace} {...props} />
+
+const Heart = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#CFFF82' />
+        <path
+            d='M118 67H138V45H207V67H230V135H207V157H186V179H162V201H139V223H117V201H94V179H70V157H49V135H26V67H49V45H118V67ZM60 92V112H80V92H60ZM80 72V92H100V72H80Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 心
+export const HeartIcon = (props: Partial<IconProps>) => <Icon component={Heart} {...props} />
+
+const Wallet = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#FFD58F' />
+        <path
+            d='M140 94H152V106H164V94H184V106H196V128H208V140H220V196H208V208H196V220H60V208H48V196H36V140H48V128H60V106H72V94H92V106H82V118H92V106H104V94H116V82H140V94ZM128 106V118H116V130H128V152H116V164H128V186H116V198H128V208H140V198H152V186H140V164H152V152H140V130H152V118H140V106H128ZM104 174V186H116V174H104ZM152 164V186H164V164H152ZM104 130V152H116V130H104ZM152 130V142H164V130H152ZM164 118H176V106H164V118ZM104 94H92V82H104V94ZM164 94H152V82H164V94ZM153 48H142V60H130V72H118V60H106V72H94V60H105V48H94V60H82V48H94V36H153V48ZM186 48H175V60H164V72H142V60H153V48H164V36H186V48ZM82 48H70V36H82V48Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 钱袋子
+export const WalletIcon = (props: Partial<IconProps>) => <Icon component={Wallet} {...props} />
+
+const Diamond = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <rect width='256' height='256' fill='#FFF27B' />
+        <path
+            d='M135.467 212.134H120.533V197.2H135.467V212.134ZM120.533 197.2H105.6V182.267H120.533V197.2ZM225.066 122.533H210.134V137.467H195.2V152.4H180.267V167.333H165.333V182.267H150.4V197.2H135.467V107.6H225.066V122.533ZM105.6 182.267H90.667V167.333H105.6V182.267ZM90.667 167.333H75.7334V152.4H90.667V167.333ZM75.7334 152.4H60.7998V137.467H75.7334V152.4ZM60.7998 137.467H45.8662V122.533H60.7998V137.467ZM75.7334 62.7998H90.667V47.8662H165.333V62.7998H150.4V77.7334H135.467V92.667H120.533V77.7334H105.6V92.667H120.533V107.6H45.8662V122.533H30.9336V107.6H16V92.667H30.9336V77.7334H45.8662V62.7998H60.7998V47.8662H75.7334V62.7998ZM240 107.6H225.066V92.667H240V107.6ZM225.066 92.667H210.134V77.7334H225.066V92.667ZM90.667 77.7334H105.6V62.7998H90.667V77.7334ZM210.134 77.7334H195.2V62.7998H210.134V77.7334ZM195.2 62.7998H180.267V47.8662H195.2V62.7998Z'
+            fill='#171717'
+        />
+    </svg>
+)
+
+// 钻石
+export const DiamondIcon = (props: Partial<IconProps>) => <Icon component={Diamond} {...props} />
+
+const Robot = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256' fill='none'>
+        <g clipPath='url(#clip0_46163_26596)'>
+            <rect width='256' height='256' fill='#FF819A' />
+            <path
+                d='M158.667 86.5098H178.51V108.157H200.157V128H220V189.333H200.157V147.843H178.51V165.883H156.862V220H137.02V165.883H118.98V220H99.1377V165.883H77.4902V147.843H55.8428V189.333H36V128H55.8428V108.157H77.4902V86.5098H97.333V66.667H158.667V86.5098ZM99.1377 108.157V128H118.98V108.157H99.1377ZM137.02 108.157V128H156.862V108.157H137.02ZM97.333 66.667H77.4902V46.8232H97.333V66.667ZM178.51 66.667H158.667V46.8232H178.51V66.667ZM77.4902 46.8232H57.6475V36H77.4902V46.8232ZM198.353 46.8232H178.51V36H198.353V46.8232Z'
+                fill='#171717'
+            />
+        </g>
+        <defs>
+            <clipPath id='clip0_46163_26596'>
+                <rect width='256' height='256' fill='white' />
+            </clipPath>
+        </defs>
+    </svg>
+)
+
+// 机器人
+export const RobotIcon = (props: Partial<IconProps>) => <Icon component={Robot} {...props} />
+
+const LightningBolt = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M8.6665 6.66667V2L2.6665 9.33333H7.33317L7.33317 14L13.3332 6.66667L8.6665 6.66667Z'
+            stroke='url(#paint0_linear_46630_6719)'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <defs>
+            <linearGradient
+                id='paint0_linear_46630_6719'
+                x1='2.6665'
+                y1='2'
+                x2='15.7306'
+                y2='5.83677'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+
+export const LightningBoltIcon = (props: Partial<IconProps>) => <Icon component={LightningBolt} {...props} />

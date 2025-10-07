@@ -117,48 +117,9 @@ const AddKnowledgenBaseModal: FC<TAddKnowledgenBaseModalProps> = ({
                     })
                 })
             } else if (!error && !success) {
+                // TODO 此处逻辑需要修改
                 setSreamStatus((pre) => ({...pre, success: true}))
                 setTargetToken(lastTokenRef.current)
-
-                const pluginData = await grpcFetchLocalPluginDetail({Name: "构建知识条目"}, true)
-                let executeParams = {
-                    params: {
-                        Code: "",
-                        PluginType: "yak",
-                        PluginName: "构建知识条目",
-                        ExecParams: [
-                            {
-                                Key: "kbName",
-                                Value: addKnowledgenBaseModal.KnowledgeBaseName!
-                            },
-                            {
-                                Key: "query",
-                                Value: ""
-                            },
-                            {
-                                Key: "entrylen",
-                                Value: "1000"
-                            },
-                            {
-                                Key: "k",
-                                Value: "0"
-                            },
-                            {
-                                Key: "kmin",
-                                Value: "2"
-                            },
-                            {
-                                Key: "kmax",
-                                Value: "4"
-                            }
-                        ]
-                    },
-                    pluginCustomParams: pluginData?.Params
-                }
-                run({
-                    ...executeParams,
-                    token: lastTokenRef.current
-                })
             } else {
                 debugPluginStreamEvent.stop()
                 await runAsync(params)

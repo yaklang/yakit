@@ -18,11 +18,6 @@ import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
 
-interface TRepositoryManageProps {
-    knowledgeBasesData?: GetKnowledgeBaseResponse["KnowledgeBases"]
-    knowledgeBasesRunAsync: () => Promise<KnowledgeBase[]>
-}
-
 const createMenuList = [
     // {
     //     key: "import",
@@ -170,4 +165,3 @@ const KnowledgeBaseManage: FC<{
 }
 
 export {KnowledgeBaseManage}
-export type {TRepositoryManageProps}
