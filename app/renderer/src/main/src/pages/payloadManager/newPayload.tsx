@@ -1316,7 +1316,9 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
             <div className={styles["new-payload-list"]}>
                 <div className={styles["header"]}>
                     <div className={styles["title-box"]}>
-                        <div className={styles["title"]}>{onlyInsert ? t("NewPayloadLocalList.selectDictionaryToInsert") : "字典管理"}</div>
+                        <div className={styles["title"]}>
+                            {onlyInsert ? t("NewPayloadLocalList.selectDictionaryToInsert") : "字典管理"}
+                        </div>
                         <div className={styles["count"]}>{getPayloadCount}</div>
                         {!onlyInsert && (
                             <YakitButton
@@ -4580,7 +4582,9 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                                 <PropertyNoAddIcon />
                             </div>
                             <div className={styles["title"]}>{selectInfo}</div>
-                            <div className={styles["sub-title"]}>{t("ReadOnlyNewPayload.supportInsertFileForFuzz")}</div>
+                            <div className={styles["sub-title"]}>
+                                {t("ReadOnlyNewPayload.supportInsertFileForFuzz")}
+                            </div>
                         </div>
                     ) : (
                         <YakitEmpty title={t("ReadOnlyNewPayload.pleaseSelectDictionaryOrFolder")} />

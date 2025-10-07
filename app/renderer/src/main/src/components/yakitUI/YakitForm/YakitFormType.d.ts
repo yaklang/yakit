@@ -1,4 +1,4 @@
-import {YakitAutoCompleteProps} from './../YakitAutoComplete/YakitAutoCompleteType.d';
+import {YakitAutoCompleteProps} from "./../YakitAutoComplete/YakitAutoCompleteType.d"
 import {FormItemProps, InputProps} from "antd"
 import {DraggerProps} from "antd/lib/upload"
 import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
@@ -28,7 +28,7 @@ export interface YakitDraggerProps extends FileDraggerProps {
     /**@description selectType为file,该属性才有效*/
     setContent?: (s: string) => void
     uploadFileText?: string
-    uploadFolderText?:string
+    uploadFolderText?: string
     help?: ReactDOM
     showExtraHelp?: ReactDOM
     showDefHelp?: boolean
@@ -77,13 +77,13 @@ export interface YakitFormDraggerContentProps extends YakitDraggerContentProps {
 }
 
 export interface YakitDraggerContentPathProps extends YakitDraggerContentProps {
-    textAreaType: "content"|"path"
-    onTextAreaType:(v:"content"|"path") => void
+    textAreaType: "content" | "path"
+    onTextAreaType: (v: "content" | "path") => void
 }
 
 export interface YakitFormDraggerContentPathProps extends YakitDraggerContentProps {
-    textAreaType: "content"|"path"
-    onTextAreaType:(v:"content"|"path") => void
+    textAreaType: "content" | "path"
+    onTextAreaType: (v: "content" | "path") => void
     formItemClassName?: string
     formItemProps?: FormItemProps
 }

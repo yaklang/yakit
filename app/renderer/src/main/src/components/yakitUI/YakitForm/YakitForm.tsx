@@ -25,7 +25,7 @@ import {YakitSpin} from "../YakitSpin/YakitSpin"
 import {YakitRadioButtons} from "../YakitRadioButtons/YakitRadioButtons"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import { handleOpenFileSystemDialog, OpenDialogOptions } from "@/utils/fileSystemDialog"
+import {handleOpenFileSystemDialog, OpenDialogOptions} from "@/utils/fileSystemDialog"
 
 const {Dragger} = Upload
 
@@ -350,15 +350,14 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         if (multiple !== false) {
             properties.push("multiSelections")
         }
-            handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFolder"), properties})
-            .then((data) => {
-                const filesLength = data.filePaths.length
-                if (filesLength) {
-                    const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
-                    // 设置名字
-                    if (setFileName) setFileName(absolutePath)
-                }
-            })
+        handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFolder"), properties}).then((data) => {
+            const filesLength = data.filePaths.length
+            if (filesLength) {
+                const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
+                // 设置名字
+                if (setFileName) setFileName(absolutePath)
+            }
+        })
     })
     /**选择文件 */
     const onUploadFile = useMemoizedFn(() => {
@@ -367,33 +366,32 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         if (multiple !== false) {
             properties.push("multiSelections")
         }
-            handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFile"), properties})
-            .then((data) => {
-                const filesLength = data.filePaths.length
-                let acceptFlag = true
-                if (filesLength) {
-                    const absolutePath: string[] = []
-                    data.filePaths.forEach((p) => {
-                        const path = p.replace(/\\/g, "\\")
-                        if (fileExtensionIsExist || !!props.accept) {
-                            if (isAcceptEligible(path, props.accept || ".*")) {
-                                absolutePath.push(path)
-                            } else {
-                                acceptFlag = false
-                            }
-                        } else {
+        handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFile"), properties}).then((data) => {
+            const filesLength = data.filePaths.length
+            let acceptFlag = true
+            if (filesLength) {
+                const absolutePath: string[] = []
+                data.filePaths.forEach((p) => {
+                    const path = p.replace(/\\/g, "\\")
+                    if (fileExtensionIsExist || !!props.accept) {
+                        if (isAcceptEligible(path, props.accept || ".*")) {
                             absolutePath.push(path)
+                        } else {
+                            acceptFlag = false
                         }
-                    })
-
-                    if (props.accept && !acceptFlag) {
-                        failed(t("YakitFormDragger.onlySupportFormat", {accept: props.accept}))
+                    } else {
+                        absolutePath.push(path)
                     }
+                })
 
-                    // 设置名字
-                    if (setFileName) setFileName(absolutePath.join(","))
+                if (props.accept && !acceptFlag) {
+                    failed(t("YakitFormDragger.onlySupportFormat", {accept: props.accept}))
                 }
-            })
+
+                // 设置名字
+                if (setFileName) setFileName(absolutePath.join(","))
+            }
+        })
     })
     /**拖拽文件夹后的路径回显文本处理 */
     const afterFolderDrop = useMemoizedFn((e) => {
@@ -670,26 +668,25 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
     const onUploadFile = useMemoizedFn((e) => {
         e.stopPropagation()
         if (disabled) return
-            handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFile"), properties: ["openFile"]})
-            .then((data) => {
-                const filesLength = data.filePaths.length
-                if (filesLength === 1) {
-                    const path: string = data.filePaths[0].replace(/\\/g, "\\")
-                    ipcRenderer
-                        .invoke("fetch-file-info-by-path", path)
-                        .then((fileInfo) => {
-                            onHandlerFile({
-                                size: fileInfo.size,
-                                path
-                            })
+        handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFile"), properties: ["openFile"]}).then((data) => {
+            const filesLength = data.filePaths.length
+            if (filesLength === 1) {
+                const path: string = data.filePaths[0].replace(/\\/g, "\\")
+                ipcRenderer
+                    .invoke("fetch-file-info-by-path", path)
+                    .then((fileInfo) => {
+                        onHandlerFile({
+                            size: fileInfo.size,
+                            path
                         })
-                        .catch((err) => {
-                            yakitNotify("error", t("YakitDraggerContent.file_read_error") + err)
-                        })
-                } else if (filesLength > 1) {
-                    yakitNotify("error", t("YakitDraggerContent.single_file_only"))
-                }
-            })
+                    })
+                    .catch((err) => {
+                        yakitNotify("error", t("YakitDraggerContent.file_read_error") + err)
+                    })
+            } else if (filesLength > 1) {
+                yakitNotify("error", t("YakitDraggerContent.single_file_only"))
+            }
+        })
     })
     /**通过文件路径获取文件内容 */
     const onGetContent = useMemoizedFn((path: string) => {
@@ -739,7 +736,8 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                                 })}
                                 onClick={onUploadFile}
                             >
-                                <OutlineUploadIcon className={styles["upload-icon"]} /> {t("YakitDraggerContent.click_here")}
+                                <OutlineUploadIcon className={styles["upload-icon"]} />{" "}
+                                {t("YakitDraggerContent.click_here")}
                             </span>
                             {t("YakitButton.upload")}
                         </label>
@@ -855,26 +853,25 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
     const onUploadFile = useMemoizedFn((e) => {
         e.stopPropagation()
         if (disabled) return
-            handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
-            .then((data) => {
-                const filesLength = data.filePaths.length
-                if (filesLength === 1) {
-                    const path: string = data.filePaths[0].replace(/\\/g, "\\")
-                    ipcRenderer
-                        .invoke("fetch-file-info-by-path", path)
-                        .then((fileInfo) => {
-                            onHandlerFile({
-                                size: fileInfo.size,
-                                path
-                            })
+        handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]}).then((data) => {
+            const filesLength = data.filePaths.length
+            if (filesLength === 1) {
+                const path: string = data.filePaths[0].replace(/\\/g, "\\")
+                ipcRenderer
+                    .invoke("fetch-file-info-by-path", path)
+                    .then((fileInfo) => {
+                        onHandlerFile({
+                            size: fileInfo.size,
+                            path
                         })
-                        .catch((err) => {
-                            yakitNotify("error", "文件数据读取异常:" + err)
-                        })
-                } else if (filesLength > 1) {
-                    yakitNotify("error", "只支持单文件上传")
-                }
-            })
+                    })
+                    .catch((err) => {
+                        yakitNotify("error", "文件数据读取异常:" + err)
+                    })
+            } else if (filesLength > 1) {
+                yakitNotify("error", "只支持单文件上传")
+            }
+        })
     })
     /**通过文件路径获取文件内容 */
     const onGetContent = useMemoizedFn((size: number, path: string) => {

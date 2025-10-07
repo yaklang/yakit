@@ -1020,6 +1020,72 @@ export const OutlineChataltIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineChatalt} {...props} />
 }
 
+const OutLineAiChat = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M5.33333 8H5.34M8 8H8.00667M10.6667 8H10.6733M14 8C14 10.9455 11.3137 13.3333 8 13.3333C6.97382 13.3333 6.00781 13.1043 5.16311 12.7007L2 13.3333L2.92999 10.8534C2.34104 10.0282 2 9.04952 2 8C2 5.05448 4.68629 2.66667 8 2.66667C11.3137 2.66667 14 5.05448 14 8Z'
+            stroke='url(#paint0_linear_46437_36788)'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <circle cx='5.33317' cy='8' r='0.666667' fill='url(#paint1_linear_46437_36788)' />
+        <circle cx='8.00016' cy='8' r='0.666667' fill='url(#paint2_linear_46437_36788)' />
+        <ellipse cx='10.6667' cy='8' rx='0.666667' ry='0.666667' fill='url(#paint3_linear_46437_36788)' />
+        <defs>
+            <linearGradient
+                id='paint0_linear_46437_36788'
+                x1='2'
+                y1='2.66667'
+                x2='16.0268'
+                y2='7.88042'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+            <linearGradient
+                id='paint1_linear_46437_36788'
+                x1='4.6665'
+                y1='7.33333'
+                x2='6.26579'
+                y2='7.86173'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stop-olor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+            <linearGradient
+                id='paint2_linear_46437_36788'
+                x1='7.3335'
+                y1='7.33333'
+                x2='8.93278'
+                y2='7.86173'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+            <linearGradient
+                id='paint3_linear_46437_36788'
+                x1='10'
+                y1='7.33333'
+                x2='11.5993'
+                y2='7.86173'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+
+export const OutlineAiChatIcon = (props: Partial<IconProps>) => <Icon component={OutLineAiChat} {...props} />
+
 const OutlineChatalt2 = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path

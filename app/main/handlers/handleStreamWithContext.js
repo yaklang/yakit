@@ -14,6 +14,8 @@ module.exports = {
 
         streamMap.set(token, stream)
         stream.on("data", (data) => {
+            console.log(12345678910)
+
             if (!windows) {
                 return
             }
