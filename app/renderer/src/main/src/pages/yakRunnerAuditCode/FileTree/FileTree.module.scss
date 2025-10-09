@@ -1,10 +1,12 @@
 /* ---------- FileTree ----------*/
 .file-tree {
-    height: 100%;
     padding: 0px 0px 0px 4px;
+    flex: 1;
+    overflow: hidden;
     :global {
         .ant-tree .ant-tree-treenode {
             padding-bottom: 0;
+            background-color: var(--Colors-Use-Basic-Background);
         }
         .ant-tree-switcher {
             display: none;
@@ -33,7 +35,7 @@
             width: 6px !important;
         }
         .ant-tree-list-scrollbar-thumb{
-            background: #c1c1c1 !important;
+            background: var(--Colors-Use-Basic-Background) !important;
         }
     }
 
@@ -53,7 +55,7 @@
     position: relative;
     height: 22px;
     text-align: center;
-    color: var(--yakit-disable-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     font-size: 11px;
     line-height: 22px;
 }
@@ -75,7 +77,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             transition: transform 0.3s;
         }
         &.expanded {
@@ -112,30 +114,50 @@
                 width: 16px;
                 height: 16px;
             }
+            .line{
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 16px;
+                margin-left: 2px;
+                margin-right: 8px;
+            }
         }
         .content-body {
             flex: 1;
             overflow: hidden;
-            color: #31343f;
-            font-size: 12px;
-            font-weight: 500;
-            line-height: 16px;
-            .file-tree-input-wrapper {
-                height: 16px;
-                .file-tree-input {
-                    padding: 0px;
-                    height: 16px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 4px;
+            
+            .name{
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 16px;
+                overflow: hidden;
+
+                flex-shrink: 0; /* 防止这个元素被压缩  */
+                .detail-tag {
+                    margin-left: 4px;
                 }
-                input {
-                    border: 0;
-                }
+            }
+            .description {
+                color: #b4bbca;
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 16px;
+                overflow: hidden;
+
+                flex-shrink: 1; /* 允许这个元素被压缩 */
             }
         }
     }
 
     &:hover {
         border-radius: 4px;
-        background-color: #f8f8f8;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     &.node-selected {

@@ -45,8 +45,6 @@ export enum RemoteGV {
     GlobalChromePath = "global-chrome-path",
     /** @name 软件内菜单展示模式 */
     PatternMenu = "PatternMenu",
-    /** @name 是否展示引擎控制台  */
-    ShowBaseConsole = "SHOW_BASE_CONSOLE",
 
     /** @name 菜单是否为用户自行导入的json数据 */
     IsImportJSONMenu = "is-import-json-menu",
@@ -104,12 +102,12 @@ export enum RemoteGV {
     SinglePluginExecTabs = "single-plugin-exec-tabs",
     /**@name 启用webSocket压缩 */
     MITMDisableWebsocketCompression = "mitm_disable_Websocket_Compression",
+    /**@name 插件并发进程 */
+    MITMPluginConcurrency = "mitm_Plugin_Concurrent_Process",
     /**@name 漏洞管理页面中,高级查询内容的显/隐 */
     AuditHoleShow = "audit-hole-show",
     /**@name 专项漏洞左侧tabs */
     YakPocTabs = "yakpoc-tabs",
-    /**@name 笔记本本地全文搜索:缓存搜索的关键词列表 */
-    NotepadLocalSearch = "notepad-local-search",
     /**@name mitm中启用插件,需要缓存noParamsCheckList的插件数据 */
     CheckCacheListData = "CHECK_CACHE_LIST_DATA",
     /** @name mitm手动劫持编辑器响应美化&渲染 */

@@ -2,12 +2,12 @@
     height: calc(100% - 30px);
     .edit-icon {
         svg {
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
     .del-icon {
         svg {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
         }
     }
 }

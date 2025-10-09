@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react"
-import { Form, FormItemProps } from "antd"
-import { failed } from "../../utils/notification"
-import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import React, {useEffect, useState} from "react"
+import {Form, FormItemProps} from "antd"
+import {failed} from "../../utils/notification"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 export interface SelectItemProps {
     label: string | any
@@ -20,7 +20,7 @@ export interface SelectItemProps {
     onChange?: (value: string, dict: string) => void
 }
 
-const { Item } = Form
+const {Item} = Form
 
 export const SelectItem: React.FC<SelectItemProps> = (props) => {
     const [lists, setLists] = useState<string[]>([])
@@ -29,7 +29,7 @@ export const SelectItem: React.FC<SelectItemProps> = (props) => {
     const fetchList = () => {
         ipcRenderer
             .invoke("GetAllPayloadGroup")
-            .then((data: { Groups: string[] }) => {
+            .then((data: {Groups: string[]}) => {
                 setLists(data.Groups || [])
             })
             .catch((e: any) => {
@@ -53,14 +53,14 @@ export const SelectItem: React.FC<SelectItemProps> = (props) => {
             >
                 <YakitSelect
                     value={props.value}
-                    allowClear={true}
                     loading={loading}
+                    allowClear
                     disabled={loading || props.disable}
                     onChange={(value: any) => {
                         if (value) {
                             setLoading(true)
                             ipcRenderer
-                                .invoke("Codec", { Type: "fuzz", Text: `{{x(${value})}}` })
+                                .invoke("Codec", {Type: "fuzz", Text: `{{x(${value})}}`})
                                 .then((res) => {
                                     if (props.onChange) props.onChange(value, res?.Result || "")
                                 })

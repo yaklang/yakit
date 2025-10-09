@@ -1,0 +1,75 @@
+// #region QSInputTextarea
+.qs-input-textarea {
+    padding: 0;
+    width: 100%;
+    min-height: 20px !important;
+}
+textarea.qs-input-textarea {
+    line-height: 20px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+// #endregion
+
+// #region QSInputTextarea
+.ai-chat-textarea {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+    background: var(--Colors-Use-Basic-Background);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.textarea-body {
+    display: flex;
+    gap: 4px;
+    .textarea-icon {
+        width: 20px;
+        display: flex;
+        justify-content: center;
+        padding-top: 2px;
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+    .textarea-textarea {
+        max-height: 100px !important;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+}
+
+.textarea-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    overflow: hidden;
+    height: 28px;
+
+    .footer-left {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+        flex: 1;
+        // overflow: hidden;
+    }
+    .footer-right {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex: 1;
+        overflow: hidden;
+    }
+}
+
+.round-btn {
+    border-radius: 20px;
+    svg {
+        width: 14px;
+    }
+}
+// #endregion

@@ -6,12 +6,13 @@
         .down-modal-heard {
             display: flex;
             justify-content: flex-start;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
 
             .modal-icon {
                 margin-right: 16px;
 
                 svg {
-                    color: var(--yakit-warning-5);
+                    color: var(--Colors-Use-Warning-Primary);
                     width: 22px;
                     height: 22px;
                 }
@@ -20,7 +21,7 @@
             .modal-title {
                 display: block;
                 overflow: hidden;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-weight: 500;
                 font-size: 16px;
                 line-height: 1.4;
@@ -35,7 +36,7 @@
 }
 
 .modal-confirm-btns {
-    padding-bottom: 24px;
+    padding: 16px 0;
     width: 100%;
     display: flex;
     justify-content: flex-end;

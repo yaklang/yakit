@@ -1,6 +1,7 @@
 import {YakURLResource} from "@/pages/yakURLTree/data"
 import {AuditEmiterYakUrlProps} from "../YakRunnerAuditCodeType"
 import {ShowItemType} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {ReactNode} from "react"
 export interface YakURLKVPair {
     Key: string
     Value: string
@@ -33,11 +34,12 @@ export interface AuditNodeDetailProps {
 export interface AuditTreeNodeProps {
     info: AuditNodeProps
     expandedKeys: string[]
-    onSelected: (selected: boolean, node: AuditNodeProps, nodeDetail?: AuditNodeDetailProps) => any
+    onSelected: (node: AuditNodeProps, nodeDetail?: AuditNodeDetailProps) => any
     onExpanded: (expanded: boolean, node: AuditNodeProps) => void
     foucsedKey: string
-    onJump: (info: AuditNodeProps) => void
     loadTreeMore: (info: AuditNodeProps) => void
+    /**自定义节点显示内容 */
+    customizeContent: (info: AuditNodeProps) => ReactNode
 }
 
 // Map存储列表详情
@@ -141,6 +143,8 @@ export interface AuditModalFormModalProps {
     title?: string
     // 绑定容器
     warrpId?: HTMLElement | null
+    // 默认值
+    initForm?: {[key: string]: any}
 }
 
 export interface AfreshAuditModalProps {
@@ -171,11 +175,12 @@ export interface SSAProgramResponse {
     Language: string
     EngineVersion: string
     Recompile: boolean
+    Id: number
     HighRiskNumber: number
     CriticalRiskNumber: number
     WarnRiskNumber: number
     LowRiskNumber: number
-    Id: number
+    InfoRiskNumber: number
 }
 
 export interface AuditHistoryTableProps {

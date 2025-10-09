@@ -7,6 +7,7 @@ import {apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
 import {QuerySyntaxFlowResultResponse} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
 import {monaco} from "react-monaco-editor"
 import { randomString } from "@/utils/randomUtil"
+import { handleShortcutKey } from "@/utils/globalShortcutKey/utils"
 const {ipcRenderer} = window.require("electron")
 export interface RuleEditorBoxProps {
     ruleEditor: string
@@ -77,9 +78,10 @@ export const RuleEditorBox: React.FC<RuleEditorBoxProps> = (props) => {
             }}
             disabled={disabled}
             editorDidMount={(editor) => {
-                editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-                    onAuditRuleSubmit()
-                })
+                // monaco快捷键
+                // editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+                //     onAuditRuleSubmit()
+                // })
             }}
         />
     )

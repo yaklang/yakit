@@ -7,7 +7,7 @@ import React, {useEffect, useState, useMemo} from "react"
 import {MITMStatus} from "./MITMHijackedContent"
 import styles from "./MITMServerHijacking.module.scss"
 import classNames from "classnames"
-import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {availableColors} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {EditorMenuItemType} from "@/components/yakitUI/YakitEditor/EditorMenu"
@@ -16,6 +16,9 @@ import {useMemoizedFn} from "ahooks"
 import {openPacketNewWindow} from "@/utils/openWebsite"
 import {grpcMITMDropRequestById, grpcMITMDropResponseById} from "../MITMHacker/utils"
 import {ManualHijackTypeProps} from "../MITMManual/MITMManualType"
+import {YakitKeyBoard, YakitKeyMod} from "@/utils/globalShortcutKey/keyboard"
+import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -54,6 +57,7 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
         onSetBeautifyTrigger,
         traceInfo
     } = props
+    const {t, i18n} = useI18nNamespaces(["history"])
     return (
         <div className={styles["autoForward-manual"]}>
             {width > 900 && (
@@ -88,7 +92,7 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                         </YakitSelect.Option>
                         {availableColors.map((item) => (
                             <YakitSelect.Option value={item.searchWord} key={item.searchWord}>
-                                {item.render}
+                                {item.render(t)}
                             </YakitSelect.Option>
                         ))}
                     </YakitSelect>
@@ -267,11 +271,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 {
                     key: "trigger-auto-hijacked",
                     label: "切换为自动劫持模式",
-                    keybindings: [
-                        YakitEditorKeyCode.Shift,
-                        system === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                        YakitEditorKeyCode.KEY_T
-                    ]
+                    keybindings: YakEditorOptionShortcutKey.TriggerAutoHijacked
                 },
                 {
                     key: "forward-response",
@@ -309,20 +309,12 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 {
                     key: "trigger-auto-hijacked",
                     label: "切换为自动劫持模式",
-                    keybindings: [
-                        YakitEditorKeyCode.Shift,
-                        system === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                        YakitEditorKeyCode.KEY_T
-                    ]
+                    keybindings: YakEditorOptionShortcutKey.TriggerAutoHijacked
                 },
                 {
                     key: "forward-response",
                     label: "放行该 HTTP Response",
-                    keybindings: [
-                        YakitEditorKeyCode.Shift,
-                        system === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                        YakitEditorKeyCode.KEY_F
-                    ]
+                    keybindings: YakEditorOptionShortcutKey.ForwardResponse
                 },
                 {
                     key: "drop-response",

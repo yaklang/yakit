@@ -1,23 +1,26 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Progress} from "antd"
 import {useMemoizedFn} from "ahooks"
-import {failed} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {ExecResult} from "../invoker/schema"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
     CreatReportRequest,
+    GenerateSSAReport,
     apiCancelSimpleDetectCreatReport,
+    apiGenerateSSAReport,
     apiSimpleDetectCreatReport
 } from "../securityTool/newPortScan/utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import emiter from "@/utils/eventBus/eventBus"
+import {ShowModalProps} from "@/utils/showModal"
 
 const {ipcRenderer} = window.require("electron")
 
-export const onCreateReportModal = (createReportContent: CreateReportContentProps) => {
+export const onCreateReportModal = (createReportContent: CreateReportContentProps, modalProps: ShowModalProps) => {
     const m = showYakitModal({
         title: "下载报告",
         footer: null,
@@ -25,16 +28,18 @@ export const onCreateReportModal = (createReportContent: CreateReportContentProp
         onCancel: () => {
             m.destroy()
         },
-        bodyStyle: {padding: 24}
+        bodyStyle: {padding: 24},
+        ...modalProps
     })
 }
 export interface CreateReportContentProps {
     reportName: string
     runtimeId: string
     onCancel?: () => void
+    type?: "portScan" | "codeScan"
 }
 const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((props) => {
-    const {onCancel, runtimeId} = props
+    const {onCancel, runtimeId, type = "portScan"} = props
     const [reportName, setReportName] = useState<string>(props.reportName || "默认报告名称")
     // 是否展示报告生成进度
     const [showReportPercent, setShowReportPercent] = useState<boolean>(false)
@@ -47,11 +52,31 @@ const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((prop
 
     /** 下载报告 */
     const downloadReport = () => {
-        const reqParams: CreatReportRequest = {
-            ReportName: reportName,
-            RuntimeId: runtimeId
+        if (type === "portScan") {
+            const reqParams: CreatReportRequest = {
+                ReportName: reportName,
+                RuntimeId: runtimeId
+            }
+            apiSimpleDetectCreatReport(reqParams, tokenRef.current)
         }
-        apiSimpleDetectCreatReport(reqParams, tokenRef.current)
+        if (type === "codeScan") {
+            const reqParams: GenerateSSAReport = {
+                ReportName: reportName,
+                TaskID: runtimeId
+            }
+            apiGenerateSSAReport(reqParams, tokenRef.current)
+                .then((res) => {
+                    setReportPercent(1)
+                    setTimeout(() => {
+                        yakitNotify("success", res.Message)
+                        if (onCancel) onCancel()
+                        emiter.emit("openPage", JSON.stringify({route: YakitRoute.DB_Report}))
+                    }, 300)
+                })
+                .catch(() => {
+                    setReportLoading(false)
+                })
+        }
     }
     /** 获取生成报告返回结果 */
     useEffect(() => {
@@ -107,11 +132,11 @@ const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((prop
                 />
                 {showReportPercent && (
                     <Progress
-                        strokeColor='#F28B44'
-                        trailColor='#F0F2F5'
+                        strokeColor='var(--Colors-Use-Main-Primary)'
+                        trailColor='var(--Colors-Use-Neutral-Bg)'
                         percent={Math.trunc(reportPercent * 100)}
                         format={(percent) => `${percent}%`}
-                        style={{marginTop: 12}}
+                        style={{marginTop: 12,display:"flex",alignItems:"center"}}
                     />
                 )}
             </div>

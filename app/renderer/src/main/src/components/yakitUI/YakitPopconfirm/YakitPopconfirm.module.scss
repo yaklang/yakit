@@ -4,12 +4,12 @@
             display: none;
         }
         .ant-popover-inner {
-            border: 1px solid var(--yakit-border-color);
-            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
             border-radius: 4px;
         }
         .ant-popover-arrow-content {
-            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
         }
         .ant-popover-inner-content {
             padding: 16px 12px;
@@ -22,6 +22,7 @@
         }
     }
     .yakit-popconfirm-title {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         .yakit-popconfirm-buttons {
             display: flex;
             flex: 1;
@@ -39,8 +40,8 @@
             bottom: 1px;
 
             .ant-popover-arrow-content {
-                border: 1px solid #eaecf3 !important;
-                background-color: #fff;
+                border: 1px solid var(--Colors-Use-Neutral-Border);
+                background-color: var(--Colors-Use-Neutral-Border);
             }
 
             .ant-popover-arrow-content::before {
@@ -56,8 +57,8 @@
             right: 1px;
 
             .ant-popover-arrow-content {
-                border: 1px solid #eaecf3 !important;
-                background-color: #fff;
+                border: 1px solid var(--Colors-Use-Neutral-Border);
+                background-color: var(--Colors-Use-Neutral-Border);
             }
 
             .ant-popover-arrow-content::before {
@@ -70,11 +71,11 @@
 .yakit-popconfirm-right-wrapper {
     :global {
         .ant-popover-arrow {
-            left: 1px;
+            // left: 1px;
 
             .ant-popover-arrow-content {
-                border: 1px solid #eaecf3 !important;
-                background-color: #fff;
+                border: 1px solid var(--Colors-Use-Neutral-Border);
+                background-color: var(--Colors-Use-Basic-Background);
             }
 
             .ant-popover-arrow-content::before {
@@ -90,8 +91,8 @@
             top: 1px;
 
             .ant-popover-arrow-content {
-                border: 1px solid #eaecf3 !important;
-                background-color: #fff;
+                border: 1px solid var(--Colors-Use-Neutral-Border);
+                background-color: var(--Colors-Use-Neutral-Border);
             }
 
             .ant-popover-arrow-content::before {

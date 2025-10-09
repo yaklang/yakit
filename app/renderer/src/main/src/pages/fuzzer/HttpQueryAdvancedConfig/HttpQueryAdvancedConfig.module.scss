@@ -3,12 +3,12 @@
 .http-query-advanced-config {
     display: flex;
     flex-direction: column;
-    min-width: 300px;
-    max-width: 300px;
-    width: 300px;
-    border-right: 1px solid var(--yakit-border-color);
+    min-width: 335px;
+    max-width: 335px;
+    width: 335px;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
     animation: show 0.2s cubic-bezier(0.12, 0.4, 0.29, 1.46);
-    background-color: var(--yakit-card-background-color);
+    background-color: var(--Colors-Use-Neutral-Bg);
 
     :global {
         .ant-radio-button-wrapper {
@@ -23,18 +23,21 @@
         }
         .ant-form-item-with-help .ant-form-item-explain {
             font-size: 12px;
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
         }
     }
 
     .chevron-down-icon {
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 
     .chevron-right-icon {
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 
     .advanced-config-timeout,
+    .advanced-config-random-chunked-delay,
+    .advanced-config-random-chunked-length,
     .advanced-config-delay {
         display: flex;
         align-items: center;
@@ -68,7 +71,7 @@
 
             // cursor: help;
             svg {
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
             }
         }
     }
@@ -80,7 +83,18 @@
             .ant-collapse-content > .ant-collapse-content-box {
                 padding: 12px 0 0;
             }
+            .ant-collapse-header{
+                border-top: transparent;
+            }
         }
+    }
+
+    .rule-collapse{
+       :global{
+        .ant-collapse-header{
+                border-top: transparent;
+            }
+       } 
     }
 
     .advanced-config-extra-formItem {
@@ -100,7 +114,7 @@
 
     .to-end {
         text-align: center;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         font-size: 11px;
         padding-top: 12px;
         padding-bottom: 24px;
@@ -127,11 +141,15 @@
         .ant-radio-button-wrapper {
             padding: 3px 10px;
         }
-    }
+        .ant-collapse-item > .ant-collapse-header {
+            border-top-color: transparent;
+        }
+    }    
 }
 .matchers-panel {
     display: flex;
     align-items: center;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 
     .matchers-number {
         @include HTTPFuzzerPageShare.circle-number;
@@ -139,7 +157,7 @@
     }
 }
 .matchers-item {
-    border-bottom: 1px solid var(--yakit-border-color);
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     padding-bottom: 12px;
     margin-bottom: 12px;
     &:last-child {
@@ -169,9 +187,9 @@
     align-items: center;
     justify-content: space-between;
     padding: 2px 8px;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px;
-    background: #ffffff;
+    background: var(--Colors-Use-Basic-Background);
 
     &:hover {
         .matchersList-item-operate {
@@ -185,7 +203,10 @@
         gap: 4px;
 
         .item-id {
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+        .item-label{
+            color: var(--Colors-Use-Neutral-Text-1-Title)
         }
 
         .item-number {
@@ -207,11 +228,11 @@
         }
 
         .trash-icon {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
             @include HTTPFuzzerPageShare.base-icon-card;
 
             &:hover {
-                color: var(--yakit-danger-4);
+                color: var(--Colors-Use-Error-Border);
             }
 
             &:active,
@@ -222,7 +243,7 @@
 
         .hollow-lightningBolt-icon,
         .terminal-icon {
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             @include HTTPFuzzerPageShare.base-icon-card;
         }
 
@@ -233,7 +254,7 @@
         }
 
         .pencilAlit-icon-disabled {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
 
             svg {
                 cursor: not-allowed;
@@ -265,7 +286,7 @@
 }
 
 .terminal-popover {
-    width: 600px;
+    width: 650px;
     padding: 12px 0;
     $_arrow-top: var(--arrow-top, 50%);
 
@@ -295,7 +316,7 @@
             pointer-events: none;
             left: -6px;
             top: $_arrow-top;
-            border-left: 12px solid #fff;
+            border-left: 12px solid var(--Colors-Use-Neutral-Border);
             border-bottom: 12px solid transparent;
             transform: rotate(-45deg);
             transition: all 0.3s;
@@ -304,23 +325,31 @@
 }
 
 .variable-item {
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px;
     padding: 8px;
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
+    :global{
+        input{
+            background-color: var(--Colors-Use-Basic-Background) !important;
+        }
+        textarea{
+            background-color: var(--Colors-Use-Basic-Background) !important;
+        }
+    }
 
     &:hover {
-        border-color: var(--yakit-primary-4);
+        border-color: var(--Colors-Use-Main-Hover);
     }
 
     &:focus-within {
-        border-color: var(--yakit-primary-5);
-        box-shadow: 0 0 2px 2px var(--yakit-primary-2);
+        border-color: var(--Colors-Use-Main-Primary);
+        box-shadow: 0 0 2px 2px var(--Colors-Use-Main-Focus);
     }
 
     input::placeholder,
     textarea::placeholder {
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         font-size: 12px;
     }
 
@@ -330,10 +359,15 @@
 
     .variable-item-input {
         border: 0;
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         width: 100%;
         outline: none;
         outline: 0;
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        &::placeholder{
+            color: var(--Colors-Use-Neutral-Disable);
+        }
     }
 
     .variable-item-textarea-body {
@@ -344,13 +378,18 @@
             width: 100%;
             outline: none;
             outline: 0;
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            &::placeholder{
+                color: var(--Colors-Use-Neutral-Disable);
+            }
         }
 
         .resizer-icon {
             position: absolute;
             bottom: 6px;
             right: 0;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             z-index: 0;
             pointer-events: none;
         }

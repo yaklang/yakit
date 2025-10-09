@@ -142,6 +142,8 @@ module.exports = (win, getClient) => {
         //   --no-proxy-server ⊗	Don't use a proxy server, always make direct connections. Overrides any other proxy server flags that are passed. ↪
         let launchOpt = {
             startingUrl: disableCACertPage === false ? "http://mitm" : "chrome://newtab", // 确保在启动时打开 chrome://newtab 页面。
+            logLevel: "verbose",
+            ignoreDefaultFlags: true,
             chromeFlags: [
                 `--proxy-server=http://${hostRaw}:${portInt}`, // 设置具体的代理服务器地址和端口。
                 ...chromeFlags.filter(item => !item.disabled).map(item => {

@@ -90,7 +90,7 @@ export interface SequenceItemProps {
  * @property {number} failedCount 失败的数量
  * @property {FuzzerResponse} onlyOneResponse 只有一条返回记录
  * @property {FuzzerResponse[]} successFuzzer 成功数据list
- * @property {FuzzerResponse[]} failedFuzzer 成功数据list
+ * @property {FuzzerResponse[]} failedFuzzer 失败数据list
  */
 export interface ResponseProps {
     id: string

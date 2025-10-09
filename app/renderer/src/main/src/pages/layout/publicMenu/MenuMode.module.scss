@@ -6,7 +6,7 @@
     .divider-style {
         width: 1px;
         height: 72px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Border);
     }
 
     .menu-icon-wrapper {
@@ -21,7 +21,7 @@
         cursor: pointer;
     }
     .child-icon-wrapper:hover {
-        background: #eaecf3;
+        background: var(--Colors-Use-Neutral-Bg-Hover);
     }
     .title-style {
         height: 12px;
@@ -29,10 +29,11 @@
         justify-content: center;
         align-items: center;
         font-size: 11px;
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         word-break: keep-all;
         white-space: nowrap;
         user-select: none;
+        text-align: center;
     }
 
     .disable-style {
@@ -53,7 +54,7 @@
         cursor: pointer;
     }
     .vertical-menu-wrapper:hover {
-        background: #eaecf3;
+        background: var(--Colors-Use-Neutral-Bg-Hover);
     }
     .horizontal-menu-wrapper {
         padding: 2px 4px;
@@ -64,7 +65,7 @@
         cursor: pointer;
     }
     .horizontal-menu-wrapper:hover {
-        background: #eaecf3;
+        background: var(--Colors-Use-Neutral-Bg-Hover);
     }
     .parent-menu-wrapper {
         padding: 4px;

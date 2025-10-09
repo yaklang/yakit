@@ -25,24 +25,27 @@
     }
 
     .plugin-execute-result-tabPane {
-        border: 1px solid var(--yakit-border-color);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         border-top: 0;
     }
 
     .table-container {
         border: 0 !important;
-        border-top: 1px solid var(--yakit-border-color) !important;
+        border-top: 1px solid var(--Colors-Use-Neutral-Border) !important;
     }
     .custom-table-container {
         border: 0 !important;
     }
 }
-
+.table-container {
+    border: 0 !important;
+    border-top: 1px solid var(--Colors-Use-Neutral-Border) !important;
+}
 .plugin-execute-result-tab-content {
     @extend %display-column-center;
     justify-content: flex-start;
     height: 100%;
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 12px;
     font-weight: 400;
     line-height: 16px; /* 133.333% */
@@ -51,7 +54,7 @@
         @extend %display-flex-center;
         justify-content: space-between;
         padding: 14px 12px 10px;
-        border-bottom: 1px solid var(--yakit-border-color);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     }
 }
 .plugin-execute-result-tab-content-body {
@@ -72,7 +75,7 @@
     }
     .current-http-table-container {
         border: 0 !important;
-        border-top: 1px solid var(--yakit-border-color) !important;
+        border-top: 1px solid var(--Colors-Use-Neutral-Border) !important;
     }
 }
 
@@ -90,13 +93,13 @@
 }
 
 .table-title {
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     font-size: 12px;
     font-style: normal;
     font-weight: 400;
     line-height: 16px; /* 133.333% */
     &-number {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         margin-left: 4px;
     }
 }
@@ -113,11 +116,11 @@
         .tab-number {
             @extend %display-flex-center;
             padding: 2px 6px;
-            background-color: var(--yakit-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
             border-radius: 8px;
             margin-left: 8px;
 
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 10px;
             font-style: normal;
             font-weight: 400;
@@ -127,7 +130,7 @@
     }
     .log-tab-name-active {
         .tab-number {
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
             color: #fff;
         }
     }
@@ -147,7 +150,7 @@
     justify-content: space-between;
     padding: 14px 12px 10px;
 
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 12px;
     font-weight: 400;
     line-height: 16px; /* 133.333% */

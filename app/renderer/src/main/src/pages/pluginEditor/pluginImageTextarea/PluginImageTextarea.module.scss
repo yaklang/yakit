@@ -5,15 +5,15 @@
     flex-direction: column;
     gap: 12px;
     border-radius: 4px;
-    border: 1px solid #eaecf3;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     cursor: text;
 }
 .plugin-image-textarea:hover {
-    border-color: #f69c5d;
+    border-color: var(--Colors-Use-Main-Border);
 }
 .plugin-image-textarea-focus {
-    border-color: #f28b44;
-    box-shadow: 0 0 0 2px #fbe7d9;
+    border-color: var(--Colors-Use-Main-Border);
+    box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
 }
 
 .plugin-image-textarea-quotation {
@@ -22,7 +22,7 @@
     align-items: center;
     gap: 8px;
     border-radius: 4px;
-    background: #f8f8f8;
+    background: var(--Colors-Use-Neutral-Bg);
 
     .del-btn {
         width: 16px;
@@ -34,11 +34,11 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
         &:hover {
             svg {
-                color: #f28b44;
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -46,7 +46,7 @@
     .divider-style {
         width: 1px;
         height: 16px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     .content-style {
@@ -54,7 +54,7 @@
         display: flex;
         gap: 8px;
         align-items: center;
-        color: #85899e;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         font-size: 12px;
         font-weight: 400;
         line-height: 16px;
@@ -82,8 +82,8 @@
             justify-content: center;
             align-items: center;
             border-radius: 8px;
-            background: #f0f1f3;
-            color: #85899e;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-size: 10px;
             font-weight: 400;
             line-height: 12px;

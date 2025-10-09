@@ -15,7 +15,7 @@ import {useInstance} from "@milkdown/react"
 import {usePluginViewContext} from "@prosemirror-adapter/react"
 import {ReactNode, useCallback, useEffect, useRef, useState} from "react"
 import {callCommand} from "@milkdown/kit/utils"
-import {useCreation, useDebounceEffect, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn} from "ahooks"
 import {IconBold, IconCode2, IconItalic, IconStrikethrough, IconType, IconUnderline} from "../icon/icon"
 import styles from "./Tooltip.module.scss"
 import React from "react"
@@ -28,13 +28,17 @@ import {underlineCommand} from "../utils/underline"
 import {commentCommand} from "../utils/commentPlugin"
 import {setWrapInBlockType} from "../utils/utils"
 import {Tooltip} from "antd"
-import {MilkdownBaseUtilProps} from "../MilkdownEditorType"
-import {cloneDeep} from "lodash"
-import {defaultTooltipList} from "../constants"
+import {MilkdownBaseUtilProps, MilkdownMenu, MilkdownMenuKeyEnum, tooltipKey, TooltipListProps} from "../constants"
 import {convertToListBullet, listToParagraphCommand} from "../utils/listPlugin"
 import {headingToParagraphCommand, listToHeadingCommand} from "../utils/headingPlugin"
 import {listToCodeCommand} from "../utils/codePlugin"
 import {fileCustomSchema} from "../utils/uploadPlugin"
+import type {EditorView} from "@milkdown/prose/view"
+import {TextSelection, type EditorState} from "@milkdown/kit/prose/state"
+import type {VirtualElement} from "@floating-ui/dom"
+import {computePosition, flip, offset} from "@floating-ui/dom"
+import {posToDOMRect} from "@milkdown/prose"
+import {mentionCustomSchema} from "../utils/mentionPlugin"
 
 export const tooltip = tooltipFactory("Text")
 
@@ -60,6 +64,7 @@ const highlight = [
         description: "黄色:  :::warning空格"
     }
 ]
+const tooltipWidth = 324
 
 interface TooltipViewProps {}
 export const TooltipView: React.FC<TooltipViewProps> = () => {
@@ -68,6 +73,7 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
 
     const ref = useRef<HTMLDivElement>(null)
     const tooltipProvider = useRef<TooltipProvider>()
+    const initializedRef = useRef<boolean>(false)
 
     const {view, prevState} = usePluginViewContext()
     const [loading, get] = useInstance()
@@ -79,8 +85,20 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         [loading]
     )
 
-    const tooltipTextList = useCreation(() => {
-        return cloneDeep(defaultTooltipList)
+    const tooltipTextList: TooltipListProps[] = useCreation(() => {
+        return tooltipKey.map((ele, index) => {
+            if (ele === "key-divider") {
+                return {
+                    key: `${index}-divider`,
+                    label: "divider"
+                }
+            } else {
+                return {
+                    ...MilkdownMenu[ele],
+                    key: ele
+                }
+            }
+        })
     }, [])
 
     useEffect(() => {
@@ -89,10 +107,7 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         }
         if (ref.current) {
             tooltipProvider.current = new TooltipProvider({
-                content: ref.current,
-                offset: {
-                    crossAxis: 100
-                }
+                content: ref.current
             })
         }
     }, [loading])
@@ -106,15 +121,89 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
     useDebounceEffect(
         () => {
             if (loading || !tooltipProvider.current) return
-            if (isSelectFile() || isSelectImg()) {
+            if (isSelectFile() || isSelectImg() || isSelectMention()) {
                 tooltipProvider.current?.hide()
                 return
             }
-            tooltipProvider.current?.update(view, prevState)
+            tooltipUpdate(view, prevState)
         },
         [loading, view, prevState],
         {wait: 200, leading: true}
     )
+    /**根据编辑器选中得变化更新 tooltip 得位置 */
+    const tooltipUpdate = useDebounceFn(
+        (view: EditorView, prevState?: EditorState) => {
+            if (!ref.current) return
+            const {state, composing} = view
+            const {selection, doc} = state
+            const {ranges} = selection
+            const from = Math.min(...ranges.map((range) => range.$from.pos))
+            const to = Math.max(...ranges.map((range) => range.$to.pos))
+            const isSame = prevState && prevState.doc.eq(doc) && prevState.selection.eq(selection)
+
+            if (!initializedRef.current) {
+                view.dom.parentElement?.appendChild(ref.current)
+                initializedRef.current = true
+            }
+
+            if (composing || isSame) return
+            if (!onShouldShow(view)) {
+                tooltipProvider.current?.hide()
+                return
+            }
+            const virtualEl: VirtualElement = {
+                getBoundingClientRect: () => posToDOMRect(view, from, to)
+            }
+            computePosition(virtualEl, ref.current, {
+                placement: "top",
+                middleware: [flip()]
+            }).then(({x, y}) => {
+                if (!ref.current) return
+                let styleObj: {left: null | string; top: null | string; right: null | string} = {
+                    left: null,
+                    top: `${y}px`,
+                    right: null
+                }
+                const {width} = view.dom.getBoundingClientRect()
+                const rightBoundary = width - x
+                if (rightBoundary < tooltipWidth) {
+                    styleObj = {
+                        ...styleObj,
+                        right: "0px"
+                    }
+                } else {
+                    styleObj = {
+                        ...styleObj,
+                        left: `${x > 0 ? x : 0}px`
+                    }
+                }
+                Object.assign(ref.current.style, styleObj)
+            })
+
+            tooltipProvider.current?.show()
+        },
+        {wait: 200}
+    ).run
+    /**判断 tooltip 是否显示 */
+    const onShouldShow = (view: EditorView): boolean => {
+        if (!ref.current) {
+            return false
+        }
+        const {doc, selection} = view.state
+        const {empty, from, to} = selection
+
+        const isEmptyTextBlock = !doc.textBetween(from, to).length && view.state.selection instanceof TextSelection
+
+        const isTooltipChildren = ref.current.contains(document.activeElement)
+
+        const notHasFocus = !view.hasFocus() && !isTooltipChildren
+
+        const isReadonly = !view.editable
+
+        if (notHasFocus || empty || isEmptyTextBlock || isReadonly) return false
+
+        return true
+    }
     /**判断选中节点是否为文件 */
     const isSelectFile = useMemoizedFn(() => {
         const selectedNode = getSelectNode()
@@ -131,6 +220,11 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
             default:
                 return false
         }
+    })
+    /**判断选中节点是否为 @/提及 */
+    const isSelectMention = useMemoizedFn(() => {
+        const selectedNode = getSelectNode()
+        return selectedNode?.type.name === mentionCustomSchema.node.id
     })
     /**
      * 获取选中的节点
@@ -166,33 +260,33 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         e.preventDefault()
         action(callCommand(commentCommand.key, "111"))
     })
-    const onText = useMemoizedFn(({label}) => {
-        switch (label) {
-            case "正文":
+    const onText = useMemoizedFn(({key}) => {
+        switch (key) {
+            case MilkdownMenuKeyEnum.Text:
                 convertToParagraph()
                 break
-            case "一级标题":
+            case MilkdownMenuKeyEnum.Heading1:
                 convertToHeading(1)
                 break
-            case "二级标题":
+            case MilkdownMenuKeyEnum.Heading2:
                 convertToHeading(2)
                 break
-            case "三级标题":
+            case MilkdownMenuKeyEnum.Heading3:
                 convertToHeading(3)
                 break
-            case "有序列表":
+            case MilkdownMenuKeyEnum.OrderedList:
                 action(callCommand(wrapInOrderedListCommand.key))
                 break
-            case "无序列表":
+            case MilkdownMenuKeyEnum.UnorderedList:
                 action(callCommand(wrapInBulletListCommand.key))
                 break
-            case "任务":
+            case MilkdownMenuKeyEnum.Task:
                 action(callCommand(convertToListBullet.key))
                 break
-            case "代码块":
+            case MilkdownMenuKeyEnum.CodeBlock:
                 convertToCode()
                 break
-            case "引用":
+            case MilkdownMenuKeyEnum.Quote:
                 action(callCommand(wrapInBlockquoteCommand.key))
                 break
             default:
@@ -299,7 +393,7 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         setVisibleLight(false)
     })
     return (
-        <div className={styles["tooltip"]} ref={ref}>
+        <div className={styles["tooltip"]} ref={ref} style={{width: tooltipWidth}}>
             <YakitPopover
                 overlayClassName={styles["tooltip-popover"]}
                 placement='bottomLeft'
@@ -309,13 +403,13 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
                     <div className={styles["tooltip-popover-content"]}>
                         {tooltipTextList.map((ele) => {
                             if (ele.label === "divider") {
-                                return <div key={ele.id} className={styles["tooltip-divider-horizontal"]} />
+                                return <div key={ele.key} className={styles["tooltip-divider-horizontal"]} />
                             }
                             const item = ele as MilkdownBaseUtilProps
                             return (
-                                <Tooltip key={item.id} title={item.description} placement='right'>
+                                <Tooltip key={item.key} title={item.description} placement='right'>
                                     <div
-                                        key={item.id}
+                                        key={item.key}
                                         className={styles["tooltip-list-item"]}
                                         onClick={() => onText(item)}
                                     >

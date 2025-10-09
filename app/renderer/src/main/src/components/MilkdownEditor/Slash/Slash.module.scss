@@ -1,0 +1,44 @@
+.slash {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 8px;
+    overflow: hidden;
+    padding: 4px 8px;
+    box-shadow:
+        0 3px 6px -4px rgba(0, 0, 0, 0.12),
+        0 6px 16px 0 rgba(0, 0, 0, 0.08),
+        0 9px 28px 8px rgba(0, 0, 0, 0.05);
+    background-color: #fff;
+    width: 150px;
+
+    .slash-title {
+        font-size: 12px;
+        color: var(--yakit-helper-text-color);
+        user-select: none;
+        padding: 4px;
+    }
+    .slash-item {
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        gap: 12px;
+        color: var(--yakit-header-color);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        line-height: 16px;
+        &:hover {
+            background-color: var(--Colors-Use-Neutral-Bg);
+        }
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+}
+
+.slash[data-show="false"] {
+    display: none;
+}

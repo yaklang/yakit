@@ -61,6 +61,16 @@ export interface HoldGRPCStreamParams {
     /** @name 是否限制缓存多少条logState信息（默认100） */
     isLimitLogs?: boolean
 }
+/** 判断是否为无效数据 */
+export const checkStreamValidity = (stream: StreamResult.Log) => {
+    try {
+        const check = JSON.parse(stream.data)
+        if (check === "null" || !check || check === "undefined") return false
+        return check
+    } catch (e) {
+        return false
+    }
+}
 
 export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     const {
@@ -131,17 +141,6 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         // 只缓存 100 条结果（日志类型 + 数据类型）
         if (messages.current.length > 100 && isLimitLogs) {
             messages.current.pop()
-        }
-    })
-
-    /** 判断是否为无效数据 */
-    const checkStreamValidity = useMemoizedFn((stream: StreamResult.Log) => {
-        try {
-            const check = JSON.parse(stream.data)
-            if (check === "null" || !check || check === "undefined") return false
-            return check
-        } catch (e) {
-            return false
         }
     })
 

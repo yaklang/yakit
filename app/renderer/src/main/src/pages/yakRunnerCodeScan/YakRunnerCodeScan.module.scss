@@ -19,7 +19,7 @@
         gap: 16px;
         height: 100%;
         overflow: hidden;
-        border-right: 1px solid #eaecf3;
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         padding: 12px 8px;
         width: 33.33333%;
         max-width: 432px;
@@ -32,7 +32,7 @@
                 @extend %display-flex-center;
                 gap: 8px;
                 .header-text {
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 600;
                     line-height: 16px; /* 133.333% */
@@ -49,7 +49,7 @@
         height: 100%;
         overflow: hidden;
         width: 300px;
-        border-right: 1px solid var(--yakit-border-color);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         padding: 12px 8px;
         gap: 8px;
         flex-shrink: 0;
@@ -58,7 +58,7 @@
             gap: 4px;
             height: 24px;
             .header-text {
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-weight: 600;
                 line-height: 16px;
@@ -68,17 +68,17 @@
                 justify-content: space-between;
                 flex: 1;
                 .heard-tip {
-                    color: var(--yakit-helper-text-color);
+                    color: var(--Colors-Use-Neutral-Disable);
                     font-size: 12px;
                     font-style: normal;
                     font-weight: 400;
                     line-height: 16px; /* 133.333% */
                 }
                 .heard-number {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                     margin-left: 4px;
                 }
-                .option{
+                .option {
                     display: flex;
                 }
             }
@@ -146,11 +146,11 @@
             max-width: 130px;
             padding: 12px;
             border-radius: 4px;
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
             margin: 4px;
             cursor: pointer;
             &:hover {
-                background-color: var(--yakit-background-color);
+                background-color: var(--Colors-Use-Neutral-Bg);
             }
             .item-tip {
                 @extend %display-column-center;
@@ -158,7 +158,7 @@
                 gap: 4px;
                 .item-tip-name {
                     text-align: center;
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-style: normal;
                     font-weight: 600;
@@ -170,7 +170,7 @@
                     -webkit-box-orient: vertical;
                 }
                 .item-tip-number {
-                    color: var(--yakit-body-text-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 10px;
                     font-style: normal;
                     font-weight: 400;
@@ -182,9 +182,9 @@
             height: 62px;
         }
         .group-item-wrapper-checked {
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
             &:hover {
-                background-color: var(--yakit-primary-4);
+                background-color: var(--Colors-Use-Main-Hover);
             }
             .item-tip {
                 .item-tip-name {
@@ -248,7 +248,7 @@
             @extend %display-column-center;
             gap: 4px;
             margin-bottom: 8px;
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
             border-radius: 4px;
             padding: 8px 12px;
             height: 100px;
@@ -260,10 +260,10 @@
                 -webkit-box-orient: vertical;
             }
             .time {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
             .time-danger {
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
             }
         }
     }
@@ -295,7 +295,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px 0;
-            border-top: 1px solid #eaecf3;
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
             border-bottom: 1px solid transparent;
             .flow-rule-item-info {
                 height: 28px;
@@ -308,7 +308,7 @@
                 &-text-style {
                     flex: 1 0 0;
                     overflow: hidden;
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     line-height: 16px;
                     font-weight: 400;
@@ -382,18 +382,24 @@
         flex: 1;
         overflow: hidden;
         height: 1px;
-        border-top: 1px dashed #eaecf3;
+        border-top: 1px dashed var(--Colors-Use-Neutral-Border);
     }
 }
 
+.divider-style {
+    width: 1px;
+    height: 12px;
+    background-color: var(--Colors-Use-Neutral-Border);
+}
+
 .agent-down-stream-proxy {
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
     display: inline-flex;
     cursor: pointer;
 }
 
 .extra-params-collapse {
-    border-bottom: 1px solid #eaecf3;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     margin-left: calc(33% - 90px);
 }
 
@@ -409,4 +415,9 @@
     height: 100%;
     display: flex;
     background: #ffffff;
+}
+.default-content {
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }

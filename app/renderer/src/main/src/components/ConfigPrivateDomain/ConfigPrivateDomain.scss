@@ -15,6 +15,7 @@
             text-align: center;
             font-size: 30px;
             padding-bottom: 22px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
     .ant-select-single .ant-select-selector .ant-select-selection-item {
@@ -41,7 +42,7 @@
             margin-left: 4px;
             // cursor: help;
             svg {
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
             }
         }
     }

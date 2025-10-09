@@ -1,27 +1,28 @@
 // ========================== wrapper ==========================
 .yakit-input-number-wrapper {
-    --input-number-box-shadow-color: var(--yakit-primary-2);
+    --input-number-box-shadow-color: var(--Colors-Use-Main-Focus);
     --input-number-box-shadow-error-color: var(--yakit-danger-2);
 
-    --input-number-border-hover-color: var(--yakit-primary-4);
-    --input-number-border-focus-color: var(--yakit-primary-5);
-    --input-number-border-error-color: var(--yakit-danger-5);
-    --input-number-border-color: var(--yakit-border-color);
-    --input-number-border-disabled-color: var(--yakit-border-color);
+    --input-number-border-hover-color: var(--Colors-Use-Main-Hover);
+    --input-number-border-focus-color: var(--Colors-Use-Main-Primary);
+    --input-number-border-error-color: var(--Colors-Use-Error-Primary);
+    --input-number-border-color: var(--Colors-Use-Neutral-Border);
+    --input-number-border-disabled-color: var(--Colors-Use-Neutral-Border);
 
-    --input-number-icon-hover-color: var(--yakit-primary-4);
-    --input-number-icon-error-color: var(--yakit-danger-5);
-    --input-number-icon-disabled-color: var(--yakit-helper-text-color);
+    --input-number-icon-hover-color: var(--Colors-Use-Main-Hover);
+    --input-number-icon-error-color: var(--Colors-Use-Error-Primary);
+    --input-number-icon-disabled-color: var(--Colors-Use-Neutral-Disable);
 
-    --input-number-hover-color: var(--yakit-primary-4);
-    --input-number-hover-error-color: var(--yakit-danger-5);
+    --input-number-hover-color: var(--Colors-Use-Main-Hover);
+    --input-number-hover-error-color: var(--Colors-Use-Error-Primary);
 
-    --input-number-background-disabled-color: var(--yakit-background-color);
+    --input-number-background-disabled-color: var(--Colors-Use-Neutral-Bg-Hover);
 
-    background-color: var(--yakit-background-color-color);
     :global {
-        .ant-input-number {
+        .ant-input-number:not(.ant-input-number-disabled) {
             border-color: var(--input-number-border-color);
+            background-color: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-input-number:hover {
             border-color: var(--input-number-border-hover-color);
@@ -44,11 +45,11 @@
         .ant-input-number-affix-wrapper:focus,
         .ant-input-number-affix-wrapper-focused {
             box-shadow: 0 0 0 2px var(--input-number-box-shadow-color);
-            border-color: var(--yakit-primary-4);
+            border-color: var(--Colors-Use-Main-Hover);
         }
 
         .ant-input-number-affix-wrapper:not(.ant-input-number-affix-wrapper-disabled):hover {
-            border-color: var(--yakit-primary-4);
+            border-color: var(--Colors-Use-Main-Hover);
         }
         .ant-input-number-disabled:hover {
             border-color: var(--input-number-border-disabled-color);
@@ -58,9 +59,24 @@
         }
         .ant-input-number-handler {
             border-color: var(--input-number-border-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
+            span {
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            }
         }
-        .ant-input-number-group-addon{
+        .ant-input-number-group-addon {
             border-color: var(--input-number-border-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            background-color: var(--Colors-Use-Neutral-Bg);
+        }
+        .ant-input-number-disabled {
+            background-color: var(--input-number-background-disabled-color);
+            cursor: not-allowed;
+            border-color: var(--input-number-border-disabled-color);
+            color: var(--input-number-icon-disabled-color);
+            svg {
+                color: var(--input-number-icon-disabled-color);
+            }
         }
     }
 }
@@ -156,13 +172,20 @@
 }
 
 // ========================== disabled ==========================
-.yakit-input-number-disabled {
+.yakit-input-number-wrapper-disabled .yakit-input-number-disabled {
     background: var(--input-number-background-disabled-color);
     cursor: not-allowed;
     border-color: var(--input-number-border-disabled-color);
-
+    color: var(--Colors-Use-Neutral-Disable);
     svg {
         color: var(--input-number-icon-disabled-color);
+    }
+    :global {
+        .ant-input[disabled] {
+            background: var(--input-number-background-disabled-color);
+            border-color: var(--input-number-border-disabled-color);
+            color: var(--Colors-Use-Neutral-Disable);
+        }
     }
 }
 
@@ -177,6 +200,7 @@
     user-select: none;
     transition: border 0.24s linear 0.14s;
     flex: 1;
+    background-color: var(--Colors-Use-Basic-Background);
     width: 100%;
 
     :global {
@@ -219,7 +243,7 @@
         border-radius: 4px 0px 0px 4px;
         cursor: pointer;
         opacity: 0;
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
 
         &:hover {
             color: var(--input-number-hover-color);
@@ -231,7 +255,7 @@
         border-radius: 0px 4px 4px 0px;
         cursor: pointer;
         opacity: 0;
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
 
         &:hover {
             color: var(--input-number-hover-color);
@@ -239,7 +263,7 @@
     }
 
     .icon-midden {
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
         width: 24px;
         height: 26px;
         line-height: 26px;
@@ -327,7 +351,7 @@
 .yakit-input-number-horizontal-disabled {
     background: var(--input-number-background-disabled-color);
     &:hover {
-        border-color: var(--yakit-background-color);
+        border-color: var(--Colors-Use-Neutral-Bg);
         .icon-disabled {
             opacity: 0;
         }

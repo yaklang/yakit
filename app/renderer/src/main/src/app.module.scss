@@ -13,23 +13,23 @@
         font-weight: 600;
         font-size: 16px;
         line-height: 24px;
-        color: #000000;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .body-content {
         margin-top: 8px;
         font-size: 14px;
         line-height: 24px;
         text-align: justify;
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         .sign-content {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
         }
         .underline-content {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
             text-decoration: underline;
         }
         .sign-bold-content {
-            color: var(--yakit-danger-5);
+            color: var(--Colors-Use-Error-Primary);
             font-weight: 500;
         }
     }

@@ -1,97 +1,127 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useLayoutEffect, useRef, useState} from "react"
 import * as echarts from "echarts"
+import {EChartsOption} from "echarts"
 import styles from "./EchartsInit.module.scss"
 import classNames from "classnames"
-import { useSize } from "ahooks"
+import {useSize} from "ahooks"
+import {useTheme} from "@/hook/useTheme"
+import cloneDeep from "lodash/cloneDeep"
+import { getCssVar } from "@/utils/tool"
 
 interface VerticalOptionBarProps {
     content: any
 }
 
-export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
-    const {content} = props
-    const ref = useRef(null);
-    const size = useSize(ref);
-    const chartRef = useRef(null)
-    const optionRef = useRef<any>({
-        title: {
-            text: "",
-            left: "center"
-        },
-        tooltip: {
-            trigger: "axis",
-            axisPointer: {
-                type: "shadow"
-            }
-        },
-        xAxis: {
-            type: "category",
-            data: [],
-            // axisLabel: {
-            //   rotate: -45, // 负值为逆时针旋转
-            // }
-            axisLabel: {
-                // interval: 0, // 显示所有标签
-            }
-        },
-        yAxis: {
-            type: "value"
-        },
-        series: [
-            {
-                data: [],
-                type: "bar",
-                label: {
-                    show: true, // 设置label可显示
-                    position: "top", // 设置label位置
-                    formatter: "{c}" // 设置label内容
-                    // emphasis: {
-                    //     // 设置label的鼠标悬停样式
-                    //     textStyle: {
-                    //         color: '#000',
-                    //         fontWeight: 'bold'
-                    //     }
-                    // },
-                }
-            }
-        ]
-    })
-    useEffect(() => {
-        if (content?.type_verbose === "通用KV") {
-            const {name_verbose, name, data, complexity_group, access_vector} = content
+interface ContentProp {
+    data: any[]
+    name: string
+    name_verbose: string
+    reason: string
+    type: string
+    type_verbose: string
+}
+interface MultiPieProps {
+    content: ContentProp
+}
 
+interface HollowPieProps {
+    data: {name: any; value: any; color: string; direction?: string}[]
+    title?: string
+}
+interface NightingleRoseProps {
+    content: ContentProp
+}
+interface DetailsProps {
+    name: string
+    content: string
+}
+interface EchartsCardProps {
+    dataTitle: string
+    dataSource: any[]
+}
+
+export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
+    const {theme} = useTheme()
+    const {content} = props
+    const ref = useRef<HTMLDivElement>(null)
+    const size = useSize(ref)
+    const chartRef = useRef<HTMLDivElement>(null)
+
+    // 构建完整 option 的函数
+    const buildOptions = (content: any) => {
+        const titleColor = getCssVar("--Colors-Use-Neutral-Text-1-Title")
+        const axisColor = getCssVar("--Colors-Use-Neutral-Text-4-Help-text")
+        const tooltipBg = getCssVar("--Colors-Use-Basic-Background")
+        const tooltipText = getCssVar("--Colors-Use-Neutral-Text-1-Title")
+        const barColor = getCssVar("--Colors-Use-Primary-Default")
+
+        const option: any = {
+            title: {
+                text: "",
+                left: "center",
+                textStyle: {
+                    color: titleColor,
+                    fontWeight: "bold"
+                }
+            },
+            tooltip: {
+                trigger: "axis",
+                axisPointer: {type: "shadow"},
+                backgroundColor: tooltipBg,
+                borderColor: getCssVar("--Colors-Use-Neutral-Border"),
+                textStyle: {color: tooltipText}
+            },
+            xAxis: {
+                type: "category",
+                data: [],
+                axisLabel: {color: axisColor},
+                axisLine: {lineStyle: {color: axisColor}}
+            },
+            yAxis: {
+                type: "value",
+                axisLabel: {color: axisColor},
+                axisLine: {lineStyle: {color: axisColor}},
+                splitLine: {lineStyle: {color: getCssVar("--Colors-Use-Neutral-Border")}}
+            },
+            series: [
+                {
+                    data: [],
+                    type: "bar",
+                    itemStyle: {color: barColor},
+                    label: {show: true, position: "top", formatter: "{c}", color: titleColor}
+                }
+            ]
+        }
+
+        if (content?.type_verbose === "通用KV") {
+            const {name_verbose, name, data, complexity_group} = content
             let title: string[] = []
             let value: {value: number}[] = []
+
             Array.isArray(data) &&
-                data.map((item) => {
+                data.forEach((item) => {
                     title.push(item.key_verbose || item.key)
-                    value.push({
-                        value: item.value
-                    })
+                    value.push({value: item.value})
                 })
+
             if (complexity_group && complexity_group.length > 0) {
-                // 不隐藏x轴
-                optionRef.current.xAxis.axisLabel.interval = 0
-                // 排序
+                option.xAxis.axisLabel.interval = 0
                 const allTitle = complexity_group.split(",")
                 let cacheTitle: string[] = []
                 let cacheValue: {value: number}[] = []
-                allTitle.map((item) => {
+
+                allTitle.forEach((item) => {
                     if (title.includes(item)) {
-                        let itemIndex = title.indexOf(item)
-                        cacheTitle.push(title[itemIndex])
-                        cacheValue.push(value[itemIndex])
+                        const idx = title.indexOf(item)
+                        cacheTitle.push(title[idx])
+                        cacheValue.push(value[idx])
                     }
                 })
 
-                // 补充
-                allTitle.map((item, index) => {
-                    // 如若不存在 则插入
+                allTitle.forEach((item, index) => {
                     if (!cacheTitle.includes(item)) {
                         cacheTitle.splice(index, 0, item)
-                        cacheValue.splice(index, 0, {
-                            value: 0
-                        })
+                        cacheValue.splice(index, 0, {value: 0})
                     }
                 })
 
@@ -99,24 +129,33 @@ export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
                 value = cacheValue
             }
 
-            optionRef.current.title.text = name_verbose || name
-            optionRef.current.xAxis.data = title || []
-            optionRef.current.series[0].data = value || []
+            option.title.text = name_verbose || name
+            option.xAxis.data = title || []
+            option.series[0].data = value || []
         } else {
-            const {title, value, name, color} = content
-            optionRef.current.xAxis.data = name || []
-            optionRef.current.series[0].data = value || []
-            optionRef.current.title.text = title
+            const {title, value, name} = content
+            option.xAxis.data = name || []
+            option.series[0].data = value || []
+            option.title.text = title
         }
-        // @ts-ignore
+
+        return option
+    }
+
+    useLayoutEffect(() => {
+        if (!chartRef.current) return
+
         const myChart = echarts.init(chartRef.current)
-        myChart.setOption(optionRef.current)
+        const option = buildOptions(content) // 每次重新生成完整 option
+        myChart.setOption(option)
+
         return () => {
             myChart.dispose()
         }
-    }, [size?.width])
+    }, [size?.width, theme, content]) // theme 变化时会重新渲染
+
     return (
-        <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="vertical-bar">
+        <div className={styles["echarts-box"]} ref={ref} data-type='echarts-box' echart-type='vertical-bar'>
             <div className={classNames(styles["echart-item"], styles["echart-item-vertical-bar"])} ref={chartRef}></div>
         </div>
     )
@@ -124,102 +163,115 @@ export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
 
 // 堆叠柱状图
 export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
+    const {theme} = useTheme()
     const {content} = props
-    const ref = useRef(null);
-    const size = useSize(ref);
+    const ref = useRef(null)
+    const size = useSize(ref)
     const chartRef = useRef(null)
-    const optionRef = useRef<any>({
-        title: {
-            left: "center",
-            text: "柱状图标题"
-        },
-        tooltip: {
-            trigger: "axis",
-            axisPointer: {
-                type: "shadow"
-            }
-        },
-        legend: {
-            orient: "vertical", // 垂直方向
-            y: "center",
-            right: 0,
-            data: ["严重", "高危", "中危", "低危"]
-        },
-        grid: {
-            left: "6%",
-            right: "14%",
-            bottom: "3%",
-            containLabel: true
-        },
-        xAxis: {
-            type: "category",
-            data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        },
-        yAxis: {
-            name: "风险数(个)",
-            type: "value"
-        },
-        series: [
-            {
-                name: "低危",
-                type: "bar",
-                stack: "total",
-                label: {
-                    show: true
-                },
-                emphasis: {
-                    focus: "series"
-                },
-                data: [320, 302, 301, 334, 390, 330, 320],
-                color: ["rgb(165,215,112)"],
-                barMaxWidth: 120 // 设置柱状图的最大宽度
+
+    const buildOptions = () => {
+        const titleColor = getCssVar("--Colors-Use-Neutral-Text-1-Title")
+        const axisColor = getCssVar("--Colors-Use-Neutral-Text-2-Primary")
+        const tooltipBg = getCssVar("--Colors-Use-Basic-Background")
+        const tooltipText = titleColor
+        const tooltipBorder = getCssVar("--Colors-Use-Neutral-Border")
+        const legendTextColor = axisColor
+
+        return {
+            title: {
+                left: "center",
+                text: content?.name_verbose || content?.name || "柱状图标题",
+                textStyle: {
+                    color: titleColor,
+                    fontWeight: "bold"
+                }
             },
-            {
-                name: "中危",
-                type: "bar",
-                stack: "total",
-                label: {
-                    show: true
-                },
-                emphasis: {
-                    focus: "series"
-                },
-                data: [120, 132, 101, 134, 90, 230, 210],
-                color: ["rgb(252,203,44)"],
-                barMaxWidth: 120
+            tooltip: {
+                trigger: "axis",
+                axisPointer: {type: "shadow"},
+                backgroundColor: tooltipBg,
+                textStyle: {color: tooltipText},
+                borderColor: tooltipBorder,
+                borderWidth: 1
             },
-            {
-                name: "高危",
-                type: "bar",
-                stack: "total",
-                label: {
-                    show: true
+            legend: {
+                orient: "vertical",
+                y: "center",
+                right: 0,
+                textStyle: {
+                    color: legendTextColor
                 },
-                emphasis: {
-                    focus: "series"
-                },
-                data: [220, 182, 191, 234, 290, 330, 310],
-                color: ["rgb(255,120,82)"],
-                barMaxWidth: 120
+                data: ["严重", "高危", "中危", "低危"]
             },
-            {
-                name: "严重",
-                type: "bar",
-                stack: "total",
-                label: {
-                    show: true
+            grid: {
+                left: "6%",
+                right: "14%",
+                bottom: "3%",
+                containLabel: true
+            },
+            xAxis: {
+                type: "category",
+                data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                axisLabel: {color: axisColor},
+                axisLine: {lineStyle: {color: axisColor}}
+            },
+            yAxis: {
+                name: "风险数(个)",
+                type: "value",
+                axisLabel: {color: axisColor},
+                axisLine: {lineStyle: {color: axisColor}},
+                splitLine: {lineStyle: {color: getCssVar("--Colors-Use-Neutral-Border")}}
+            },
+            series: [
+                {
+                    name: "低危",
+                    type: "bar",
+                    stack: "total",
+                    label: {show: true, color: titleColor},
+                    emphasis: {focus: "series"},
+                    data: [320, 302, 301, 334, 390, 330, 320] as any,
+                    itemStyle: {color: getCssVar("--Colors-Use-Status-Safe")},
+                    barMaxWidth: 120
                 },
-                emphasis: {
-                    focus: "series"
+                {
+                    name: "中危",
+                    type: "bar",
+                    stack: "total",
+                    label: {show: true, color: titleColor},
+                    emphasis: {focus: "series"},
+                    data: [120, 132, 101, 134, 90, 230, 210] as any,
+                    itemStyle: {color: getCssVar("--Colors-Use-Status-Medium")},
+                    barMaxWidth: 120
                 },
-                data: [220, 182, 191, 234, 290, 330, 310],
-                color: ["red"],
-                barMaxWidth: 120
-            }
-        ]
-    })
+                {
+                    name: "高危",
+                    type: "bar",
+                    stack: "total",
+                    label: {show: true, color: titleColor},
+                    emphasis: {focus: "series"},
+                    data: [220, 182, 191, 234, 290, 330, 310] as any,
+                    itemStyle: {color: getCssVar("--Colors-Use-Status-High")},
+                    barMaxWidth: 120
+                },
+                {
+                    name: "严重",
+                    type: "bar",
+                    stack: "total",
+                    label: {show: true, color: titleColor},
+                    emphasis: {focus: "series"},
+                    data: [220, 182, 191, 234, 290, 330, 310] as any,
+                    itemStyle: {color: getCssVar("--Colors-Use-Status-Serious")},
+                    barMaxWidth: 120
+                }
+            ]
+        }
+    }
+
     useEffect(() => {
-        const {name_verbose, name, data} = content
+        if (!chartRef.current) return
+
+        // 处理数据
+        const {data} = content
         let CRITICAL: (number | null)[] = []
         let MEDIUM: (number | null)[] = []
         let HIGH: (number | null)[] = []
@@ -230,7 +282,7 @@ export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
             let medium = null
             let high = null
             let low = null
-            list.map((itemIn) => {
+            list.forEach((itemIn) => {
                 switch (itemIn.key) {
                     case "CRITICAL":
                         critical = itemIn.value
@@ -252,22 +304,24 @@ export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
             LOW.push(low)
             return item.key_verbose || item.key
         })
-        optionRef.current.title.text = name_verbose || name
-        optionRef.current.xAxis.data = xAxisData
-        optionRef.current.series[0].data = LOW
-        optionRef.current.series[1].data = MEDIUM
-        optionRef.current.series[2].data = HIGH
-        optionRef.current.series[3].data = CRITICAL
 
-        // @ts-ignore
+        const option = buildOptions()
+        option.xAxis.data = xAxisData
+        option.series[0].data = LOW
+        option.series[1].data = MEDIUM
+        option.series[2].data = HIGH
+        option.series[3].data = CRITICAL
+
         const myChart = echarts.init(chartRef.current)
-        myChart.setOption(optionRef.current)
+        myChart.setOption(option)
+
         return () => {
             myChart.dispose()
         }
-    }, [size?.width])
+    }, [size?.width, theme, content])
+
     return (
-        <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="stacked-vertical-bar">
+        <div className={styles["echarts-box"]} ref={ref} data-type='echarts-box' echart-type='stacked-vertical-bar'>
             <div
                 className={classNames(styles["echart-item"], styles["echart-item-stacked-vertical-bar"])}
                 ref={chartRef}
@@ -276,174 +330,154 @@ export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
     )
 }
 
-interface HollowPieProps {
-    data: {name: any; value: any; color: string; direction?: string}[]
-    title?: string
-}
 // 空心圆环
 export const HollowPie: React.FC<HollowPieProps> = (props) => {
     const {data, title} = props
-    const ref = useRef(null);
-    const size = useSize(ref);
+    const {theme} = useTheme()
+    const ref = useRef(null)
+    const size = useSize(ref)
     const newData = data.filter((item) => item.direction != "center" && item.value !== 0)
     const centerData = data.filter((item) => item.direction === "center") || [{name: "资产", value: 0}]
     const chartRef = useRef(null)
-    const optionRef = useRef<any>({
-        title: {
-            show: true,
-            text: "资产",
-            subtext: ["{text|200}{small|台}"],
-            top: "44%",
-            left: "37%",
-            textAlign: "center",
-            itemGap: 0,
-            // triggerEvent: true,
-            textStyle: {
-                color: "#31343F",
-                fontSize: 12,
-                lineHeight: 16,
-                fontWeight: 600,
-                fontFamily: "PingFang HK"
-            },
-            subtextStyle: {
-                rich: {
-                    text: {
-                        fontSize: 20,
-                        lineHeight: 32,
-                        color: "#31343F"
-                    },
-                    small: {
-                        fontSize: 10,
-                        color: "#999"
-                    }
-                }
-            }
-        },
-        // 多标题
-        graphic: [
-            // 第一个标题
-            {
-                type: "text", // 文本标签类型
-                left: "center", // 相对于画布的位置
-                top: "8%", // 相对于画布的位置
-                style: {
-                    text: "", // 文本内容
-                    // textColor: '#eee', // 文本颜色
-                    fontSize: 18, // 文本字体大小
-                    fontWeight: "bold" // 文本字体粗细
-                }
-            }
-        ],
-        tooltip: {
-            trigger: "item"
-        },
-        legend: {
-            show: true,
-            top: "middle",
-            right: "8%",
-            type: "scroll",
-            orient: "vertical",
-            icon: "circle",
-            padding: [0, 0, 0, 0],
-            // 点的大小位置
-            itemWidth: 13,
-            itemHeight: 7,
-            itemStyle: {
-                borderWidth: 0
-                // borderColor:"#0ba5ff"
-            },
-            // selectedMode:false,
-            textStyle: {
-                rich: {
-                    name: {
-                        color: "#85899E",
-                        fontSize: 12
-                    },
-                    value: {
-                        color: "#31343F",
-                        fontSize: 14,
-                        fontWeight: 500,
-                        align: "right"
-                    }
-                }
-            }
-        },
 
-        series: [
-            {
-                // 空心饼图内外径
-                radius: ["35%", "62%"],
-                // 饼图上下左右位置
-                center: ["38%", "50%"],
-                itemStyle: {
-                    borderColor: "#F0F1F3",
-                    borderWidth: 1
+    const buildOptions = () => {
+        const titleColor = getCssVar("--Colors-Use-Neutral-Text-1-Title")
+        const subTitleColor = getCssVar("--Colors-Use-Neutral-Text-2-Primary")
+        const tooltipBg = getCssVar("--Colors-Use-Basic-Background")
+        const tooltipText = titleColor
+        const tooltipBorder = getCssVar("--Colors-Use-Neutral-Border")
+        const legendNameColor = getCssVar("--Colors-Use-Neutral-Text-2-Primary")
+        const legendValueColor = titleColor
+        const pieBorderColor = getCssVar("--Colors-Use-Basic-Background")
+
+        return {
+            title: {
+                show: true,
+                text: centerData[0].name,
+                subtext: [`{text|${centerData[0].value}}{small|台}`],
+                top: "44%",
+                left: "37%",
+                textAlign: "center",
+                itemGap: 0,
+                textStyle: {
+                    color: titleColor,
+                    fontSize: 12,
+                    lineHeight: 16,
+                    fontWeight: 600,
+                    fontFamily: "PingFang HK"
                 },
-                avoidLabelOverlap: false,
-                type: "pie",
-                label: {
-                    show: true,
-                    formatter: function (obj: any) {
-                        const {value, name} = obj
-                        return `${name}：${((value * 100) / centerData[0].value).toFixed(0)}%`
+                subtextStyle: {
+                    rich: {
+                        text: {
+                            fontSize: 20,
+                            lineHeight: 32,
+                            color: titleColor
+                        },
+                        small: {
+                            fontSize: 10,
+                            color: subTitleColor
+                        }
+                    }
+                }
+            },
+            graphic: [
+                {
+                    type: "text",
+                    left: "center",
+                    top: "8%",
+                    style: {
+                        text: title || "",
+                        fontSize: 18,
+                        fontWeight: "bold",
+                        fill: titleColor
+                    }
+                }
+            ],
+            tooltip: {
+                trigger: "item",
+                backgroundColor: tooltipBg,
+                textStyle: {color: tooltipText},
+                borderColor: tooltipBorder,
+                borderWidth: 1
+            },
+            legend: {
+                show: true,
+                top: "middle",
+                right: "8%",
+                type: "scroll",
+                orient: "vertical",
+                icon: "circle",
+                padding: [0, 0, 0, 0],
+                itemWidth: 13,
+                itemHeight: 7,
+                itemStyle: {borderWidth: 0},
+                textStyle: {
+                    rich: {
+                        name: {color: legendNameColor, fontSize: 12},
+                        value: {color: legendValueColor, fontSize: 14, fontWeight: 500, align: "right"}
+                    }
+                },
+                formatter: (name: any) => {
+                    try {
+                        const itemValue = newData.filter((item) => item.name === name)[0].value
+                        return `{name|${name}:} {value|${itemValue}}`
+                    } catch (error) {
+                        return ""
+                    }
+                }
+            },
+            series: [
+                {
+                    radius: ["35%", "62%"],
+                    center: ["38%", "50%"],
+                    itemStyle: {
+                        borderColor: pieBorderColor,
+                        borderWidth: 1
                     },
-                    // "{b}: {d}%",
-                    fontSize: 12
-                },
-                labelLine: {
-                    show: true
-                },
-                data: [],
-                color: []
-            }
-        ]
-    })
-    useEffect(() => {
-        optionRef.current.legend.formatter = (name: any) => {
-            try {
-                const itemValue = newData.filter((item) => item.name === name)[0].value
-                return "{name|" + name + ":} " + "{value|" + itemValue + "}"
-            } catch (error) {
-                return ""
-            }
+                    avoidLabelOverlap: false,
+                    type: "pie",
+                    label: {
+                        show: true,
+                        formatter: function (obj: any) {
+                            const {value, name} = obj
+                            return `${name}：${((value * 100) / centerData[0].value).toFixed(0)}%`
+                        },
+                        fontSize: 12,
+                        color: titleColor
+                    },
+                    labelLine: {show: true},
+                    data: newData || [],
+                    color: (newData || []).map((item) => item.color)
+                }
+            ]
         }
-        optionRef.current.series[0].data = newData || []
-        optionRef.current.series[0].color = (newData || []).map((item)=>item.color);
-        optionRef.current.title.text = centerData[0].name
-        optionRef.current.graphic[0].style.text = title || ""
-        optionRef.current.title.subtext = [`{text|${centerData[0].value}}{small|台}`]
-        // @ts-ignore
+    }
+
+    useLayoutEffect(() => {
+        if (!chartRef.current) return
         const myChart = echarts.init(chartRef.current)
-        myChart.setOption(optionRef.current)
+        myChart.setOption(buildOptions())
         return () => {
             myChart.dispose()
         }
-    }, [size?.width])
+    }, [size?.width, theme, data, title])
+
     return (
-        <div className={classNames(styles["echarts-box"],styles["echarts-box-hollow-pie"])} ref={ref} 
-        data-type="echarts-box" echart-type="hollow-pie">
+        <div
+            className={classNames(styles["echarts-box"], styles["echarts-box-hollow-pie"])}
+            ref={ref}
+            data-type='echarts-box'
+            echart-type='hollow-pie'
+        >
             <div className={classNames(styles["echart-item"], styles["echart-item-hollow-pie"])} ref={chartRef}></div>
         </div>
     )
 }
-
-interface ContentProp {
-    data: any[]
-    name: string
-    name_verbose: string
-    reason: string
-    type: string
-    type_verbose: string
-}
-interface MultiPieProps {
-    content: ContentProp
-}
-
 // 多层饼环
 export const MultiPie: React.FC<MultiPieProps> = (props) => {
     const {name_verbose, name, data} = props.content
-    const ref = useRef(null);
-    const size = useSize(ref);
+    const ref = useRef(null)
+    const size = useSize(ref)
     const chartRef = useRef(null)
     const optionRef = useRef<any>({
         title: {
@@ -596,173 +630,172 @@ export const MultiPie: React.FC<MultiPieProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="multi-pie">
+        <div className={styles["echarts-box"]} ref={ref} data-type='echarts-box' echart-type='multi-pie'>
             <div className={classNames(styles["echart-item"], styles["echart-item-multi-pie"])} ref={chartRef}></div>
         </div>
     )
 }
 
-interface NightingleRoseProps {
-    content: ContentProp
-}
-interface DetailsProps {
-    name: string
-    content: string
-}
 // 南丁格尔玫瑰图
 export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
     const {name_verbose, name, data} = props.content
-    const ref = useRef(null);
-    const size = useSize(ref);
+    const {theme} = useTheme()
+    const ref = useRef(null)
+    const size = useSize(ref)
     const [details, setDetails] = useState<DetailsProps>()
     const chartRef = useRef(null)
-    const optionRef = useRef<any>({
-        title: {
-            text: "Nightingale Chart",
-            left: "center"
-        },
-        tooltip: {
-            trigger: "item",
-            formatter: "{a} <br/>{b} : {c} ({d}%)"
-        },
-        legend: {
-            top: "bottom"
-        },
-        toolbox: {
-            show: true,
-            feature: {
-                mark: {show: true}
-            }
-        },
-        series: [
-            {
-                name: "Nightingale Chart",
-                type: "pie",
-                radius: [50, 150],
-                center: ["50%", "50%"],
-                roseType: "area",
-                itemStyle: {
-                    borderRadius: 8
-                },
-                data: []
-            }
-        ]
-    })
-    useEffect(() => {
-        if (Array.isArray(data)) {
-            // 构造"南丁格尔玫瑰图"伪数据
-            let cacheSource = JSON.parse(JSON.stringify(data))
-            // 当值为1大于总数三分之一时 一半隐藏一半显示
-            if (data.length >= 6) {
-                let index = data.filter((item) => item.value === 1).length
-                let limit = data.length / 3
-                let isShow = true
-                if (index > limit) {
-                    let newData = data.filter((item) => {
-                        if (item.value > 1) return true
-                        else {
-                            isShow = !isShow
-                            return isShow
-                        }
-                    })
-                    cacheSource = JSON.parse(JSON.stringify(newData))
-                }
-            }
-            // 3-6为四分之一扇
-            if (cacheSource.length < 6) {
-                optionRef.current.series[0].center = ["30%", "66%"]
-                let limitCount = cacheSource.length * 3
-                for (let index = 0; index < limitCount; index++) {
-                    cacheSource.push({
-                        isHide: true
-                    })
-                }
-            }
-            // 6-12为二分之一扇
-            else if (cacheSource.length >= 6 && cacheSource.length <= 12) {
-                optionRef.current.series[0].startAngle = 180
-                optionRef.current.series[0].center = ["50%", "70%"]
-                optionRef.current.legend = {
-                    show: false
-                }
-                let limitCount = cacheSource.length
-                for (let index = 0; index < limitCount; index++) {
-                    cacheSource.push({
-                        isHide: true
-                    })
-                }
-            }
-            // 12-20为全扇 超出数据不显示
-            else if (cacheSource.length > 12) {
-                optionRef.current.series[0].radius = [40, 120]
-                optionRef.current.legend = {
-                    show: false
-                }
-                cacheSource = cacheSource.slice(0, 20)
-            }
 
-            const value = cacheSource
-                .map((item: any) => {
-                    if (item?.isHide) {
-                        return {
-                            value: 0,
-                            name: "",
-                            label: {
-                                show: false
-                            },
-                            labelLine: {
-                                show: false
-                            }
-                        }
-                    } else {
-                        const description_zh = item.detail || ""
-                        let str = ""
-                        str = description_zh.replace(/\n+/g, "\n").replaceAll("\n", "<br/>")
-                        return {
-                            value: item.value,
-                            name: item.key_verbose || item.key,
-                            content: str
-                        }
+    const buildBaseOption = () => {
+        const titleColor = getCssVar("--Colors-Use-Neutral-Text-1-Title")
+        const tooltipBg = getCssVar("--Colors-Use-Basic-Background")
+        const tooltipText = titleColor
+        const tooltipBorder = getCssVar("--Colors-Use-Neutral-Border")
+        const legendTextColor = getCssVar("--Colors-Use-Neutral-Text-2-Primary")
+        const pieBorderColor = getCssVar("--Colors-Use-Basic-Background")
+
+        return {
+            title: {
+                text: name_verbose || name || "Nightingale Chart",
+                left: "center",
+                textStyle: {color: titleColor, fontWeight: "bold"}
+            },
+            tooltip: {
+                trigger: "item",
+                backgroundColor: tooltipBg,
+                textStyle: {color: tooltipText},
+                borderColor: tooltipBorder,
+                borderWidth: 1,
+                formatter: "{a} <br/>{b} : {c} ({d}%)"
+            },
+            legend: {
+                top: "bottom",
+                textStyle: {color: legendTextColor}
+            },
+            toolbox: {
+                show: true,
+                feature: {
+                    mark: {show: true}
+                }
+            },
+            series: [
+                {
+                    name: name_verbose || name || "Nightingale Chart",
+                    type: "pie",
+                    radius: [50, 150],
+                    center: ["50%", "50%"],
+                    roseType: "area",
+                    itemStyle: {
+                        borderRadius: 8,
+                        borderColor: pieBorderColor
+                    },
+                    label: {color: titleColor},
+                    data: []
+                }
+            ]
+        }
+    }
+
+    useLayoutEffect(() => {
+        if (!Array.isArray(data)) return
+
+        // 先创建基础配置
+        const baseOption = buildBaseOption() as any
+        let cacheSource = JSON.parse(JSON.stringify(data))
+
+        // 当值为1大于总数三分之一时 一半隐藏一半显示
+        if (data.length >= 6) {
+            const index = data.filter((item) => item.value === 1).length
+            const limit = data.length / 3
+            let isShow = true
+            if (index > limit) {
+                const newData = data.filter((item) => {
+                    if (item.value > 1) return true
+                    else {
+                        isShow = !isShow
+                        return isShow
                     }
                 })
-                .sort((a: any, b: any) => b.value - a.value)
-            if (Array.isArray(value) && value.length > 0) {
-                setDetails({
-                    name: value[0]?.name || "",
-                    content: (value[0]?.content || "").replaceAll("<br/>", "\n")
-                })
-            }
-            optionRef.current.tooltip.formatter = (params: any) => {
-                return `${params.data.name} : ${params.data.value} (${params.percent}%)`
-            }
-
-            optionRef.current.title.text = name_verbose || name
-            optionRef.current.series[0].name = name_verbose || name
-            optionRef.current.series[0].data = value || []
-            // @ts-ignore
-            const myChart = echarts.init(chartRef.current)
-            //先解绑事件，防止事件重复触发
-            myChart.off("click")
-            myChart.off("legendselectchanged")
-            myChart.on("click", function (params) {
-                // console.log("点击", params);
-                setDetails({
-                    // @ts-ignore
-                    name: params?.data?.name || "",
-                    // @ts-ignore
-                    content: (params?.data?.content || "").replaceAll("<br/>", "\n")
-                })
-            })
-            myChart.setOption(optionRef.current)
-            return () => {
-                myChart.dispose()
+                cacheSource = JSON.parse(JSON.stringify(newData))
             }
         }
-    }, [size?.width])
+
+        // 3-6 为四分之一扇
+        if (cacheSource.length < 6) {
+            baseOption.series[0].center = ["30%", "66%"]
+            const limitCount = cacheSource.length * 3
+            for (let i = 0; i < limitCount; i++) {
+                cacheSource.push({isHide: true})
+            }
+        }
+        // 6-12 为半扇
+        else if (cacheSource.length >= 6 && cacheSource.length <= 12) {
+            baseOption.series[0].startAngle = 180
+            baseOption.series[0].center = ["50%", "70%"]
+            baseOption.legend = {show: false}
+            const limitCount = cacheSource.length
+            for (let i = 0; i < limitCount; i++) {
+                cacheSource.push({isHide: true})
+            }
+        }
+        // 超过 12 为全扇
+        else if (cacheSource.length > 12) {
+            baseOption.series[0].radius = [40, 120]
+            baseOption.legend = {show: false}
+            cacheSource = cacheSource.slice(0, 20)
+        }
+
+        const value = cacheSource
+            .map((item: any) => {
+                if (item?.isHide) {
+                    return {
+                        value: 0,
+                        name: "",
+                        label: {show: false},
+                        labelLine: {show: false}
+                    }
+                } else {
+                    const description_zh = item.detail || ""
+                    const str = description_zh.replace(/\n+/g, "\n").replaceAll("\n", "<br/>")
+                    return {
+                        value: item.value,
+                        name: item.key_verbose || item.key,
+                        content: str
+                    }
+                }
+            })
+            .sort((a: any, b: any) => b.value - a.value)
+
+        if (Array.isArray(value) && value.length > 0) {
+            setDetails({
+                name: value[0]?.name || "",
+                content: (value[0]?.content || "").replaceAll("<br/>", "\n")
+            })
+        }
+
+        baseOption.tooltip.formatter = (params: any) =>
+            `${params.data.name} : ${params.data.value} (${params.percent}%)`
+        baseOption.series[0].data = value
+
+        const myChart = echarts.init(chartRef.current)
+        myChart.off("click")
+        myChart.off("legendselectchanged")
+        myChart.on("click", function (params: any) {
+            setDetails({
+                name: params?.data?.name || "",
+                content: (params?.data?.content || "").replaceAll("<br/>", "\n")
+            })
+        })
+        myChart.setOption(baseOption)
+
+        return () => {
+            myChart.dispose()
+        }
+    }, [size?.width, theme, data, name, name_verbose])
+
     return (
         <>
             {Array.isArray(data) && (
-                <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="nightingle-rose">
+                <div className={styles["echarts-box"]} ref={ref} data-type='echarts-box' echart-type='nightingle-rose'>
                     <div
                         className={classNames(styles["echart-item"], styles["echart-item-nightingle-rose"])}
                         ref={chartRef}
@@ -770,8 +803,12 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
                     {details && (
                         <div className={styles["echart-detail"]}>
                             <div className={styles["echart-detail-item"]}>
-                                <div className={styles["echart-detail-item-title"]} id="nightingle-rose-title">{details.name}</div>
-                                <div className={styles["echart-detail-item-content"]} id="nightingle-rose-content">{details.content}</div>
+                                <div className={styles["echart-detail-item-title"]} id='nightingle-rose-title'>
+                                    {details.name}
+                                </div>
+                                <div className={styles["echart-detail-item-content"]} id='nightingle-rose-content'>
+                                    {details.content}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -781,6 +818,92 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
     )
 }
 
+interface EchartsOptionProps {
+    content: {
+        type: "e-chart"
+        name: "nightingale-rose" | "bar-graph"
+        option: EChartsOption
+    }
+}
+
+// echarts任意图表(后端传入option控制)
+export const EchartsOption: React.FC<EchartsOptionProps> = (props) => {
+    const {option, name} = props.content
+    const ref = useRef(null)
+    const size = useSize(ref)
+    const chartRef = useRef(null)
+    const optionRef = useRef<EChartsOption>(option)
+    useEffect(() => {
+        // @ts-ignore
+        const myChart = echarts.init(chartRef.current)
+        try {
+            let setOption = cloneDeep(optionRef.current) as any
+            if (name === "nightingale-rose") {
+                setOption.series[0].label.formatter = (params) => {
+                    return params.name + "\n" + (params.data.realPercent || 0.0).toFixed(2) + "%"
+                }
+                setOption.tooltip.formatter = (params) => {
+                    return `${params.name} : ${params.data.realValue}`
+                }
+            }
+            if (name === "bar-graph") {
+                setOption.tooltip.formatter = (params) => {
+                    let result = params[0].axisValue + "<br/>"
+                    let total = 0
+                    params.forEach(function (item) {
+                        if (item.value > 0) {
+                            let count = Math.round(item.value * item.data.realTotal)
+                            total += count
+                            result +=
+                                item.marker +
+                                " " +
+                                item.seriesName +
+                                ": " +
+                                count +
+                                " (" +
+                                (item.value * 100).toFixed(1) +
+                                "%)<br/>"
+                        }
+                    })
+                    if (total > 0) result += "总计: " + total + "<br/>"
+                    return result
+                }
+            }
+            optionRef.current = setOption
+            myChart.setOption(optionRef.current)
+        } catch (error) {}
+
+        return () => {
+            myChart.dispose()
+        }
+    }, [size?.width])
+
+    // 下载word报告时用于适配
+    const echartType = useMemo(() => {
+        switch (name) {
+            case "bar-graph":
+                return "vertical-bar"
+            default:
+                return name
+        }
+    }, [name])
+
+    // 样式适配
+    const chartStyle = useMemo(() => {
+        switch (name) {
+            case "bar-graph":
+                return styles["echart-item-vertical-bar"]
+            case "nightingale-rose":
+                return styles["echart-item-nightingle-rose"]
+        }
+    }, [name])
+
+    return (
+        <div className={styles["echarts-box"]} ref={ref} data-type='echarts-box' echart-type={echartType}>
+            <div className={classNames(styles["echart-item"], styles[chartStyle])} ref={chartRef}></div>
+        </div>
+    )
+}
 interface EchartsCardProps {
     dataTitle: string
     dataSource: any[]
@@ -791,13 +914,32 @@ export const EchartsCard: React.FC<EchartsCardProps> = (props) => {
     const {dataTitle, dataSource} = props
     return (
         <>
-            <div style={{fontSize:18,padding:"10px 0",fontWeight:"bold",color:"rgb(70, 70, 70)"}}>{dataTitle}</div>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
+            <div
+                style={{
+                    fontSize: 18,
+                    padding: "10px 0",
+                    fontWeight: "bold",
+                    color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                }}
+            >
+                {dataTitle}
+            </div>
+            <div style={{display: "flex", justifyContent: "space-between", marginBottom: 12}}>
                 {dataSource.map((item: any) => {
                     return (
-                        <div style={{height:66,width:"46%",padding:10,border:"1px solid #cbcbcb",boxSizing:"content-box"}}>
-                            <div style={{color:"#666"}}>{item.key_verbose || item.key}</div>
-                            <div style={{marginTop:10,fontSize:24}}>{item.value}</div>
+                        <div
+                            style={{
+                                height: 66,
+                                width: "46%",
+                                padding: 10,
+                                border: "1px solid var(--Colors-Use-Neutral-Border)",
+                                boxSizing: "content-box"
+                            }}
+                        >
+                            <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
+                                {item.key_verbose || item.key}
+                            </div>
+                            <div style={{marginTop: 10, fontSize: 24}}>{item.value}</div>
                         </div>
                     )
                 })}

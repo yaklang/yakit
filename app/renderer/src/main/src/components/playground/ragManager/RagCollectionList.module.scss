@@ -1,0 +1,158 @@
+.rag-collection-list {
+    height: 100%;
+    
+    .collection-list {
+        height: calc(100% - 120px);
+        overflow-y: auto;
+        padding-bottom: 8px;
+        
+        .collection-item {
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            
+            &:hover {
+                border-color: var(--yakit-primary-color);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+            
+            &.selected {
+                border-color: var(--yakit-primary-color);
+                background-color: var(--yakit-primary-1);
+            }
+            
+            .collection-info {
+                flex: 1;
+                min-width: 0;
+                
+                .collection-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                    
+                    .collection-name {
+                        font-size: 14px;
+                        font-weight: 600;
+                        color: var(--yakit-header-color);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        flex: 1;
+                        margin-right: 8px;
+                    }
+                }
+                
+                .collection-details {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 12px;
+                    margin-bottom: 8px;
+                    
+                    .detail-item {
+                        display: flex;
+                        align-items: center;
+                        font-size: 12px;
+                        
+                        .label {
+                            color: var(--yakit-text-color-2);
+                            margin-right: 4px;
+                        }
+                        
+                        .value {
+                            color: var(--yakit-text-color-1);
+                            font-weight: 500;
+                        }
+                    }
+                }
+                
+                .collection-description {
+                    font-size: 12px;
+                    color: var(--yakit-text-color-2);
+                    line-height: 1.4;
+                    margin-bottom: 8px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                }
+                
+                .collection-meta {
+                    .created-at {
+                        font-size: 11px;
+                        color: var(--yakit-text-color-3);
+                    }
+                }
+            }
+            
+            .collection-actions {
+                margin-left: 12px;
+                display: flex;
+                align-items: center;
+            }
+        }
+    }
+    
+    .pagination-wrapper {
+        margin-top: 16px;
+        display: flex;
+        justify-content: center;
+        padding: 12px 0;
+        border-top: 1px solid var(--yakit-border-color);
+    }
+}
+
+// 集合详情弹窗样式
+.collection-detail {
+    .detail-section {
+        margin-bottom: 24px;
+        
+        h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--yakit-header-color);
+            border-bottom: 1px solid var(--yakit-border-color);
+            padding-bottom: 8px;
+        }
+        
+        .detail-grid {
+            .detail-row {
+                display: flex;
+                align-items: center;
+                margin-bottom: 8px;
+                
+                .label {
+                    min-width: 80px;
+                    color: var(--yakit-text-color-2);
+                    font-size: 13px;
+                }
+                
+                .value {
+                    color: var(--yakit-text-color-1);
+                    font-size: 13px;
+                    font-weight: 500;
+                }
+            }
+        }
+        
+        .description-content {
+            background: var(--yakit-canvas-color);
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 13px;
+            color: var(--yakit-text-color-1);
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+    }
+}

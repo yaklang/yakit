@@ -4,7 +4,7 @@ import {HTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {Uint8ArrayToString} from "@/utils/str"
 import {ThunderboltOutlined} from "@ant-design/icons"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {HighLightText, OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {HighLightText, OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -17,7 +17,10 @@ import {newWebsocketFuzzerTab} from "./WebsocketFuzzer"
 import {HistoryHighLightText} from "@/components/HTTPFlowDetail"
 import styles from "./HTTPFlowForWebsocketViewer.module.scss"
 import {IMonacoEditor} from "@/utils/editors"
-import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
+import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
+import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
+import {ByteCountTag} from "../fuzzer/HTTPFuzzerPage"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 export interface HTTPFlowForWebsocketViewerProp {
     pageType?: HTTPHistorySourcePageType
     historyId?: string
@@ -25,29 +28,19 @@ export interface HTTPFlowForWebsocketViewerProp {
     highLightText?: HistoryHighLightText[]
     highLightItem?: HistoryHighLightText
     highLightFindClass?: string
+    showJumpTree?: boolean
+    keepSearchName?: string
 }
 
 export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp> = (props) => {
+    const {t, i18n} = useI18nNamespaces(["history"])
     const [mode, setMode] = useState<"request" | "response">("request")
-    const {flow, historyId, pageType, highLightText, highLightItem, highLightFindClass} = props
+    const {flow, historyId, pageType, highLightText, highLightItem, highLightFindClass, showJumpTree, keepSearchName} =
+        props
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
-    const [reqSelectionByteCount, setReqSelectionByteCount] = useState<number>(0)
-    const [resSelectionByteCount, setResSelectionByteCount] = useState<number>(0)
-    useEffect(() => {
-        try {
-            if (reqEditor) {
-                getSelectionEditorByteCount(reqEditor, (byteCount) => {
-                    setReqSelectionByteCount(byteCount)
-                })
-            }
-            if (resEditor) {
-                getSelectionEditorByteCount(resEditor, (byteCount) => {
-                    setResSelectionByteCount(byteCount)
-                })
-            }
-        } catch (e) {}
-    }, [reqEditor, resEditor])
+    const resSelectionByteCount = useSelectionByteCount(resEditor, 500)
+    const reqSelectionByteCount = useSelectionByteCount(reqEditor, 500)
 
     const onScrollTo = useMemoizedFn(() => {
         if (historyId) {
@@ -69,11 +62,9 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
             size={"small"}
             className={styles["hTTPFlow-websocket-viewer"]}
             headStyle={{
-                background: "#fff",
                 height: 32,
                 minHeight: 32,
-                boxSizing: "content-box",
-                borderBottom: "1px solid var(--yakit-border-color)"
+                boxSizing: "content-box"
             }}
             bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 32px)"}}
             title={
@@ -87,24 +78,23 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                         buttonStyle='solid'
                         value={mode}
                         options={[
-                            {value: "request", label: "请求"},
-                            {value: "response", label: "响应"}
+                            {value: "request", label: t("HTTPFlowForWebsocketViewer.request")},
+                            {value: "response", label: t("HTTPFlowForWebsocketViewer.response")}
                         ]}
                         onChange={(e) => setMode(e.target.value)}
                     />
                     <YakitTag color={"info"}>
                         {mode === "request"
-                            ? `请求大小：${flow.RequestSizeVerbose}`
-                            : `Body大小: ${flow.BodySizeVerbose}`}
+                            ? `${t("HTTPFlowForWebsocketViewer.requestSizeVerbose")}${flow.RequestSizeVerbose}`
+                            : `${t("HTTPFlowForWebsocketViewer.body_size")}${flow.BodySizeVerbose}`}
                     </YakitTag>
-                    {["History"].includes(pageType || "") && (
+                    {["History"].includes(pageType || "") && showJumpTree && (
                         <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
                     )}
-                    {mode === "request" ? (
-                        <>{reqSelectionByteCount > 0 && <YakitTag>{reqSelectionByteCount} bytes</YakitTag>}</>
-                    ) : (
-                        <>{resSelectionByteCount > 0 && <YakitTag>{resSelectionByteCount} bytes</YakitTag>}</>
-                    )}
+                    <ByteCountTag
+                        selectionByteCount={mode === "request" ? reqSelectionByteCount : resSelectionByteCount}
+                        key='websocketViewer'
+                    />
                 </div>
             }
             extra={
@@ -126,6 +116,7 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                 {mode === "request" && (
                     <WebSocketEditor
                         flow={flow}
+                        keepSearchName={keepSearchName}
                         value={Uint8ArrayToString(flow.Request)}
                         highLightText={highLightText?.filter((i) => i.IsMatchRequest)}
                         highLightFind={highLightItem?.IsMatchRequest ? [highLightItem] : []}
@@ -137,6 +128,7 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                 {mode === "response" && (
                     <WebSocketEditor
                         flow={flow}
+                        keepSearchName={keepSearchName}
                         value={Uint8ArrayToString(flow.Response)}
                         highLightText={highLightText?.filter((i) => !i.IsMatchRequest)}
                         highLightFind={highLightItem ? (highLightItem.IsMatchRequest ? [] : [highLightItem]) : []}
@@ -156,6 +148,7 @@ interface WebSocketEditorProps {
     contextMenu?: OtherMenuListProps
     highLightText?: HighLightText[]
     highLightFind?: HighLightText[]
+    keepSearchName?: string
     highLightFindClass?: string
     isPositionHighLightCursor?: boolean
     onSetEditor?: (editor: IMonacoEditor) => void
@@ -164,6 +157,7 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
     const {
         flow,
         value,
+        keepSearchName,
         contextMenu = {},
         highLightText,
         highLightFind,
@@ -171,7 +165,7 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
         isPositionHighLightCursor,
         onSetEditor
     } = props
-
+    const {t, i18n} = useI18nNamespaces(["history"])
     // 发送到WS Fuzzer
     const sendWebSocketMenuItem: OtherMenuListProps = useMemo(() => {
         return {
@@ -179,21 +173,17 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
                 menu: [
                     {
                         key: "new-web-socket-tab",
-                        label: "发送到WS Fuzzer",
+                        label: t("HTTPFlowForWebsocketViewer.sendToWSFuzzer"),
                         children: [
                             {
                                 key: "发送并跳转",
-                                label: "发送并跳转",
-                                keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                                label: t("HTTPFlowForWebsocketViewer.sendAndRedirect"),
+                                keybindings: YakEditorOptionShortcutKey.CommonSendAndJumpToWebFuzzer
                             },
                             {
                                 key: "仅发送",
-                                label: "仅发送",
-                                keybindings: [
-                                    YakitEditorKeyCode.Control,
-                                    YakitEditorKeyCode.Shift,
-                                    YakitEditorKeyCode.KEY_R
-                                ]
+                                label: t("HTTPFlowForWebsocketViewer.sendOnly"),
+                                keybindings: YakEditorOptionShortcutKey.CommonSendToWebFuzzer
                             }
                         ]
                     }
@@ -202,7 +192,7 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
                     try {
                         const text = flow.Request
                         if (!Uint8ArrayToString(text)) {
-                            yakitNotify("info", "数据包为空")
+                            yakitNotify("info", t("HTTPFlowForWebsocketViewer.packetEmpty"))
                             return
                         }
                         if (key === "发送并跳转") {
@@ -216,13 +206,14 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
                 }
             }
         }
-    }, [flow.Request, flow.IsHTTPS])
+    }, [flow.Request, flow.IsHTTPS, i18n.language])
 
     return (
         <YakitEditor
             type='http'
             value={value}
             readOnly={true}
+            keepSearchName={keepSearchName}
             noMiniMap={true}
             highLightText={highLightText}
             highLightFind={highLightFind}

@@ -22,8 +22,8 @@ export interface FileDetailInfo {
     path: string
     /** 图标 */
     icon: string
-    /** 代码 */
-    code: string
+    /** 代码（如若code未定义 则为缓存加载需重新获取） */
+    code?: string
     /** 文件语言 */
     language?: string
     /** 打开文件的时间戳（用于打开编辑器列表排序） */

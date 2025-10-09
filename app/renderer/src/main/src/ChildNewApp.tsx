@@ -3,6 +3,9 @@ import OpenPacketNewWindow from "./components/OpenPacketNewWindow/OpenPacketNewW
 import styles from "./ChildNewApp.module.scss"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {coordinate} from "./pages/globalVariable"
+import {YakitSpin} from "./components/yakitUI/YakitSpin/YakitSpin"
+import TitleBar from "./components/BaseTitleBar"
+
 const {ipcRenderer} = window.require("electron")
 
 interface ParentWindowData {
@@ -13,11 +16,15 @@ interface ChildNewAppProps {}
 const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
     const [parentWinData, setParentWinData] = useState<ParentWindowData>()
     useEffect(() => {
+        ipcRenderer.send("request-parent-data")
         ipcRenderer.on("get-parent-window-data", (e, data) => {
             setParentWinData(data as ParentWindowData)
         })
+        return () => {
+            setParentWinData(undefined)
+            ipcRenderer.removeAllListeners("get-parent-window-data")
+        }
     }, [])
-
     // 全局记录鼠标坐标位置(为右键菜单提供定位)
     const handleMouseMove = useDebounceFn(
         useMemoizedFn((e: MouseEvent) => {
@@ -49,7 +56,12 @@ const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
         return null
     }, [parentWinData])
 
-    return <div className={styles["child-new-app-wrapper"]}>{childNewAppEle}</div>
+    return (
+        <div className={styles["child-new-app-wrapper"]}>
+            <TitleBar />
+            {childNewAppEle}
+        </div>
+    )
 }
 
 export default ChildNewApp

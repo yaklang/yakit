@@ -10,11 +10,21 @@ import {
     useUpdateEffect
 } from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {OutlineLog2Icon, OutlineRefreshIcon, OutlineSearchIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {
+    OutlineChevrondownIcon,
+    OutlineCogIcon,
+    OutlineLog2Icon,
+    OutlineRefreshIcon,
+    OutlineReplyIcon,
+    OutlineSearchIcon,
+    OutlineSelectorIcon,
+    OutlineTerminalIcon
+} from "@/assets/icon/outline"
 import classNames from "classnames"
 import {RemoteHistoryGV} from "@/enums/history"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {
+    AdvancedSet,
     availableColors,
     CalloutColor,
     ColorSearch,
@@ -32,7 +42,7 @@ import {
     onExpandHTTPFlow,
     onRemoveCalloutColor,
     onSendToTab,
-    RangeInputNumberTable,
+    RangeInputNumberTableWrapper,
     SourceType,
     YakQueryHTTPFlowResponse
 } from "@/components/HTTPFlowTable/HTTPFlowTable"
@@ -43,9 +53,8 @@ import {yakitNotify} from "@/utils/notification"
 import {ArrowCircleRightSvgIcon, CheckCircleIcon, ChromeFrameSvgIcon, ColorSwatchIcon} from "@/assets/newIcon"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {openExternalWebsite, saveABSFileToOpen} from "@/utils/openWebsite"
+import {minWinSendToChildWin, openExternalWebsite, openPacketNewWindow, saveABSFileToOpen} from "@/utils/openWebsite"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -61,19 +70,15 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 import {v4 as uuidv4} from "uuid"
 import {isEqual} from "lodash"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {convertKeyboard} from "@/components/yakitUI/YakitEditor/editorUtils"
-import {YakitSystem} from "@/yakitGVDefine"
 import {randomString} from "@/utils/randomUtil"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
-import {usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {ExportSelect} from "@/components/DataExport/DataExport"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser"
 import {setClipboardText} from "@/utils/clipboard"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
-import {useHotkeys} from "react-hotkeys-hook"
 import {
     generateCSRFPocByRequest,
     generateYakCodeByRequest,
@@ -81,56 +86,78 @@ import {
 } from "@/pages/invoker/fromPacketToYakCode"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import emiter from "@/utils/eventBus/eventBus"
+import {HTTPFlowDetailProp} from "@/components/HTTPFlowDetail"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
+import {
+    getGlobalShortcutKeyEvents,
+    GlobalShortcutKey,
+    ShortcutKeyFocusType
+} from "@/utils/globalShortcutKey/events/global"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import styles from "./HTTPHistoryFilter.module.scss"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {YakitRoute} from "@/enums/yakitRoute"
 const {ipcRenderer} = window.require("electron")
 
 type tabKeys = "web-tree" | "process"
 interface TabsItem {
     key: tabKeys
-    label: ReactElement | string
+    label: (t: (keys: string) => string) => ReactElement | string
     contShow: boolean
 }
 
 interface HTTPHistoryFilterProps {
+    onSetClickedHttpFlow: (flow?: HTTPFlow) => void
+    onSetFirstHttpFlow: (flow?: HTTPFlow) => void
     onSetSelectedHttpFlowIds: (ids: string[]) => void
-    onSetIsAllHttpFlow: (b: boolean) => void
     onSetHTTPFlowFilter: (filterStr: string) => void
+    refreshHttpTable?: boolean
+    isResetSelect?: boolean
+    onSetIsResetSelect?: React.Dispatch<React.SetStateAction<boolean>>
     downstreamProxy: string
     toWebFuzzer?: boolean
     runtimeId?: string[]
     sourceType?: string
+    webFuzzerPageId?: string
 }
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((props) => {
     const {
+        onSetClickedHttpFlow,
+        onSetFirstHttpFlow,
         onSetSelectedHttpFlowIds,
-        onSetIsAllHttpFlow,
         onSetHTTPFlowFilter,
+        refreshHttpTable,
+        isResetSelect,
+        onSetIsResetSelect,
         downstreamProxy,
         toWebFuzzer,
         runtimeId,
-        sourceType
+        sourceType,
+        webFuzzerPageId
     } = props
-
+    const {t, i18n} = useI18nNamespaces(["history"])
     // #region 左侧tab
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
     const [curTabKey, setCurTabKey] = useState<tabKeys>("web-tree")
     const [tabsData, setTabsData] = useState<Array<TabsItem>>([
         {
             key: "web-tree",
-            label: (
+            label: (t) => (
                 <>
-                    <OutlineLog2Icon /> 网站树
+                    <span className={styles["tab-item-text"]}>{t("HTTPHistory.websiteTree")}</span> <OutlineLog2Icon />
                 </>
             ),
             contShow: true // 初始为true
         },
         {
             key: "process",
-            label: (
+            label: (t) => (
                 <>
+                    <span className={styles["tab-item-text"]}>{t("HTTPHistory.process")}</span>
                     <OutlineTerminalIcon />
-                    进程
                 </>
             ),
             contShow: false // 初始为false
@@ -143,27 +170,43 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                     const tabs = JSON.parse(setting)
                     setTabsData((prev) => {
                         prev.forEach((i) => {
-                            if (i.key === tabs.curTabKey) {
-                                i.contShow = tabs.contShow
-                            } else {
+                            if (toWebFuzzer) {
                                 i.contShow = false
+                            } else {
+                                if (i.key === tabs.curTabKey) {
+                                    i.contShow = tabs.contShow
+                                } else {
+                                    i.contShow = false
+                                }
                             }
                         })
                         return [...prev]
                     })
                     setCurTabKey(tabs.curTabKey)
+                    setRemoteValue(
+                        RemoteHistoryGV.HTTPHistoryFilterLeftTabs,
+                        JSON.stringify({contShow: toWebFuzzer ? false : tabs.contShow, curTabKey: tabs.curTabKey})
+                    )
                 } catch (error) {
                     setTabsData((prev) => {
                         prev.forEach((i) => {
-                            if (i.key === "web-tree") {
-                                i.contShow = true
-                            } else {
+                            if (toWebFuzzer) {
                                 i.contShow = false
+                            } else {
+                                if (i.key === "web-tree") {
+                                    i.contShow = true
+                                } else {
+                                    i.contShow = false
+                                }
                             }
                         })
                         return [...prev]
                     })
                     setCurTabKey("web-tree")
+                    setRemoteValue(
+                        RemoteHistoryGV.HTTPHistoryFilterLeftTabs,
+                        JSON.stringify({contShow: toWebFuzzer ? false : true, curTabKey: "web-tree"})
+                    )
                 }
             }
         })
@@ -240,7 +283,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                 isVer={false}
                 freeze={openTabsFlag}
                 isRecalculateWH={openTabsFlag}
-                firstNode={() => (
+                firstNode={
                     <div className={styles["HTTPHistoryFilter-left"]}>
                         <div className={styles["tab-wrap"]}>
                             <div className={styles["tab"]}>
@@ -255,7 +298,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                                             handleTabClick(item)
                                         }}
                                     >
-                                        {item.label}
+                                        {item.label(t)}
                                     </div>
                                 ))}
                             </div>
@@ -281,7 +324,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                                 >
                                     <WebTree
                                         height={treeWrapHeight - 30}
-                                        searchPlaceholder='请输入域名进行搜索，例baidu.com'
+                                        searchPlaceholder={t("HTTPHistory.pleaseEnterDomainToSearch")}
                                         treeExtraQueryparams={treeQueryparams}
                                         refreshTreeFlag={refreshFlag}
                                         onGetUrl={(searchURL, includeInUrl) => {
@@ -304,7 +347,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             </div>
                         </div>
                     </div>
-                )}
+                }
                 lineStyle={{display: ""}}
                 firstMinSize={openTabsFlag ? "325px" : "24px"}
                 secondMinSize={720}
@@ -316,12 +359,17 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             includeInUrl={includeInUrl}
                             ProcessName={curProcess}
                             onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
-                            onSetIsAllHttpFlow={onSetIsAllHttpFlow}
+                            onSetClickedHttpFlow={onSetClickedHttpFlow}
+                            onSetFirstHttpFlow={onSetFirstHttpFlow}
+                            refresh={refreshHttpTable}
+                            isResetSelect={isResetSelect}
+                            onSetIsResetSelect={onSetIsResetSelect}
                             downstreamProxy={downstreamProxy}
                             inMouseEnterTable={true}
                             toWebFuzzer={toWebFuzzer}
                             runtimeId={runtimeId}
                             sourceType={sourceType}
+                            webFuzzerPageId={webFuzzerPageId}
                         />
                     </div>
                 }
@@ -334,18 +382,42 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         </div>
     )
 })
+
+export const defalutColumnsOrder = [
+    "Method",
+    "StatusCode",
+    "Url",
+    "Host",
+    "Path",
+    "Payloads", // 此字段特殊不参与表格列自定义
+    "FromPlugin",
+    "Tags",
+    "IPAddress",
+    "BodyLength",
+    "HtmlTitle",
+    "GetParamsTotal",
+    "ContentType",
+    "DurationMs",
+    "UpdatedAt",
+    "RequestSizeVerbose"
+]
 interface HTTPFlowTableProps {
     searchURL?: string
     includeInUrl?: string
     ProcessName?: string[]
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
     onSetSelectedHttpFlowIds?: (ids: string[]) => void
-    onSetIsAllHttpFlow?: (b: boolean) => void
+    onSetClickedHttpFlow?: (flow?: HTTPFlow) => void
+    onSetFirstHttpFlow?: (flow?: HTTPFlow) => void
+    refresh?: boolean
+    isResetSelect?: boolean
+    onSetIsResetSelect?: React.Dispatch<React.SetStateAction<boolean>>
     downstreamProxy?: string
     inMouseEnterTable?: boolean
     toWebFuzzer?: boolean
     runtimeId?: string[]
     sourceType?: string
+    webFuzzerPageId?: string
 }
 const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
     const {
@@ -354,16 +426,23 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         ProcessName,
         onQueryParams,
         onSetSelectedHttpFlowIds,
-        onSetIsAllHttpFlow,
+        onSetClickedHttpFlow,
+        onSetFirstHttpFlow,
+        refresh,
+        isResetSelect = true,
+        onSetIsResetSelect,
         downstreamProxy = "",
         inMouseEnterTable = false,
         toWebFuzzer = false,
         runtimeId = [],
-        sourceType = "mitm"
+        sourceType = "mitm",
+        webFuzzerPageId
     } = props
-    const {currentPageTabRouteKey} = usePageInfo(
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "history", "yakitRoute"])
+    const {currentPageTabRouteKey, queryPagesDataById} = usePageInfo(
         (s) => ({
-            currentPageTabRouteKey: s.currentPageTabRouteKey
+            currentPageTabRouteKey: s.currentPageTabRouteKey,
+            queryPagesDataById: s.queryPagesDataById
         }),
         shallow
     )
@@ -382,6 +461,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
     // 表格相关变量
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
+    const [isReset, setIsReset] = useState<boolean>(false)
     const [loading, setLoading] = useState(false)
     const sorterTableRef = useRef<SortProps>()
     const [data, setData] = useState<HTTPFlow[]>([])
@@ -419,6 +499,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const [fileSuffix, setFileSuffix] = useState<string[]>([])
     const [searchContentType, setSearchContentType] = useState<string>("")
     const [excludeKeywords, setExcludeKeywords] = useState<string[]>([])
+    const [statusCode, setStatusCode] = useState<string>("")
     useEffect(() => {
         getDefautAdvancedSearch()
     }, [])
@@ -464,6 +545,13 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 setExcludeKeywords(excludeKeywords)
             }
         })
+        // 状态码
+        getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisStatusCode).then((e) => {
+            if (!!e) {
+                const statusCode: string = e
+                setStatusCode(statusCode)
+            }
+        })
     }
     useDebounceEffect(
         () => {
@@ -480,7 +568,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         ExcludePath: urlPath,
                         IncludeSuffix: [],
                         ExcludeSuffix: fileSuffix,
-                        ExcludeKeywords: excludeKeywords
+                        ExcludeKeywords: excludeKeywords,
+                        ExcludeStatusCode: statusCode
                     }
                 }
                 // 展示
@@ -494,12 +583,14 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         IncludePath: urlPath,
                         ExcludePath: [],
                         IncludeSuffix: fileSuffix,
-                        ExcludeSuffix: []
+                        ExcludeSuffix: [],
+                        ExcludeKeywords: [],
+                        ExcludeStatusCode: ""
                     }
                 }
             })
         },
-        [filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords],
+        [filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords, statusCode],
         {wait: 500}
     )
     const isFilter: boolean = useCreation(() => {
@@ -508,19 +599,23 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             urlPath.length > 0 ||
             fileSuffix.length > 0 ||
             searchContentType?.length > 0 ||
-            excludeKeywords.length > 0
+            excludeKeywords.length > 0 ||
+            statusCode?.length > 0
         )
-    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords])
+    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords, statusCode])
     // #endregion
 
     // #region 表格勾选，表格行选中相关
     const [clickRow, setClickRow] = useState<HTTPFlow>()
     const onRowClick = useMemoizedFn((rowDate?: HTTPFlow) => {
         if (rowDate) {
-            setClickRow(rowDate)
-        } else {
-            setClickRow(undefined)
+            minWinSendToChildWin({
+                type: "openPacketNewWindow",
+                data: getPacketNewWindow(rowDate)
+            })
         }
+        setClickRow(rowDate)
+        onSetClickedHttpFlow && onSetClickedHttpFlow(rowDate)
     })
     const onSetCurrentRow = useDebounceFn(
         (rowDate: HTTPFlow | undefined) => {
@@ -528,6 +623,26 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         },
         {wait: 200, leading: true}
     ).run
+
+    const getPacketNewWindow = useMemoizedFn((r) => {
+        return {
+            showParentPacketCom: {
+                components: "HTTPFlowDetailMini",
+                props: {
+                    noHeader: true,
+                    id: r?.Id || 0,
+                    sendToWebFuzzer: true,
+                    selectedFlow: getHTTPFlowReqAndResToString(r),
+                    downstreamProxyStr: downstreamProxy,
+                    showEditTag: false,
+                    showJumpTree: false
+                } as HTTPFlowDetailProp
+            }
+        }
+    })
+    const onHTTPFlowFilterTableRowDoubleClick = useMemoizedFn((r) => {
+        openPacketNewWindow(getPacketNewWindow(r))
+    })
 
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
@@ -559,8 +674,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const compareSelectedRowKeys = useCampare(selectedRowKeys)
     useDebounceEffect(
         () => {
-            onSetSelectedHttpFlowIds && onSetSelectedHttpFlowIds(selectedRowKeys)
-            onSetIsAllHttpFlow && onSetIsAllHttpFlow(isAllSelect)
+            onSetSelectedHttpFlowIds && onSetSelectedHttpFlowIds(isAllSelect ? [] : selectedRowKeys)
         },
         [isAllSelect, compareSelectedRowKeys],
         {wait: 300}
@@ -597,6 +711,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     /** ---- tags end ----*/
 
     /** ---- 响应长度 start ----*/
+    const [bodyLengthSort, setBodyLengthSort, getBodyLengthSort] = useGetSetState<"asc" | "desc" | false>(false)
     const [checkBodyLength, setCheckBodyLength] = useState<boolean>(false)
     const [afterBodyLength, setAfterBodyLength] = useState<number>()
     const [beforeBodyLength, setBeforeBodyLength] = useState<number>()
@@ -618,29 +733,40 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         }),
         {wait: 200}
     ).run
+    const onBodyLengthSort = useMemoizedFn((sort) => {
+        const newSort = bodyLengthSort === sort ? false : sort
+        if (newSort) {
+            setIsReset((prev) => !prev)
+        }
+        setBodyLengthSort(newSort)
+        sorterTableRef.current = {
+            orderBy: newSort ? "body_length" : "Id",
+            order: newSort || "desc"
+        }
+        queyChangeUpdateData()
+    })
     /** ---- 响应长度 end ----*/
 
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-        if (newSort.order === "none") {
-            newSort.order = "desc"
+        if (!getBodyLengthSort() || newSort.orderBy !== "") {
+            if (newSort.order === "none") {
+                newSort.order = "desc"
+            }
+            if (newSort.orderBy === "DurationMs") {
+                newSort.orderBy = "duration"
+            }
+            if (newSort.orderBy === "RequestSizeVerbose") {
+                newSort.orderBy = "request_length"
+            }
+            sorterTableRef.current = newSort
+            setBodyLengthSort(false)
         }
-        if (newSort.orderBy === "DurationMs") {
-            newSort.orderBy = "duration"
-        }
-        if (newSort.orderBy === "BodyLength") {
-            newSort.orderBy = "body_length"
-        }
-        if (newSort.orderBy === "RequestSizeVerbose") {
-            newSort.orderBy = "request_length"
-        }
-        sorterTableRef.current = newSort
-
         setQuery((prev) => {
             const newQuery = {
                 ...prev,
                 ...filter,
                 Tags: [...tagsFilter],
-                bodyLength: !!(afterBodyLength || beforeBodyLength) // 主要是用来响应长度icon显示颜色
+                bodyLength: !!(afterBodyLength || beforeBodyLength || getBodyLengthSort() || checkBodyLength) // 主要是用来响应长度icon显示颜色
             }
 
             if (filter["ContentType"]) {
@@ -661,29 +787,19 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     })
     // #endregion
 
-    // #region 表格自定义相关
+    // #region 表格自定义相关（excludeCustomColumnsKey这个变量暂时勿动，没有做其他列兼容）
     // 需要完全排除列字段，表格不可能出现的列
     const noColumnsKey = toWebFuzzer ? [] : ["Payloads"]
-    // 排除展示的列
+    // 不需要参与自定义的列（也就是不需要存进缓存）
+    const excludeCustomColumnsKey: string[] = ["Payloads"]
+    const specialCustoms = useMemoizedFn((key) => {
+        return excludeCustomColumnsKey.includes(key) || noColumnsKey.includes(key)
+    })
+    // 排除展示的列（包含noColumnsKey）
     const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(noColumnsKey)
     // 默认所有列展示顺序
-    const defalutColumnsOrderRef = useRef<string[]>([
-        "Method",
-        "StatusCode",
-        "Url",
-        "Payloads",
-        "FromPlugin",
-        "Tags",
-        "IPAddress",
-        "BodyLength",
-        "HtmlTitle",
-        "GetParamsTotal",
-        "ContentType",
-        "DurationMs",
-        "UpdatedAt",
-        "RequestSizeVerbose"
-    ])
-    // 所有列展示顺序
+    const defalutColumnsOrderRef = useRef<string[]>(defalutColumnsOrder.filter((key) => !noColumnsKey.includes(key)))
+    // 所有列展示顺序（不包含excludeCustomColumnsKey）
     const [columnsOrder, setColumnsOrder] = useState<string[]>([])
     useEffect(() => {
         if (inViewport) {
@@ -695,26 +811,42 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 if (res[0].status === "fulfilled") {
                     const arr = res[0].value.split(",")
                     const excludeKeys = [...arr, ...noColumnsKey].filter((key) => key)
-                    if (!isEqual(excludeKeys, excludeColumnsKey)) {
+                    // 确保顺序缓存里面的key一定在默认所有列中存在
+                    const realArr = excludeKeys.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
+                    if (!isEqual(realArr, excludeColumnsKey)) {
                         refreshTabelKey = true
-                        setExcludeColumnsKey(excludeKeys)
+                        setExcludeColumnsKey(realArr)
                     }
+                    setRemoteValue(
+                        RemoteHistoryGV.HistroyExcludeColumnsKey,
+                        realArr.filter((key) => !specialCustoms(key)) + ""
+                    )
                 }
                 if (res[1].status === "fulfilled") {
                     try {
                         const arr = JSON.parse(res[1].value) || []
                         // 确保顺序缓存里面的key一定在默认所有列中存在
-                        const realArr = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
-                        // toWebFuzzer 跳转过来 需要 特殊处理 Payloads 在Url后面
-                        if (toWebFuzzer && realArr.findIndex((key: string) => key === "Payloads") === -1) {
-                            const urlIndex = realArr.findIndex((key: string) => key === "Url")
-                            realArr.splice(urlIndex + 1, 0, "Payloads")
+                        const arr2 = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
+                        // 按照 defalutColumnsOrderRef.current 顺序补充新增列
+                        defalutColumnsOrderRef.current.forEach((key: string, idx: number) => {
+                            if (!arr2.includes(key)) {
+                                let insertIdx = arr2.findIndex((k) => defalutColumnsOrderRef.current.indexOf(k) > idx)
+                                if (insertIdx === -1) {
+                                    arr2.push(key)
+                                } else {
+                                    arr2.splice(insertIdx, 0, key)
+                                }
+                            }
+                        })
+                        // 特殊处理 Payloads 在Path后面
+                        if (toWebFuzzer) {
+                            if (arr2.findIndex((key: string) => key === "Payloads") === -1) {
+                                const pathIndex = arr2.findIndex((key: string) => key === "Path")
+                                arr2.splice(pathIndex + 1, 0, "Payloads")
+                            }
                         }
-                        // 如果列表有新增列，顺序从新再次缓存
-                        setRemoteValue(
-                            RemoteHistoryGV.HistroyColumnsOrder,
-                            JSON.stringify(realArr.filter((key) => key !== "Payloads"))
-                        )
+                        const realArr = arr2.filter((key) => !specialCustoms(key))
+                        setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(realArr))
                         if (!isEqual(realArr, columnsOrder)) {
                             refreshTabelKey = true
                             setColumnsOrder(realArr)
@@ -736,9 +868,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const [idFixed, setIdFixed] = useState<boolean>(true)
 
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
+        // ⚠️ 注意：此处新增或删除列请务必同步 history页面，还有处理 defalutColumnsOrder 变量，这个变量是存的全部的列默认顺序key
         const columnArr: ColumnsTypeProps[] = [
             {
-                title: "序号",
+                title: t("YakitTable.order"),
                 dataKey: "Id",
                 fixed: idFixed ? "left" : undefined,
                 ellipsis: false,
@@ -749,9 +882,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 }
             },
             {
-                title: "方法",
+                title: t("HTTPFlowTable.method"),
                 dataKey: "Method",
-                width: 80,
+                width: 100,
                 filterProps: {
                     filterKey: "Methods",
                     filtersType: "select",
@@ -776,20 +909,24 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         {
                             label: "DELETE",
                             value: "DELETE"
+                        },
+                        {
+                            label: "PATCH",
+                            value: "PATCH"
                         }
                     ]
                 }
             },
             {
-                title: "状态码",
+                title: t("HTTPFlowTable.statusCode"),
                 dataKey: "StatusCode",
-                width: 100,
+                width: 120,
                 filterProps: {
                     filterKey: "StatusCode",
                     filtersType: "input",
                     filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />,
                     filterInputProps: {
-                        placeholder: "支持输入200,200-204格式，多个用逗号分隔",
+                        placeholder: t("YakitInput.supportInputFormat"),
                         wrapperStyle: {width: 270},
                         onRegular: (value) => {
                             // 只允许输入数字、逗号和连字符，去掉所有其他字符
@@ -820,6 +957,16 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 }
             },
             {
+                title: "Host",
+                dataKey: "Host",
+                width: 200
+            },
+            {
+                title: "Path",
+                dataKey: "Path",
+                width: 400
+            },
+            {
                 title: "Payloads",
                 dataKey: "Payloads",
                 width: 300,
@@ -833,7 +980,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 }
             },
             {
-                title: "相关插件",
+                title: t("HTTPFlowTable.fromPlugin"),
                 dataKey: "FromPlugin",
                 width: 200,
                 filterProps: {
@@ -908,23 +1055,19 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 width: 200
             },
             {
-                title: "响应长度",
+                title: t("HTTPFlowTable.bodyLength"),
                 dataKey: "BodyLength",
-                width: 200,
-                minWidth: 140,
-                sorterProps: {
-                    sorter: true
-                },
-                beforeIconExtra: (
-                    <div className={classNames(styles["body-length-checkbox"])}>
-                        <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)} />
-                        <span className={styles["tip"]}>大于0</span>
-                    </div>
-                ),
+                width: 130,
                 filterProps: {
                     filterKey: "bodyLength",
-                    filterRender: () => (
-                        <RangeInputNumberTable
+                    filterIcon: <OutlineSelectorIcon className={styles["filter-icon"]} />,
+                    filterRender: (closePopover: () => void) => (
+                        <RangeInputNumberTableWrapper
+                            showSort={true}
+                            bodyLengthSort={getBodyLengthSort()}
+                            onBodyLengthSort={onBodyLengthSort}
+                            checkBodyLength={checkBodyLength}
+                            onCheckThan0={onCheckThan0}
                             minNumber={afterBodyLength}
                             setMinNumber={setAfterBodyLength}
                             maxNumber={beforeBodyLength}
@@ -940,6 +1083,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                 setBeforeBodyLength(undefined)
                                 setAfterBodyLength(undefined)
                                 setBodyLengthUnit("B")
+                                setTimeout(() => {
+                                    closePopover()
+                                }, 50)
                             }}
                             onSure={() => {
                                 setQuery((prev) => {
@@ -956,6 +1102,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                             : undefined
                                     }
                                 })
+                                setTimeout(() => {
+                                    closePopover()
+                                }, 50)
                             }}
                             extra={
                                 <YakitSelect
@@ -996,9 +1145,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 width: 200
             },
             {
-                title: "参数",
+                title: t("HTTPFlowTable.params"),
                 dataKey: "GetParamsTotal",
-                width: 100,
+                width: 130,
                 filterProps: {
                     filterKey: "HaveParamsTotal",
                     filtersType: "select",
@@ -1007,11 +1156,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     },
                     filters: [
                         {
-                            label: "有",
+                            label: t("HTTPFlowTable.have"),
                             value: "true"
                         },
                         {
-                            label: "无",
+                            label: t("HTTPFlowTable.none"),
                             value: "false"
                         }
                     ]
@@ -1029,7 +1178,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 )
             },
             {
-                title: "响应类型",
+                title: t("HTTPFlowTable.contentType"),
                 dataKey: "ContentType",
                 width: 150,
                 render: (text) => {
@@ -1058,9 +1207,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 }
             },
             {
-                title: "延迟(ms)",
+                title: t("HTTPFlowTable.durationMs"),
                 dataKey: "DurationMs",
-                width: 200,
+                width: 120,
                 sorterProps: {
                     sorter: true
                 },
@@ -1078,7 +1227,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 }
             },
             {
-                title: "请求时间",
+                title: t("HTTPFlowTable.updatedAt"),
                 dataKey: "UpdatedAt",
                 filterProps: {
                     filterKey: "UpdatedAt",
@@ -1088,16 +1237,16 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTimestamp(text)}</div>
             },
             {
-                title: "请求大小",
+                title: t("HTTPFlowTable.requestSizeVerbose"),
                 dataKey: "RequestSizeVerbose",
                 enableDrag: false,
-                width: 200,
+                width: 120,
                 sorterProps: {
                     sorter: true
                 }
             },
             {
-                title: "操作",
+                title: t("YakitTable.action"),
                 dataKey: "action",
                 width: 80,
                 fixed: "right",
@@ -1131,7 +1280,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                     e.stopPropagation()
                                     let m = showYakitDrawer({
                                         width: "80%",
-                                        content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxy),
+                                        content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxy, t),
                                         bodyStyle: {paddingTop: 5}
                                     })
                                 }}
@@ -1150,10 +1299,17 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             // 过滤掉 Id 和 action以及不可能出现的列
             const middleColumns = columnArr.filter((item) => !["Id", "action", ...noColumnsKey].includes(item.dataKey))
 
+            // 特殊处理一下 Payloads 位置
+            const realColumnsOrder = columnsOrder.slice()
+            if (toWebFuzzer) {
+                const pathIndex = columnsOrder.findIndex((key: string) => key === "Path")
+                realColumnsOrder.splice(pathIndex + 1, 0, "Payloads")
+            }
+
             // 先按 columnsOrder 排序
-            const sortedColumns = middleColumns
-                .filter((col) => columnsOrder.includes(col.dataKey))
-                .sort((a, b) => columnsOrder.indexOf(a.dataKey) - columnsOrder.indexOf(b.dataKey))
+            const sortedColumns = middleColumns.sort(
+                (a, b) => realColumnsOrder.indexOf(a.dataKey) - realColumnsOrder.indexOf(b.dataKey)
+            )
 
             // 先加上Id
             if (idColumn) finalColumns.push(idColumn)
@@ -1180,6 +1336,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         setIdFixed(realColumns.length !== 2)
         return realColumns
     }, [
+        toWebFuzzer,
         idFixed,
         columnsOrder,
         JSON.stringify(noColumnsKey),
@@ -1193,8 +1350,20 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         beforeBodyLength,
         bodyLengthUnit,
         contentType,
-        downstreamProxy
+        downstreamProxy,
+        i18n.language
     ])
+    // #endregion
+
+    // #region 表格列 设置
+    const [advancedSetVisible, setAdvancedSetVisible] = useState<boolean>(false)
+    const isAdvancedSet = useCreation(() => {
+        const realDefalutColumnsOrder = defalutColumnsOrderRef.current.filter((key) => !specialCustoms(key))
+        const orderFlag1 =
+            columnsOrder.length === 0 ? false : JSON.stringify(realDefalutColumnsOrder) !== JSON.stringify(columnsOrder)
+        const orderFlag2 = !!excludeColumnsKey.filter((key) => !specialCustoms(key)).length
+        return orderFlag1 || orderFlag2
+    }, [excludeColumnsKey, noColumnsKey, columnsOrder])
     // #endregion
 
     // #region 表格右键操作
@@ -1203,66 +1372,66 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         return [
             {
                 key: "发送到 Web Fuzzer",
-                label: "发送到 Web Fuzzer",
+                label: t("HTTPFlowTable.RowContextMenu.sendToWebFuzzer"),
                 number: 10,
                 default: true,
                 children: [
                     {
                         key: "sendAndJumpToWebFuzzer",
-                        label: "发送并跳转",
-                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                        label: t("HTTPFlowTable.RowContextMenu.sendAndRedirect"),
+                        keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys
                     },
                     {
                         key: "sendToWebFuzzer",
-                        label: "仅发送",
-                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.Shift, YakitEditorKeyCode.KEY_R]
+                        label: t("HTTPFlowTable.RowContextMenu.sendOnly"),
+                        keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys
                     }
                 ],
                 onClickBatch: () => {}
             },
             {
                 key: "发送到 WS Fuzzer",
-                label: "发送到 WS Fuzzer",
+                label: t("HTTPFlowTable.RowContextMenu.sendToWSFuzzer"),
                 number: 10,
                 default: false,
                 webSocket: true,
                 children: [
                     {
                         key: "sendAndJumpToWS",
-                        label: "发送并跳转",
-                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                        label: t("HTTPFlowTable.RowContextMenu.sendAndRedirect"),
+                        keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys
                     },
                     {
                         key: "sendToWS",
-                        label: "仅发送",
-                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.Shift, YakitEditorKeyCode.KEY_R]
+                        label: t("HTTPFlowTable.RowContextMenu.sendOnly"),
+                        keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys
                     }
                 ],
                 onClickBatch: () => {}
             },
             {
                 key: "复制 URL",
-                label: "复制 URL",
+                label: t("HTTPFlowTable.RowContextMenu.copyURL"),
                 number: 30,
                 default: true,
                 webSocket: true,
                 onClickSingle: (v) => setClipboardText(v.Url),
                 onClickBatch: (v, number) => {
                     if (v.length === 0) {
-                        yakitNotify("warning", "请选择数据")
+                        yakitNotify("warning", t("HTTPFlowTable.pleaseSelectData"))
                         return
                     }
                     if (v.length < number) {
                         setClipboardText(v.map((ele) => `${ele.Url}`).join("\r\n"))
                         resetSelected()
                     } else {
-                        yakitNotify("warning", `最多同时只能复制${number}条数据`)
+                        yakitNotify("warning", t("HTTPFlowTable.copyLimit", {number}))
                     }
                 }
             },
             {
                 key: "下载 Response Body",
-                label: "下载 Response Body",
+                label: t("HTTPFlowTable.RowContextMenu.downloadResponseBody"),
                 default: true,
                 webSocket: false,
                 onClickSingle: (v) => {
@@ -1273,7 +1442,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             },
             {
                 key: "浏览器中打开URL",
-                label: "浏览器中打开URL",
+                label: t("HTTPFlowTable.RowContextMenu.openURLInBrowser"),
                 default: true,
                 webSocket: false,
                 onClickSingle: (v) => {
@@ -1282,7 +1451,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             },
             {
                 key: "浏览器中查看响应",
-                label: "浏览器中查看响应",
+                label: t("HTTPFlowTable.RowContextMenu.viewResponseInBrowser"),
                 default: true,
                 webSocket: false,
                 onClickSingle: (v) => {
@@ -1291,7 +1460,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             },
             {
                 key: "复制为 CSRF Poc",
-                label: "复制为 CSRF Poc",
+                label: t("HTTPFlowTable.RowContextMenu.copyAsCSRFPoc"),
                 default: true,
                 webSocket: false,
                 onClickSingle: (v) => {
@@ -1304,37 +1473,37 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             },
             {
                 key: "复制为 Yak PoC 模版",
-                label: "复制为 Yak PoC 模版",
+                label: t("HTTPFlowTable.RowContextMenu.copyAsYakPoCTemplate"),
                 default: true,
                 webSocket: false,
                 children: [
                     {
                         key: "数据包 PoC 模版",
-                        label: "数据包 PoC 模版"
+                        label: t("HTTPFlowTable.RowContextMenu.packetPoCTemplate")
                     },
                     {
                         key: "批量检测 PoC 模版",
-                        label: "批量检测 PoC 模版"
+                        label: t("HTTPFlowTable.RowContextMenu.batchTestPoCTemplate")
                     }
                 ]
             },
             {
                 key: "标注颜色",
-                label: "标注颜色",
+                label: t("HTTPFlowTable.RowContextMenu.tagColor"),
                 default: true,
                 webSocket: false,
                 number: 20,
                 children: availableColors.map((i) => {
                     return {
                         key: i.title,
-                        label: i.render
+                        label: i.render(t)
                     }
                 }),
                 onClickBatch: () => {}
             },
             {
                 key: "移除颜色",
-                label: "移除颜色",
+                label: t("HTTPFlowTable.RowContextMenu.removeColor"),
                 default: true,
                 webSocket: false,
                 number: 20,
@@ -1343,49 +1512,51 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             },
             {
                 key: "发送到对比器",
-                label: "发送到对比器",
+                label: t("HTTPFlowTable.RowContextMenu.sendToComparer"),
                 default: true,
                 webSocket: false,
                 children: [
                     {
                         key: "发送到对比器左侧",
-                        label: "发送到对比器左侧",
+                        label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft"),
                         disabled: [false, true, false][compareState]
                     },
                     {
                         key: "发送到对比器右侧",
-                        label: "发送到对比器右侧",
+                        label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight"),
                         disabled: [false, false, true][compareState]
                     }
                 ]
             },
             {
                 key: "导出数据",
-                label: "导出数据",
+                label: t("HTTPFlowTable.RowContextMenu.exportData"),
                 default: true,
                 webSocket: false,
                 children: [
                     {
                         key: "导出为Excel",
-                        label: "导出为Excel"
+                        label: t("HTTPFlowTable.RowContextMenu.exportToExcel")
                     },
                     {
                         key: "导出为HAR",
-                        label: "导出为HAR"
+                        label: t("HTTPFlowTable.RowContextMenu.exportToHAR")
                     }
                 ],
                 onClickBatch: () => {}
+            },
+            {
+                key: "新窗口打开",
+                label: t("HTTPFlowTable.RowContextMenu.openInNewWindow"),
+                default: true,
+                webSocket: true,
+                onClickSingle: (v) => {
+                    onHTTPFlowFilterTableRowDoubleClick(v)
+                }
             }
         ]
-    }, [data, compareState])
+    }, [data, compareState, i18n.language])
 
-    /** 菜单自定义快捷键渲染处理事件 */
-    const systemRef = useRef<YakitSystem>("Darwin")
-    useEffect(() => {
-        ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
-            systemRef.current = systemType
-        })
-    }, [])
     const contextMenuKeybindingHandle = useMemoizedFn((data) => {
         const menus: any = []
         for (let item of data) {
@@ -1395,7 +1566,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 info.children = contextMenuKeybindingHandle(info.children)
             } else {
                 if (info.keybindings && info.keybindings.length > 0) {
-                    const keysContent = convertKeyboard(systemRef.current, info.keybindings)
+                    const keysContent = convertKeyboardToUIKey(info.keybindings)
                     info.label = keysContent ? (
                         <div className={styles["editor-context-menu-keybind-wrapper"]}>
                             <div className={styles["content-style"]}>{info.label}</div>
@@ -1434,7 +1605,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     })
     const onRowContextMenu = useMemoizedFn((rowData: HTTPFlow, _, event: React.MouseEvent) => {
         if (rowData) {
-            setClickRow(rowData)
+            onSetCurrentRow(rowData)
         }
 
         let rowContextmenu: any[] = []
@@ -1577,15 +1748,15 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean) => {
         const length = selectedRowKeys.length
         if (length <= 0) {
-            yakitNotify("warning", `请选择数据`)
+            yakitNotify("warning", t("HTTPFlowTable.pleaseSelectData"))
             return
         }
         if (isAllSelect && !all) {
-            yakitNotify("warning", "该批量操作不支持全选")
+            yakitNotify("warning", t("HTTPFlowTable.batchOperationNoSelectAll"))
             return
         }
         if (number < length) {
-            yakitNotify("warning", `最多同时只能发送${number}条数据`)
+            yakitNotify("warning", t("HTTPFlowTable.maxSendData", {number}))
             return
         }
         for (let i = 0; i < length; i++) {
@@ -1597,37 +1768,27 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         }
     })
 
-    // 右键菜单 发送到 Web Fuzzer、发送到 WS Fuzzer、快捷键发送
-    useHotkeys(
-        "ctrl+r",
-        (e) => {
+    useShortcutKeyTrigger("sendAndJump*common", (focus) => {
+        let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+        if (inViewport && !item) {
             if (clickRow) {
                 clickRow.IsWebsocket
                     ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request)
                     : onSendToTab(clickRow, true, downstreamProxy)
             }
-        },
-        {
-            enabled: inViewport
-        },
-        [hTTPFlowFilterTableRef, clickRow, downstreamProxy]
-    )
+        }
+    })
 
-    useHotkeys(
-        "ctrl+shift+r",
-        (e) => {
-            e.stopPropagation()
+    useShortcutKeyTrigger("send*common", (focus) => {
+        let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+        if (inViewport && !item) {
             if (clickRow) {
                 clickRow.IsWebsocket
                     ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request, false)
                     : onSendToTab(clickRow, false, downstreamProxy)
             }
-        },
-        {
-            enabled: inViewport
-        },
-        [hTTPFlowFilterTableRef, clickRow, downstreamProxy]
-    )
+        }
+    })
 
     // 数据包 PoC 模版
     const onPocMould = useMemoizedFn((v: HTTPFlow) => {
@@ -1659,11 +1820,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     // 标注颜色批量
     const CalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number, i: any) => {
         if (flowList.length === 0) {
-            yakitNotify("warning", "请选择数据")
+            yakitNotify("warning", t("HTTPFlowTable.pleaseSelectData"))
             return
         }
         if (flowList.length > number) {
-            yakitNotify("warning", `最多同时只能操作${number}条数据`)
+            yakitNotify("warning", t("HTTPFlowTable.maxOperateData", {number}))
             return
         }
         const newList = flowList.map((flow) => {
@@ -1693,18 +1854,18 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 resetSelected()
             })
             .catch((error) => {
-                yakitNotify("error", "批量标注颜色失败：" + error)
+                yakitNotify("error", error + "")
             })
     })
 
     // 移除颜色 批量
     const onRemoveCalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number) => {
         if (flowList.length === 0) {
-            yakitNotify("warning", "请选择数据")
+            yakitNotify("warning", t("HTTPFlowTable.pleaseSelectData"))
             return
         }
         if (flowList.length > number) {
-            yakitNotify("warning", `最多同时只能操作${number}条数据`)
+            yakitNotify("warning", t("HTTPFlowTable.maxOperateData", {number}))
             return
         }
         const newList = flowList.map((flow) => {
@@ -1735,23 +1896,35 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     })
 
     // 导出为EXCEL
-    const [exportTitle, setExportTitle] = useState<string[]>([])
+    const [exportDataKey, setExportDataKey] = useState<string[]>([])
     const onExcelExport = (list: number[]) => {
-        const titleValue = configColumnRef.current.map((item) => item.title)
-        const exportValue = [...titleValue, "请求包", "响应包"]
+        percentContainerRef.current = currentPageTabRouteKey
+        const titleValue = configColumnRef.current.map((item) => ({title: item.title, key: item.dataKey}))
+        const exportValue = [
+            ...titleValue,
+            {title: t("HTTPFlowTable.requestPacket"), key: "request"},
+            {title: t("HTTPFlowTable.responsePacket"), key: "response"}
+        ]
         const m = showYakitModal({
-            title: "导出字段",
+            title: t("HTTPFlowTable.exportFields"),
             content: (
                 <ExportSelect
                     exportValue={exportValue}
                     initCheckValue={
-                        toWebFuzzer ? exportValue.filter((i) => !["参数", "请求包", "响应包"].includes(i)) : exportValue
+                        toWebFuzzer
+                            ? exportValue.filter((i) => !["GetParamsTotal", "request", "response"].includes(i.key))
+                            : exportValue
                     }
-                    setExportTitle={(v: string[]) => setExportTitle(["序号", ...v])}
-                    exportKey={toWebFuzzer ? "WEBFUZZER-HISTORY-EXPORT-KEY" : "MITM-HTTP-HISTORY-EXPORT-KEY"}
+                    setExportTitle={(v: string[]) => {
+                        setExportDataKey(["Id", ...v])
+                    }}
+                    exportKey={toWebFuzzer ? "WEBFUZZER-HISTORY-EXPORT-KEYS" : "MITM-HTTP-HISTORY-EXPORT-KEYS"}
                     fileName={!toWebFuzzer ? "History" : "WebFuzzer"}
                     getData={(pagination) => getExcelData(pagination, list)}
                     onClose={() => m.destroy()}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+                    }
                 />
             ),
             onCancel: () => {
@@ -1759,7 +1932,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             },
             width: 650,
             footer: null,
-            maskClosable: false
+            maskClosable: false,
+            getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
         })
     }
     const formatJson = (filterVal, jsonData) => {
@@ -1793,74 +1967,105 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             }
 
             let exportParams: any = {}
-            // 这里的key值 不一定和表格的key对应的上
+            // 这里的key值为数据库的key
             const arrList = [
                 {
-                    title: "序号",
-                    key: "id"
+                    title: t("YakitTable.order"),
+                    key: "id",
+                    dataKey: "Id"
                 },
                 {
-                    title: "方法",
-                    key: "method"
+                    title: t("HTTPFlowTable.method"),
+                    key: "method",
+                    dataKey: "Method"
                 },
                 {
-                    title: "状态码",
-                    key: "status_code"
+                    title: t("HTTPFlowTable.statusCode"),
+                    key: "status_code",
+                    dataKey: "StatusCode"
                 },
                 {
                     title: "URL",
-                    key: "url"
+                    key: "url",
+                    dataKey: "Url"
+                },
+                {
+                    title: "Host",
+                    key: "host",
+                    dataKey: "Host"
+                },
+                {
+                    title: "Path",
+                    key: "path",
+                    dataKey: "Path"
                 },
                 {
                     title: "Payloads",
-                    key: "payloads"
+                    key: "payloads",
+                    dataKey: "Payloads"
                 },
                 {
-                    title: "相关插件",
-                    key: "from_plugin"
+                    title: t("HTTPFlowTable.fromPlugin"),
+                    key: "from_plugin",
+                    dataKey: "FromPlugin"
                 },
                 {
                     title: "Tags",
-                    key: "tags"
+                    key: "tags",
+                    dataKey: "Tags"
                 },
                 {
                     title: "IP",
-                    key: "iP_address"
+                    key: "iP_address",
+                    dataKey: "IPAddress"
                 },
                 {
-                    title: "响应长度",
-                    key: "body_length"
+                    title: t("HTTPFlowTable.bodyLength"),
+                    key: "body_length",
+                    dataKey: "BodyLength"
                 },
                 {
                     title: "Title",
-                    key: "response"
+                    key: "response",
+                    dataKey: "HtmlTitle"
                 },
                 {
-                    title: "参数",
-                    key: "get_params_total"
+                    title: t("HTTPFlowTable.params"),
+                    key: "get_params_total",
+                    dataKey: "GetParamsTotal"
                 },
                 {
-                    title: "响应类型",
-                    key: "content_type"
+                    title: t("HTTPFlowTable.contentType"),
+                    key: "content_type",
+                    dataKey: "ContentType"
                 },
                 {
-                    title: "请求时间",
-                    key: "updated_at"
+                    title: t("HTTPFlowTable.durationMs"),
+                    key: "duration",
+                    dataKey: "DurationMs"
                 },
                 {
-                    title: "请求大小",
-                    key: "request"
+                    title: t("HTTPFlowTable.updatedAt"),
+                    key: "updated_at",
+                    dataKey: "UpdatedAt"
                 },
                 {
-                    title: "请求包",
-                    key: "request"
+                    title: t("HTTPFlowTable.requestSizeVerbose"),
+                    key: "request",
+                    dataKey: "RequestSizeVerbose"
                 },
                 {
-                    title: "响应包",
-                    key: "response"
+                    title: t("HTTPFlowTable.requestPacket"),
+                    key: "request",
+                    dataKey: "request"
+                },
+                {
+                    title: t("HTTPFlowTable.responsePacket"),
+                    key: "response",
+                    dataKey: "response"
                 }
             ]
-            const FieldName = arrList.filter((item) => exportTitle.includes(item.title)).map((item) => item.key)
+            const FieldName = arrList.filter((item) => exportDataKey.includes(item.dataKey)).map((item) => item.key)
 
             const Ids: number[] = list.map((id) => Number(id))
             // 最大请求条数
@@ -1906,29 +2111,27 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     }
                 })
                 if (message.length > 0) {
-                    yakitNotify("warning", `部分导出内容缺失:${message}`)
+                    yakitNotify("warning", `${t("HTTPFlowTable.partialExportMissing")}${message}`)
                 }
-                initExcelData(resolve, rsp.Data, rsp)
+                initExcelData(resolve, rsp.Data, rsp, arrList)
             })
         })
     })
-    const initExcelData = (resolve, newExportData: HTTPFlow[], rsp) => {
+    const initExcelData = (resolve, newExportData: HTTPFlow[], rsp, arrList) => {
         let exportData: any = []
         const header: string[] = []
         const filterVal: string[] = []
-        exportTitle.map((item) => {
-            if (item === "请求包") {
-                header.push(item)
+        exportDataKey.map((item) => {
+            const title = arrList.filter((i) => i.dataKey === item)[0]?.title || item
+            header.push(title)
+            if (item === "request") {
                 filterVal.push("Request")
-            } else if (item === "响应包") {
-                header.push(item)
+            } else if (item === "response") {
                 filterVal.push("Response")
-            } else if (item === "序号") {
-                header.push(item)
+            } else if (item === "Id") {
                 filterVal.push("Id")
             } else {
-                const itemData = configColumnRef.current.filter((itemIn) => itemIn.title === item)[0]
-                header.push(item)
+                const itemData = configColumnRef.current.filter((itemIn) => itemIn.dataKey === item)[0]
                 filterVal.push(itemData.dataKey)
             }
         })
@@ -1946,7 +2149,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const percentContainerRef = useRef<string>(currentPageTabRouteKey)
     const onHarExport = (ids: number[]) => {
         handleSaveFileSystemDialog({
-            title: "保存文件",
+            title: t("HTTPFlowTable.saveFile"),
             defaultPath: !toWebFuzzer ? "History" : "WebFuzzer",
             filters: [
                 {name: "HAR Files", extensions: ["har"]} // 只允许保存 .har 文件
@@ -1990,7 +2193,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
     useUpdateEffect(() => {
         queyChangeUpdateData()
-    }, [query])
+    }, [query, refresh])
 
     const update = useMemoizedFn((page: number) => {
         const isInit = page === 1
@@ -2015,7 +2218,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         const copyParams = {...params}
         copyParams.Color = copyParams.Color ? copyParams.Color : []
         copyParams.StatusCode = copyParams.StatusCode ? copyParams.StatusCode : ""
-        onQueryParams && onQueryParams(JSON.stringify(copyParams), false)
+        onQueryParams && onQueryParams(JSON.stringify(copyParams), copyParams.SearchURL ? false : true)
         ipcRenderer
             .invoke("QueryHTTPFlows", params)
             .then((res: YakQueryHTTPFlowResponse) => {
@@ -2032,8 +2235,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
                 if (isInit) {
                     setIsRefresh((prev) => !prev)
-                    resetSelected()
-                    setClickRow(undefined)
+                    if (isResetSelect) {
+                        resetSelected()
+                    } else {
+                        onSetIsResetSelect && onSetIsResetSelect(true)
+                    }
                 } else {
                     if (isAllSelect) {
                         setSelectedRowKeys(d.map((item) => item.Id + ""))
@@ -2042,10 +2248,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 }
             })
             .catch((e) => {
-                yakitNotify("error", `查询 http flow 失败: ${e}`)
+                yakitNotify("error", `query HTTP Flow failed: ${e}`)
             })
             .finally(() => {
-                setLoading(false)
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
             })
     })
 
@@ -2059,6 +2267,20 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         }
     }, [])
 
+    useDebounceEffect(
+        () => {
+            if (onSetFirstHttpFlow) {
+                if (data.length) {
+                    onSetFirstHttpFlow(getHTTPFlowReqAndResToString(data[0]))
+                } else {
+                    onSetFirstHttpFlow(undefined)
+                }
+            }
+        },
+        [data],
+        {wait: 300}
+    )
+
     return (
         <div className={styles["HTTPFlowFilterTable"]} ref={hTTPFlowFilterTableRef}>
             <TableVirtualResize<HTTPFlow>
@@ -2066,6 +2288,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 query={query}
                 loading={loading}
                 isRefresh={isRefresh}
+                isReset={isReset}
                 isShowTitle={true}
                 renderTitle={
                     <div className={styles["http-history-table-title"]}>
@@ -2103,7 +2326,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                             })
                                         }}
                                     >
-                                        {tag.text}
+                                        {tag.text(t)}
                                     </YakitCheckableTag>
                                 ))}
                                 <TableTotalAndSelectNumber
@@ -2112,6 +2335,32 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                 />
                             </div>
                             <div className={styles["http-history-table-right"]}>
+                                {webFuzzerPageId && toWebFuzzer && (
+                                    <YakitButton
+                                        icon={<OutlineReplyIcon />}
+                                        size='small'
+                                        onClick={() => {
+                                            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+                                                YakitRoute.HTTPFuzzer,
+                                                webFuzzerPageId
+                                            )
+                                            if (currentItem) {
+                                                emiter.emit(
+                                                    "switchSubMenuItem",
+                                                    JSON.stringify({pageId: webFuzzerPageId, forceRefresh: true})
+                                                )
+                                                emiter.emit(
+                                                    "switchMenuItem",
+                                                    JSON.stringify({route: YakitRoute.HTTPFuzzer})
+                                                )
+                                            } else {
+                                                yakitNotify("info", "目标页面已不存在")
+                                            }
+                                        }}
+                                    >
+                                        返回
+                                    </YakitButton>
+                                )}
                                 <YakitButton
                                     type='text'
                                     onClick={() => {
@@ -2119,18 +2368,20 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                     }}
                                     style={{padding: 0}}
                                 >
-                                    高级筛选
+                                    {t("HTTPFlowTable.advancedFilter")}
                                 </YakitButton>
                                 {isFilter && (
                                     <YakitTag color={"success"} style={{margin: 0}}>
-                                        已配置
+                                        {t("HTTPFlowTable.configured")}
                                         <CheckedSvgIcon />
                                     </YakitTag>
                                 )}
                                 <Divider type='vertical' style={{margin: 0, top: 1}} />
                                 <div className={classNames(styles["http-history-table-right-item"])}>
                                     {size?.width && size?.width > 800 && (
-                                        <div className={styles["http-history-table-right-label"]}>协议类型</div>
+                                        <div className={styles["http-history-table-right-label"]}>
+                                            {t("HTTPFlowTable.protocolType")}
+                                        </div>
                                     )}
                                     <YakitSelect
                                         size='small'
@@ -2145,7 +2396,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                             })
                                         }}
                                     >
-                                        <YakitSelect.Option value=''>全部</YakitSelect.Option>
+                                        <YakitSelect.Option value=''>{t("HTTPFlowTable.all")}</YakitSelect.Option>
                                         <YakitSelect.Option value='http/https'>http/https</YakitSelect.Option>
                                         <YakitSelect.Option value='websocket'>websocket</YakitSelect.Option>
                                     </YakitSelect>
@@ -2201,6 +2452,42 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                         </YakitButton>
                                     </YakitPopover>
                                 </div>
+                                <YakitPopover
+                                    overlayClassName={styles["http-history-table-drop-down-popover"]}
+                                    content={
+                                        <YakitMenu
+                                            width={150}
+                                            selectedKeys={[]}
+                                            data={getBatchContextMenu()}
+                                            onClick={({key, keyPath}) => {
+                                                onMultipleClick(key, keyPath)
+                                            }}
+                                        />
+                                    }
+                                    trigger='click'
+                                    placement='bottomLeft'
+                                >
+                                    <YakitButton
+                                        type='outline2'
+                                        disabled={selectedRowKeys.length === 0}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                        }}
+                                    >
+                                        {t("YakitButton.batchOperation")}
+                                        <OutlineChevrondownIcon />
+                                    </YakitButton>
+                                </YakitPopover>
+                                <YakitButton
+                                    icon={<OutlineCogIcon />}
+                                    type={isAdvancedSet ? "text" : "text2"}
+                                    onClick={() => {
+                                        setAdvancedSetVisible(true)
+                                    }}
+                                    style={{padding: isAdvancedSet ? 0 : undefined}}
+                                >
+                                    {isAdvancedSet && t("HTTPFlowTable.configured")}
+                                </YakitButton>
                                 <YakitButton
                                     type='text2'
                                     icon={<OutlineRefreshIcon />}
@@ -2233,7 +2520,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 inMouseEnterTable={inMouseEnterTable}
                 onChange={onTableChange}
                 onRowContextMenu={onRowContextMenu}
+                currentSelectItem={clickRow}
                 onSetCurrentRow={onSetCurrentRow}
+                onRowDoubleClick={onHTTPFlowFilterTableRowDoubleClick}
             />
             {/* 高级筛选抽屉 */}
             {drawerFormVisible && (
@@ -2243,13 +2532,22 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     visible={drawerFormVisible}
                     setVisible={setDrawerFormVisible}
                     onSave={(filters) => {
-                        const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} = filters
+                        const {
+                            filterMode,
+                            hostName,
+                            urlPath,
+                            fileSuffix,
+                            searchContentType,
+                            excludeKeywords,
+                            statusCode
+                        } = filters
                         setFilterMode(filterMode)
                         setHostName(hostName)
                         setUrlPath(urlPath)
                         setFileSuffix(fileSuffix)
                         setSearchContentType(searchContentType)
                         setExcludeKeywords(excludeKeywords)
+                        setStatusCode(statusCode)
                         setDrawerFormVisible(false)
                     }}
                     filterMode={filterMode}
@@ -2258,6 +2556,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     fileSuffix={fileSuffix}
                     searchContentType={searchContentType}
                     excludeKeywords={excludeKeywords}
+                    statusCode={statusCode}
                 />
             )}
             {/* 导出HAR数据 */}
@@ -2267,16 +2566,48 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
                     }
                     visible={percentVisible}
-                    title='导出HAR流量数据'
+                    title={t("ImportExportProgress.exportHARData")}
                     token={exportToken}
                     apiKey='ExportHTTPFlowStream'
                     onClose={(finish) => {
                         setPercentVisible(false)
                         if (finish) {
-                            yakitNotify("success", "导出成功")
+                            yakitNotify("success", t("YakitNotification.exportSuccess"))
                         }
                     }}
                 />
+            )}
+            {/* 设置 */}
+            {advancedSetVisible && (
+                <AdvancedSet
+                    showBackgroundRefresh={false}
+                    columnsAllStr={JSON.stringify(
+                        configColumnRef.current.filter((item) => !specialCustoms(item.dataKey))
+                    )}
+                    onCancel={() => {
+                        setAdvancedSetVisible(false)
+                    }}
+                    onSave={(setting) => {
+                        setAdvancedSetVisible(false)
+                        const {configColumnsAll} = setting
+                        // 自定义列
+                        const unshowKeys = configColumnsAll.filter((item) => !item.isShow).map((item) => item.dataKey)
+                        const newExcludeColumnsKey = [...noColumnsKey, ...unshowKeys]
+                        const newColOrder = configColumnsAll.map((i) => i.dataKey)
+                        if (
+                            JSON.stringify(excludeColumnsKey) !== JSON.stringify(newExcludeColumnsKey) ||
+                            JSON.stringify(newColOrder) !== JSON.stringify(columnsOrder)
+                        ) {
+                            setRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey, unshowKeys + "")
+                            setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(newColOrder))
+                            setExcludeColumnsKey(newExcludeColumnsKey)
+                            setColumnsOrder(newColOrder)
+                            // 表格列宽度需要重新计算
+                            setTableKeyNumber(uuidv4())
+                        }
+                    }}
+                    defalutColumnsOrder={defalutColumnsOrderRef.current}
+                ></AdvancedSet>
             )}
         </div>
     )

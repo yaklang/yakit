@@ -11,26 +11,32 @@
 .divider-style {
     @extend %divider-style;
 }
+
 .port-scan-form-wrapper {
     display: grid;
     grid-template-rows: 1fr;
     transition: all 0.3s ease;
     padding-top: 16px;
+
     :global {
         .ant-form {
             overflow: hidden;
         }
     }
+
     .plugin-execute-form-item {
         width: 100%;
     }
+
     .plugin-execute-form-operate {
         @extend %display-flex-center;
+
         .plugin-execute-form-operate-start {
             margin-right: 8px;
         }
     }
 }
+
 .port-scan-form-wrapper-hidden {
     grid-template-rows: 0fr;
     padding-top: 0;
@@ -42,12 +48,45 @@
     grid-gap: 12px;
     padding: 12px;
     border-radius: 4px;
-    background: var(--yakit-card-background-color);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+
+    .template-checkbox-wrapper {
+        display: flex;
+        align-items: center;
+
+        :global(.ant-checkbox-wrapper) {
+            flex: 1;
+        }
+
+        .template-del-icon {
+            color: #b4bbca;
+            margin-left: 4px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            &:hover {
+                color: #ff4d4f;
+            }
+        }
+
+        .template-not-allowed-del-icon {
+            cursor: not-allowed;
+            color: #b4bbca;
+            margin-left: 4px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
 }
 
 .ports-form-extra {
     @extend %display-flex-center;
 }
+
 .form-extra {
     @extend %display-flex-center;
     gap: 8px 0;

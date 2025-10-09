@@ -1,10 +1,10 @@
 .websocketFuzzer {
     height: 100%;
-    .webSocket-fuzzer-empty {
-        position: relative;
-        top: 50%;
-        margin-top: -102px;
-    }
+    // .webSocket-fuzzer-empty {
+    //     position: relative;
+    //     top: 50%;
+    //     margin-top: -102px;
+    // }
 }
 .websocketClientOperator-card {
     border: none;
@@ -27,12 +27,13 @@
             svg {
                 width: 18px;
                 height: 18px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
     }
     &-body {
         height: 100%;
+        overflow: auto;
         .websocketFlow-list-container {
             height: 100%;
             overflow-y: scroll;
@@ -47,23 +48,23 @@
                     gap: 12px;
                     &:not(:first-child) {
                         &:not(.websocketFlow-list-item-active) {
-                            border-top: 1px solid var(--yakit-border-color);
+                            border-top: 1px solid var(--Colors-Use-Neutral-Border);
                         }
                     }
                     &:last-child {
                         &:not(.websocketFlow-list-item-active) {
-                            border-bottom: 1px solid var(--yakit-border-color);
+                            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
                         }
                     }
                     &:hover {
                         &:not(.websocketFlow-list-item-active) {
-                            background: var(--yakit-card-background-color);
+                            background: var(--Colors-Use-Neutral-Bg-Hover);
                         }
                     }
                 }
                 .websocketFlow-list-item-active {
-                    border: 1px solid var(--yakit-primary-3);
-                    background-color: var(--yakit-primary-1);
+                    border: 1px solid var(--Colors-Use-Main-Border);
+                    background-color: var(--Colors-Use-Main-Bg);
                 }
             }
         }

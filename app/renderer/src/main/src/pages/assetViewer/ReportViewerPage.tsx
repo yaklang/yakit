@@ -1,9 +1,9 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {QuestionMarkCircleIcon, RefreshIcon} from "@/assets/newIcon"
-import {Space, Tooltip} from "antd"
+import {Pagination, Space, Tooltip} from "antd"
 import {OutlineTrashIcon} from "@/assets/icon/outline"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
@@ -16,8 +16,7 @@ import classNames from "classnames"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {onRemoveToolFC} from "@/utils/deleteTool"
-import {isEnterpriseEdition} from "@/utils/envfile"
+import {GetReleaseEdition, isCommunityIRify, isEnpriTraceIRify, PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import html2pdf from "html2pdf.js"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -35,6 +34,7 @@ import {PieGraph} from "../graph/PieGraph"
 import {BarGraph} from "../graph/BarGraph"
 import {
     EchartsCard,
+    EchartsOption,
     HollowPie,
     MultiPie,
     NightingleRose,
@@ -45,6 +45,8 @@ import {FoldHoleCard, FoldRuleCard} from "./reportRenders/ReportExtendCard"
 import {AutoCard} from "@/components/AutoCard"
 import styles from "./ReportViewerPage.module.scss"
 import {getEnvTypeByProjects} from "../softwareSettings/ProjectManage"
+import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
+import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 interface ReportViewerPageProp {}
@@ -114,6 +116,17 @@ const ReportList: React.FC<ReportListProp> = (props) => {
         update(1)
     }, [])
 
+    const onRefreshDBReportFun = useMemoizedFn(() => {
+        update(1)
+    })
+
+    useEffect(() => {
+        emiter.on("onRefreshDBReport", onRefreshDBReportFun)
+        return () => {
+            emiter.off("onRefreshDBReport", onRefreshDBReportFun)
+        }
+    }, [])
+
     useEffect(() => {
         ipcRenderer.on("fetch-simple-open-report", (e, reportId: number) => {
             update(1)
@@ -168,14 +181,13 @@ const ReportList: React.FC<ReportListProp> = (props) => {
     }
 
     const onRemove = useMemoizedFn(() => {
-        const transferParams = {
-            selectedRowKeys,
-            params: {...query, Type: getEnvTypeByProjects()},
-            interfaceName: "DeleteReport",
-            selectedRowKeysNmae: "IDs"
-        }
         setLoading(true)
-        onRemoveToolFC(transferParams)
+        ipcRenderer
+            .invoke("DeleteReport", {
+                Type: getEnvTypeByProjects(),
+                IDs: selectedRowKeys,
+                DeleteAll: selectedRowKeys.length === 0
+            })
             .then(() => {
                 selectedRowKeys.length === 0 && onSetSelectReportId(undefined)
                 if (selectReportId && selectedRowKeys.includes(selectReportId)) {
@@ -183,6 +195,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                 }
                 update(1)
             })
+            .catch((e: any) => {})
             .finally(() => setLoading(false))
     })
 
@@ -190,11 +203,9 @@ const ReportList: React.FC<ReportListProp> = (props) => {
         <YakitCard
             className={styles["card"]}
             headStyle={{
-                background: "#fff",
                 height: 32,
                 minHeight: 32,
                 boxSizing: "content-box",
-                borderBottom: "1px solid var(--yakit-border-color)",
                 paddingLeft: 0
             }}
             bodyStyle={{padding: 12, paddingLeft: 0, width: "100%", height: "calc(100% - 32px)"}}
@@ -254,13 +265,18 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                         return (
                             <div onClick={() => onSetSelectReportId(item.Id)} key={item.Id}>
                                 <YakitCard
-                                    className={styles["card"]}
+                                    className={classNames(styles["card"], {
+                                        [styles["card-selected"]]: selectReportId === item.Id
+                                    })}
                                     headClassName={styles["list-item-header"]}
                                     headStyle={{
                                         height: 32,
                                         minHeight: 32,
                                         boxSizing: "content-box",
-                                        borderBottom: selectReportId == item.Id ? "1px solid #fff" : undefined
+                                        borderBottom:
+                                            selectReportId == item.Id
+                                                ? "1px solid var(--Colors-Use-Neutral-Border)"
+                                                : undefined
                                     }}
                                     bodyClassName={styles["list-item-body"]}
                                     bodyStyle={{
@@ -277,7 +293,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                                     extra={<YakitTag>{formatTimestamp(item.PublishedAt)}</YakitTag>}
                                     style={{
                                         backgroundColor:
-                                            selectReportId == item.Id ? "var(--yakit-primary-2)" : undefined
+                                            selectReportId == item.Id ? "var(--Colors-Use-Main-Bg-Hover)" : undefined
                                     }}
                                 >
                                     <Tooltip title='点击选中后，可删除'>
@@ -307,6 +323,24 @@ const ReportList: React.FC<ReportListProp> = (props) => {
     )
 }
 
+// 根据阈值切割报告 用于分页显示 性能优化项
+const truncateArrayBySize = (arr: ReportItem[], maxSizeKB: number): ReportItem[][] => {
+    const maxSizeBytes = maxSizeKB * 1024
+    let currentChunkSize = 0
+    const result: ReportItem[][] = [[]]
+    for (const item of arr) {
+        const itemSize = new Blob([JSON.stringify(item)]).size
+        if (currentChunkSize + itemSize > maxSizeBytes) {
+            result.push([])
+            currentChunkSize = 0
+        }
+        result[result.length - 1].push(item)
+        currentChunkSize += itemSize
+    }
+
+    return result
+}
+
 interface ReportViewerProp {
     reportId?: number
 }
@@ -323,6 +357,8 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         Title: "-"
     })
     const isEchartsToImg = useRef<boolean>(true)
+    const [allReportItems, setAllReportItems] = useState<ReportItem[][]>([])
+    const [current, setCurrent] = useState<number>(1)
     const [reportItems, setReportItems] = useState<ReportItem[]>([])
     const divRef = useRef<HTMLDivElement>(null)
     const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
@@ -354,7 +390,9 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         try {
             const items = report.JsonRaw && report.JsonRaw !== "-" && (JSON.parse(report.JsonRaw) as ReportItem[])
             if (!!items && items.length > 0) {
-                setReportItems(items)
+                const newReportItems = truncateArrayBySize(items, 90) // 每页90KB
+                setAllReportItems(newReportItems)
+                setReportItems(newReportItems[0])
             }
         } catch (e) {
             yakitNotify("error", `Parse Report[${props.reportId}]'s items failed`)
@@ -363,43 +401,59 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
 
     // 下载PDF
     const downloadPdf = () => {
-        setDownloadLoading(true)
-        setTimeout(() => {
+        try {
             if (!divRef || !divRef.current) return
             const contentHTML = divRef.current
-            html2pdf()
-                .from(contentHTML)
-                .set({
-                    margin: [10, 5, 10, 5],
-                    filename: `${report.Title}.pdf`,
-                    image: {type: "jpeg", quality: 0.95},
-                    jsPDF: {
-                        format: "a4"
-                    },
-                    html2canvas: {
-                        scale: 2
-                    },
-                    pagebreak: {
-                        // 自动分页控制属性
-                        // mode: 'avoid-all',
-                        after: "#cover"
-                    }
-                })
-                .save()
-                .then(() => {
-                    setDownloadLoading(false)
-                })
-        }, 50)
+            if (contentHTML.scrollTop) {
+                contentHTML.scrollTop = 0
+            }
+            // 获取所有图表 改动其元素 为了生成pdf能正确渲染
+            const echartsElements = contentHTML.querySelectorAll('[data-type="echarts-box"]')
+            // 遍历每一个元素并修改样式
+            echartsElements.forEach((element) => {
+                const el = element as HTMLElement
+                // 例如：根据 index 给每个元素设置不同的背景色
+                el.style.justifyContent = "flex-start"
+            })
+            setDownloadLoading(true)
+            setTimeout(() => {
+                html2pdf()
+                    .from(contentHTML)
+                    .set({
+                        margin: [10, 5, 10, 5],
+                        filename: `${report.Title}${allReportItems.length > 1 ? "-" + current : ""}.pdf`,
+                        image: {type: "jpeg", quality: 0.95},
+                        jsPDF: {
+                            format: "a4"
+                        },
+                        // 图像渲染的清晰度过高时 大量的数据生成的pdf文件白屏
+                        // html2canvas: {
+                        //     scale: 2
+                        // },
+                        pagebreak: {
+                            // 自动分页控制属性
+                            // mode: 'avoid-all',
+                            after: "#cover"
+                        }
+                    })
+                    .save()
+                    .then(() => {
+                        setDownloadLoading(false)
+                        // 遍历每一个元素并修改样式
+                        echartsElements.forEach((element) => {
+                            const el = element as HTMLElement
+                            // 例如：根据 index 给每个元素设置不同的背景色
+                            el.style.justifyContent = "center"
+                        })
+                    })
+            }, 500)
+        } catch (error) {}
     }
 
     // 下载HTML
     const downloadHtml = () => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件夹",
-                properties: ["openDirectory"]
-            })
-            .then((data: any) => {
+            handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]})
+            .then((data) => {
                 if (data.filePaths.length) {
                     setDownloadLoading(true)
                     let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
@@ -455,6 +509,8 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     options = {scale: 0.8, windowWidth: 1200}
                 } else if (echartType === "nightingle-rose") {
                     options = {scale: 1, windowWidth: 1000, x: 150, y: 0, height: 400}
+                } else if (echartType === "e-chart") {
+                    options = {scale: 1, windowWidth: 1000}
                 }
 
                 const canvas = await html2canvas(element as HTMLElement, options)
@@ -472,8 +528,11 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             })
         }
         // word报告不要附录 table添加边框 移除南丁格尔玫瑰图点击详情(图像中已含)
-        const wordStr: string = contentHTML.outerHTML
-            .substring(0, contentHTML.outerHTML.indexOf("附录："))
+        let wordStr: string = contentHTML.outerHTML
+        if (wordStr.includes("附录：")) {
+            wordStr = wordStr.substring(0, contentHTML.outerHTML.indexOf("附录："))
+        }
+        wordStr = wordStr
             .replace(/<table(.*?)>/g, '<table$1 border="1">')
             .replace(/<th(.*?)>/g, '<th$1 style="width: 10%">')
             .replace(/<div[^>]*id=("nightingle-rose-title"|"nightingle-rose-content")[^>]*>[\s\S]*?<\/div>/g, "")
@@ -486,6 +545,45 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         setWordDownloadLoading(false)
     }
 
+    const onChangePagination = (page: number) => {
+        isEchartsToImg.current = true
+        setReportItems(allReportItems[page - 1] || [])
+        setCurrent(page)
+    }
+
+    const getDownloadMenu = useMemo(() => {
+        if (GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit) {
+            return [
+                {
+                    key: "pdf",
+                    label: "Pdf"
+                }
+            ]
+        } else if (isCommunityIRify() || isEnpriTraceIRify()) {
+            return [
+                {
+                    key: "pdf",
+                    label: "Pdf"
+                },
+                {
+                    key: "html",
+                    label: "HTML"
+                }
+            ]
+        } else {
+            return [
+                {
+                    key: "html",
+                    label: "HTML"
+                },
+                {
+                    key: "word",
+                    label: "Word"
+                }
+            ]
+        }
+    }, [])
+
     return (
         <div className={styles["report-viewer"]}>
             {report.Id <= 0 ? (
@@ -497,11 +595,9 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     <YakitCard
                         className={styles["card"]}
                         headStyle={{
-                            background: "#fff",
                             height: 32,
                             minHeight: 32,
                             boxSizing: "content-box",
-                            borderBottom: "1px solid var(--yakit-border-color)",
                             paddingLeft: 0,
                             paddingRight: 0
                         }}
@@ -538,23 +634,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                                 </YakitButton>
                                 <YakitDropdownMenu
                                     menu={{
-                                        data: isEnterpriseEdition()
-                                            ? [
-                                                  {
-                                                      key: "html",
-                                                      label: "HTML"
-                                                  },
-                                                  {
-                                                      key: "word",
-                                                      label: "Word"
-                                                  }
-                                              ]
-                                            : [
-                                                  {
-                                                      key: "pdf",
-                                                      label: "Pdf"
-                                                  }
-                                              ],
+                                        data: getDownloadMenu,
                                         onClick: ({key}) => {
                                             switch (key) {
                                                 case "html":
@@ -588,6 +668,18 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                                 ))}
                             </Space>
                         </div>
+                        {allReportItems.length > 1 && (
+                            <div className={styles["pagination"]}>
+                                <Pagination
+                                    size='small'
+                                    total={allReportItems.length}
+                                    current={current}
+                                    pageSize={1}
+                                    showTotal={(total) => <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>共 {total} 页</div>}
+                                    onChange={onChangePagination}
+                                />
+                            </div>
+                        )}
                     </YakitCard>
                 </YakitSpin>
             )}
@@ -670,6 +762,9 @@ const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
                             case "general":
                                 // kv图展示柱状图
                                 return <VerticalOptionBar content={content} />
+                            // echarts任意图表
+                            case "e-chart":
+                                return <EchartsOption content={content} />
                             case "year-cve":
                                 return <StackedVerticalBar content={content} />
                             case "card":

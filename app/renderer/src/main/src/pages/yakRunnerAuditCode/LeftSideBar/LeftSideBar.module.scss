@@ -1,15 +1,15 @@
 .left-side-bar {
     height: 100%;
     display: flex;
-    // border-left: 1px solid #eaecf3;
-    // border-right: 1px solid #eaecf3;
+    // border-left: 1px solid var(--Colors-Use-Neutral-Border);
+    // border-right: 1px solid var(--Colors-Use-Neutral-Border);
 
     &-list {
         display: inline-flex;
         flex-direction: column;
         align-items: flex-start;
-        background: #f8f8f8;
-        border-right: 1px solid #eaecf3;
+        background: var(--Colors-Use-Neutral-Bg);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
     }
 
     &-item {
@@ -19,12 +19,12 @@
         align-items: flex-start;
         gap: 4px;
         cursor: pointer;
-        border-bottom: 1px solid #eaecf3;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         position: relative;
         user-select: none;
 
         .item-text {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 600;
             line-height: 16px;
@@ -35,7 +35,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     &-item:hover {
@@ -43,17 +43,17 @@
     }
 
     &-item-active {
-        background-color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Primary);
         .item-text {
-            color: #ffffff;
+            color: var(--Colors-Use-Main-On-Primary);
         }
         svg {
-            color: #ffffff;
+            color: var(--Colors-Use-Main-On-Primary);
         }
     }
 
     &-item-advanced-config-unShow {
-        background-color: var(--yakit-primary-3);
+        background-color: var(--Colors-Use-Main-Border);
     }
 
     &-item-disable {
@@ -62,7 +62,7 @@
     }
 
     &-item-active:hover {
-        background-color: var(--yakit-primary-4);
+        background-color: var(--Colors-Use-Main-Hover);
     }
 
     &-content {
@@ -91,5 +91,5 @@
 }
 
 .hidden {
-    border-right: 1px solid var(--yakit-background-color);
+    border-right: 1px solid var(--Colors-Use-Neutral-Bg);
 }

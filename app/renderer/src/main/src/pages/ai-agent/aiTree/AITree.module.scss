@@ -1,0 +1,285 @@
+.ai-tree {
+    height: 100%;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    overflow: hidden auto;
+}
+
+/* ---------- AITreeNode ----------*/
+.ai-tree-node {
+    .node-wrapper {
+        height: 16px;
+        display: flex;
+        .content {
+            flex: 1;
+            padding-left: 4px;
+            display: flex;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            .content-title {
+                padding-left: 2px;
+                overflow: hidden;
+                color: var(--Colors-Use-Neutral-Text-2-Primary);
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px;
+            }
+            .hover-wrapper {
+                cursor: pointer;
+                display: none;
+                position: absolute;
+                top: -4px;
+                left: 2px;
+                width: calc(100% - 4px);
+                padding: 4px;
+                justify-content: space-between;
+                align-items: center;
+                border-radius: 4px;
+                background: var(--Colors-Use-Neutral-Bg-Hover);
+                .task-title {
+                    flex: 1;
+                    overflow: hidden;
+                    color: var(--Colors-Use-Neutral-Text-2-Primary);
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+                .task-extra-btns {
+                    display: flex;
+                    justify-content: flex-end;
+                    align-items: center;
+                    gap: 4px;
+                    .info-icon {
+                        width: 16px;
+                        height: 16px;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                        svg {
+                            width: 16px;
+                            height: 16px;
+                        }
+                        .hover-icon {
+                            color:var(--Colors-Use-Main-Primary);
+                        }
+                    }
+                }
+            }
+            &:hover {
+                .hover-wrapper {
+                    display: flex;
+                }
+            }
+            .show-hover-wrapper {
+                display: flex;
+            }
+        }
+    }
+}
+
+.task-detail-popover {
+    .detail-wrapper {
+        width: 360px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        .detail-title {
+            color: var(--Colors-Use-Neutral-Text-1-Title, #353639);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 20px;
+            letter-spacing: 0.1px;
+        }
+        .detail-description {
+            color: var(--Colors-Use-Neutral-Text-3-Secondary, #868c97);
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+        }
+    }
+
+    :global {
+        .ant-popover-inner {
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
+            border-radius: 4px;
+            border: 1px solid var(--Colors-Use-Neutral-Bg-Hover, #eef0f3);
+            background: var(--Colors-Use-Basic-Background, #fff);
+            .ant-popover-inner-content {
+                padding: 16px;
+            }
+        }
+        .ant-popover-arrow {
+            top: 0;
+        }
+    }
+}
+
+/* ---------- AITreeEmptyNode ----------*/
+.node-horizontal-line {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 7px;
+        width: 2px;
+        height: 50%;
+        background-color: var(--Colors-Use-Neutral-Border);
+    }
+    &::after {
+        content: "";
+        position: absolute;
+        top: 7px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--Colors-Use-Neutral-Border);
+    }
+}
+.node-vertical-line {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 7px;
+        width: 2px;
+        height: 100%;
+        background-color: var(--Colors-Use-Neutral-Border);
+    }
+}
+.node-T-line {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 7px;
+        width: 2px;
+        height: 100%;
+        background-color: var(--Colors-Use-Neutral-Border);
+    }
+    &::after {
+        content: "";
+        position: absolute;
+        top: 7px;
+        left: 8px;
+        width: 50%;
+        height: 2px;
+        background-color: var(--Colors-Use-Neutral-Border);
+    }
+}
+
+.node-start-oblique-line {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        width: 2px;
+        height: 142%;
+        background: var(--Colors-Use-Neutral-Border);
+        transform: rotate(-30deg);
+    }
+}
+
+.node-end-oblique-line {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: -4px;
+        width: 2px;
+        height: 142%;
+        background: var(--Colors-Use-Neutral-Border);
+        transform: rotate(30deg);
+    }
+}
+
+.node-end-half-oblique-line {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    &::before {
+        content: "";
+        position: absolute;
+        left: 1px;
+        top: -2px;
+        width: 2px;
+        height: 71%;
+        background: var(--Colors-Use-Neutral-Border);
+        transform: rotate(30deg);
+    }
+}
+
+.node-icon {
+    width: 16.3px;
+    height: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+/* ---------- TaskWaitIcon ----------*/
+.task-wait-icon {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 50%;
+    background-color: var(--Colors-Use-Basic-Background);
+}
+
+/* ---------- TaskInProgressIcon ----------*/
+.task-in-progress-icon {
+    width: 16px;
+    height: 16px;
+    padding: 2px;
+    border: 1px solid var(--Colors-Use-Main-Primary);
+    border-radius: 50%;
+    background-color: var(--Colors-Use-Basic-Background);
+
+    .center-wrapper {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 50%;
+        background-color: var(--Colors-Use-Main-Primary);
+        animation: icon-breath 2s linear infinite;
+    }
+}
+@keyframes icon-breath {
+    0% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(0.9);
+    }
+    50% {
+        transform: scale(0.8);
+    }
+    75% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+    }
+}

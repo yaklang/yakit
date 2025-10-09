@@ -22,7 +22,6 @@ import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/ut
 import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog"
 import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
-import {BaseMiniConsole} from "../baseConsole/BaseConsole"
 import {
     getReleaseEditionName,
     isCommunityEdition,
@@ -39,6 +38,8 @@ import {
     getEnvTypeByProjects,
     NewProjectAndFolder,
     ProjectDescription,
+    ProjectIOProgress,
+    ProjectParamsProp,
     TransferProject
 } from "@/pages/softwareSettings/ProjectManage"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
@@ -59,7 +60,6 @@ import {DownloadYaklang} from "./update/DownloadYaklang"
 import {HelpDoc} from "./HelpDoc/HelpDoc"
 import {SolidCheckCircleIcon, SolidHomeIcon} from "@/assets/icon/solid"
 import {ChatCSGV} from "@/enums/chatCS"
-import {outputToPrintLog} from "./WelcomeConsoleUtil"
 import {setNowProjectDescription} from "@/pages/globalVariable"
 import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig} from "../configNetwork/ConfigNetworkPage"
@@ -75,13 +75,23 @@ import {Tooltip} from "antd"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {clearTerminalMap, getMapAllTerminalKey} from "@/pages/yakRunner/BottomEditorDetails/TerminalBox/TerminalMap"
 import {grpcFetchLatestYakVersion, grpcFetchYakInstallResult} from "@/apiUtils/grpc"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
 import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
 import {setYakitEngineMode} from "@/constants/software"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {handleFetchArchitecture, handleFetchIsDev, SystemInfo} from "@/constants/hardware"
 import {getEnginePortCacheKey} from "@/utils/localCache/engine"
+import {
+    apiSplitUpload,
+    ExportProjectRequest,
+    grpcExportProject,
+    grpcGetProjects,
+    SplitUploadRequest,
+    useUploadInfoByEnpriTrace
+} from "./utils"
+import moment from "moment"
+import {debugToPrintLog} from "@/utils/logCollection"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
@@ -103,6 +113,12 @@ export interface UILayoutProp {
 }
 
 const UILayout: React.FC<UILayoutProp> = (props) => {
+    const {currentPageTabRouteKey} = usePageInfo(
+        (s) => ({
+            currentPageTabRouteKey: s.currentPageTabRouteKey
+        }),
+        shallow
+    )
     /** ---------- 软件级功能设置 Start ---------- */
     // 顶部是否可以拖拽并移动软件位置
     const [drop, setDrop] = useState<boolean>(true)
@@ -136,6 +152,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const onSetEngineMode = useMemoizedFn((v?: YaklangEngineMode) => {
         setYakitEngineMode(v)
         setEngineMode(v)
+        SystemInfo.mode = v
     })
     /** 是否为远程模式 */
     const isRemoteEngine = useMemo(() => engineMode === "remote", [engineMode])
@@ -169,7 +186,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [engineLink])
 
     // 获取企业版配置信息
-    const {eeSystemConfig, setEeSystemConfig} = useEeSystemConfig()
+    const {eeSystemConfig} = useEeSystemConfig()
+    const isLoginFirstRef = useRef<boolean>(true) // 只是登录的那一下需要传login参数的标志
     useDebounceEffect(
         () => {
             let collectData = false
@@ -181,35 +199,113 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             let timer
             if (collectData && userInfo.isLogin) {
                 const token = userInfo.token
-                visitorsStatisticsFun(token)
+                if (isLoginFirstRef.current) {
+                    visitorsStatisticsFun(token, "login")
+                    isLoginFirstRef.current = false
+                } else {
+                    visitorsStatisticsFun(token)
+                }
                 timer = setInterval(() => {
                     visitorsStatisticsFun(token)
                 }, 60000)
             } else {
+                isLoginFirstRef.current = true
                 timer && clearInterval(timer)
             }
             return () => {
+                isLoginFirstRef.current = true
                 timer && clearInterval(timer)
             }
         },
         [eeSystemConfig, userInfo],
         {wait: 300}
     )
+    //#region 企业版登录成功后根据配置信息看是否需要自动上传项目
+    const projectListRef = useRef<ProjectDescription[]>([])
+    const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
     useEffect(() => {
-        if (engineLink && isEnpriTrace()) {
-            NetWorkApi<any, API.SystemConfigResponse>({
-                method: "get",
-                url: "system/config"
-            })
-                .then((config) => {
-                    const data = config.data || []
-                    setEeSystemConfig([...data])
-                })
-                .catch(() => {
-                    setEeSystemConfig([])
-                })
+        // 登录根据配置参数判断是否自动上传项目
+        uploadProjectEvent.startUpload({
+            isAutoUploadProject: true
+        })
+    }, [userInfo.isLogin])
+
+    useEffect(() => {
+        emiter.on("autoUploadProject", (data) => {
+            try {
+                onGetProjects(JSON.parse(data).day)
+            } catch (error) {}
+        })
+        return () => {
+            emiter.off("autoUploadProject")
         }
-    }, [engineLink])
+    }, [])
+
+    const onGetProjects = useMemoizedFn((day) => {
+        const time = moment().subtract(day, "days").startOf("day")
+        const query: ProjectParamsProp = {
+            Type: "project",
+            FrontendType: "project",
+            AfterUpdatedAt: time.unix(),
+            Pagination: {
+                Page: 1,
+                Limit: -1,
+                Order: "desc",
+                OrderBy: "updated_at"
+            }
+        }
+        grpcGetProjects(query).then((res) => {
+            const {Projects} = res
+            const name = currentProject?.ProjectName || ""
+            projectListRef.current = [...(Projects || [])].filter((item) => item.ProjectName !== name) // 过滤当前打开的项目
+            if (projectListRef.current.length > 0) {
+                onExportProject()
+            }
+        })
+    })
+    const onExportProject = useMemoizedFn(() => {
+        if (!projectListRef.current.length) return
+        const value = projectListRef.current.shift()
+        if (!value) return
+        const token = `${value.Id}-${moment().valueOf()}`
+        let filePath = ""
+        let hasError = false
+        ipcRenderer.on(`${token}-data`, (e, data: ProjectIOProgress) => {
+            if (!!data.TargetPath) {
+                filePath = data.TargetPath.replace(/\\/g, "\\")
+            }
+        })
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            hasError = true
+            failed(`${value.ProjectName}项目数据同步失败,请手动上传`)
+        })
+        ipcRenderer.once(`${token}-end`, (e, data) => {
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            if (hasError) {
+                onExportProject()
+                return
+            }
+            const onlineToken = `${filePath}-${moment().valueOf()}`
+            const onlineParams: SplitUploadRequest = {
+                url: "fragment/upload",
+                path: filePath,
+                token: onlineToken,
+                type: "Project"
+            }
+            apiSplitUpload(onlineParams).then((TaskStatus) => {
+                if (!TaskStatus) {
+                    failed(`${projectName}项目数据同步失败,请手动上传`)
+                }
+                onExportProject()
+            })
+        })
+        const params: ExportProjectRequest = {
+            Id: value.Id,
+            token
+        }
+        grpcExportProject(params)
+    })
 
     /** ---------- 引擎状态和连接相关逻辑 Start ---------- */
     /** 插件漏洞信息库自检 */
@@ -232,6 +328,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
      * 4、引擎是否存在
      */
     const handleFetchBaseInfo = useMemoizedFn(async (nextFunc?: () => any) => {
+        debugToPrintLog(`------ 获取系统基础信息 ------`)
         try {
             if (SystemInfo.isDev === undefined) await handleFetchIsDev()
         } catch (error) {}
@@ -252,11 +349,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** 获取上次连接引擎的模式 */
     const handleLinkEngineMode = useMemoizedFn(() => {
+        debugToPrintLog(`------ 获取上次连接引擎的模式 ------`)
         setCheckLog(["获取上次连接引擎的模式..."])
         getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
             switch (val) {
                 case "remote":
                     setCheckLog((arr) => arr.concat(["获取连接模式成功——远程模式"]))
+                    debugToPrintLog(`------ 连接引擎的模式: remote ------`)
                     setTimeout(() => {
                         handleChangeLinkMode(true)
                     }, 1000)
@@ -264,12 +363,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     return
                 case "local":
                     setCheckLog((arr) => arr.concat(["获取连接模式成功——本地模式"]))
+                    debugToPrintLog(`------ 连接引擎的模式: local ------`)
                     setTimeout(() => {
                         handleChangeLinkMode()
                     }, 1000)
                     return
                 default:
                     setCheckLog((arr) => arr.concat(["未获取到连接模式-默认(本地)模式"]))
+                    debugToPrintLog(`------ 连接引擎的模式: local ------`)
                     setTimeout(() => {
                         handleChangeLinkMode()
                     }, 1000)
@@ -289,6 +390,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         onDisconnect()
         setYakitStatus("")
         onSetEngineMode("local")
+        debugToPrintLog(`------ 启动本地引擎连接逻辑 ------`)
         handleStartLocalLink(isInitLocalLink.current)
         isInitLocalLink.current = false
     })
@@ -305,6 +407,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 setLinkLocalEngine()
             }, 1000)
         } else {
+            debugToPrintLog(`------ 启动无本地引擎逻辑 ------`)
             setCheckLog(["检查本地是否已安装引擎..."])
             setCheckLog((arr) => arr.concat(["本地未安装引擎，准备启动安装引擎弹窗"]))
             setTimeout(() => {
@@ -333,6 +436,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     })
 
+    // 软件开始进行逻辑启动
     useEffect(() => {
         setTimeout(() => {
             /**
@@ -447,6 +551,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 开始本地连接引擎
     const handleLinkLocalEngine = useMemoizedFn((port: number) => {
+        debugToPrintLog(`------ 开始启动引擎, 指定端口: ${port} ------`)
         setCheckLog([`本地普通权限引擎模式，开始启动本地引擎-端口: ${port}`])
         setCredential({
             Host: "127.0.0.1",
@@ -458,7 +563,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         })
         setYakitStatus("ready")
         onStartLinkEngine()
-        outputToPrintLog("local-start-test-engine-link-status")
     })
 
     const [remoteLinkLoading, setRemoteLinkLoading] = useState<boolean>(false)
@@ -483,28 +587,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** ---------- 软件状态与是否连接引擎相关方法 End ---------- */
 
     /** ---------- 各种操作逻辑处理 Start ---------- */
-    // 引擎日志终端
-    const [yakitConsole, setYakitConsole] = useState<boolean>(false)
-
-    /**
-     * 打开引擎日志终端
-     */
-    useEffect(() => {
-        emiter.on("openEngineLogTerminal", () => {
-            setYakitConsole(true)
-        })
-        return () => {
-            emiter.off("openEngineLogTerminal")
-        }
-    }, [])
-
-    useEffect(() => {
-        if (engineLink) {
-        } else {
-            setYakitConsole(false)
-        }
-    }, [engineLink])
-
     const setTimeoutLoading = useMemoizedFn((setLoading: (v: boolean) => any) => {
         setLoading(true)
         setTimeout(() => {
@@ -599,10 +681,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 handleLinkRemoteMode()
                 return
 
-            case "console":
-                setYakitConsole(true)
-                return
-
             case "changeProject":
                 // yakit-ui进入项目管理
                 changeYakitMode("soft")
@@ -653,6 +731,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** ---------- yakit和yaklang的更新(以连接引擎的状态下) & kill引擎进程 Start ---------- */
     // 更新yakit-modal
     const [yakitDownload, setYakitDownload] = useState<boolean>(false)
+    // 是否为内网yakit更新
+    const [intranetYakit, setIntranetYakit] = useState<boolean>(false)
     // 更新yaklang前置-关闭所有引擎进程modal
     const [yaklangKillPss, setYaklangKillPss] = useState<boolean>(false)
     const [yaklangKillBuildInEngine, setYaklangKillBuildInEngine] = useState<boolean>(false)
@@ -676,7 +756,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     // 监听UI上的更新yakit或yaklang更新功能
     const handleActiveDownloadModal = useMemoizedFn((type: string) => {
         if (yaklangKillPss || yakitDownload) return
-        if (type === "yakit") setYakitDownload(true)
+        if (type === "intranetYakit") {
+            setYakitDownload(true)
+            setIntranetYakit(true)
+        }
+        if (type === "yakit") {
+            setYakitDownload(true)
+            setIntranetYakit(false)
+        }
         if (type === "yaklang") setYaklangKillPss(true)
     })
     // kill完引擎进程后开始更新引擎
@@ -750,7 +837,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     const initBuildInEngine = () => {
         ipcRenderer
-            .invoke("InitBuildInEngine", {})
+            .invoke("RestoreEngineAndPlugin", {})
             .then(() => {
                 yakitNotify("info", "解压内置引擎成功")
                 showYakitModal({
@@ -983,8 +1070,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** ---------- EE版-license Start ---------- */
     // 企业版-连接引擎后验证license=>展示企业登录
-    // const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
-    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(false)
+    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
     useEffect(() => {
         // 用户退出 - 验证license=>展示企业登录
         ipcRenderer.on("again-judge-license-login", () => {
@@ -1168,10 +1254,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [coedcPluginShow, setCoedcPluginShow] = useState<boolean>(false)
 
     // 判断打开 ChatCS-AI插件执行/全局网络配置第三方应用框
+    const percentContainerRef = useRef<string>(currentPageTabRouteKey)
     const onFuzzerModal = useMemoizedFn(async (value) => {
         try {
             const val: {text?: string; scriptName?: string; code?: string; isAiPlugin: any} = JSON.parse(value)
             if (val.isAiPlugin === "isGetPlugin") {
+                percentContainerRef.current = currentPageTabRouteKey
                 setCoedcPluginShow(true)
                 return
             }
@@ -1194,30 +1282,28 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         <div className={styles["ai-describe"]}>
                                             请选择AI类型进行APIKey配置，如配置多个，可在全局配置中配置使用优先级
                                         </div>
-                                        <div style={{margin: 24, marginRight: 45}}>
-                                            <NewThirdPartyApplicationConfig
-                                                isOnlyShowAiType={true}
-                                                onAdd={(e) => {
-                                                    let existed = false
-                                                    const existedResult = (obj.AppConfigs || []).map((i) => {
-                                                        if (i.Type === e.Type) {
-                                                            existed = true
-                                                            return {...i, ...e}
-                                                        }
-                                                        return {...i}
-                                                    })
-                                                    if (!existed) {
-                                                        existedResult.push(e)
+                                        <NewThirdPartyApplicationConfig
+                                            isOnlyShowAiType={true}
+                                            onAdd={(e) => {
+                                                let existed = false
+                                                const existedResult = (obj.AppConfigs || []).map((i) => {
+                                                    if (i.Type === e.Type) {
+                                                        existed = true
+                                                        return {...i, ...e}
                                                     }
-                                                    const params = {...obj, AppConfigs: existedResult}
-                                                    apiSetGlobalNetworkConfig(params).then(() => {
-                                                        openAIByChatCS({...val})
-                                                        m.destroy()
-                                                    })
-                                                }}
-                                                onCancel={() => m.destroy()}
-                                            />
-                                        </div>
+                                                    return {...i}
+                                                })
+                                                if (!existed) {
+                                                    existedResult.push(e)
+                                                }
+                                                const params = {...obj, AppConfigs: existedResult}
+                                                apiSetGlobalNetworkConfig(params).then(() => {
+                                                    openAIByChatCS({...val})
+                                                    m.destroy()
+                                                })
+                                            }}
+                                            onCancel={() => m.destroy()}
+                                        />
                                     </>
                                 )
                             })
@@ -1445,7 +1531,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [])
 
     const onReady = useMemoizedFn(() => {
-        outputToPrintLog(`连接成功-start-engineLink:${getEngineLink()}`)
+        // debugToPrintLog(`------ 进程存活，准备连接中... ------`)
         if (!getEngineLink()) {
             isEnpriTraceAgent() ? SELinkedEngine() : onLinkedEngine()
         }
@@ -1467,7 +1553,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             setKeepalive(false)
             return
         }
-        outputToPrintLog(`连接失败: ${count}次`)
+        debugToPrintLog(`[INFO] 目标引擎进程不存在: 探活失败${count}次`)
 
         setEngineLink(false)
 
@@ -1605,7 +1691,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                     {stopScreen}
 
-                                    <HelpDoc system={system} engineLink={engineLink} />
+                                    <HelpDoc system={system} />
 
                                     {engineLink && (
                                         <>
@@ -1679,7 +1765,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         </>
                                     )}
 
-                                    <HelpDoc system={system} engineLink={engineLink} />
+                                    <HelpDoc system={system} />
 
                                     {stopScreen}
 
@@ -1774,7 +1860,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 setShowEngineLog={setShowEngineLog}
                             />
                         )}
-
                         {engineLink && (
                             <YakitSpin spinning={switchEngineLoading}>
                                 {isJudgeLicense ? (
@@ -1811,7 +1896,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     }
                                 />
                                 {/* 更新yakit */}
-                                <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload} />
+                                <DownloadYakit
+                                    system={system}
+                                    visible={yakitDownload}
+                                    setVisible={setYakitDownload}
+                                    intranetYakit={intranetYakit}
+                                />
                             </div>
                         )}
 
@@ -1838,7 +1928,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             >
                 <EngineLog visible={engineLink} setVisible={setShowEngineLog} />
             </div>
-            <BaseMiniConsole visible={yakitConsole} setVisible={setYakitConsole} />
 
             {/* 项目加密导出弹框 */}
             <NewProjectAndFolder
@@ -1915,6 +2004,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     // 此处通知刷新各类基于codec插件菜单
                     emiter.emit("onRefPluginCodecMenu")
                 }}
+                getContainer={
+                    document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+                }
             />
         </div>
     )

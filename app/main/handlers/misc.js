@@ -1,5 +1,5 @@
 const {ipcMain} = require("electron")
-const {getLocalYaklangEngine, loadExtraFilePath} = require("../filePath.js")
+const {getLocalYaklangEngine, loadExtraFilePath, YakitProjectPath} = require("../filePath.js")
 const fs = require("fs")
 const path = require("path")
 const crypto = require("crypto")
@@ -750,6 +750,8 @@ module.exports = (win, getClient) => {
     })
     ipcMain.handle("CalcEngineSha265", async (e, params) => {
         const hashs = []
+
+        // 此处留存于10月1号后可删除----start
         const hashTxt = path.join("bins", "engine-sha256.txt")
         if (fs.existsSync(loadExtraFilePath(hashTxt))) {
             let hashData = fs.readFileSync(loadExtraFilePath(hashTxt)).toString("utf8")
@@ -758,6 +760,19 @@ module.exports = (win, getClient) => {
             // 去除首尾空格
             hashData = hashData.trim()
             hashs.push(hashData)
+        }
+        // 此处留存于10月1号后可删除----end
+
+        if (process.platform === "darwin") {
+            const yakKeyFile = path.join(YakitProjectPath, "engine-sha256.txt")
+            if (fs.existsSync(yakKeyFile)) {
+                let hashData = fs.readFileSync(yakKeyFile).toString("utf8")
+                // 去除换行符
+                hashData = (hashData || "").replace(/\r?\n/g, "")
+                // 去除首尾空格
+                hashData = hashData.trim()
+                hashs.push(hashData)
+            }
         }
 
         return new Promise((resolve, reject) => {
@@ -780,5 +795,13 @@ module.exports = (win, getClient) => {
                 }
             }
         })
+    })
+
+    // StartMcpServer 启动 MCP 服务器
+    const streamStartMcpServerMap = new Map()
+    ipcMain.handle("cancel-StartMcpServer", handlerHelper.cancelHandler(streamStartMcpServerMap))
+    ipcMain.handle("StartMcpServer", (e, params, token) => {
+        const stream = getClient().StartMcpServer(params)
+        handlerHelper.registerHandler(win, stream, streamStartMcpServerMap, token)
     })
 }

@@ -22,10 +22,12 @@ import {
     OutlineArrowsexpandIcon,
     OutlineClipboardlistIcon,
     OutlineRefreshIcon,
-    OutlineStoreIcon
+    OutlineStoreIcon,
+    OutlineTrashIcon
 } from "@/assets/icon/outline"
 import classNames from "classnames"
 import {Checkbox, Divider, Form} from "antd"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import cloneDeep from "lodash/cloneDeep"
 import {ScanKind, ScanPortTemplate, defaultPorts} from "@/pages/portscan/PortScanPage"
 import {YakitFormDraggerContentPath} from "@/components/yakitUI/YakitForm/YakitForm"
@@ -266,6 +268,8 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
     FingerprintMode: "all",
     UserFingerprintFiles: [],
     UserFingerprintFilesStr: "",
+    EnableFingerprintGroup: true,
+    FingerprintGroup: [""],
     Proto: ["tcp"],
     SaveClosedPorts: false,
     SaveToDB: true,
@@ -389,7 +393,9 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                 reportName: taskNameRef.current,
                 runtimeId
             }
-            onCreateReportModal(params)
+            onCreateReportModal(params, {
+                getContainer: document.getElementById(`main-operator-page-body-${YakitRoute.Mod_ScanPort}`) || undefined
+            })
         })
 
         const [inputType, setInputType] = useState<"content" | "path">("content")
@@ -410,6 +416,10 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                 executeParams["TargetsFile"] = executeParams["Targets"]
                 executeParams["Targets"] = ""
             }
+            executeParams.FingerprintGroup =
+                executeParams.FingerprintGroup?.length === 1 && executeParams.FingerprintGroup[0] === ""
+                    ? []
+                    : executeParams.FingerprintGroup || []
             delete executeParams.UserFingerprintFilesStr
             portScanStreamEvent.reset()
             setRuntimeId("")
@@ -553,37 +563,77 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
 
 const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo((props) => {
     const {inViewport, disabled, form, extraParamsValue, inputType, setInputType} = props
-    const [templatePort, setTemplatePort] = useState<string>()
+    const [portTemplates, setPortTemplates] = useState<{[key: string]: string}>({})
+    const [saveTemplateVisible, setSaveTemplateVisible] = useState<boolean>(false)
+    const [templateName, setTemplateName] = useState<string>("")
 
     useEffect(() => {
-        if (inViewport) onGetTemplatePort()
+        if (inViewport) onGetPortTemplates()
     }, [inViewport])
-    const onGetTemplatePort = useMemoizedFn(() => {
+
+    const onGetPortTemplates = useMemoizedFn(() => {
         ipcRenderer
-            .invoke("fetch-local-cache", ScanPortTemplate)
+            .invoke("fetch-local-cache", "ScanPortTemplates")
             .then((value: string) => {
                 if (value) {
-                    setTemplatePort(value || "")
+                    try {
+                        const templates = JSON.parse(value)
+                        setPortTemplates(templates || {})
+                    } catch (e) {
+                        setPortTemplates({})
+                    }
+                } else {
+                    setPortTemplates({})
                 }
             })
-            .catch(() => {})
+            .catch(() => {
+                setPortTemplates({})
+            })
     })
-    const onSetTemplatePort = useMemoizedFn(() => {
+
+    const onShowSaveTemplate = useMemoizedFn(() => {
         const ports = form.getFieldValue("Ports")
         if (!ports) {
             yakitNotify("error", "请输入端口后再保存")
             return
         }
-        ipcRenderer.invoke("set-local-cache", ScanPortTemplate, ports).then(() => {
-            yakitNotify("success", "保存成功")
-            setTemplatePort(ports)
+        setTemplateName("")
+        setSaveTemplateVisible(true)
+    })
+
+    const onSaveTemplate = useMemoizedFn(() => {
+        if (!templateName.trim()) {
+            yakitNotify("error", "请输入模板名称")
+            return
+        }
+        const ports = form.getFieldValue("Ports")
+        const newTemplates = {
+            ...portTemplates,
+            [templateName.trim()]: ports
+        }
+        ipcRenderer.invoke("set-local-cache", "ScanPortTemplates", JSON.stringify(newTemplates)).then(() => {
+            yakitNotify("success", "模板保存成功")
+            setPortTemplates(newTemplates)
+            setSaveTemplateVisible(false)
+            setTemplateName("")
+        })
+    })
+
+    const onDeleteTemplate = useMemoizedFn((templateKey: string) => {
+        const newTemplates = {...portTemplates}
+        delete newTemplates[templateKey]
+        ipcRenderer.invoke("set-local-cache", "ScanPortTemplates", JSON.stringify(newTemplates)).then(() => {
+            yakitNotify("success", "模板删除成功")
+            setPortTemplates(newTemplates)
         })
     })
     /**选择预设端口设置Ports值 */
     const onCheckPresetPort = useMemoizedFn((checkedValue: CheckboxValueType[]) => {
         let res: string = (checkedValue || [])
             .map((i) => {
-                if (i === "template") return templatePort
+                if (typeof i === "string" && portTemplates[i]) {
+                    return portTemplates[i]
+                }
                 return PresetPorts[i as string] || ""
             })
             .join(",")
@@ -623,7 +673,31 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                     <YakitCheckbox value={"top1000+"}>常见一两千</YakitCheckbox>
                     <YakitCheckbox value={"topdb"}>常见数据库与 MQ</YakitCheckbox>
                     <YakitCheckbox value={"topudp"}>常见 UDP 端口</YakitCheckbox>
-                    {templatePort && <YakitCheckbox value={"template"}>模板</YakitCheckbox>}
+                    {Object.keys(portTemplates).map((templateKey) => (
+                        <div key={templateKey} className={styles["template-checkbox-wrapper"]}>
+                            <YakitCheckbox value={templateKey}>
+                                <div className={"content-ellipsis"} style={{maxWidth: 110}} title={templateKey}>
+                                    {templateKey}
+                                </div>
+                            </YakitCheckbox>
+                            {disabled ? (
+                                <OutlineTrashIcon
+                                    className={styles["template-not-allowed-del-icon"]}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                />
+                            ) : (
+                                <OutlineTrashIcon
+                                    className={styles["template-del-icon"]}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onDeleteTemplate(templateKey)
+                                    }}
+                                />
+                            )}
+                        </div>
+                    ))}
                 </Checkbox.Group>
             </Form.Item>
             <Form.Item
@@ -635,9 +709,10 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                             type='text'
                             icon={<OutlineStoreIcon />}
                             style={{paddingLeft: 0}}
-                            onClick={onSetTemplatePort}
+                            onClick={onShowSaveTemplate}
+                            disabled={disabled}
                         >
-                            存为模块
+                            存为模板
                         </YakitButton>
                         <div className={styles["divider-style"]}></div>
                         <YakitButton
@@ -663,6 +738,39 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                     <YakitTag>指纹扫描并发：{extraParamsValue.Concurrent}</YakitTag>
                 </div>
             </Form.Item>
+
+            <YakitModal
+                title='保存指纹配置'
+                visible={saveTemplateVisible}
+                onCancel={() => setSaveTemplateVisible(false)}
+                width={400}
+                footer={null}
+            >
+                <div>
+                    <YakitInput.TextArea
+                        placeholder='请为指纹配置取个名字...'
+                        showCount
+                        maxLength={50}
+                        value={templateName}
+                        onChange={(e) => setTemplateName(e.target.value)}
+                        onPressEnter={onSaveTemplate}
+                    />
+                    <div style={{display: "flex", justifyContent: "end", gap: 8, marginTop: 25}}>
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => {
+                                setTemplateName("")
+                                setSaveTemplateVisible(false)
+                            }}
+                        >
+                            取消
+                        </YakitButton>
+                        <YakitButton type='primary' onClick={onSaveTemplate}>
+                            保存
+                        </YakitButton>
+                    </div>
+                </div>
+            </YakitModal>
         </>
     )
 })

@@ -5,6 +5,7 @@ import {
     CodeScoreModuleProps,
     CodeScoreSmokingEvaluateResponseProps,
     FilterPopoverBtnProps,
+    FuncBtnIconProps,
     FuncBtnProps,
     FuncFilterPopoverProps,
     FuncSearchProps,
@@ -238,6 +239,16 @@ export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
     )
 })
 
+/** @name 带提示的图标按钮组件 */
+export const FuncBtnIcon: React.FC<FuncBtnIconProps> = memo((props) => {
+    const {name, ...rest} = props
+    return (
+        <Tooltip title={name} overlayClassName='plugins-tooltip'>
+            <YakitButton {...rest}></YakitButton>
+        </Tooltip>
+    )
+})
+
 /** @name 带屏幕宽度自适应的搜索内容组件 */
 export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
     const {maxWidth, onSearch: onsearch, yakitCombinationSearchProps = {}, includeSearchType} = props
@@ -280,6 +291,9 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
             case "userName":
                 newSearch.userName = e.target.value
                 break
+            case "tag":
+                newSearch.tag = e.target.value
+                break
             case "fieldKeywords":
                 newSearch.fieldKeywords = e.target.value
                 break
@@ -302,6 +316,8 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
                 return search.keyword
             case "userName":
                 return search.userName
+            case "tag":
+                return search.tag
             case "fieldKeywords":
                 return search.fieldKeywords
             default:
@@ -1514,7 +1530,8 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
         specialHint = "(无法判断，是否需要转人工审核)",
         specialBtnText = "转人工审核",
         specialExtraBtn = null,
-        hiddenSpecialBtn = false
+        hiddenSpecialBtn = false,
+        scoreHintData
     } = props
 
     const [loading, setLoading] = useState<boolean>(true)
@@ -1583,20 +1600,31 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
             {!hiddenScoreHint && (
                 <div className={styles["header-wrapper"]}>
                     <div className={styles["title-style"]}>检测项包含：</div>
-                    <div className={styles["header-body"]}>
-                        <div className={styles["opt-content"]}>
-                            <div className={styles["content-order"]}>1</div>
-                            基础编译测试，判断语法是否符合规范，是否存在不正确语法；
+                    {Array.isArray(scoreHintData) ? (
+                        <div className={styles["header-body"]}>
+                            {scoreHintData.map((item, index) => (
+                                <div className={styles["opt-content"]} key={index}>
+                                    <div className={styles["content-order"]}>{index + 1}</div>
+                                    {item}
+                                </div>
+                            ))}
                         </div>
-                        <div className={styles["opt-content"]}>
-                            <div className={styles["content-order"]}>2</div>
-                            把基础防误报服务器作为测试基准，防止条件过于宽松导致的误报；
+                    ) : (
+                        <div className={styles["header-body"]}>
+                            <div className={styles["opt-content"]}>
+                                <div className={styles["content-order"]}>1</div>
+                                基础编译测试，判断语法是否符合规范，是否存在不正确语法；
+                            </div>
+                            <div className={styles["opt-content"]}>
+                                <div className={styles["content-order"]}>2</div>
+                                把基础防误报服务器作为测试基准，防止条件过于宽松导致的误报；
+                            </div>
+                            <div className={styles["opt-content"]}>
+                                <div className={styles["content-order"]}>3</div>
+                                检查插件执行过程是否会发生崩溃。
+                            </div>
                         </div>
-                        <div className={styles["opt-content"]}>
-                            <div className={styles["content-order"]}>3</div>
-                            检查插件执行过程是否会发生崩溃。
-                        </div>
-                    </div>
+                    )}
                 </div>
             )}
             {loading && (
@@ -1685,7 +1713,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
 
 /** @name 插件源码评分弹窗 */
 export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
-    const {visible, onCancel, ...rest} = props
+    const {visible, onCancel, title, ...rest} = props
 
     // 不合格|取消
     const onFailed = useMemoizedFn(() => {
@@ -1704,7 +1732,7 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
 
     return (
         <YakitModal
-            title='插件基础检测'
+            title={title || "插件基础检测"}
             type='white'
             width={"50%"}
             centered={true}

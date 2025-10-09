@@ -12,7 +12,7 @@ import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {safeFormatDownloadProcessState} from "../utils"
-import {grpcFetchLatestYakitVersion} from "@/apiUtils/grpc"
+import {grpcFetchIntranetYakitVersion, grpcFetchLatestYakitVersion} from "@/apiUtils/grpc"
 import {WebsiteGV} from "@/enums/website"
 
 import classNames from "classnames"
@@ -20,43 +20,72 @@ import styles from "./DownloadYakit.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
-interface DownloadYakitProps {
-    system: YakitSystem
-    visible: boolean
-    setVisible: (flag: boolean) => any
+interface useDownloadYakitProps {
+    intranetYakit?: boolean
+    setVisible?: (v: boolean) => void
+    onDownloadFinish?: (filePath: string,status:boolean) => void
 }
 
-/** @name Yakit软件更新下载弹窗 */
-export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
-    const {system, visible, setVisible} = props
-
-    /** 常见问题弹窗是否展示 */
-    const [qsShow, setQSShow] = useState<boolean>(false)
-
-    /** 是否置顶 */
-    const [isTop, setIsTop] = useState<0 | 1 | 2>(0)
-
-    const [disabled, setDisabled] = useState(true)
-    const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
-    const debouncedBounds = useDebounce(bounds, {wait: 500})
-    const draggleRef = useRef<HTMLDivElement>(null)
-
-    /** 下载进度条数据 */
-    const [downloadProgress, setDownloadProgress, getDownloadProgress] = useGetState<DownloadingState>()
-
+/** @name Yakit软件更新下载 */
+export const useDownloadYakit = (props: useDownloadYakitProps) => {
+    const {intranetYakit = true, setVisible, onDownloadFinish} = props
     // 是否中断下载进程
     const isBreakRef = useRef<boolean>(false)
+    /** 下载进度条数据 */
+    const [downloadProgress, setDownloadProgress, getDownloadProgress] = useGetState<DownloadingState>()
 
     /**
      * 1. 获取最新软件版本号，并下载
      * 2. 监听本地下载软件进度数据
-     * @returns 删除监听事件2
      */
-    useEffect(() => {
-        if (visible) {
-            if (isCommunityEdition() || isEnpriTrace()) {
-                isBreakRef.current = true
-                setDownloadProgress(undefined)
+
+    const onDownloadStart = () => {
+        if (isCommunityEdition() || isEnpriTrace()) {
+            isBreakRef.current = true
+            setDownloadProgress(undefined)
+            if (intranetYakit) {
+                // 处理内网版本
+                grpcFetchIntranetYakitVersion()
+                    .then((filePath: string) => {
+                        ipcRenderer
+                            .invoke("download-latest-intranet-yakit", filePath)
+                            .then((isAlready) => {
+                                if (!isBreakRef.current) return
+                                if (onDownloadFinish) {
+                                    onDownloadFinish(filePath,true)
+                                    return
+                                }
+                                success("下载完毕")
+                                if (!isAlready) {
+                                    if (!getDownloadProgress()?.size) return
+                                    setDownloadProgress({
+                                        time: {
+                                            elapsed: downloadProgress?.time.elapsed || 0,
+                                            remaining: 0
+                                        },
+                                        speed: 0,
+                                        percent: 100,
+                                        // @ts-ignore
+                                        size: getDownloadProgress().size
+                                    })
+                                }
+                                ipcRenderer.invoke("open-yakit-path")
+                                emiter.emit("downloadedYakitIntranetFlag")
+                            })
+                            .catch((e: any) => {
+                                if (!isBreakRef.current) return
+                                onDownloadFinish?.(filePath,false)
+                                failed(`下载失败: ${e}`)
+                            })
+                            .finally(() => {
+                                setVisible?.(false)
+                            })
+                    })
+                    .catch((e: any) => {
+                        if (!isBreakRef.current) return
+                        setVisible?.(false)
+                    })
+            } else {
                 grpcFetchLatestYakitVersion()
                     .then((data: string) => {
                         let version = data
@@ -64,8 +93,8 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
 
                         ipcRenderer
                             .invoke("download-latest-yakit", version, {
-                                isEnterprise:isEnterpriseEdition(),
-                                isIRify:isIRify()
+                                isEnterprise: isEnterpriseEdition(),
+                                isIRify: isIRify()
                             })
                             .then(() => {
                                 if (!isBreakRef.current) return
@@ -88,24 +117,78 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                                 if (!isBreakRef.current) return
                                 failed(`下载失败: ${e}`)
                             })
-                            .finally(() => setVisible(false))
+                            .finally(() => setVisible?.(false))
                     })
                     .catch((e: any) => {
                         if (!isBreakRef.current) return
-                        setVisible(false)
+                        setVisible?.(false)
                     })
             }
-            // 如需编写 Yakit-EE 下载功能，可在此处添加
+        }
+        // 如需编写 Yakit-EE 下载功能，可在此处添加
+        ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
+            if (!isBreakRef.current) return
+            setDownloadProgress(safeFormatDownloadProcessState(state))
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("download-yakit-engine-progress")
+        }
+    }
 
-            ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
-                if (!isBreakRef.current) return
-                setDownloadProgress(safeFormatDownloadProcessState(state))
-            })
-            return () => {
-                ipcRenderer.removeAllListeners("download-yakit-engine-progress")
-            }
+    /** 取消下载事件 */
+    const onCancel = useMemoizedFn(() => {
+        isBreakRef.current = false
+        setVisible?.(false)
+        setDownloadProgress(undefined)
+        ipcRenderer.invoke("cancel-download-yakit-version")
+    })
+
+    const onBreak = useMemoizedFn((isBreak: boolean) => {
+        isBreakRef.current = isBreak
+    })
+    return [
+        downloadProgress,
+        {
+            onDownloadStart,
+            onCancel,
+            onBreak
+        }
+    ] as const
+}
+
+interface DownloadYakitProps {
+    system: YakitSystem
+    visible: boolean
+    setVisible: (flag: boolean) => any
+    intranetYakit: boolean
+}
+
+/** @name Yakit软件更新下载弹窗 */
+export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
+    const {system, visible, setVisible, intranetYakit} = props
+
+    const [downloadProgress, {onDownloadStart, onCancel, onBreak}] = useDownloadYakit({intranetYakit, setVisible})
+    /** 常见问题弹窗是否展示 */
+    const [qsShow, setQSShow] = useState<boolean>(false)
+
+    /** 是否置顶 */
+    const [isTop, setIsTop] = useState<0 | 1 | 2>(0)
+
+    const [disabled, setDisabled] = useState(true)
+    const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
+    const debouncedBounds = useDebounce(bounds, {wait: 500})
+    const draggleRef = useRef<HTMLDivElement>(null)
+
+    /**
+     * 1. 获取最新软件版本号，并下载
+     * 2. 监听本地下载软件进度数据
+     * @returns 删除监听事件2
+     */
+    useEffect(() => {
+        if (visible) {
+            onDownloadStart()
         } else {
-            isBreakRef.current = false
+            onBreak(false)
         }
     }, [visible])
 
@@ -121,14 +204,6 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
             top: -targetRect.top + uiData.y + 36,
             bottom: clientHeight - (targetRect.bottom - uiData.y)
         })
-    })
-
-    /** 取消下载事件 */
-    const onCancel = useMemoizedFn(() => {
-        isBreakRef.current = false
-        setVisible(false)
-        setDownloadProgress(undefined)
-        ipcRenderer.invoke("cancel-download-yakit-version")
     })
 
     return (
@@ -177,8 +252,8 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                                         {getReleaseEditionName()} 软件下载中...
                                     </div>
                                     <Progress
-                                        strokeColor='#F28B44'
-                                        trailColor='#F0F2F5'
+                                        strokeColor='var(--Colors-Use-Main-Primary)'
+                                        trailColor='var(--Colors-Use-Neutral-Bg)'
                                         percent={Math.floor((downloadProgress?.percent || 0) * 100)}
                                     />
                                     <div className={styles["download-info-wrapper"]}>

@@ -111,7 +111,7 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                                 renderItem={(e) => {
                                     return (
                                         <List.Item>
-                                            <span className='content-ellipsis'>{e}</span>
+                                            <span className='content-ellipsis' style={{color:'var(--Colors-Use-Neutral-Text-1-Title)'}}>{e}</span>
                                             <CopyComponents copyText={e} />
                                         </List.Item>
                                     )

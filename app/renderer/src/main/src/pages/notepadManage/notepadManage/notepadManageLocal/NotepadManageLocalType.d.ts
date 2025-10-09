@@ -5,8 +5,6 @@ export interface NotepadManageLocalProps {}
 export interface NotepadLocalActionProps {
     /**@name 当前操作的数据 */
     record: Note
-    /**@name 当前打开的笔记本编辑页面数据 */
-    notepadPageList: PageNodeItemProps[]
     /**@name 删除事件回调 */
     onSingleRemoveAfter: () => void
 }
@@ -15,6 +13,8 @@ export interface NotepadImportProps {
     onImportSuccessAfter: () => void
     /**@name 关闭事件回调 */
     onClose: () => void
+    /**@name 弹窗作用域 */
+    getContainer?: HTMLElement
 }
 
 export interface NotepadExportProps {
@@ -22,6 +22,8 @@ export interface NotepadExportProps {
     filter: NoteFilter
     /**@name 关闭事件回调 */
     onClose: () => void
+    /**@name 弹窗作用域 */
+    getContainer?: HTMLElement
 }
 
 export interface NotepadLocalSearchProps {}

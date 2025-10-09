@@ -38,6 +38,7 @@ import {getFileNameByUrl} from "../utils/trackDeletePlugin"
 import {httpDeleteOSSResource} from "@/apiUtils/http"
 import {useStore} from "@/store"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {LogNodeStatusFileIcon} from "@/assets/icon/colors"
 
 interface CustomFileItem {
     name: string
@@ -65,6 +66,42 @@ export const getTypeAndNameByPath = (path) => {
 }
 interface CustomFileProps {
     type: UploadFileTypeProps
+}
+
+export const renderFileTypeIcon = (params: {type: string; iconClassName?: string}) => {
+    const {type, iconClassName} = params
+    switch (type) {
+        case ".doc":
+        case "doc":
+            return <IconNotepadFileTypeWord className={iconClassName} />
+        case ".zip":
+        case "zip":
+        case ".7z":
+        case "7z":
+        case ".tar":
+        case "tar":
+            return <IconNotepadFileTypeCompress className={iconClassName} />
+        case ".ppt":
+        case "ppt":
+            return <IconNotepadFileTypePPT className={iconClassName} />
+        case ".csv":
+        case "csv":
+        case ".xlsx":
+        case "xlsx":
+        case ".numbers":
+        case "numbers":
+        case "xls":
+        case ".xls":
+            return <IconNotepadFileTypeExcel className={iconClassName} />
+        case ".pdf":
+        case "pdf":
+            return <IconNotepadFileTypePdf className={iconClassName} />
+        case ".txt":
+        case "txt":
+            return <LogNodeStatusFileIcon className={iconClassName} />
+        default:
+            return <IconNotepadFileTypeUnknown className={iconClassName} />
+    }
 }
 export const CustomFile: React.FC<CustomFileProps> = (props) => {
     const {type} = props
@@ -180,24 +217,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
             onRemoveFile()
         })
     })
-    const renderType = () => {
-        switch (fileInfo?.type) {
-            case ".doc":
-                return <IconNotepadFileTypeWord />
-            case ".zip":
-            case ".7z":
-            case ".tar":
-                return <IconNotepadFileTypeCompress />
-            case ".ppt":
-                return <IconNotepadFileTypePPT />
-            case ".csv":
-                return <IconNotepadFileTypeExcel />
-            case ".pdf":
-                return <IconNotepadFileTypePdf />
-            default:
-                return <IconNotepadFileTypeUnknown />
-        }
-    }
+
     const onDown = (e) => {
         e.stopPropagation()
         e.preventDefault()
@@ -290,7 +310,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
             >
                 {!!(fileInfo.path || fileInfo.url) ? (
                     <CustomFileItem
-                        title={renderType()}
+                        title={renderFileTypeIcon({type: fileInfo?.type})}
                         subTitle={fileInfo.name}
                         describe={numeral(fileInfo.size).format("0b")}
                         extra={
@@ -312,8 +332,8 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                                             <div className={styles["percent-loading"]}>
                                                 <span>{percent}%</span>
                                                 <Progress
-                                                    strokeColor='#F28B44'
-                                                    trailColor='#F0F2F5'
+                                                    strokeColor='var(--Colors-Use-Main-Primary)'
+                                                    trailColor='var(--Colors-Use-Neutral-Bg)'
                                                     type='circle'
                                                     percent={percent}
                                                     width={20}
@@ -350,7 +370,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                     />
                 ) : queryFileErrorInfo ? (
                     <CustomFileItem
-                        title={renderType()}
+                        title={renderFileTypeIcon({type: fileInfo?.type})}
                         subTitle='获取文件信息错误'
                         extra={
                             <>
@@ -479,7 +499,7 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
     })
     return (
         <YakitHint
-            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}
@@ -489,8 +509,8 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
             visible={visible}
         >
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={percent}
                 format={(percent) => `已下载 ${percent}%`}
             />

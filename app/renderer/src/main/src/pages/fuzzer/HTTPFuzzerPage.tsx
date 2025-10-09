@@ -1,4 +1,4 @@
-import React, {CSSProperties, useEffect, useMemo, useRef, useState} from "react"
+import React, {CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react"
 import {Form, Result, Space, Popover, Tooltip, Divider, Descriptions} from "antd"
 import {
     IMonacoEditor,
@@ -36,7 +36,6 @@ import {
     ChevronRightIcon,
     ChromeSvgIcon,
     ClockIcon,
-    PaperAirplaneIcon,
     SearchIcon,
     StopIcon,
     ArrowsRetractIcon,
@@ -86,7 +85,7 @@ import {
 import {HTTPHeader} from "../mitm/MITMContentReplacerHeaderOperator"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {MatcherAndExtraction} from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
-import _ from "lodash"
+import _, {throttle} from "lodash"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
@@ -100,7 +99,8 @@ import {
     OutlinePlugsIcon,
     OutlineSearchIcon,
     OutlineFilterIcon,
-    OutlineSwitchhorizontalIcon
+    OutlineSwitchhorizontalIcon,
+    OutlineCogIcon
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
@@ -109,7 +109,7 @@ import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated, openExternalWebsite, openPacketNewWindow} from "@/utils/openWebsite"
 import {PayloadGroupNodeProps, ReadOnlyNewPayload} from "../payloadManager/newPayload"
-import {createRoot} from "react-dom/client"
+import {createRoot, Root} from "react-dom/client"
 import {SolidPauseIcon, SolidPlayIcon} from "@/assets/icon/solid"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import blastingIdmp4 from "@/assets/blasting-id.mp4"
@@ -148,13 +148,44 @@ import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {filterColorTag} from "@/components/TableVirtualResize/utils"
 import {FuzzerConcurrentLoad, FuzzerResChartData} from "./FuzzerConcurrentLoad/FuzzerConcurrentLoad"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 import {WebFuzzerDroppedProps} from "./FuzzerSequence/FuzzerSequenceType"
+import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import {convertKeyboardToUIKey, registerShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"
+import {
+    getHttpFuzzerShortcutKeyEvents,
+    getStorageHttpFuzzerShortcutKeyEvents
+} from "@/utils/globalShortcutKey/events/page/httpFuzzer"
+import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
+import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
+import {updateConcurrentLoad} from "@/utils/duplex/duplex"
+import {debugToPrintLog} from "@/utils/logCollection"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {formatTimeYMD} from "@/utils/timeUtil"
+import {type LoggerData, useLogger} from "@/hook/useLogger/useLogger"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
 
+// 保留数组中非重复数据
+type TFilterNonUnique = <T>(arr: T[]) => T[]
+const filterNonUnique: TFilterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
+
 const {ipcRenderer} = window.require("electron")
+
+const httpFuzzerLog = ({name, title, content, status}: Partial<LoggerData>) => {
+    return {
+        name: name || "HTTPFuzzerPage",
+        title: title || "sendRequest",
+        content: content || "发送请求",
+        status,
+        time: formatTimeYMD(Date.now())
+    }
+}
+
+const logger = (log: LoggerData) => {
+    ipcRenderer.invoke("add-log", log)
+}
 
 export type AdvancedConfigShowProps = Record<Exclude<WebFuzzerType, "sequence">, boolean>
 export interface ShareValueProps {
@@ -183,6 +214,7 @@ export const analyzeFuzzerResponse = (
                     }}
                     index={index}
                     data={data}
+                    randomChunkedData={i.RandomChunkedData}
                 />
             </>
         ),
@@ -259,8 +291,20 @@ export interface FuzzerResponse {
     OriginalContentType: string
     FixContentType: string
     IsSetContentTypeOptions: boolean
+    RandomChunkedData: RandomChunkedResponse[]
 }
-
+export interface RandomChunkedResponse {
+    /**@name 当前的 chunked index */
+    Index: number
+    /**@name 当前的 chunked 数据 */
+    Data: Uint8Array
+    /**@name 当前的 chunked 长度 */
+    ChunkedLength: number
+    /**@name 当前的 chunked 延迟时间 */
+    CurrentChunkedDelayTime: number
+    /**@name 总的发送耗时 */
+    TotalDelayTime: number
+}
 export interface HistoryHTTPFuzzerTask {
     Request: string
     RequestRaw: Uint8Array
@@ -333,6 +377,12 @@ export interface FuzzerRequestProps {
 
     /** 是否由引擎进行丢弃包逻辑 */
     EngineDropPacket?: boolean
+    // Random Chunked
+    EnableRandomChunked?: boolean
+    RandomChunkedMinLength?: number
+    RandomChunkedMaxLength?: number
+    RandomChunkedMinDelay?: number
+    RandomChunkedMaxDelay?: number
 }
 
 export const showDictsAndSelect = (fun: (i: string) => any) => {
@@ -381,7 +431,7 @@ export function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
         })
 }
 
-const getAction = (mode) => {
+export const getAction = (mode) => {
     switch (mode) {
         case "drop":
             return "discard"
@@ -423,6 +473,11 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         DelayMinSeconds: value.minDelaySeconds,
         DelayMaxSeconds: value.maxDelaySeconds,
         RepeatTimes: value.repeatTimes,
+        EnableRandomChunked: !!value.enableRandomChunked,
+        RandomChunkedMinLength: value.randomChunkedMinLength,
+        RandomChunkedMaxLength: value.randomChunkedMaxLength,
+        RandomChunkedMinDelay: value.randomChunkedMinDelay,
+        RandomChunkedMaxDelay: value.randomChunkedMaxDelay,
 
         // retry config
         MaxRetryTimes: value.maxRetryTimes,
@@ -626,7 +681,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // 切换【配置】/【规则】高级内容显示 type
     const [advancedConfigShowType, setAdvancedConfigShowType] = useState<WebFuzzerType>("config")
-    const [currentFuzzerPage, setCurrentFuzzerPage, getCurrentFuzzerPage] = useGetSetState<boolean>(true)
+    const [currentFuzzerPage, setCurrentFuzzerPage] = useGetSetState<boolean>(true)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
@@ -642,10 +697,28 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      * 内容
      * */
     const [_firstResponse, setFirstResponse, getFirstResponse] = useGetState<FuzzerResponse>(emptyFuzzer)
-    const [successFuzzer, setSuccessFuzzer] = useState<FuzzerResponse[]>([])
-    const [failedFuzzer, setFailedFuzzer] = useState<FuzzerResponse[]>([])
     const [_successCount, setSuccessCount, getSuccessCount] = useGetState(0)
     const [_failedCount, setFailedCount, getFailedCount] = useGetState(0)
+
+    const successFuzzerRef = useRef<FuzzerResponse[]>([]) // 成功的响应
+    const failedFuzzerRef = useRef<FuzzerResponse[]>([]) // 失败的响应
+    const fuzzerResChartDataBufferRef = useRef<FuzzerResChartData[]>([]) // 图表数据
+
+    const successFuzzer: FuzzerResponse[] = useMemo(() => {
+        // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
+        // 这样，传递给下游组件的 prop 引用会变化，触发其更新
+        return [...successFuzzerRef.current]
+    }, [_successCount])
+    const failedFuzzer: FuzzerResponse[] = useMemo(() => {
+        // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
+        // 这样，传递给下游组件的 prop 引用会变化，触发其更新
+        return [...failedFuzzerRef.current]
+    }, [_failedCount])
+    const fuzzerResChartData: FuzzerResChartData[] = useMemo(() => {
+        // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
+        // 这样，传递给下游组件的 prop 引用会变化，触发其更新
+        return [...fuzzerResChartDataBufferRef.current]
+    }, [_successCount, _failedCount])
 
     /**/
 
@@ -675,6 +748,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [inViewport = true] = useInViewport(fuzzerRef)
     const inViewportRef = useRef<boolean>(inViewport)
 
+    const [hex, setHex] = useState<boolean>(false)
+
     const hotPatchCodeRef = useRef<string>(initWebFuzzerPageInfo().hotPatchCode)
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
 
@@ -688,16 +763,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [pluginDebugCode, setPluginDebugCode] = useState<string>("")
 
     const [onlyOneResEditor, setOnlyOneResEditor] = useState<IMonacoEditor>()
-    const [onlyOneResSelectionByteCount, setOnlyOneResSelectionByteCount] = useState<number>(0)
-    useEffect(() => {
-        try {
-            if (onlyOneResEditor) {
-                getSelectionEditorByteCount(onlyOneResEditor, (byteCount) => {
-                    setOnlyOneResSelectionByteCount(byteCount)
-                })
-            }
-        } catch (e) {}
-    }, [onlyOneResEditor])
+    const onlyOneResSelectionByteCount = useSelectionByteCount(onlyOneResEditor, 500)
 
     useEffect(() => {
         fuzzerTableMaxDataRef.current = fuzzerTableMaxData
@@ -716,9 +782,21 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             emiter.off("onSetAdvancedConfigShow", onSetAdvancedConfigShow)
         }
     }, [])
+
+    useShortcutKeyTrigger(
+        "saveHistoryData*httpFuzzer",
+        useMemoizedFn(() => {
+            if (inViewport) {
+                emiter.emit("onSaveHistoryDataHttpFuzzer")
+            }
+        })
+    )
+
     useEffect(() => {
         inViewportRef.current = inViewport
         if (inViewport) {
+            registerShortcutKeyHandle(ShortcutKeyPage.HTTPFuzzer)
+            getStorageHttpFuzzerShortcutKeyEvents()
             onRefWebFuzzerValue()
             emiter.on("onRefWebFuzzer", onRefWebFuzzerValue)
             emiter.on("onSwitchTypeWebFuzzerPage", onFuzzerAdvancedConfigShowType)
@@ -769,6 +847,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onFuzzerAdvancedConfigShowType = useMemoizedFn((data) => {
         if (!inViewport) return
         try {
+            setCurrentFuzzerPage(true)
             const value = JSON.parse(data)
             setAdvancedConfigShowType(value.type)
         } catch (error) {}
@@ -812,7 +891,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setSubscribeClose(YakitRoute.HTTPFuzzer, {
             close: {
                 title: "关闭提示",
-                content: "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
+                content: (
+                    <div style={{color: "var(--Colors-Use-Neutral-Text-3-Secondary)"}}>
+                        关闭一级菜单会关闭一级菜单下的所有二级菜单?
+                    </div>
+                ),
                 onOkText: "确定",
                 onCancelText: "取消",
                 onOk: (m) => onCloseTab(m)
@@ -834,74 +917,82 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
     const isSaveFuzzerLabelFun = useMemoizedFn(() => {
         // 常用标签默认存储
-        ipcRenderer.invoke("QueryFuzzerLabel").then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
-            const {Data} = data
-            if (Array.isArray(Data) && Data.length === 0) {
-                ipcRenderer.invoke("SaveFuzzerLabel", {
-                    Data: defaultLabel
-                })
-                // 缓存标签数量 用于添加生成标签Description
-                setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: defaultLabel.length}))
-            } else {
-                // 获取缓存的固有标签
-                let oldFixedArr: string[] = []
-                // 获取最新的固有标签
-                let newFixedArr: string[] = defaultLabel.map((item) => item.DefaultDescription)
-                Data.forEach((item) => {
-                    if (item.DefaultDescription.endsWith("-fixed")) {
-                        oldFixedArr.push(item.DefaultDescription)
-                    }
-                })
-                let arr: string[] = filterNonUnique([...oldFixedArr, ...newFixedArr])
-                arr.forEach((item) => {
-                    // 需要新添的项
-                    if (newFixedArr.includes(item)) {
-                        ipcRenderer.invoke("SaveFuzzerLabel", {
-                            Data: defaultLabel.filter((itemIn) => itemIn.DefaultDescription === item)
-                        })
-                    }
-                    // 需要删除的项
-                    else {
-                        ipcRenderer.invoke("DeleteFuzzerLabel", {
-                            Hash: Data.filter((itemIn) => itemIn.DefaultDescription === item)[0].Hash
-                        })
-                    }
-                })
-            }
-        })
+        ipcRenderer
+            .invoke("QueryFuzzerLabel")
+            .then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
+                const {Data} = data
+                if (Array.isArray(Data) && Data.length === 0) {
+                    ipcRenderer.invoke("SaveFuzzerLabel", {
+                        Data: defaultLabel
+                    })
+                    // 缓存标签数量 用于添加生成标签Description
+                    const defaultLabelCount = defaultLabel?.length ?? 0
+                    setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: defaultLabelCount}))
+                } else {
+                    // 获取缓存的固有标签
+                    let oldFixedArr: string[] = []
+                    // 获取最新的固有标签
+                    let newFixedArr = defaultLabel.map((item) => item.DefaultDescription)
+                    Data.forEach((item) => {
+                        if (item.DefaultDescription.endsWith("-fixed")) {
+                            oldFixedArr.push(item.DefaultDescription)
+                        }
+                    })
+                    let arr = filterNonUnique([...oldFixedArr, ...newFixedArr])
+                    arr.forEach((item) => {
+                        // 需要新添的项
+                        if (newFixedArr.includes(item)) {
+                            ipcRenderer.invoke("SaveFuzzerLabel", {
+                                Data: defaultLabel.filter((itemIn) => itemIn.DefaultDescription === item)
+                            })
+                        }
+                        // 需要删除的项
+                        else {
+                            ipcRenderer.invoke("DeleteFuzzerLabel", {
+                                Hash: Data.filter((itemIn) => itemIn.DefaultDescription === item)[0].Hash
+                            })
+                        }
+                    })
+                }
+            })
+            .catch((err) => debugToPrintLog(err))
     })
 
     useEffect(() => {
         // 此次重构不兼容之前数据 所以在第一次进入页面时清空
-        getRemoteValue("IS_DELETE_FUZZ_LABEL").then((remoteData) => {
-            if (!remoteData) {
-                ipcRenderer
-                    .invoke("DeleteFuzzerLabel", {})
-                    .then(() => {
-                        isSaveFuzzerLabelFun()
-                    })
-                    .catch((err) => {
-                        failed(`清空老数据失败：${err}`)
-                    })
-                setRemoteValue("IS_DELETE_FUZZ_LABEL", JSON.stringify({isDelete: false}))
-                return
-            }
-            isSaveFuzzerLabelFun()
-        })
+        getRemoteValue("IS_DELETE_FUZZ_LABEL")
+            .then((remoteData) => {
+                if (!remoteData) {
+                    ipcRenderer
+                        .invoke("DeleteFuzzerLabel", {})
+                        .then(() => {
+                            isSaveFuzzerLabelFun()
+                        })
+                        .catch((err) => {
+                            failed(`清空老数据失败：${err}`)
+                        })
+                    setRemoteValue("IS_DELETE_FUZZ_LABEL", JSON.stringify({isDelete: false}))
+                    return
+                }
+                isSaveFuzzerLabelFun()
+            })
+            .catch((err) => debugToPrintLog(err))
     }, [])
 
     // 定时器
-    const resetResponse = useMemoizedFn(() => {
+    const resetResponse = useMemoizedFn(async () => {
         setFirstResponse({...emptyFuzzer})
-        setSuccessFuzzer([])
+        successFuzzerRef.current = []
+        failedFuzzerRef.current = []
+        updateConcurrentLoad("rps", [])
+        updateConcurrentLoad("cps", [])
+        fuzzerResChartDataBufferRef.current = []
         setRedirectedResponse(undefined)
-        setFailedFuzzer([])
         setSuccessCount(0)
         setFailedCount(0)
         if (!retryRef.current) {
             runtimeIdRef.current = ""
         }
-        setFuzzerResChartData("")
     })
 
     const retryRef = useRef<boolean>(false)
@@ -966,8 +1057,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     yakitNotify("error", `WF历史数据恢复失败:${error}`)
                 }
             })
-            .catch(() => {
+            .catch((err) => {
                 setAdvancedConfigValue((v) => ({...v, ...history}))
+                debugToPrintLog(err)
             })
     })
     const responseViewerRef = useRef<MatcherAndExtractionRefProps>({
@@ -975,6 +1067,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const onValidateHTTPFuzzer = useMemoizedFn(() => {
+        logger(
+            httpFuzzerLog({
+                title: "运行函数-开始：",
+                content: "onValidateHTTPFuzzer"
+            })
+        )
         if (showMatcherAndExtraction && responseViewerRef.current) {
             responseViewerRef.current
                 .validate()
@@ -989,10 +1087,22 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 .finally(() => {
                     setTimeout(() => {
                         submitToHTTPFuzzer()
+                        logger(
+                            httpFuzzerLog({
+                                title: "运行函数-结束：",
+                                content: "onValidateHTTPFuzzer"
+                            })
+                        )
                     }, 200)
                 })
         } else {
             submitToHTTPFuzzer()
+            logger(
+                httpFuzzerLog({
+                    title: "运行函数-结束：",
+                    content: "onValidateHTTPFuzzer"
+                })
+            )
         }
     })
 
@@ -1008,6 +1118,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const submitToHTTPFuzzer = useMemoizedFn(() => {
+        logger(
+            httpFuzzerLog({
+                title: "运行函数-开始：",
+                content: "submitToHTTPFuzzer"
+            })
+        )
         resetResponse()
 
         //  更新默认搜索
@@ -1031,16 +1147,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
         if (retryRef.current) {
             retryRef.current = false
-            const retryTaskID = failedFuzzer.length > 0 ? failedFuzzer[0].TaskId : undefined
-            if (retryTaskID) {
-                const params = {...httpParams, RetryTaskID: parseInt(retryTaskID + "")}
+            const retryTaskID = failedFuzzer?.length > 0 ? failedFuzzer[0]?.TaskId : undefined
+            if (typeof retryTaskID === "number") {
+                const params = {...httpParams, RetryTaskID: parseInt(retryTaskID + "", 10)}
                 const retryParams = _.omit(params, ["Request", "RequestRaw"])
                 ipcRenderer.invoke("HTTPFuzzer", retryParams, tokenRef.current)
                 setIsPause(true)
             }
         } else if (matchRef.current) {
             matchRef.current = false
-            const matchTaskID = successFuzzer.length > 0 ? successFuzzer[0].TaskId : undefined
+            const matchTaskID = successFuzzer?.length > 0 ? successFuzzer[0]?.TaskId : undefined
             const params = {...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID}
             setLoadingText("匹配中")
             ipcRenderer.invoke("HTTPFuzzer", params, tokenRef.current)
@@ -1048,6 +1164,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
         }
         onSaveHTTPFuzzerByPageId()
+        logger(
+            httpFuzzerLog({
+                title: "运行函数-结束：",
+                content: "submitToHTTPFuzzer"
+            })
+        )
     })
     /**保存当前页面的历史数据 */
     const onSaveHTTPFuzzerByPageId = useMemoizedFn(() => {
@@ -1109,7 +1231,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const tokenRef = useRef<string>(randomString(60))
     const taskIDRef = useRef<string>("")
     const runtimeIdRef = useRef<string>("")
-    const [fuzzerResChartData, setFuzzerResChartData] = useState<string>("")
     useEffect(() => {
         const token = tokenRef.current
 
@@ -1126,9 +1247,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         ipcRenderer.on(errToken, (e, details) => {
             yakitNotify("error", `提交模糊测试请求失败 ${details}`)
         })
-        let successBuffer: FuzzerResponse[] = []
-        let failedBuffer: FuzzerResponse[] = []
-        let fuzzerResChartDataBuffer: FuzzerResChartData[] = []
         let count: number = 0 // 用于数据项请求字段
 
         const updateData = () => {
@@ -1137,24 +1255,41 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
 
             if (
-                failedBuffer.length +
-                    successBuffer.length +
+                failedFuzzerRef.current.length +
+                    successFuzzerRef.current.length +
                     failedCount +
                     successCount +
-                    fuzzerResChartDataBuffer.length ===
+                    fuzzerResChartDataBufferRef.current.length ===
                 0
             ) {
                 return
             }
-
-            setSuccessFuzzer([...successBuffer])
-            setFailedFuzzer([...failedBuffer])
             setFailedCount(failedCount)
             setSuccessCount(successCount)
-            if (inViewportRef.current && getCurrentFuzzerPage()) {
-                setFuzzerResChartData(JSON.stringify(fuzzerResChartDataBuffer))
+        }
+
+        const releaseQueue: FuzzerResponse[] = []
+        let releaseTimer: NodeJS.Timeout | null = null
+        const scheduleRelease = (item: FuzzerResponse) => {
+            releaseQueue.push(item)
+            if (!releaseTimer) {
+                releaseTimer = setInterval(() => {
+                    if (releaseQueue.length === 0) {
+                        clearInterval(releaseTimer!)
+                        releaseTimer = null
+                        return
+                    }
+                    // 每次释放 20 条旧数据
+                    for (let i = 0; i < 20 && releaseQueue.length > 0; i++) {
+                        const obj = releaseQueue.shift()!
+                        obj.RequestRaw = null as unknown as Uint8Array
+                        obj.ResponseRaw = null as unknown as Uint8Array
+                    }
+                }, 1000)
             }
         }
+
+        const updateDataThrottle = throttle(updateData, 500, {leading: false, trailing: true})
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
             taskIDRef.current = data.TaskId
@@ -1171,7 +1306,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 // 重置extractedMap
                 reset()
             }
-            const r = {
+            let r = {
                 // 6.16
                 ...data,
                 Headers: data.Headers || [],
@@ -1185,41 +1320,48 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
 
             // 设置第一个 response
-            if (getFirstResponse().RequestRaw.length === 0) {
+            if (getFirstResponse().RequestRaw?.length === 0) {
                 setFirstResponse(r)
             }
 
             if (data.Ok) {
                 successCount++
-                successBuffer.push(r)
+                successFuzzerRef.current.push(r)
                 // 超过最大显示 展示最新数据
-                if (successBuffer.length > fuzzerTableMaxDataRef.current) {
-                    successBuffer.shift()
+                if (successFuzzerRef.current.length > fuzzerTableMaxDataRef.current) {
+                    const oldest = successFuzzerRef.current.shift()
+                    if (oldest) scheduleRelease(oldest)
                 }
             } else {
                 failedCount++
-                failedBuffer.push(r)
+                failedFuzzerRef.current.push(r)
             }
-            fuzzerResChartDataBuffer.push({
+
+            fuzzerResChartDataBufferRef.current.push({
                 Count: (r.Count as number) + 1,
                 TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
                 TCPDurationMs: +r.TCPDurationMs,
                 ConnectDurationMs: +r.ConnectDurationMs,
                 DurationMs: +r.DurationMs
-            })
-            if (fuzzerResChartDataBuffer.length > 5000) {
-                fuzzerResChartDataBuffer.shift()
+            } as FuzzerResChartData)
+            if (fuzzerResChartDataBufferRef.current.length > 5000) {
+                fuzzerResChartDataBufferRef.current.shift()
+            }
+
+            r = null as unknown as FuzzerResponse
+
+            if (successCount + failedCount >= 1) {
+                updateDataThrottle()
+            } else {
+                updateData()
             }
         })
 
         ipcRenderer.on(endToken, () => {
             updateData()
-            successBuffer = []
-            failedBuffer = []
             count = 0
             successCount = 0
             failedCount = 0
-            fuzzerResChartDataBuffer = []
             dCountRef.current = 0
             taskIDRef.current = ""
             setTimeout(() => {
@@ -1227,15 +1369,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setLoading(false)
                 getTotal()
             }, 500)
+            stop()
+            logger(httpFuzzerLog({content: "发送完成", status: "end"}))
         })
-
-        const updateDataId = setInterval(() => {
-            updateData()
-        }, 300)
 
         return () => {
             ipcRenderer.invoke("cancel-HTTPFuzzer", token)
-            clearInterval(updateDataId)
             ipcRenderer.removeAllListeners(errToken)
             ipcRenderer.removeAllListeners(dataToken)
             ipcRenderer.removeAllListeners(endToken)
@@ -1244,14 +1383,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const [extractedMap, {setAll, reset}] = useMap<string, string>()
     useEffect(() => {
-        ipcRenderer.on(
-            "fetch-extracted-to-table",
-            (e: any, data: {type: string; extractedMap: Map<string, string>}) => {
-                if (data.type === "fuzzer") {
-                    setExtractedMap(data.extractedMap)
-                }
+        ipcRenderer.on("fetch-extracted-to-table", (_, data: {type: string; extractedMap: Map<string, string>}) => {
+            if (data.type === "fuzzer") {
+                setExtractedMap(data.extractedMap)
             }
-        )
+        })
         return () => {
             ipcRenderer.removeAllListeners("fetch-extracted-to-table")
         }
@@ -1367,7 +1503,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         callback(params)
     })
 
-    const cachedTotal = successFuzzer.length + failedFuzzer.length
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const cachedTotal = useMemo(
+        () => successFuzzer?.length + failedFuzzer?.length,
+        [successFuzzer?.length, failedFuzzer?.length]
+    )
+
     const [currentPage, setCurrentPage] = useState<number>(0)
     const [total, setTotal] = useState<number>()
     /**获取上一个/下一个 */
@@ -1436,7 +1577,19 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             maxDelaySeconds: val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0,
             timeout: val.timeout ? Number(val.timeout) : 0,
             dialTimeoutSeconds: val.dialTimeoutSeconds ? Number(val.dialTimeoutSeconds) : 0,
-            repeatTimes: val.repeatTimes ? Number(val.repeatTimes) : 0
+            repeatTimes: val.repeatTimes ? Number(val.repeatTimes) : 0,
+            randomChunkedMinLength: val.randomChunkedMinLength
+                ? Number(val.randomChunkedMinLength)
+                : defaultAdvancedConfigValue.randomChunkedMinLength,
+            randomChunkedMaxLength: val.randomChunkedMaxLength
+                ? Number(val.randomChunkedMaxLength)
+                : defaultAdvancedConfigValue.randomChunkedMaxLength,
+            randomChunkedMinDelay: val.randomChunkedMinDelay
+                ? Number(val.randomChunkedMinDelay)
+                : defaultAdvancedConfigValue.randomChunkedMinDelay,
+            randomChunkedMaxDelay: val.randomChunkedMaxDelay
+                ? Number(val.randomChunkedMaxDelay)
+                : defaultAdvancedConfigValue.randomChunkedMaxDelay
         }
         setAdvancedConfigValue(newValue)
     })
@@ -1451,21 +1604,26 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const [exportData, setExportData] = useState<FuzzerResponse[]>([])
     const onShowResponseMatcherAndExtraction = useMemoizedFn((params: ShowResponseMatcherAndExtractionProps) => {
-        const {activeType, activeKey, order} = params
-        setShowMatcherAndExtraction(true)
-        setActiveType(activeType)
-        switch (activeType) {
-            case "extractors":
-                setActiveKey(activeKey)
-                break
-            case "matchers":
-                setDefActiveKeyAndOrder({
-                    order: order || 0,
-                    defActiveKey: activeKey
-                })
-                break
-            default:
-                break
+        try {
+            const {activeType, activeKey, order} = params
+            setShowMatcherAndExtraction(true)
+            setActiveType(activeType)
+
+            switch (activeType) {
+                case "extractors":
+                    setActiveKey(activeKey)
+                    break
+                case "matchers":
+                    setDefActiveKeyAndOrder({
+                        order: order || 0,
+                        defActiveKey: activeKey
+                    })
+                    break
+                default:
+                    break
+            }
+        } catch (err) {
+            debugToPrintLog(err)
         }
     })
     const setHotPatchCodeRef = (val) => {
@@ -1563,12 +1721,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 >
                     美化
                 </YakitButton>
+                <YakitCheckableTag checked={hex} onChange={setHex}>
+                    HEX
+                </YakitCheckableTag>
                 <YakitButton
                     size='small'
                     type='primary'
                     onClick={() => {
                         hotPatchTrigger()
                     }}
+                    style={{marginLeft: -8}}
                 >
                     热加载
                 </YakitButton>
@@ -1735,6 +1897,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     )
 
     const getNewCurrentPage = useMemoizedFn(() => {
+        logger(
+            httpFuzzerLog({
+                title: "运行函数-开始：",
+                content: "getNewCurrentPage"
+            })
+        )
         const params = {
             Pagination: {Limit: 1, Order: "", OrderBy: "", Page: 1},
             Keyword: "",
@@ -1744,6 +1912,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .invoke("QueryHistoryHTTPFuzzerTaskEx", params)
             .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
                 setCurrentPage(Number(data.Total) + 1)
+                logger(
+                    httpFuzzerLog({
+                        title: "运行函数-结束：",
+                        content: "getNewCurrentPage"
+                    })
+                )
             })
     })
     // 跳转插件调试页面
@@ -1789,6 +1963,108 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return false
         }
     }, [advancedConfigShowType, advancedConfigShow])
+
+    useShortcutKeyTrigger(
+        "sendRequest*httpFuzzer",
+        useMemoizedFn(() => {
+            if (inViewport && isbuttonIsSendReqStatus) {
+                sendRequest()
+            }
+        })
+    )
+
+    const {start, stop} = useLogger(
+        (logFn) => {
+            // 日志超过一万条，记录长度
+            if (successFuzzerRef.current.length < 10000 && failedFuzzerRef.current.length < 10000) return
+            logFn(
+                httpFuzzerLog({
+                    title: "成功与失败的长度",
+                    content: `成功：${successFuzzerRef.current.length}——失败：${failedFuzzerRef.current.length}`
+                })
+            )
+        },
+        [],
+        {immediate: false}
+    )
+
+    const sendRequest = useMemoizedFn(() => {
+        logger(
+            httpFuzzerLog({
+                status: "start",
+                content: "发送请求"
+            })
+        )
+        const {repeatTimes, resNumlimit, concurrent} = advancedConfigValue
+        logger(
+            httpFuzzerLog({
+                title: "参数",
+                content: JSON.stringify({
+                    repeatTimes,
+                    resNumlimit,
+                    concurrent
+                })
+            })
+        )
+        start()
+        setRedirectedResponse(undefined)
+        sendFuzzerSettingInfo()
+        onValidateHTTPFuzzer()
+        getNewCurrentPage()
+    })
+
+    const jumpHTTPHistoryAnalysis = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.DB_HTTPHistoryAnalysis,
+                params: {
+                    webFuzzer: true,
+                    runtimeId: runtimeIdRef.current.split(","),
+                    sourceType: "scan",
+                    verbose: currentItem?.pageName ? `${currentItem?.pageName}-全部流量` : "",
+                    pageId: currentItem?.pageId || ""
+                }
+            })
+        )
+    })
+
+    const moreLimtAlertMsg = useMemo(
+        () => (
+            <div style={{fontSize: 12}}>
+                响应数量超过{fuzzerTableMaxData}
+                ，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
+                <YakitButton type='text' onClick={jumpHTTPHistoryAnalysis} style={{padding: 0}}>
+                    查看全部
+                </YakitButton>
+                查看所有数据
+            </div>
+        ),
+        [fuzzerTableMaxData]
+    )
+    const noMoreLimtAlertMsg = useMemo(
+        () => (
+            <div style={{fontSize: 12}}>
+                需要进行高级筛选，多条件组合查询或其他复杂操作时，建议点击跳转到
+                <YakitButton type='text' onClick={jumpHTTPHistoryAnalysis} style={{padding: 0}}>
+                    流量分析器
+                </YakitButton>
+                进行操作
+            </div>
+        ),
+        []
+    )
+
+    const [skipSaveHTTPFlow, setSkipSaveHTTPFlow] = useState<boolean>(false)
+    useEffect(() => {
+        if (inViewport) {
+            ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((res) => {
+                setSkipSaveHTTPFlow(res.SkipSaveHTTPFlow)
+            })
+        }
+    }, [inViewport])
+
     return (
         <>
             <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
@@ -1798,7 +2074,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         visible={advancedConfigVisible}
                         onInsertYakFuzzer={onInsertYakFuzzerFun}
                         onValuesChange={onGetFormValue}
-                        defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw) || ""}
+                        defaultHttpResponse={
+                            Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || ""
+                        }
                         outsideShowResponseMatcherAndExtraction={
                             onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
                         }
@@ -1826,18 +2104,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             继续
                                         </YakitButton>
                                     ) : (
-                                        <YakitButton
-                                            onClick={() => {
-                                                setRedirectedResponse(undefined)
-                                                sendFuzzerSettingInfo()
-                                                onValidateHTTPFuzzer()
-                                                getNewCurrentPage()
-                                            }}
-                                            icon={<PaperAirplaneIcon />}
-                                            type={"primary"}
-                                            size='large'
-                                        >
-                                            发送请求
+                                        <YakitButton onClick={sendRequest} type={"primary"} size='large'>
+                                            发送请求{" "}
+                                            {convertKeyboardToUIKey(
+                                                getHttpFuzzerShortcutKeyEvents()["sendRequest*httpFuzzer"].keys
+                                            )}
                                         </YakitButton>
                                     )}
                                 </>
@@ -1877,7 +2148,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             </div>
                             <Divider type='vertical' style={{margin: 0, top: 1}} />
                             <div className={styles["display-flex"]}>
-                                <Popover
+                                <YakitPopover
                                     trigger={"click"}
                                     placement={"leftTop"}
                                     destroyTooltipOnHide={true}
@@ -1902,7 +2173,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     <YakitButton type='text' icon={<ClockIcon />} style={{padding: "4px 0px"}}>
                                         历史
                                     </YakitButton>
-                                </Popover>
+                                </YakitPopover>
                             </div>
                             <div
                                 className={styles["blasting-example"]}
@@ -1969,11 +2240,17 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             />
                         </div>
                         <div className={styles["fuzzer-heard-right"]}>
-                            <ShareImportExportData
-                                module='fuzzer'
-                                getShareContent={getShareContent}
-                                getFuzzerRequestParams={getFuzzerRequestParams}
-                            />
+                            {getFuzzerRequestParams && typeof getFuzzerRequestParams === "function" ? (
+                                <ShareImportExportData
+                                    module='fuzzer'
+                                    getShareContent={getShareContent}
+                                    getFuzzerRequestParams={
+                                        getFuzzerRequestParams as unknown as () =>
+                                            | FuzzerRequestProps[]
+                                            | FuzzerRequestProps
+                                    }
+                                />
+                            ) : null}
                             <Divider type='vertical' style={{margin: 8}} />
 
                             <FuncBtn
@@ -2029,6 +2306,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 refreshTrigger={refreshTrigger}
                                 request={requestRef.current}
                                 setRequest={onSetRequest}
+                                hex={hex}
                                 isHttps={advancedConfigValue.isHttps}
                                 hotPatchCode={hotPatchCodeRef.current}
                                 hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
@@ -2050,6 +2328,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
                                 {onlyOneResponse ? (
                                     <ResponseViewer
+                                        keepSearchName='fuzzer-response'
                                         isHttps={advancedConfigValue.isHttps}
                                         ref={responseViewerRef}
                                         fuzzerResponse={httpResponse}
@@ -2106,34 +2385,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         extractedMap={extractedMap}
                                                         isEnd={loading}
                                                         pageId={props.id}
-                                                        moreLimtAlertMsg={
-                                                            <div style={{fontSize: 12}}>
-                                                                响应数量超过{fuzzerTableMaxData}
-                                                                ，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
-                                                                <YakitButton
-                                                                    type='text'
-                                                                    onClick={() => {
-                                                                        // setShowAllDataRes(true)
-                                                                        emiter.emit(
-                                                                            "openPage",
-                                                                            JSON.stringify({
-                                                                                route: YakitRoute.DB_HTTPHistoryAnalysis,
-                                                                                params: {
-                                                                                    webFuzzer: true,
-                                                                                    runtimeId:
-                                                                                        runtimeIdRef.current.split(","),
-                                                                                    sourceType: "scan"
-                                                                                }
-                                                                            })
-                                                                        )
-                                                                    }}
-                                                                    style={{padding: 0}}
-                                                                >
-                                                                    查看全部
-                                                                </YakitButton>
-                                                                查看所有数据
-                                                            </div>
-                                                        }
+                                                        moreLimtAlertMsg={moreLimtAlertMsg}
+                                                        noMoreLimtAlertMsg={noMoreLimtAlertMsg}
                                                         fuzzerTableMaxData={fuzzerTableMaxData}
                                                     />
                                                 )}
@@ -2148,29 +2401,56 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         pageId={props.id}
                                                     />
                                                 )}
-                                                <div
-                                                    style={{
-                                                        display: showSuccess === "Concurrent/Load" ? "block" : "none",
-                                                        height: "100%",
-                                                        overflowY: "auto",
-                                                        overflowX: "hidden"
-                                                    }}
-                                                >
-                                                    <FuzzerConcurrentLoad
-                                                        inViewportCurrent={
-                                                            inViewport && advancedConfigShowType !== "sequence"
-                                                        }
-                                                        fuzzerResChartData={fuzzerResChartData}
-                                                        loading={loading}
-                                                    />
-                                                </div>
+                                                {showSuccess === "Concurrent/Load" && (
+                                                    <div
+                                                        style={{
+                                                            height: "100%",
+                                                            overflowY: "auto",
+                                                            overflowX: "hidden"
+                                                        }}
+                                                    >
+                                                        <FuzzerConcurrentLoad
+                                                            inViewportCurrent={inViewport && currentFuzzerPage}
+                                                            fuzzerResChartData={fuzzerResChartData}
+                                                        />
+                                                    </div>
+                                                )}
                                             </>
                                         ) : (
                                             <Result
                                                 status={"warning"}
                                                 title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
                                                 subTitle={
-                                                    "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
+                                                    <div>
+                                                        本栏结果针对模糊测试的多个 HTTP
+                                                        请求结果展示做了优化，可以自动识别单个/多个请求的展示。
+                                                        {skipSaveHTTPFlow ? (
+                                                            <>
+                                                                响应数量超过前端限制请确认开启
+                                                                <YakitButton
+                                                                    type='text'
+                                                                    icon={<OutlineCogIcon />}
+                                                                    style={{
+                                                                        padding: 0,
+                                                                        height: "auto",
+                                                                        verticalAlign: "top"
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        emiter.emit(
+                                                                            "menuOpenPage",
+                                                                            JSON.stringify({
+                                                                                route: YakitRoute.Beta_ConfigNetwork
+                                                                            })
+                                                                        )
+                                                                    }}
+                                                                >
+                                                                    保存HTTP流量设置
+                                                                </YakitButton>
+                                                            </>
+                                                        ) : (
+                                                            ""
+                                                        )}
+                                                    </div>
                                                 }
                                             />
                                         )}
@@ -2224,7 +2504,7 @@ export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
     return (
         <YakitSpin spinning={loading} style={{width: "100%", height: "100%"}}>
             <div style={{height: "100%"}}>
-                <YakitEditor fontSize={14} type={"text"} readOnly={true} value={value} />
+                <YakitEditor fontSize={14} type={"plaintext"} readOnly={true} value={value} />
             </div>
         </YakitSpin>
     )
@@ -2251,16 +2531,24 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
         }
     }, [inViewport])
     const getConfigSystemProxy = useMemoizedFn(() => {
-        apiGetSystemProxy().then((res: GetSystemProxyResult) => {
-            setSystemProxy({
-                ...res,
-                CurrentProxy: res.CurrentProxy ? res.CurrentProxy : "127.0.0.1:8083"
+        apiGetSystemProxy()
+            .then((res: GetSystemProxyResult) => {
+                setSystemProxy({
+                    ...res,
+                    CurrentProxy: res.CurrentProxy ? res.CurrentProxy : "127.0.0.1:8083"
+                })
             })
-        })
+            .catch((err) => debugToPrintLog(err))
     })
     const isShowSystemProxy = useCreation(() => {
         return systemProxy?.Enable && !advancedConfigValue.noSystemProxy && !advancedConfigValue.proxy.length
     }, [systemProxy, advancedConfigValue.noSystemProxy, advancedConfigValue.proxy])
+    const onCloseRandomChunked = useMemoizedFn(() => {
+        setAdvancedConfigValue({
+            ...advancedConfigValue,
+            enableRandomChunked: false
+        })
+    })
     return (
         <div className={styles["display-flex"]} ref={divRef}>
             {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
@@ -2302,6 +2590,11 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
                         <YakitTag color='danger'>匹配失败</YakitTag>
                     )}
                 </>
+            )}
+            {advancedConfigValue.enableRandomChunked && (
+                <YakitTag closable onClose={onCloseRandomChunked}>
+                    开启分块传输
+                </YakitTag>
             )}
         </div>
     )
@@ -2368,10 +2661,9 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         pageId,
         noPopconfirm = true,
         retryNoPopconfirm = true,
-        cancelCurrentHTTPFuzzer,
-        resumeAndPause
+        cancelCurrentHTTPFuzzer
     } = props
-
+    const {t, i18n} = useI18nNamespaces(["history"])
     const [color, setColor] = useState<string[]>()
     const [keyWord, setKeyWord] = useState<string>()
     const [statusCode, setStatusCode] = useState<string>()
@@ -2432,7 +2724,9 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     exportPayloadResponse(newListTable)
                 }
             }
-        } catch (error) {}
+        } catch (error) {
+            debugToPrintLog(error)
+        }
     })
 
     // const onViewExecResults = useMemoizedFn(() => {
@@ -2472,7 +2766,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 <YakitButton icon={<SearchIcon />} size={size} type='outline2' />
                             </YakitPopover>
                         )}
-                        <Divider type='vertical' style={{margin: 0, top: 1}} />
+                        <Divider
+                            type='vertical'
+                            style={{margin: 0, top: 1, backgroundColor: "var(--Colors-Use-Neutral-Border)"}}
+                        />
                         <ChromeSvgIcon
                             className={styles["extra-chrome-btn"]}
                             onClick={() => {
@@ -2623,7 +2920,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 <YakitSelect
                                     size='small'
                                     mode='tags'
-                                    options={availableColors.map((i) => ({value: i.searchWord, label: i.render}))}
+                                    options={availableColors.map((i) => ({value: i.searchWord, label: i.render(t)}))}
                                     allowClear
                                     value={color}
                                     onChange={setColor}
@@ -3012,7 +3309,7 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
             <>
                 {rsp.IsHTTPS && <YakitTag>{rsp.IsHTTPS ? "https" : ""}</YakitTag>}
                 {selectionByteCount ? (
-                    <YakitTag>{selectionByteCount} bytes</YakitTag>
+                    <ByteCountTag selectionByteCount={selectionByteCount || 0} key='webfuzzerOneRes'></ByteCountTag>
                 ) : (
                     <YakitTag>
                         {rsp.BodyLength}bytes / {rsp.DurationMs}ms
@@ -3062,18 +3359,20 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
     return <></>
 })
 
+let fizzOverlayRoot: Root | null = null
+let fizzOverlayDomNode: HTMLDivElement | null = null
 export const onAddOverlayWidget = (editor, rsp, isShow?: boolean) => {
-    editor.removeOverlayWidget({
-        getId() {
-            return "monaco.fizz.overlaywidget"
-        }
-    })
+    // 先移除旧的 widget 和卸载 React Root
+    onRemoveOverlayWidget(editor)
     if (!isShow) return
+
+    fizzOverlayDomNode = document.createElement("div")
+    fizzOverlayRoot = createRoot(fizzOverlayDomNode)
+    fizzOverlayRoot.render(<EditorOverlayWidget rsp={rsp} />)
+
     const fizzOverlayWidget = {
         getDomNode() {
-            const domNode = document.createElement("div")
-            createRoot(domNode).render(<EditorOverlayWidget rsp={rsp} />)
-            return domNode
+            return fizzOverlayDomNode!
         },
         getId() {
             return "monaco.fizz.overlaywidget"
@@ -3085,6 +3384,18 @@ export const onAddOverlayWidget = (editor, rsp, isShow?: boolean) => {
         }
     }
     editor.addOverlayWidget(fizzOverlayWidget)
+}
+const onRemoveOverlayWidget = (editor) => {
+    editor.removeOverlayWidget({
+        getId() {
+            return "monaco.fizz.overlaywidget"
+        }
+    })
+    if (fizzOverlayRoot) {
+        fizzOverlayRoot.unmount()
+        fizzOverlayRoot = null
+    }
+    fizzOverlayDomNode = null
 }
 
 interface EditorOverlayWidgetProps {
@@ -3124,12 +3435,13 @@ interface ResponseViewerProps {
     webFuzzerValue: string
     isHttps?: boolean
     request: string
-
     showResponseInfoSecondEditor: boolean
     setShowResponseInfoSecondEditor: (b: boolean) => void
     secondNodeTitle?: () => JSX.Element
     secondNodeExtra?: () => JSX.Element
     onSetOnlyOneResEditor: (editor: IMonacoEditor) => void
+
+    keepSearchName?: string
 }
 
 export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
@@ -3152,6 +3464,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             secondNodeExtra,
             webFuzzerValue,
             request,
+            keepSearchName,
             onSetOnlyOneResEditor
         } = props
 
@@ -3313,22 +3626,19 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             <>
                 <YakitResizeBox
                     isVer={true}
-                    lineStyle={{display: !show ? "none" : "", background: "#f0f2f5"}}
-                    firstNodeStyle={{padding: !show ? 0 : undefined, background: "#f0f2f5"}}
+                    lineStyle={{display: !show ? "none" : "", background: "var(--Colors-Use-Basic-Background)"}}
+                    firstNodeStyle={{padding: !show ? 0 : undefined, background: "var(--Colors-Use-Basic-Background)"}}
                     firstNode={
                         <NewHTTPPacketEditor
+                            keepSearchName={keepSearchName}
                             language={fuzzerResponse?.DisableRenderStyles ? "text" : undefined}
                             isShowBeautifyRender={!fuzzerResponse?.IsTooLargeResponse}
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
-                            system={props.system}
                             originValue={codeKey === "utf-8" ? responseRawString : codeValue}
                             originalPackage={fuzzerResponse.ResponseRaw}
                             readOnly={true}
-                            hideSearch={true}
                             isResponse={true}
-                            noHex={true}
-                            // noHeader={true}
                             loading={codeLoading}
                             showDefaultExtra={false}
                             title={secondNodeTitle && secondNodeTitle()}
@@ -3376,7 +3686,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                             }
                                             return undefined
                                         })()}
-                                        style={{height: "100%", backgroundColor: "#fff"}}
+                                        style={{height: "100%", backgroundColor: "var(--Colors-Use-Basic-Background)"}}
                                     >
                                         <>详细原因：{fuzzerResponse.Reason}</>
                                     </Result>
@@ -3438,6 +3748,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     defActiveKey={activeKey}
                                     defActiveType={activeType}
                                     defActiveKeyAndOrder={activeKeyAndOrder}
+                                    pageType='webfuzzer'
                                 />
                             ) : (
                                 <></>
@@ -3455,7 +3766,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                     secondNodeStyle={{
                         display: show ? "" : "none",
                         padding: 0,
-                        border: "1px solid rgb(240, 240, 240)",
+                        border: "1px solid var(--Colors-Use-Neutral-Border)",
                         borderRadius: "0px 0px 0px 4px"
                     }}
                     lineDirection='bottom'
@@ -3583,3 +3894,17 @@ export const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstra
         </div>
     )
 })
+
+export const ByteCountTag: React.FC<{selectionByteCount?: number; key: string; style?: CSSProperties}> = ({
+    selectionByteCount = 0,
+    key,
+    style = {}
+}) => {
+    return selectionByteCount > 0 ? (
+        <YakitTag key={key} style={style}>
+            {selectionByteCount} bytes
+        </YakitTag>
+    ) : (
+        <></>
+    )
+}

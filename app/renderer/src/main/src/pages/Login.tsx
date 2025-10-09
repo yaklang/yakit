@@ -1,7 +1,6 @@
 import React, {useEffect, useState, useLayoutEffect} from "react"
 import {Modal} from "antd"
 import {ExclamationCircleOutlined, GithubOutlined, RightOutlined, WechatOutlined} from "@ant-design/icons"
-import {AutoSpin} from "@/components/AutoSpin"
 import {failed} from "@/utils/notification"
 import "./Login.scss"
 import {NetWorkApi} from "@/services/fetch"
@@ -126,13 +125,6 @@ const Login: React.FC<LoginProp> = (props) => {
                             </div>
                             <RightOutlined className='icon-right' />
                         </div>
-                        {/* <div className='login-icon' onClick={() => fetchLogin("login")}>
-                            <div className='login-icon-text'>
-                                <img src={yakitImg} className="type-icon type-icon-img"/>
-                                企业登录
-                            </div>
-                            <RightOutlined className='icon-right' />
-                        </div> */}
                     </div>
                 </div>
             </YakitSpin>

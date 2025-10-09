@@ -1,0 +1,12 @@
+.chunked-table-container-wrapper {
+    overflow: hidden;
+    .chunked-table-container-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        margin-bottom: 10px;
+    }
+    .chunked-table-container {
+        max-height: 50vh;
+    }
+}

@@ -1,3 +1,12 @@
+
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    flex-direction: column;
+}
 .bottom-editor-details {
     height: 100%;
     width: 100%;
@@ -5,9 +14,9 @@
     flex-direction: column;
     .header {
         height: 32px;
-        border-top: 1px solid #eaecf3;
-        border-bottom: 1px solid #eaecf3;
-        background: #f8f8f8;
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg);
         display: flex;
         flex-direction: row;
         justify-content: space-between;
@@ -22,9 +31,9 @@
                 padding: 4px 12px;
                 align-items: center;
                 cursor: pointer;
-                border-right: 1px solid #eaecf3;
+                border-right: 1px solid var(--Colors-Use-Neutral-Border);
                 .title {
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 600;
                     line-height: 16px;
@@ -33,22 +42,22 @@
                     margin-left: 4px;
                     padding: 0px 8px;
                     border-radius: 8px;
-                    background: #f6544a;
-                    color: #fff;
+                    background: var(--Colors-Use-Red-Bg);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 400;
                     line-height: 16px;
                 }
             }
             .active-item {
-                background: var(--yakit-primary-5);
+                background: var(--Colors-Use-Main-Primary);
                 .title {
-                    color: #fff;
+                    color: var(--Colors-Use-Main-On-Primary);
                 }
             }
             .no-active-item {
                 &:hover {
-                    background-color: rgba(204, 210, 222, 0.5);
+                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
                 }
             }
         }
@@ -85,7 +94,7 @@
         font-size: 12px;
         margin-bottom: 4px;
         .default-font {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
             cursor: pointer;
             &:hover {
                 text-decoration: underline;
@@ -96,7 +105,7 @@
 
 .yak-runner-terminal-close {
     svg{
-        color: var(--yakit-danger-4) !important;
+        color: var(--Colors-Use-Error-Border) !important;
     }
 }
 

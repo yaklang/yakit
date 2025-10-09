@@ -1,0 +1,44 @@
+@mixin notepad-list-body($name) {
+    .notepad-#{$name}-list-body {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        height: 100%;
+        overflow: hidden;
+        padding: 12px 0 12px 12px;
+        .notepad-list {
+            padding-right: 4px;
+        }
+        .notepad-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 40px;
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
+            color: var(--yakit-header-color);
+            padding: 12px 8px;
+            user-select: none;
+            line-height: 16px;
+    
+            &:first-child {
+                border-top-color: transparent;
+            }
+    
+            &:hover {
+                background: var(--Colors-Use-Neutral-Bg);
+                border-radius: 8px;
+                border-top-color: transparent;
+            }
+    
+            .notepad-row-content {
+                width: 100%;
+                cursor: pointer;
+            }
+        }
+        .notepad-row:hover + .notepad-row {
+            border-top-color: transparent;
+        }
+    }
+}
+
+@include notepad-list-body("online");

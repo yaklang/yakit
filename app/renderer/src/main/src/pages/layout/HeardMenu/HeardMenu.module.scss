@@ -1,6 +1,6 @@
 .heard-menu-body {
-    background-color: var(--yakit-card-background-color);
-    // border-bottom: 1px solid var(--yakit-border-color);
+    background-color: var(--Colors-Use-Neutral-Bg);
+    // border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     display: flex;
     flex-direction: column;
 }
@@ -27,12 +27,12 @@
 .heard-menu-home-small-icon {
     width: 20px;
     height: 24px;
-    background: #f0f1f3;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
     cursor: pointer;
 
     border-width: 1px 1px 1px 0px;
     border-style: solid;
-    border-color: #eaecf3;
+    border-color: var(--Colors-Use-Neutral-Border);
     border-radius: 0px 4px 4px 0px;
 }
 .heard-menu-home-title {
@@ -42,7 +42,7 @@
     line-height: 16px;
     display: flex;
     align-items: center;
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     text-align: center;
 }
 .heard-menu {
@@ -101,7 +101,7 @@
             height: 24px;
 
             svg {
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 margin-left: 2px;
             }
 
@@ -110,10 +110,10 @@
             }
 
             &:hover {
-                color: var(--yakit-primary-4);
+                color: var(--Colors-Use-Main-Hover);
 
                 svg {
-                    color: var(--yakit-primary-4);
+                    color: var(--Colors-Use-Main-Hover);
                 }
             }
         }
@@ -123,10 +123,10 @@
         }
 
         .heard-menu-item-active {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
 
             svg {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
 
@@ -140,10 +140,10 @@
         }
 
         .heard-menu-item-open {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
 
             svg {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
                 margin-left: 2px;
                 width: 16px;
                 height: 16px;
@@ -201,13 +201,13 @@
 }
 
 .heard-menu-customize-menu {
-    background: var(--yakit-primary-1);
-    border: 1px solid var(--yakit-primary-3);
+    background: var(--Colors-Use-Main-Bg);
+    border: 1px solid var(--Colors-Use-Main-Border);
     border-radius: 4px;
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
 
     svg {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 .heard-menu-expand {
@@ -225,7 +225,7 @@
 }
 
 .heard-menu-sort {
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     display: flex;
     align-items: center;
     cursor: pointer;
@@ -250,7 +250,7 @@
         cursor: pointer;
         align-items: center;
         height: 28px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
 
         svg {
             width: 20px;
@@ -258,11 +258,11 @@
         }
 
         &:hover {
-            background-color: var(--yakit-primary-1);
+            background-color: var(--Colors-Use-Main-Bg);
             border-radius: 4px;
 
             .heard-sub-menu-label {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
 
             .heard-sub-menu-item-icon {
@@ -276,7 +276,7 @@
 
         .heard-sub-menu-label {
             margin-left: 8px;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             white-space: nowrap;
             text-overflow: ellipsis;
             overflow: hidden;
@@ -301,7 +301,7 @@
             border-radius: 4px;
 
             .heard-sub-menu-label {
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
 
             .heard-sub-menu-item-icon {
@@ -322,8 +322,8 @@
 
     :global {
         .ant-popover-inner {
-            border: 1px solid var(--yakit-border-color);
-            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
             border-radius: 4px;
 
             .ant-popover-inner-content {
@@ -368,7 +368,7 @@
 
         .ant-tabs-dropdown-open {
             svg {
-                color: var(--yakit-primary-4);
+                color: var(--Colors-Use-Main-Hover);
             }
         }
 
@@ -396,11 +396,11 @@
     }
 
     .dots-icon {
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         cursor: pointer;
 
         &:hover {
-            color: var(--yakit-primary-4);
+            color: var(--Colors-Use-Main-Hover);
         }
     }
 
@@ -415,11 +415,11 @@
             justify-content: center;
             align-items: center;
             padding: 0 16px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             height: 34px;
 
             &:hover {
-                color: var(--yakit-primary-4);
+                color: var(--Colors-Use-Main-Hover);
 
                 .sub-menu-expand-item-icon {
                     .item-icon {
@@ -462,7 +462,7 @@
             opacity: 0.3;
 
             &:hover {
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
 
                 .sub-menu-expand-item-icon {
                     .item-icon {
@@ -475,7 +475,7 @@
         .sub-menu-expand-item-line {
             width: 1px;
             height: 20px;
-            background-color: var(--yakit-border-color);
+            background-color: var(--Colors-Use-Neutral-Border);
         }
     }
 }
@@ -527,7 +527,7 @@
     .sub-menu-expand-item {
         display: flex;
         align-items: center;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         padding: 6px 8px;
         padding-left: 6px !important;
 
@@ -543,11 +543,11 @@
         }
 
         &:hover {
-            background-color: var(--yakit-primary-1);
+            background-color: var(--Colors-Use-Main-Bg);
             border-radius: 4px;
 
             .sub-menu-expand-item-label {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -567,19 +567,19 @@
         justify-content: space-between;
         padding: 6px 8px;
         cursor: pointer;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         border-radius: 4px;
         font-size: 12px;
         height: 28px;
 
         svg {
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             width: 16px;
             height: 16px;
         }
 
         &:hover {
-            background-color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Main-Primary);
             color: #fff;
 
             svg {
@@ -599,10 +599,10 @@
     }
 
     .customize-item-select {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
 
         svg {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }
@@ -628,7 +628,7 @@
     :global {
         .ant-modal-close:focus,
         .ant-modal-close:hover {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }
@@ -638,15 +638,15 @@
 
     .menuItem-yakScripName {
         margin: 0 4px;
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 
 .import-resource-menu-popover {
     :global {
         .ant-popover-inner {
-            border: 1px solid var(--yakit-border-color);
-            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
             border-radius: 4px;
             .ant-popover-inner-content {
                 padding: 6px 4px 8px 4px;
@@ -655,29 +655,3 @@
     }
 }
 
-.notepad-drop-menu {
-    padding: 6px 4px;
-    border-radius: 4px;
-
-    .notepad-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 6px 8px;
-        cursor: pointer;
-        color: var(--yakit-header-color);
-        border-radius: 4px;
-        font-size: 12px;
-        height: 28px;
-        &:hover {
-            background-color: var(--yakit-primary-5);
-            color: #fff;
-        }
-
-        .notepad-item-left {
-            display: flex;
-            align-items: center;
-            height: 16px;
-        }
-    }
-}

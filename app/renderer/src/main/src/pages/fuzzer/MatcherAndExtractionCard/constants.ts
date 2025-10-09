@@ -2,20 +2,22 @@ import {TableCellToColorTag} from "@/components/TableVirtualResize/utils"
 import {HTTPResponseExtractor, HTTPResponseMatcher} from "./MatcherAndExtractionCardType"
 
 /**@name 过滤器模式 */
-export const filterModeOptions = [
-    {
-        value: "drop",
-        label: "丢弃"
-    },
-    {
-        value: "match",
-        label: "保留"
-    },
-    {
-        value: "onlyMatch",
-        label: "仅匹配"
-    }
-]
+export const filterModeOptions = (t: (text: string) => string) => {
+    return [
+        {
+            value: "drop",
+            label: t("MatcherCollapse.discard")
+        },
+        {
+            value: "match",
+            label: t("MatcherCollapse.match")
+        },
+        {
+            value: "onlyMatch",
+            label: t("MatcherCollapse.onlyMatch")
+        }
+    ]
+}
 
 /**@name 条件关系 */
 export const matchersConditionOptions = [
@@ -72,13 +74,15 @@ export const defaultExtractorItem: HTTPResponseExtractor = {
     XPathAttribute: ""
 }
 
-export const matcherTypeList = [
-    {label: "关键字", value: "word"},
-    {label: "正则表达式", value: "regex"},
-    {label: "状态码", value: "status_code"},
-    {label: "十六进制", value: "binary"},
-    {label: "表达式", value: "expr"}
-]
+export const matcherTypeList = (t: (text: string) => string) => {
+    return [
+        {label: t("MatcherCollapse.keyword"), value: "word"},
+        {label: t("MatcherCollapse.regex"), value: "regex"},
+        {label: t("MatcherCollapse.status_code"), value: "status_code"},
+        {label: t("MatcherCollapse.hex"), value: "binary"},
+        {label: t("MatcherCollapse.expression"), value: "expr"}
+    ]
+}
 
 export const extractorTypeList = [
     {label: "正则表达式", value: "regex"},

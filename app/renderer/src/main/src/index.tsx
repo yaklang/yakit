@@ -10,8 +10,35 @@ import "./yakitUI.scss"
 import "./theme/yakit.scss"
 import "./yakitLib.scss"
 import "./assets/global.scss"
-import {useEffect, useState} from "react"
+import {Suspense, useEffect, useState} from "react"
 import ChildNewApp from "./ChildNewApp"
+import {getRemoteValue} from "./utils/kv"
+import {getRemoteI18nGV} from "./utils/envfile"
+import i18n from "@/i18n/i18n"
+
+window.MonacoEnvironment = {
+    getWorkerUrl: function (moduleId, label) {
+        switch (label) {
+            case "json":
+                return "static/js/json.worker.js"
+            case "yaml":
+                return "static/js/yaml.worker.js"
+            case "java":
+                return "static/js/java.worker.js"
+            case "go":
+                return "static/js/go.worker.js"
+            case "html":
+            case "markdown":
+                return "static/js/html.worker.js"
+            case "css":
+                return "static/js/css.worker.js"
+            default:
+                // 有代码高亮、查找、代码折叠等基础功能
+                // 但是它不包含各个语言的智能分析、补全、校验等高级功能
+                return "static/js/editor.worker.js"
+        }
+    }
+}
 
 const getQueryParam = (param) => {
     return new URLSearchParams(window.location.search).get(param)
@@ -21,6 +48,14 @@ const App = () => {
     const [windowType, setWindowType] = useState(getQueryParam("window"))
 
     useEffect(() => {
+        getRemoteValue(getRemoteI18nGV())
+            .then((savedLang) => {
+                if (savedLang) {
+                    i18n.changeLanguage(savedLang)
+                }
+            })
+            .catch((err) => console.error(err))
+
         const onPopState = () => {
             setWindowType(getQueryParam("window"))
         }
@@ -29,6 +64,14 @@ const App = () => {
         return () => window.removeEventListener("popstate", onPopState)
     }, [])
     return windowType === "child" ? <ChildNewApp /> : <NewApp />
+}
+
+// 只在子窗口移除 loading
+if (window.location.search.includes("window=child")) {
+    const initialLoading = document.getElementById("initial-loading")
+    if (initialLoading) {
+        initialLoading.remove()
+    }
 }
 
 // const divRoot = document.getElementById("root")
@@ -46,10 +89,13 @@ const App = () => {
 // }
 // ahooks useVirtualList在createRoot(divRoot).render生成下的元素会出现渲染不及时，掉帧闪的问题，暂时先换成ReactDOM.render，期待官方修复
 // antd menu 存在多个二级菜单时, 在createRoot(divRoot).render生成下，会导致鼠标从一个二级菜单移动到下一个二级菜单后，前一个二级菜单不消失的情况，暂不确定原因，等升级antd5后再次尝试
+
 ReactDOM.render(
     // <React.StrictMode>
     <DndProvider backend={HTML5Backend}>
-        <App />
+        <Suspense fallback={<div>loading...</div>}>
+            <App />
+        </Suspense>
     </DndProvider>,
     // </React.StrictMode>,
     document.getElementById("root")

@@ -4,6 +4,7 @@ import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {ReactNode} from "react"
 import {TableVirtualResizeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import { CodeRangeProps } from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail";
+// import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 export interface YakitRiskTableProps {
     setRiskLoading: (b: boolean) => void
     /**是否开启高级查询 */
@@ -56,6 +57,15 @@ export interface QueryRisksRequest {
 
 export type QueryRisksResponse = QueryGeneralResponse<Risk>
 
+export interface YakitRiskDetailContentProps {
+    info: Risk | SSARisk
+    isShowCollapse: boolean
+    setIsShowCollapse: ((v: boolean) => void)
+    jumpCodeScanPage?: ((v: string) => void)
+    isShowExtra?: boolean
+    isScroll?: boolean
+}
+
 export interface YakitRiskDetailsProps {
     className?: string
     info: Risk
@@ -65,6 +75,7 @@ export interface YakitRiskDetailsProps {
     border?: boolean
     isShowExtra?: boolean
     onRetest?: (info: Risk) => void
+    boxStyle?: React.CSSProperties
 }
 
 export interface YakitRiskSelectTagProps {

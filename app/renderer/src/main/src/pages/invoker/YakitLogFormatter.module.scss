@@ -1,7 +1,7 @@
 @use "../../theme/themeify.scss" as tools;
 
 %time-text {
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
 
     font-size: 14px;
     font-style: normal;
@@ -10,7 +10,7 @@
     flex-shrink: 0;
 }
 %expand-text {
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
     font-size: 12px;
     font-style: normal;
     font-weight: 400;
@@ -18,11 +18,11 @@
     // width: fit-content;
     cursor: pointer;
     &:hover {
-        color: var(--yakit-primary-4);
+        color: var(--Colors-Use-Main-Hover);
     }
     &:focus,
     &:active {
-        color: var(--yakit-primary-6);
+        color: var(--Colors-Use-Main-Pressed);
     }
 }
 %display-flex-center {
@@ -35,7 +35,7 @@
     justify-content: center;
 }
 .log-info {
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 
     font-size: 14px;
     font-style: normal;
@@ -53,8 +53,8 @@
     .md-content {
         padding: 12px;
         border-radius: 4px;
-        border: 1px solid var(--yakit-border-color);
-        background: #fff;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Basic-Background);
         max-height: 20vh;
         overflow-y: auto;
     }
@@ -66,11 +66,11 @@
     }
 }
 
-.file-body {
+.file-show {
     @extend %display-column-center;
     gap: 4px;
     .file-card {
-        background-color: #fff;
+        background-color: var(--Colors-Use-Basic-Background);
         border-radius: 4px;
     }
     .file-heard {
@@ -79,7 +79,7 @@
     .file-card-heard {
         border-bottom: 0;
         height: 36px;
-        background: var(--yakit-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
     }
     .file-card-body {
         gap: 8px;
@@ -87,6 +87,7 @@
         grid-template-rows: 1fr;
         padding: 0 12px;
         transition: grid-template-rows 0.3s ease;
+        background-color: var(--Colors-Use-Basic-Background);
     }
     .file-card-body-hidden {
         grid-template-rows: 0fr;
@@ -103,16 +104,16 @@
         border-radius: 4px 4px 0 0;
         background: linear-gradient(
                 0deg,
-                tools.fetch-color-transparen(var(--yakit-tag-color-red), 20%) 0%,
-                tools.fetch-color-transparen(var(--yakit-tag-color-red), 20%) 100%
+                tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 20%) 0%,
+                tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 20%) 100%
             ),
-            #fff;
+            var(--Colors-Use-Basic-Background);
     }
     .file-card-title {
         @extend %display-flex-center;
         gap: 8px;
         .name {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 400;
         }
@@ -124,22 +125,83 @@
     .file-status {
         padding: 0px 6px;
         border-radius: 8px;
-        border: 1px solid tools.fetch-color-transparen(var(--yakit-tag-color-red), 30%);
-        background: rgba(246, 84, 74, 0.08);
-        color: var(--yakit-tag-color-red);
+        border: 1px solid tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 30%);
+        background: var(--Colors-Use-Main-Bg);
+        color: var(--Colors-Use-Error-Primary);
     }
     .file-description {
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 14px;
         font-style: normal;
         font-weight: 400;
     }
     .file-path {
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-style: normal;
         font-weight: 400;
         line-height: 16px; /* 133.333% */
+    }
+}
+
+.log-file {
+    @extend %display-column-center;
+    gap: 4px;
+    .log-file-heard {
+        @extend %display-flex-center;
+        gap: 12px;
+        .time {
+            @extend %time-text;
+        }
+    }
+    .log-file-card-title {
+        @extend %display-flex-center;
+        gap: 8px;
+        .name {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 14px;
+            font-weight: 400;
+
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+        }
+    }
+
+    .log-file-card-extra {
+        @extend %display-flex-center;
+        gap: 8px;
+    }
+    .log-file-card {
+        background-color: var(--Colors-Use-Basic-Background);
+        border-radius: 4px;
+        .log-file-card-heard {
+            gap: 12px;
+            height: 36px;
+            background: var(--Colors-Use-Neutral-Bg);
+        }
+        .log-file-card-heard-no-border-bottom {
+            border-bottom-color: transparent;
+        }
+    }
+    .log-file-card-body {
+        gap: 8px;
+        display: grid;
+        grid-template-rows: 1fr;
+        padding: 0 12px;
+        transition: grid-template-rows 0.3s ease;
+        background-color: var(--Colors-Use-Basic-Background);
+    }
+    .log-file-card-body-hidden {
+        grid-template-rows: 0fr;
+        .log-file-body {
+            padding: 0;
+        }
+    }
+    .log-file-body {
+        overflow: hidden;
+        padding: 12px 0;
     }
 }
 
@@ -150,8 +212,8 @@
         @extend %time-text;
     }
     .json-content {
-        background-color: var(--yakit-background-color);
-        border: 1px solid var(--yakit-border-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
         padding: 12px;
         white-space: pre-wrap;
@@ -159,7 +221,7 @@
         font-size: 14px;
         line-height: 1.5;
         overflow-x: auto;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 }
 
@@ -171,16 +233,16 @@
     }
 
     .editor-content {
-        border: 1px solid var(--yakit-border-color);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 8px;
 
         .editor-content-title {
             @extend %display-flex-center;
             justify-content: space-between;
             padding: 10px 16px 10px 20px;
-            background-color: #fff;
+            background-color: var(--Colors-Use-Basic-Background);
 
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 16px;
             font-style: normal;
             font-weight: 600;
@@ -188,7 +250,7 @@
 
             .editor-content-extra {
                 @extend %display-flex-center;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 .time {
                     @extend %display-flex-center;
                     gap: 8px;
@@ -211,17 +273,17 @@
         @extend %time-text;
     }
     .graph-content {
-        border: 1px solid var(--yakit-border-color);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
         padding: 16px 20px;
-        background-color: #fff;
+        background-color: var(--Colors-Use-Basic-Background);
 
         .graph-content-title {
             @extend %display-flex-center;
             justify-content: space-between;
             margin-bottom: 8px;
 
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 16px;
             font-style: normal;
             font-weight: 600;
@@ -230,7 +292,7 @@
                 @extend %display-flex-center;
                 gap: 8px;
 
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 12px;
                 font-style: normal;
                 font-weight: 400;
@@ -239,13 +301,13 @@
         .graph-xAxis-list {
             @extend %display-flex-center;
             gap: 8px 20px;
-            border-bottom: 1px solid var(--yakit-border-color);
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             padding-bottom: 8px;
             flex-wrap: wrap;
             .graph-xAxis-list-item {
                 @extend %display-flex-center;
                 gap: 8px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             .circle {
                 width: 12px;

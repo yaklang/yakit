@@ -1,75 +1,82 @@
 // ========================== antd list to yakit start ==========================
 .yakit-list {
     .ant-spin {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .ant-spin-dot-item {
-        background-color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Primary);
     }
     .ant-pagination-item:hover a {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .ant-pagination-prev:hover .ant-pagination-item-link,
     .ant-pagination-next:hover .ant-pagination-item-link {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .ant-pagination-item a {
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .ant-pagination-item-active {
-        border-color: var(--yakit-primary-5);
+        border-color: var(--Colors-Use-Main-Primary);
+        background: var(--Colors-Use-Basic-Background);
     }
     .ant-pagination-item-active a {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .ant-pagination-jump-prev .ant-pagination-item-container .ant-pagination-item-link-icon,
     .ant-pagination-jump-next .ant-pagination-item-container .ant-pagination-item-link-icon {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
     .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-        border-color: var(--yakit-border-color);
+        border-color: var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        background-color: var(--Colors-Use-Basic-Background);
         &:hover {
-            border-color: var(--yakit-primary-4);
+            border-color: var(--Colors-Use-Main-Hover);
         }
     }
     .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
-        border: 1px solid var(--yakit-primary-4);
-        box-shadow: 0 0 0 2px var(--yakit-primary-2);
+        border: 1px solid var(--Colors-Use-Main-Hover);
+        box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
     }
 
     .ant-select-item-option-content:hover {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
 
     .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
         background-color: transparent;
     }
 
+    .ant-select-dropdown{
+        background-color: var(--Colors-Use-Basic-Background);
+        box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
+    }
+
     .ant-select-item {
         border-radius: 4px;
         padding: 4px 8px;
         margin: 0 4px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
 
         &:hover {
-            background-color: var(--yakit-background-color);
-            color: var(--yakit-primary-5);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 
     .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
         font-weight: 400;
-        background-color: var(--yakit-primary-2);
-        color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Main-Focus);
+        color: var(--Colors-Use-Main-Primary);
         &:hover {
-            background-color: var(--yakit-background-color);
-            color: var(--yakit-primary-5);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
         }
     }
 }
 .yakit-list-bordered {
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px;
 }
 // ========================== antd list to yakit end ==========================

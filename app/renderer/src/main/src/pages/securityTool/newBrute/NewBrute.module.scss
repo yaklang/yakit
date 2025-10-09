@@ -17,7 +17,7 @@
     flex: 1;
     overflow: hidden;
     max-width: 300px;
-    border-right: 1px solid var(--yakit-border-color);
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
     padding: 12px;
     :global {
         .ant-tree-switcher {
@@ -29,7 +29,7 @@
         justify-content: space-between;
 
         &-title {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 600;
             line-height: 16px;
@@ -42,6 +42,8 @@
         .tree-root {
             flex: 1;
             padding-right: 12px;
+            background-color: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
     }
 }

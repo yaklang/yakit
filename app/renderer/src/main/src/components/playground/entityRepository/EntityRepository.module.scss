@@ -1,0 +1,262 @@
+.entityRepositoryContainer {
+    padding: 16px;
+    height: 100%;
+    overflow: auto;
+    
+    .header {
+        margin-bottom: 16px;
+        
+        .title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    }
+    
+    .tabContent {
+        .card {
+            margin-bottom: 16px;
+        }
+        
+        .tableContainer {
+            // 确保表格容器有合适的高度，但不限制最大高度
+            min-height: 450px;
+            // 移除max-height限制，让分页控件可见
+            // max-height: 600px;
+            // overflow: hidden;
+            
+            // 确保表格和分页控件都能正确显示
+            display: flex;
+            flex-direction: column;
+            
+            .ant-table {
+                // 让表格占据剩余空间，但为分页控件留出空间
+                flex: 1;
+                
+                .ant-table-thead > tr > th {
+                    background-color: #fafafa;
+                    font-weight: 600;
+                    position: sticky;
+                    top: 0;
+                    z-index: 1;
+                }
+                
+                // 确保表格内容区域有合适的高度，但不限制分页控件
+                .ant-table-tbody {
+                    // 移除固定高度限制
+                    // max-height: 400px;
+                }
+                
+                // 自定义滚动条样式
+                .ant-table-body {
+                    &::-webkit-scrollbar {
+                        width: 8px;
+                        height: 8px;
+                    }
+                    
+                    &::-webkit-scrollbar-track {
+                        background: #f1f1f1;
+                        border-radius: 4px;
+                    }
+                    
+                    &::-webkit-scrollbar-thumb {
+                        background: #c1c1c1;
+                        border-radius: 4px;
+                        
+                        &:hover {
+                            background: #a8a8a8;
+                        }
+                    }
+                }
+                
+                // 确保表格在容器中正确显示
+                .ant-table-container {
+                    border: 1px solid #f0f0f0;
+                    border-radius: 6px;
+                }
+            }
+            
+            // 确保分页控件始终可见
+            .ant-pagination {
+                margin-top: 16px;
+                text-align: right;
+                padding: 8px 0;
+                background: #fff;
+                border-top: 1px solid #f0f0f0;
+                position: relative;
+                z-index: 10;
+                // 确保分页控件不被隐藏
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                // 确保分页控件不被压缩
+                flex-shrink: 0;
+            }
+        }
+    }
+    
+    .repositoryInfo {
+        background-color: #f6f8fa;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        
+        .repositoryName {
+            font-weight: 600;
+            color: #1890ff;
+        }
+        
+        .repositoryDescription {
+            color: #666;
+            margin-top: 4px;
+        }
+    }
+    
+    .actionButtons {
+        margin-bottom: 16px;
+        
+        .ant-space {
+            gap: 8px;
+        }
+    }
+    
+    .ermDiagram {
+        .dotContent {
+            background-color: #f5f5f5;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            max-height: 400px;
+            overflow: auto;
+        }
+        
+        .svgContainer {
+            max-height: 600px;
+            overflow: auto;
+            text-align: center;
+            
+            svg {
+                max-width: 100%;
+                height: auto;
+                border: 1px solid #e8e8e8;
+                border-radius: 4px;
+                background-color: #fff;
+            }
+        }
+    }
+    
+    .viewModeToggle {
+        margin-bottom: 16px;
+        text-align: center;
+        
+        .ant-btn {
+            min-width: 100px;
+        }
+    }
+    
+    .entityTag {
+        &.blue {
+            background-color: #e6f7ff;
+            border-color: #91d5ff;
+            color: #1890ff;
+        }
+        
+        &.green {
+            background-color: #f6ffed;
+            border-color: #b7eb8f;
+            color: #52c41a;
+        }
+    }
+    
+    .attributeTags {
+        .ant-tag {
+            margin: 2px;
+            font-size: 11px;
+        }
+    }
+    
+    .filterForm {
+        .ant-form-item {
+            margin-bottom: 8px;
+        }
+        
+        .ant-input {
+            font-size: 12px;
+        }
+        
+        .ant-btn {
+            font-size: 12px;
+            height: 28px;
+        }
+    }
+    
+    .filterCard {
+        background-color: #fafafa;
+        border: 1px solid #e8e8e8;
+        
+        .ant-card-body {
+            padding: 12px;
+        }
+    }
+    
+    .ermSettings {
+        .ant-space {
+            gap: 8px;
+        }
+        
+        .ant-input {
+            font-size: 12px;
+        }
+        
+        .ant-btn {
+            font-size: 12px;
+            height: 28px;
+        }
+    }
+    
+    // 全局分页样式，确保分页控件可见
+    :global(.ant-pagination) {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        margin-top: 16px !important;
+        text-align: right !important;
+    }
+    
+    // 响应式设计
+    @media (max-width: 768px) {
+        .tableContainer {
+            min-height: 400px;
+            // max-height: 500px;
+            
+            .ant-table {
+                .ant-table-body {
+                    &::-webkit-scrollbar {
+                        width: 6px;
+                        height: 6px;
+                    }
+                }
+            }
+        }
+        
+        .filterForm {
+            .ant-form-item {
+                margin-bottom: 12px;
+            }
+            
+            .ant-input {
+                width: 100% !important;
+            }
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .tableContainer {
+            min-height: 350px;
+            // max-height: 450px;
+        }
+    }
+}

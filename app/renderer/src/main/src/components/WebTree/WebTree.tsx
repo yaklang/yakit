@@ -19,6 +19,7 @@ import {RefreshIcon} from "@/assets/newIcon"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import classNames from "classnames"
 import styles from "./WebTree.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 type TreeNodeType = "dir" | "file" | "query" | "path"
 export interface TreeNode extends DataNode {
@@ -52,7 +53,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         searchVal = "",
         searchInputDisabled = false,
         refreshTreeWithSearchVal = false,
-        searchPlaceholder = "请输入关键词搜索",
+        searchPlaceholder,
         treeExtraQueryparams,
         refreshTreeFlag = false,
         onSelectNodes,
@@ -61,6 +62,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         resetTableAndEditorShow,
         runTimeId = ""
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
 
     const [treeLoading, setTreeLoading] = useState<boolean>(false)
     // 未搜索情况时的网站树
@@ -83,9 +85,9 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
 
     const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
         const iconsEle = {
-            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
-            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
-            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
+            file: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
+            query: <OutlineVariableIcon className='yakitTreeNode-icon' />,
+            path: <OutlineLink2Icon className='yakitTreeNode-icon' />
         }
         return iconsEle[treeNodeType] || <></>
     }
@@ -126,7 +128,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 }, 50)
             }).catch((error) => {
                 setTreeLoading(false)
-                yakitFailed(`加载失败: ${error}`)
+                yakitFailed(`${t("YakitNotification.loadFailed", {colon: true})}${error}`)
             })
         }, 30)
     })
@@ -249,33 +251,30 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         searchVal && onSearchTree(searchVal)
     }, [searchVal])
 
-    useEffect(
-        () => {
-            if (treeExtraQueryparams) {
-                if (selectedKeys.length) {
-                    if (refreshTreeFlag) {
-                        if (searchTreeFlag.current) {
-                            setSelectedKeys([])
-                            setSelectedNodes([])
-                            setExpandedKeys([])
-                            getTreeData("website://" + searchValue)
-                        } else {
-                            refreshTree()
-                        }
-                    }
-                } else {
+    useEffect(() => {
+        if (treeExtraQueryparams) {
+            if (selectedKeys.length) {
+                if (refreshTreeFlag) {
                     if (searchTreeFlag.current) {
-                        setExpandedKeys([])
+                        setSelectedKeys([])
                         setSelectedNodes([])
+                        setExpandedKeys([])
                         getTreeData("website://" + searchValue)
                     } else {
                         refreshTree()
                     }
                 }
+            } else {
+                if (searchTreeFlag.current) {
+                    setExpandedKeys([])
+                    setSelectedNodes([])
+                    getTreeData("website://" + searchValue)
+                } else {
+                    refreshTree()
+                }
             }
-        },
-        [treeExtraQueryparams, refreshTreeFlag, inViewport],
-    )
+        }
+    }, [treeExtraQueryparams, refreshTreeFlag, inViewport])
 
     // 刷新网站树
     const refreshTree = useMemoizedFn(() => {
@@ -369,7 +368,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             <div className={styles["tree-top-wrap"]} ref={treeTopWrapRef}>
                 <YakitInput.Search
                     wrapperStyle={{width: "calc(100% - 40px)", marginBottom: 15}}
-                    placeholder={searchPlaceholder}
+                    placeholder={searchPlaceholder || t("YakitInput.searchKeyWordPlaceholder")}
                     allowClear
                     onChange={onSearchChange}
                     onSearch={onSearchTree}

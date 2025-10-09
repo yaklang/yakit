@@ -1,6 +1,7 @@
 import {ReactNode} from "react"
 import {CodeScoreSmokingEvaluateResponseProps} from "@/pages/plugins/funcTemplateType"
 import {IMonacoEditorMarker} from "@/utils/editorMarkers"
+import { SSARisk } from "../../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 export interface CursorPosition {
     lineNumber: number // 当前行号
     column: number // 当前字符位置
@@ -55,8 +56,8 @@ export interface FileDetailInfo {
     isUnSave?: boolean
     /** 是否已被外部删除（文件树监控-删除） */
     isDelete?: boolean
-    /** 语法检查（代码打开时执行） */
-    syntaxCheck?: IMonacoEditorMarker[]
+    /** 漏洞汇总（代码打开时执行） */
+    syntaxCheck?: SSARisk[]
     /** 帮助信息（代码坐标获取时执行） */
     helpInfo?: any
 

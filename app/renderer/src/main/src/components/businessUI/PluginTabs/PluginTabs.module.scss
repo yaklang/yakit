@@ -15,7 +15,8 @@
                 height: 25px;
                 margin-bottom: 0;
                 &::before {
-                    border-bottom: 1px solid #eaecf3;
+                    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+                    // border-bottom: none;
                     z-index: 0;
                 }
                 .ant-tabs-ink-bar {
@@ -26,13 +27,13 @@
                 .ant-tabs-tab {
                     padding: 4px 8px;
                     border-radius: 4px 4px 0px 0px;
-                    border-top: 1px solid #eaecf3;
-                    border-right: 1px solid #eaecf3;
-                    border-left: 1px solid #eaecf3;
+                    border-top: 1px solid var(--Colors-Use-Neutral-Border);
+                    border-right: 1px solid var(--Colors-Use-Neutral-Border);
+                    border-left: 1px solid var(--Colors-Use-Neutral-Border);
                     border-bottom: 0;
-                    background: #f0f1f3;
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                     .ant-tabs-tab-btn {
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 16px;
@@ -43,20 +44,20 @@
                 }
                 // 选中
                 .ant-tabs-tab.ant-tabs-tab-active {
-                    border-top: 1px solid #f28b44;
-                    border-right: 1px solid #f28b44;
-                    border-left: 1px solid #f28b44;
-                    background: #f28b44;
+                    border-top: 1px solid var(--Colors-Use-Main-Border);
+                    border-right: 1px solid var(--Colors-Use-Main-Border);
+                    border-left: 1px solid var(--Colors-Use-Main-Border);
+                    background: var(--Colors-Use-Main-Primary);
                     .ant-tabs-tab-btn {
-                        color: #fff;
+                        color: var(--Colors-Use-Main-On-Primary);
                         text-shadow: unset;
                     }
                 }
                 // 禁用
                 .ant-tabs-tab.ant-tabs-tab-disabled {
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
                     .ant-tabs-tab-btn {
-                        color: #ccd2de;
+                        color: var(--Colors-Use-Neutral-Disable);
                     }
                 }
             }
@@ -67,7 +68,7 @@
                 height: 25px;
                 margin-top: 0;
                 &::before {
-                    border-top: 1px solid #eaecf3;
+                    border-top: 1px solid var(--Colors-Use-Neutral-Border);
                     z-index: 0;
                 }
                 .ant-tabs-ink-bar {
@@ -78,13 +79,13 @@
                 .ant-tabs-tab {
                     padding: 4px 8px;
                     border-radius: 0px 0px 4px 4px;
-                    border-bottom: 1px solid #eaecf3;
-                    border-right: 1px solid #eaecf3;
-                    border-left: 1px solid #eaecf3;
+                    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+                    border-right: 1px solid (--Colors-Use-Neutral-Border);
+                    border-left: 1px solid (--Colors-Use-Neutral-Border);
                     border-top: 0;
-                    background: #f0f1f3;
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                     .ant-tabs-tab-btn {
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 16px;
@@ -95,20 +96,20 @@
                 }
                 // 选中
                 .ant-tabs-tab.ant-tabs-tab-active {
-                    border-bottom: 1px solid #f28b44;
-                    border-right: 1px solid #f28b44;
-                    border-left: 1px solid #f28b44;
-                    background: #f28b44;
+                    border-bottom: 1px solid var(--Colors-Use-Main-Border);
+                    border-right: 1px solid var(--Colors-Use-Main-Border);
+                    border-left: 1px solid var(--Colors-Use-Main-Border);
+                    background: var(--Colors-Use-Main-Primary);
                     .ant-tabs-tab-btn {
-                        color: #fff;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         text-shadow: unset;
                     }
                 }
                 // 禁用
                 .ant-tabs-tab.ant-tabs-tab-disabled {
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
                     .ant-tabs-tab-btn {
-                        color: #ccd2de;
+                        color: var(--Colors-Use-Neutral-Disable);
                     }
                 }
             }
@@ -124,7 +125,7 @@
                     position: absolute;
                     top: 0;
                     left: 0;
-                    border-left: 1px solid #eaecf3;
+                    border-left: 1px solid var(--Colors-Use-Neutral-Border);
                     z-index: 0;
                     content: "";
                 }
@@ -137,13 +138,14 @@
                     width: 21px;
                     padding: 8px 4px;
                     border-radius: 0px 4px 4px 0px;
-                    border-top: 1px solid #eaecf3;
-                    border-right: 1px solid #eaecf3;
-                    border-bottom: 1px solid #eaecf3;
+                    border-top: 1px solid (--Colors-Use-Neutral-Border);
+                    border-right: 1px solid (--Colors-Use-Neutral-Border);
+                    border-bottom: 1px solid (--Colors-Use-Neutral-Border);
                     border-left: 0;
-                    background: #f0f1f3;
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
+                    border-color: var(--Colors-Use-Neutral-Border);
                     .ant-tabs-tab-btn {
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 14px;
@@ -156,20 +158,21 @@
                 }
                 // 选中
                 .ant-tabs-tab.ant-tabs-tab-active {
-                    border-top: 1px solid #f28b44;
-                    border-right: 1px solid #f28b44;
-                    border-bottom: 1px solid #f28b44;
-                    background: #f28b44;
+                    border-top: 1px solid var(--Colors-Use-Main-Border);
+                    border-right: 1px solid var(--Colors-Use-Main-Border);
+                    border-bottom: 1px solid var(--Colors-Use-Main-Border);
+                    background: var(--Colors-Use-Main-Primary);
                     .ant-tabs-tab-btn {
-                        color: #fff;
+                        color: var(--Colors-Use-Main-On-Primary);
                         text-shadow: unset;
                     }
                 }
                 // 禁用
                 .ant-tabs-tab.ant-tabs-tab-disabled {
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
+                    border-color: var(--Colors-Use-Neutral-Border);
                     .ant-tabs-tab-btn {
-                        color: #ccd2de;
+                        color: var(--Colors-Use-Neutral-Disable);
                     }
                 }
             }
@@ -192,7 +195,7 @@
                     position: absolute;
                     top: 0;
                     right: 0;
-                    border-right: 1px solid #eaecf3;
+                    border-right: 1px solid (--Colors-Use-Neutral-Border);
                     z-index: 0;
                     content: "";
                 }
@@ -205,13 +208,13 @@
                     width: 21px;
                     padding: 8px 4px;
                     border-radius: 4px 0px 0px 4px;
-                    border-top: 1px solid #eaecf3;
-                    border-left: 1px solid #eaecf3;
-                    border-bottom: 1px solid #eaecf3;
+                    border-top: 1px solid (--Colors-Use-Neutral-Border);
+                    border-left: 1px solid (--Colors-Use-Neutral-Border);
+                    border-bottom: 1px solid (--Colors-Use-Neutral-Border);
                     border-right: 0;
-                    background: #f0f1f3;
+                    background: var(--Colors-Use-Neutral-Bg-Hover);
                     .ant-tabs-tab-btn {
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 14px;
@@ -224,20 +227,20 @@
                 }
                 // 选中
                 .ant-tabs-tab.ant-tabs-tab-active {
-                    border-top: 1px solid #f28b44;
-                    border-left: 1px solid #f28b44;
-                    border-bottom: 1px solid #f28b44;
-                    background: #f28b44;
+                    border-top: 1px solid var(--Colors-Use-Main-Border);
+                    border-left: 1px solid var(--Colors-Use-Main-Border);
+                    border-bottom: 1px solid var(--Colors-Use-Main-Border);
+                    background: var(--Colors-Use-Main-Primary);
                     .ant-tabs-tab-btn {
-                        color: #fff;
+                        color: var(--Colors-Use-Main-On-Primary);
                         text-shadow: unset;
                     }
                 }
                 // 禁用
                 .ant-tabs-tab.ant-tabs-tab-disabled {
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
                     .ant-tabs-tab-btn {
-                        color: #ccd2de;
+                        color: var(--Colors-Use-Neutral-Disable);
                     }
                 }
             }
@@ -268,14 +271,14 @@
     overflow: hidden;
     :global {
         .ant-tabs-nav .ant-tabs-nav-list {
-            border-bottom: 1px solid #eaecf3;
+            border-bottom: 1px solid (--Colors-Use-Neutral-Border);
         }
         .ant-tabs-top {
             & > .ant-tabs-nav {
                 height: 34px;
                 margin-bottom: 0;
                 &::before {
-                    border-bottom: 1px solid #eaecf3;
+                    border-bottom: 1px solid (--Colors-Use-Neutral-Border);
                     z-index: 0;
                 }
                 .ant-tabs-ink-bar {
@@ -286,14 +289,14 @@
                 .ant-tabs-tab {
                     padding: 4px 16px;
                     border: 0;
-                    background: #fff;
+                    background: var(--Colors-Use-Neutral-Bg);
                     position: relative;
                     border-radius: 0;
                     &:hover {
-                        background-color: #f8f8f8;
+                        background-color: var(--Colors-Use-Neutral-Bg);
                     }
                     .ant-tabs-tab-btn {
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 12px;
                         font-weight: 600;
                         line-height: 16px;
@@ -303,7 +306,7 @@
                         svg {
                             width: 16px;
                             height: 16px;
-                            color: #85899e;
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         }
                     }
                 }
@@ -314,38 +317,38 @@
                         position: absolute;
                         height: 16px;
                         width: 1px;
-                        background-color: #eaecf3;
+                        background-color: (--Colors-Use-Neutral-Border);
                         left: 0px;
                     }
                 }
                 // 选中
                 .ant-tabs-tab.ant-tabs-tab-active {
                     border: 0;
-                    background: rgba(242, 139, 68, 0.06);
-                    color: #f28b44;
+                    background: var(--Colors-Use-Main-Bg);
+                    color: var(--Colors-Use-Main-On-Primary);
                     &::after {
                         content: "";
                         position: absolute;
                         width: 100%;
                         bottom: -1px;
                         left: 0;
-                        border-bottom: 2px solid #f28b44;
+                        border-bottom: 3px solid var(--Colors-Use-Main-Primary);
                     }
                     .ant-tabs-tab-btn {
-                        color: #f28b44;
+                        color: var(--Colors-Use-Main-Primary);
                         text-shadow: unset;
                     }
                     .anticon {
                         svg {
-                            color: #f28b44;
+                            color: var(--Colors-Use-Main-Primary);
                         }
                     }
                 }
                 // 禁用
                 .ant-tabs-tab.ant-tabs-tab-disabled {
-                    background: #f8f8f8;
+                    background: var(--Colors-Use-Neutral-Bg);
                     .ant-tabs-tab-btn {
-                        color: #ccd2de;
+                        color: var(--Colors-Use-Neutral-Disable);
                     }
                 }
             }

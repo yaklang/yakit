@@ -1,0 +1,92 @@
+{
+  "Layout": {
+    "PublicMenu": {
+      "getUserMenuFailed": "Failed to get user menu:",
+      "pluginNotAvailableOnline": "This plugin is not available online and cannot be downloaded."
+    },
+    "MenuCodec": {
+      "decode": "decode",
+      "encode": "encode",
+      "fuzztag": "fuzztag",
+      "messageCodecInProgress": "Please wait for the previous operation to complete.",
+      "messageCodecNoContent": "Please enter content to encode/decode before trying again.",
+      "messageCodecEmptyType": "BUG: Empty encode/decode type.",
+      "base64": "Base64 Encode",
+      "htmlencode": "HTML Entity Encode (Force)",
+      "htmlencodeHex": "HTML Entity Encode (Hex Mode)",
+      "htmlescape": "HTML Entity Encode (Special Chars Only)",
+      "urlencode": "URL Encode (Force)",
+      "urlescape": "URL Encode (Special Chars Only)",
+      "urlescapePath": "URL Path Encode (Special Chars Only)",
+      "doubleUrlencode": "Double URL Encode",
+      "hexEncode": "Hex Encode",
+      "jsonUnicode": "Unicode Encode",
+      "MD5": "MD5 Encode",
+      "SM3": "SM3 Encode",
+      "SHA1": "SHA1 Encode",
+      "SHA256": "SHA-256 Encode",
+      "SHA512": "SHA-512 Encode",
+      "base64Decode": "Base64 Decode",
+      "htmldecode": "HTML Decode",
+      "urlunescape": "URL Decode",
+      "urlunescapePath": "URL Path Decode",
+      "doubleUrldecode": "Double URL Decode",
+      "hexDecode": "Hex Decode",
+      "jsonUnicodeDecode": "Unicode Decode"
+    },
+    "MenuDNSLog": {
+      "accessRecords": "Access Records",
+      "showOnlyARecords": "Show only A records",
+      "type": "Type",
+      "remoteIP": "Remote IP",
+      "time": "Time",
+      "useCallbackService": "Use {v1} Built-in {v2} Callback Service",
+      "generateDomain": "Generate Domain",
+      "viewAccessRecords": "View Access Records"
+    },
+    "ExtraMenu": {
+      "localPlugin": "Local Plugin",
+      "pluginID": "Plugin ID",
+      "online": "Online",
+      "local": "Local",
+      "importSharedData": "Import Shared Data",
+      "importHARHistoryData": "Import HAR History Data"
+    },
+    "NotepadMenu": {
+      "list": "{name} Manage",
+      "add": "New {name}"
+    },
+    "HeardMenu": {
+      "editMenu": "Edit Menu",
+      "importJsonConfig": "Import JSON Configuration",
+      "scanMode": "ScanMode",
+      "resetScanMode": "Reset Scan Mode",
+      "expertMode": "Expert Mode",
+      "resetExpertMode": "Reset Expert Mode",
+      "getMenuFailed": "Failed to get menu:",
+      "downloadMenuPluginFailed": "Failed to download menu plugin:",
+      "saveMenuFailed": "Failed to save menu:",
+      "updateMenuFailed": "Failed to update menu:",
+      "pluginLoadFailed": "Plugin Load Failed",
+      "menuMissing": " menu is missing. Click to re-download. If it still fails, please visit the plugin store to find ",
+      "plugin": "plugin",
+      "switchMenuModeFailed": "Failed to switch menu mode:",
+      "deleteMenuFailed": "Failed to delete menu:",
+      "dataCannotBeEmpty": "Data cannot be empty",
+      "partialDataError": "Some data errors occurred during conversion and have been automatically discarded.",
+      "importDataFailed": "Failed to process imported data:",
+      "pluginMissingDownload": "Plugin is missing, click to download"
+    },
+    "MenuPlugin": {
+      "restoreMenu": "Restore Menu",
+      "restoreMenuTip": "Restore Menu Reminder",
+      "confirmRestoreMenu": "After confirming restore, the frequently used plugins menu bar will be reset. Do you want to proceed?",
+      "commonPlugins": "Common Plugins"
+    },
+    "MenuMode": {
+      "bruteForce": "Brute Force",
+      "and": " And ",
+      "unauthorizedCheck": "Unauthorized Detection"
+    }
+  }
+}

@@ -10,20 +10,16 @@ import {
 } from "./YakRunnerAuditCodeType"
 import {Progress} from "antd"
 import {AuditModalFormModal} from "./AuditCode/AuditCode"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import {
-    addAreaFileInfo,
-    getCodeByPath,
-    getCodeSizeByPath,
-    getNameByPath,
+    addAuditCodeAreaFileInfo,
     grpcFetchAuditTree,
     judgeAreaExistAuditPath,
-    judgeAreaExistFilePath,
-    monacaLanguageType,
-    removeAreaFilesInfo,
-    setAreaFileActive,
-    setYakRunnerHistory,
-    updateAreaFileInfo
+    judgeAuditCodeAreaExistFilePath,
+    removeAuditCodeAreaFilesInfo,
+    setAuditCodeAreaFileActive,
+    setAuditCodeHistory,
+    updateAuditCodeAreaFileInfo
 } from "./utils"
 import styles from "./YakRunnerAuditCode.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -54,7 +50,12 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {Selection} from "./RunnerTabs/RunnerTabsType"
 import {LeftSideType} from "./LeftSideBar/LeftSideBarType"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
-import { onSetSelectedSearchVal } from "./AuditSearchModal/AuditSearch"
+import {onSetSelectedSearchVal} from "./AuditSearchModal/AuditSearch"
+import {registerShortcutKeyHandle, unregisterShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"
+import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
+import {getStorageAuditCodeShortcutKeyEvents} from "@/utils/globalShortcutKey/events/page/yakRunnerAuditCode"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import {getCodeByPath, getCodeSizeByPath, getNameByPath, monacaLanguageType} from "../yakRunner/utils"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props
@@ -68,6 +69,8 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     /** ---------- 审计规则 ---------- */
     const [auditRule, setAuditRule] = useState<string>("")
+    /** ---------- RuntimeID作用于全局，用于条件筛选 ---------- */
+    const [runtimeID, setRuntimeID] = useState<string>("")
     /** ---------- 审计运行状态 ---------- */
     const [auditExecuting, setAuditExecuting] = useState<boolean>(false)
 
@@ -137,62 +140,66 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     })
 
     const onInitTreeFun = useMemoizedFn(async (rootPath: string, isFirst: boolean = true) => {
-        resetMap(isFirst)
-        onResetAuditStatusFun()
-        const lastFolder = await getNameByPath(rootPath)
-        if (rootPath.length > 0 && lastFolder.length > 0) {
-            const node: FileNodeMapProps = {
-                parent: null,
-                name: lastFolder,
-                path: rootPath,
-                isFolder: true,
-                icon: FolderDefault
-            }
-
-            handleFetchFileList(rootPath, (list) => {
-                // 如若打开空文件夹 则不可展开
-                if (list.length === 0) {
-                    node.isLeaf = true
+        try {
+            resetMap(isFirst)
+            onResetAuditStatusFun()
+            const lastFolder = await getNameByPath(rootPath)
+            if (rootPath.length > 0 && lastFolder.length > 0) {
+                const node: FileNodeMapProps = {
+                    parent: null,
+                    name: lastFolder,
+                    path: rootPath,
+                    isFolder: true,
+                    icon: FolderDefault
                 }
-                setMapFileDetail(rootPath, node)
-                const children: FileTreeListProps[] = []
 
-                let childArr: string[] = []
-                list.forEach((item) => {
-                    // 注入文件结构Map
-                    childArr.push(item.path)
-                    // 文件Map
-                    setMapFileDetail(item.path, item)
-                    // 注入tree结构
-                    children.push({path: item.path})
+                handleFetchFileList(rootPath, (list) => {
+                    // 如若打开空文件夹 则不可展开
+                    if (list.length === 0) {
+                        node.isLeaf = true
+                    }
+                    setMapFileDetail(rootPath, node)
+                    const children: FileTreeListProps[] = []
+
+                    let childArr: string[] = []
+                    list.forEach((item) => {
+                        // 注入文件结构Map
+                        childArr.push(item.path)
+                        // 文件Map
+                        setMapFileDetail(item.path, item)
+                        // 注入tree结构
+                        children.push({path: item.path})
+                    })
+                    // 文件结构Map
+                    setMapFolderDetail(rootPath, childArr)
+                    if (list) setFileTree([{path: rootPath}])
                 })
-                // 文件结构Map
-                setMapFolderDetail(rootPath, childArr)
-                if (list) setFileTree([{path: rootPath}])
-            })
 
-            // 打开文件夹时接入历史记录
-            const history: YakRunnerHistoryProps = {
-                isFile: false,
-                name: lastFolder,
-                path: rootPath,
-                loadTreeType: "audit"
+                // 打开文件夹时接入历史记录
+                const history: YakRunnerHistoryProps = {
+                    isFile: false,
+                    name: lastFolder,
+                    path: rootPath,
+                    loadTreeType: "audit"
+                }
+                setAuditCodeHistory(history)
             }
-            setYakRunnerHistory(history)
-        }
+        } catch (error) {}
     })
 
     const [isShowAuditDetail, setShowAuditDetail] = useState<boolean>(false)
 
     // 清除代码审计树残留数据
     const onResetAuditStatusFun = useMemoizedFn(async () => {
-        clearMapAuditChildDetail()
-        clearMapAuditDetail()
-        setShowAuditDetail(false)
-        // 移除已显示的审计树代码
-        const auditPaths = await judgeAreaExistAuditPath(areaInfo)
-        const newAreaInfo = removeAreaFilesInfo(areaInfo, auditPaths)
-        setAreaInfo(newAreaInfo)
+        try {
+            clearMapAuditChildDetail()
+            clearMapAuditDetail()
+            setShowAuditDetail(false)
+            // 移除已显示的审计树代码
+            const auditPaths = await judgeAreaExistAuditPath(areaInfo)
+            const newAreaInfo = removeAuditCodeAreaFilesInfo(areaInfo, auditPaths)
+            setAreaInfo(newAreaInfo)
+        } catch (error) {}
     })
 
     const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
@@ -318,14 +325,14 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             const {path, name, parent, highLightRange} = params
 
             // 校验是否已存在 如若存在则不创建只定位
-            const file = await judgeAreaExistFilePath(areaInfo, path)
+            const file = await judgeAuditCodeAreaExistFilePath(areaInfo, path)
             if (file) {
                 let cacheAreaInfo = areaInfo
                 // 如若存在高亮显示 则注入
                 if (highLightRange) {
-                    cacheAreaInfo = updateAreaFileInfo(areaInfo, {...file, highLightRange}, file.path)
+                    cacheAreaInfo = updateAuditCodeAreaFileInfo(areaInfo, {...file, highLightRange}, file.path)
                 }
-                const newAreaInfo = setAreaFileActive(cacheAreaInfo, path)
+                const newAreaInfo = setAuditCodeAreaFileActive(cacheAreaInfo, path)
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile({...file, highLightRange})
                 // 完全一样且存在widget数据 通知再次打开widget
@@ -363,8 +370,8 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                     highLightRange
                 }
                 // (性能优化 为了快速打开文件 在文件打开时不注入语法检测 再文件打开后再注入语法检测)
-                // const syntaxActiveFile = {...(await getDefaultActiveFile(scratchFile))}
-                const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, scratchFile, activeFile)
+                // const syntaxActiveFile = {...(await getAuditCodeDefaultActiveFile(scratchFile))}
+                const {newAreaInfo, newActiveFile} = addAuditCodeAreaFileInfo(areaInfo, scratchFile, activeFile)
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile(newActiveFile)
 
@@ -375,7 +382,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                         name,
                         path
                     }
-                    setYakRunnerHistory(history)
+                    setAuditCodeHistory(history)
                 }
             }
         } catch (error) {
@@ -647,26 +654,28 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
     const store: YakRunnerContextStore = useMemo(() => {
         return {
-            pageInfo: pageInfo,
-            fileTree: fileTree,
-            projectName: projectName,
-            areaInfo: areaInfo,
-            activeFile: activeFile,
-            auditRule: auditRule,
-            auditExecuting: auditExecuting
+            pageInfo,
+            fileTree,
+            projectName,
+            areaInfo,
+            activeFile,
+            auditRule,
+            auditExecuting,
+            runtimeID
         }
-    }, [pageInfo, fileTree, projectName, areaInfo, activeFile, auditRule, auditExecuting])
+    }, [pageInfo, fileTree, projectName, areaInfo, activeFile, auditRule, auditExecuting, runtimeID])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
-            setPageInfo: setPageInfo,
-            setFileTree: setFileTree,
-            setProjectName: setProjectName,
-            handleFileLoadData: handleFileLoadData,
-            setAreaInfo: setAreaInfo,
-            setActiveFile: setActiveFile,
-            setAuditRule: setAuditRule,
-            setAuditExecuting: setAuditExecuting
+            setPageInfo,
+            setFileTree,
+            setProjectName,
+            handleFileLoadData,
+            setAreaInfo,
+            setActiveFile,
+            setAuditRule,
+            setAuditExecuting,
+            setRuntimeID
         }
     }, [])
 
@@ -722,39 +731,35 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     }
 
     // 双击Shift
-    const [lastShiftTime, setLastShiftTime] = useState<number>(0);
+    const [lastShiftTime, setLastShiftTime] = useState<number>(0)
     const handleDoubleShift = useMemoizedFn(() => {
-        const now = Date.now();
-        if (now - lastShiftTime < 300) { // 300ms 内连点两次 Shift
+        const now = Date.now()
+        if (now - lastShiftTime < 300) {
+            // 300ms 内连点两次 Shift
             // 在这里处理连点两次 Shift 的逻辑
             emiter.emit("onOpenSearchModal")
         }
-        setLastShiftTime(now);
-    });
-    const keyDownRef = useRef<HTMLDivElement>(null)
-    const handleKeyPress = (event) => {
-        const {key,ctrlKey,altKey,metaKey,repeat} = event
-        // 如若长按某个键时 后面激发的repeat会变为true
-        if (key === 'Shift' && !ctrlKey && !altKey && !metaKey && !repeat) {
-            handleDoubleShift()
-            event.preventDefault()
-        }
-    }
+        setLastShiftTime(now)
+    })
+    const shortcutRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(shortcutRef)
     useEffect(() => {
-        if (keyDownRef.current) {
-            keyDownRef.current.addEventListener("keydown", handleKeyPress)
-        }
-        return () => {
-            // 在组件卸载时移除事件监听器
-            if (keyDownRef.current) {
-                keyDownRef.current.removeEventListener("keydown", handleKeyPress)
+        if (inViewport) {
+            registerShortcutKeyHandle(ShortcutKeyPage.YakRunner_Audit_Code)
+            getStorageAuditCodeShortcutKeyEvents()
+            return () => {
+                unregisterShortcutKeyHandle(ShortcutKeyPage.YakRunner_Audit_Code)
             }
         }
-    }, [])
+    }, [inViewport])
+
+    useShortcutKeyTrigger("search*aduit", () => {
+        handleDoubleShift()
+    })
 
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
-            <div className={styles["audit-code"]} id='audit-code' tabIndex={0} ref={keyDownRef}>
+            <div className={styles["audit-code"]} id='audit-code' tabIndex={0} ref={shortcutRef}>
                 <div className={styles["audit-code-page"]}>
                     <div className={styles["audit-code-body"]}>
                         <YakitResizeBox
@@ -762,7 +767,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                             firstRatio={isUnShow ? "25px" : "300px"}
                             firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
                             lineDirection='right'
-                            firstMinSize={isUnShow ? 25 : 200}
+                            firstMinSize={isUnShow ? 25 : 252}
                             lineStyle={{width: 4}}
                             secondMinSize={480}
                             firstNode={
@@ -851,8 +856,8 @@ export const AuditCodeStatusInfo: React.FC<AuditCodeStatusInfoProps> = (props) =
                     <div className={styles["hint-right-title"]}>{title}</div>
                     <div className={styles["download-progress"]}>
                         <Progress
-                            strokeColor='#F28B44'
-                            trailColor='#F0F2F5'
+                            strokeColor='var(--Colors-Use-Main-Primary)'
+                            trailColor='var(--Colors-Use-Neutral-Bg)'
                             percent={Math.floor((streamData.Progress || 0) * 100)}
                             showInfo={false}
                         />

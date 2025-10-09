@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
-import {isEngineConnectionAlive, outputToPrintLog, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
+import {isEngineConnectionAlive, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
 import {EngineWatchDogCallbackType, YaklangEngineMode} from "@/yakitGVDefine"
 import {EngineModeVerbose} from "@/components/basics/YakitLoading"
 import {failed} from "@/utils/notification"
@@ -9,6 +9,7 @@ import {useStore, yakitDynamicStatus} from "@/store"
 import {remoteOperation} from "@/pages/dynamicControl/DynamicControl"
 import {fetchEnv, getRemoteHttpSettingGV, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import emiter from "@/utils/eventBus/eventBus"
+import {debugToPrintLog} from "@/utils/logCollection"
 
 export interface YaklangEngineWatchDogCredential {
     Mode?: YaklangEngineMode
@@ -48,8 +49,8 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
         /** 引擎信息认证 */
         const engineTest = useMemoizedFn((isDynamicControl?: boolean) => {
-            outputToPrintLog(
-                `engineTest-start:\nmode:${props.credential.Mode}|port:${props.credential.Port}|isDynamicControl:${isDynamicControl}`
+            debugToPrintLog(
+                `[IFNO] engine-test mode:${props.credential.Mode} port:${props.credential.Port} isDynamicControl:${isDynamicControl}`
             )
             // 重置状态
             setAutoStartProgress(false)
@@ -68,10 +69,11 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
              * 当然引擎没有启动的时候无法连接成功，要准备根据引擎状态选择合适的方式启动引擎
              */
             outputToWelcomeConsole("开始尝试连接 Yaklang 核心引擎")
+            debugToPrintLog(`------ 测试目标引擎是否存在进程存活情况------`)
             ipcRenderer
                 .invoke("connect-yaklang-engine", props.credential)
                 .then(() => {
-                    outputToPrintLog(`engineTest-success: mode:${props.credential.Mode}`)
+                    debugToPrintLog(`------ 目标引擎进程存活------`)
                     outputToWelcomeConsole(`连接核心引擎成功！`)
                     if (props.onKeepaliveShouldChange) {
                         props.onKeepaliveShouldChange(true)
@@ -87,7 +89,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     }
                 })
                 .catch((e) => {
-                    outputToPrintLog(`engineTest-failed: mode:${props.credential.Mode}`)
+                    debugToPrintLog(`------ 目标引擎进程不存在 ------`)
                     outputToWelcomeConsole("未连接到引擎，尝试启动引擎进程")
                     switch (mode) {
                         case "local":
@@ -141,7 +143,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     return
                 }
 
-                outputToPrintLog(`尝试启动新引擎进程: port:${props.credential.Port}`)
+                debugToPrintLog(`[INFO] 尝试启动新的引擎进程 port:${props.credential.Port}`)
 
                 // 只有普通模式才涉及到引擎启动的流程
                 outputToWelcomeConsole(`开始以普通权限启动本地引擎进程，本地端口为: ${props.credential.Port}`)
@@ -168,12 +170,12 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                             })
                             .then(() => {
                                 outputToWelcomeConsole("引擎启动成功！")
-                                outputToPrintLog(`本地新引擎进程启动成功`)
+                                debugToPrintLog(`[INFO] 本地新引擎进程启动成功`)
                             })
                             .catch((e) => {
                                 console.info(e)
                                 outputToWelcomeConsole("引擎启动失败:" + e)
-                                outputToPrintLog(`本地新引擎进程启动失败: ${e}`)
+                                debugToPrintLog(`[ERROR] 本地新引擎进程启动失败: ${e}`)
                             })
                             .finally(() => {
                                 startingUp.current = false
@@ -184,7 +186,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                             `端口被占用，无法启动本地引擎（${EngineModeVerbose(mode as YaklangEngineMode)}）`
                         )
                         outputToWelcomeConsole(`错误原因为: ${e}`)
-                        outputToPrintLog(`端口被占用: ${e}`)
+                        debugToPrintLog(`[ERROR] 新引擎进程启动出错: 端口被占用: ${e}`)
                     })
             },
             [autoStartProgress, props.onKeepaliveShouldChange, props.credential],
@@ -212,7 +214,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 }
                 return
             }
-            outputToPrintLog(`开始检测引擎进程是否启动`)
+            debugToPrintLog(`------ 开始启动引擎进程探活逻辑------`)
 
             let count = 0
             let failedCount = 0
@@ -221,7 +223,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 count++
                 isEngineConnectionAlive()
                     .then(() => {
-                        outputToPrintLog(`keepalive状态: ${keepalive}`)
+                        // debugToPrintLog(`[INFO] 探活结果: 存活`)
                         if (!keepalive) {
                             return
                         }
@@ -235,6 +237,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         }
                     })
                     .catch((e) => {
+                        // debugToPrintLog(`[INFO] 探活结果: 不存在`)
                         failedCount++
                         if (failedCount > 0 && failedCount <= 20) {
                             outputToWelcomeConsole(`引擎未完全启动，无法连接，失败次数：${failedCount}`)

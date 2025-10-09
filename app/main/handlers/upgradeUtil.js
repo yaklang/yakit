@@ -1,5 +1,6 @@
 const {ipcMain, shell} = require("electron")
 const childProcess = require("child_process")
+const spawn = require("cross-spawn")
 const process = require("process")
 const path = require("path")
 const os = require("os")
@@ -20,9 +21,16 @@ const {
     loadExtraFilePath,
     yakitInstallDir
 } = require("../filePath")
-const {downloadYakitEE, downloadYakitCommunity, downloadYakEngine, getDownloadUrl} = require("./utils/network")
+const {
+    downloadYakitEE,
+    downloadYakitCommunity,
+    downloadIntranetYakit,
+    downloadYakEngine,
+    getDownloadUrl,
+    getSuffix
+} = require("./utils/network")
 const {engineCancelRequestWithProgress, yakitCancelRequestWithProgress} = require("./utils/requestWithProgress")
-const {getCheckTextUrl} = require("../handlers/utils/network")
+const {getCheckTextUrl, fetchSpecifiedYakVersionHash} = require("../handlers/utils/network")
 const {engineLogOutputFileAndUI} = require("../logFile")
 
 const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile")
@@ -128,17 +136,18 @@ const getLatestYakLocalEngine = () => {
 
 // 获取Yakit所处平台
 const getYakitPlatform = () => {
+    const suffix = getSuffix()
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
-                return `darwin-arm64`
+                return `darwin${suffix}-arm64`
             } else {
-                return `darwin-x64`
+                return `darwin${suffix}-x64`
             }
         case "win32":
-            return `windows-amd64`
+            return `windows${suffix}-amd64`
         case "linux":
-            return `linux-amd64`
+            return `linux${suffix}-amd64`
     }
 }
 
@@ -221,23 +230,62 @@ module.exports = {
 
                 console.info("YAK-VERSION process is executing...")
                 isFetchingVersion = true
-                childProcess.execFile(getLatestYakLocalEngine(), ["-v"], {timeout: 5000}, (err, stdout) => {
-                    engineLogOutputFileAndUI(win, `${stdout.toString("utf-8")}`)
-                    if (err) {
-                        engineLogOutputFileAndUI(win, `${err.toString("utf-8")}`)
-                        yakVersionEmitter.emit("version", err, null)
-                        isFetchingVersion = false
-                        return
+                const child = spawn(getLatestYakLocalEngine(), ["-v"], {timeout: 5200})
+                let stdout = ""
+                let stderr = ""
+                let finished = false
+                const timer = setTimeout(() => {
+                    if (!finished) {
+                        finished = true
+                        child.kill()
+                        try {
+                            if (process.platform === "win32") {
+                                childProcess.exec(`taskkill /PID ${child.pid} /T /F`)
+                            } else {
+                                process.kill(child.pid, "SIGKILL")
+                            }
+                        } catch (e) {
+                        } finally {
+                            const error = new Error("[yak -v] 获取版本超时，已强制终止")
+                            engineLogOutputFileAndUI(win, error.toString())
+                            yakVersionEmitter.emit("version", error, null)
+                            isFetchingVersion = false
+                        }
                     }
-                    // const version = stdout.replaceAll("yak version ()", "").trim();
+                }, 5000)
+                child.stdout.on("data", (data) => {
+                    stdout += data.toString("utf-8")
+                })
+                child.stderr.on("data", (data) => {
+                    stderr += data.toString("utf-8")
+                })
+                child.on("error", (err) => {
+                    if (finished) return
+                    finished = true
+                    clearTimeout(timer)
+                    engineLogOutputFileAndUI(win, `${err.toString("utf-8")}`)
+                    if (stderr) {
+                        engineLogOutputFileAndUI(win, `${stderr}`)
+                    }
+                    yakVersionEmitter.emit("version", err, null)
+                    isFetchingVersion = false
+                })
+                child.on("close", (code) => {
+                    if (finished) return
+                    engineLogOutputFileAndUI(win, `${stdout}`)
                     const match = /.*?yak(\.exe)?\s+version\s+(\S+)/.exec(stdout)
                     const version = match && match[2]
                     if (!version) {
-                        engineLogOutputFileAndUI(win, "[unknown reason] cannot fetch yak version (yak -v)")
-                        const error = new Error("[unknown reason] cannot fetch yak version (yak -v)")
-                        yakVersionEmitter.emit("version", error, null)
-                        isFetchingVersion = false
+                        engineLogOutputFileAndUI(win, "----- 引擎无法获取yak本地版本 -----")
+                        if (code !== 0 || stderr) {
+                            engineLogOutputFileAndUI(win, `${stderr}` || `Process exited with code ${code}`)
+                            const error = new Error(`${stderr}` || `Process exited with code ${code}`)
+                            yakVersionEmitter.emit("version", error, null)
+                            isFetchingVersion = false
+                        }
                     } else {
+                        finished = true
+                        clearTimeout(timer)
                         engineLogOutputFileAndUI(win, `----- 获取到yak本地版本: ${version}-----`)
                         latestVersionCache = version
                         yakVersionEmitter.emit("version", null, version)
@@ -268,25 +316,67 @@ module.exports = {
                         return
                     }
 
-                    childProcess.execFile(commandPath, ["-v"], {timeout: 20000}, (error, stdout, stderr) => {
-                        if (error) {
-                            let errorMessage = `命令执行失败: ${error.message}\nStdout: ${stdout}\nStderr: ${stderr}`
-                            if (error.code === "ENOENT") {
-                                errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nStderr: ${stderr}`
-                            } else if (error.killed) {
-                                errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nStderr: ${stderr}`
-                            } else if (error.signal) {
-                                errorMessage = `引擎由于信号而终止: ${error.signal}\nStderr: ${stderr}`
-                            } else if (error.code === "ETIMEDOUT") {
-                                errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`
+                    const child = spawn(commandPath, ["-v"], {timeout: 20200})
+                    let stdout = ""
+                    let stderr = ""
+                    let finished = false
+                    const timer = setTimeout(() => {
+                        if (!finished) {
+                            finished = true
+                            child.kill()
+                            try {
+                                if (process.platform === "win32") {
+                                    childProcess.exec(`taskkill /PID ${child.pid} /T /F`)
+                                } else {
+                                    process.kill(child.pid, "SIGKILL")
+                                }
+                            } catch (e) {
+                            } finally {
+                                let errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`
+                                engineLogOutputFileAndUI(win, `${errorMessage}`)
+                                reject(new Error(errorMessage))
                             }
-
+                        }
+                    }, 20000)
+                    child.stdout.on("data", (data) => {
+                        stdout += data.toString()
+                    })
+                    child.stderr.on("data", (data) => {
+                        stderr += data.toString()
+                    })
+                    child.on("error", (error) => {
+                        if (finished) return
+                        finished = true
+                        clearTimeout(timer)
+                        let errorMessage = `命令执行失败: ${error.message}\nStdout: ${stdout}\nStderr: ${stderr}`
+                        if (error.code === "ENOENT") {
+                            errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
+                        } else if (error.killed) {
+                            errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
+                        } else if (error.signal) {
+                            errorMessage = `引擎由于信号而终止: ${error.signal}\nStderr: ${stderr}`
+                        }
+                        engineLogOutputFileAndUI(win, `${errorMessage}`)
+                        reject(new Error(errorMessage))
+                    })
+                    child.on("close", (code, signal) => {
+                        if (finished) return
+                        if (code !== 0) {
+                            let errorMessage = `命令执行失败: 退出码 ${code}\nStdout: ${stdout}\nStderr: ${stderr}`
+                            if (signal) {
+                                errorMessage = `引擎由于信号而终止: ${signal}\nStderr: ${stderr}`
+                            }
                             engineLogOutputFileAndUI(win, `${errorMessage}`)
-
                             reject(new Error(errorMessage))
                             return
                         }
-
+                        if (stderr) {
+                            engineLogOutputFileAndUI(win, `Stderr: ${stderr}`)
+                            reject(new Error(stderr))
+                            return
+                        }
+                        finished = true
+                        clearTimeout(timer)
                         resolve(stdout)
                     })
                 })
@@ -318,6 +408,44 @@ module.exports = {
         }
         ipcMain.handle("download-latest-yak", async (e, version) => {
             return await asyncDownloadLatestYak(version)
+        })
+
+        const asyncWriteEngineKeyToYakitProjects = async (version) => {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    if (process.platform === "darwin") {
+                        const yakKeyFile = path.join(YakitProjectPath, "engine-sha256.txt")
+                        // 先行删除
+                        if (fs.existsSync(yakKeyFile)) {
+                            fs.unlinkSync(yakKeyFile)
+                        }
+                        // macOS下正常下载引擎时注入
+                        if (version) {
+                            const hashData = await fetchSpecifiedYakVersionHash(version, {timeout: 2000})
+                            fs.writeFileSync(yakKeyFile, hashData)
+                        }
+                        // macOS下解压内置引擎时注入
+                        else {
+                            const hashTxt = path.join("bins", "engine-sha256.txt")
+                            if (fs.existsSync(loadExtraFilePath(hashTxt))) {
+                                let hashData = fs.readFileSync(loadExtraFilePath(hashTxt)).toString("utf8")
+                                // 去除换行符
+                                hashData = (hashData || "").replace(/\r?\n/g, "")
+                                // 去除首尾空格
+                                hashData = hashData.trim()
+                                fs.writeFileSync(yakKeyFile, hashData)
+                            }
+                        }
+                    }
+                    resolve()
+                } catch (error) {
+                    reject(error)
+                }
+            })
+        }
+
+        ipcMain.handle("write-engine-key-to-yakit-projects", async (e, version) => {
+            return await asyncWriteEngineKeyToYakitProjects(version)
         })
 
         // 判断历史引擎版本是否存在以及正确性
@@ -441,9 +569,38 @@ module.exports = {
             return await asyncDownloadLatestYakit(version, type)
         })
 
+        const asyncDownloadLatestIntranetYakit = (filePath) => {
+            return new Promise((resolve, reject) => {
+                const dest = path.join(yakitInstallDir, path.basename(filePath))
+                // 校验yakitInstallDir目录下是否已经存在filePath文件，存在则直接返回
+                fs.access(dest, fs.constants.F_OK, async (err) => {
+                    if (err) {
+                        // 内网版下载
+                        await downloadIntranetYakit(
+                            filePath,
+                            dest,
+                            (state) => {
+                                if (!!state) {
+                                    win.webContents.send("download-yakit-engine-progress", state)
+                                }
+                            },
+                            resolve,
+                            reject
+                        )
+                    } else {
+                        resolve(true)
+                    }
+                })
+            })
+        }
+
+        ipcMain.handle("download-latest-intranet-yakit", async (e, filePath) => {
+            return await asyncDownloadLatestIntranetYakit(filePath)
+        })
+
         ipcMain.handle("download-enpriTrace-latest-yakit", async (e, url) => {
             return await new Promise((resolve, reject) => {
-                downloadYakitByDownloadUrl(resolve, reject, url)
+                downloadIntranetYakitByDownloadUrl(resolve, reject, url)
             })
         })
 
@@ -653,9 +810,6 @@ module.exports = {
                 })
             })
         }
-        ipcMain.handle("InitBuildInEngine", async (e, params) => {
-            return await asyncInitBuildInEngine(params)
-        })
 
         // 尝试初始化数据库
         ipcMain.handle("InitCVEDatabase", async (e) => {
@@ -689,6 +843,7 @@ module.exports = {
 
         // asyncRestoreEngineAndPlugin wrapper
         ipcMain.handle("RestoreEngineAndPlugin", async (e, params) => {
+            latestVersionCache = null
             const engineTarget = isWindows ? path.join(yaklangEngineDir, "yak.exe") : path.join(yaklangEngineDir, "yak")
             const buidinEngine = path.join(yaklangEngineDir, "yak.build-in")
             const cacheFlagLock = path.join(basicDir, "flag.txt")

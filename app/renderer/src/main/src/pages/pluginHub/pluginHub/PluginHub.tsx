@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn} from "ahooks"
 import {PluginSourceType, PluginToDetailInfo} from "../type"
 import {PluginHubList} from "../pluginHubList/PluginHubList"
 import {PluginHubDetail, PluginHubDetailRefProps} from "../pluginHubDetail/PluginHubDetail"
@@ -7,6 +7,9 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemotePluginGV} from "@/enums/plugin"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {registerShortcutKeyHandle, unregisterShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"
+import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
@@ -21,6 +24,17 @@ interface PluginHubProps {}
 const PluginHub: React.FC<PluginHubProps> = memo((props) => {
     const {} = props
     const [active, setActive] = useState<PluginSourceType>()
+
+    const wrapper = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(wrapper)
+    useEffect(() => {
+        if (inViewport) {
+            registerShortcutKeyHandle(ShortcutKeyPage.PluginHub)
+            return () => {
+                unregisterShortcutKeyHandle(ShortcutKeyPage.PluginHub)
+            }
+        }
+    }, [inViewport])
 
     useEffect(() => {
         getRemoteValue(RemotePluginGV.UpdateLocalPluginForMITMCLI).then((val) => {
@@ -70,7 +84,7 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
     /** ---------- 详情组件逻辑 End ---------- */
 
     return (
-        <div id={wrapperId} className={styles["yakit-plugin-hub"]}>
+        <div ref={wrapper} id={wrapperId} className={styles["yakit-plugin-hub"]}>
             <div className={classNames(styles["list"], {[styles["out-list"]]: hiddenDetail || !isDetail})}>
                 <PluginHubList
                     rootElementId={wrapperId}
@@ -110,7 +124,13 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
             />
             {/* 一键下载 */}
             {allDownloadHint && (
-                <YakitGetOnlinePlugin visible={allDownloadHint} setVisible={() => setAllDownloadHint(false)} />
+                <YakitGetOnlinePlugin
+                    visible={allDownloadHint}
+                    setVisible={() => setAllDownloadHint(false)}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${YakitRoute.Plugin_Hub}`) || undefined
+                    }
+                />
             )}
         </div>
     )

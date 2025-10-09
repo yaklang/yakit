@@ -12,6 +12,7 @@
         flex: 1;
         height: 100%;
         overflow: hidden;
+        background-color: var(--Colors-Use-Neutral-Bg);
 
         .container-wrapper {
             width: 100%;
@@ -25,7 +26,7 @@
         .ui-layout-header {
             width: 100%;
             height: 37px;
-            background-color: var(--yakit-neutral10-color);
+            background-color: var(--Colors-Use-Basic-Background);
             -webkit-user-select: none;
             user-select: none;
 
@@ -33,17 +34,16 @@
                 width: 1px;
                 height: 100%;
                 padding: 10px 0;
-
                 .divider-style {
                     height: 100%;
-                    border-left: 1px solid var(--yakit-border-color);
+                    border-left: 1px solid var(--Colors-Use-Neutral-Border);
                 }
             }
 
             .divider-wrapper {
                 width: 1px;
                 height: 100%;
-                border-left: 1px solid var(--yakit-border-color);
+                border-left: 1px solid var(--Colors-Use-Neutral-Border);
             }
 
             .header-body {
@@ -51,7 +51,7 @@
                 height: 100%;
                 display: flex;
                 justify-content: space-between;
-                border-bottom: 1px solid var(--yakit-border-color);
+                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
                 position: relative;
 
                 .header-border-yakit-mask {
@@ -59,7 +59,7 @@
                     bottom: -1px;
                     width: 45px;
                     height: 1px;
-                    background: var(--yakit-card-background-color);
+                    background: var(--Colors-Use-Neutral-Bg);
                 }
 
                 .yakit-header-title {
@@ -71,7 +71,7 @@
                     transform: translate(-30px, 0);
                     line-height: 36px;
                     font-weight: 600;
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     text-align: center;
                     -webkit-app-region: drag;
                 }
@@ -100,21 +100,21 @@
                 .yakit-mode-icon {
                     box-sizing: border-box;
                     padding: 8px 12px;
-                    border-left: 1px solid var(--yakit-border-color);
-                    color: var(--yakit-body-text-color);
+                    border-left: 1px solid var(--Colors-Use-Neutral-Border);
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     svg {
                         width: 20px;
                         height: 20px;
                     }
                 }
                 .yakit-mode-icon:hover {
-                    background-color: var(--yakit-background-color);
+                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
                 }
 
                 .yakit-mode-selected {
-                    background: var(--yakit-card-background-color);
+                    background: var(--Colors-Use-Neutral-Bg);
                     .mode-icon-selected {
-                        color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     }
                 }
             }
@@ -142,7 +142,7 @@
             flex: 1;
             overflow: hidden;
             position: relative;
-            background: var(--yakit-primary-2);
+            background: var(--Colors-Use-Neutral-Bg);
         }
     }
 
@@ -246,11 +246,11 @@
 }
 
 .sampling-popover {
-    width: 272px;
+    width: 350px;
     padding-top: 10px;
     border-radius: 4px;
     overflow: hidden;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
 
     :global {
         .ant-popover-inner-content {
@@ -261,7 +261,7 @@
     .sampling-info {
         display: flex;
         align-items: center;
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         padding-top: 8px;
         &-item {
             display: inline-block;
@@ -271,11 +271,11 @@
     }
 
     .sampling-footer {
-        border-top: 1px solid var(--yakit-border-color);
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 0px 0px 4px 4px;
         width: 100%;
         display: flex;
-        background: var(--yakit-card-background-color);
+        background: var(--Colors-Use-Neutral-Bg);
         height: 28px;
         user-select: none;
         margin-top: 14px;
@@ -292,20 +292,20 @@
         }
 
         .sampling-exit {
-            color: var(--yakit-danger-5);
-            border-right: 1px solid var(--yakit-border-color);
+            color: var(--Colors-Use-Error-Primary);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
             svg {
                 width: 16px;
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
                 margin-right: 2px;
             }
         }
 
         .sampling-refresh {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
             svg {
                 width: 16px;
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
                 margin-right: 2px;
             }
         }

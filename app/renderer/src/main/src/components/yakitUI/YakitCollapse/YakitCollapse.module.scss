@@ -1,7 +1,7 @@
 .yakit-collapse {
     padding: 0;
     font-size: 12px;
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     & > :global(.ant-collapse-item) {
         :global {
             .ant-collapse-extra {
@@ -18,7 +18,7 @@
             .ant-collapse-arrow {
                 width: 16px;
                 height: 16px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
                 svg {
                     width: 16px;
                     height: 16px;
@@ -36,9 +36,10 @@
         margin-bottom: 8px;
         & > :global(.ant-collapse-header) {
             border-top: 0;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             &:hover {
                 border-radius: 4px;
-                background: var(--yakit-card-background-color);
+                background: var(--Colors-Use-Neutral-Bg);
             }
         }
         &:global(:last-child) {
@@ -50,7 +51,7 @@
         }
         &:global(.ant-collapse-item-active) {
             border-radius: 4px;
-            background: var(--yakit-card-background-color);
+            background: var(--Colors-Use-Neutral-Bg);
             margin-bottom: 8px;
             &:last-child {
                 margin-bottom: 0;
@@ -58,14 +59,21 @@
         }
     }
 }
+
 .yakit-collapse-bordered {
     & > :global(.ant-collapse-item) {
         margin-bottom: 0px;
         & > :global(.ant-collapse-header) {
-            border-top: 1px solid var(--yakit-border-color);
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
             &:hover {
                 background-color: transparent;
                 border-radius: 0;
+            }
+            & > :global(.ant-collapse-expand-icon) {
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
+            & > :global(.ant-collapse-header-text) {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
         &:global(:last-child) {
@@ -84,7 +92,7 @@
 .yakit-collapse-grey-divider {
     :global {
         .ant-collapse-ghost > .ant-collapse-item {
-            border-bottom: 1px solid var(--yakit-border-color);
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             &:last-child {
                 border-bottom: 0;
             }

@@ -1,6 +1,13 @@
 import React from "react"
 import {success, yakitFailed, yakitNotify} from "./notification"
 import {OpenPacketNewWindowItem} from "@/components/OpenPacketNewWindow/OpenPacketNewWindow"
+import {childWindowHash} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
+import {
+    changeClickEngineConsoleFlag,
+    clickEngineConsoleFlag,
+    engineConsoleWindowHash
+} from "@/components/layout/hooks/useEngineConsole/useEngineConsole"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -9,11 +16,33 @@ export const openExternalWebsite = (u: string) => {
 }
 
 export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
-    yakitNotify("info", "新窗口打开中...")
-    ipcRenderer.send("open-new-child-window", {
-        type: "openPacketNewWindow",
-        data: data
+    if (childWindowHash) {
+        minWinSendToChildWin({type: "openPacketNewWindow", data})
+    } else {
+        yakitNotify("info", i18n.language === "zh" ? "新窗口打开中..." : "Opening new window...")
+        ipcRenderer.send("open-new-child-window", {
+            type: "openPacketNewWindow",
+            data: data
+        })
+    }
+}
+export const minWinSendToChildWin = (params) => {
+    ipcRenderer.send("onTop-childWin")
+    ipcRenderer.send("minWin-send-to-childWin", {
+        type: params.type,
+        hash: childWindowHash,
+        data: params.data
     })
+}
+
+export const openConsoleNewWindow = () => {
+    if (clickEngineConsoleFlag) return
+    if (!engineConsoleWindowHash) {
+        changeClickEngineConsoleFlag(true)
+        ipcRenderer.invoke("open-console-new-window")
+    } else {
+        ipcRenderer.send("onTop-console-new-window")
+    }
 }
 
 export const openABSFile = (u: string) => {

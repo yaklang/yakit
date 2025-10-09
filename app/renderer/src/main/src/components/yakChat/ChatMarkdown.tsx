@@ -7,8 +7,8 @@ import RehypeKatex from "rehype-katex"
 import RemarkGfm from "remark-gfm"
 import RehypeHighlight from "rehype-highlight"
 import mermaid from "mermaid"
-import rehypeRaw from "rehype-raw"
 import {CopyComponents} from "../yakitUI/YakitTag/YakitTag"
+import rehypeSanitize from "rehype-sanitize"
 
 import "./chatMarkdown.scss"
 
@@ -16,15 +16,14 @@ const {ipcRenderer} = window.require("electron")
 
 interface ChatMarkdownBaseProps {
     content: string
+    skipHtml?: boolean
 }
 export type ChatMarkdownProps = ChatMarkdownBaseProps & React.DOMAttributes<HTMLDivElement>
 
 export const ChatMarkdown: React.FC<ChatMarkdownProps> = memo((props) => {
-    const {content} = props
-
     return (
         <div className='markdown-body'>
-            <MarkdownContent content={content} />
+            <MarkdownContent {...props} />
         </div>
     )
 })
@@ -70,23 +69,24 @@ function Mermaid(props: {code: string; onError: () => void}) {
     )
 }
 
-function PreCode(props: {children: any}) {
+function PreCode(props: {children?: React.ReactNode}) {
     const ref = useRef<HTMLPreElement>(null)
     const [mermaidCode, setMermaidCode] = useState("")
     const [copyStr, setCopyStr] = useState("")
     useEffect(() => {
-        if (!ref.current) return
-        const mermaidDom = ref.current.querySelector("code.language-mermaid")
-        if (mermaidDom) {
-            setMermaidCode((mermaidDom as HTMLElement).innerText)
+        if (ref.current) {
+            // 初始赋值
+            setCopyStr(ref.current.textContent || "")
+            // 监听后续变化
+            const observer = new MutationObserver(() => {
+                if (ref.current) {
+                    setCopyStr(ref.current.textContent || "")
+                }
+            })
+            observer.observe(ref.current, {childList: true, subtree: true})
+            return () => observer.disconnect()
         }
     }, [props.children])
-
-    useEffect(() => {
-        if (ref.current) {
-            setCopyStr(ref.current.innerText)
-        }
-    }, [ref.current])
 
     if (mermaidCode) {
         return <Mermaid code={mermaidCode} onError={() => setMermaidCode("")} />
@@ -94,27 +94,31 @@ function PreCode(props: {children: any}) {
 
     return (
         <pre ref={ref}>
-            <CopyComponents className='copy-code-button' copyText={copyStr || ""} iconColor={"#85899e"} />
+            <CopyComponents
+                className='copy-code-button'
+                copyText={copyStr || ""}
+                iconColor={"var(--Colors-Use-Neutral-Text-1-Title)"}
+            />
 
             {props.children}
         </pre>
     )
 }
 
-function _MarkDownContent(props: {content: string}) {
+function _MarkDownContent(props: ChatMarkdownBaseProps) {
     return (
         <ReactMarkdown
             remarkPlugins={[RemarkMath, RemarkGfm, RemarkBreaks]}
             rehypePlugins={[
                 RehypeKatex,
-                rehypeRaw,
                 [
                     RehypeHighlight,
                     {
                         detect: false,
                         ignoreMissing: true
                     }
-                ]
+                ],
+                rehypeSanitize
             ]}
             components={{
                 pre: PreCode,
@@ -130,6 +134,7 @@ function _MarkDownContent(props: {content: string}) {
                     )
                 }
             }}
+            skipHtml={props.skipHtml}
         >
             {props.content}
         </ReactMarkdown>

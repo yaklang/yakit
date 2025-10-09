@@ -45,7 +45,7 @@ export const convertGetNotepadRequest = (
 
 export interface GetNotepadRequestProps extends API.GetNotepadRequest, PluginListPageMeta {}
 /**
- * @description 获取记事本列表
+ * @description 获取云文档列表
  * @param query
  * @param hiddenError
  * @returns
@@ -65,13 +65,13 @@ export const apiGetNotepadList: APIFunc<GetNotepadRequestProps, API.GetNotepadRe
         })
             .then(resolve)
             .catch((err) => {
-                if (!hiddenError) yakitNotify("error", "获取记事本列表失败:" + err)
+                if (!hiddenError) yakitNotify("error", "获取云文档列表失败:" + err)
                 reject(err)
             })
     })
 }
 /**
- * @description 保存/新建记事本
+ * @description 保存/新建云文档
  * @param params
  * @param hiddenError
  * @returns
@@ -85,7 +85,7 @@ export const apiSaveNotepad: APIFunc<API.PostNotepadRequest, string> = (params, 
         })
             .then(resolve)
             .catch((err) => {
-                if (!hiddenError) yakitNotify("error", "保存/新建记事本失败:" + err)
+                if (!hiddenError) yakitNotify("error", "保存/新建云文档失败:" + err)
                 reject(err)
             })
     })
@@ -95,7 +95,7 @@ interface NotepadDetailRequest {
     hash: string
 }
 /**
- * @description 获取记事本详情
+ * @description 获取云文档详情
  * @param hash
  * @param hiddenError
  * @returns
@@ -111,14 +111,14 @@ export const apiGetNotepadDetail: APIFunc<string, API.GetNotepadList> = (hash, h
         })
             .then(resolve)
             .catch((err) => {
-                if (!hiddenError) yakitNotify("error", "获取记事本详情失败:" + err)
+                if (!hiddenError) yakitNotify("error", "获取云文档详情失败:" + err)
                 reject(err)
             })
     })
 }
 
 /**
- * @description 删除记事本
+ * @description 删除云文档
  * @param params
  * @param hiddenNotify
  * @returns
@@ -140,7 +140,7 @@ export const apiDeleteNotepadDetail: APIFunc<API.DeleteNotepadRequest, API.Actio
                 resolve(res)
             })
             .catch((err) => {
-                if (!hiddenNotify) yakitNotify("error", "删除记事本失败:" + err)
+                if (!hiddenNotify) yakitNotify("error", "删除云文档失败:" + err)
                 reject(err)
             })
     })
@@ -155,7 +155,7 @@ export const apiDownloadNotepad: APIFunc<API.NotepadDownloadRequest, string> = (
         })
             .then(resolve)
             .catch((err) => {
-                if (!hiddenError) yakitNotify("error", "下载记事本失败:" + err)
+                if (!hiddenError) yakitNotify("error", "下载云文档失败:" + err)
                 reject(err)
             })
     })
@@ -376,7 +376,7 @@ export interface NoteContent {
     Id: string
     Note: Note
     Index: number
-    Length: number
+    Line: number
     LineContent: string
 }
 export interface SearchNoteContentRequest {
@@ -468,28 +468,6 @@ export const showSaveDialog: APIOptionalFunc<string, ShowSaveDialogResponse> = (
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("show-save-dialog", fileName)
-            .then(resolve)
-            .catch((err) => {
-                if (!hiddenError) yakitNotify("error", `获取保存文件路径错误${err}`)
-                reject(err)
-            })
-    })
-}
-
-export interface OpenDialogRequest {
-    title?: string
-    properties?: string[]
-    defaultPath?: string
-}
-export interface OpenDialogResponse {
-    canceled: boolean
-    filePaths: string[]
-    bookmarks?: string[]
-}
-export const openDialog: APIOptionalFunc<OpenDialogRequest, OpenDialogResponse> = (params, hiddenError) => {
-    return new Promise((resolve, reject) => {
-        ipcRenderer
-            .invoke("openDialog", params)
             .then(resolve)
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", `获取保存文件路径错误${err}`)

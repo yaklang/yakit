@@ -13,13 +13,13 @@
                 align-items: center;
 
                 .virtual-table-heard-left-text {
-                    color: var(--yakit-helper-text-color);
+                    color: var(--Colors-Use-Neutral-Disable);
                     font-size: 12px;
                     margin-right: 4px;
                 }
 
                 .virtual-table-heard-left-number {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                     font-size: 12px;
                 }
             }
@@ -39,15 +39,15 @@
             svg {
                 width: 16px;
                 &:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
 
         span {
             padding: 0 12px;
-            border-right: 1px solid var(--yakit-border-color);
-            color: var(--yakit-body-text-color);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
 
             &:first-child {
                 padding-left: 0;
@@ -61,7 +61,7 @@
         .del-icon {
             svg {
                 width: 16px;
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
             }
         }
     }

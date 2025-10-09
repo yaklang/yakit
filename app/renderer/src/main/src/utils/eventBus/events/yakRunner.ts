@@ -5,7 +5,6 @@ export type YakRunnerEventProps = {
     onOpenBottomDetail: string
     onOpenTerminaDetail?: string
     onRefreshRunnerHistory: string
-    onRefreshAduitHistory?: string
     // 打开文件树
     onOpenFileTree: string
     // 刷新文件树
@@ -34,6 +33,8 @@ export type YakRunnerEventProps = {
     onOperationFileTree: string
     // 通过路径打开文件
     onOpenFileByPath: string
+    // 通过缓存文件路径读取文件内容
+    onGetCodeByPathCache: string
     // 打开编译文件Modal
     onOpenAuditModal?: string
     // 刷新审计树

@@ -1,55 +1,95 @@
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {RequestYakURLResponse} from "../yakURLTree/data"
+import {RequestYakURLResponse, YakURLResource} from "../yakURLTree/data"
 import {FileDefault, FileSuffix, FolderDefault} from "../yakRunner/FileTree/icon"
-import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
+import {AuditDetailItemProps, AuditYakUrlProps} from "./AuditCode/AuditCodeType"
 
 import emiter from "@/utils/eventBus/eventBus"
 import {failed, warn} from "@/utils/notification"
-import {AreaInfoProps, TabFileProps, YakRunnerHistoryProps} from "./YakRunnerAuditCodeType"
+import {AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps} from "./YakRunnerAuditCodeType"
 import cloneDeep from "lodash/cloneDeep"
 import {randomString} from "@/utils/randomUtil"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsType"
+import {FileDetailInfo, OptionalFileDetailInfo, Selection} from "./RunnerTabs/RunnerTabsType"
 import {v4 as uuidv4} from "uuid"
-import {
-    ConvertYakStaticAnalyzeErrorToMarker,
-    IMonacoEditorMarker,
-    YakStaticAnalyzeErrorResult
-} from "@/utils/editorMarkers"
 import {FileNodeMapProps, FileNodeProps} from "./FileTree/FileTreeType"
-import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
-import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
-
+import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import {SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
+import {CodeRangeProps} from "./RightAuditDetail/RightAuditDetail"
+import {
+    QuerySyntaxFlowScanTaskRequest,
+    QuerySyntaxFlowScanTaskResponse
+} from "../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer"
+import {genDefaultPagination} from "../invoker/schema"
+import {APIFunc} from "@/apiUtils/type"
+import {JumpToAuditEditorProps} from "./BottomEditorDetails/BottomEditorDetailsType"
+import {getNameByPath, initFileTreeData} from "../yakRunner/utils"
 const {ipcRenderer} = window.require("electron")
 
-const initFileTreeData = (list, path) => {
+const getLineFun = (info: YakURLResource) => {
+    try {
+        if (info.ResourceType === "risk") {
+            const result = info.Extra.find((item) => item.Key === "code_range")?.Value
+            if (result) {
+                const item: CodeRangeProps = JSON.parse(result)
+                const {start_line} = item
+                return start_line
+            }
+        }
+        return undefined
+    } catch (error) {}
+}
+
+const initRiskOrRuleTreeData = (list: RequestYakURLResponse, path) => {
     return list.Resources.sort((a, b) => {
-        // 将 ResourceType 为 'dir' 的对象排在前面
-        if (a.ResourceType === "dir" && b.ResourceType !== "dir") {
+        // 将 ResourceType 为 'program'与'source' 的对象排在前面
+        if (["program", "source"].includes(a.ResourceType) && !["program", "source"].includes(b.ResourceType)) {
             return -1 // a排在b前面
-        } else if (a.ResourceType !== "dir" && b.ResourceType === "dir") {
+        } else if (!["program", "source"].includes(a.ResourceType) && ["program", "source"].includes(b.ResourceType)) {
             return 1 // b排在a前面
         } else {
             return 0 // 保持原有顺序
         }
     }).map((item) => {
-        const isFile = !item.ResourceType
-        const isFolder = item.ResourceType === "dir"
-        const suffix = isFile && item.ResourceName.indexOf(".") > -1 ? item.ResourceName.split(".").pop() : ""
-        const isLeaf = isFile || !item.HaveChildrenNodes
+        const isFile = !item.HaveChildrenNodes
+        const isFolder = item.HaveChildrenNodes
+        let suffix = isFile && item.ResourceName.indexOf(".") > -1 ? item.ResourceName.split(".").pop() : ""
+        const count = item.Extra.find((item) => item.Key === "count")?.Value
+        const name = item.ResourceName.split("/").pop() || ""
+        const severity = item.Extra.find((item) => item.Key === "severity")?.Value
+        const severityValue = SeverityMapTag.find((item) => item.key.includes(severity || ""))?.value
+        let folderIcon = FolderDefault
+        let description: string | undefined = undefined
+        let line: number | undefined = undefined
+        if (item.ResourceType === "source") {
+            folderIcon = FileSuffix[item.ResourceName.split(".").pop() || ""]
+            description = path ? item.Path.replace(path, "") : item.Path
+        }
+        if (item.ResourceType === "function") {
+            folderIcon = FileSuffix["function"]
+        }
+        if (item.ResourceType === "risk") {
+            line = getLineFun(item)
+        }
+        if (item.ResourceType === "risk" && severityValue) {
+            suffix = severityValue
+        }
         return {
             parent: path || null,
-            name: item.ResourceName,
+            name,
             path: item.Path,
-            isFolder: isFolder,
-            icon: isFolder ? FolderDefault : suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
-            isLeaf: isLeaf
+            isFolder,
+            icon: isFolder ? folderIcon : suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
+            isLeaf: isFile,
+            count,
+            description,
+            line,
+            data: item
         }
     })
 }
 
 /**
- * @name 审计树获取
+ * @name 审计完整树获取
  */
 export const grpcFetchAuditTree: (path: string) => Promise<{res: RequestYakURLResponse; data: FileNodeMapProps[]}> = (
     path
@@ -71,61 +111,87 @@ export const grpcFetchAuditTree: (path: string) => Promise<{res: RequestYakURLRe
 }
 
 /**
- * @name 删除已编译项目
+ * @name 漏洞文件/规则汇总树获取
  */
-export const grpcFetchDeleteAudit: (path: string) => Promise<FileNodeMapProps[]> = (path) => {
+export const grpcFetchRiskOrRuleTree: (
+    path: string,
+    Query: {
+        program: string
+        type: "risk" | "file" | "rule"
+        search?: string
+        task_id?: string
+        result_id?: string
+        compare?: string
+    }
+) => Promise<{res: RequestYakURLResponse; data: FileNodeMapProps[]}> = (
+    path,
+    {program, type, search, task_id, result_id, compare}
+) => {
     return new Promise(async (resolve, reject) => {
+        // ssadb path为/时 展示最近编译
         const params = {
-            Method: "DELETE",
+            Method: "GET",
             Url: {
-                Schema: "ssadb",
+                Schema: "ssarisk",
                 Path: path,
-                Query: [{Key: "trash", Value: "true"}]
+                Query: [
+                    {
+                        Key: "type",
+                        Value: type
+                    },
+                    {
+                        Key: "program",
+                        Value: type !== "risk" ? program : ""
+                    },
+                    {
+                        Key: "search",
+                        Value: search
+                    },
+                    {
+                        Key: "task_id",
+                        Value: task_id
+                    },
+                    {
+                        Key: "result_id",
+                        Value: result_id
+                    },
+                    {
+                        Key: "compare",
+                        Value: compare
+                    }
+                ]
             }
         }
         try {
-            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            // console.log("删除已编译项目", params, list)
-            const data: FileNodeMapProps[] = initFileTreeData(list, path)
-            resolve(data)
+            const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            const data: FileNodeMapProps[] = initRiskOrRuleTreeData(res, path === "/" ? program : path)
+            resolve({res, data})
         } catch (error) {
             reject(error)
         }
     })
 }
 
-interface YakRunnerLastFolderExpandedProps {
-    folderPath: string
-    expandedKeys: string[]
-}
-
-const YakRunnerLastAuditFolderExpanded = "YakRunnerLastAuditFolderExpanded"
-
 /**
- * @name 更改打开的文件夹及其展开项
+ * @name 漏洞文件/规则汇树筛选列表获取
  */
-export const setYakRunnerLastFolderExpanded = (cache: YakRunnerLastFolderExpandedProps) => {
-    const newCache = JSON.stringify(cache)
-    setRemoteValue(YakRunnerLastAuditFolderExpanded, newCache)
-}
-
-/**
- * @name 获取上次打开的文件夹及其展开项
- */
-export const getYakRunnerLastFolderExpanded = (): Promise<YakRunnerLastFolderExpandedProps | null> => {
+export const grpcFetchAuditCodeRiskOrRuleList: (Programs: string) => Promise<QuerySyntaxFlowScanTaskResponse> = (
+    Programs
+) => {
     return new Promise(async (resolve, reject) => {
-        getRemoteValue(YakRunnerLastAuditFolderExpanded).then((data) => {
-            try {
-                if (!data) {
-                    resolve(null)
-                    return
-                }
-                const historyData: YakRunnerLastFolderExpandedProps = JSON.parse(data)
-                resolve(historyData)
-            } catch (error) {
-                resolve(null)
+        const params: QuerySyntaxFlowScanTaskRequest = {
+            Pagination: genDefaultPagination(100, 1),
+            Filter: {
+                Programs: [Programs],
+                HaveRisk: true
             }
-        })
+        }
+        try {
+            const res: QuerySyntaxFlowScanTaskResponse = await ipcRenderer.invoke("QuerySyntaxFlowScanTask", params)
+            resolve(res)
+        } catch (error) {
+            reject(error)
+        }
     })
 }
 
@@ -145,7 +211,7 @@ export const loadAuditFromYakURLRaw = (
                 Url: params,
                 Body: body,
                 Page,
-                PageSize,
+                PageSize
             })
             .then((rsp: RequestYakURLResponse) => {
                 resolve(rsp)
@@ -156,35 +222,17 @@ export const loadAuditFromYakURLRaw = (
     })
 }
 
-/**
- * @name 获取路径上的(文件/文件夹)名（兼容多系统）
- */
-export const getNameByPath = (filePath: string): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("pathFileName", {
-                filePath
-            })
-            .then((currentName: string) => {
-                resolve(currentName)
-            })
-            .catch(() => {
-                resolve("")
-            })
-    })
-}
-
 const YakRunnerAuditOpenHistory = "YakRunnerAuditOpenHistory"
 
 /**
  * @name 更改Audit历史记录
  */
-export const setYakRunnerHistory = (newHistory: YakRunnerHistoryProps) => {
+export const setAuditCodeHistory = (newHistory: YakRunnerHistoryProps) => {
     getRemoteValue(YakRunnerAuditOpenHistory).then((data) => {
         try {
             if (!data) {
                 setRemoteValue(YakRunnerAuditOpenHistory, JSON.stringify([newHistory]))
-                emiter.emit("onRefreshRunnerHistory", JSON.stringify([newHistory]))
+                emiter.emit("onCodeAuditRefreshAduitHistory", JSON.stringify([newHistory]))
                 return
             }
             const historyData: YakRunnerHistoryProps[] = JSON.parse(data)
@@ -193,7 +241,7 @@ export const setYakRunnerHistory = (newHistory: YakRunnerHistoryProps) => {
                 ...historyData.filter((item) => item.path !== newHistory.path)
             ].slice(0, 10)
             setRemoteValue(YakRunnerAuditOpenHistory, JSON.stringify(newHistoryData))
-            emiter.emit("onRefreshRunnerHistory", JSON.stringify(newHistoryData))
+            emiter.emit("onCodeAuditRefreshAduitHistory", JSON.stringify(newHistoryData))
         } catch (error) {
             failed(`历史记录异常，重置历史 ${error}`)
             setRemoteValue(YakRunnerAuditOpenHistory, JSON.stringify([]))
@@ -204,7 +252,7 @@ export const setYakRunnerHistory = (newHistory: YakRunnerHistoryProps) => {
 /**
  * @name 获取Audit历史记录
  */
-export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
+export const getAuditCodeHistory = (): Promise<YakRunnerHistoryProps[]> => {
     return new Promise(async (resolve, reject) => {
         getRemoteValue(YakRunnerAuditOpenHistory).then((data) => {
             try {
@@ -244,7 +292,7 @@ export const judgeAreaExistAuditPath = (areaInfo: AreaInfoProps[]): Promise<stri
 /**
  * @name 删除分栏数据里多个节点的file数据并重新布局
  */
-export const removeAreaFilesInfo = (areaInfo: AreaInfoProps[], removePath: string[]) => {
+export const removeAuditCodeAreaFilesInfo = (areaInfo: AreaInfoProps[], removePath: string[]) => {
     // 如若有为空项则删除
     const buildAreaInfo = (areaInfo) => {
         const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
@@ -286,7 +334,7 @@ export const removeAreaFilesInfo = (areaInfo: AreaInfoProps[], removePath: strin
 /**
  * @name 更改分栏数据里某个节点的isActive活动数据
  */
-export const setAreaFileActive = (areaInfo: AreaInfoProps[], path: string) => {
+export const setAuditCodeAreaFileActive = (areaInfo: AreaInfoProps[], path: string) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
     newAreaInfo.forEach((item, index) => {
         item.elements.forEach((itemIn, indexIn) => {
@@ -307,7 +355,7 @@ export const setAreaFileActive = (areaInfo: AreaInfoProps[], path: string) => {
  * @name 更新分栏数据里某个节点的file数据
  */
 // 根据path更新指定内容
-export const updateAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFileDetailInfo, path: string) => {
+export const updateAuditCodeAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFileDetailInfo, path: string) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
     newAreaInfo.forEach((item, index) => {
         item.elements.forEach((itemIn, indexIn) => {
@@ -327,7 +375,10 @@ export const updateAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFile
 /**
  * @name 判断分栏数据里是否存在某个节点file数据
  */
-export const judgeAreaExistFilePath = (areaInfo: AreaInfoProps[], path: string): Promise<FileDetailInfo | null> => {
+export const judgeAuditCodeAreaExistFilePath = (
+    areaInfo: AreaInfoProps[],
+    path: string
+): Promise<FileDetailInfo | null> => {
     return new Promise(async (resolve, reject) => {
         const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
         newAreaInfo.forEach((item, index) => {
@@ -346,7 +397,11 @@ export const judgeAreaExistFilePath = (areaInfo: AreaInfoProps[], path: string):
 /**
  * @name 新增分栏数据里某个节点的file数据
  */
-export const addAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo, activeFile?: FileDetailInfo) => {
+export const addAuditCodeAreaFileInfo = (
+    areaInfo: AreaInfoProps[],
+    info: FileDetailInfo,
+    activeFile?: FileDetailInfo
+) => {
     let newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
     let newActiveFile: FileDetailInfo = info
     try {
@@ -397,106 +452,19 @@ export const addAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo,
     }
 }
 
-const getCodeByNode = (path: string): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("read-file-content", path)
-            .then((res) => {
-                resolve(res)
-            })
-            .catch(() => {
-                failed("无法获取该文件内容，请检查后后重试！")
-                reject()
-            })
-    })
-}
-
-/**
- * @name 根据文件path获取其内容
- */
-export const getCodeByPath = (path: string, loadTreeType?: "file" | "audit"): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            let content: string = ""
-            const token = randomString(60)
-            ipcRenderer.invoke(
-                "ReadFile",
-                {FilePath: path, FileSystem: loadTreeType === "audit" ? "ssadb" : "local"},
-                token
-            )
-            ipcRenderer.on(`${token}-data`, (e, result: {Data: Uint8Array; EOF: boolean}) => {
-                content += Uint8ArrayToString(result.Data)
-                if (result.EOF) {
-                    resolve(content)
-                }
-            })
-            ipcRenderer.on(`${token}-error`, async (e, error) => {
-                // 此处在 ssadb 模式时不做node兼容处理
-                try {
-                    let newContent = await getCodeByNode(path)
-                    resolve(newContent)
-                } catch (error) {
-                    failed(`无法获取该文件内容，请检查后后重试:  ${error}`)
-                    reject()
-                }
-            })
-            ipcRenderer.on(`${token}-end`, (e, data) => {
-                ipcRenderer.removeAllListeners(`${token}-data`)
-                ipcRenderer.removeAllListeners(`${token}-error`)
-                ipcRenderer.removeAllListeners(`${token}-end`)
-            })
-        } catch (error) {}
-    })
-}
-
-/**
- * @name 最大限制10M
- */
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
-
-/**
- * @name 根据文件path获取其大小并判断其是否为文本
- */
-export const getCodeSizeByPath = (
-    path: string,
-    loadTreeType?: "file" | "audit"
-): Promise<{size: number; isPlainText: boolean}> => {
-    return new Promise(async (resolve, reject) => {
-        const params = {
-            Method: "GET",
-            Url: {
-                Schema: loadTreeType === "audit" ? "ssadb" : "file",
-                Path: path,
-                Query: [{Key: "detectPlainText", Value: "true"}]
-            }
-        }
-        try {
-            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            const size = parseInt(list.Resources[0].Size + "")
-            let isPlainText: boolean = true
-            list.Resources[0].Extra.forEach((item) => {
-                if (item.Key === "IsPlainText" && item.Value === "false") {
-                    isPlainText = false
-                }
-            })
-            resolve({
-                size,
-                isPlainText
-            })
-        } catch (error) {
-            reject(error)
-        }
-    })
-}
-
 /**
  * @name 删除分栏数据里某个节点的file数据
  */
-export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
+export const removeAuditCodeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    let newActiveFile: FileDetailInfo | undefined = undefined
+    let activeFileArr: FileDetailInfo[] = []
     newAreaInfo.forEach((item, idx) => {
         item.elements.forEach((itemIn, idxin) => {
             itemIn.files.forEach((file, fileIndex) => {
+                if (file.isActive) {
+                    activeFileArr.push(file)
+                }
                 if (file.path === info.path) {
                     // 如若仅存在一项 则删除此大项并更新布局
                     if (item.elements.length > 1 && itemIn.files.length === 1) {
@@ -515,31 +483,39 @@ export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailIn
                         if (info.isActive) {
                             newAreaInfo[idx].elements[idxin].files[fileIndex - 1 < 0 ? 0 : fileIndex - 1].isActive =
                                 true
+                            newActiveFile =
+                                newAreaInfo[idx].elements[idxin].files[fileIndex - 1 < 0 ? 0 : fileIndex - 1]
                         }
                     }
                 }
             })
         })
     })
-    return newAreaInfo
+    if (!newActiveFile && activeFileArr.length > 0) {
+        let delIndex = activeFileArr.findIndex((item) => item.path === info.path)
+        if (delIndex > -1) {
+            newActiveFile = activeFileArr[delIndex - 1 < 0 ? 0 : delIndex - 1]
+        }
+    }
+    return {newAreaInfo, newActiveFile}
 }
 
 /**
- * @name 语法检查
+ * @name 漏洞汇总
  */
-export const onSyntaxCheck = (code: string) => {
+export const onSyntaxRisk = ({ProgramName, CodeSourceUrl, RuntimeID}) => {
     return new Promise(async (resolve, reject) => {
-        // StaticAnalyzeError
         ipcRenderer
-            .invoke("StaticAnalyzeError", {Code: StringToUint8Array(code), PluginType: "yak"})
-            .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
-                if (e && e.Result.length > 0) {
-                    const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
-                    // monaco.editor.setModelMarkers(model, "owner", markers)
-                    resolve(markers)
-                } else {
-                    resolve([])
+            .invoke("QuerySSARisks", {
+                Filter: {
+                    ProgramName,
+                    CodeSourceUrl,
+                    RuntimeID
                 }
+            })
+            .then((res: QuerySSARisksResponse) => {
+                const {Data} = res
+                resolve(Data)
             })
             .catch(() => {
                 resolve([])
@@ -548,24 +524,34 @@ export const onSyntaxCheck = (code: string) => {
 }
 
 /**
- * @name 注入语法检查结果
+ * @name 注入漏洞汇总结果
  */
-export const getDefaultActiveFile = async (info: FileDetailInfo) => {
+export const getAuditCodeDefaultActiveFile = async (
+    info: FileDetailInfo,
+    ProgramName: string[],
+    CodeSourceUrl: string[],
+    RuntimeID: string[]
+) => {
+    // if (info.syntaxCheck) {
+    //     return info
+    // }
     let newActiveFile = info
-    // 注入语法检查结果
-    if (newActiveFile.language === "yak") {
-        const syntaxCheck = (await onSyntaxCheck(newActiveFile.code)) as IMonacoEditorMarker[]
-        if (syntaxCheck) {
-            newActiveFile = {...newActiveFile, syntaxCheck}
+    try {
+        if (CodeSourceUrl.length > 0) {
+            // 注入漏洞汇总结果
+            const syntaxCheck = (await onSyntaxRisk({ProgramName, CodeSourceUrl, RuntimeID})) as SSARisk[]
+            if (syntaxCheck) {
+                newActiveFile = {...newActiveFile, syntaxCheck}
+            }
         }
-    }
+    } catch (error) {}
     return newActiveFile
 }
 
 /**
  * @name 更改项是否包含激活展示文件，包含则取消激活
  */
-export const isResetActiveFile = (
+export const isResetAuditCodeActiveFile = (
     files: FileDetailInfo[] | FileNodeProps[],
     activeFile: FileDetailInfo | undefined
 ) => {
@@ -581,7 +567,7 @@ export const isResetActiveFile = (
 /**
  * @name 文件树重命名
  */
-export const grpcFetchRenameFileTree: (
+export const grpcFetchAuditCodeRenameFileTree: (
     path: string,
     newName: string,
     parentPath: string | null
@@ -612,121 +598,45 @@ export const grpcFetchRenameFileTree: (
     })
 }
 
-/**
- * @name 文件保存
- */
-export const grpcFetchSaveFile: (path: string, code: string) => Promise<FileNodeMapProps[]> = (path, code) => {
+/**Extra找到code_range，根据其进行跳转到文件对应的位置 */
+export const onJumpByCodeRange: APIFunc<AuditDetailItemProps, null> = (data) => {
     return new Promise(async (resolve, reject) => {
-        const params = {
-            Method: "POST",
-            Url: {
-                Schema: "file",
-                Query: [{Key: "op", Value: "content"}],
-                Path: path
-            },
-            // Body: []byte(fileContent),
-            Body: StringToUint8Array(code)
-        }
         try {
-            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            // console.log("文件保存", params, list)
-            const data: FileNodeMapProps[] = initFileTreeData(list, path)
-            resolve(data)
-        } catch (error) {
-            reject(error)
-        }
-    })
-}
-
-/**
- * @name 获取打开文件的path与name
- */
-export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件",
-                properties: ["openFile"]
-            })
-            .then(async (data: {filePaths: string[]}) => {
-                const filesLength = data.filePaths.length
-                if (filesLength === 1) {
-                    const path: string = data.filePaths[0].replace(/\\/g, "\\")
-                    const name: string = await getNameByPath(path)
-                    resolve({
-                        path,
-                        name
-                    })
-                } else if (filesLength > 1) {
-                    warn("只支持单选文件")
+            const arr = data.Extra.filter((item) => item.Key === "code_range")
+            if (arr.length > 0) {
+                const item: CodeRangeProps = JSON.parse(arr[0].Value)
+                const {url, start_line, start_column, end_line, end_column} = item
+                const name = await getNameByPath(url)
+                // console.log("monaca跳转", item, name)
+                const highLightRange: Selection = {
+                    startLineNumber: start_line,
+                    startColumn: start_column,
+                    endLineNumber: end_line,
+                    endColumn: end_column
                 }
+                const OpenFileByPathParams: OpenFileByPathProps = {
+                    params: {
+                        path: url,
+                        name,
+                        highLightRange
+                    }
+                }
+                emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+                // 纯跳转行号
+                setTimeout(() => {
+                    const obj: JumpToAuditEditorProps = {
+                        selections: highLightRange,
+                        path: url,
+                        isSelect: false
+                    }
+                    emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
+                }, 100)
                 resolve(null)
-            })
-            .catch(() => {
-                reject()
-            })
-    })
-}
-
-/**
- * @name 获取上一级的路径（兼容多系统）
- */
-export const getPathParent = (filePath: string): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("pathParent", {
-                filePath
-            })
-            .then((currentPath: string) => {
-                resolve(currentPath)
-            })
-            .catch(() => {
-                resolve("")
-            })
-    })
-}
-
-/**
- * @name 新建文件
- */
-export const grpcFetchCreateFile: (
-    path: string,
-    code?: string | null,
-    parentPath?: string | null
-) => Promise<FileNodeMapProps[]> = (path, code, parentPath) => {
-    return new Promise(async (resolve, reject) => {
-        const params: any = {
-            Method: "PUT",
-            Url: {
-                Schema: "file",
-                Query: [{Key: "type", Value: "file"}],
-                Path: path
+            } else {
+                reject("未找到code_range字段,无法跳转")
             }
-        }
-        if (code && code.length > 0) {
-            params.Body = StringToUint8Array(code)
-        }
-        try {
-            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            // console.log("新建文件", params, list)
-            const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
-            resolve(data)
         } catch (error) {
             reject(error)
         }
     })
-}
-
-/**
- * @name 编辑器代码类型判断
- */
-export const monacaLanguageType = (suffix?: string) => {
-    switch (suffix) {
-        case "yak":
-            return YaklangMonacoSpec
-        case "sf":
-            return SyntaxFlowMonacoSpec
-        default:
-            return undefined
-    }
 }

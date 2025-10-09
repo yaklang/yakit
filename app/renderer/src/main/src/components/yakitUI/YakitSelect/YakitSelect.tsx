@@ -16,6 +16,11 @@ import {CacheDataHistoryProps, YakitOptionTypeProps, onGetRemoteValuesBase, onSe
 import {setRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
 import {OutlineCheckIcon, OutlineXIcon} from "@/assets/icon/outline"
+import EmptyPng from "@/components/yakitUI/YakitEmpty/EmptyPng.png"
+import DarkEmptyPng from "@/components/yakitUI/YakitEmpty/DarkEmptyPng.png"
+import {useTheme} from "@/hook/useTheme"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+
 const {Option, OptGroup} = Select
 
 /**
@@ -38,6 +43,8 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     }: YakitSelectProps<OptionType>,
     ref: React.Ref<YakitBaseSelectRef>
 ) => {
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
+    const {theme} = useTheme()
     const selectRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(selectRef)
     // 鼠标移入项 用于判断是否显示 ×
@@ -54,7 +61,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         ref,
         () => ({
             onSetRemoteValues: (value: string[]) => {
-                const newValue = value.length > 0 ? value : props.value
+                const newValue = value.length > 0 ? value : props.value || []
                 onSetRemoteValues(newValue)
             },
             onGetRemoteValues: () => {
@@ -63,6 +70,15 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         }),
         [cacheHistoryData, props.value]
     )
+
+    const emptyImageTarget = useMemo(() => {
+        if (theme === "dark") {
+            return DarkEmptyPng
+        } else {
+            return EmptyPng
+        }
+    }, [theme])
+
     /**@description 缓存 cacheHistoryDataKey 对应的数据 */
     const onSetRemoteValues = useMemoizedFn((newValue: string[]) => {
         if (!cacheHistoryDataKey) return
@@ -91,7 +107,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                     })
                 })
                 .catch((e) => {
-                    yakitNotify("error", `${cacheHistoryDataKey}缓存字段保存数据出错:` + e)
+                    yakitNotify("error", `${cacheHistoryDataKey}${t("YakitSelect.YakitSelectCustom.cache_field_save_error")}` + e)
                 })
         } else if (props.mode === "multiple") {
             // 多选;该情况下label和value 大多数时候不一样;暂不支持缓存
@@ -154,7 +170,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                         })
                     })
                     .catch((e) => {
-                        yakitNotify("error", `${cacheHistoryDataKey}缓存字段保存数据出错:` + e)
+                        yakitNotify("error", `${cacheHistoryDataKey}${t("YakitSelect.YakitSelectCustom.cache_field_save_error")}` + e)
                     })
             } else if (props.mode === "multiple") {
                 // 暂不支持删除缓存项
@@ -191,11 +207,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                     setMouseEnterItem("")
                 }}
             >
-                <div
-                    className={styles["yakit-option-item-label"]}
-                >
-                    {copyItem.label}
-                </div>
+                <div className={styles["yakit-option-item-label"]}>{copyItem.label}</div>
                 <OutlineXIcon
                     style={{
                         display: showClose ? "block" : "none"
@@ -303,6 +315,12 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                     setShow(open)
                     if (props.onDropdownVisibleChange) props.onDropdownVisibleChange(open)
                 }}
+                notFoundContent={
+                    <div className={classNames("yakit-select-notFound")}>
+                        <img src={emptyImageTarget} alt='' style={{width: 88}} />
+                        <div className={classNames("yakit-select-content")}>{t("YakitEmpty.noData")}</div>
+                    </div>
+                }
             >
                 {props.children}
             </Select>

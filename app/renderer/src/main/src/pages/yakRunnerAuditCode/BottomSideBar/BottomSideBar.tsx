@@ -1,15 +1,10 @@
 import React, {useEffect, useMemo, useState} from "react"
 import {BottomSideBarProps} from "./BottomSideBarType"
-
 import classNames from "classnames"
 import styles from "./BottomSideBar.module.scss"
-import {
-    OutlineBugIcon,
-    OutlineScanRuleEditIcon,
-} from "@/assets/icon/outline"
+import {OutlineAnnotationIcon, OutlineBugIcon, OutlineClockIcon, OutlineScanRuleEditIcon, OutlineTagIcon} from "@/assets/icon/outline"
 import useStore from "../hooks/useStore"
-
-const {ipcRenderer} = window.require("electron")
+import emiter from "@/utils/eventBus/eventBus"
 
 export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
     const {onOpenEditorDetails} = props
@@ -26,11 +21,29 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
         }
         return data
     }, [activeFile?.position])
-    
+
     return (
         <div className={styles["bottom-side-bar"]}>
             {/* 语法检查|终端|帮助信息 */}
             <div className={styles["bottom-side-bar-left"]}>
+                <div
+                    className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
+                    onClick={() => {
+                        emiter.emit("onOpenLeftSecondNode", "result")
+                    }}
+                >
+                    <OutlineTagIcon />
+                    审计结果
+                </div>
+                <div
+                    className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
+                    onClick={() => {
+                        emiter.emit("onOpenLeftSecondNode", "history")
+                    }}
+                >
+                    <OutlineClockIcon />
+                    审计历史
+                </div>
                 <div
                     className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
                     onClick={() => {
@@ -48,6 +61,13 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                 >
                     <OutlineBugIcon />
                     漏洞详情
+                </div>
+                <div className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
+                    onClick={() => {
+                        onOpenEditorDetails("holeDispose")
+                    }}>
+                        <OutlineAnnotationIcon />
+                        漏洞处置
                 </div>
             </div>
 

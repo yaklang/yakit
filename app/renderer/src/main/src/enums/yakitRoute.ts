@@ -2,7 +2,7 @@
 export enum YakitRoute {
     /** 首页 */
     NewHome = "new-home",
-    /** 手动渗透 */
+    /** 手动渗透 v1*/
     HTTPHacker = "httpHacker",
     /**mitm v2 */
     MITMHacker = "mitm-hijack",
@@ -16,7 +16,6 @@ export enum YakitRoute {
     Plugin_OP = "plugin-op",
     Mod_Brute = "brute",
     Plugin_Hub = "plugin-hub",
-    Plugin_Groups = "plugin-groups",
     BatchExecutorPage = "batch-executor-page-ex",
     /** 反连 */
     DNSLog = "dnslog",
@@ -86,6 +85,8 @@ export enum YakitRoute {
     YakRunner_Audit_Code = "yakrunner-audit-code",
     // YakRunner项目管理
     YakRunner_Project_Manager = "yakrunner-project-manager",
+    // YakRunner扫描历史
+    YakRunner_ScanHistory = "yakrunner_scanHistory",
     /** 规则管理 */
     Rule_Management = "rule-management",
     /**笔记本管理 */
@@ -95,5 +96,26 @@ export enum YakitRoute {
     // YakRunner漏洞管理
     YakRunner_Audit_Hole = "yakrunner-audit-hole",
     // 系统配置（目前仅供IRify企业版配置水印）
-    System_Config = "system-config"
+    System_Config = "system-config",
+    // AI-Agent
+    AI_Agent = "ai-agent",
+
+    // 快捷键设置
+    ShortcutKey = "shortcut-key",
+    /** Java 反编译 */
+    Yak_Java_Decompiler = "yak-java-decompiler",
+    // 指纹库
+    FingerprintManage = "fingerprint-manage",
+    // ssa-result-diff
+    Ssa_Result_Diff = "ssa-result-diff",
+    // 新建 Forge
+    AddAIForge = "add-ai-forge",
+    // 编辑 Forge
+    ModifyAIForge = "modify-ai-forge",
+    /**AI 工具新增 */
+    AddAITool = "add-ai-tool",
+    /**AI 工具编辑 */
+    ModifyAITool = "modify-ai-tool",
+    /** AI 知识库 */
+    AI_REPOSITORY = "ai-repository"
 }

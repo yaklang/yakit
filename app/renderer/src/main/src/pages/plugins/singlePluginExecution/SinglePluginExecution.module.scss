@@ -12,7 +12,7 @@
         .plugin-tab {
             width: 24px;
             height: 100%;
-            background: #f0f1f3;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
             &-item {
                 padding: 12px 4px;
                 cursor: pointer;
@@ -23,19 +23,19 @@
 
                 text-orientation: sideways-right;
                 writing-mode: vertical-rl;
-                border-top: 1px solid #fff;
+                border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 &:hover {
-                    background: rgba(204, 210, 222, 0.5);
+                    background: var(--Colors-Use-Basic-Background);
                 }
                 &-active {
-                    color: #ffffff;
-                    background-color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-On-Primary);
+                    background-color: var(--Colors-Use-Main-Primary);
                     &:hover {
-                        background-color: var(--yakit-primary-4);
+                        background-color: var(--Colors-Use-Main-Hover);
                     }
                 }
                 &-unshowCont {
-                    background-color: var(--yakit-primary-3);
+                    background-color: var(--Colors-Use-Main-Border);
                 }
             }
         }

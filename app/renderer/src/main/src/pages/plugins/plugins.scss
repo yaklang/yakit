@@ -9,16 +9,16 @@
 }
 // -------------------- 审核状态图标颜色 ↓↓↓ --------------------
 .aduit-status-solid-circle-color {
-    color: #ffb660;
+    color: var(--Colors-Use-Main-Primary);
 }
 .aduit-status-badge-check-color {
-    color: #56c991;
+    color: var(--Colors-Use-Green-Primary);
 }
 .aduit-status-ban-color {
-    color: #b4bbca;
+    color: var(--Colors-Use-Neutral-Disable);
 }
 .aduit-status-flag-color {
-    color: #4a94f8;
+    color: var(--Colors-Use-Blue-Primary);
 }
 // -------------------- tooltip组件样式 ↓↓↓ --------------------
 .plugins-tooltip {
@@ -26,12 +26,12 @@
         display: flex;
         padding: 8px 12px;
         border-radius: 4px;
-        border: 1px solid #f8f8f8;
-        background: rgba(49, 52, 63, 0.9);
-        border-bottom-width: 0px;
+        background: var(--Colors-Use-Neutral-Text-1-Title);
+        border: 1px solid var(--Colors-Use-Neutral-Text-1-Title);
+        color: var(--Colors-Use-Basic-Background);
+        box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
+        // border-bottom-width: 0px;
 
-        color: #fff;
-        // text-align: center;
         font-size: 12px;
         line-height: 16px;
         cursor: text;
@@ -81,6 +81,7 @@
     padding-left: 4px;
     .ant-tooltip-arrow {
         left: 1px;
+        
     }
 }
 // -------------------- form组件样式 ↓↓↓ --------------------
@@ -99,37 +100,37 @@
 .plugins-item-required {
     margin: 0 4px;
     padding-top: 4px;
-    color: #f4736b;
+    color: var(--Colors-Use-Error-Primary);
     font-size: 14px;
     line-height: 14px;
 }
 // -------------------- radio组件样式 ↓↓↓ --------------------
 .plugins-radio-wrapper {
     .ant-radio:hover .ant-radio-inner {
-        border-color: #f28b44;
+        border-color: var(--Colors-Use-Main-Border);
     }
     .ant-radio-checked .ant-radio-inner {
-        border-color: #f28b44;
+        border-color: var(--Colors-Use-Main-Border);
     }
     .ant-radio-checked::after {
-        border-color: #f28b44;
+        border-color: var(--Colors-Use-Main-Border);
     }
     .ant-radio-inner::after {
-        background-color: #f28b44;
+        background-color: var(--Colors-Use-Main-Border);
     }
     .ant-radio-input:focus + .ant-radio-inner {
-        box-shadow: 0 0 0 3px rgb(242 139 68 / 12%);
+        box-shadow: 0 0 0 3px var(--Colors-Use-Main-Focus);
     }
     .ant-radio.ant-radio-disabled .ant-radio-inner {
-        background-color: #f0f1f3;
-        border-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Bg);
+        border-color: var(--Colors-Use-Neutral-Border);
     }
     .ant-radio.ant-radio-checked.ant-radio-disabled .ant-radio-inner {
-        border-color: #ccd2de;
+        border-color: var(--Colors-Use-Neutral-Border);
         background-color: transparent;
     }
     .ant-radio.ant-radio-checked.ant-radio-disabled .ant-radio-inner:after {
-        background-color: #ccd2de;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }
 // -------------------- anchor组件样式 ↓↓↓ --------------------
@@ -155,7 +156,7 @@
 .divider-style {
     width: 1px;
     height: 16px;
-    background-color: #eaecf3;
+    background-color: var(--Colors-Use-Neutral-Bg);
 }
 
 .extra-header-wrapper {
@@ -166,7 +167,7 @@
     .divider-style {
         width: 1px;
         height: 16px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     .btn-group-wrapper {
@@ -197,7 +198,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px 0;
-            border-top: 1px solid #eaecf3;
+            border-top: 1px solid var(--Colors-Use-Neutral-Border);
             border-bottom: 1px solid transparent;
             .plugin-details-item-info {
                 flex: 1 0 0;
@@ -209,7 +210,7 @@
                 &-text-style {
                     flex: 1 0 0;
                     overflow: hidden;
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     line-height: 16px;
                 }
@@ -224,7 +225,7 @@
                     svg {
                         width: 16px;
                         height: 16px;
-                        color: #b4bbca;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     }
                 }
             }
@@ -234,13 +235,13 @@
         }
     }
     .plugin-details-item-wrapper-active {
-        border-color: #fbc6a1;
-        background: rgba(242, 139, 68, 0.06);
+        border-color: var(--Colors-Use-Main-Border);
+        background: var(--Colors-Use-Main-Focus);
     }
     .plugin-details-item-wrapper-enableClick {
         cursor: pointer;
         &:hover {
-            background-color: #f0f1f3;
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
             .plugin-details-item {
                 border-color: transparent;
             }
@@ -290,7 +291,7 @@
     .loading-icon {
         width: 26px;
         text-align: center;
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         svg {
             width: 16px;
             height: 16px;

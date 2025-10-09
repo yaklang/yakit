@@ -3,6 +3,7 @@ import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import {EditorMenuItemType} from "./EditorMenu"
 import {EditorDetailInfoProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 import {Selection} from "@/pages/yakRunner/RunnerTabs/RunnerTabsType"
+import {type Theme} from "@/hook/useTheme"
 
 /** monaco-editor 相关接口 */
 export type YakitSelection = monacoEditor.Selection
@@ -30,6 +31,7 @@ export interface YakitEditorProps {
     value?: string
     /** @name 修改编辑器内容事件回调 */
     setValue?: (content: string) => any
+    onChange?:(content: string) => any 
 
     /** @name 文件类型 */
     type?: "html" | "http" | "yak" | string
@@ -77,8 +79,6 @@ export interface YakitEditorProps {
 
     /** @name 配置项-(存在此项则将字体/换行交由emiter更新) */
     editorId?: string
-/** @name 配置项-监听monaco快捷键 */
-    onKeyPress?: (v:KeyboardEvent) => void
 
     /** @name 配置项-高亮显示配置 */
     highLightText?: HighLightText[] | Selection[]
@@ -92,6 +92,12 @@ export interface YakitEditorProps {
     fixContentType?: string
     originalContentType?: string
     fixContentTypeHoverMessage?: string
+    renderValidationDecorations?: "on" | "off" | "editable"
+    // 弹窗 / 抽屉类独立在 root 节点外的盒模型，需外部传入颜色主题
+    propsTheme?: Theme
+
+    // 查找关键字
+    keepSearchName?: string
 }
 
 /**
@@ -108,52 +114,6 @@ export interface OtherMenuListProps {
     }
 }
 
-/** @name 编辑器-键盘对应按键枚举(暂时只包含字母和F1-12) */
-export enum YakitEditorKeyCode {
-    Control = 17,
-    Shift = 16,
-    Meta = 93,
-    Alt = 18,
-
-    KEY_A = 65,
-    KEY_B = 66,
-    KEY_C = 67,
-    KEY_D = 68,
-    KEY_E = 69,
-    KEY_F = 70,
-    KEY_G = 71,
-    KEY_H = 72,
-    KEY_I = 73,
-    KEY_J = 74,
-    KEY_K = 75,
-    KEY_L = 76,
-    KEY_M = 77,
-    KEY_N = 78,
-    KEY_O = 79,
-    KEY_P = 80,
-    KEY_Q = 81,
-    KEY_R = 82,
-    KEY_S = 83,
-    KEY_T = 84,
-    KEY_U = 85,
-    KEY_V = 86,
-    KEY_W = 87,
-    KEY_X = 88,
-    KEY_Y = 89,
-    KEY_Z = 90,
-    F1 = 112,
-    F2 = 113,
-    F3 = 114,
-    F4 = 115,
-    F5 = 116,
-    F6 = 117,
-    F7 = 118,
-    F8 = 119,
-    F9 = 120,
-    F10 = 121,
-    F11 = 122,
-    F12 = 123
-}
 /** 自定义快捷键对应的菜单项key值 */
 export interface KeyboardToFuncProps {
     [key: string]: string[]

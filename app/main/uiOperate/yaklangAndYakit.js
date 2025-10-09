@@ -11,9 +11,11 @@ const {
     getAvailableOSSDomain,
     fetchSpecifiedYakVersionHash
 } = require("../handlers/utils/network")
-const childProcess = require("child_process")
 const {testEngineAvaiableVersion} = require("../ipc")
 const {engineLogOutputFileAndUI} = require("../logFile")
+const process = require("process")
+const childProcess = require("child_process")
+const spawn = require("cross-spawn")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("get-available-oss-domain", async () => {
@@ -109,59 +111,73 @@ module.exports = (win, getClient) => {
             const commandParams = ["get-random-port", "-type", "tcp", "-json"]
             engineLogOutputFileAndUI(win, "----- 获取启动引擎可用端口号 -----")
             engineLogOutputFileAndUI(win, `执行命令: ${getLocalYaklangEngine()} ${commandParams.join(" ")}`)
-            childProcess.execFile(getLocalYaklangEngine(), commandParams, {timeout: 5000}, (err, stdout, stderr) => {
-                engineLogOutputFileAndUI(win, stdout.toString("utf-8"))
-                if (err) {
-                    engineLogOutputFileAndUI(win, err.toString("utf-8"))
-                    const arr = stdout
-                        .split("\n")
-                        .map((item) => item.trim())
-                        .map((item) => {
-                            try {
-                                const match = item.match(/\[FTAL\]\s*(.*)/)[1]
-                                return match
-                            } catch (error) {
-                                return ""
-                            }
-                        })
-                        .filter(Boolean)
-                    const {name, message} = err
-                    reject(`${name}: ${message}${arr.join("\n")}`)
-                    return
-                }
-                if (stderr) {
-                    engineLogOutputFileAndUI(win, stderr.toString("utf-8"))
-                    reject(stderr)
-                    return
-                }
 
-                try {
-                    const arr = stdout
-                        .split("\n")
-                        .map((item) => item.trim())
-                        .map((item) => {
-                            try {
-                                // 后端定义的封装格式，修改需与后端确认
-                                const match = item.match(
-                                    /^<f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>({.*})<\/f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>$/
-                                )[1]
-                                return match
-                            } catch (error) {
-                                return ""
-                            }
-                        })
-                        .filter(Boolean)
-                    if (arr.length === 0) {
-                        engineLogOutputFileAndUI(win, "引擎无法获取可用端口号, 请重置内置引擎")
-                        reject("引擎无法获取可用端口号, 请重置内置引擎")
-                        return
+            const child = spawn(getLocalYaklangEngine(), commandParams, {timeout: 5200})
+            let stdout = ""
+            let stderr = ""
+            let finished = false
+            const timer = setTimeout(() => {
+                if (!finished) {
+                    finished = true
+                    child.kill()
+                    try {
+                        if (process.platform === "win32") {
+                            childProcess.exec(`taskkill /PID ${child.pid} /T /F`)
+                        } else {
+                            process.kill(child.pid, "SIGKILL")
+                        }
+                    } catch (e) {
+                    } finally {
+                        engineLogOutputFileAndUI(win, "----- 引擎获取端口超时 -----")
+                        reject("引擎获取端口超时，请重置内置引擎")
                     }
-                    // 处理干扰符号：去除前后空格/换行
+                }
+            }, 5000)
+            child.stdout.on("data", (data) => {
+                stdout += data.toString()
+            })
+            child.stderr.on("data", (data) => {
+                stderr += data.toString()
+            })
+            child.on("error", (err) => {
+                if (finished) return
+                finished = true
+                clearTimeout(timer)
+                engineLogOutputFileAndUI(win, `err: ${err.toString()}`)
+                reject(`[YakEnginePort] ${err.name}: ${err.message}`)
+            })
+            child.on("close", (code) => {
+                if (finished) return
+                engineLogOutputFileAndUI(win, stdout)
+                const arr = stdout
+                    .split("\n")
+                    .map((item) => item.trim())
+                    .map((item) => {
+                        const val =
+                            item.match(
+                                /^<f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>({.*})<\/f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>$/
+                            ) || []
+                        const match = val[1]
+                        return match
+                    })
+                    .filter(Boolean)
+                if (arr.length === 0) {
+                    engineLogOutputFileAndUI(win, "----- 引擎无法获取可用端口号 -----")
+                    if (code !== 0 || stderr) {
+                        engineLogOutputFileAndUI(win, stderr || `Process exited with code ${code}`) // 只在失败时输出stderr
+                    }
+                    reject("引擎无法获取可用端口号, 请重置内置引擎")
+                    return
+                }
+                try {
                     const cleanedOutput = arr[0].trim()
                     const result = JSON.parse(cleanedOutput)
+                    finished = true
+                    clearTimeout(timer)
                     engineLogOutputFileAndUI(win, `----- 获取启动引擎可用端口成功: ${result.port} -----`)
                     resolve(result.port)
                 } catch (parseError) {
+                    engineLogOutputFileAndUI(win, "[YakEnginePort] 解析stdout异常: " + parseError)
                     reject(parseError)
                 }
             })
@@ -174,5 +190,9 @@ module.exports = (win, getClient) => {
     // 获取运行引擎的适配版本
     ipcMain.handle("determine-adapted-version-engine", async (e, params) => {
         return await testEngineAvaiableVersion(params)
+    })
+
+    ipcMain.handle("fetch-local-engine-path", async () => {
+        return getLocalYaklangEngine()
     })
 }

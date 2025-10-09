@@ -11,7 +11,7 @@ import {LeftSideBarProps, LeftSideType} from "./LeftSideBarType"
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
     const {fileTreeLoad, onOpenEditorDetails, isUnShow, setUnShow, active, setActive} = props
     const {pageInfo} = useStore()
-    const [isOnlyFileTree, setOnlyFileTree] = useState<boolean>(true)
+    const [isOnlyFileTree, setOnlyFileTree] = useState<boolean>(false)
     const ref = useRef(null)
     const getContainerSize = useSize(ref)
     // 抽屉展示高度
@@ -35,7 +35,10 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
             secondRatio: "50%",
             firstMinSize: 250,
             secondMinSize: 180,
-            lineStyle: {}
+        }
+        if (isOnlyFileTree) {
+            p.firstRatio = "100%"
+            p.secondRatio = "0%"
         }
         return p
     }, [isOnlyFileTree])
@@ -109,7 +112,8 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
                         <YakitResizeBox
                             isVer={true}
                             firstNodeStyle={{padding: 0}}
-                            secondNodeStyle={{padding: 0}}
+                            lineStyle={{display: isOnlyFileTree ? "none" : ""}}
+                            secondNodeStyle={{padding: 0, display: isOnlyFileTree ? "none" : ""}}
                             firstNode={<RunnerFileTree fileTreeLoad={fileTreeLoad} boxHeight={boxHeight} />}
                             secondNode={
                                 <AuditCode

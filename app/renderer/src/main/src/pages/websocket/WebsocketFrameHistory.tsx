@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
 import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
@@ -16,6 +16,9 @@ import {Tooltip} from "antd"
 
 import classNames from "classnames"
 import styles from "./WebsocketFrameHistory.module.scss"
+import oneDarkPro from "react-hex-editor/themes/oneDarkPro"
+import {useTheme} from "@/hook/useTheme"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -43,6 +46,7 @@ export interface WebsocketFlowParams {
 
 export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props) => {
     const {websocketHash} = props
+    const {t, i18n} = useI18nNamespaces(["history", "yakitUi"])
 
     /** ---------- 表格数据+逻辑 Start ---------- */
     const initLoading = useRef<boolean>(false)
@@ -53,6 +57,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
         Total: 0
     })
     const hasMore = useRef<boolean>(true)
+    const requestSequence = useRef<number>(0)
 
     const wrapperRef = useRef<HTMLDivElement>(null)
     const bodyRef = useRef<HTMLDivElement>(null)
@@ -61,6 +66,11 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
         wrapperTarget: bodyRef,
         itemHeight: 33,
         overscan: 5
+    })
+
+    const deduplicateData = useMemoizedFn((existingData: WebsocketFlow[], newData: WebsocketFlow[]) => {
+        const existingFrameIndexes = new Set(existingData.map((item) => item.FrameIndex))
+        return newData.filter((item) => !existingFrameIndexes.has(item.FrameIndex))
     })
 
     const fetchList = useMemoizedFn((isInit?: boolean) => {
@@ -73,30 +83,50 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
 
         setLoading(true)
         const pageNum = isInit ? 1 : Number(response.Pagination.Page) + 1
+
+        const currentSequence = ++requestSequence.current
+
         ipcRenderer
             .invoke("QueryWebsocketFlowByHTTPFlowWebsocketHash", {
                 WebsocketRequestHash: websocketHash,
                 Pagination: {Page: pageNum, Limit: 20}
             })
             .then((r: QueryGeneralResponse<WebsocketFlow>) => {
+                if (currentSequence !== requestSequence.current) {
+                    return
+                }
+
                 const newData = r.Data.map((item) => {
                     item.cellClassName = filterColorTag(item.Tags)
                     return item
                 })
-                const length = isInit ? newData.length : response.Data.length + newData.length
-                hasMore.current = length < Number(r.Total)
 
                 if (isInit) {
+                    const length = newData.length
+                    hasMore.current = length < Number(r.Total)
                     scrollTo(0)
                     setResponse({...r, Data: newData})
                 } else {
-                    setResponse((old) => ({...r, Data: old.Data.concat(newData)}))
+                    const deduplicatedNewData = deduplicateData(response.Data, newData)
+                    const combinedData = response.Data.concat(deduplicatedNewData)
+                    const length = combinedData.length
+                    hasMore.current = length < Number(r.Total)
+
+                    setResponse((old) => ({
+                        ...r,
+                        Data: combinedData
+                    }))
                 }
+            })
+            .catch((error) => {
+                console.error("Failed to fetch websocket flow data:", error)
             })
             .finally(() =>
                 setTimeout(() => {
-                    initLoading.current = false
-                    setLoading(false)
+                    if (currentSequence === requestSequence.current) {
+                        initLoading.current = false
+                        setLoading(false)
+                    }
                 }, 300)
             )
     })
@@ -125,6 +155,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
     const infoDetail = useRef<{content: string; hex: Uint8Array}>()
     const [showDetail, setShowDetail] = useState(false)
     const [activeTab, setActiveTab] = useState<"utf8" | "hex">("utf8")
+    const {theme} = useTheme()
 
     const handleOpenInfoDetail = useMemoizedFn((info: WebsocketFlow) => {
         if (showDetail) return
@@ -139,12 +170,16 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
     })
     /** ---------- 数据帧详情 End ---------- */
 
+    const targetHexTheme = useMemo(() => {
+        return theme === "dark" ? {hexEditor: oneDarkPro} : undefined
+    }, [theme])
+
     return (
         <YakitCard
-            title={"Websocket 数据帧"}
+            title={t("WebsocketFrameHistory.websocket_data_frame")}
             bodyStyle={{padding: 0}}
             extra={
-                <Tooltip title='刷新' placement='top'>
+                <Tooltip title={t("YakitButton.refresh")} placement='top'>
                     <YakitButton
                         type='text2'
                         icon={<OutlineRefreshIcon />}
@@ -157,20 +192,26 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
         >
             <div className={styles["websocket-frame-history"]}>
                 <div className={styles["table-header"]}>
-                    <div style={{width: 50}} className={classNames(styles["header-cell"], styles["base-cell"])}>
-                        序号
+                    <div
+                        style={{width: i18n.language === "zh" ? 50 : 80}}
+                        className={classNames(styles["header-cell"], styles["base-cell"])}
+                    >
+                        {t("YakitTable.order")}
                     </div>
-                    <div style={{width: 100}} className={classNames(styles["header-cell"], styles["base-cell"])}>
-                        数据方向
+                    <div
+                        style={{width: i18n.language === "zh" ? 100 : 150}}
+                        className={classNames(styles["header-cell"], styles["base-cell"])}
+                    >
+                        {t("WebsocketFrameHistory.data_direction")}
                     </div>
                     <div style={{width: 97}} className={classNames(styles["header-cell"], styles["base-cell"])}>
                         Type
                     </div>
                     <div className={classNames(styles["header-cell"], styles["base-cell"], styles["flex-cell"])}>
-                        预览
+                        {t("WebsocketFrameHistory.preview")}
                     </div>
                     <div style={{width: 63}} className={classNames(styles["header-cell"], styles["base-cell"])}>
-                        操作
+                        {t("YakitTable.action")}
                     </div>
                 </div>
 
@@ -186,13 +227,17 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                     const onlyRed = isCellRedSingleColor(cellClassName)
                                     return (
                                         <div
-                                            key={FrameIndex}
+                                            key={`${websocketHash}-${FrameIndex}`}
+                                            // key={FrameIndex}
                                             className={classNames(styles["table-tr"], {
                                                 [styles[`table-row-${colorClassName}`]]: !!colorClassName
                                             })}
                                         >
                                             <div
-                                                style={{width: 50, color: onlyRed ? "#fff" : undefined}}
+                                                style={{
+                                                    width: 50,
+                                                    color: onlyRed ? "var(--Colors-Use-Basic-Background)" : undefined
+                                                }}
                                                 className={classNames(styles["tr-cell"], styles["base-cell"])}
                                             >
                                                 {FrameIndex}
@@ -202,9 +247,13 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                                 className={classNames(styles["tr-cell"], styles["base-cell"])}
                                             >
                                                 {FromServer ? (
-                                                    <YakitTag className={styles["cell-tag-style"]}>服务端响应</YakitTag>
+                                                    <YakitTag className={styles["cell-tag-style"]}>
+                                                        {t("WebsocketFrameHistory.server_response")}
+                                                    </YakitTag>
                                                 ) : (
-                                                    <YakitTag className={styles["cell-tag-style"]}>客户端请求</YakitTag>
+                                                    <YakitTag className={styles["cell-tag-style"]}>
+                                                        {t("WebsocketFrameHistory.client_request")}
+                                                    </YakitTag>
                                                 )}
                                             </div>
                                             <div
@@ -226,7 +275,11 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                                 )}
                                             >
                                                 <span
-                                                    style={{color: onlyRed ? "#fff" : undefined}}
+                                                    style={{
+                                                        color: onlyRed
+                                                            ? "var(--Colors-Use-Basic-Background)"
+                                                            : undefined
+                                                    }}
                                                     className={classNames(
                                                         styles["cell-data-verbose"],
                                                         "yakit-content-single-ellipsis"
@@ -247,7 +300,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                                         handleOpenInfoDetail(data)
                                                     }}
                                                 >
-                                                    详情
+                                                    {t("YakitButton.detail")}
                                                 </YakitButton>
                                             </div>
                                         </div>
@@ -261,7 +314,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                 </div>
                             )}
                             {!loading && !hasMore.current && (
-                                <div className={styles["table-footer-empty"]}>暂无数据</div>
+                                <div className={styles["table-footer-empty"]}>{t("YakitEmpty.noData")}</div>
                             )}
                         </div>
                     </YakitSpin>
@@ -270,7 +323,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
 
             <YakitModal
                 type='white'
-                title='数据帧详情'
+                title={t("WebsocketFrameHistory.data_frame_details")}
                 centered={true}
                 width={"60%"}
                 footer={null}
@@ -302,6 +355,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                 showColumnLabels={true}
                                 showRowLabels={true}
                                 highlightColumn={true}
+                                theme={targetHexTheme}
                             />
                         )}
                     </div>

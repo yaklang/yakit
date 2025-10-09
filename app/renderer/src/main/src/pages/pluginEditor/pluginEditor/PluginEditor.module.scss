@@ -14,12 +14,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #eaecf3;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     .header-title {
         display: flex;
         align-items: center;
 
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 16px;
         font-weight: 600;
         line-height: 24px;
@@ -42,7 +42,7 @@
         }
 
         &:hover {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 
@@ -53,7 +53,7 @@
     }
 }
 .plugin-editor-modify-header {
-    background-color: var(--yakit-card-background-color);
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
     padding: 8px 16px;
     .header-title {
         font-size: 14px;
@@ -94,7 +94,7 @@
         flex-direction: column;
         gap: 2px;
         .title-style {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             line-height: 24px;
         }

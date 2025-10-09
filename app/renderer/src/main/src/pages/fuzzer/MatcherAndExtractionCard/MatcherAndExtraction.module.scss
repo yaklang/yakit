@@ -11,14 +11,14 @@
 }
 
 .icon-active {
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
 }
 .matching-extraction-resize-box {
     height: 100%;
     min-height: 300px;
     .matching-extraction-editor {
         padding-top: 16px;
-        background-color: #f0f2f5;
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
         height: 100%;
         :global {
             .monaco-editor .scroll-decoration {
@@ -38,8 +38,8 @@
         @extend .flex-space-between-and-center;
         height: 40px;
         padding: 8px 16px 8px 12px;
-        background: var(--yakit-card-background-color);
-        border-bottom: 1px solid var(--yakit-border-color);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         .matching-extraction-title {
             display: flex;
             align-items: center;
@@ -50,9 +50,9 @@
             font-weight: 400;
             font-size: 12px;
             line-height: 16px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
             .primary-number {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
                 margin: 0 4px;
             }
         }
@@ -70,37 +70,37 @@
                 border-top: 0;
             }
             .ant-collapse > .ant-collapse-item > .ant-collapse-header {
-                background: var(--yakit-card-background-color);
+                background: var(--Colors-Use-Neutral-Bg);
                 border-radius: 4px 4px 0px 0px;
                 border-bottom: 1px solid transparent;
             }
             .ant-collapse-item-active .ant-collapse-header {
-                border-bottom-color: var(--yakit-border-color) !important;
+                border-bottom-color: var(--Colors-Use-Neutral-Border) !important;
             }
             .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
                 padding: 0;
             }
             .ant-collapse-item {
-                border: 1px solid var(--yakit-border-color);
+                border: 1px solid var(--Colors-Use-Neutral-Border);
                 border-radius: 4px !important;
             }
             .ant-collapse-item + .ant-collapse-item {
                 margin-top: 8px;
             }
             .ant-collapse-ghost > .ant-collapse-item:last-child {
-                border-bottom: 1px solid var(--yakit-border-color);
+                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             }
         }
 
         .matching-list-item {
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
             border-radius: 8px;
             margin-bottom: 12px;
         }
         .matching-extraction-condition {
             @extend .flex-space-between-and-center;
             padding: 12px 12px 8px;
-            background-color: #fff;
+            background-color: var(--Colors-Use-Basic-Background);
             border-radius: 8px;
             flex-wrap: wrap;
             gap: 8px 0;
@@ -114,7 +114,7 @@
                         font-size: 12px;
                         line-height: 16px;
                         margin-right: 4px;
-                        color: var(--yakit-header-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                 }
             }
@@ -129,7 +129,7 @@
                 @extend .flex-center;
                 gap: 4px;
                 .header-id {
-                    color: var(--yakit-helper-text-color);
+                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
                     @extend .flex-center;
                     gap: 4px;
                     margin-right: 8px;
@@ -146,7 +146,7 @@
     }
     .remove-icon {
         margin-left: 8px;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
         svg {
             width: 16px;
             height: 16px;
@@ -154,11 +154,11 @@
     }
 }
 .trash-icon {
-    color: var(--yakit-danger-5);
+    color: var(--Colors-Use-Error-Primary);
     @include HTTPFuzzerPageShare.base-icon-card;
 }
 .collapse-panel-condition {
-    background-color: var(--yakit-card-background-color);
+    background-color: var(--Colors-Use-Neutral-Bg);
     padding: 12px 8px;
 }
 .collapse-panel-condition-notEditable {
@@ -176,11 +176,11 @@
         &:focus {
             .matcher-item-textarea,
             .resizer-icon {
-                background-color: var(--yakit-card-background-color);
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
             }
         }
         textarea::placeholder {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
             font-size: 12px;
         }
         textarea::-webkit-resizer {
@@ -196,12 +196,17 @@
             overflow-y: overlay;
             min-height: 24px;
             line-height: 16px;
+            background-color: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            &::placeholder{
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
         }
         .resizer-icon {
             position: absolute;
             bottom: 6px;
             right: 4px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             z-index: 0;
             pointer-events: none;
         }
@@ -217,11 +222,11 @@
         gap: 4px;
         margin-left: 4px;
         .adjustments-icon {
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             @include HTTPFuzzerPageShare.base-icon-card;
             &:hover {
-                background-color: var(--yakit-background-color);
-                color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Neutral-Bg);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -232,7 +237,7 @@
         .divider {
             height: 1px;
             width: 100%;
-            background-color: var(--yakit-border-color);
+            background-color: var(--Colors-Use-Neutral-Border);
             transform: scaleY(0.5);
             transform-origin: 50% 100%;
         }
@@ -242,7 +247,7 @@
     display: flex;
     align-items: self-start;
     font-size: 12px;
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     min-height: 24px;
     .label {
         width: 104px;
@@ -280,7 +285,7 @@
     .color-select-content {
         display: flex;
         flex-direction: column;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         .hit-color {
             font-weight: 500;
             font-size: 12px;
@@ -299,7 +304,7 @@
                 border-radius: 4px;
 
                 &:hover {
-                    background-color: var(--yakit-background-color);
+                    background-color: var(--Colors-Use-Neutral-Bg);
                 }
                 .color-chunk {
                     width: 16px;
@@ -308,7 +313,7 @@
                 }
             }
             .color-list-item-active {
-                background-color: var(--yakit-primary-1);
+                background-color: var(--Colors-Use-Main-Bg);
             }
         }
     }
@@ -319,13 +324,13 @@
     height: 24px;
     @extend .flex-center;
     justify-content: center;
-    // border: 1px solid var(--yakit-border-color);
+    // border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 50%;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     cursor: pointer;
     &:hover {
-        color: var(--yakit-primary-5);
-        border-color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
+        border-color: var(--Colors-Use-Main-Primary);
     }
 }
 .color-select-btn-small {
@@ -337,8 +342,8 @@
     }
 }
 .color-select-btn-active {
-    color: var(--yakit-primary-5);
-    border-color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
+    border-color: var(--Colors-Use-Main-Primary);
 }
 
 .edit-name-popover {
@@ -352,7 +357,7 @@
         flex-direction: column;
         gap: 4px;
         &-title {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-weight: 500;
             font-size: 12px;
             line-height: 16px;

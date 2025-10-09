@@ -17,7 +17,7 @@ import SetPassword from "./SetPassword"
 import {useEeSystemConfig, UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 import {refreshToken} from "@/utils/login"
-import {getRemoteValue, setLocalValue} from "@/utils/kv"
+import {getLocalValue, getRemoteValue, setLocalValue} from "@/utils/kv"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {
@@ -30,9 +30,8 @@ import {
     isIRify
 } from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
-import {CodeGV, RemoteGV} from "@/yakitGV"
+import {CodeGV} from "@/yakitGV"
 import {EnterpriseLoginInfoIcon} from "@/assets/icons"
-import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
 import {ControlOperation} from "@/pages/dynamicControl/DynamicControl"
 import {YakitHintModal} from "@/components/yakitUI/YakitHint/YakitHintModal"
@@ -46,12 +45,15 @@ import {MultipleNodeInfo} from "./layout/mainOperatorContent/MainOperatorContent
 import {WaterMark} from "@ant-design/pro-layout"
 import emiter from "@/utils/eventBus/eventBus"
 import {httpDeleteOSSResource} from "@/apiUtils/http"
-
-import "./main.scss"
-import "./GlobalClass.scss"
 import {setUpSyntaxFlowMonaco} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {MessageCenterModal} from "@/components/MessageCenter/MessageCenter"
+import {LocalGVS} from "@/enums/localGlobal"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {grpcOpenRenderLogFolder} from "@/utils/logCollection"
+
+import "./main.scss"
+import "./GlobalClass.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -232,6 +234,22 @@ export interface fuzzerInfoProp {
 }
 
 const Main: React.FC<MainProp> = React.memo((props) => {
+    const [showRenderCrash, setShowRenderCrash] = useState(false)
+    useEffect(() => {
+        getLocalValue(LocalGVS.RenderCrashScreen)
+            .then((value) => {
+                setShowRenderCrash(!!value)
+            })
+            .catch(() => {})
+    }, [])
+    const handleShowRenderCrashCallback = useMemoizedFn((result: boolean) => {
+        if (result) {
+            grpcOpenRenderLogFolder()
+        }
+        setLocalValue(LocalGVS.RenderCrashScreen, false)
+        setShowRenderCrash(false)
+    })
+
     const [loading, setLoading] = useState(false)
 
     // 修改密码弹框
@@ -287,28 +305,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         }
     }, [])
     /** ---------- 远程控制 end ---------- */
-    /** ---------- 引擎控制台 start ---------- */
-    // 是否展示console
-    const [isShowBaseConsole, setIsShowBaseConsole] = useState<boolean>(false)
-    // 展示console方向
-    const [directionBaseConsole, setDirectionBaseConsole] = useState<"left" | "bottom" | "right">("left")
-    // 监听console方向打开
-    useEffect(() => {
-        ipcRenderer.on("callback-direction-console-log", (e, res: any) => {
-            if (res?.direction) {
-                setDirectionBaseConsole(res.direction)
-                setIsShowBaseConsole(true)
-            }
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("callback-direction-console-log")
-        }
-    }, [])
-    // 缓存console展示状态 用于状态互斥
-    useEffect(() => {
-        setLocalValue(RemoteGV.ShowBaseConsole, isShowBaseConsole)
-    }, [isShowBaseConsole])
-    /** ---------- 引擎控制台 end ---------- */
     /** ---------- 登录状态变化的逻辑 start ---------- */
     const {userInfo, setStoreUserInfo} = useStore()
 
@@ -441,10 +437,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             return ""
         }
         // IRify社区版有水印
-        else if (isCommunityIRify()){
+        else if (isCommunityIRify()) {
             return "IRify技术浏览版仅供技术交流使用"
-        }
-        else if (userInfo.isLogin) {
+        } else if (userInfo.isLogin) {
             if (isEnpriTrace()) {
                 return getEnpriTraceWaterMark(userInfo.companyName || " ")
             }
@@ -470,57 +465,57 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         })
     }, [])
 
-    // 拖动chartCS
+    // // 拖动chartCS
     const chartCSDragAreaRef = useRef<any>(null)
-    const chartCSDragItemRef = useRef<any>(null)
-    const [chartCSDragAreaHeight, setChartCSDragAreaHeight] = useState<number>(0)
-    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-        entries.forEach((entry) => {
-            const h = entry.target.getBoundingClientRect().height
-            setChartCSDragAreaHeight(h)
-        })
-    })
-    // 从底部缩短软件高度时 拖拽元素始终保持在边界处可见
-    useUpdateEffect(() => {
-        if (chartCSDragItemRef.current) {
-            const top = parseInt(getComputedStyle(chartCSDragItemRef.current).getPropertyValue("top"))
-            const flag = top >= chartCSDragAreaHeight - 43 - 10 // 判读拖拽元素是否离最底部还有10px的距离
-            const currentTop = flag ? chartCSDragAreaHeight - 43 - 10 : top
-            chartCSDragItemRef.current.style.top = currentTop + "px"
-        }
-    }, [chartCSDragAreaHeight, chartCSDragItemRef])
+    // const chartCSDragItemRef = useRef<any>(null)
+    // const [chartCSDragAreaHeight, setChartCSDragAreaHeight] = useState<number>(0)
+    // const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+    //     entries.forEach((entry) => {
+    //         const h = entry.target.getBoundingClientRect().height
+    //         setChartCSDragAreaHeight(h)
+    //     })
+    // })
+    // // 从底部缩短软件高度时 拖拽元素始终保持在边界处可见
+    // useUpdateEffect(() => {
+    //     if (chartCSDragItemRef.current) {
+    //         const top = parseInt(getComputedStyle(chartCSDragItemRef.current).getPropertyValue("top"))
+    //         const flag = top >= chartCSDragAreaHeight - 43 - 10 // 判读拖拽元素是否离最底部还有10px的距离
+    //         const currentTop = flag ? chartCSDragAreaHeight - 43 - 10 : top
+    //         chartCSDragItemRef.current.style.top = currentTop + "px"
+    //     }
+    // }, [chartCSDragAreaHeight, chartCSDragItemRef])
 
-    useEffect(() => {
-        if (chartCSDragAreaRef.current && chartCSDragItemRef.current) {
-            const chartCSDragItemDom = chartCSDragItemRef.current
-            const dragAreaDom = chartCSDragAreaRef.current
+    // useEffect(() => {
+    //     if (chartCSDragAreaRef.current && chartCSDragItemRef.current) {
+    //         const chartCSDragItemDom = chartCSDragItemRef.current
+    //         const dragAreaDom = chartCSDragAreaRef.current
 
-            resizeObserver.observe(dragAreaDom)
-            dragAreaDom.addEventListener("dragover", function (e: {preventDefault: () => void}) {
-                e.preventDefault()
-            })
-            dragAreaDom.addEventListener(
-                "drop",
-                function (e: {
-                    dataTransfer: any
-                    preventDefault: () => void
-                    target: {getBoundingClientRect: () => any}
-                    clientY: number
-                }) {
-                    e.preventDefault()
-                    if (e.dataTransfer.getData("dragItem") === "chartCSDragItem") {
-                        const rect = dragAreaDom.getBoundingClientRect()
-                        const y = e.clientY - rect.top
-                        const currentTop = y >= rect.height - 43 - 10 ? rect.height - 43 - 10 : y
-                        chartCSDragItemDom.style.top = currentTop <= 0 ? 0 : currentTop + "px"
-                    }
-                }
-            )
-            chartCSDragItemDom.addEventListener("dragstart", function (e) {
-                e.dataTransfer.setData("dragItem", "chartCSDragItem")
-            })
-        }
-    }, [chartCSDragItemRef, chartCSDragAreaRef])
+    //         resizeObserver.observe(dragAreaDom)
+    //         dragAreaDom.addEventListener("dragover", function (e: {preventDefault: () => void}) {
+    //             e.preventDefault()
+    //         })
+    //         dragAreaDom.addEventListener(
+    //             "drop",
+    //             function (e: {
+    //                 dataTransfer: any
+    //                 preventDefault: () => void
+    //                 target: {getBoundingClientRect: () => any}
+    //                 clientY: number
+    //             }) {
+    //                 e.preventDefault()
+    //                 if (e.dataTransfer.getData("dragItem") === "chartCSDragItem") {
+    //                     const rect = dragAreaDom.getBoundingClientRect()
+    //                     const y = e.clientY - rect.top
+    //                     const currentTop = y >= rect.height - 43 - 10 ? rect.height - 43 - 10 : y
+    //                     chartCSDragItemDom.style.top = currentTop <= 0 ? 0 : currentTop + "px"
+    //                 }
+    //             }
+    //         )
+    //         chartCSDragItemDom.addEventListener("dragstart", function (e) {
+    //             e.dataTransfer.setData("dragItem", "chartCSDragItem")
+    //         })
+    //     }
+    // }, [chartCSDragItemRef, chartCSDragAreaRef])
 
     /** -------------------- 更新前瞻 Start -------------------- */
     // useEffect(() => {
@@ -594,12 +589,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 />
                             )}
                             <MainOperatorContent routeKeyToLabel={routeKeyToLabel.current} />
-                            {isShowBaseConsole && (
-                                <BaseConsole
-                                    setIsShowBaseConsole={setIsShowBaseConsole}
-                                    directionBaseConsole={directionBaseConsole}
-                                />
-                            )}
                         </div>
                     </AutoSpin>
 
@@ -619,15 +608,26 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     {(isCommunityEdition() || isEnpriTrace()) && (
                         <YakChatCS visible={chatShow} setVisible={setChatShow} />
                     )}
-                    {(isCommunityEdition() || isEnpriTrace()) && !chatShow && (
+                    {/* {(isCommunityEdition() || isEnpriTrace()) && !chatShow && (
                         <div className='chat-icon-wrapper' onClick={onChatCS} draggable={true} ref={chartCSDragItemRef}>
                             <img src={yakitCattle} />
                         </div>
-                    )}
+                    )} */}
 
                     {messageCenterShow && (
                         <MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow} />
                     )}
+
+                    <YakitHint
+                        getContainer={chartCSDragAreaRef.current || undefined}
+                        visible={showRenderCrash}
+                        title='渲染端崩溃提示'
+                        content='检测到渲染端有崩溃情况，点击查看日志即可查看崩溃日志，忽略后可在系统设置中进行查看'
+                        okButtonText='查看日志'
+                        onOk={() => handleShowRenderCrashCallback(true)}
+                        cancelButtonText='忽略'
+                        onCancel={() => handleShowRenderCrashCallback(false)}
+                    />
                 </Layout>
             </WaterMark>
             {controlShow && <ControlOperation controlName={controlName} />}
@@ -657,50 +657,3 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 })
 
 export default Main
-
-// interface UpdateForwardProsp {
-//     visible: boolean
-//     onCancel: () => any
-//     onOk: () => any
-//     onIgnore: () => any
-// }
-// const UpdateForward: React.FC<UpdateForwardProsp> = memo((props) => {
-//     const {visible, onCancel, onOk, onIgnore} = props
-
-//     return (
-//         <YakitModal
-//             type='white'
-//             maskClosable={false}
-//             keyboard={false}
-//             centered={true}
-//             closable={false}
-//             visible={visible}
-//             title='重要更新内容前瞻'
-//             okText='已知道!'
-//             cancelText='关闭'
-//             cancelButtonProps={{style: {display: "none"}}}
-//             onCancel={onCancel}
-//             onOk={onOk}
-//             footerExtra={
-//                 <YakitButton type='text' onClick={onIgnore}>
-//                     不再提示
-//                 </YakitButton>
-//             }
-//         >
-//             <div className='update-forward-wrapper'>
-//                 <div className='title-style'>Windows自定义安装上线预告!!!</div>
-//                 <div className='content-style'>
-//                     下一个版本即将上线自定义安装，安装涉及到旧数据迁移，为避免出现意外情况，建议安装前将yakit-project文件夹进行备份。
-//                 </div>
-
-//                 <div className='content-style'>
-//                     <span className='highlight-style'>注意事项!!</span>
-//                     <div>1、安装前需先将引擎进行更新</div>
-//                     <div>
-//                         2、迁移会将用户文件夹下的yakit-project文件复制到安装路径，并删除。如安装后打开发现没有引擎或数据，可能是用户文件夹下的yakit-project由于被占用无法删除，导致读取的还是用户文件下的内容。如已经迁移完可直接将用户文件夹下的yakit-project删除即可正常读取
-//                     </div>
-//                 </div>
-//             </div>
-//         </YakitModal>
-//     )
-// })

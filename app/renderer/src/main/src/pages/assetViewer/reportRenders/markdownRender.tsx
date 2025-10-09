@@ -3,12 +3,22 @@ import {ReportItem} from "./schema"
 
 import MDEditor from "@uiw/react-md-editor"
 import styles from "./markdownRender.module.scss"
+import {useTheme} from "@/hook/useTheme"
+import classNames from "classnames"
 const {Markdown} = MDEditor
 
 export interface ReportMarkdownBlockProp {
     item: ReportItem
+    className?: string
 }
 
 export const ReportMarkdownBlock: React.FC<ReportMarkdownBlockProp> = (props) => {
-    return <Markdown source={props.item.content} className={styles["markdown-block"]} />
+    const {theme} = useTheme()
+    return (
+        <Markdown
+            source={props.item.content}
+            className={classNames(styles["markdown-block"], props.className)}
+            warpperElement={{"data-color-mode": theme}}
+        />
+    )
 }

@@ -3,6 +3,7 @@ import {
     QueryRisksRequest,
     QueryRisksResponse,
     YakitCodeScanRiskDetailsProps,
+    YakitRiskDetailContentProps,
     YakitRiskDetailsProps,
     YakitRiskSelectTagProps,
     YakitRiskTableProps,
@@ -87,14 +88,14 @@ import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {AuditCodePageInfoProps, PluginHubPageInfoProps} from "@/store/pageInfo"
+import {AuditCodePageInfoProps, PluginHubPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import ReactResizeDetector from "react-resize-detector"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {loadAuditFromYakURLRaw} from "@/pages/yakRunnerAuditCode/utils"
-import {AuditEmiterYakUrlProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType"
+import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {addToTab} from "@/pages/MainTabs"
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
@@ -105,6 +106,12 @@ import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
 import {RemoteRiskGV} from "@/enums/risk"
 import {useStore} from "@/store"
 import {openPacketNewWindow} from "@/utils/openWebsite"
+import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
+import {JumpToAuditEditorProps} from "@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType"
+import {Selection} from "@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType"
+import MDEditor from "@uiw/react-md-editor"
+import {getNameByPath} from "@/pages/yakRunner/utils"
+import {shallow} from "zustand/shallow"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -270,8 +277,15 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         yakitRiskDetailsBorder = true,
         excludeColumnsKey = []
     } = props
+    const {currentPageTabRouteKey} = usePageInfo(
+        (s) => ({
+            currentPageTabRouteKey: s.currentPageTabRouteKey
+        }),
+        shallow
+    )
     const {userInfo} = useStore()
     const [loading, setLoading] = useState<boolean>(false)
+    const percentContainerRef = useRef<string>(currentPageTabRouteKey)
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [response, setResponse] = useState<QueryRisksResponse>({
@@ -776,6 +790,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     })
     const onExportCSV = useMemoizedFn(() => {
         if (+response.Total === 0) return
+        percentContainerRef.current = currentPageTabRouteKey
         const exportValue = exportFields.map((item) => item.label)
         const initCheckFields = exportFields.filter((ele) => ele.isDefaultChecked).map((item) => item.label)
         const m = showYakitModal({
@@ -789,6 +804,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     getData={getExcelData}
                     onClose={() => m.destroy()}
                     fileName='风险与漏洞'
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+                    }
                 />
             ),
             onCancel: () => {
@@ -796,7 +814,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 setSelectList([])
             },
             footer: null,
-            width: 650
+            width: 650,
+            getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
         })
     })
     const formatJson = (filterVal, jsonData) => {
@@ -1095,6 +1114,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             setSelectList((s) => [...s, selectedRows])
         } else {
             setSelectList((s) => s.filter((ele) => ele.Id !== selectedRows.Id))
+            setAllCheck(false)
         }
     })
     const onSetCurrentRow = useMemoizedFn((val?: Risk) => {
@@ -1496,8 +1516,9 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 })
 
 export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((props) => {
-    const {info, isShowTime = true, className = "", border = true, isShowExtra, onRetest} = props
-    const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response">("request")
+    const {info, isShowTime = true, className = "", border = true, isShowExtra, onRetest, boxStyle} = props
+    // 目前可展示的请求和响应类型
+    const [currentShowType, setCurrentShowType] = useState<("request" | "response")[]>([])
     const [isShowCode, setIsShowCode] = useState<boolean>(true)
     const descriptionsRef = useRef<HTMLDivElement>(null)
     const descriptionsDivWidth = useListenWidth(descriptionsRef)
@@ -1505,11 +1526,13 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     useEffect(() => {
         const isRequestString = !!requestString(info)
         const isResponseString = !!responseString(info)
+        let showType: ("request" | "response")[] = []
         if (isRequestString) {
-            setCurrentSelectShowType("request")
+            showType.push("request")
         } else if (isResponseString) {
-            setCurrentSelectShowType("response")
+            showType.push("response")
         }
+        setCurrentShowType(showType)
         if (isRequestString || isResponseString) {
             setIsShowCode(true)
         } else {
@@ -1553,12 +1576,12 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         if (descriptionsDivWidth > 600) return 3
         return 1
     }, [descriptionsDivWidth])
-    const codeNode = useMemoizedFn(() => {
+    const codeNode = useMemoizedFn((isRequest: boolean) => {
         const isHttps = !!info.Url && info.Url?.length > 0 && info.Url.includes("https")
         const extraParams = {
-            originValue: currentSelectShowType === "request" ? requestString(info) : responseString(info),
-            originalPackage: currentSelectShowType === "request" ? info.Request : info.Response,
-            webFuzzerValue: currentSelectShowType === "request" ? "" : requestString(info)
+            originValue: isRequest ? requestString(info) : responseString(info),
+            originalPackage: isRequest ? info.Request : info.Response,
+            webFuzzerValue: isRequest ? "" : requestString(info)
         }
         return (
             <NewHTTPPacketEditor
@@ -1566,36 +1589,9 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                 url={info.Url || ""}
                 readOnly={true}
                 isShowBeautifyRender={true}
-                showDefaultExtra={true}
-                hideSearch={true}
-                noHex={true}
-                noModeTag={true}
-                simpleMode={true}
-                bordered={false}
-                isResponse={currentSelectShowType === "response"}
-                title={
-                    <div className={styles["content-resize-first-heard"]}>
-                        <YakitRadioButtons
-                            size='small'
-                            value={currentSelectShowType}
-                            onChange={(e) => {
-                                setCurrentSelectShowType(e.target.value)
-                            }}
-                            buttonStyle='solid'
-                            options={[
-                                {
-                                    value: "request",
-                                    label: "请求"
-                                },
-                                {
-                                    value: "response",
-                                    label: "响应"
-                                }
-                            ]}
-                        />
-                    </div>
-                }
-                downbodyParams={{IsRisk: true, Id: info.Id, IsRequest: currentSelectShowType === "request"}}
+                bordered={true}
+                isResponse={!isRequest}
+                downbodyParams={{IsRisk: true, Id: info.Id, IsRequest: isRequest}}
                 onClickOpenPacketNewWindowMenu={() => {
                     openPacketNewWindow({
                         request: {
@@ -1618,6 +1614,27 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     const responseString = useMemoizedFn((info) => {
         return Uint8ArrayToString(info?.Response || new Uint8Array())
     })
+
+    const [showType, setShowType] = useControllableValue<"detail" | "code" | "history">(props, {
+        defaultValue: "detail",
+        valuePropName: "showType",
+        trigger: "setShowType"
+    })
+
+    const getOptions = useMemo(() => {
+        let options = [
+            {
+                label: "漏洞详情",
+                value: "detail"
+            },
+            {
+                label: "数据包",
+                value: "code"
+            }
+        ]
+        return options
+    }, [])
+
     const extraResizeBoxProps = useCreation(() => {
         let p: YakitResizeBoxProps = {
             firstNode: <></>,
@@ -1627,7 +1644,14 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             lineStyle: {height: "auto"},
             firstNodeStyle: {height: "auto"}
         }
-        if (!isShowCode) {
+        if (currentShowType.length === 0 && currentShowType.includes("request")) {
+            p.firstRatio = "100%"
+            p.secondRatio = "0%"
+            p.lineStyle = {display: "none"}
+            p.firstNodeStyle = {padding: 0}
+            p.secondNodeStyle = {display: "none"}
+        }
+        if (currentShowType.length === 0 && currentShowType.includes("response")) {
             p.firstRatio = "0%"
             p.secondRatio = "100%"
             p.lineStyle = {display: "none"}
@@ -1635,8 +1659,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             p.secondNodeStyle = {padding: 0}
         }
         return p
-    }, [isShowCode])
-
+    }, [currentShowType])
     return (
         <>
             <div
@@ -1714,73 +1737,109 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                         </div>
                     )}
                 </div>
-                <YakitResizeBox
-                    {...extraResizeBoxProps}
-                    firstNode={<div className={styles["content-resize-first"]}>{codeNode()}</div>}
-                    secondNode={
-                        <div className={styles["content-resize-second"]} ref={descriptionsRef}>
-                            <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
-                                <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
-                                <Descriptions.Item label='类型'>
-                                    {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
-                                </Descriptions.Item>
-                                <Descriptions.Item label='来源'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
-                                <Descriptions.Item label='反连Token' contentStyle={{minWidth: 120}}>
-                                    {info?.ReverseToken || "-"}
-                                </Descriptions.Item>
-                                <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                                <Descriptions.Item label='验证状态'>
-                                    <YakitTag color={`${!info.WaitingVerified ? "success" : "info"}`}>
-                                        {!info.WaitingVerified ? "已验证" : "未验证"}
-                                    </YakitTag>
-                                </Descriptions.Item>
+                {isShowCode && (
+                    <YakitRadioButtons
+                        style={{margin: 6}}
+                        value={showType}
+                        onChange={(e) => {
+                            const value = e.target.value
+                            setShowType(value)
+                        }}
+                        buttonStyle='solid'
+                        options={getOptions}
+                    />
+                )}
+                {showType === "detail" && (
+                    <div className={styles["content-resize-second"]} ref={descriptionsRef}>
+                        <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
+                            <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
+                            <Descriptions.Item label='类型'>
+                                {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
+                            </Descriptions.Item>
+                            <Descriptions.Item label='来源'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
+                            <Descriptions.Item label='反连Token' contentStyle={{minWidth: 120}}>
+                                {info?.ReverseToken || "-"}
+                            </Descriptions.Item>
+                            <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
+                            <Descriptions.Item label='验证状态'>
+                                <YakitTag color={`${!info.WaitingVerified ? "success" : "info"}`}>
+                                    {!info.WaitingVerified ? "已验证" : "未验证"}
+                                </YakitTag>
+                            </Descriptions.Item>
 
-                                <>
-                                    <Descriptions.Item
-                                        label='漏洞描述'
-                                        span={column}
-                                        contentStyle={{whiteSpace: "pre-wrap"}}
-                                    >
-                                        {info.Description || "-"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item
-                                        label='解决方案'
-                                        span={column}
-                                        contentStyle={{whiteSpace: "pre-wrap"}}
-                                    >
-                                        {info.Solution || "-"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label='Parameter' span={column}>
-                                        {info.Parameter || "-"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label='Payload' span={column}>
-                                        <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Payload}` || "-"}</div>
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label='详情' span={column}>
-                                        <div style={{height: 180}}>
-                                            <YakitEditor type='yak' value={`${info.Details || ""}`} readOnly={true} />
-                                        </div>
-                                    </Descriptions.Item>
-                                </>
-                            </Descriptions>
-                            <div className={styles["no-more"]}>暂无更多</div>
-                        </div>
-                    }
-                    firstMinSize={200}
-                    secondMinSize={400}
-                />
+                            <>
+                                <Descriptions.Item
+                                    label='漏洞描述'
+                                    span={column}
+                                    contentStyle={{whiteSpace: "pre-wrap"}}
+                                >
+                                    {info.Description || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item
+                                    label='解决方案'
+                                    span={column}
+                                    contentStyle={{whiteSpace: "pre-wrap"}}
+                                >
+                                    {info.Solution || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item label='Parameter' span={column}>
+                                    {info.Parameter || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item label='Payload' span={column}>
+                                    <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Payload}` || "-"}</div>
+                                </Descriptions.Item>
+                                <Descriptions.Item label='详情' span={column}>
+                                    <div style={{height: 180}}>
+                                        <YakitEditor type='yak' value={`${info.Details || ""}`} readOnly={true} />
+                                    </div>
+                                </Descriptions.Item>
+                            </>
+                        </Descriptions>
+                        <div className={styles["no-more"]}>暂无更多</div>
+                    </div>
+                )}
+
+                {showType === "code" && isShowCode && (
+                    <YakitResizeBox
+                        style={{padding: 6, ...boxStyle}}
+                        {...extraResizeBoxProps}
+                        firstNode={<div className={styles["content-resize-first"]}>{codeNode(true)}</div>}
+                        secondNode={<div className={styles["content-resize-first"]}>{codeNode(false)}</div>}
+                        firstMinSize={300}
+                        secondMinSize={300}
+                    />
+                )}
             </div>
         </>
     )
 })
 
-export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> = React.memo((props) => {
-    const {info, className, border, isShowExtra} = props
+export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = React.memo((props) => {
+    const {info, isShowCollapse, setIsShowCollapse, jumpCodeScanPage, isShowExtra, isScroll} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
+    const extraResizeBoxProps = useCreation(() => {
+        let p: YakitResizeBoxProps = {
+            firstNode: <></>,
+            secondNode: <></>,
+            firstRatio: "50%",
+            secondRatio: "50%",
+            lineStyle: {height: "auto"},
+            firstNodeStyle: {height: "auto"}
+        }
+        if (!isShowCollapse) {
+            p.firstRatio = "0%"
+            p.secondRatio = "100%"
+            p.lineStyle = {display: "none"}
+            p.firstNodeStyle = {display: "none"}
+            p.secondNodeStyle = {padding: 0}
+        }
+        return p
+    }, [isShowCollapse])
 
     useEffect(() => {
         const {ResultID, SyntaxFlowVariable, ProgramName} = info
+
         if (ResultID && SyntaxFlowVariable && ProgramName) {
             const params: AuditEmiterYakUrlProps = {
                 Schema: "syntaxflow",
@@ -1792,7 +1851,6 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
         }
     }, [info])
 
-    const [isShowCollapse, setIsShowCollapse] = useState<boolean>(false)
     const initData = useMemoizedFn(async (params: AuditEmiterYakUrlProps) => {
         try {
             setLoading(true)
@@ -1836,24 +1894,31 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
         }
     })
 
-    const extraResizeBoxProps = useCreation(() => {
-        let p: YakitResizeBoxProps = {
-            firstNode: <></>,
-            secondNode: <></>,
-            firstRatio: "50%",
-            secondRatio: "50%",
-            lineStyle: {height: "auto"},
-            firstNodeStyle: {height: "auto"}
-        }
-        if (!isShowCollapse) {
-            p.firstRatio = "0%"
-            p.secondRatio = "100%"
-            p.lineStyle = {display: "none"}
-            p.firstNodeStyle = {display: "none"}
-            p.secondNodeStyle = {padding: 0}
-        }
-        return p
-    }, [isShowCollapse])
+    return (
+        <YakitResizeBox
+            {...extraResizeBoxProps}
+            firstNode={
+                <div className={styles["content-resize-collapse"]}>
+                    <div className={styles["main-title"]}>相关代码段</div>
+                    <YakitSpin spinning={loading}>
+                        <AuditResultCollapse
+                            data={yakURLData}
+                            jumpCodeScanPage={jumpCodeScanPage}
+                            isShowExtra={isShowExtra}
+                        />
+                    </YakitSpin>
+                </div>
+            }
+            secondNode={<AuditResultDescribe info={info} isScroll={isScroll} />}
+            firstMinSize={200}
+            secondMinSize={400}
+        />
+    )
+})
+
+export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> = React.memo((props) => {
+    const {info, className, border, isShowExtra} = props
+    const [isShowCollapse, setIsShowCollapse] = useState<boolean>(false)
 
     const onClickIP = useMemoizedFn(() => {
         if (props.onClickIP) props.onClickIP(info)
@@ -1979,35 +2044,19 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                     </div>
                 )}
             </div>
-            <YakitResizeBox
-                {...extraResizeBoxProps}
-                firstNode={
-                    <div className={styles["content-resize-collapse"]}>
-                        <div className={styles["main-title"]}>相关代码段</div>
-                        <YakitSpin spinning={loading}>
-                            <AuditResultCollapse
-                                data={yakURLData}
-                                jumpCodeScanPage={jumpCodeScanPage}
-                                isShowExtra={isShowExtra}
-                            />
-                        </YakitSpin>
-                    </div>
-                }
-                secondNode={<AuditResultDescribe info={info} />}
-                firstMinSize={200}
-                secondMinSize={400}
-            />
+            <YakitRiskDetailContent info={info} isShowCollapse={isShowCollapse} setIsShowCollapse={setIsShowCollapse} />
         </div>
     )
 })
 
 export interface AuditResultDescribeProps {
-    info: Risk | SSARisk
+    info: SSARisk
     columnSize?: number
+    isScroll?: boolean
 }
 
 export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.memo((props) => {
-    const {info, columnSize} = props
+    const {info, columnSize, isScroll = true} = props
 
     const column = useCreation(() => {
         if (columnSize) return columnSize
@@ -2019,7 +2068,11 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
         return newInfo?.FromYakScript || newInfo?.FromRule || "漏洞检测"
     })
     return (
-        <div className={styles["content-resize-second"]}>
+        <div
+            className={classNames(styles["content-resize-second"], {
+                [styles["content-resize-overflow"]]: isScroll
+            })}
+        >
             <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
                 <Descriptions.Item label='类型'>
                     {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
@@ -2027,11 +2080,27 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                 <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
                 <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                 <>
-                    <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                        {info.Description || "-"}
+                    <Descriptions.Item label='漏洞描述' span={column}>
+                        {info.Description ? (
+                            <MDEditor.Markdown
+                                className={classNames(styles["md-content"])}
+                                source={info.Description}
+                                style={{whiteSpace: "normal"}}
+                            />
+                        ) : (
+                            "-"
+                        )}
                     </Descriptions.Item>
-                    <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                        {info.Solution || "-"}
+                    <Descriptions.Item label='解决方案' span={column}>
+                        {info.Solution ? (
+                            <MDEditor.Markdown
+                                className={classNames(styles["md-content"])}
+                                source={info.Solution}
+                                style={{whiteSpace: "normal"}}
+                            />
+                        ) : (
+                            "-"
+                        )}
                     </Descriptions.Item>
                 </>
             </Descriptions>
@@ -2040,14 +2109,13 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
     )
 })
 
-export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.memo((props) => {
-    const {info, columnSize} = props
+interface RightBugAuditResultHeaderProps {
+    info: SSARisk
+    extra?: React.ReactNode
+}
 
-    const column = useCreation(() => {
-        if (columnSize) return columnSize
-        return 1
-    }, [])
-
+export const RightBugAuditResultHeader: React.FC<RightBugAuditResultHeaderProps> = React.memo((props) => {
+    const {info, extra} = props
     const severityInfo = useCreation(() => {
         const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
         let icon = <></>
@@ -2078,46 +2146,98 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
         }
     }, [info.Severity])
 
+    const onContext = useMemoizedFn(async () => {
+        try {
+            const item: CodeRangeProps = JSON.parse(info.CodeRange)
+            const {url, start_line, start_column, end_line, end_column} = item
+            const name = await getNameByPath(url)
+            const highLightRange: Selection = {
+                startLineNumber: start_line,
+                startColumn: start_column,
+                endLineNumber: end_line,
+                endColumn: end_column
+            }
+            const OpenFileByPathParams: OpenFileByPathProps = {
+                params: {
+                    path: url,
+                    name,
+                    highLightRange
+                }
+            }
+            emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+            // 纯跳转行号
+            setTimeout(() => {
+                const obj: JumpToAuditEditorProps = {
+                    selections: highLightRange,
+                    path: url,
+                    isSelect: false
+                }
+                emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
+            }, 100)
+        } catch (error) {}
+    })
+
+    return (
+        <div className={styles["content-heard"]}>
+            <div className={styles["content-heard-left"]}>
+                <div className={styles["content-heard-severity"]}>
+                    {severityInfo.icon}
+                    <span
+                        className={classNames(
+                            styles["content-heard-severity-name"],
+                            styles[`severity-${severityInfo.tag}`]
+                        )}
+                    >
+                        {severityInfo.name}
+                    </span>
+                </div>
+                <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
+                <div className={styles["content-heard-body"]}>
+                    <div
+                        className={classNames(
+                            styles["content-heard-body-title"],
+                            styles["content-heard-body-title-click"],
+                            "content-ellipsis"
+                        )}
+                        onClick={onContext}
+                    >
+                        {info.Title || "-"}
+                    </div>
+                    <div className={styles["content-heard-body-description"]} style={{flexWrap: "wrap"}}>
+                        <YakitTag color='info'>ID:{info.Id}</YakitTag>
+                        <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                        <span className={styles["description-port"]}>所属项目:{info.ProgramName || "-"}</span>
+                        <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                        <span className={styles["content-heard-body-time"]}>
+                            发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {extra && <div className={styles["content-heard-right"]}>{extra}</div>}
+        </div>
+    )
+})
+
+export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.memo((props) => {
+    const {info, columnSize} = props
+    const column = useCreation(() => {
+        if (columnSize) return columnSize
+        return 1
+    }, [])
+
     const getRule = useMemoizedFn(() => {
         const newInfo = info as any
         return newInfo?.FromYakScript || newInfo?.FromRule || "漏洞检测"
     })
+
     return (
         <div
             className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions", {
                 [styles["yakit-risk-details-content-no-border"]]: true
             })}
         >
-            <div className={styles["content-heard"]}>
-                <div className={styles["content-heard-left"]}>
-                    <div className={styles["content-heard-severity"]}>
-                        {severityInfo.icon}
-                        <span
-                            className={classNames(
-                                styles["content-heard-severity-name"],
-                                styles[`severity-${severityInfo.tag}`]
-                            )}
-                        >
-                            {severityInfo.name}
-                        </span>
-                    </div>
-                    <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
-                    <div className={styles["content-heard-body"]}>
-                        <div className={classNames(styles["content-heard-body-title"], "content-ellipsis")}>
-                            {info.Title || "-"}
-                        </div>
-                        <div className={styles["content-heard-body-description"]} style={{flexWrap: "wrap"}}>
-                            <YakitTag color='info'>ID:{info.Id}</YakitTag>
-                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                            <span className={styles["description-port"]}>所属项目:{info.ProgramName || "-"}</span>
-                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                            <span className={styles["content-heard-body-time"]}>
-                                发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <RightBugAuditResultHeader info={info} />
             <div className={styles["content-resize-second"]}>
                 <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
                     <Descriptions.Item label='类型'>
@@ -2127,10 +2247,24 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
                     <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                     <>
                         <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                            {info.Description || "-"}
+                            {info.Description ? (
+                                <MDEditor.Markdown
+                                    className={classNames(styles["md-content"])}
+                                    source={info.Description}
+                                />
+                            ) : (
+                                "-"
+                            )}
                         </Descriptions.Item>
                         <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                            {info.Solution || "-"}
+                            {info.Solution ? (
+                                <MDEditor.Markdown
+                                    className={classNames(styles["md-content"])}
+                                    source={info.Solution}
+                                />
+                            ) : (
+                                "-"
+                            )}
                         </Descriptions.Item>
                     </>
                 </Descriptions>

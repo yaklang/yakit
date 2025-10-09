@@ -4,6 +4,7 @@ import {XTerm} from "xterm-for-react"
 import {xtermFit} from "@/utils/xtermUtils"
 import styles from "./YakitCVXterm.module.scss"
 import {setClipboardText} from "@/utils/clipboard"
+import {useXTermOptions} from "@/hook/useXTermOptions/useXTermOptions"
 
 export interface CVXtermProps extends IProps {
     isWrite?: boolean
@@ -25,11 +26,16 @@ export const TERMINAL_INPUT_KEY = {
  * @description 仅适配部分，使用自己看看有没有问题
  */
 export const YakitCVXterm = forwardRef((props: CVXtermProps, ref) => {
-    const {isWrite = false, write: rewrite, ...rest} = props
+    const {isWrite = false, write: rewrite, options, ...rest} = props
 
     const [loading, setLoading] = useState<boolean>(false)
 
     const xtermRef = useRef<any>(null)
+
+    const terminalOptions = useXTermOptions({
+        getTerminal: () => xtermRef.current?.terminal
+    })
+
     const timer = useRef<any>(null)
 
     useImperativeHandle(ref, () => ({
@@ -114,6 +120,10 @@ export const YakitCVXterm = forwardRef((props: CVXtermProps, ref) => {
                 }}
                 onResize={(r) => {
                     xtermFit(xtermRef, r.cols, r.rows)
+                }}
+                options={{
+                    ...terminalOptions,
+                    ...options
                 }}
                 {...rest}
             />

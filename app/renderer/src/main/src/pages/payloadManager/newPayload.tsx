@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Divider, Form, Input, Progress, Tooltip} from "antd"
+import {Divider, Progress, Tooltip} from "antd"
 import {
+    useCreation,
     useDebounceEffect,
     useDebounceFn,
     useGetState,
@@ -30,6 +31,7 @@ import {
     OutlineRefreshIcon,
     OutlineSparklesIcon,
     OutlineTrashIcon,
+    OutlineUploadIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {OutlineAddPayloadIcon, PropertyIcon, PropertyNoAddIcon} from "./icon"
@@ -60,27 +62,44 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import Dragger from "antd/lib/upload/Dragger"
 import {v4 as uuidv4} from "uuid"
-import {DeletePayloadProps, NewPayloadTable, Payload, QueryPayloadParams} from "./newPayloadTable"
+import {DeletePayloadProps, NewPayloadTable, Payload, QueryPayloadParams} from "./PayloadLocalTable"
 import {PaginationSchema, QueryGeneralResponse} from "../invoker/schema"
 import {randomString} from "@/utils/randomUtil"
 import _isEqual from "lodash/isEqual"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import emiter from "@/utils/eventBus/eventBus"
-import {Uint8ArrayToString} from "@/utils/str"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakEditor} from "@/utils/editors"
-import {openABSFileLocated} from "@/utils/openWebsite"
+import {openABSFile, openABSFileLocated} from "@/utils/openWebsite"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {setClipboardText} from "@/utils/clipboard"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {isEnpriTrace} from "@/utils/envfile"
+import {NewPayloadOnlineList} from "./onlinePayload/NewPayloadOnlineList"
+import {UserInfoProps, useStore} from "@/store"
+import {
+    apiDeleteOnlinePayloadList,
+    apiGetOnlinePayloadFile,
+    apiGetOnlinePayloadList,
+    apiUpdateOnlinePayloadFile
+} from "./utils"
+import {DeleteOnlinePayloadProps, NewPayloadOnlineTable} from "./onlinePayload/PayloadOnlineTable"
+import {API} from "@/services/swagger/resposeType"
+import {useTheme} from "@/hook/useTheme"
+import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
 const {ipcRenderer} = window.require("electron")
+
+// 是否为Payload操作员
+export const isPayloadOperator = (userInfo?: UserInfoProps) =>
+    userInfo?.isLogin && ["admin", "auditor"].includes(userInfo?.role || "")
 
 interface UploadStatusInfoProps {
     title: string
@@ -114,10 +133,10 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
             <div className={styles["hint-right-wrapper"]}>
                 <div className={styles["hint-right-download"]}>
                     <div className={styles["hint-right-title"]}>{title}</div>
-                    <div className={classNames(styles["download-progress"],"yakit-progress-wrapper")}>
+                    <div className={classNames(styles["download-progress"], "yakit-progress-wrapper")}>
                         <Progress
-                            strokeColor='#F28B44'
-                            trailColor='#F0F2F5'
+                            strokeColor='var(--Colors-Use-Main-Primary)'
+                            trailColor='var(--Colors-Use-Neutral-Bg)'
                             percent={Math.floor((streamData.Progress || 0) * 100)}
                             showInfo={false}
                         />
@@ -688,7 +707,7 @@ const cloneItemStyle = (draggableStyle) => {
 }
 
 // 根据Group获取此项
-const findItemByGroup = (items: DataItem[], group: string): DataItem | null => {
+export const findItemByGroup = (items: DataItem[], group: string): DataItem | null => {
     for (const item of items) {
         if (item.name === group && item.type !== "Folder") {
             return item
@@ -718,7 +737,7 @@ const findItemById = (items: DataItem[], targetId: string): DataItem | null => {
 }
 
 // 根据Id获取此项(如在文件夹中 则获取至文件夹那一层)
-const findFoldersById = (items: DataItem[], targetId: string) => {
+export const findFoldersById = (items: DataItem[], targetId: string) => {
     for (const item of items) {
         if (item.id === targetId) {
             return item
@@ -747,7 +766,7 @@ const compareArrays = (arr1, arr2) => {
 }
 
 // 判断字符串中是否存在/*,
-const isIncludeSpecial = (v: string) => /[/*,]/.test(v)
+export const isIncludeSpecial = (v: string) => /[/*,]/.test(v)
 
 // 将后端结构数据捏成渲染数组
 const nodesToDataFun = (nodes: PayloadGroupNodeProps[]) => {
@@ -774,7 +793,26 @@ const nodesToDataFun = (nodes: PayloadGroupNodeProps[]) => {
     })
 }
 
-interface DataItem {
+// 递归数组中的数据库与文件并将其id归纳为一个数组
+const getDataBaseIds = (data: DataItem[]): string[] => {
+    let ids: string[] = []
+    for (const item of data) {
+        if (["DataBase", "File"].includes(item.type)) {
+            ids.push(item.name)
+        } else if (item.type === "Folder" && item.node) {
+            const foundInNode = getDataBaseIds(item.node)
+            if (foundInNode.length > 0) {
+                ids = ids.concat(foundInNode)
+            }
+        }
+    }
+    return ids
+}
+
+// 数组去重
+const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
+
+export interface DataItem {
     type: "File" | "Folder" | "DataBase"
     name: string
     id: string
@@ -799,7 +837,7 @@ export interface PayloadGroupNodeProps {
 const droppable = "droppable"
 const droppableGroup = "droppableGroup"
 
-export interface NewPayloadListProps {
+export interface NewPayloadLocalListProps {
     listLoading: boolean
     data: DataItem[]
     setData: (v: DataItem[]) => void
@@ -820,9 +858,11 @@ export interface NewPayloadListProps {
     onCheckedItem?: (id: string[]) => void
     floderChecked?: string[]
     onSetFloderChecked?: (id: string[]) => void
+    setShowType?: (v: "local" | "online") => void
+    showType?: "local" | "online"
 }
 
-export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
+export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) => {
     const {
         listLoading,
         data,
@@ -840,7 +880,9 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         checkedItem = [],
         onCheckedItem = () => {},
         floderChecked = [],
-        onSetFloderChecked = () => {}
+        onSetFloderChecked = () => {},
+        setShowType,
+        showType
     } = props
 
     const [dropType, setDropType] = useState<string>(droppable)
@@ -851,8 +893,15 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     const [moveLevel, setMoveLevel] = useState<MoveLevelProps>()
     const moveLevelRef = useRef<MoveLevelProps>()
 
-    // 用于记录不展开的文件夹(默认展开)
-    const [notExpandArr, setNotExpandArr] = useState<string[]>([])
+    // 用于记录展开的文件夹
+    const [expandArr, setExpandArr] = useState<string[]>([])
+    // 用于记录所选需要导出的数据
+    const [exportData, setExportData] = useState<string[]>([])
+
+    const [exportVisible, setExportVisible] = useState<boolean>(false)
+    const [exportType, setExportType] = useState<ExportTypeProps>()
+
+    const userInfo = useStore((s) => s.userInfo)
 
     useUpdateEffect(() => {
         onUpdateAllPayloadGroup(data)
@@ -880,10 +929,12 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                     let type: string = item.length > 0 ? item[0].type : ""
                     setGroup(group)
                     setContentType(type === "DataBase" ? "table" : "editor")
+                    setShowType && setShowType("local")
                 } else {
                     setFolder("")
                     setGroup(selectData.name)
                     setContentType(selectData.type === "DataBase" ? "table" : "editor")
+                    setShowType && setShowType("local")
                 }
             }
         }
@@ -1254,260 +1305,322 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         return count
     }, [data])
 
+    const allCheckIds = useMemo(() => {
+        return getDataBaseIds(data)
+    }, [data])
+
     return (
-        <div className={styles["new-payload-list"]}>
-            <div className={styles["header"]}>
-                <div className={styles["title-box"]}>
-                    <div className={styles["title"]}>{onlyInsert ? "选择想要插入的字典" : "Payload 字典管理"}</div>
-                    <div className={styles["count"]}>{getPayloadCount}</div>
-                    {!onlyInsert && (
-                        <YakitButton
-                            type='text2'
-                            icon={<OutlineRefreshIcon />}
-                            onClick={() => {
-                                onQueryGroup()
-                            }}
-                        />
-                    )}
-                </div>
-                <div className={styles["extra"]}>
-                    {onlyInsert ? (
-                        <>
-                            <Tooltip title={"前往 Payload 字典管理"}>
-                                <YakitButton
-                                    type='text2'
-                                    icon={<OutlineCogIcon />}
-                                    onClick={() => {
-                                        onClose && onClose()
-                                        ipcRenderer.invoke("open-route-page", {route: YakitRoute.PayloadManager})
-                                    }}
-                                />
-                            </Tooltip>
-                        </>
-                    ) : (
-                        <YakitDropdownMenu
-                            menu={{
-                                data: [
-                                    {
-                                        key: "createDictionaries",
-                                        label: (
-                                            <div className={styles["extra-menu"]}>
-                                                <OutlineAddPayloadIcon />
-                                                <div className={styles["menu-name"]}>新建字典</div>
-                                            </div>
-                                        )
-                                    },
-                                    {
-                                        key: "createFolder",
-                                        label: (
-                                            <div className={styles["extra-menu"]}>
-                                                <OutlineFolderaddIcon />
-                                                <div className={styles["menu-name"]}>新建文件夹</div>
-                                            </div>
-                                        )
-                                    }
-                                ],
-                                onClick: ({key}) => {
-                                    switch (key) {
-                                        case "createDictionaries":
-                                            const m = showYakitModal({
-                                                getContainer: document.getElementById("new-payload") || document.body,
-                                                title: null,
-                                                footer: null,
-                                                width: 566,
-                                                type: "white",
-                                                closable: false,
-                                                maskClosable: false,
-                                                hiddenHeader: true,
-                                                content: (
-                                                    <CreateDictionaries
-                                                        title='新建字典'
-                                                        type='dictionaries'
-                                                        onQueryGroup={onQueryGroup}
-                                                        onClose={() => {
-                                                            m.destroy()
-                                                        }}
-                                                    />
-                                                )
-                                            })
-                                            break
-                                        case "createFolder":
-                                            // 生成 UUID
-                                            const uuid = uuidv4()
-                                            setData([
-                                                {
-                                                    type: "Folder",
-                                                    name: "",
-                                                    id: uuid,
-                                                    isCreate: true,
-                                                    number: 0
-                                                },
-                                                ...data
-                                            ])
-                                            break
-                                        default:
-                                            break
-                                    }
-                                }
-                            }}
-                            dropdown={{
-                                trigger: ["click"],
-                                placement: "bottomRight"
-                            }}
-                        >
-                            <Tooltip title={"新增"}>
-                                <YakitButton type='secondary2' icon={<OutlinePlusIcon />} />
-                            </Tooltip>
-                        </YakitDropdownMenu>
-                    )}
-                </div>
-            </div>
-            <YakitSpin spinning={listLoading}>
-                <div className={styles["content"]}>
-                    <div className={styles["drag-list"]}>
+        <>
+            <div className={styles["new-payload-list"]}>
+                <div className={styles["header"]}>
+                    <div className={styles["title-box"]}>
+                        <div className={styles["title"]}>{onlyInsert ? "选择想要插入的字典" : "字典管理"}</div>
+                        <div className={styles["count"]}>{getPayloadCount}</div>
+                        {!onlyInsert && (
+                            <YakitButton
+                                type='text2'
+                                icon={<OutlineRefreshIcon />}
+                                onClick={() => {
+                                    onQueryGroup()
+                                }}
+                            />
+                        )}
+                    </div>
+                    <div className={styles["extra"]}>
                         {onlyInsert ? (
                             <>
-                                {data.map((item, index) => {
-                                    const fileOutside =
-                                        moveLevel?.draggableId === item.id ? moveLevel.level === "outside" : true
-                                    const isCombine = combineIds[0] === item.id
-                                    /* 渲染你的文件夹或文件组件 */
-                                    /* 使用 item.type 来区分文件夹和文件 */
-                                    return item.type === "Folder" ? (
-                                        // 渲染文件夹组件
-                                        <FolderComponent
-                                            key={`${item.id}-${index}`}
-                                            folder={item}
-                                            selectItem={selectItem}
-                                            setSelectItem={setSelectItem}
-                                            data={data}
-                                            setData={setData}
-                                            subDropType={subDropType}
-                                            moveLevel={moveLevel}
-                                            isCombine={isCombine}
-                                            codePath={codePath}
-                                            notExpandArr={notExpandArr}
-                                            setNotExpandArr={setNotExpandArr}
-                                            onQueryGroup={onQueryGroup}
-                                            setContentType={setContentType}
-                                            onlyInsert={onlyInsert}
-                                            checkedItem={checkedItem}
-                                            onCheckedItem={onCheckedItem}
-                                            floderChecked={floderChecked}
-                                            onSetFloderChecked={onSetFloderChecked}
-                                        />
-                                    ) : (
-                                        // 渲染文件组件
-                                        <FileComponent
-                                            key={`${item.id}-${index}`}
-                                            file={item}
-                                            selectItem={selectItem}
-                                            setSelectItem={setSelectItem}
-                                            data={data}
-                                            setData={setData}
-                                            isInside={!fileOutside}
-                                            isCombine={isCombine}
-                                            codePath={codePath}
-                                            onQueryGroup={onQueryGroup}
-                                            setContentType={setContentType}
-                                            onlyInsert={onlyInsert}
-                                            checkedItem={checkedItem}
-                                            onCheckedItem={onCheckedItem}
-                                        />
-                                    )
-                                })}
-                                <div className={styles["to-end"]}>已经到底啦～</div>
+                                <Tooltip title={"前往 字典管理"}>
+                                    <YakitButton
+                                        type='text2'
+                                        icon={<OutlineCogIcon />}
+                                        onClick={() => {
+                                            onClose && onClose()
+                                            ipcRenderer.invoke("open-route-page", {route: YakitRoute.PayloadManager})
+                                        }}
+                                    />
+                                </Tooltip>
                             </>
                         ) : (
-                            <>
-                                <DragDropContext
-                                    onDragEnd={onDragEnd}
-                                    onDragStart={onDragStart}
-                                    onDragUpdate={onDragUpdate}
-                                    onBeforeCapture={onBeforeCapture}
+                            <div className={styles["option"]}>
+                                <Tooltip title={"批量导出"}>
+                                    <YakitButton
+                                        type='text2'
+                                        icon={<OutlineExportIcon />}
+                                        onClick={() => {
+                                            if (exportData.length === 0) {
+                                                warn("请选择导出内容")
+                                                return
+                                            }
+                                            setExportType("all")
+                                            setExportVisible(true)
+                                        }}
+                                    />
+                                </Tooltip>
+                                <YakitDropdownMenu
+                                    menu={{
+                                        data: [
+                                            {
+                                                key: "createDictionaries",
+                                                label: (
+                                                    <div className={styles["extra-menu"]}>
+                                                        <OutlineAddPayloadIcon />
+                                                        <div className={styles["menu-name"]}>新建字典</div>
+                                                    </div>
+                                                )
+                                            },
+                                            {
+                                                key: "createFolder",
+                                                label: (
+                                                    <div className={styles["extra-menu"]}>
+                                                        <OutlineFolderaddIcon />
+                                                        <div className={styles["menu-name"]}>新建文件夹</div>
+                                                    </div>
+                                                )
+                                            }
+                                        ],
+                                        onClick: ({key}) => {
+                                            switch (key) {
+                                                case "createDictionaries":
+                                                    const m = showYakitModal({
+                                                        getContainer:
+                                                            document.getElementById("new-payload") || document.body,
+                                                        title: null,
+                                                        footer: null,
+                                                        width: 566,
+                                                        type: "white",
+                                                        closable: false,
+                                                        maskClosable: false,
+                                                        hiddenHeader: true,
+                                                        content: (
+                                                            <CreateDictionaries
+                                                                title='新建字典'
+                                                                type='dictionaries'
+                                                                onQueryGroup={onQueryGroup}
+                                                                onClose={() => {
+                                                                    m.destroy()
+                                                                }}
+                                                            />
+                                                        )
+                                                    })
+                                                    break
+                                                case "createFolder":
+                                                    // 生成 UUID
+                                                    const uuid = uuidv4()
+                                                    setData([
+                                                        {
+                                                            type: "Folder",
+                                                            name: "",
+                                                            id: uuid,
+                                                            isCreate: true,
+                                                            number: 0
+                                                        },
+                                                        ...data
+                                                    ])
+                                                    break
+                                                default:
+                                                    break
+                                            }
+                                        }
+                                    }}
+                                    dropdown={{
+                                        trigger: ["click"],
+                                        placement: "bottomRight"
+                                    }}
                                 >
-                                    <Droppable
-                                        droppableId='droppable-payload'
-                                        direction='vertical'
-                                        type={dropType}
-                                        isCombineEnabled={isCombineEnabled}
-                                    >
-                                        {(provided) => (
-                                            <div ref={provided.innerRef} {...provided.droppableProps}>
-                                                {data.map((item, index) => {
-                                                    const fileOutside =
-                                                        moveLevel?.draggableId === item.id
-                                                            ? moveLevel.level === "outside"
-                                                            : true
-                                                    const isCombine = combineIds[0] === item.id
-                                                    return (
-                                                        <Draggable key={item.id} draggableId={item.id} index={index}>
-                                                            {(provided, snapshot) => (
-                                                                <div
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}
-                                                                    style={{
-                                                                        // ...provided.draggableProps.style
-                                                                        ...getItemStyle(
-                                                                            snapshot.isDragging,
-                                                                            provided.draggableProps.style
-                                                                        )
-                                                                    }}
-                                                                >
-                                                                    {/* 渲染你的文件夹或文件组件 */}
-                                                                    {/* 使用 item.type 来区分文件夹和文件 */}
-                                                                    {item.type === "Folder" ? (
-                                                                        // 渲染文件夹组件
-                                                                        <FolderComponent
-                                                                            folder={item}
-                                                                            selectItem={selectItem}
-                                                                            setSelectItem={setSelectItem}
-                                                                            data={data}
-                                                                            setData={setData}
-                                                                            subDropType={subDropType}
-                                                                            moveLevel={moveLevel}
-                                                                            isCombine={isCombine}
-                                                                            codePath={codePath}
-                                                                            notExpandArr={notExpandArr}
-                                                                            setNotExpandArr={setNotExpandArr}
-                                                                            onQueryGroup={onQueryGroup}
-                                                                            setContentType={setContentType}
-                                                                            isDragging={snapshot.isDragging}
-                                                                        />
-                                                                    ) : (
-                                                                        // 渲染文件组件
-                                                                        <FileComponent
-                                                                            file={item}
-                                                                            selectItem={selectItem}
-                                                                            setSelectItem={setSelectItem}
-                                                                            data={data}
-                                                                            setData={setData}
-                                                                            isInside={!fileOutside}
-                                                                            isCombine={isCombine}
-                                                                            codePath={codePath}
-                                                                            onQueryGroup={onQueryGroup}
-                                                                            setContentType={setContentType}
-                                                                            isDragging={snapshot.isDragging}
-                                                                        />
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </Draggable>
-                                                    )
-                                                })}
-                                                {provided.placeholder}
-                                            </div>
-                                        )}
-                                    </Droppable>
-                                </DragDropContext>
-                                <div className={styles["to-end"]}>已经到底啦～</div>
-                            </>
+                                    <Tooltip title={"新增"}>
+                                        <YakitButton type='secondary2' icon={<OutlinePlusIcon />} />
+                                    </Tooltip>
+                                </YakitDropdownMenu>
+                            </div>
                         )}
                     </div>
                 </div>
-            </YakitSpin>
-        </div>
+                <YakitSpin spinning={listLoading} wrapperClassName={styles["spin-box"]}>
+                    <div className={styles["content"]}>
+                        <div className={styles["drag-list"]}>
+                            {onlyInsert ? (
+                                <>
+                                    {data.map((item, index) => {
+                                        const fileOutside =
+                                            moveLevel?.draggableId === item.id ? moveLevel.level === "outside" : true
+                                        const isCombine = combineIds[0] === item.id
+                                        /* 渲染你的文件夹或文件组件 */
+                                        /* 使用 item.type 来区分文件夹和文件 */
+                                        return item.type === "Folder" ? (
+                                            // 渲染文件夹组件
+                                            <FolderComponent
+                                                key={`${item.id}-${index}`}
+                                                folder={item}
+                                                selectItem={selectItem}
+                                                setSelectItem={setSelectItem}
+                                                data={data}
+                                                setData={setData}
+                                                subDropType={subDropType}
+                                                moveLevel={moveLevel}
+                                                isCombine={isCombine}
+                                                codePath={codePath}
+                                                expandArr={expandArr}
+                                                setExpandArr={setExpandArr}
+                                                onQueryGroup={onQueryGroup}
+                                                setContentType={setContentType}
+                                                onlyInsert={onlyInsert}
+                                                checkedItem={checkedItem}
+                                                onCheckedItem={onCheckedItem}
+                                                floderChecked={floderChecked}
+                                                onSetFloderChecked={onSetFloderChecked}
+                                            />
+                                        ) : (
+                                            // 渲染文件组件
+                                            <FileComponent
+                                                key={`${item.id}-${index}`}
+                                                file={item}
+                                                selectItem={selectItem}
+                                                setSelectItem={setSelectItem}
+                                                data={data}
+                                                setData={setData}
+                                                isInside={!fileOutside}
+                                                isCombine={isCombine}
+                                                codePath={codePath}
+                                                onQueryGroup={onQueryGroup}
+                                                setContentType={setContentType}
+                                                onlyInsert={onlyInsert}
+                                                checkedItem={checkedItem}
+                                                onCheckedItem={onCheckedItem}
+                                            />
+                                        )
+                                    })}
+                                    <div className={styles["to-end"]}>已经到底啦～</div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className={styles["checkbox-wrapper"]}>
+                                        <YakitCheckbox
+                                            checked={exportData.length === allCheckIds.length}
+                                            indeterminate={
+                                                exportData.length > 0 && exportData.length < allCheckIds.length
+                                            }
+                                            className={styles["checkbox"]}
+                                            disabled={allCheckIds.length === 0}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setExportData(allCheckIds)
+                                                } else {
+                                                    setExportData([])
+                                                }
+                                            }}
+                                        >
+                                            全选
+                                        </YakitCheckbox>
+                                    </div>
+
+                                    <DragDropContext
+                                        onDragEnd={onDragEnd}
+                                        onDragStart={onDragStart}
+                                        onDragUpdate={onDragUpdate}
+                                        onBeforeCapture={onBeforeCapture}
+                                    >
+                                        <Droppable
+                                            droppableId='droppable-payload'
+                                            direction='vertical'
+                                            type={dropType}
+                                            isCombineEnabled={isCombineEnabled}
+                                        >
+                                            {(provided) => (
+                                                <div ref={provided.innerRef} {...provided.droppableProps}>
+                                                    {data.map((item, index) => {
+                                                        const fileOutside =
+                                                            moveLevel?.draggableId === item.id
+                                                                ? moveLevel.level === "outside"
+                                                                : true
+                                                        const isCombine = combineIds[0] === item.id
+                                                        return (
+                                                            <Draggable
+                                                                key={item.id}
+                                                                draggableId={item.id}
+                                                                index={index}
+                                                            >
+                                                                {(provided, snapshot) => (
+                                                                    <div
+                                                                        ref={provided.innerRef}
+                                                                        {...provided.draggableProps}
+                                                                        {...provided.dragHandleProps}
+                                                                        style={{
+                                                                            // ...provided.draggableProps.style
+                                                                            ...getItemStyle(
+                                                                                snapshot.isDragging,
+                                                                                provided.draggableProps.style
+                                                                            )
+                                                                        }}
+                                                                    >
+                                                                        {/* 渲染你的文件夹或文件组件 */}
+                                                                        {/* 使用 item.type 来区分文件夹和文件 */}
+                                                                        {item.type === "Folder" ? (
+                                                                            // 渲染文件夹组件
+                                                                            <FolderComponent
+                                                                                folder={item}
+                                                                                selectItem={selectItem}
+                                                                                setSelectItem={setSelectItem}
+                                                                                data={data}
+                                                                                setData={setData}
+                                                                                subDropType={subDropType}
+                                                                                moveLevel={moveLevel}
+                                                                                isCombine={isCombine}
+                                                                                codePath={codePath}
+                                                                                expandArr={expandArr}
+                                                                                setExpandArr={setExpandArr}
+                                                                                onQueryGroup={onQueryGroup}
+                                                                                setContentType={setContentType}
+                                                                                isDragging={snapshot.isDragging}
+                                                                                exportData={exportData}
+                                                                                setExportData={setExportData}
+                                                                                userInfo={userInfo}
+                                                                                showType={showType}
+                                                                            />
+                                                                        ) : (
+                                                                            // 渲染文件组件
+                                                                            <FileComponent
+                                                                                file={item}
+                                                                                selectItem={selectItem}
+                                                                                setSelectItem={setSelectItem}
+                                                                                data={data}
+                                                                                setData={setData}
+                                                                                isInside={!fileOutside}
+                                                                                isCombine={isCombine}
+                                                                                codePath={codePath}
+                                                                                onQueryGroup={onQueryGroup}
+                                                                                setContentType={setContentType}
+                                                                                isDragging={snapshot.isDragging}
+                                                                                exportData={exportData}
+                                                                                setExportData={setExportData}
+                                                                                userInfo={userInfo}
+                                                                                showType={showType}
+                                                                            />
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </Draggable>
+                                                        )
+                                                    })}
+                                                    {provided.placeholder}
+                                                </div>
+                                            )}
+                                        </Droppable>
+                                    </DragDropContext>
+                                    <div className={styles["to-end"]}>已经到底啦～</div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </YakitSpin>
+            </div>
+            {exportVisible && (
+                <ExportByPayloadGrpc
+                    group={exportData.join(",")}
+                    setExportVisible={setExportVisible}
+                    exportType={exportType}
+                />
+            )}
+        </>
     )
 }
 
@@ -1552,7 +1665,7 @@ export const FileComponentClone: React.FC<FileComponentCloneProps> = (props) => 
                     [styles["extra-hover"]]: !menuOpen
                 })}
             >
-                <div className={styles["file-count"]}>10</div>
+                <div className={styles["file-count"]}>{file.type === "DataBase" ? file.number : ""}</div>
                 <div
                     className={styles["extra-icon"]}
                     onClick={(e) => {
@@ -1579,8 +1692,8 @@ interface FolderComponentProps {
     // 导出所需参数
     codePath?: string
     // 文件夹不展开记录
-    notExpandArr: string[]
-    setNotExpandArr: (v: string[]) => void
+    expandArr: string[]
+    setExpandArr: (v: string[]) => void
     onQueryGroup: (obj?: {Group: string; Folder: string}) => void
     setContentType: (v?: "editor" | "table") => void
     onlyInsert?: boolean
@@ -1590,6 +1703,10 @@ interface FolderComponentProps {
     onCheckedItem?: (id: string[]) => void
     floderChecked?: string[]
     onSetFloderChecked?: (id: string[]) => void
+    exportData?: string[]
+    setExportData?: (ids: React.SetStateAction<string[]>) => void
+    userInfo?: UserInfoProps
+    showType?: "local" | "online"
 }
 export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     const {
@@ -1602,8 +1719,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         moveLevel,
         isCombine,
         codePath,
-        notExpandArr,
-        setNotExpandArr,
+        expandArr,
+        setExpandArr,
         onQueryGroup,
         setContentType,
         onlyInsert,
@@ -1611,7 +1728,11 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         checkedItem = [],
         onCheckedItem = () => {},
         floderChecked = [],
-        onSetFloderChecked = () => {}
+        onSetFloderChecked = () => {},
+        exportData = [],
+        setExportData,
+        userInfo,
+        showType = "local"
     } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
@@ -1621,6 +1742,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     const getAllFolderName = useMemoizedFn(() => {
         return data.filter((item) => item.type === "Folder").map((item) => item.name)
     })
+
+    const [uploadVisible, setUploadVisible] = useState<boolean>(false)
 
     const setFolderNameById = useMemoizedFn(() => {
         // 文件夹只会存在第一层 不用递归遍历
@@ -1649,6 +1772,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                         success("新建文件夹成功")
                         setInputName(inputName)
                         setFolderNameById()
+                        setExportData && setExportData([])
                     })
                     .catch((e: any) => {
                         failed(`新建文件夹失败：${e}`)
@@ -1694,7 +1818,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         setData(newData)
         // 如果删除的包含选中项 则重新选择
         const sourceFolders = findFoldersById(data, id)
-        if (sourceFolders && sourceFolders?.node) {
+        if (sourceFolders && sourceFolders?.node && showType === "local") {
             let results = sourceFolders.node.find((item) => item.id === selectItem)
             if (results) setContentType(undefined)
         }
@@ -1710,8 +1834,10 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 success("删除成功")
                 onDeleteFolderById(folder.id)
                 setDeleteVisible(false)
+                setExportData && setExportData([])
             })
             .catch((e: any) => {
+                setDeleteVisible(false)
                 failed(`删除失败：${e}`)
             })
     })
@@ -1723,6 +1849,16 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
             setMenuOpen(true)
         }
     })
+
+    const allCheckIds = useMemo(() => {
+        return getDataBaseIds(folder.node || [])
+    }, [folder.node])
+
+    // 上传
+    const onUpload = useMemoizedFn(() => {
+        setUploadVisible(true)
+    })
+
     return (
         <>
             {isEditInput ? (
@@ -1762,7 +1898,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                         onSetFloderChecked([...arr])
                                     }
                                 }}
-                            ></YakitCheckbox>
+                            />
                         </div>
                     )}
                     <div
@@ -1774,27 +1910,44 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                             [styles["folder-combine"]]: isCombine,
                             [styles["folder-no-combine"]]: !isCombine,
                             [styles["folder-border"]]:
-                                !isCombine && !menuOpen && !isDragging && notExpandArr.includes(folder.id)
+                                !isCombine && !menuOpen && !isDragging && !expandArr.includes(folder.id)
                         })}
                         onClick={() => {
                             if (onlyInsert) {
                                 setSelectItem(folder.id)
                             }
-                            if (notExpandArr.includes(folder.id)) {
-                                setNotExpandArr(notExpandArr.filter((item) => item !== folder.id))
+                            if (expandArr.includes(folder.id)) {
+                                setExpandArr(expandArr.filter((item) => item !== folder.id))
                             } else {
-                                setNotExpandArr([...notExpandArr, folder.id])
+                                setExpandArr([...expandArr, folder.id])
                             }
                         }}
                         onContextMenu={handleRightClick}
                     >
                         <div className={styles["folder-header"]}>
+                            {!onlyInsert && (
+                                <YakitCheckbox
+                                    checked={
+                                        allCheckIds.length > 0 &&
+                                        allCheckIds.every((element) => exportData.includes(element))
+                                    }
+                                    disabled={allCheckIds.length === 0}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setExportData &&
+                                                setExportData((old) => filterItem([...old, ...allCheckIds]))
+                                        } else {
+                                            setExportData &&
+                                                setExportData((old: string[]) =>
+                                                    old.filter((item) => !allCheckIds.includes(item))
+                                                )
+                                        }
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            )}
                             <div className={styles["is-fold-icon"]}>
-                                {!notExpandArr.includes(folder.id) ? (
-                                    <SolidChevrondownIcon />
-                                ) : (
-                                    <SolidChevronrightIcon />
-                                )}
+                                {expandArr.includes(folder.id) ? <SolidChevrondownIcon /> : <SolidChevronrightIcon />}
                             </div>
                             <div className={styles["folder-icon"]}>
                                 <SolidFolderopenIcon />
@@ -1841,6 +1994,16 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                         <div className={styles["menu-name"]}>重命名</div>
                                                     </div>
                                                 )
+                                            },
+                                            {
+                                                key: "upload",
+                                                label: (
+                                                    <div className={styles["extra-menu"]}>
+                                                        <OutlineUploadIcon />
+                                                        <div className={styles["menu-name"]}>上传</div>
+                                                    </div>
+                                                ),
+                                                disabled: !isPayloadOperator(userInfo)
                                             },
                                             {
                                                 type: "divider"
@@ -1890,6 +2053,9 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                 case "rename":
                                                     setEditInput(true)
                                                     break
+                                                case "upload":
+                                                    onUpload()
+                                                    break
                                                 case "delete":
                                                     setDeleteVisible(true)
                                                     break
@@ -1919,7 +2085,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
 
             {onlyInsert ? (
                 <>
-                    {!notExpandArr.includes(folder.id) &&
+                    {expandArr.includes(folder.id) &&
                         Array.isArray(folder.node) &&
                         folder.node.map((file, index) => (
                             <FileComponent
@@ -1938,12 +2104,13 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                 endBorder={(folder.node?.length || 0) - 1 === index}
                                 checkedItem={checkedItem}
                                 onCheckedItem={onCheckedItem}
+                                showType={showType}
                             />
                         ))}
                 </>
             ) : (
                 <>
-                    {!notExpandArr.includes(folder.id) && (
+                    {expandArr.includes(folder.id) && (
                         <Droppable
                             droppableId={`${folder.id}`}
                             type={subDropType}
@@ -2003,6 +2170,10 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                             onQueryGroup={onQueryGroup}
                                                             setContentType={setContentType}
                                                             endBorder={(folder.node?.length || 0) - 1 === index}
+                                                            exportData={exportData}
+                                                            setExportData={setExportData}
+                                                            userInfo={userInfo}
+                                                            showType={showType}
                                                         />
                                                     </div>
                                                 )}
@@ -2017,6 +2188,16 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
             )}
             {deleteVisible && (
                 <DeleteConfirm visible={deleteVisible} setVisible={setDeleteVisible} onFinish={onDeleteFolder} />
+            )}
+            {uploadVisible && (
+                <UploadOrDownloadByPayloadGrpc
+                    group={""}
+                    folder={folder.name}
+                    setUploadOrDownloadVisible={setUploadVisible}
+                    finished={() => {
+                        emiter.emit("refreshOnlineListEvent")
+                    }}
+                />
             )}
         </>
     )
@@ -2102,6 +2283,10 @@ interface FileComponentProps {
     endBorder?: boolean
     checkedItem?: string[]
     onCheckedItem?: (id: string[]) => void
+    exportData?: string[]
+    setExportData?: (ids: React.SetStateAction<string[]>) => void
+    userInfo?: UserInfoProps
+    showType?: "local" | "online"
 }
 
 export const FileComponent: React.FC<FileComponentProps> = (props) => {
@@ -2121,8 +2306,13 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         isDragging,
         endBorder,
         checkedItem = [],
-        onCheckedItem = () => {}
+        onCheckedItem = () => {},
+        exportData = [],
+        setExportData,
+        userInfo,
+        showType
     } = props
+    const {theme} = useTheme()
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(file.isCreate === true)
     const [inputName, setInputName] = useState<string>(file.name)
@@ -2131,7 +2321,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     const [visible, setVisible] = useState<boolean>(false)
 
     const [exportVisible, setExportVisible] = useState<boolean>(false)
-    const [exportType, setExportType] = useState<"all" | "file">()
+    const [exportType, setExportType] = useState<ExportTypeProps>()
     // show
     const [streamData, setStreamData] = useState<SavePayloadProgress>({
         Progress: 0,
@@ -2144,6 +2334,9 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
 
     // delete
     const [deleteVisible, setDeleteVisible] = useState<boolean>(false)
+
+    // upload
+    const [uploadVisible, setUploadVisible] = useState<boolean>(false)
 
     // 根据Id修改文件名
     const setFileById = useMemoizedFn((id: string, newName: string) => {
@@ -2208,6 +2401,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                     success("修改成功")
                     setInputName(inputName)
                     setFileById(file.id, inputName)
+                    setExportData && setExportData([])
                 })
                 .catch((e: any) => {
                     setInputName(file.name)
@@ -2238,12 +2432,12 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 })
                 setData(newData)
                 let results = selectData.node?.find((item) => item.id === selectItem)
-                if (results) setContentType(undefined)
+                if (results && showType === "local") setContentType(undefined)
             } else {
                 const newData = copyData.filter((item) => item.id !== id)
                 setData(newData)
 
-                if (selectItem === id) setContentType(undefined)
+                if (selectItem === id && showType === "local") setContentType(undefined)
             }
         }
     })
@@ -2258,6 +2452,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 success("删除成功")
                 onDeletePayloadById(file.id)
                 setDeleteVisible(false)
+                setExportData && setExportData([])
             })
             .catch((e: any) => {
                 setDeleteVisible(false)
@@ -2268,13 +2463,18 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     // 导出Csv
     const onExportCsv = useMemoizedFn(() => {
         setExportVisible(true)
-        setExportType("all")
+        setExportType("csv")
     })
 
     // 文件导出
     const onExportTxt = useMemoizedFn(() => {
         setExportVisible(true)
         setExportType("file")
+    })
+
+    // 上传
+    const onUpload = useMemoizedFn(() => {
+        setUploadVisible(true)
     })
 
     // 转为数据库存储
@@ -2286,7 +2486,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             },
             token
         )
-        if (file.id === selectItem) setContentType(undefined)
+        if (file.id === selectItem && showType === "local") setContentType(undefined)
         setVisible(true)
     })
 
@@ -2367,6 +2567,16 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                       )
                   },
                   {
+                      key: "upload",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlineUploadIcon />
+                              <div className={styles["menu-name"]}>上传</div>
+                          </div>
+                      ),
+                      disabled: !isPayloadOperator(userInfo)
+                  },
+                  {
                       type: "divider"
                   },
                   {
@@ -2418,6 +2628,16 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                       )
                   },
                   {
+                      key: "upload",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlineUploadIcon />
+                              <div className={styles["menu-name"]}>上传</div>
+                          </div>
+                      ),
+                      disabled: !isPayloadOperator(userInfo)
+                  },
+                  {
                       type: "divider"
                   },
                   {
@@ -2431,7 +2651,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                       type: "danger"
                   }
               ]
-    }, [])
+    }, [userInfo?.isLogin])
 
     // 右键展开菜单
     const handleRightClick = useMemoizedFn((e) => {
@@ -2441,6 +2661,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             setMenuOpen(true)
         }
     })
+
     return (
         <>
             {isEditInput ? (
@@ -2480,7 +2701,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                         onCheckedItem([...arr])
                                     }
                                 }}
-                            ></YakitCheckbox>
+                            />
                         </div>
                     )}
                     <div
@@ -2502,9 +2723,34 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                     >
                         <div className={styles["file-header"]}>
                             {!onlyInsert && (
-                                <div className={styles["drag-icon"]}>
-                                    <SolidDragsortIcon />
-                                </div>
+                                <>
+                                    <YakitCheckbox
+                                        className={classNames(styles["payload-checkbox"], {
+                                            [styles["payload-dark-checkbox"]]:
+                                                file.id !== selectItem && theme === "dark"
+                                        })}
+                                        checked={exportData.includes(file.name)}
+                                        disabled={getDataBaseIds([file]).length === 0}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setExportData &&
+                                                    setExportData((old) =>
+                                                        filterItem([...old, ...getDataBaseIds([file])])
+                                                    )
+                                            } else {
+                                                let notExportArr = getDataBaseIds([file])
+                                                setExportData &&
+                                                    setExportData((old: string[]) =>
+                                                        old.filter((item) => !notExportArr.includes(item))
+                                                    )
+                                            }
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <div className={styles["drag-icon"]}>
+                                        <SolidDragsortIcon />
+                                    </div>
+                                </>
                             )}
                             {file.type === "DataBase" ? (
                                 <div className={classNames(styles["file-icon"], styles["file-icon-database"])}>
@@ -2575,6 +2821,9 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                 case "toDatabase":
                                                     onGroupToDatabase()
                                                     break
+                                                case "upload":
+                                                    onUpload()
+                                                    break
                                                 case "delete":
                                                     setDeleteVisible(true)
                                                     break
@@ -2633,11 +2882,21 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 <DeleteConfirm visible={deleteVisible} setVisible={setDeleteVisible} onFinish={onDeletePayload} />
             )}
             {exportVisible && (
-                <ExportByGrpc
+                <ExportByPayloadGrpc
                     group={file.name}
                     folder={folder || ""}
                     setExportVisible={setExportVisible}
-                    isFile={exportType === "file"}
+                    exportType={exportType}
+                />
+            )}
+            {uploadVisible && (
+                <UploadOrDownloadByPayloadGrpc
+                    group={file.name}
+                    folder={folder || ""}
+                    setUploadOrDownloadVisible={setUploadVisible}
+                    finished={() => {
+                        emiter.emit("refreshOnlineListEvent")
+                    }}
                 />
             )}
         </>
@@ -2700,7 +2959,7 @@ export const MoveOrCopyPayload: React.FC<MoveOrCopyPayloadProps> = (props) => {
     )
 }
 
-interface PayloadContentProps {
+interface PayloadLocalContentProps {
     isExpand?: boolean
     setExpand?: (v: boolean) => void
     showContentType: "editor" | "table"
@@ -2715,11 +2974,9 @@ interface PayloadFileDataProps {
     IsBigFile: boolean
 }
 
-interface GetAllPayloadFromFileResponse {
-    Progress: number
-}
+type ExportTypeProps = "csv" | "file" | "all"
 
-export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
+export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) => {
     const {isExpand, setExpand, showContentType, group, folder, onlyInsert, onClose} = props
     const [isEditMonaco, setEditMonaco] = useState<boolean>(false)
     const [editorValue, setEditorValue] = useState<string>("")
@@ -2737,15 +2994,19 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
 
     const [exportVisible, setExportVisible] = useState<boolean>(false)
-    const [exportType, setExportType] = useState<"all" | "file">()
+    const [exportType, setExportType] = useState<ExportTypeProps>()
     // 去重token
     const [token, setToken] = useState(randomString(20))
     const [visible, setVisible] = useState<boolean>(false)
 
     const copyMoveValueRef = useRef<MoveOrCopyParamsProps>()
-
+    const userInfo = useStore((s) => s.userInfo)
     const headerRef = useRef<HTMLDivElement>(null)
     const size = useSize(headerRef)
+
+    const onRefreshTableEvent = useMemoizedFn(() => {
+        onQueryPayload()
+    })
 
     useEffect(() => {
         emiter.on("refreshTableEvent", onRefreshTableEvent)
@@ -2753,10 +3014,6 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
             emiter.off("refreshTableEvent", onRefreshTableEvent)
         }
     }, [])
-
-    const onRefreshTableEvent = useMemoizedFn(() => {
-        onQueryPayload()
-    })
 
     useDebounceEffect(
         () => {
@@ -2796,6 +3053,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
 
     const onQueryEditor = useMemoizedFn((Group: string, Folder: string) => {
         setLoading(true)
+
         ipcRenderer
             .invoke("QueryPayloadFromFile", {
                 Group,
@@ -2804,10 +3062,28 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
             .then((data: PayloadFileDataProps) => {
                 setPayloadFileData(data)
                 setEditorValue(Uint8ArrayToString(data.Data))
-                setLoading(false)
             })
             .catch((e: any) => {
                 failed("编辑器数据获取失败")
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    })
+
+    const onSaveFileFun = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("UpdatePayloadToFile", {
+                GroupName: group,
+                Content: editorValue
+            })
+            .then(() => {
+                onQueryEditor(group, folder)
+                setEditMonaco(false)
+                success("保存成功")
+            })
+            .catch((e: any) => {
+                failed(`UpdatePayloadToFile failed:${e}`)
             })
     })
 
@@ -2924,23 +3200,6 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
         })
     })
 
-    const onSaveFileFun = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("UpdatePayloadToFile", {
-                GroupName: group,
-                Content: editorValue
-            })
-            .then((data) => {
-                onQueryEditor(group, folder)
-                setResponse(data)
-                setEditMonaco(false)
-                success("保存成功")
-            })
-            .catch((e: any) => {
-                failed(`UpdatePayloadToFile failed:${e}`)
-            })
-    })
-
     // show
     const [streamData, setStreamData] = useState<SavePayloadProgress>({
         Progress: 0,
@@ -3046,7 +3305,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                                 type='outline2'
                                 icon={<OutlineExportIcon />}
                                 onClick={() => {
-                                    setExportType("all")
+                                    setExportType("csv")
                                     setExportVisible(true)
                                 }}
                             >
@@ -3165,6 +3424,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                             >
                                 导出
                             </YakitButton>
+
                             {payloadFileData?.IsBigFile === false && (
                                 <>
                                     <YakitButton
@@ -3174,6 +3434,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                                     >
                                         自动去重
                                     </YakitButton>
+
                                     <YakitButton
                                         onClick={() => {
                                             setEditMonaco(true)
@@ -3266,25 +3527,302 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                 />
             </YakitModal>
             {exportVisible && (
-                <ExportByGrpc
+                <ExportByPayloadGrpc
                     group={group}
                     folder={folder}
                     setExportVisible={setExportVisible}
-                    isFile={exportType === "file"}
+                    exportType={exportType}
                 />
             )}
         </div>
     )
 }
 
-interface ExportByGrpcProps {
-    group: string
-    folder: string
-    setExportVisible: (v: boolean) => void
-    isFile?: boolean
+export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) => {
+    const {isExpand, setExpand, showContentType, group, folder} = props
+    const [isEditMonaco, setEditMonaco] = useState<boolean>(false)
+    const [editorValue, setEditorValue] = useState<string>("")
+    const [payloadFileData, setPayloadFileData] = useState<PayloadFileDataProps>()
+
+    const [selectPayloadArr, setSelectPayloadArr] = useState<number[]>([])
+    const [params, setParams, getParams] = useGetState<API.PayloadRequest>({
+        keyword: "",
+        folder: "",
+        group: "",
+        page: 1,
+        limit: 20,
+        order: "asc",
+        order_by: "id"
+    })
+    const [response, setResponse] = useState<API.PayloadResponse>()
+    const pagination: API.PageMeta | undefined = response?.pagemeta
+    const [loading, setLoading] = useState<boolean>(false)
+
+    const userInfo = useStore((s) => s.userInfo)
+
+    const onRefreshTableEvent = useMemoizedFn(() => {
+        onQueryPayload()
+    })
+
+    useEffect(() => {
+        emiter.on("refreshTableEvent", onRefreshTableEvent)
+        return () => {
+            emiter.off("refreshTableEvent", onRefreshTableEvent)
+        }
+    }, [])
+
+    useDebounceEffect(
+        () => {
+            reset()
+            // 获取table数据
+            if (showContentType === "table") {
+                onQueryPayload(undefined, undefined, true)
+            }
+            // 获取editor数据
+            else {
+                onQueryEditor(group, folder)
+            }
+        },
+        [group, folder, showContentType],
+        {
+            wait: 200
+        }
+    )
+
+    const reset = useMemoizedFn(() => {
+        setEditorValue("")
+        setPayloadFileData(undefined)
+        setResponse(undefined)
+        setSelectPayloadArr([])
+    })
+
+    const Expand = () => (
+        <div
+            className={styles["icon-box"]}
+            onClick={() => {
+                setExpand && setExpand(!isExpand)
+            }}
+        >
+            {isExpand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+        </div>
+    )
+
+    const onQueryEditor = useMemoizedFn((Group: string, Folder: string) => {
+        setLoading(true)
+        // 云端编辑器内容获取
+        apiGetOnlinePayloadFile({group: Group, folder: Folder})
+            .then((res) => {
+                setPayloadFileData({
+                    Data: StringToUint8Array(res.data || "") as unknown as Uint8Array,
+                    IsBigFile: res.isBigFile || false
+                })
+                setEditorValue(res.data || "")
+            })
+            .catch((e: any) => {
+                failed(`编辑器数据获取失败：${e}`)
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    })
+
+    const onSaveFileFun = useMemoizedFn(() => {
+        apiUpdateOnlinePayloadFile({
+            groupName: group,
+            content: editorValue
+        })
+            .then(() => {
+                onQueryEditor(group, folder)
+                setEditMonaco(false)
+                success("保存成功")
+            })
+            .catch((e: any) => {
+                failed(`UpdatePayloadToFile failed:${e}`)
+            })
+    })
+
+    const onQueryPayload = useMemoizedFn((page?: number, limit?: number, isNoRefreshList?: boolean) => {
+        const obj: API.PayloadRequest = {
+            ...getParams(),
+            group,
+            folder,
+            page: page || getParams().page,
+            limit: limit || getParams().limit,
+            order: "desc",
+            order_by: "updated_at"
+        }
+
+        apiGetOnlinePayloadList(obj)
+            .then((data) => {
+                setResponse(data)
+                if (!isNoRefreshList) {
+                    // 通知刷新列表
+                    emiter.emit("refreshOnlineListEvent")
+                }
+            })
+            .catch((e: any) => {
+                failed(`QueryPayload failed：${e}`)
+            })
+    })
+
+    const onDeletePayload = useMemoizedFn((deletePayload: DeleteOnlinePayloadProps) => {
+        apiDeleteOnlinePayloadList(deletePayload)
+            .then(() => {
+                let page = pagination?.page
+                // 如为当页全部删除回到第一页
+                if (pagination && deletePayload.ids?.length === response?.data.length) {
+                    page = 1
+                }
+                onQueryPayload(page, pagination?.limit)
+                setSelectPayloadArr([])
+                success("删除成功")
+            })
+            .catch((e: any) => {
+                failed("删除失败：" + e)
+            })
+    })
+
+    const isNoSelect: boolean = useMemo(() => selectPayloadArr.length === 0, [selectPayloadArr])
+
+    return (
+        <div className={styles["payload-content"]}>
+            <div className={styles["header"]}>
+                <div className={styles["title-box"]}>
+                    <div className={styles["title"]}>{group}</div>
+                    <div className={styles["sub-title"]}>
+                        {showContentType === "editor" && payloadFileData?.IsBigFile ? (
+                            <YakitTag color='danger'>超大字典</YakitTag>
+                        ) : selectPayloadArr.length > 0 ? (
+                            <div className={styles["total-item"]}>
+                                <span className={styles["total-item-text"]}>Selected</span>
+                                <span className={styles["total-item-number"]}>{selectPayloadArr?.length}</span>
+                            </div>
+                        ) : (
+                            `可以通过 fuzz 模块 {{x(字典名)}} 来渲染`
+                        )}
+                    </div>
+                </div>
+                {showContentType === "table" && (
+                    <div className={styles["extra"]}>
+                        <YakitInput.Search
+                            placeholder='请输入关键词搜索'
+                            value={params.keyword}
+                            onChange={(e) => {
+                                setParams({...params, keyword: e.target.value})
+                            }}
+                            style={{maxWidth: 200}}
+                            onSearch={() => {
+                                onQueryPayload(undefined, undefined, true)
+                            }}
+                        />
+                        <Divider type='vertical' style={{top: 1, height: 16}} />
+                        <YakitButton
+                            type='outline1'
+                            colors='danger'
+                            icon={<OutlineTrashIcon />}
+                            disabled={isNoSelect}
+                            onClick={() => {
+                                if (!isNoSelect) {
+                                    onDeletePayload({ids: selectPayloadArr})
+                                }
+                            }}
+                        />
+                        {setExpand && Expand()}
+                    </div>
+                )}
+
+                {showContentType === "editor" && (
+                    <>
+                        <div
+                            className={classNames(styles["extra"], {
+                                [styles["extra-hidden"]]: !isEditMonaco
+                            })}
+                        >
+                            <YakitButton
+                                type='outline2'
+                                icon={<OutlineXIcon />}
+                                onClick={() => {
+                                    setEditMonaco(false)
+                                    payloadFileData && setEditorValue(Uint8ArrayToString(payloadFileData.Data))
+                                }}
+                            >
+                                取消
+                            </YakitButton>
+                            <YakitButton icon={<SolidStoreIcon />} onClick={onSaveFileFun}>
+                                保存
+                            </YakitButton>
+                            {setExpand && Expand()}
+                        </div>
+
+                        <div
+                            className={classNames(styles["extra"], {
+                                [styles["extra-hidden"]]: isEditMonaco
+                            })}
+                        >
+                            {payloadFileData?.IsBigFile === false && (
+                                <>
+                                    <YakitButton
+                                        onClick={() => {
+                                            setEditMonaco(true)
+                                        }}
+                                        icon={<OutlinePencilaltIcon />}
+                                        disabled={!isPayloadOperator(userInfo)}
+                                    >
+                                        编辑
+                                    </YakitButton>
+                                </>
+                            )}
+
+                            {setExpand && Expand()}
+                        </div>
+                    </>
+                )}
+            </div>
+            <div className={styles["content"]}>
+                {showContentType === "editor" && (
+                    <div className={styles["editor-box"]}>
+                        <YakEditor
+                            type='plaintext'
+                            readOnly={!isEditMonaco}
+                            // noLineNumber={true}
+                            value={editorValue}
+                            setValue={(content: string) => {
+                                setEditorValue(content)
+                            }}
+                            loading={loading}
+                            noWordWrap={true}
+                        />
+                    </div>
+                )}
+                {showContentType === "table" && (
+                    <div className={styles["table-box"]}>
+                        <NewPayloadOnlineTable
+                            selectPayloadArr={selectPayloadArr}
+                            setSelectPayloadArr={setSelectPayloadArr}
+                            onDeletePayload={onDeletePayload}
+                            onQueryPayload={onQueryPayload}
+                            pagination={pagination}
+                            params={params}
+                            response={response}
+                            setResponse={setResponse}
+                            setParams={setParams}
+                        />
+                    </div>
+                )}
+            </div>
+        </div>
+    )
 }
-export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
-    const {group, folder, setExportVisible, isFile} = props
+
+interface ExportByPayloadGrpcProps {
+    group: string
+    folder?: string
+    setExportVisible: (v: boolean) => void
+    exportType?: ExportTypeProps
+}
+// 导出
+export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) => {
+    const {group, folder, setExportVisible, exportType} = props
     // 导出token
     const [exportToken, setExportToken] = useState(randomString(20))
     // export-show
@@ -3304,25 +3842,56 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
         onExportFileFun()
     }, [])
 
+    const getExportGrpc = useMemo(() => {
+        if (!exportType) {
+            return ""
+        }
+        let exportObj = {
+            file: "ExportAllPayloadFromFile",
+            csv: "ExportAllPayload",
+            all: "ExportPayloadDBAndFile"
+        }
+        return exportObj[exportType]
+    }, [exportType])
+
+    const getCancleExportGrpc = useMemo(() => {
+        if (!exportType) {
+            return ""
+        }
+        let cancelExportObj = {
+            file: "cancel-ExportAllPayloadFromFile",
+            csv: "cancel-ExportAllPayload",
+            all: "cancel-ExportPayloadDBAndFile"
+        }
+        return cancelExportObj[exportType]
+    }, [exportType])
+
     // 导出任务
     const onExportFileFun = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件夹",
-                properties: ["openDirectory"]
-            })
-            .then((data: any) => {
-                if (data.filePaths.length) {
-                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+        handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]}).then((data) => {
+            if (data.filePaths.length) {
+                let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                if (exportType === "all") {
+                    exportPathRef.current = absolutePath
+                    ipcRenderer.invoke(
+                        getExportGrpc,
+                        {
+                            Groups: group.split(","),
+                            SavePath: absolutePath
+                        },
+                        exportToken
+                    )
+                    setShowModal(true)
+                } else {
                     ipcRenderer
                         .invoke("pathJoin", {
                             dir: absolutePath,
-                            file: `${group}.${isFile ? "txt" : "csv"}`
+                            file: `${group}.${exportType === "file" ? "txt" : "csv"}`
                         })
                         .then((currentPath: string) => {
                             exportPathRef.current = currentPath
                             ipcRenderer.invoke(
-                                isFile ? "ExportAllPayloadFromFile" : "ExportAllPayload",
+                                getExportGrpc,
                                 {
                                     Group: group,
                                     Folder: folder,
@@ -3332,14 +3901,15 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
                             )
                             setShowModal(true)
                         })
-                } else {
-                    setExportVisible(false)
                 }
-            })
+            } else {
+                setExportVisible(false)
+            }
+        })
     })
     // 取消导出任务
     const cancelExportFile = useMemoizedFn(() => {
-        ipcRenderer.invoke(isFile ? "cancel-ExportAllPayloadFromFile" : "cancel-ExportAllPayload", exportToken)
+        ipcRenderer.invoke(getCancleExportGrpc, exportToken)
     })
 
     const onExportStreamData = useThrottleFn(
@@ -3351,7 +3921,7 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
 
     // 监听导出任务
     useEffect(() => {
-        ipcRenderer.on(`${exportToken}-data`, async (e: any, data: GetAllPayloadFromFileResponse) => {
+        ipcRenderer.on(`${exportToken}-data`, async (e: any, data: SavePayloadProgress) => {
             if (data) {
                 try {
                     onExportStreamData(data)
@@ -3365,10 +3935,12 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
             info("[ExportFile] finished")
             setShowModal(false)
             setExportVisible(false)
-            exportPathRef.current && openABSFileLocated(exportPathRef.current)
+            if (exportPathRef.current) {
+                exportType === "all" ? openABSFile(exportPathRef.current) : openABSFileLocated(exportPathRef.current)
+            }
         })
         return () => {
-            ipcRenderer.invoke(isFile ? "cancel-ExportAllPayloadFromFile" : "cancel-ExportAllPayload", exportToken)
+            ipcRenderer.invoke(getCancleExportGrpc, exportToken)
             ipcRenderer.removeAllListeners(`${exportToken}-data`)
             ipcRenderer.removeAllListeners(`${exportToken}-error`)
             ipcRenderer.removeAllListeners(`${exportToken}-end`)
@@ -3401,6 +3973,119 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
     )
 }
 
+interface UploadOrDownloadByPayloadGrpcProps {
+    group: string
+    folder: string
+    setUploadOrDownloadVisible: (v: boolean) => void
+    type?: "upload" | "download"
+    finished?: () => void
+}
+// 上传与下载(默认上传)
+export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGrpcProps> = (props) => {
+    const {group, folder, setUploadOrDownloadVisible, type = "upload", finished} = props
+    const userInfo = useStore((s) => s.userInfo)
+    // 导出token
+    const [exportToken, setExportToken] = useState(randomString(20))
+    // export-show
+    const [exportStreamData, setExportStreamData] = useState<SavePayloadProgress>({
+        Progress: 0,
+        Message: "",
+        CostDurationVerbose: "",
+        RestDurationVerbose: "",
+        Speed: "0"
+    })
+    const logInfoRef = useRef<string[]>([])
+    // 是否显示modal
+    const [showModal, setShowModal] = useState<boolean>(false)
+
+    useEffect(() => {
+        onUploadFileFun()
+    }, [])
+
+    // 上传任务
+    const onUploadFileFun = useMemoizedFn(() => {
+        ipcRenderer.invoke(
+            type === "upload" ? "UploadPayloadToOnline" : "DownloadPayload",
+            {
+                Token: userInfo.token,
+                Group: group,
+                Folder: folder
+            },
+            exportToken
+        )
+        setShowModal(true)
+    })
+    // 取消上传任务
+    const cancelExportFile = useMemoizedFn(() => {
+        ipcRenderer.invoke(type === "upload" ? "cancel-UploadPayloadToOnline" : "cancel-DownloadPayload", exportToken)
+    })
+
+    const onExportStreamData = useThrottleFn(
+        (data) => {
+            setExportStreamData({...exportStreamData, Progress: data.Progress})
+        },
+        {wait: 500}
+    ).run
+
+    // 监听上传任务
+    useEffect(() => {
+        ipcRenderer.on(`${exportToken}-data`, async (e: any, data: SavePayloadProgress) => {
+            if (data) {
+                try {
+                    if (data.Message.length > 0) {
+                        logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+                    }
+                    onExportStreamData(data)
+                } catch (error) {}
+            }
+        })
+        ipcRenderer.on(`${exportToken}-error`, (e: any, error: any) => {
+            failed(`${type === "upload" ? "[UploadFile]" : "[DownloadFile]"} error:  ${error}`)
+        })
+        ipcRenderer.on(`${exportToken}-end`, (e: any, data: any) => {
+            info(`${type === "upload" ? "[UploadFile]" : "[DownloadFile]"} finished`)
+            setShowModal(false)
+            setUploadOrDownloadVisible(false)
+            finished && finished()
+            logInfoRef.current = []
+        })
+        return () => {
+            ipcRenderer.invoke(
+                type === "upload" ? "cancel-UploadPayloadToOnline" : "cancel-DownloadPayload",
+                exportToken
+            )
+            ipcRenderer.removeAllListeners(`${exportToken}-data`)
+            ipcRenderer.removeAllListeners(`${exportToken}-error`)
+            ipcRenderer.removeAllListeners(`${exportToken}-end`)
+        }
+    }, [])
+    return (
+        <YakitModal
+            centered
+            getContainer={document.getElementById("new-payload") || document.body}
+            visible={showModal}
+            title={null}
+            footer={null}
+            width={520}
+            type='white'
+            closable={false}
+            hiddenHeader={true}
+            bodyStyle={{padding: 0}}
+        >
+            <UploadStatusInfo
+                title={`${type === "upload" ? "上传" : "下载"}中，请耐心等待...`}
+                streamData={exportStreamData}
+                cancelRun={() => {
+                    cancelExportFile()
+                    setUploadOrDownloadVisible(false)
+                }}
+                logInfo={logInfoRef.current}
+                showDownloadDetail={false}
+            />
+        </YakitModal>
+    )
+}
+
 export interface NewPayloadProps {}
 export const NewPayload: React.FC<NewPayloadProps> = (props) => {
     // 是否全部展开
@@ -3416,6 +4101,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
 
     const [listLoading, setListLoading] = useState<boolean>(false)
     const [data, setData] = useState<DataItem[]>([])
+    const [isOnlyShowLocal, setOnlyShowLocal] = useState<boolean>(true)
 
     // 关闭Payload
     const [isClosePayload, setClosePayload] = useState<boolean>(false)
@@ -3435,11 +4121,20 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
         Speed: "0"
     })
     const logInfoRef = useRef<string[]>([])
-    // 页面是否第一次请求
-    const queryGroupRef = useRef<boolean>(true)
 
     // 用于比较顺序是否改变
     const cacheNodesRef = useRef<PayloadGroupNodeProps[]>([])
+
+    // 当前展示的是本地还是线上
+    const [showType, setShowType] = useState<"local" | "online">("local")
+
+    const userInfo = useStore((s) => s.userInfo)
+
+    useUpdateEffect(() => {
+        if (showType !== "local") {
+            setSelectItem(undefined)
+        }
+    }, [showType])
 
     const onQueryGroup = (obj?: {Group: string; Folder: string}) => {
         setListLoading(true)
@@ -3463,50 +4158,6 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                 }
                 if (newData.length === 0) {
                     setExpand(true)
-                } else {
-                    if (queryGroupRef.current) {
-                        // 初次进入选中
-                        queryGroupRef.current = false
-                        let obj: any = {}
-                        // 遍历打开数组下的第一个文件
-                        newData.forEach((item) => {
-                            if (item.type === "Folder" && item.node) {
-                                if (!obj?.Group) {
-                                    obj.Folder = item.name
-                                }
-                                item.node.forEach((itemIn) => {
-                                    if (!obj?.Group) {
-                                        obj.Group = itemIn.name
-                                        obj.ContentType = itemIn.type === "DataBase" ? "table" : "editor"
-                                        obj.Id = itemIn.id
-                                    }
-                                })
-                            } else {
-                                if (item.type !== "Folder" && !obj?.Group) {
-                                    obj.Folder = ""
-                                    obj.Group = item.name
-                                    obj.ContentType = item.type === "DataBase" ? "table" : "editor"
-                                    obj.Id = item.id
-                                }
-                            }
-                        })
-                        if (obj.Group) {
-                            setGroup(obj.Group)
-                            setFolder(obj.Folder)
-                            setContentType(obj.ContentType)
-                            setSelectItem(obj.Id)
-                        }
-                    } else {
-                        // 如若为obj不存在且当前group寻找不到 则让其重新选择
-                        if (!obj) {
-                            // 根据Id判断其是否为文件
-                            const item = findItemByGroup(newData, group)
-                            if (item === null) {
-                                reset()
-                            }
-                        }
-                        setExpand(false)
-                    }
                 }
             })
             .catch((e: any) => {
@@ -3556,7 +4207,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
     }, [])
 
     const reset = useMemoizedFn(() => {
-        setContentType(undefined)
+        showType === "local" && setContentType(undefined)
         setSelectItem(undefined)
         setGroup("")
         setFolder("")
@@ -3603,21 +4254,63 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
         }
     }, [])
 
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "50%",
+            secondRatio: "50%",
+            firstMinSize: 250,
+            secondMinSize: 250
+        }
+        if (isOnlyShowLocal || !isEnpriTrace()) {
+            p.firstRatio = "100%"
+            p.secondRatio = "0%"
+        }
+        return p
+    }, [isOnlyShowLocal])
+
+    useEffect(() => {
+        if (userInfo.isLogin) {
+            setOnlyShowLocal(false)
+        } else {
+            setOnlyShowLocal(true)
+        }
+    }, [userInfo.isLogin])
+
     return (
         <div className={styles["new-payload"]} id='new-payload'>
             <div className={styles["payload-list-box"]} style={isExpand ? {width: 0, opacity: 0} : {}}>
-                <NewPayloadList
-                    listLoading={listLoading}
-                    data={data}
-                    setData={setData}
-                    cacheNodesRef={cacheNodesRef}
-                    onQueryGroup={onQueryGroup}
-                    setGroup={setGroup}
-                    setFolder={setFolder}
-                    setContentType={setContentType}
-                    codePath={codePath}
-                    selectItem={selectItem}
-                    setSelectItem={setSelectItem}
+                <YakitResizeBox
+                    isVer={true}
+                    firstNodeStyle={{padding: 0}}
+                    lineStyle={{display: isOnlyShowLocal || !isEnpriTrace() ? "none" : ""}}
+                    secondNodeStyle={{padding: 0, display: isOnlyShowLocal || !isEnpriTrace() ? "none" : ""}}
+                    firstNode={
+                        <NewPayloadLocalList
+                            listLoading={listLoading}
+                            data={data}
+                            setData={setData}
+                            cacheNodesRef={cacheNodesRef}
+                            onQueryGroup={onQueryGroup}
+                            setGroup={setGroup}
+                            setFolder={setFolder}
+                            setContentType={setContentType}
+                            codePath={codePath}
+                            selectItem={selectItem}
+                            setSelectItem={setSelectItem}
+                            setShowType={setShowType}
+                            showType={showType}
+                        />
+                    }
+                    secondNode={
+                        <NewPayloadOnlineList
+                            setGroup={setGroup}
+                            setFolder={setFolder}
+                            setContentType={setContentType}
+                            showType={showType}
+                            setShowType={setShowType}
+                        />
+                    }
+                    {...ResizeBoxProps}
                 />
             </div>
             {data.length === 0 ? (
@@ -3660,13 +4353,25 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
             ) : (
                 <>
                     {showContentType ? (
-                        <PayloadContent
-                            isExpand={isExpand}
-                            setExpand={setExpand}
-                            showContentType={showContentType}
-                            group={group}
-                            folder={folder}
-                        />
+                        <>
+                            {showType === "local" ? (
+                                <PayloadLocalContent
+                                    isExpand={isExpand}
+                                    setExpand={setExpand}
+                                    showContentType={showContentType}
+                                    group={group}
+                                    folder={folder}
+                                />
+                            ) : (
+                                <PayloadOnlineContent
+                                    isExpand={isExpand}
+                                    setExpand={setExpand}
+                                    showContentType={showContentType}
+                                    group={group}
+                                    folder={folder}
+                                />
+                            )}
+                        </>
                     ) : (
                         <div className={styles["no-data"]}>
                             <YakitEmpty title='请点击左侧列表，选择想要查看的字典' />
@@ -3787,7 +4492,7 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
             className={classNames(styles["new-payload-only-insert"], styles["new-payload"])}
         >
             <div className={styles["payload-list-box"]}>
-                <NewPayloadList
+                <NewPayloadLocalList
                     listLoading={false}
                     data={data}
                     setData={setData}
@@ -3844,7 +4549,7 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
             </div>
 
             {showContentType && group.length !== 0 ? (
-                <PayloadContent
+                <PayloadLocalContent
                     showContentType={showContentType}
                     group={group}
                     folder={folder}

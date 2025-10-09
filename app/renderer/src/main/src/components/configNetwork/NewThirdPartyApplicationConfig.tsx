@@ -12,6 +12,7 @@ import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {yakitNotify} from "@/utils/notification"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
+import styles from "./ConfigNetworkPage.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 interface ThirdPartyAppConfigItemTemplate {
@@ -226,7 +227,6 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                             }
                         >
                             <YakitAutoComplete
-                                showSearch
                                 options={modelNameAllOptions}
                                 onFocus={getModelNameOption}
                                 dropdownRender={(menu) => {
@@ -235,6 +235,12 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                                             <YakitSpin spinning={modelOptionLoading}>{menu}</YakitSpin>
                                         </>
                                     )
+                                }}
+                                filterOption={(inputValue, option) => {
+                                    if (option?.value && typeof option?.value === "string") {
+                                        return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                                    }
+                                    return false
                                 }}
                             ></YakitAutoComplete>
                         </Form.Item>
@@ -269,55 +275,59 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
     }, [formValues])
 
     return (
-        <Form
-            form={form}
-            layout={"horizontal"}
-            labelCol={{span: 5}}
-            wrapperCol={{span: 18}}
-            initialValues={initialValues}
-            onValuesChange={(changedValues, allValues) => {
-                // 当类型改变时，表单项的值采用默认值
-                if (changedValues.Type !== undefined) {
-                    const templatesobj = templates.find((item) => item.Name === changedValues.Type)
-                    const formItems = templatesobj?.Items || []
-                    formItems.forEach((item) => {
-                        form.setFieldsValue({
-                            [item.Name]: ["string", "list"].includes(item.Type)
-                                ? item.DefaultValue
-                                : item.DefaultValue === "true"
+        <div className={styles["config-form-wrapper"]}>
+            <Form
+                form={form}
+                layout={"horizontal"}
+                labelCol={{span: 5}}
+                wrapperCol={{span: 18}}
+                initialValues={initialValues}
+                onValuesChange={(changedValues, allValues) => {
+                    // 当类型改变时，表单项的值采用默认值
+                    if (changedValues.Type !== undefined) {
+                        const templatesobj = templates.find((item) => item.Name === changedValues.Type)
+                        const formItems = templatesobj?.Items || []
+                        formItems.forEach((item) => {
+                            form.setFieldsValue({
+                                [item.Name]: ["string", "list"].includes(item.Type)
+                                    ? item.DefaultValue
+                                    : item.DefaultValue === "true"
+                            })
                         })
-                    })
-                }
-            }}
-            onSubmitCapture={(e) => {
-                e.preventDefault()
-            }}
-        >
-            <Form.Item
-                label={"类型"}
-                rules={[{required: true, message: `请${canAddType ? "填写" : "选择"}类型`}]}
-                name={"Type"}
+                    }
+                }}
+                onSubmitCapture={(e) => {
+                    e.preventDefault()
+                }}
+                className={styles["config-form"]}
             >
-                {canAddType ? (
-                    <YakitAutoComplete options={options} disabled={disabledType} />
+                <Form.Item
+                    label={"类型"}
+                    rules={[{required: true, message: `请${canAddType ? "填写" : "选择"}类型`}]}
+                    name={"Type"}
+                >
+                    {canAddType ? (
+                        <YakitAutoComplete options={options} disabled={disabledType} />
+                    ) : (
+                        <YakitSelect disabled={disabledType} options={options}></YakitSelect>
+                    )}
+                </Form.Item>
+                {isInOptions ? (
+                    <>{renderAllFormItems()}</>
                 ) : (
-                    <YakitSelect disabled={disabledType} options={options}></YakitSelect>
+                    <>
+                        {defaultFormItems.map((item, index) => (
+                            <React.Fragment key={index}>{renderSingleFormItem(item)}</React.Fragment>
+                        ))}
+                    </>
                 )}
-            </Form.Item>
-            {isInOptions ? (
-                <>{renderAllFormItems()}</>
-            ) : (
-                <>
-                    {defaultFormItems.map((item, index) => (
-                        <React.Fragment key={index}>{renderSingleFormItem(item)}</React.Fragment>
-                    ))}
-                </>
-            )}
-            <div style={{display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12}}>
-                <YakitButton type='outline2' onClick={onCancel}>
+            </Form>
+            <div className={styles["config-footer"]}>
+                <YakitButton size='large' type='outline2' onClick={onCancel}>
                     取消
                 </YakitButton>
                 <YakitButton
+                    size='large'
                     type={"primary"}
                     onClick={() => {
                         form.validateFields().then((res) => {
@@ -334,7 +344,7 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                     确定添加
                 </YakitButton>
             </div>
-        </Form>
+        </div>
     )
 }
 

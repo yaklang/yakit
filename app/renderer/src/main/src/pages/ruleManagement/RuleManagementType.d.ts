@@ -1,11 +1,20 @@
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {SyntaxFlowResult} from "../yakRunnerCodeScan/YakRunnerCodeScanType"
+import {UserInfoProps} from "@/store"
 
 export interface RuleManagementProps {}
 
+export interface LocalRuleGroupListPropsRefProps {
+    handleReset: () => void
+}
 export interface LocalRuleGroupListProps {
+    ref?: ForwardedRef<LocalRuleGroupListPropsRefProps>
     isrefresh?: boolean
     onGroupChange: (groups: string[]) => void
+    currentPageTabRouteKey: string
+    canUpload: boolean
+    userInfo: UserInfoProps
+    onRefreshOnlienRuleManagement: () => void
 }
 
 type RuleImportExportModalExtra = {
@@ -19,7 +28,7 @@ export interface RuleImportExportModalProps {
     getContainer?: HTMLElement
     width?: number
     extra: RuleImportExportModalExtra
-    filterData: Pick<SyntaxFlowRuleFilter, "RuleNames" | "Language" | "GroupNames" | "Purpose" | "Keyword"> & {
+    filterData: Pick<SyntaxFlowRuleFilter, "RuleNames" | "Language" | "GroupNames" | "Purpose" | "Keyword" | "FilterRuleKind" | "FilterLibRuleKind"> & {
         allCheck: boolean
     }
     onCallback: (result: boolean) => void
@@ -50,6 +59,35 @@ export interface RuleDebugAuditListProps {
     auditData: SyntaxFlowResult[]
     onDetail: (info: SyntaxFlowResult) => void
 }
+
+export interface RuleUploadAndDownloadModalProps {
+    getContainer?: string | HTMLElement | getContainerFunc | false
+    type: string
+    apiKey: string
+    token: string
+    onCancel: () => void
+    onSuccess: () => void
+}
+
+interface OnlineRuleGroupListPropsRefProps {
+    handleReset: () => void
+}
+export interface OnlineRuleGroupListProps {
+    ref?: ForwardedRef<OnlineRuleGroupListPropsRefProps>
+    isrefresh?: boolean
+    onGroupChange: (groups: string[]) => void
+    currentPageTabRouteKey: string
+    canDel: boolean
+    userInfo: UserInfoProps
+    onRefreshRuleManagement: () => void
+}
+
+export interface RelatedHoleListProps {
+    info?: SyntaxFlowRule
+    visible: boolean
+    alertMsgRef: React.MutableRefObject<{[key: string]: AlertMessage}>
+}
+
 /** ---------- 规则组相关接口定义 Start ---------- */
 // #region
 export interface SyntaxFlowRuleGroupFilter {
@@ -102,6 +140,8 @@ export interface QuerySyntaxFlowSameGroupResponse {
 
 /** ---------- 规则相关接口定义 Start ---------- */
 // #region
+export type FilterRuleKind = "buildIn" | "unBuildIn"
+export type FilterLibRuleKind = "lib" | "noLib" | ""
 export interface SyntaxFlowRuleFilter {
     RuleNames?: string[]
     Language?: string[]
@@ -110,17 +150,12 @@ export interface SyntaxFlowRuleFilter {
     Purpose?: string[]
     Tag?: string[]
     Keyword?: string
-    // 是否包含作为库的规则  这些规则只提供相关数据并被其他规则引用 默认不包含
-    includeLibraryRule?: boolean
-
-    FromId?: number // 废弃
-    UntilId?: number // 废弃
 
     AfterId?: number
     BeforeId?: number
 
-    FilterRuleKind?: "buildIn" | "unBuildIn" // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
-    FilterLibRuleKind?: "lib" | "noLib" | "" // 是否显示Lib规则
+    FilterRuleKind?: FilterRuleKind // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
+    FilterLibRuleKind?: FilterLibRuleKind // 是否显示Lib规则
 }
 export interface QuerySyntaxFlowRuleRequest {
     Filter?: SyntaxFlowRuleFilter
@@ -146,12 +181,28 @@ export interface SyntaxFlowRule {
     AllowIncluded: boolean
     IncludedName: string
     Tag: string
-    AlertDesc: string
 
     Hash: string
 
     GroupName: string[]
+
+    AlertMsg: {[key: string]: AlertMessage}
 }
+
+export interface AlertMessage {
+    Title: string
+    TitleZh: string
+    Description: string
+    Solution: string
+    Severity: string
+    Purpose: string
+    Msg: string
+    Cve: string
+    RiskType: string
+    Tag: string
+    Extra: {[key: string]: string}
+}
+
 export interface QuerySyntaxFlowRuleResponse {
     Pagination: Paging
     Rule: SyntaxFlowRule[]
@@ -165,6 +216,7 @@ export interface SyntaxFlowRuleInput {
     Tags?: string[] // 无效，不知道后端是否有用
     GroupNames: string[]
     Description: string
+    AlertMsg: {[key: string]: AlertMessage}
 }
 export interface CreateSyntaxFlowRuleRequest {
     SyntaxFlowInput: SyntaxFlowRuleInput
@@ -176,21 +228,24 @@ export interface UpdateSyntaxFlowRuleRequest {
 export interface DeleteSyntaxFlowRuleRequest {
     Filter: SyntaxFlowRuleFilter
 }
-
-export interface ExportSyntaxFlowsRequest {
-    Filter: SyntaxFlowRuleFilter
-    Password?: string
-    TargetPath: string
-}
-
-export interface ImportSyntaxFlowsRequest {
-    InputPath: string
-    Password?: string
-}
-
-export interface SyntaxflowsProgress {
-    Progress: number
-    Verbose: string
-}
 // #endregion
 /** ---------- 规则相关接口定义 End ---------- */
+
+/** ---------- 线上规则相关接口定义 Start ---------- */
+// #region
+export interface SyntaxFlowRuleToOnlineRequest {
+    Pagination?: Paging
+    Filter: SyntaxFlowRuleFilter
+    Token: string
+}
+export interface SyntaxFlowRuleOnlineProgress {
+    Progress: number
+    Message: string
+    MessageType: string
+}
+export interface DownloadSyntaxFlowRuleRequest {
+    Token: string
+    Filter: SyntaxFlowRuleFilter
+}
+// #endregion
+/** ---------- 线上规则相关接口定义 End ---------- */

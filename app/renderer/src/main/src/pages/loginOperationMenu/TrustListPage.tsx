@@ -59,7 +59,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
         return head_img && !!head_img.length ? (
             <Avatar size={20} src={head_img} />
         ) : (
-            <Avatar size={20} style={{backgroundColor: "var(--yakit-primary-6)"}}>
+            <Avatar size={20} style={{backgroundColor: "var(--Colors-Use-Main-Pressed)"}}>
                 {name && name.slice(0, 1)}
             </Avatar>
         )
@@ -346,7 +346,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 }
                 data={response.data}
                 enableDrag={false}
-                renderKey='id'
+                renderKey='appid'
                 columns={columns}
                 useUpAndDown
                 pagination={{

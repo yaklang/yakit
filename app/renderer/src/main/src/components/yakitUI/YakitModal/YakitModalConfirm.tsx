@@ -8,16 +8,34 @@ import {ErrorBoundary} from "react-error-boundary"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {createRoot} from "react-dom/client"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+
+interface YakitBaseModalProp
+    extends Omit<YakitModalProp, "okType" | "okButtonProps" | "cancelButtonProps">,
+        React.ComponentProps<any> {
+    onVisibleSetter?: (setter: (i: boolean) => any) => any
+    showConfirmLoading?: boolean
+    subTitle?:string
+}
+
 export interface YakitModalConfirmProps extends YakitBaseModalProp {
     title?: React.ReactNode | string
     content?: React.ReactNode | string
     modalAfterClose?: () => any
-    onOk?: () => any
-    onCancel?: () => any
+    onOk?: (e) => any
+    onCancel?: (e) => any
     onOkText?: string
     onCancelText?: string
     showConfirmLoading?: boolean
 }
+
+interface YakitBaseModalProps extends YakitModalProp, React.ComponentProps<any> {
+    onVisibleSetter?: (setter: (i: boolean) => void) => void
+    showConfirmLoading?: boolean
+    onCancelText?: string
+    onOkText?: string
+}
+
 export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
     const div = document.createElement("div")
     document.body.appendChild(div)
@@ -106,14 +124,8 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
     }
 }
 
-interface YakitBaseModalProp
-    extends Omit<YakitModalProp, "cancelButtonProps" | "okButtonProps" | "okType">,
-        React.ComponentProps<any> {
-    onVisibleSetter?: (setter: (i: boolean) => any) => any
-    showConfirmLoading?: boolean
-}
-
-const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
+const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [visible, setVisible] = useState<boolean>(true)
     const [loading, setLoading] = useState<boolean>(false)
 
@@ -125,7 +137,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
 
     return (
         <YakitModal
-            footerStyle={{backgroundColor: "#fff", borderTop: 0, padding: 0}}
+            footerStyle={{borderTop: 0, padding: 0}}
             footer={
                 <div className={style["modal-confirm-btns"]}>
                     <YakitButton
@@ -136,7 +148,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                         }}
                         {...props.cancelButtonProps}
                     >
-                        {props.onCancelText || "取消"}
+                        {props.onCancelText || t("YakitButton.cancel")}
                     </YakitButton>
                     <YakitButton
                         onClick={(e) => {
@@ -150,7 +162,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                         loading={loading}
                         {...props.okButtonProps}
                     >
-                        {props.onOkText || "确定"}
+                        {props.onOkText || t("YakitButton.ok")}
                     </YakitButton>
                 </div>
             }
@@ -161,6 +173,11 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                 <div
                     onClick={(e) => {
                         e.stopPropagation()
+                        if (props.onCloseX) {
+                            props.onCloseX(e)
+                        } else {
+                            props.onCancel?.(e)
+                        }
                         setVisible(false)
                     }}
                     className='modal-remove-icon'

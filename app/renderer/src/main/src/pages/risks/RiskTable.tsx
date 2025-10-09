@@ -346,7 +346,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             width: 400,
             filteredValue: (getParams()["Search"] && ["TitleVerbose"]) || null,
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                return params && <SearchOutlined style={{color: filtered ? "var(--Colors-Use-Blue-Bg)" : undefined}} />
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -372,7 +372,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             filteredValue: (getParams()["RiskType"] && ["RiskTypeVerbose"]) || null,
             render: (_, i: Risk) => i?.RiskTypeVerbose || i.RiskType,
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                return params && <SearchOutlined style={{color: filtered ? "var(--Colors-Use-Blue-Bg)" : undefined}} />
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (
@@ -406,7 +406,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
             render: (_, i: Risk) => i?.IP || "-",
             filteredValue: (getParams()["Network"] && ["IP"]) || null,
             filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+                return params && <SearchOutlined style={{color: filtered ? "var(--Colors-Use-Blue-Bg)" : undefined}} />
             },
             filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
                 return (

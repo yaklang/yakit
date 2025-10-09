@@ -93,14 +93,16 @@ interface SyntaxFlowScanTaskFilter {
     FromId?: number
     UntilId?: number
     Kind?: string[]
+    HaveRisk?: boolean
 }
 
-interface QuerySyntaxFlowScanTaskRequest {
+export interface QuerySyntaxFlowScanTaskRequest {
     Pagination: Paging
     Filter?: SyntaxFlowScanTaskFilter
+    ShowDiffRisk?: boolean
 }
 
-interface SyntaxFlowScanTask {
+export interface SyntaxFlowScanTask {
     Id: number
     CreatedAt: number
     UpdatedAt: number
@@ -118,9 +120,22 @@ interface SyntaxFlowScanTask {
 
     Config: SyntaxFlowScanRequest
     Kind: "debug" | "scan"
+
+    // diff
+    NewRiskCount: number
+    InfoCount: number
+    LowCount: number
+    WarningCount: number
+    CriticalCount: number
+    HighCount: number
+    NewInfoCount: number
+    NewLowCount: number
+    NewWarningCount: number
+    NewCriticalCount: number
+    NewHighCount: number
 }
 
-interface QuerySyntaxFlowScanTaskResponse {
+export interface QuerySyntaxFlowScanTaskResponse {
     Pagination: Paging
     Data: SyntaxFlowScanTask[]
     Total: number

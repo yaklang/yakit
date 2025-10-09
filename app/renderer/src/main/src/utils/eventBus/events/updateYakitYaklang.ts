@@ -3,6 +3,8 @@ export type UpdateYakitYaklangEventProps = {
     activeUpdateYakitOrYaklang: string
     /** yakit下载完成后的通信 */
     downloadedYakitFlag?: string
+    /** 内网yakit下载完成后的通信 */
+    downloadedYakitIntranetFlag?: string
     /** 启动并创建引擎进程 */
     startAndCreateEngineProcess?: boolean
     /** 下载指定版本yaklang */

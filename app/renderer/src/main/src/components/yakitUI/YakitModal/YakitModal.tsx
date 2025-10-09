@@ -1,18 +1,22 @@
 import React, {CSSProperties, ReactNode, useMemo} from "react"
 import {Modal, ModalProps} from "antd"
+import {useMemoizedFn} from "ahooks"
 import {YakitButton, YakitButtonProp} from "../YakitButton/YakitButton"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import styles from "./yakitModal.module.scss"
 
-export interface YakitModalProp extends Omit<ModalProps, "style" | "cancelButtonProps" | "okButtonProps" | "okType"> {
+export interface YakitModalProp extends Omit<ModalProps, "cancelButtonProps" | "okButtonProps" | "okType"> {
     headerStyle?: CSSProperties
     footerStyle?: CSSProperties
 
     cancelButtonProps?: YakitButtonProp
     okButtonProps?: YakitButtonProp
     okType?: YakitButtonProp["type"]
+
+    onCloseX?: ModalProps["onCancel"]
 
     /** @name 副标题 */
     subTitle?: ReactNode
@@ -44,11 +48,12 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         title,
         footer,
         cancelButtonProps,
-        cancelText = "取消",
+        cancelText,
         okButtonProps,
         confirmLoading,
-        okText = "确认",
+        okText,
         okType,
+        onCloseX,
         onCancel,
         onOk,
         /** 自定义新增属性 ↓↓↓ */
@@ -59,6 +64,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         hiddenHeader = false,
         ...resetProps
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
 
     const typeClass = useMemo(() => {
         if (type === "white") return styles["yakit-modal-white"]
@@ -68,6 +74,14 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         if (size === "large") return styles["yakit-modal-large"]
         return styles["yakit-modal-small"]
     }, [size])
+
+    const onCancelX: YakitModalProp["onCancel"] = useMemoizedFn((e) => {
+        if (onCloseX) {
+            onCloseX(e)
+        } else {
+            onCancel?.(e)
+        }
+    })
 
     return (
         <Modal
@@ -81,7 +95,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
             )}
             closable={false}
             footer={null}
-            onCancel={onCancel}
+            onCancel={onCancelX}
         >
             <div className={styles["yakit-modal-body"]}>
                 {!hiddenHeader && (
@@ -94,10 +108,10 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
                         )}
                         {closable && (
                             <YakitButton
-                                type='text2'
+                                type='text'
                                 size={size === "large" ? "large" : "middle"}
                                 icon={!!closeIcon ? closeIcon : <OutlineXIcon />}
-                                onClick={onCancel}
+                                onClick={onCancelX}
                             />
                         )}
                     </div>
@@ -121,7 +135,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
                                         onClick={onCancel}
                                         {...cancelButtonProps}
                                     >
-                                        {cancelText}
+                                        {cancelText || t("YakitButton.cancel")}
                                     </YakitButton>
                                     <YakitButton
                                         loading={confirmLoading}
@@ -130,7 +144,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
                                         onClick={onOk}
                                         {...okButtonProps}
                                     >
-                                        {okText}
+                                        {okText || t("YakitButton.ok")}
                                     </YakitButton>
                                 </div>
                             </>

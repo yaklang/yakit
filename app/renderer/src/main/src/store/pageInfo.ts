@@ -4,7 +4,6 @@ import {subscribeWithSelector, persist, StorageValue} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {AdvancedConfigShowProps} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {yakitNotify} from "@/utils/notification"
-import {RemoteGV} from "@/yakitGV"
 import {setRemoteProjectValue} from "@/utils/kv"
 import cloneDeep from "lodash/cloneDeep"
 import {createWithEqualityFn} from "zustand/traditional"
@@ -74,6 +73,24 @@ interface PageParamsInfoProps {
     modifyNotepadPageInfo?: ModifyNotepadPageInfoProps
     /** hTTPHacker v2 新版 */
     mitmHackerPageInfo?: MITMHackerPageInfoProps
+    /** 编辑 ai-forge 模板页面 */
+    modifyAIForgePageInfo?: AIForgeEditorPageInfoProps
+    /** 编辑 ai tool 页面 */
+    modifyAIToolPageInfo?: AIToolEditorPageInfoProps
+    /** 扫描历史页面 */
+    yakRunnerScanHistory?: YakRunnerScanHistoryPageInfoProps
+}
+
+export interface AIForgeEditorPageInfoProps {
+    /** 编辑时使用，为 forge 模板 id */
+    id: number
+    source: YakitRoute
+    [key: string]: any
+}
+
+export interface AIToolEditorPageInfoProps {
+    id: number
+    source: YakitRoute
 }
 
 export interface AddYakitScriptPageInfoProps {
@@ -97,9 +114,11 @@ export interface WebsocketFuzzerPageInfoProps {
 }
 
 export interface HTTPHistoryAnalysisPageInfo {
+    verbose?: string
     webFuzzer?: boolean
     runtimeId?: string[]
     sourceType?: string
+    pageId?: string
 }
 
 export interface PluginBatchExecutorPageInfoProps {
@@ -189,7 +208,7 @@ export interface HTTPHackerPageInfoProps {
 }
 
 export interface MITMHackerPageInfoProps {
-    immediatelyLaunchedInfo: ImmediatelyLaunchedInfo
+    immediatelyLaunchedInfo?: ImmediatelyLaunchedInfo
 }
 
 export interface AuditCodePageInfoProps {
@@ -203,6 +222,13 @@ export interface AuditCodePageInfoProps {
     Query?: {Key: string; Value: number}[]
     // 文件与高亮信息
     CodeRange?: string
+    // 漏洞/规则 树所选中的下拉列表
+    runtimeId?: string
+    // 左侧tab选中
+    leftTabActive?: string
+    // 只看新增
+    isShowCompare?: boolean
+    refreshRiskOrRuleList?: boolean
 }
 
 export interface CodeScanPageInfoProps {
@@ -213,12 +239,20 @@ export interface CodeScanPageInfoProps {
 }
 
 export interface ModifyNotepadPageInfoProps {
+    /**需要跳转定位的dom元素id */
+    domId?: string
     /**笔记本 线上:hash(string) 本地:Id(number)*/
     notepadHash?: string | number
     /**笔记本标题 */
     title?: string
     /**搜索关键词 */
-    keyWord?: string
+    keyWordInfo?: {keyWord: string; position: number; line?: number}
+    /**自动带入内容 */
+    content?: string
+}
+
+export interface YakRunnerScanHistoryPageInfoProps {
+    Programs: string[]
 }
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>

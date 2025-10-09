@@ -4,15 +4,19 @@ const path = require("path")
 const url = require("url")
 const {registerIPC, clearing} = require("./ipc")
 const process = require("process")
-const {initExtraLocalCache, getExtraLocalCacheValue, initLocalCache, setCloeseExtraLocalCache} = require("./localCache")
+const {
+    initExtraLocalCache,
+    getExtraLocalCacheValue,
+    initLocalCache,
+    setCloeseExtraLocalCache,
+    setLocalCache
+} = require("./localCache")
 const {asyncKillDynamicControl} = require("./handlers/dynamicControlFun")
-const {windowStatePatch, engineLog, renderLog, printLog} = require("./filePath")
-const fs = require("fs")
+const {windowStatePatch} = require("./filePath")
 const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
-const {clearFolder} = require("./toolsFunc")
 const {MenuTemplate} = require("./menu")
-const {fetchEngineLogFile, closeEngineLogFile} = require("./logFile")
+const {renderLogOutputFile, getAllLogHandles, closeAllLogHandles, initAllLogFolders} = require("./logFile")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -59,6 +63,28 @@ const createWindow = () => {
         frame: false,
         titleBarStyle: "hidden"
     })
+    win.webContents.setWindowOpenHandler(({url}) => {
+        console.log("prevent new-window in main window, u: ", url)
+        return {action: "deny"}
+    })
+    win.webContents.on("new-window", (e) => {
+        console.log("prevent new-window in main window")
+        e.preventDefault()
+    })
+
+    // 监听渲染端的崩溃事件
+    win.webContents.on("render-process-gone", (event, details) => {
+        // 发送渲染端崩溃事件
+        renderLogOutputFile(`----- Render process is gone ------`)
+        renderLogOutputFile(`Render process: ${details.reason}, exitcode: ${details.exitCode}`)
+        if (details.reason === "crashed") {
+            // 如果渲染端崩溃了，设置渲染端崩溃标记位
+            setLocalCache("render-crash-screen", true)
+        }
+        // 记录logger日志
+        require("./handlers/logger").saveLogs()
+    })
+
     win.setSize(mainWindowState.width, mainWindowState.height)
     mainWindowState.manage(win)
     if (isDev) {
@@ -74,6 +100,11 @@ const createWindow = () => {
     win.setMenu(null)
     win.setMenuBarVisibility(false)
     if (process.platform === "darwin") win.setWindowButtonVisibility(false)
+
+    // 监听主进程所有错误信息
+    // process.on("uncaughtException", (err, origin) => {
+    //     console.log(`Caught exception: ${err}\n` + `Exception origin: ${origin}`)
+    // })
 
     win.on("close", async (e) => {
         e.preventDefault()
@@ -93,16 +124,11 @@ const createWindow = () => {
     win.webContents.on("will-navigate", (e, url) => {
         e.preventDefault()
     })
-    // 录屏
-    // globalShortcut.register("Control+Shift+X", (e) => {
-    //     win.webContents.send("open-screenCap-modal")
-    // })
 }
 
 /**
  * set software menu
  */
-
 const menu = Menu.buildFromTemplate(MenuTemplate)
 Menu.setApplicationMenu(menu)
 
@@ -121,13 +147,6 @@ app.whenReady().then(() => {
             })
         })
 
-        // globalShortcut.register("Control+Shift+b", () => {
-        //     screenshots.startCapture()
-        //     globalShortcut.register("esc", () => {
-        //         screenshots.endCapture()
-        //         globalShortcut.unregister("esc")
-        //     })
-        // })
         globalShortcut.register("Control+Shift+q", () => {
             screenshots.endCapture()
             globalShortcut.unregister("esc")
@@ -147,25 +166,11 @@ app.whenReady().then(() => {
     }
 
     /**
-     * error-log:
+     * init-log-folders:
      * 存在则检查文件数量是否超过10个，超过则只保留最近10个文件
      * 不存在则新建文件夹
      */
-    if (fs.existsSync(engineLog)) {
-        clearFolder(engineLog, 9)
-    } else {
-        fs.mkdirSync(engineLog, {recursive: true})
-    }
-    if (fs.existsSync(renderLog)) {
-        clearFolder(renderLog, 9)
-    } else {
-        fs.mkdirSync(renderLog, {recursive: true})
-    }
-    if (fs.existsSync(printLog)) {
-        clearFolder(printLog, 9)
-    } else {
-        fs.mkdirSync(printLog, {recursive: true})
-    }
+    initAllLogFolders()
 
     // 软件退出的逻辑
     ipcMain.handle("app-exit", async (e, params) => {
@@ -198,7 +203,7 @@ app.whenReady().then(() => {
                     } else if (res.response === 1) {
                         win = null
                         clearing()
-                        closeEngineLogFile()
+                        closeAllLogHandles()
                         app.exit()
                     } else {
                         e.preventDefault()
@@ -210,7 +215,7 @@ app.whenReady().then(() => {
             await asyncKillDynamicControl()
             win = null
             clearing()
-            closeEngineLogFile()
+            closeAllLogHandles()
             app.exit()
         }
     })
@@ -225,15 +230,8 @@ app.whenReady().then(() => {
 
     try {
         registerIPC(win)
-        fetchEngineLogFile()
+        getAllLogHandles()
     } catch (e) {}
-
-    //
-    // // autoUpdater.autoDownload = false
-    // autoUpdater.checkForUpdates();
-    // autoUpdater.signals.updateDownloaded(info => {
-    //     console.info(info.downloadedFile)
-    // })
 
     app.on("activate", function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()

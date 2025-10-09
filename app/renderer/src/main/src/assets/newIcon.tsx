@@ -105,7 +105,7 @@ const SorterUp = () => (
         />
         <path
             d='M11.3332 5.33337V13.3334M11.3332 13.3334L13.9998 10.6667M11.3332 13.3334L8.6665 10.6667'
-            stroke='#B4BBCA'
+            stroke='var(--Colors-Use-Neutral-Disable)'
             strokeLinecap='round'
             strokeLinejoin='round'
         />
@@ -123,7 +123,7 @@ const SorterDown = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
         <path
             d='M4.66667 10.6666V2.66663M4.66667 2.66663L2 5.33329M4.66667 2.66663L7.33333 5.33329'
-            stroke='#B4BBCA'
+            stroke='var(--Colors-Use-Neutral-Disable)'
             strokeLinecap='round'
             strokeLinejoin='round'
         />

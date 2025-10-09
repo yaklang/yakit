@@ -1,35 +1,39 @@
 $color-list: (
     primary: (
-        color-1: var(--yakit-primary-1),
-        color-2: var(--yakit-primary-2),
-        color-3: var(--yakit-primary-3),
-        color-4: var(--yakit-primary-4),
-        color-5: var(--yakit-primary-5),
-        color-6: var(--yakit-primary-6)
+        color-1: var(--Colors-Use-Main-Bg),
+        color-2: var(--Colors-Use-Main-Focus),
+        color-3: var(--Colors-Use-Main-Border),
+        color-4: var(--Colors-Use-Main-Hover),
+        color-5: var(--Colors-Use-Main-Primary),
+        color-6: var(--Colors-Use-Main-Pressed),
+        color-7: var(--Colors-Use-Main-On-Primary)
     ),
     success: (
-        color-1: var(--yakit-success-1),
-        color-2: var(--yakit-success-2),
-        color-3: var(--yakit-success-3),
-        color-4: var(--yakit-success-4),
-        color-5: var(--yakit-success-5),
-        color-6: var(--yakit-success-6)
+        color-1: var(--Colors-Use-Success-Bg),
+        color-2: var(--Colors-Use-Success-Focus),
+        color-3: var(--Colors-Use-Success-Border),
+        color-4: var(--Colors-Use-Success-Hover),
+        color-5: var(--Colors-Use-Success-Primary),
+        color-6: var(--Colors-Use-Success-Pressed),
+        color-7: var(--Colors-Use-Main-On-Primary)
     ),
     danger: (
-        color-1: var(--yakit-danger-1),
-        color-2: var(--yakit-danger-2),
-        color-3: var(--yakit-danger-3),
-        color-4: var(--yakit-danger-4),
-        color-5: var(--yakit-danger-5),
-        color-6: var(--yakit-danger-6)
+        color-1: var(--Colors-Use-Error-Bg),
+        color-2: var(--Colors-Use-Error-Focus),
+        color-3: var(--Colors-Use-Error-Border),
+        color-4: var(--Colors-Use-Error-Hover),
+        color-5: var(--Colors-Use-Error-Primary),
+        color-6: var(--Colors-Use-Error-Pressed),
+        color-7: var(--Colors-Use-Main-On-Primary)
     ),
     infoBlue: (
-        color-1: var(--yakit-infoBlue-1),
-        color-2: var(--yakit-infoBlue-2),
-        color-3: var(--yakit-infoBlue-3),
-        color-4: var(--yakit-infoBlue-4),
-        color-5: var(--yakit-infoBlue-5),
-        color-6: var(--yakit-infoBlue-6)
+        color-1: var(--Colors-Use-Blue-Bg),
+        color-2: var(--Colors-Use-Blue-Focus),
+        color-3: var(--Colors-Use-Blue-Border),
+        color-4: var(--Colors-Use-Blue-Hover),
+        color-5: var(--Colors-Use-Blue-Primary),
+        color-6: var(--Colors-Use-Blue-Pressed),
+        color-7: var(--Colors-Use-Main-On-Primary)
     )
 );
 @function fetch-color($type, $color) {

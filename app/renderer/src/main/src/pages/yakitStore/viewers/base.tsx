@@ -30,6 +30,7 @@ import {MITMPluginLogViewer} from "@/pages/mitm/MITMPluginLogViewer"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import moment from "moment"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -62,7 +63,6 @@ export interface PluginResultUIProp {
     debugMode?: boolean
 
     cardStyleType?: number
-    runtimeId?: string
     fromPlugin?: string
     defaultActive?: string
 
@@ -173,6 +173,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         cardStyleType,
         consoleHeight
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitStore"])
     const [active, setActive] = useState(() => {
         if (props.defaultActive) {
             return props.defaultActive
@@ -195,8 +196,18 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         progressBars.push({
             id: v.id,
             node: (
-                <Card size={"small"} hoverable={false} bordered={true} title={`任务进度ID：${v.id}`}>
-                    <Progress percent={parseInt((v.progress * 100).toFixed(0))} status='active' />
+                <Card
+                    size={"small"}
+                    hoverable={false}
+                    bordered={true}
+                    title={`${t("viewers.base.PluginResultUI.taskProgressID")}${v.id}`}
+                >
+                    <Progress
+                        strokeColor='var(--Colors-Use-Main-Primary)'
+                        trailColor='var(--Colors-Use-Neutral-Bg)'
+                        percent={parseInt((v.progress * 100).toFixed(0))}
+                        status='active'
+                    />
                 </Card>
             )
         })
@@ -252,7 +263,6 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         <YakitCVXterm
                             ref={xtermRef}
                             options={{
-                                convertEol: true,
                                 rows: 12
                             }}
                             // onResize={(r) => {
@@ -324,23 +334,16 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         </TabPane>
                     )
                 })}
-                {!!props.runtimeId && (
-                    <TabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
-                        <CurrentHttpFlow
-                            pageType='Plugin'
-                            runtimeId={props.runtimeId}
-                            isOnlyTable={onlyShowFirstNode}
-                            onIsOnlyTable={setOnlyShowFirstNode}
-                        ></CurrentHttpFlow>
-                    </TabPane>
-                )}
-                <TabPane tab={"日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
+                <TabPane
+                    tab={t("viewers.base.PluginResultUI.log")}
+                    key={finalFeatures.length > 0 ? "log" : "feature-0"}
+                >
                     {
                         <>
                             <AutoCard
                                 title={
                                     <Space>
-                                        <div>任务额外日志与结果</div>
+                                        <div>{t("viewers.base.PluginResultUI.taskExtraLogAndResult")}</div>
                                         <YakitTag color='info'>
                                             {(timelineItemProps || []).length > 0
                                                 ? formatDate(timelineItemProps[0].timestamp)
@@ -381,7 +384,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     <TabPane
                         tab={
                             <div>
-                                {`漏洞与风险`}
+                                {t("viewers.base.PluginResultUI.vulnerabilitiesAndRisks")}
                                 <Tag style={{marginLeft: 4}} color={"red"}>
                                     {props.risks.length}
                                 </Tag>
@@ -433,172 +436,6 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         </div>
     )
 })
-
-interface CurrentHttpFlowProp {
-    runtimeId: string
-    httpHistoryTableTitleStyle?: CSSProperties
-    containerClassName?: string
-
-    /** 指定搜索url */
-    searchURL?: string
-    /** 指定搜索url参数 */
-    includeInUrl?: string | string[]
-    /** 是否只展示表格 */
-    isOnlyTable: boolean
-    /** 是否只展示表格 */
-    onIsOnlyTable: (value: boolean) => any
-    /** 是否展示详情 */
-    showDetail?: boolean
-    pageType?: HTTPHistorySourcePageType
-
-    /**
-     * 流量表筛选条件回调
-     * @param queryParams 流量表筛选条件JSON
-     */
-    onQueryParams?: (queryParams: string, execFlag?: boolean) => void
-    refresh?: boolean // 是否刷新表格
-
-    showBatchActions?: boolean
-}
-
-export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
-    const {
-        runtimeId,
-        httpHistoryTableTitleStyle,
-        containerClassName = "",
-        searchURL,
-        includeInUrl,
-        isOnlyTable,
-        onIsOnlyTable,
-        showDetail,
-        pageType,
-        onQueryParams,
-        refresh = true,
-        showBatchActions = false
-    } = props
-    const [highlightSearch, setHighlightSearch] = useState("")
-    const lasetIdRef = useRef<number>()
-    const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
-    const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
-    const [flow, setFlow] = useState<HTTPFlow>()
-    const [historyId, setHistoryId] = useState<string>(uuidv4())
-
-    const getHTTPFlowById = (id: number, rowDate: HTTPFlow) => {
-        setFlowRequestLoad(false)
-        setFlowResponseLoad(false)
-        setFlow(rowDate)
-        onIsOnlyTable(false)
-
-        // 是否获取Request
-        let isGetRequest: boolean = true
-        let isGetResponse: boolean = true
-
-        // 请求不为空直接使用
-        if (rowDate.RequestString) {
-            isGetRequest = false
-        }
-        if (rowDate.ResponseString) {
-            isGetResponse = false
-        }
-        // 请求或响应只要有一个为0就走接口拿取数据
-        if (isGetRequest || isGetResponse) {
-            isGetRequest && setFlowRequestLoad(true)
-            isGetResponse && setFlowResponseLoad(true)
-            ipcRenderer
-                .invoke("GetHTTPFlowById", {Id: id})
-                .then((i: HTTPFlow) => {
-                    if (i.Id == lasetIdRef.current) {
-                        setFlow(i)
-                    }
-                })
-                .catch((e: any) => {
-                    yakitNotify("error", `Query HTTPFlow failed: ${e}`)
-                })
-                .finally(() => {
-                    setTimeout(() => {
-                        setFlowRequestLoad(false)
-                        setFlowResponseLoad(false)
-                    }, 300)
-                })
-        }
-    }
-
-    const ResizeBoxProps = useCreation(() => {
-        let p = {
-            firstRatio: "50%",
-            secondRatio: "50%"
-        }
-        if (isOnlyTable) {
-            p.secondRatio = "0%"
-            p.firstRatio = "100%"
-        }
-        return p
-    }, [isOnlyTable])
-
-    return (
-        <>
-            <YakitResizeBox
-                lineDirection='top'
-                isVer={true}
-                lineStyle={{display: isOnlyTable ? "none" : ""}}
-                firstNodeStyle={{padding: isOnlyTable ? 0 : undefined}}
-                secondNodeStyle={{display: isOnlyTable ? "none" : ""}}
-                firstNode={
-                    <HTTPFlowTable
-                        runTimeId={runtimeId}
-                        params={{SourceType: "scan"}}
-                        searchURL={searchURL}
-                        includeInUrl={includeInUrl}
-                        onSelected={(i) => {
-                            if (!i) return
-                            lasetIdRef.current = i.Id
-                            getHTTPFlowById(i.Id, i)
-                        }}
-                        onSearch={setHighlightSearch}
-                        onlyShowFirstNode={isOnlyTable}
-                        setOnlyShowFirstNode={onIsOnlyTable}
-                        httpHistoryTableTitleStyle={{
-                            paddingTop: 12,
-                            paddingLeft: 8,
-                            paddingRight: 8,
-                            ...(httpHistoryTableTitleStyle || {})
-                        }}
-                        historyId={historyId}
-                        titleHeight={47}
-                        containerClassName={containerClassName}
-                        pageType={pageType}
-                        onQueryParams={onQueryParams}
-                        refresh={refresh}
-                        noTableTitle={false}
-                        showSourceType={false}
-                        showAdvancedSearch={false}
-                        showProtocolType={false}
-                        showColorSwatch={false}
-                        showBatchActions={showBatchActions}
-                        showDelAll={false}
-                        showSetting={false}
-                    />
-                }
-                secondNode={
-                    flow && (!isOnlyTable || showDetail) ? (
-                        <HTTPFlowDetailRequestAndResponse
-                            id={flow.Id}
-                            flow={flow}
-                            noHeader={true}
-                            search={highlightSearch}
-                            flowRequestLoad={flowRequestLoad}
-                            flowResponseLoad={flowResponseLoad}
-                            sendToWebFuzzer={true}
-                            historyId={historyId}
-                            pageType={pageType}
-                        />
-                    ) : null
-                }
-                {...ResizeBoxProps}
-            />
-        </>
-    )
-}
 
 export interface YakitFeatureRenderProp {
     feature: string

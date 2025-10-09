@@ -2,6 +2,7 @@
 .shell-receiver-contain {
     display: flex;
     overflow: hidden;
+    background-color: var(--Colors-Use-Basic-Background);
 }
 .shell-receiver {
     height: 100%;
@@ -21,7 +22,7 @@
             justify-content: space-between;
             padding: 14px 16px 10px 12px;
             align-items: center;
-            border-bottom: 1px solid #eaecf3;
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             .title {
                 display: flex;
                 flex-direction: row;
@@ -73,7 +74,7 @@
     padding: 14px 12px 12px 16px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #eaecf3;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
     flex-shrink: 0;
     .header {
         display: flex;
@@ -108,7 +109,7 @@
             .prefix {
                 display: flex;
                 align-items: center;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 svg {
                     width: 16px;
                     height: 16px;
@@ -125,7 +126,7 @@
             align-items: center;
             padding: 10px 8px;
             border-radius: 4px;
-            background: #f8f8f8;
+            background: var(--Colors-Use-Neutral-Bg);
             margin-bottom: 4px;
             cursor: pointer;
             .text {
@@ -139,20 +140,20 @@
                 -webkit-box-orient: vertical;
             }
             &:hover {
-                background-color: var(--yakit-background-color);
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
             }
         }
         .item-box-active {
-            background-color: var(--yakit-primary-5);
-            color: #fff;
+            background-color: var(--Colors-Use-Main-Primary);
+            color: var(--Colors-Use-Main-On-Primary);
             &:hover {
-                background-color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Main-Hover);
             }
         }
     }
     .no-more-text {
         font-size: 12px;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         height: 28px;
         display: flex;
         align-items: center;
@@ -162,7 +163,7 @@
     }
 }
 .fold-icon {
-    color: #85899e;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
     cursor: pointer;
     border-radius: 4px;
     width: 24px;
@@ -175,8 +176,8 @@
         height: 16px;
     }
     &:hover {
-        background-color: var(--yakit-background-color);
-        color: var(--yakit-primary-5);
+        background-color: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 
@@ -190,18 +191,18 @@
         font-weight: 600;
         font-size: 16px;
         line-height: 24px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         margin-bottom: 8px;
         text-align: center;
     }
     .heard-subTitle-text {
         padding: 8px 24px;
-        background-color: tools.fetch-color-transparen(var(--yakit-success-5), 10%);
+        background-color: tools.fetch-color-transparen(var(--Colors-Use-Success-Primary), 10%);
         height: 48px;
         font-weight: 400;
         font-size: 12px;
         line-height: 16px;
-        color: var(--yakit-success-5);
+        color: var(--Colors-Use-Success-Primary);
         border-radius: 4px;
     }
     .shellReceiver-form {
@@ -219,19 +220,19 @@
 .shell-receiver-middle-item {
     width: 300px;
     box-sizing: content-box;
-    border-right: 1px solid #eaecf3;
+    border-right: 1px solid var(--Colors-Use-Neutral-Border);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     .header {
         height: 24px;
         box-sizing: content-box;
-        background-color: #fff;
+        background-color: var(--Colors-Use-Basic-Background);
         padding: 14px 12px 10px 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid #eaecf3;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         .title {
             font-size: 12px;
             font-weight: 600;
@@ -252,14 +253,14 @@
                 padding: 4px;
                 border-radius: 4px;
                 cursor: pointer;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 svg {
                     width: 16px;
                     height: 16px;
                 }
                 &:hover {
-                    background-color: var(--yakit-background-color);
-                    color: var(--yakit-primary-5);
+                    background-color: var(--Colors-Use-Neutral-Bg);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
@@ -269,7 +270,7 @@
         overflow: auto;
 
         .content-text {
-            background-color: var(--yakit-card-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
             padding: 8px 12px;
             word-break: break-all;
             flex: 1;
@@ -291,13 +292,13 @@
         }
     }
     .footer {
-        border-top: 1px solid #eaecf3;
-        box-shadow: 0px -8px 16px 0px rgba(133, 137, 158, 0.1);
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
+        box-shadow: 0px -8px 16px 0px var(--Colors-Use-Basic-Shadow);
         display: flex;
         flex-direction: column;
         gap: 12px;
         padding: 12px;
-        background-color: #fff;
+        background-color: var(--Colors-Use-Basic-Background);
         .select-box {
             display: flex;
             flex-direction: column;
@@ -318,7 +319,7 @@
         .line {
             height: 1px;
             width: 100%;
-            background-color: #eaecf3;
+            background-color: var(--Colors-Use-Basic-Background);
         }
     }
 }
@@ -336,7 +337,7 @@
     line-height: 16px;
     .setting-terminal-tip {
         font-size: 12px;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
     }
     .setting-terminal-upgrade {
         display: flex;

@@ -1,0 +1,80 @@
+/* ---------- AIChatSetting ----------*/
+.ai-chat-setting {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .setting-header {
+        padding: 8px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
+        .header-title {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px;
+        }
+    }
+
+    .setting-form {
+        flex: 1;
+        padding: 12px 12px 20px 12px;
+        overflow: hidden auto;
+        :global {
+            .ant-row.ant-form-item {
+                margin-bottom: 8px;
+                .ant-form-item-label {
+                    padding-bottom: 0;
+                    label {
+                        height: unset;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
+                        font-size: 12px;
+                        font-weight: 400;
+                    }
+                }
+            }
+        }
+
+        .info-icon {
+            cursor: pointer;
+            margin-left: 2px;
+            svg {
+                width: 16px;
+                height: 16px;
+                color: #868c97;
+            }
+        }
+    }
+}
+.form-info-icon-tooltip {
+    padding-bottom: 2px;
+}
+
+/* ---------- FormItemSlider ----------*/
+.form-item-slider {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    :global {
+        .ant-slider {
+            margin: 6px;
+        }
+    }
+    .slider-body {
+        flex: 1;
+        padding-left: 2px;
+        padding-right: 2px;
+        overflow: hidden;
+    }
+    .slider-value {
+        width: 30px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+        letter-spacing: 0.5px;
+    }
+}

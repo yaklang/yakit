@@ -16,14 +16,14 @@
             padding: 4px;
             border-radius: 4px;
             cursor: pointer;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             svg {
                 width: 16px;
                 height: 16px;
             }
             &:hover {
-                background-color: var(--yakit-background-color);
-                color: var(--yakit-primary-5);
+                background-color: var(--Colors-Use-Neutral-Bg);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -44,21 +44,21 @@
 
 .white-link {
     @extend .fake-content;
-    border-color: #fff;
+    border-color: var(--Colors-Use-Neutral-Border);
 }
 
 .grey-link {
     @extend .fake-content;
-    border-color: var(--yakit-border-color);
+    border-color: var(--Colors-Use-Neutral-Border);
 }
 
 .primary-link {
     @extend .fake-content;
-    border-color: var(--yakit-primary-5) !important;
+    border-color: var(--Colors-Use-Main-Primary) !important;
 }
 
 .dragging {
-    background-color: #fff;
+    background-color: var(--Colors-Use-Basic-Background);
 
     &::before {
         @extend .white-link;
@@ -71,7 +71,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     cursor: pointer;
     border-radius: 4px;
 }
@@ -80,7 +80,7 @@
     @extend .base-show-icon;
 
     &:hover {
-        background-color: var(--yakit-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }
 
@@ -89,20 +89,20 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #f8f8f8;
+    background: var(--Colors-Use-Neutral-Bg);
     position: relative;
 
     .runner-tab-body {
         display: flex;
         overflow: hidden;
         width: 100%;
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg);
         position: relative;
 
         &::after {
             @extend .fake-content;
             bottom: 0;
-            border-color: var(--yakit-border-color);
+            border-color: var(--Colors-Use-Neutral-Border);
         }
     }
 
@@ -122,7 +122,7 @@
 
     .outline-chevron-double-left {
         @extend .base-operate-icon;
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
         width: 20px;
         height: 32px;
         flex-shrink: 0;
@@ -147,7 +147,7 @@
 
     .outline-chevron-double-right {
         @extend .base-operate-icon;
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
         width: 20px;
         height: 32px;
         flex-shrink: 0;
@@ -196,7 +196,7 @@
         position: absolute;
         bottom: 0;
         left: 0;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }
 
@@ -215,7 +215,7 @@
     max-width: 200px;
     min-width: 32px;
     justify-content: space-between;
-    background-color: var(--yakit-card-background-color);
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
     font-size: 12px;
     transition:
         min-width 0.1s linear,
@@ -235,7 +235,7 @@
             height: 16px;
         }
         .text-style {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 600;
             line-height: 16px;
@@ -252,7 +252,7 @@
             .dot {
                 width: 10px;
                 height: 10px;
-                background: #f28b44;
+                background: var(--Colors-Use-Main-Primary);
                 border-radius: 50%;
                 margin: 5px;
                 position: relative;
@@ -263,7 +263,7 @@
 }
 
 .runner-tab-bar-item:hover {
-    background-color: #ffffff;
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
 }
 
 .runner-tab-bar-item:not(:first-child) {
@@ -274,13 +274,13 @@
         top: 8px;
         width: 1px;
         height: 16px;
-        background-color: #eaecf3;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 }
 
 .runner-tab-bar-item.selected {
     min-width: fit-content;
-    background-color: #f0f1f3;
+    background-color: var(--Colors-Use-Neutral-Bg);
     &::after {
         content: "";
         position: absolute;
@@ -288,14 +288,14 @@
         left: 0;
         width: 100%;
         height: 1px;
-        background-color: #f0f1f3;
+        background-color: var(--Colors-Use-Neutral-Bg);
         z-index: 10;
     }
 
     .item-wrapper {
         .text-style {
             white-space: nowrap;
-            color: #f28b44;
+            color: var(--Colors-Use-Main-Primary);
             font-size: 12px;
             font-weight: 600;
             line-height: 16px;
@@ -340,7 +340,7 @@
         width: 100%;
         height: 2px;
         border-radius: 2px 2px 0px 0px;
-        background: #f28b44;
+        background: var(--Colors-Use-Main-Border);
         z-index: 10;
     }
 }
@@ -352,9 +352,9 @@
 }
 
 .runner-tab-bar-item.dragging {
-    border: 1px solid #f28b44;
+    border: 1px solid var(--Colors-Use-Main-Border);
     border-radius: 4px;
-    background-color: rgba(242, 139, 68, 0.06);
+    background-color: var(--Colors-Use-Main-Bg);
     &.selected {
         &::before {
             visibility: hidden;
@@ -370,7 +370,7 @@
 /* ---------- RunnerTabPane ----------*/
 .runner-tab-pane {
     height: 100%;
-    background-color: #f0f1f3;
+    background-color: var(--Colors-Use-Neutral-Bg);
     .warning-editor {
         height: 100%;
         width: 100%;
@@ -400,7 +400,7 @@
             }
         }
         .header-style {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 32px;
             font-weight: 600;
             line-height: 40px;
@@ -419,9 +419,9 @@
             flex-direction: column;
             gap: 12px;
             border-radius: 8px;
-            background: #f8f8f8;
+            background: var(--Colors-Use-Neutral-Bg);
             .title-style {
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 14px;
                 font-weight: 600;
                 line-height: 20px;
@@ -445,7 +445,7 @@
                         display: flex;
                         align-items: center;
                         gap: 4px;
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         font-size: 14px;
                         font-weight: 400;
                         line-height: 20px;
@@ -460,7 +460,7 @@
                         svg {
                             width: 20px;
                             height: 20px;
-                            color: #85899e;
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         }
                     }
                 }
@@ -497,7 +497,7 @@
             flex-direction: column;
             gap: 4px;
             .title-style {
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 14px;
                 font-weight: 600;
                 line-height: 20px;
@@ -516,14 +516,14 @@
                     line-height: 20px;
                     white-space: nowrap;
                     .file-name {
-                        color: #f28b44;
+                        color: var(--Colors-Use-Main-Primary);
                     }
                     .file-path {
-                        color: #b4bbca;
+                        color: var(--Colors-Use-Neutral-Disable);
                     }
                     &:hover {
                         .file-path {
-                            color: #f28b44;
+                            color: var(--Colors-Use-Main-Hover);
                             text-decoration: underline;
                         }
                     }

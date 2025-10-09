@@ -503,10 +503,10 @@ export const PluginLogOpt: React.FC<PluginLogOptProps> = memo((props) => {
 /** 左侧冒泡框箭头 */
 const PopoverArrow = () => (
     <svg width='9' height='36' viewBox='0 0 9 36' fill='none' xmlns='http://www.w3.org/2000/svg'>
-        <path d='M7.24713 11.7071L1.45424 17.5L7.24713 23.2929L7.24713 17.5L7.24713 11.7071Z' stroke='#EAECF3' />
+        <path d='M7.24713 11.7071L1.45424 17.5L7.24713 23.2929L7.24713 17.5L7.24713 11.7071Z' stroke='currentColor' />
         <path d='M7.74713 23.5L1.74713 17.5L7.74713 11.5L7.74713 17.5L7.74713 23.5Z' fill='currentColor' />
     </svg>
 )
-const PopoverArrowIcon = (props: Partial<IconProps>) => {
+export const PopoverArrowIcon = (props: Partial<IconProps>) => {
     return <Icon component={PopoverArrow} {...props} />
 }

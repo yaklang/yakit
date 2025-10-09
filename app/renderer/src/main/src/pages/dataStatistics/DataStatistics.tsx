@@ -25,6 +25,7 @@ import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/Table
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {isEnpriTrace} from "@/utils/envfile"
+import {useTheme} from "@/hook/useTheme"
 const {RangePicker} = YakitDatePicker
 
 // 将分钟转换为小时，并保留两位小数
@@ -399,9 +400,13 @@ interface echartListProps {
     name: string
     value: number
 }
+
+const textColor = ["#c8d0dd", "#353639"]
+
 const PieEcharts: React.FC<PieChartProps> = (props) => {
     const {inViewport, setCityDate} = props
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
+    const {theme} = useTheme()
     const chartListRef = useRef<echartListProps[]>([])
     const [isShowEcharts, setIsShowEcharts] = useState<boolean>(false)
     const colorList = [
@@ -431,7 +436,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
             triggerEvent: true,
             textStyle: {
                 fontSize: 40,
-                color: "#31343F",
+                color: textColor[theme === "dark" ? 0 : 1],
                 lineHeight: 52,
                 fontWeight: 700
             },
@@ -478,7 +483,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
                         marginRight: 12
                     },
                     value: {
-                        color: "#31343F",
+                        color: textColor[theme === "dark" ? 0 : 1],
                         fontSize: 14,
                         fontWeight: 500,
                         align: "right"
@@ -543,6 +548,28 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
         //     // console.log("点击了", e) // 如果不加off事件，就会叠加触发
         // })
     }, [])
+
+    // 监听模式
+    useUpdateEffect(() => {
+        if (!echartsRef.current) return
+        const color = textColor[theme === "dark" ? 0 : 1]
+        echartsRef.current.setOption({
+            title: {
+                textStyle: {
+                    color
+                }
+            },
+            legend: {
+                textStyle: {
+                    rich: {
+                        value: {
+                            color
+                        }
+                    }
+                }
+            }
+        })
+    }, [theme])
 
     const getPluginSearch = useMemoizedFn(() => {
         NetWorkApi<null, API.TouristCityResponse>({

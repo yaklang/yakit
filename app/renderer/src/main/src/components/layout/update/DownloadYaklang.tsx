@@ -79,6 +79,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
 
                 success("下载完毕")
                 if (!getDownloadProgress()?.size) return
+
                 setDownloadProgress({
                     time: {
                         elapsed: downloadProgress?.time.elapsed || 0,
@@ -89,9 +90,14 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
                     // @ts-ignore
                     size: getDownloadProgress().size
                 })
-                // 清空主进程yaklang版本缓存
-                ipcRenderer.invoke("clear-local-yaklang-version-cache")
-                onUpdate()
+
+                // 考虑在mac下载完成后，在其yakit-projects目录下写入一个文件engine-sha256.txt，注入当前引擎hash值
+                // 这样在下次启动时，yakit会自动检测到引擎是否一致(用于解决yakit与irify在mac下的引擎冲突)
+                ipcRenderer.invoke("write-engine-key-to-yakit-projects", yakLangVersion.current).finally(() => {
+                    // 清空主进程yaklang版本缓存
+                    ipcRenderer.invoke("clear-local-yaklang-version-cache")
+                    onUpdate()
+                })
             })
             .catch((e: any) => {
                 if (isBreakRef.current) return
@@ -209,8 +215,8 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
                                 <div className={classNames(styles["hint-right-download"], "yakit-progress-wrapper")}>
                                     <div className={styles["hint-right-title"]}>Yaklang 引擎下载中...</div>
                                     <Progress
-                                        strokeColor='#F28B44'
-                                        trailColor='#F0F2F5'
+                                        strokeColor='var(--Colors-Use-Main-Primary)'
+                                        trailColor='var(--Colors-Use-Neutral-Bg)'
                                         percent={Math.floor((downloadProgress?.percent || 0) * 100)}
                                     />
                                     <div className={styles["download-info-wrapper"]}>

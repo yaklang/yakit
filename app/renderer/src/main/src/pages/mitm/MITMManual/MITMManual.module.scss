@@ -15,14 +15,14 @@
         height: 100%;
         display: flex;
         align-items: center;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         font-size: 12px;
     }
 }
 .mitm-v2-manual-editor-title {
     display: flex;
     align-items: center;
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     overflow: hidden;
 }
 
@@ -30,14 +30,13 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-right: 8px;
 }
 
-.mitm-v2-manual-table-status{
+.mitm-v2-manual-table-status {
     display: flex;
     align-items: center;
     gap: 2px;
-    svg{
+    svg {
         height: 14px;
         width: 14px;
     }
@@ -65,3 +64,7 @@
     }
 }
 
+.mitm-v2-manual-table-wrapper {
+    height: 100%;
+    width: 100%;
+}

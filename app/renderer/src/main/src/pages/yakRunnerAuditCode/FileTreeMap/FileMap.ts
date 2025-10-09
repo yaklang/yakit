@@ -1,7 +1,16 @@
-
 import {v4 as uuidv4} from "uuid"
-import { FileNodeMapProps } from "../FileTree/FileTreeType"
+import {FileNodeMapProps} from "../FileTree/FileTreeType"
 export const filesMap: Map<string, FileNodeMapProps> = new Map()
+
+export const getMapFail:FileNodeMapProps = {
+    parent: null,
+    name: "读取文件失败",
+    isFolder: false,
+    isLeaf: true,
+    path: `${uuidv4()}-fail`,
+    icon: "_f_yak",
+    isReadFail: true
+}
 
 export const setMapFileDetail = (path: string, info: FileNodeMapProps) => {
     filesMap.set(path, info)
@@ -9,15 +18,7 @@ export const setMapFileDetail = (path: string, info: FileNodeMapProps) => {
 
 export const getMapFileDetail = (path: string) => {
     return (
-        filesMap.get(path) || {
-            parent: null,
-            name: "读取文件失败",
-            isFolder: false,
-            isLeaf: true,
-            path: `${uuidv4()}-fail`,
-            icon: "_f_yak",
-            isReadFail: true
-        }
+        filesMap.get(path) || getMapFail
     )
 }
 
@@ -40,7 +41,6 @@ export const clearMapFileDetail = () => {
 export const removeMapFileDetail = (path: string) => {
     filesMap.delete(path)
 }
-
 
 // myMap.forEach((value, key) => {
 //   console.log(`${key} = ${value}`);

@@ -140,22 +140,19 @@ export const SolidCloudpluginIcon = (props: Partial<IconProps>) => {
 const SolidOfficialplugin = () => {
     const id = uuidv4()
     return (
-        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none'>
+        <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
             <path
-                d='M6.90323 4.36151L7.25051 4.53423L6.90322 4.36151L5.999 6.17967L5.09456 4.36105L4.77625 4.51935L5.09456 4.36105C4.96304 4.0966 4.69337 3.92825 4.39697 3.92825C3.81436 3.92825 3.44254 4.5421 3.69938 5.05854L5.21652 8.10923L5.21653 8.10924C5.53698 8.75354 6.45893 8.76158 6.78243 8.11117L6.78244 8.11116L8.29991 5.05977C8.55703 4.54276 8.1848 3.92825 7.60157 3.92825C7.30485 3.92825 7.03489 4.09678 6.90323 4.36151ZM5.88872 6.40142C5.88876 6.40135 5.88879 6.40127 5.88883 6.4012L5.88872 6.40141L5.88872 6.40142ZM5.6465 1.09523C5.86531 0.968224 6.1346 0.968224 6.3534 1.09523L10.0449 3.23799C10.2639 3.36514 10.4 3.60091 10.4 3.85722V8.14273C10.4 8.39904 10.2639 8.63481 10.0449 8.76196L6.3534 10.9047C6.1346 11.0317 5.86531 11.0317 5.6465 10.9047L1.95501 8.76196C1.73596 8.63481 1.59995 8.39904 1.59995 8.14273V3.85722C1.59995 3.60091 1.73596 3.36514 1.95501 3.23799L5.6465 1.09523Z'
-                // fill='url(#paint0_linear_16908_236791)'
+                d='M9.32715 1.68164C9.74356 1.43993 10.2564 1.43993 10.6729 1.68164L16.8252 5.25293C17.2418 5.49484 17.5 5.94249 17.5 6.42871V13.5713C17.5 14.0575 17.2418 14.5052 16.8252 14.7471L10.6729 18.3184C10.2564 18.5601 9.74356 18.5601 9.32715 18.3184L3.1748 14.7471C2.75817 14.5052 2.50001 14.0575 2.5 13.5713V6.42871C2.50001 5.94249 2.75817 5.49484 3.1748 5.25293L9.32715 1.68164ZM12.6689 6.71387C12.2382 6.71402 11.8457 6.95898 11.6543 7.34375L9.99805 10.6729L8.3418 7.34277C8.15062 6.95836 7.75851 6.71387 7.32812 6.71387C6.48262 6.71403 5.94129 7.60534 6.31445 8.35645L8.84375 13.4414C9.31726 14.393 10.6781 14.4037 11.1553 13.4443L13.6836 8.3584C14.0576 7.60622 13.5157 6.71387 12.6689 6.71387Z'
+                stroke='var(--Colors-Use-Neutral-Text-1-Title)'
                 fill={`url(#${id})`}
-                stroke='#31343F'
-                strokeWidth='0.8'
             />
             <defs>
                 <linearGradient
-                    // id='paint0_linear_16908_236791'
                     id={id}
-                    x1='1.19818'
-                    y1='6.0004'
-                    x2='10.8002'
-                    y2='6.0004'
+                    x1='1.99705'
+                    y1='10.0007'
+                    x2='18.0004'
+                    y2='10.0007'
                     gradientUnits='userSpaceOnUse'
                 >
                     <stop stopColor='#FA931D' />
@@ -1262,7 +1259,7 @@ const RuleManagementAudit = () => (
                 width='154.5'
                 height='153.25'
                 filterUnits='userSpaceOnUse'
-                colorInterpolationFilters="sRGB"
+                colorInterpolationFilters='sRGB'
             >
                 <feFlood floodOpacity='0' result='BackgroundImageFix' />
                 <feColorMatrix
@@ -1642,4 +1639,167 @@ const RuleManagementAudit = () => (
  */
 export const RuleManagementAuditIcon = (props: Partial<IconProps>) => {
     return <Icon component={RuleManagementAudit} {...props} />
+}
+
+const ColorsSparkles = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M3.33333 2V4.66667M2 3.33333H4.66667M4 11.3333V14M2.66667 12.6667H5.33333M8.66667 2L10.1905 6.57143L14 8L10.1905 9.42857L8.66667 14L7.14286 9.42857L3.33333 8L7.14286 6.57143L8.66667 2Z'
+            stroke='url(#paint0_linear_41854_3263)'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <defs>
+            <linearGradient
+                id='paint0_linear_41854_3263'
+                x1='2'
+                y1='2'
+                x2='16.3935'
+                y2='6.75561'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#DC5CDF' />
+                <stop offset='0.639423' stopColor='#8862F8' />
+                <stop offset='1' stopColor='#4493FF' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+/**
+ * @description  Icon/colors/sparkles
+ */
+export const ColorsSparklesIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ColorsSparkles} {...props} />
+}
+
+const SolidCloseCircle = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'>
+        <g clipPath='url(#clip0_37277_17516)'>
+            <path
+                d='M7 0.875C3.61758 0.875 0.875 3.61758 0.875 7C0.875 10.3824 3.61758 13.125 7 13.125C10.3824 13.125 13.125 10.3824 13.125 7C13.125 3.61758 10.3824 0.875 7 0.875ZM9.26133 9.32695L8.35898 9.32285L7 7.70273L5.64238 9.32148L4.73867 9.32559C4.67852 9.32559 4.6293 9.27773 4.6293 9.21621C4.6293 9.19023 4.63887 9.16563 4.65527 9.14512L6.43398 7.02598L4.65527 4.9082C4.63875 4.88817 4.62959 4.86308 4.6293 4.83711C4.6293 4.77695 4.67852 4.72773 4.73867 4.72773L5.64238 4.73184L7 6.35195L8.35762 4.7332L9.25996 4.7291C9.32012 4.7291 9.36934 4.77695 9.36934 4.83848C9.36934 4.86445 9.35977 4.88906 9.34336 4.90957L7.56738 7.02734L9.34473 9.14648C9.36113 9.16699 9.3707 9.1916 9.3707 9.21758C9.3707 9.27773 9.32148 9.32695 9.26133 9.32695Z'
+                fill='var(--Colors-Use-Neutral-Disable)'
+            />
+        </g>
+        <defs>
+            <clipPath id='clip0_37277_17516'>
+                <rect width='14' height='14' fill='var(--Colors-Use-Neutral-Bg)' />
+            </clipPath>
+        </defs>
+    </svg>
+)
+
+/**
+ * @description  Icon/Solid/close-circle
+ */
+export const SolidCloseCircleIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidCloseCircle} {...props} />
+}
+
+const ColorsChat = () => {
+    const id = uuidv4()
+    const id1 = uuidv4()
+    const id2 = uuidv4()
+    const id3 = uuidv4()
+    return (
+        <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
+            <path
+                d='M6.66667 10.0002H6.675M10 10.0002H10.0083M13.3333 10.0002H13.3417M17.5 10.0002C17.5 13.6821 14.1421 16.6668 10 16.6668C8.71728 16.6668 7.50976 16.3806 6.45389 15.8761L2.5 16.6668L3.66249 13.5669C2.9263 12.5355 2.5 11.3121 2.5 10.0002C2.5 6.31826 5.85786 3.3335 10 3.3335C14.1421 3.3335 17.5 6.31826 17.5 10.0002Z'
+                stroke={`url(#${id})`}
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <ellipse cx='6.66683' cy='9.99984' rx='0.833333' ry='0.833333' fill={`url(#${id1})`} />
+            <circle cx='9.99984' cy='9.99984' r='0.833333' fill={`url(#${id2})`} />
+            <ellipse cx='13.3333' cy='9.99984' rx='0.833333' ry='0.833333' fill={`url(#${id3})`} />
+            <defs>
+                <linearGradient id={id} x1='2.5' y1='3.3335' x2='20.0335' y2='9.85069' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#DC5CDF' />
+                    <stop offset='0.639423' stopColor='#8862F8' />
+                    <stop offset='1' stopColor='#4493FF' />
+                </linearGradient>
+                <linearGradient id={id1} x1='5.8335' y1='9.1665' x2='7.8326' y2='9.827' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#DC5CDF' />
+                    <stop offset='0.639423' stopColor='#8862F8' />
+                    <stop offset='1' stopColor='#4493FF' />
+                </linearGradient>
+                <linearGradient id={id2} x1='9.1665' y1='9.1665' x2='11.1656' y2='9.827' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#DC5CDF' />
+                    <stop offset='0.639423' stopColor='#8862F8' />
+                    <stop offset='1' stopColor='#4493FF' />
+                </linearGradient>
+                <linearGradient id={id3} x1='12.5' y1='9.1665' x2='14.4991' y2='9.82701' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#DC5CDF' />
+                    <stop offset='0.639423' stopColor='#8862F8' />
+                    <stop offset='1' stopColor='#4493FF' />
+                </linearGradient>
+            </defs>
+        </svg>
+    )
+}
+/**
+ * @description  Outline/chat
+ */
+export const ColorsChatIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ColorsChat} {...props} />
+}
+
+const ColorsBrainCircuit = () => {
+    const id = uuidv4()
+    return (
+        <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
+            <path
+                d='M5.12067 4.84447C5.1062 4.54486 5.15666 4.2456 5.26908 3.96429C5.3815 3.68298 5.55361 3.42529 5.77529 3.2064C5.99696 2.9875 6.26373 2.81181 6.5599 2.68966C6.85606 2.56751 7.17565 2.50137 7.49987 2.49512C7.82408 2.48887 8.14637 2.54264 8.44778 2.65327C8.7492 2.7639 9.02365 2.92916 9.255 3.13932C9.48634 3.34948 9.66991 3.60031 9.79491 3.87704C9.9199 4.15378 9.9838 4.45083 9.98285 4.75074V14.4985M5.12067 4.84447C4.6441 4.9578 4.20167 5.16993 3.82687 5.46481C3.45208 5.75969 3.15475 6.12958 2.95741 6.54647C2.76008 6.96335 2.6679 7.4163 2.68787 7.87101C2.70784 8.32572 2.83943 8.77027 3.07267 9.17098M5.12067 4.84447C5.1367 5.20719 5.2475 5.56089 5.44344 5.87545M3.07267 9.17098C2.66257 9.47911 2.34008 9.87524 2.13326 10.3249C1.92645 10.7746 1.84157 11.2642 1.886 11.7511C1.93044 12.2381 2.10284 12.7076 2.38822 13.1188C2.67361 13.5301 3.06332 13.8707 3.52346 14.1109M3.07267 9.17098C3.22099 9.05926 3.37989 8.96061 3.54715 8.87476M3.52346 14.1109C3.46664 14.5174 3.50054 14.9305 3.62309 15.3245C3.74564 15.7185 3.95422 16.085 4.23595 16.4015C4.51768 16.7181 4.86658 16.9778 5.26111 17.1647C5.65564 17.3516 6.08741 17.4618 6.52977 17.4883C6.97212 17.5149 7.41566 17.4573 7.833 17.3191C8.25034 17.1809 8.63262 16.965 8.95622 16.6848C9.27982 16.4046 9.53788 16.0661 9.71445 15.69C9.89103 15.314 9.98237 14.9085 9.98285 14.4985M3.52346 14.1109C4.01013 14.3647 4.55978 14.4986 5.11854 14.4984M9.98285 14.4985L14.8476 14.4985C15.2777 14.4985 15.6901 14.6565 15.9942 14.9377C16.2983 15.219 16.4691 15.6004 16.4691 15.9981V16.748M7.55068 10.7493C8.23136 10.5279 8.82576 10.1247 9.2587 9.59085C9.69165 9.05698 9.9437 8.41637 9.98298 7.75002M9.98298 10.7493H13.2261M9.98298 7.00019H16.4691M13.2261 7.00019V4.75071C13.2261 4.35297 13.3969 3.97153 13.701 3.69029C14.0051 3.40905 14.4175 3.25105 14.8476 3.25105M13.6314 10.7493C13.6314 10.9564 13.4499 11.1242 13.2261 11.1242C13.0022 11.1242 12.8207 10.9564 12.8207 10.7493C12.8207 10.5423 13.0022 10.3744 13.2261 10.3744C13.4499 10.3744 13.6314 10.5423 13.6314 10.7493ZM15.253 3.25105C15.253 3.45811 15.0715 3.62596 14.8476 3.62596C14.6237 3.62596 14.4422 3.45811 14.4422 3.25105C14.4422 3.04399 14.6237 2.87613 14.8476 2.87613C15.0715 2.87613 15.253 3.04399 15.253 3.25105ZM16.8745 16.748C16.8745 16.955 16.693 17.1229 16.4691 17.1229C16.2452 17.1229 16.0637 16.955 16.0637 16.748C16.0637 16.5409 16.2452 16.373 16.4691 16.373C16.693 16.373 16.8745 16.5409 16.8745 16.748ZM16.8745 7.00019C16.8745 7.20725 16.693 7.37511 16.4691 7.37511C16.2452 7.37511 16.0637 7.20725 16.0637 7.00019C16.0637 6.79313 16.2452 6.62528 16.4691 6.62528C16.693 6.62528 16.8745 6.79313 16.8745 7.00019Z'
+                stroke={`url(#${id})`}
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <defs>
+                <linearGradient
+                    id={id}
+                    x1='1.87451'
+                    y1='2.49463'
+                    x2='19.8664'
+                    y2='8.43914'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop stopColor='#DC5CDF' />
+                    <stop offset='0.639423' stopColor='#8862F8' />
+                    <stop offset='1' stopColor='#4493FF' />
+                </linearGradient>
+            </defs>
+        </svg>
+    )
+}
+/**
+ * @description Outline/BrainCircuit
+ */
+export const ColorsBrainCircuitIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ColorsBrainCircuit} {...props} />
+}
+
+const OutlineSparklesColors = () => {
+    const id = uuidv4()
+    return (
+        <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+            <path
+                d='M3.33333 2V4.66667M2 3.33333H4.66667M4 11.3333V14M2.66667 12.6667H5.33333M8.66667 2L10.1905 6.57143L14 8L10.1905 9.42857L8.66667 14L7.14286 9.42857L3.33333 8L7.14286 6.57143L8.66667 2Z'
+                stroke={`url(#${id})`}
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <defs>
+                <linearGradient id={id} x1='2' y1='2' x2='16.3935' y2='6.75561' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#DC5CDF' />
+                    <stop offset='0.639423' stopColor='#8862F8' />
+                    <stop offset='1' stopColor='#4493FF' />
+                </linearGradient>
+            </defs>
+        </svg>
+    )
+}
+/**
+ * @description Outline/sparkles
+ */
+export const OutlineSparklesColorsIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineSparklesColors} {...props} />
 }

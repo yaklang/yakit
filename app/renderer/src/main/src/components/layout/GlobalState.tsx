@@ -44,6 +44,7 @@ import {
     grpcFetchSpecifiedYakVersionHash
 } from "@/apiUtils/grpc"
 import {OutlineShieldcheckIcon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -82,6 +83,7 @@ interface ReverseDetail {
 
 export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) => {
     const {isEngineLink, system} = props
+    const {t, i18n} = useI18nNamespaces(["yakitRoute", "home", "yakitUi"])
 
     /** 自启全局反连配置(默认指定为本地) */
     useEffect(() => {
@@ -135,7 +137,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         AdviceVerbose: string
     }>({Advice: "unknown", AdviceVerbose: "无法获取 PCAP 支持信息", IsPrivileged: false})
     /** 获取网卡操作权限 */
-    const updatePcap = useMemoizedFn(() => {
+    const updatePcap = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("IsPrivilegedForNetRaw", {})
@@ -150,7 +152,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const [pluginTotal, setPluginTotal] = useState<number>(0)
 
     /** 获取本地插件数量 */
-    const updatePluginTotal = useMemoizedFn(() => {
+    const updatePluginTotal = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("QueryYakScript", {
@@ -176,7 +178,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     // IRify在初次进入页面时如若没有规则则弹窗提示
     const isShowRuleUpdateModal = useRef<boolean>(true)
     const [openFristRuleUpdateModal, setFristRuleUpdateModal] = useState<boolean>(false)
-    const onRuleUpdate = useMemoizedFn(() => {
+    const onRuleUpdate = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("CheckSyntaxFlowRuleUpdate")
@@ -205,7 +207,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         return reverseState && !!reverseDetails.PublicReverseIP && !!reverseDetails.PublicReversePort
     }, [reverseState, reverseDetails])
     /** 获取全局反连状态和配置信息 */
-    const updateGlobalReverse = useMemoizedFn(() => {
+    const updateGlobalReverse = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("get-global-reverse-server-status")
@@ -234,7 +236,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         CurrentProxy: string
     }>({Enable: false, CurrentProxy: ""})
     /** 获取系统代理 */
-    const updateSystemProxy = useMemoizedFn(() => {
+    const updateSystemProxy = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("GetSystemProxy", {})
@@ -247,7 +249,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     })
     const [showChromeWarn, setShowChromeWarn] = useState<boolean>(false)
     /** 获取Chrome启动路径 */
-    const updateChromePath = useMemoizedFn(() => {
+    const updateChromePath = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("GetChromePath")
@@ -265,7 +267,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     })
     const [showMITMCertWarn, setShowMITMCertWarn] = useState<boolean>(false)
 
-    const updateMITMCert = useMemoizedFn(() => {
+    const updateMITMCert = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("VerifySystemCertificate")
@@ -288,30 +290,26 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
     // 校验引擎是否为官方发布版本
     const [showCheckEngine, setShowCheckEngine] = useState<boolean>(false)
-    const getCurrentYak = () => {
-        return new Promise((resolve, reject) => {
-            grpcFetchLocalYakVersion(true)
-                .then((res: string) => {
-                    if (res) {
-                        const v = res.startsWith("v") ? res.slice(1) : res
-                        checkEngineSource(v, resolve, reject)
-                    } else {
-                        setShowCheckEngine(false)
-                        reject()
-                    }
-                })
-                .catch(() => {
-                    setShowCheckEngine(false)
-                    reject()
-                })
-        })
+    const getCurrentYak = async (): Promise<string> => {
+        try {
+            const res = await grpcFetchLocalYakVersion(true)
+            if (res) {
+                const v = res.startsWith("v") ? res.slice(1) : res
+                await checkEngineSource(v)
+            } else {
+                setShowCheckEngine(false)
+                throw new Error("no res")
+            }
+        } catch (e) {
+            setShowCheckEngine(false)
+            throw e
+        }
+        return ""
     }
-    const checkEngineSource = async (localYaklang: string, resolve, reject) => {
+    const checkEngineSource = async (localYaklang: string) => {
         try {
             const [res1, res2] = await Promise.all([
-                // 远端
                 grpcFetchSpecifiedYakVersionHash({version: localYaklang, config: {timeout: 3000}}, true),
-                // 本地
                 grpcFetchLocalYakVersionHash()
             ])
 
@@ -324,10 +322,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     setShowCheckEngine(true)
                 }
             }
-            resolve()
+            return ""
         } catch (error) {
             setShowCheckEngine(false)
-            reject()
+            throw error
         }
     }
     const onUseOfficialEngine = async () => {
@@ -407,26 +405,31 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const updateAllInfo = useMemoizedFn(() => {
         if (isRunRef.current) return
         isRunRef.current = true
-        let settledArr = [
-            updateSystemProxy(),
-            updateGlobalReverse(),
-            updatePcap(),
-            updateChromePath(),
-            updateMITMCert(),
-            getCurrentYak()
-        ]
-        if (serverPushStatus) {
-            settledArr.push(updatePluginTotal())
-        }
+        let settledArr: (() => Promise<string>)[] = []
         if (isIRify()) {
-            settledArr = [onRuleUpdate(), getCurrentYak()]
+            settledArr = [onRuleUpdate, getCurrentYak]
+        } else {
+            settledArr = [
+                updateSystemProxy,
+                updateGlobalReverse,
+                updatePcap,
+                updateChromePath,
+                updateMITMCert,
+                getCurrentYak
+            ]
         }
-        Promise.allSettled(settledArr)
-            .then((values) => {
-                isRunRef.current = false
-                setTimeout(() => (isIRify() ? updateIRifyState() : updateState()), 100)
+        if (serverPushStatus) {
+            settledArr.push(updatePluginTotal)
+        }
+        Promise.allSettled(settledArr.map((promiseFunc) => promiseFunc())).then((results) => {
+            results.forEach((result) => {
+                if (result.status === "rejected") {
+                    // console.log("单个任务失败：", result.reason)
+                }
             })
-            .catch(() => {})
+            isRunRef.current = false
+            setTimeout(() => (isIRify() ? updateIRifyState() : updateState()), 100)
+        })
     })
 
     const [timeInterval, setTimeInterval, getTimeInterval] = useGetState<number>(5)
@@ -657,29 +660,32 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     onClick={() => {
                                         setShow(false)
                                         const m = showYakitModal({
-                                            title: "生成自动安装脚本",
+                                            title: t("Home.generateAutoInstallScript"),
                                             width: "600px",
                                             centered: true,
                                             content: (
-                                                <div style={{padding: 15}}>
-                                                    请按照以下步骤进行操作：
+                                                <div
+                                                    style={{
+                                                        padding: 15,
+                                                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                                                    }}
+                                                >
+                                                    {t("Home.pleaseFollowSteps")}
                                                     <br />
                                                     <br />
-                                                    1. 点击确定后将会打开脚本存放的目录。
+                                                    1. {t("Home.openScriptDir")}
                                                     <br />
-                                                    2. 双击打开 "auto-install-cert.bat/auto-install-cert.sh"
-                                                    的文件执行安装。
+                                                    2. {t("Home.runAutoInstallScript")}
                                                     <br />
-                                                    3. 如果安装成功，您将看到“Certificate successfully
-                                                    installed.”的提示。
+                                                    3. {t("Home.installSuccessMessage")}
                                                     <br />
                                                     <br />
-                                                    请确保在运行脚本之前关闭任何可能会阻止安装的应用程序。
+                                                    {t("Home.closeAppsBeforeRun")}
                                                     <br />
-                                                    安装完成后，您将能够顺利使用 MITM。
+                                                    {t("Home.mitmReadyAfterInstall", {name: t("YakitRoute.MITM")})}
                                                     <br />
                                                     <br />
-                                                    如有任何疑问或需要进一步帮助，请随时联系我们。
+                                                    {t("Home.contactForHelp")}
                                                 </div>
                                             ),
                                             onOk: () => {
@@ -689,7 +695,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                                         if (p) {
                                                             openABSFileLocated(p)
                                                         } else {
-                                                            failed("生成失败")
+                                                            failed(t("YakitNotification.generationFailed"))
                                                         }
                                                     })
                                                     .catch(() => {})
@@ -1100,23 +1106,23 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             <YakitHint
                 visible={pcapHintShow}
                 heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
-                title={pcapResult ? "已有网卡操作权限" : "当前引擎不具有网卡操作权限"}
+                title={pcapResult ? t("Home.netcardAccessGranted") : t("Home.netcardNoAccess")}
                 width={600}
                 content={
                     pcapResult ? (
-                        "网卡修复需要时间，请耐心等待"
+                        t("Home.netcardRepairWaiting")
                     ) : (
                         <>
-                            Linux 与 MacOS 可通过设置权限与组为用户态赋予网卡完全权限。如无法修复可以执行命令行{" "}
+                            {t("Home.linuxMacosPermission")}{" "}
                             <YakitTag enableCopy={true} color='yellow' copyText={`chmod +rw /dev/bpf*`}></YakitTag>
-                            或者{" "}
+                            {t("Home.or")}{" "}
                             <YakitTag enableCopy={true} color='purple' copyText={`sudo chmod +rw /dev/bpf*`}></YakitTag>
-                            可以开放网卡读写权限
+                            {t("Home.rwPermissionAvailable")}
                         </>
                     )
                 }
-                okButtonText='开启 PCAP 权限'
-                cancelButtonText={pcapResult ? "知道了～" : "稍后再说"}
+                okButtonText={t("Home.pcapEnablePermission")}
+                cancelButtonText={pcapResult ? t("YakitButton.ok") : t("YakitButton.remindMeLater")}
                 okButtonProps={{loading: pcapHintLoading, style: pcapResult ? {display: "none"} : undefined}}
                 cancelButtonProps={{loading: !pcapResult && pcapHintLoading}}
                 onOk={openPcapPower}
@@ -1128,7 +1134,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     pcapResult ? undefined : (
                         <Tooltip title={`${pcap.AdviceVerbose}: ${pcap.Advice}`}>
                             <YakitButton className={styles["btn-style"]} type='text' size='max'>
-                                手动修复
+                                {t("YakitButton.manualFix")}
                             </YakitButton>
                         </Tooltip>
                     )
@@ -1169,7 +1175,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 title='是否确认关闭节点'
                 content='确认后节点将会关闭，运行在节点上的任务也会停止'
                 footerExtra={
-                    <YakitCheckbox value={noPrompt} onChange={(e) => setNoPrompt(e.target.checked)}>
+                    <YakitCheckbox checked={noPrompt} onChange={(e) => setNoPrompt(e.target.checked)}>
                         下次不再提醒
                     </YakitCheckbox>
                 }

@@ -16,7 +16,7 @@ const getBarSeries = (graphData) => {
             type: "bar",
             showBackground: true,
             backgroundStyle: {
-                color: "#f8f8f8",
+                color: "var(--Colors-Use-Neutral-Bg)",
                 borderRadius: 3
             },
             itemStyle: {
@@ -44,7 +44,7 @@ const getBarSeries = (graphData) => {
                 type: "bar",
                 showBackground: true,
                 backgroundStyle: {
-                    color: "#f8f8f8",
+                    color: "var(--Colors-Use-Neutral-Bg)",
                     borderRadius: 3
                 },
                 itemStyle: {

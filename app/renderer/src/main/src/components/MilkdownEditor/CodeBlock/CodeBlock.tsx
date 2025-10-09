@@ -7,7 +7,7 @@ import {TextSelection} from "@milkdown/kit/prose/state"
 
 interface CustomCodeComponent {}
 export const CustomCodeComponent: React.FC<CustomCodeComponent> = () => {
-    const {node, view, getPos} = useNodeViewContext()
+    const {node, view, getPos, contentRef} = useNodeViewContext()
     // 编辑器实例
     const [editor, setEditor] = useState<IMonacoEditor>()
 
@@ -51,7 +51,8 @@ export const CustomCodeComponent: React.FC<CustomCodeComponent> = () => {
         } catch (error) {}
     })
     return (
-        <div style={{height: 200, marginBottom: 20}} ref={codeRef}>
+        <div className='milkdown-code' style={{height: 200, marginBottom: 20}} ref={codeRef}>
+            {/* <div style={{display: "none"}} ref={contentRef}></div> */}
             <YakitEditor
                 type='yak'
                 readOnly={readonly}

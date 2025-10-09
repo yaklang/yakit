@@ -59,6 +59,7 @@
     :global {
         .ant-form-item-control-input-content {
             height: 300px;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
         }
     }
 }
@@ -69,9 +70,9 @@
         }
         .ant-form-item-control-input-content {
             border-radius: 2px;
-            border: 1px solid var(--yakit-danger-5);
+            border: 1px solid var(--Colors-Use-Error-Primary);
             &:focus-within {
-                box-shadow: 0 0 0 2px var(--yakit-danger-1);
+                box-shadow: 0 0 0 2px var(--Colors-Use-Error-Bg-Hover);
             }
         }
     }
@@ -96,7 +97,7 @@
         }
     }
     .plugin-execute-progress-name {
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 400;
         line-height: 16px; /* 133.333% */

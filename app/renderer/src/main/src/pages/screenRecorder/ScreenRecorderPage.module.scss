@@ -19,11 +19,15 @@
     }
 }
 .download-progress-messages {
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-weight: 400;
     font-size: 14px;
     line-height: 24px;
     min-height: 30px;
     max-height: 200px;
     overflow-y: auto;
+}
+
+.screenRecorderInstallModal {
+    top: 25vh;
 }

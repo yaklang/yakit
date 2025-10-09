@@ -26,7 +26,7 @@
     border-radius: 8px;
     background: linear-gradient(90deg, rgba(136, 99, 247, 0.1) 0%, rgba(247, 170, 99, 0.1) 100%);
     .header-title {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         line-height: 16px;
     }
@@ -38,7 +38,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-size: 12px;
             line-height: 20px;
             .opt-order {
@@ -49,12 +49,12 @@
                 align-items: center;
                 border-radius: 8px;
                 background: rgba(136, 99, 247, 0.2);
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 10px;
             }
             .strong-text {
                 font-weight: 600;
-                color: #31343f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
     }
@@ -107,7 +107,7 @@
     .item-header {
         width: 62px;
         text-align: right;
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         line-height: 22px;
     }
@@ -121,7 +121,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #31343f;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 14px;
     line-height: 22px;
     .upload-coantent {
@@ -135,12 +135,12 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #31343f;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 14px;
     line-height: 22px;
 
     .loading-text-style {
-        color: var(--ui-neutral-60);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
     .icon-style {
         color: #f28b44;

@@ -61,6 +61,7 @@ export interface YakitHintModalProps {
     /** 取消按钮的回调 */
     onCancel?: () => any
     children?: ReactNode
+    getContainer?: HTMLElement
 }
 
 export interface HintModalProps {
@@ -85,6 +86,7 @@ export interface HintModalProps {
     isResize?: boolean
     resizeMinWidth?: number
     resizeMinWHeight?: number
+    getContainer?: HTMLElement
 }
 
 export interface YakitHintWhiteProps extends HintModalProps {

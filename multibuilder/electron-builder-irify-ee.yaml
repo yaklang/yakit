@@ -67,6 +67,7 @@ linux:
         - target: AppImage
           arch:
               - x64
+              - arm64
     icon: "app/assets/yakitsslogo.icns"
 
 win:

@@ -31,7 +31,3 @@ export const isEngineConnectionAlive = () => {
         return true
     })
 }
-
-export const outputToPrintLog = (msg: string) => {
-    ipcRenderer.invoke("print-info-log", `${msg || ""}`)
-}

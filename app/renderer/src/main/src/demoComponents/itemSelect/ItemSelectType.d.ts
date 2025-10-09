@@ -1,5 +1,5 @@
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
-import {CSSProperties, ReactNode} from "react"
+import React,{CSSProperties, ReactNode} from "react"
 
 interface ItemProps {
     label?: string | ReactNode
@@ -9,7 +9,7 @@ interface ItemProps {
 }
 
 export interface SelectOptionsProps {
-    label: string
+    label: string | React.Element
     value: any
     disabled?: boolean
 }

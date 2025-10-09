@@ -5,7 +5,11 @@ export const Blockquote = () => {
 
     return (
         <blockquote
-            style={{borderLeft: "3px solid var(--yakit-border-color)", paddingLeft: 16, color: "var(--yakit-body-text-color)"}}
+            style={{
+                borderLeft: "3px solid var(--Colors-Use-Neutral-Border)",
+                paddingLeft: 16,
+                color: "var(--Colors-Use-Neutral-Text-1-Title)"
+            }}
             ref={contentRef}
         />
     )

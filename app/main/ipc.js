@@ -219,6 +219,9 @@ module.exports = {
         require("./handlers/webshell")(win, getClient)
         require("./handlers/syntaxFlow")(win, getClient)
         require("./handlers/auditRisk")(win, getClient)
+        require("./handlers/fingerprint")(win, getClient)
+        require("./handlers/third_party_binary")(win, getClient)
+        require("./handlers/knowlegebase")(win, getClient)
 
         // start chrome manager
         try {
@@ -256,6 +259,9 @@ module.exports = {
         // misc
         require("./handlers/misc")(win, getClient)
 
+        // local AI model
+        require("./handlers/localAIModel")(win, getClient)
+
         // traffic
         require("./handlers/traffic")(win, getClient)
 
@@ -286,7 +292,10 @@ module.exports = {
         require("./handlers/reverse-connlogger").register(win, getClient)
 
         // register open new child window
-        require("./handlers/openNewChildWindow").register(win, getClient)
+        require("./handlers/openNewChildWindow/index").register(win, getClient)
+
+        // register open new console window
+        require("./handlers/openConsoleNewWin/index").register(win, getClient)
 
         // 接口注册
         const api = fs.readdirSync(path.join(__dirname, "./api"))
@@ -314,5 +323,33 @@ module.exports = {
 
         // local note
         require("./handlers/note")(win, getClient)
+
+        // 日志
+        try {
+            require("./handlers/logger").register()
+        } catch (error) {
+            console.log('error:', error);
+        }
+
+        // mcp client
+        try {
+            require("./handlers/mcpServere")(win, getClient)
+        } catch (error) {
+            console.log("mcpServere.js-error", error)
+        }
+
+        // ai-agent
+        try {
+            require("./handlers/ai-agent")(win, getClient)
+        } catch (error) {
+            console.log("ai-agent.js-error", error)
+        }
+
+        // entity repository
+        try {
+            require("./handlers/entityRepository")(win, getClient)
+        } catch (error) {
+            console.log("entityRepository.js-error", error)
+        }
     }
 }

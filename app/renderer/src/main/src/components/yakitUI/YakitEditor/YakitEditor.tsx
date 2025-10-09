@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useLayoutEffect, useMemo, useRef, useState} from "react"
 import {
     useDebounceFn,
     useGetState,
@@ -12,7 +12,7 @@ import {
 import ReactResizeDetector from "react-resize-detector"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 // 编辑器 注册
-import "@/utils/monacoSpec/theme"
+// import "@/utils/monacoSpec/theme"
 import "@/utils/monacoSpec/fuzzHTTPMonacoSpec"
 import "@/utils/monacoSpec/yakEditor"
 import "@/utils/monacoSpec/html"
@@ -21,7 +21,6 @@ import {
     YakitIMonacoEditor,
     YakitEditorProps,
     YakitITextModel,
-    YakitEditorKeyCode,
     KeyboardToFuncProps,
     YakitIModelDecoration,
     OperationRecord,
@@ -33,9 +32,7 @@ import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from 
 import {StringToUint8Array} from "@/utils/str"
 import {baseMenuLists, extraMenuLists} from "./contextMenus"
 import {EditorMenu, EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType} from "./EditorMenu"
-import {YakitSystem} from "@/yakitGVDefine"
 import cloneDeep from "lodash/cloneDeep"
-import {convertKeyboard, keySortHandle} from "./editorUtils"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 import classNames from "classnames"
@@ -72,6 +69,27 @@ import {CloudDownloadIcon} from "@/assets/newIcon"
 import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
 import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
+import {
+    getStorageYakEditorShortcutKeyEvents,
+    getYakEditorShortcutKeyEvents,
+    isPageOrGlobalShortcut,
+    isYakEditorDefaultShortcut,
+    isYakEditorShortcut
+} from "@/utils/globalShortcutKey/events/page/yakEditor"
+import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
+import useFocusContextStore from "@/utils/globalShortcutKey/shortcutKeyFocusHook/hooks/useStore"
+import {ShortcutKeyFocusType} from "@/utils/globalShortcutKey/events/global"
+import {
+    convertKeyboardToUIKey,
+    convertKeyEventToKeyCombination,
+    sortKeysCombination
+} from "@/utils/globalShortcutKey/utils"
+import {YakitKeyBoard, YakitKeyMod} from "@/utils/globalShortcutKey/keyboard"
+import {applyYakitMonacoTheme} from "@/utils/monacoSpec/theme"
+import {useTheme} from "@/hook/useTheme"
+import {keepSearchNameMapStore, useKeepSearchNameMap} from "@/store/keepSearchName"
+import type {IEvent} from "monaco-editor"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface CodecTypeProps {
     key?: string
@@ -88,6 +106,23 @@ export interface contextMenuProps {
     isAiPlugin: boolean
 }
 
+interface IFindReplaceState {
+    isRevealed: boolean
+    searchString: string
+    change(update: {searchString: string}, moveCursor: boolean): void
+    onFindReplaceStateChange: IEvent<() => void>
+}
+
+interface IFindController extends monaco.editor.IStandaloneCodeEditor {
+    getState(): IFindReplaceState
+    start(opts?: {
+        forceRevealReplace?: boolean
+        seedSearchStringFromSelection?: boolean
+        shouldFocus?: boolean
+        seedSearchStringFromGlobalClipboard?: boolean
+    }): void
+}
+
 const {ipcRenderer} = window.require("electron")
 
 /** @name 字体key值对应字体大小 */
@@ -98,24 +133,44 @@ const keyToFontSize: Record<string, number> = {
 }
 
 /** 编辑器右键默认菜单 - 顶部 */
-const DefaultMenuTop: EditorMenuItemType[] = [
-    {
-        key: "font-size",
-        label: "字体大小",
-        children: [
-            {key: "font-size-small", label: "小"},
-            {key: "font-size-middle", label: "中"},
-            {key: "font-size-large", label: "大"}
-        ]
-    }
-]
+const DefaultMenuTop: (t: (text: string) => string) => EditorMenuItemType[] = (t) => {
+    return [
+        {
+            key: "font-size",
+            label: t("YakitEditor.fontSize"),
+            children: [
+                {key: "font-size-small", label: t("YakitEditor.small")},
+                {key: "font-size-middle", label: t("YakitEditor.medium")},
+                {key: "font-size-large", label: t("YakitEditor.large")}
+            ]
+        }
+    ]
+}
 
 /** 编辑器右键默认菜单 - 底部 */
-const DefaultMenuBottom: EditorMenuItemType[] = [
-    {key: "cut", label: "剪切"},
-    {key: "copy", label: "复制"},
-    {key: "paste", label: "粘贴"}
-]
+const DefaultMenuBottom: (t: (text: string) => string) => EditorMenuItemType[] = (t) => {
+    return [
+        {key: "cut", label: t("YakitEditor.cut")},
+        {key: "copy", label: t("YakitEditor.copy")},
+        {key: "paste", label: t("YakitEditor.paste")}
+    ]
+}
+
+function openFind(editor: YakitIMonacoEditor, keyword: string) {
+    editor.focus()
+    const findController = editor.getContribution<IFindController>("editor.contrib.findController")
+    const state = findController?.getState()
+    if (!state?.isRevealed) {
+        findController?.start({
+            seedSearchStringFromSelection: false,
+            shouldFocus: true
+        })
+    }
+
+    if (state?.searchString !== keyword) {
+        state?.change({searchString: keyword}, false)
+    }
+}
 
 export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const {
@@ -125,6 +180,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         setValue,
         type,
         theme = "kurior",
+        keepSearchName,
         editorDidMount,
         contextMenu = {},
         onContextMenu,
@@ -133,6 +189,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         noWordWrap = false,
         noMiniMap = false,
         noLineNumber = false,
+        renderValidationDecorations,
         lineNumbersMinChars = 5,
         fontSize = 12,
         showLineBreaks = false,
@@ -142,7 +199,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         rangeNode,
         overLine = 3,
         editorId,
-        onKeyPress,
         highLightText = [],
         highLightClass,
         highLightFind = [],
@@ -150,16 +206,23 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         isPositionHighLightCursor,
         fixContentType,
         originalContentType,
-        fixContentTypeHoverMessage
+        fixContentTypeHoverMessage,
+        onChange,
+        // 此处 添加 propsTheme 字段是因为类 弹窗 / 抽屉组件是在 root 节点之外，provider包裹的入口节点就无法实时获取到theme
+        propsTheme
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
 
-    const systemRef = useRef<YakitSystem>("Darwin")
-    const wrapperRef = useRef<HTMLDivElement>(null)
     const isInitRef = useRef<boolean>(false)
+    const {shortcutIds} = useFocusContextStore()
+    const [focusIds, setFocusIds] = useState<string[]>([`${ShortcutKeyFocusType.Monaco}-${uuidv4()}`])
 
     const [editor, setEditor] = useState<YakitIMonacoEditor>()
     const preWidthRef = useRef<number>(0)
     const preHeightRef = useRef<number>(0)
+
+    // 获取查找的关键字
+    const keepSearchNameMap = useKeepSearchNameMap()
 
     /** 编辑器语言 */
     const language = useMemo(() => {
@@ -174,8 +237,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
     }, [props.type, editor])
 
+    const inspectTokens = () => {
+        if (editor) {
+            editor?.getAction("editor.action.inspectTokens")?.run()
+        }
+    }
+
     /** @name 记录右键菜单组信息 */
-    const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTop, ...DefaultMenuBottom])
+    const DefaultMenuTopArr = useMemo(() => DefaultMenuTop(t), [i18n.language])
+    const DefaultMenuBottomArr = useMemo(() => DefaultMenuBottom(t), [i18n.language])
+    const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTopArr, ...DefaultMenuBottomArr])
     /** @name 记录右键菜单组内的快捷键对应菜单项的key值 */
     const keyBindingRef = useRef<KeyboardToFuncProps>({})
     /** @name 记录右键菜单关系[菜单组key值-菜单组内菜单项key值数组] */
@@ -183,8 +254,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
     const [nowFontsize, setNowFontsize] = useState<number>(fontSize)
+    const {theme: themeGlobal} = useTheme()
 
     const disableUnicodeDecodeRef = useRef(props.disableUnicodeDecode)
+
+    useLayoutEffect(() => {
+        applyYakitMonacoTheme(propsTheme ?? themeGlobal)
+    }, [themeGlobal, editor, propsTheme])
+
     useEffect(() => {
         // 控制编辑器失焦
         if (disabled) {
@@ -205,6 +282,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             }
         })
     }, [])
+
+    // 修改主题颜色
 
     useUpdateEffect(() => {
         if (fontSize) {
@@ -276,7 +355,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         )
     })
 
-    const ref = useRef(null)
+    const ref = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(ref)
 
     useEffect(() => {
@@ -317,10 +396,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
      * 整理右键菜单的对应关系
      * 菜单组的key值对应的组内菜单项的key值数组
      */
+    const extraMenuListsObj = useMemo(() => extraMenuLists(t), [i18n.language])
+    const baseMenuListsObj = useMemo(() => baseMenuLists(t), [i18n.language])
     useEffect(() => {
         // 往菜单组中注入codec插件
         try {
-            const httpMenu = extraMenuLists["http"].menu[0] as EditorMenuItemProps
+            const httpMenu = extraMenuListsObj["http"].menu[0] as EditorMenuItemProps
             const newHttpChildren = menuReduce([
                 ...(httpMenu?.children || []),
                 ...customHTTPMutatePlugin.map((item) => {
@@ -333,7 +414,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 })
             ])
             // 自定义HTTP数据包变形
-            ;(extraMenuLists["http"].menu[0] as EditorMenuItemProps).children = newHttpChildren
+            ;(extraMenuListsObj["http"].menu[0] as EditorMenuItemProps).children = newHttpChildren
 
             // 插件扩展（为保持key值唯一性，添加 plugin- ）
             const newCustomContextMenu = contextMenuPlugin.map((item) => {
@@ -353,7 +434,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     isAiPlugin: item.isAiPlugin
                 } as EditorMenuItemProps
             })
-            ;(extraMenuLists["customcontextmenu"].menu[0] as EditorMenuItemProps).children =
+            ;(extraMenuListsObj["customcontextmenu"].menu[0] as EditorMenuItemProps).children =
                 newCustomContextMenu.length > 0
                     ? newCustomContextMenu
                     : [
@@ -362,7 +443,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                               label: (
                                   <>
                                       <CloudDownloadIcon style={{marginRight: 4}} />
-                                      获取插件
+                                      {t("YakitEditor.getPlugin")}
                                   </>
                               ),
                               isGetPlugin: true
@@ -378,7 +459,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         isAiPlugin: item.isAiPlugin
                     } as EditorMenuItemProps
                 })
-            ;(extraMenuLists["aiplugin"].menu[0] as EditorMenuItemProps).children =
+            ;(extraMenuListsObj["aiplugin"].menu[0] as EditorMenuItemProps).children =
                 newAiPlugin.length > 0
                     ? newAiPlugin
                     : [
@@ -387,7 +468,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                               label: (
                                   <>
                                       <CloudDownloadIcon style={{marginRight: 4}} />
-                                      获取插件
+                                      {t("YakitEditor.getPlugin")}
                                   </>
                               ),
                               isGetPlugin: true
@@ -398,8 +479,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
 
         const keyToRun: Record<string, string[]> = {}
-        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
-
+        const allMenu = {...baseMenuListsObj, ...extraMenuListsObj, ...contextMenu}
         for (let key in allMenu) {
             const keys: string[] = []
             for (let item of allMenu[key].menu) {
@@ -409,7 +489,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
 
         keyToOnRunRef.current = {...keyToRun}
-    }, [contextMenu, customHTTPMutatePlugin, contextMenuPlugin])
+    }, [contextMenu, customHTTPMutatePlugin, contextMenuPlugin, extraMenuListsObj, baseMenuListsObj])
 
     const {getCurrentSelectPageId} = usePageInfo((s) => ({getCurrentSelectPageId: s.getCurrentSelectPageId}), shallow)
 
@@ -425,7 +505,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const menuItemName = keyPath[0]
                 for (let name in keyToOnRunRef.current) {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
-                        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
+                        const allMenu = {...baseMenuListsObj, ...extraMenuListsObj, ...contextMenu}
                         let pageId: string | undefined
                         let data: any = undefined
                         // 自定义右键执行携带额外参数
@@ -470,7 +550,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const menuName = keyPath[0]
                 for (let name in keyToOnRunRef.current) {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
-                        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
+                        const allMenu = {...baseMenuListsObj, ...extraMenuListsObj, ...contextMenu}
                         allMenu[name].onRun(editor, menuName)
                         executeFunc = true
                         onRightContextMenu(menuName)
@@ -581,47 +661,38 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 menus.push(info)
             } else {
                 /** 处理带快捷键的菜单项 */
-                const info = item as EditorMenuItemProps
+                const info = {...item} as EditorMenuItemProps
                 if (info.children && info.children.length > 0) {
                     info.children = contextMenuKeybindingHandle(info.key, info.children)
                 } else {
-                    if (info.key === "cut" && info.label === "剪切") {
-                        const keysContent = convertKeyboard(systemRef.current, [
-                            systemRef.current === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                            YakitEditorKeyCode.KEY_X
-                        ])
+                    if (info.key === "cut" && info.label === t("YakitEditor.cut")) {
+                        const keysContent = convertKeyboardToUIKey([YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_X])
 
                         info.label = keysContent ? (
                             <div className={styles["editor-context-menu-keybind-wrapper"]}>
-                                <div className={styles["content-style"]}>剪切</div>
+                                <div className={styles["content-style"]}>{t("YakitEditor.cut")}</div>
                                 <div className={classNames(styles["keybind-style"], "keys-style")}>{keysContent}</div>
                             </div>
                         ) : (
                             info.label
                         )
                     }
-                    if (info.key === "copy" && info.label === "复制") {
-                        const keysContent = convertKeyboard(systemRef.current, [
-                            systemRef.current === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                            YakitEditorKeyCode.KEY_C
-                        ])
+                    if (info.key === "copy" && info.label === t("YakitEditor.copy")) {
+                        const keysContent = convertKeyboardToUIKey([YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_C])
                         info.label = keysContent ? (
                             <div className={styles["editor-context-menu-keybind-wrapper"]}>
-                                <div className={styles["content-style"]}>复制</div>
+                                <div className={styles["content-style"]}>{t("YakitEditor.copy")}</div>
                                 <div className={classNames(styles["keybind-style"], "keys-style")}>{keysContent}</div>
                             </div>
                         ) : (
                             info.label
                         )
                     }
-                    if (info.key === "paste" && info.label === "粘贴") {
-                        const keysContent = convertKeyboard(systemRef.current, [
-                            systemRef.current === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                            YakitEditorKeyCode.KEY_V
-                        ])
+                    if (info.key === "paste" && info.label === t("YakitEditor.paste")) {
+                        const keysContent = convertKeyboardToUIKey([YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_V])
                         info.label = keysContent ? (
                             <div className={styles["editor-context-menu-keybind-wrapper"]}>
-                                <div className={styles["content-style"]}>粘贴</div>
+                                <div className={styles["content-style"]}>{t("YakitEditor.paste")}</div>
                                 <div className={classNames(styles["keybind-style"], "keys-style")}>{keysContent}</div>
                             </div>
                         ) : (
@@ -630,11 +701,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     }
 
                     if (info.keybindings && info.keybindings.length > 0) {
-                        const keysContent = convertKeyboard(systemRef.current, info.keybindings)
-
+                        const keyArr = getYakEditorShortcutKeyEvents()[info.keybindings].keys
+                        const keysContent = convertKeyboardToUIKey(keyArr)
                         // 记录自定义快捷键映射按键的回调事件
                         if (keysContent) {
-                            let sortKeys = keySortHandle(info.keybindings)
+                            let sortKeys = sortKeysCombination(keyArr)
                             keyBindingRef.current[sortKeys.join("-")] = parentKey ? [info.key, parentKey] : [info.key]
                         }
 
@@ -674,60 +745,53 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
          * @description 使用下方的判断逻辑，将导致后续的(额外菜单变动)无法在右键菜单再渲染中生效
          */
         // if (isInitRef.current) return
+        rightContextMenu.current = [...DefaultMenuTopArr]
+        keyBindingRef.current = {}
 
-        ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
-            systemRef.current = systemType
-
-            rightContextMenu.current = [...DefaultMenuTop]
-            keyBindingRef.current = {}
-
-            if (type === "http") {
-                rightContextMenu.current = rightContextMenu.current.concat([
-                    {key: "http-show-break", label: getShowBreak() ? "隐藏换行符" : "显示换行符"}
-                ])
-            }
-            if (language === "yak") {
-                rightContextMenu.current = rightContextMenu.current.concat([
-                    {type: "divider"},
-                    {key: "yak-formatter", label: "Yak 代码格式化"}
-                ])
-            }
-            if (menuType.length > 0) {
-                const types = Array.from(new Set(menuType))
-                for (let key of types)
-                    rightContextMenu.current = rightContextMenu.current.concat([
-                        {type: "divider"},
-                        cloneDeep(extraMenuLists[key].menu[0])
-                    ])
-            }
-
-            // 缓存需要排序的自定义菜单
-            let sortContextMenu: OtherMenuListProps[] = []
-            for (let menus in contextMenu) {
-                /* 需要排序项 */
-                if (typeof contextMenu[menus].order === "number") {
-                    sortContextMenu = sortContextMenu.concat(
-                        cloneDeep(contextMenu[menus]) as any as OtherMenuListProps[]
-                    )
-                } else {
-                    /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */
-                    rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))
+        if (type === "http") {
+            rightContextMenu.current = rightContextMenu.current.concat([
+                {
+                    key: "http-show-break",
+                    label: getShowBreak() ? t("YakitEditor.hideLineBreaks") : t("YakitEditor.showLineBreaks")
                 }
+            ])
+        }
+        if (language === "yak") {
+            rightContextMenu.current = rightContextMenu.current.concat([
+                {type: "divider"},
+                {key: "yak-formatter", label: t("YakitEditor.yakCodeFormat")}
+            ])
+        }
+        if (menuType.length > 0) {
+            const types = Array.from(new Set(menuType))
+            for (let key of types) {
+                const obj = {...extraMenuListsObj[key].menu[0]}
+                rightContextMenu.current = rightContextMenu.current.concat([{type: "divider"}, obj])
             }
-
-            // 底部默认菜单
-            rightContextMenu.current = rightContextMenu.current.concat([...DefaultMenuBottom])
-
-            // 当存在order项则需要排序
-            if (sortContextMenu.length > 0) {
-                rightContextMenu.current = sortMenuFun(rightContextMenu.current, sortContextMenu)
+        }
+        // 缓存需要排序的自定义菜单
+        let sortContextMenu: OtherMenuListProps[] = []
+        for (let menus in contextMenu) {
+            /* 需要排序项 */
+            if (typeof contextMenu[menus].order === "number") {
+                sortContextMenu = sortContextMenu.concat(cloneDeep(contextMenu[menus]) as any as OtherMenuListProps[])
+            } else {
+                /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */
+                rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))
             }
+        }
 
-            rightContextMenu.current = contextMenuKeybindingHandle("", rightContextMenu.current)
+        // 底部默认菜单
+        rightContextMenu.current = rightContextMenu.current.concat([...DefaultMenuBottomArr])
 
-            if (!forceRenderMenu) isInitRef.current = true
-        })
-    }, [forceRenderMenu, menuType, contextMenu, contextMenuPlugin, customHTTPMutatePlugin])
+        // 当存在order项则需要排序
+        if (sortContextMenu.length > 0) {
+            rightContextMenu.current = sortMenuFun(rightContextMenu.current, sortContextMenu)
+        }
+        rightContextMenu.current = contextMenuKeybindingHandle("", rightContextMenu.current)
+
+        if (!forceRenderMenu) isInitRef.current = true
+    }, [forceRenderMenu, menuType, contextMenu, contextMenuPlugin, customHTTPMutatePlugin, extraMenuListsObj])
 
     /**
      * editor编辑器的额外渲染功能:
@@ -735,7 +799,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
      */
     const pasteWarning = useThrottleFn(
         () => {
-            failed("粘贴过快，请稍后再试")
+            failed(t("YakitEditor.pasteTooFast"))
         },
         {wait: 500}
     )
@@ -782,6 +846,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         )
         const generateDecorations = (): YakitIModelDecoration[] => {
             // const text = model.getValue();
+            if (!model) return []
             const endsp = model.getPositionAt(1800)
             const dec: YakitIModelDecoration[] = []
             const text =
@@ -815,7 +880,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                 id: detail.classType + match.index,
                                 ownerId: 0,
                                 range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                                options: {afterContentClassName: detail.classType}
+                                options: {
+                                    afterContentClassName: `${detail.classType} lang-${i18n.language}`
+                                }
                             } as YakitIModelDecoration)
                         })
                     } catch (e) {}
@@ -835,7 +902,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                 id: detail.classType + match.index,
                                 ownerId: 0,
                                 range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                                options: {afterContentClassName: detail.classType}
+                                options: {
+                                    afterContentClassName: `${detail.classType} lang-${i18n.language}`
+                                }
                             } as YakitIModelDecoration)
                         })
                     } catch (e) {}
@@ -901,7 +970,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                 after: {
                                     content:
                                         originalContentTypeFun() === ""
-                                            ? "原Content-Type为空，该Content-type为自动探测"
+                                            ? t("YakitEditor.emptyContentTypeAutoDetected")
                                             : originalContentTypeFun(),
                                     inlineClassName: "unicode-decode-after"
                                 }
@@ -1032,11 +1101,32 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             current = model.deltaDecorations(current, generateDecorations())
         }
 
-        editor.onDidChangeModelContent(() => {
-            current = model.deltaDecorations(current, generateDecorations())
+        let lastValue = model.getValue()
+        editor.onDidChangeModelContent((e) => {
+            // 问题：使用 onDidChangeModelContent 生命周期钩子时，执行 model.deltaDecorations 有时可能不起作用。
+            // 这通常是因为在更新装饰器时，可能存在多次渲染/更新的时机问题，特别是当 Monaco 编辑器的模型（model）内容还没有完全渲染或更新时。
+            setTimeout(() => {
+                const newValue = model.getValue()
+                if (newValue === lastValue) {
+                    return
+                }
+                lastValue = newValue
+                current = model.deltaDecorations(current, generateDecorations())
+            }, 0)
         })
         current = model.deltaDecorations(current, generateDecorations())
 
+        // 监听查找面板变化
+        const findController = editor.getContribution<IFindController>("editor.contrib.findController")
+        const state = findController?.getState()
+        state?.onFindReplaceStateChange(() => {
+            if (!keepSearchName) return
+            if (state.isRevealed) {
+                keepSearchNameMapStore.setKeepSearchNameMap(keepSearchName, state.searchString || "")
+            } else {
+                keepSearchNameMapStore.removeKeepSearchNameMap(keepSearchName)
+            }
+        })
         return () => {
             try {
                 editor.dispose()
@@ -1053,7 +1143,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         JSON.stringify(highLightFind),
         props.disableUnicodeDecode,
         props.fixContentType,
-        props.originalContentType
+        props.originalContentType,
+        props.fixContentTypeHoverMessage,
+        i18n.language
     ])
     // 定位高亮光标位置
     useDebounceEffect(
@@ -1087,7 +1179,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         if (flag.length > 0 && type === "http") {
             for (let item of rightContextMenu.current) {
                 const info = item as EditorMenuItemProps
-                if (info?.key === "http-show-break") info.label = getShowBreak() ? "隐藏换行符" : "显示换行符"
+                if (info?.key === "http-show-break")
+                    info.label = getShowBreak() ? t("YakitEditor.hideLineBreaks") : t("YakitEditor.showLineBreaks")
             }
         }
     }, [showBreak])
@@ -1101,32 +1194,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             />
         )
     })
-
-    /** 监听键盘快捷键 */
-    useKeyPress(
-        (e) => true,
-        (e) => {
-            onKeyPress && onKeyPress(e)
-            const filterKey = [16, 17, 18, 93]
-            if (filterKey.includes(e.keyCode)) return
-
-            let activeKey: number[] = []
-            if (e.shiftKey) activeKey.push(16)
-            if (e.ctrlKey) activeKey.push(17)
-            if (e.altKey) activeKey.push(18)
-            if (e.metaKey) activeKey.push(93)
-            activeKey.push(e.keyCode)
-            if (activeKey.length <= 1) return
-            activeKey = keySortHandle(activeKey)
-
-            const keyToMenu = keyBindingRef.current[activeKey.join("-")]
-            if (!keyToMenu) return
-
-            e.stopPropagation()
-            menuItemHandle(keyToMenu[0], keyToMenu)
-        },
-        {target: wrapperRef}
-    )
 
     /** 计算编辑器的高度 有点问题，为什么用state记录而不是ref记录，测试过后删除该问题 */
     const handleEditorMount = (editor: YakitIMonacoEditor, monaco: any) => {
@@ -1232,7 +1299,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 editor && editor.trigger("keyboard", "type", {text: v.Label})
             } else if (v.DefaultDescription === "插入文件-fixed") {
                 editor && insertFileFuzzTag((i) => monacoEditorWrite(editor, i), "file:line")
-            } else if (v.DefaultDescription === "插入Payload-fixed") {
+            } else if (v.DefaultDescription === "插入字典-fixed") {
                 editor &&
                     showDictsAndSelect((i) => {
                         monacoEditorWrite(editor, i, editor.getSelection())
@@ -1352,7 +1419,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                                           }
                                                       }
                                                       const text: string = fun(newSelectedText)
-                                                      editor.trigger("keyboard", "type", {text})
+                                                      //   editor.trigger("keyboard", "type", {text})// 选择范围大会卡死
+                                                      monacoEditorWrite(editor, text)
                                                   })
                                           }
                                       }
@@ -1609,6 +1677,35 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         })
     }
 
+    useEffect(() => {
+        // 此处一个页面可能存在多个monaco
+        // 因此仅仅在monaco刚打开时获取最新的快捷键事件和对应按键
+        getStorageYakEditorShortcutKeyEvents()
+    }, [])
+
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            // 阻止事件冒泡
+            event.stopPropagation()
+        }
+        const inputElement = ref.current
+        inputElement && inputElement.addEventListener("keydown", handleKeyDown)
+        // 清理函数
+        return () => {
+            if (inputElement) {
+                inputElement.removeEventListener("keydown", handleKeyDown)
+            }
+        }
+    }, [])
+
+    // 数组去重
+    const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
+    useEffect(() => {
+        if (Array.isArray(shortcutIds)) {
+            setFocusIds(filterItem([...focusIds, ...shortcutIds]))
+        }
+    }, [shortcutIds])
+
     return (
         <div
             ref={ref}
@@ -1617,6 +1714,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 [styles["yakit-editor-disabled"]]: disabled
             })}
         >
+            {/* 查看 monaco 的对应代码 colors 所需 token 值*/}
+            {/* <button onClick={inspectTokens}>查看 token</button> */}
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
@@ -1633,7 +1732,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             />
             {disabled && <div className={styles["yakit-editor-shade"]}></div>}
             <div
-                ref={wrapperRef}
                 className={styles["yakit-editor-container"]}
                 onContextMenu={(e) => {
                     e.stopPropagation()
@@ -1641,56 +1739,94 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     showContextMenu()
                 }}
             >
-                <MonacoEditor
-                    // height={100}
-                    theme={theme || "kurior"}
-                    value={value}
-                    onChange={setValue}
-                    language={language}
-                    editorDidMount={(editor: YakitIMonacoEditor, monaco) => {
-                        setEditor(editor)
-                        /** 编辑器关光标，设置坐标0的初始位置 */
-                        editor.setSelection({
-                            startColumn: 0,
-                            startLineNumber: 0,
-                            endColumn: 0,
-                            endLineNumber: 0
-                        })
-
-                        if (editor) {
-                            /** Yak语言 代码错误检查 */
-                            const model = editor.getModel()
-                            if (model) {
-                                yakStaticAnalyze.run(editor, model)
-                                model.onDidChangeContent(() => {
-                                    yakStaticAnalyze.run(editor, model)
-                                })
+                <ShortcutKeyFocusHook style={{height: "100%", width: "100%", overflow: "hidden"}} focusId={focusIds}>
+                    <MonacoEditor
+                        // height={100}
+                        theme={theme || "kurior"}
+                        value={value}
+                        onChange={setValue || onChange}
+                        language={language}
+                        editorDidMount={(editor: YakitIMonacoEditor, monaco) => {
+                            setEditor(editor)
+                            if (keepSearchName) {
+                                const keyword = keepSearchNameMap.get(keepSearchName)
+                                if (keyword) {
+                                    openFind(editor, keyword)
+                                }
                             }
-                        }
+                            /** 编辑器关光标，设置坐标0的初始位置 */
+                            editor.setSelection({
+                                startColumn: 0,
+                                startLineNumber: 0,
+                                endColumn: 0,
+                                endLineNumber: 0
+                            })
 
-                        if (editorDidMount) editorDidMount(editor, monaco)
-                    }}
-                    options={{
-                        readOnly: readOnly,
-                        scrollBeyondLastLine: false,
-                        fontWeight: "500",
-                        fontSize: nowFontsize || 12,
-                        showFoldingControls: "always",
-                        showUnused: true,
-                        wordWrap: noWordWrap ? "off" : "on",
-                        renderLineHighlight: "line",
-                        lineNumbers: noLineNumber ? "off" : "on",
-                        minimap: noMiniMap ? {enabled: false} : undefined,
-                        lineNumbersMinChars: lineNumbersMinChars || 5,
-                        contextmenu: false,
-                        renderWhitespace: "all",
-                        bracketPairColorization: {
-                            enabled: true,
-                            independentColorPoolPerBracketType: true
-                        },
-                        fixedOverflowWidgets: true
-                    }}
-                />
+                            if (editor) {
+                                /** Yak语言 代码错误检查 */
+                                const model = editor.getModel()
+                                if (model) {
+                                    yakStaticAnalyze.run(editor, model)
+                                    model.onDidChangeContent(() => {
+                                        yakStaticAnalyze.run(editor, model)
+                                    })
+                                }
+                            }
+
+                            editor.onKeyDown((e) => {
+                                // 是否直接使用编辑器快捷键 不走自定义逻辑
+                                const isUseDefaultShortcut = isYakEditorDefaultShortcut(e.browserEvent)
+                                if (!isUseDefaultShortcut) {
+                                    // 判断当前输入是否激活 编辑器内部快捷键
+                                    const isActiveYakEditor = isYakEditorShortcut(e.browserEvent)
+                                    if (isActiveYakEditor) {
+                                        const keys = convertKeyEventToKeyCombination(e.browserEvent)
+                                        if (keys) {
+                                            let sortKeys = sortKeysCombination(keys)
+                                            const keyToMenu = keyBindingRef.current[sortKeys.join("-")]
+                                            if (!keyToMenu) return
+                                            menuItemHandle(keyToMenu[0], keyToMenu)
+                                        }
+                                        e.browserEvent.stopImmediatePropagation()
+                                        return
+                                    }
+                                    // 判断当前输入是否激活 页面级或全局快捷键
+                                    const event = isPageOrGlobalShortcut(e.browserEvent)
+                                    if (event) {
+                                        // 未接入时特殊处理removePage,接入monaco快捷键后移除此项
+                                        if (["removePage"].includes(event)) e.browserEvent.stopImmediatePropagation()
+                                        // 由于目前 存在老版本键盘快捷键(line：1112) 暂时不做后续接入 等待第二版焦点与monaco绑定
+                                        // e.browserEvent.stopImmediatePropagation()
+                                        return
+                                    }
+                                }
+                            })
+
+                            if (editorDidMount) editorDidMount(editor, monaco)
+                        }}
+                        options={{
+                            readOnly: readOnly,
+                            scrollBeyondLastLine: false,
+                            fontWeight: "500",
+                            fontSize: nowFontsize || 12,
+                            showFoldingControls: "always",
+                            showUnused: true,
+                            wordWrap: noWordWrap ? "off" : "on",
+                            renderLineHighlight: "line",
+                            lineNumbers: noLineNumber ? "off" : "on",
+                            minimap: noMiniMap ? {enabled: false} : undefined,
+                            lineNumbersMinChars: lineNumbersMinChars || 5,
+                            contextmenu: false,
+                            renderWhitespace: "all",
+                            bracketPairColorization: {
+                                enabled: true,
+                                independentColorPoolPerBracketType: true
+                            },
+                            fixedOverflowWidgets: true,
+                            renderValidationDecorations: renderValidationDecorations
+                        }}
+                    />
+                </ShortcutKeyFocusHook>
             </div>
         </div>
     )

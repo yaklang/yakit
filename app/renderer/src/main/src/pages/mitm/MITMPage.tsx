@@ -5,6 +5,7 @@ import React, {
     useContext,
     useEffect,
     useImperativeHandle,
+    useMemo,
     useRef,
     useState
 } from "react"
@@ -67,6 +68,7 @@ import {
     grpcMITMStopCall
 } from "./MITMHacker/utils"
 import {KVPair} from "@/models/kv"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const MITMRule = React.lazy(() => import("./MITMRule/MITMRule"))
 
 const {ipcRenderer} = window.require("electron")
@@ -448,6 +450,7 @@ export interface ExtraMITMServerProps {
     /**禁用初始页 */
     disableCACertPage: boolean
     DisableWebsocketCompression: boolean
+    PluginConcurrency: number
 }
 
 interface MITMServerProps {
@@ -763,6 +766,14 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         }
     }, [inViewport])
 
+    const setTotalFun = useMemoizedFn((t) => {
+        setTotal(t)
+        getAllSatisfyScript(t)
+    })
+
+    const hasParamsCheckListMemo = useSortedArrayMemo(hasParamsCheckList)
+    const noParamsCheckListMemo = useSortedArrayMemo(noParamsCheckList)
+
     const onRenderFirstNode = useMemoizedFn(() => {
         switch (status) {
             case "idle":
@@ -856,8 +867,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                 isHasParams={false}
                                 onSubmitYakScriptId={onSubmitYakScriptId}
                                 status={status}
-                                hasParamsCheckList={hasParamsCheckList}
-                                noParamsCheckList={noParamsCheckList}
+                                hasParamsCheckList={hasParamsCheckListMemo}
+                                noParamsCheckList={noParamsCheckListMemo}
                                 setNoParamsCheckList={(list) => {
                                     if (list.length === 0) {
                                         setEnableInitialPlugin(false)
@@ -902,8 +913,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         setFieldKeywords={setFieldKeywords}
                         onSubmitYakScriptId={onSubmitYakScriptId}
                         status={status}
-                        hasParamsCheckList={hasParamsCheckList}
-                        noParamsCheckList={noParamsCheckList}
+                        hasParamsCheckList={hasParamsCheckListMemo}
+                        noParamsCheckList={noParamsCheckListMemo}
                         setHasParamsCheckList={setHasParamsCheckList}
                         setNoParamsCheckList={setNoParamsCheckList}
                         isFullScreen={isFullScreenFirstNode}
@@ -912,10 +923,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         onSelectAll={onSelectAll}
                         setIsSelectAll={setIsSelectAll}
                         total={total}
-                        setTotal={(t) => {
-                            setTotal(t)
-                            getAllSatisfyScript(t)
-                        }}
+                        setTotal={setTotalFun}
                         groupNames={groupNames}
                         setGroupNames={setGroupNames}
                         onSetOpenTabsFlag={setOpenTabsFlag}
@@ -997,7 +1005,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             firstNode={() => <div className={style["mitm-server-start-pre-first"]}>{onRenderFirstNode()}</div>}
             lineStyle={{display: isFullScreenFirstNode ? "none" : ""}}
             firstMinSize={openTabsFlag ? "400px" : "24px"}
-            secondMinSize={720}
+            secondMinSize={500}
             secondNode={() => (
                 <div
                     className={style["mitm-server-start-pre-second"]}
@@ -1016,25 +1024,25 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
 })
 
 export type LoadPluginMode = "giturl" | "local" | "local-nuclei" | "uploadId"
-export const loadModeInfo = [
+const loadModeInfo = [
     {
         value: "giturl",
-        label: "线上 Nuclei",
+        label: "MitmPage.ImportLocalPlugin.onlineNuclei",
         width: 680
     },
     {
         value: "local",
-        label: "本地插件",
+        label: "MitmPage.ImportLocalPlugin.localPlugin",
         width: 680
     },
     {
         value: "local-nuclei",
-        label: "本地 Nuclei",
+        label: "MitmPage.ImportLocalPlugin.localNuclei",
         width: 680
     },
     {
         value: "uploadId",
-        label: "插件 ID",
+        label: "MitmPage.ImportLocalPlugin.pluginID",
         width: 680
     }
 ]
@@ -1051,6 +1059,7 @@ interface ImportYakScriptStreamRequest {
 
 export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((props) => {
     const {visible, setVisible, loadPluginMode, sendPluginLocal = false} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "mitm"])
     const [form] = Form.useForm()
     const [loadMode, setLoadMode] = useState<LoadPluginMode>(loadPluginMode || "giturl")
     const [localNucleiPath, setLocalNucleiPath] = useState<string>("") // localNucleiPath
@@ -1102,12 +1111,11 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     const handleImportLocalPluginFinish = () => {
         setVisible(false)
         sendMsgToLocalPlugin()
-        yakitNotify("success", "导入本地插件成功")
+        yakitNotify("success", t("MitmPage.ImportLocalPlugin.importLocalPluginSuccess"))
     }
 
     // 发送事件到本地
     const sendMsgToLocalPlugin = () => {
-        // 页面路由变动，要调整
         if (sendPluginLocal) {
             emiter.emit(
                 "openPage",
@@ -1122,14 +1130,16 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     const getRenderByLoadMode = useMemoizedFn((type: string) => {
         switch (type) {
             case "giturl":
+                const labelColSpan = i18n.language === "en" ? 5 : 3
+                const wrapperColSpan = i18n.language === "en" ? 19 : 21
                 return (
                     <>
                         <Form.Item
-                            labelCol={{span: 3}}
-                            wrapperCol={{span: 21}}
+                            labelCol={{span: labelColSpan}}
+                            wrapperCol={{span: wrapperColSpan}}
                             name='nucleiGitUrl'
-                            label='插件源'
-                            rules={[{required: true, message: "该项为必填项"}]}
+                            label={t("MitmPage.ImportLocalPlugin.pluginSource")}
+                            rules={[{required: true, message: t("YakitForm.requiredField")}]}
                             initialValue='https://github.com/projectdiscovery/nuclei-templates'
                         >
                             <YakitSelect
@@ -1149,8 +1159,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             labelCol={{span: 3}}
                             wrapperCol={{span: 21}}
                             name='proxy'
-                            label='代理'
-                            help='通过代理访问中国大陆无法访问的代码仓库：例如http://127.0.0.1:7890'
+                            label={t("MitmPage.ImportLocalPlugin.proxy")}
+                            help={t("MitmPage.ImportLocalPlugin.accessRepoViaProxy")}
                         >
                             <YakitInput />
                         </Form.Item>
@@ -1163,10 +1173,10 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             key='localPluginPath'
                             formItemProps={{
                                 name: "localPluginPath",
-                                label: "本地插件路径",
+                                label: t("MitmPage.ImportLocalPlugin.localPluginPath"),
                                 labelCol: {span: 5},
                                 wrapperCol: {span: 19},
-                                rules: [{required: true, message: "请输入本地插件路径"}]
+                                rules: [{required: true, message: t("MitmPage.ImportLocalPlugin.enterLocalPluginPath")}]
                             }}
                             multiple={false}
                             selectType='file'
@@ -1177,7 +1187,12 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             }}
                             value={localPluginPath}
                         />
-                        <Form.Item labelCol={{span: 5}} wrapperCol={{span: 19}} name='Password' label='密码'>
+                        <Form.Item
+                            labelCol={{span: 5}}
+                            wrapperCol={{span: 19}}
+                            name='Password'
+                            label={t("MitmPage.ImportLocalPlugin.password")}
+                        >
                             <YakitInput />
                         </Form.Item>
                     </>
@@ -1189,9 +1204,9 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             key='localNucleiPath'
                             formItemProps={{
                                 name: "localNucleiPath",
-                                label: "Nuclei PoC 本地路径",
-                                labelCol: {span: 5},
-                                wrapperCol: {span: 19}
+                                label: t("MitmPage.ImportLocalPlugin.nucleiPoCLocalPath"),
+                                labelCol: {span: 6},
+                                wrapperCol: {span: 18}
                             }}
                             selectType='folder'
                             // showUploadList={false}
@@ -1206,8 +1221,13 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             case "uploadId":
                 return (
                     <>
-                        <Form.Item labelCol={{span: 3}} wrapperCol={{span: 21}} name='localId' label='插件ID'>
-                            <YakitInput.TextArea placeholder='请输入插件ID，多个ID用”英文逗号“或”换行“分割...' />
+                        <Form.Item
+                            labelCol={{span: 3}}
+                            wrapperCol={{span: 21}}
+                            name='localId'
+                            label={t("MitmPage.ImportLocalPlugin.pluginID")}
+                        >
+                            <YakitInput.TextArea placeholder={t("MitmPage.ImportLocalPlugin.enterPluginID")} />
                         </Form.Item>
                     </>
                 )
@@ -1228,7 +1248,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             }
 
             setStartExecYakCodeModalVisible(true)
-            setStartExecYakCodeVerbose("导入线上Nuclei")
+            setStartExecYakCodeVerbose(t("MitmPage.ImportLocalPlugin.importOnlineNuclei"))
             setStartExecYakCodeParams({
                 Script: loadYakitPluginCode,
                 Params: params
@@ -1237,7 +1257,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
 
         if (loadMode === "local") {
             if (!formValue.localPluginPath) {
-                failed(`请输入本地插件路径`)
+                failed(t("MitmPage.ImportLocalPlugin.enterLocalPluginPath"))
                 return
             }
             const params: ImportYakScriptStreamRequest = {
@@ -1249,12 +1269,12 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
 
         if (loadMode === "local-nuclei") {
             if (!formValue.localNucleiPath) {
-                failed(`请输入Nuclei PoC 本地路径`)
+                failed(t("MitmPage.ImportLocalPlugin.enterNucleiPoCLocalPath"))
                 return
             }
 
             setStartExecYakCodeModalVisible(true)
-            setStartExecYakCodeVerbose("导入本地Nuclei")
+            setStartExecYakCodeVerbose(t("MitmPage.ImportLocalPlugin.importLocalNuclei"))
             setStartExecYakCodeParams({
                 Script: loadNucleiPoCFromLocal,
                 Params: [{Key: "local-path", Value: formValue.localNucleiPath}]
@@ -1276,7 +1296,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             params: {tabActive: "local", refeshList: true}
                         })
                     )
-                    success("插件导入成功")
+                    success(t("MitmPage.ImportLocalPlugin.pluginImportSuccess"))
                 })
                 .finally(() => {
                     setImportLoading(false)
@@ -1310,7 +1330,15 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 closable={true}
                 maskClosable={false}
                 destroyOnClose={true}
-                title={!loadPluginMode ? "导入插件方式" : <>导入{getLoadModeInfo("label")}</>}
+                title={
+                    !loadPluginMode ? (
+                        t("MitmPage.ImportLocalPlugin.pluginImportMethod")
+                    ) : (
+                        <>
+                            {t("YakitButton.import")} {t(getLoadModeInfo("label"))}
+                        </>
+                    )
+                }
                 className={style["import-local-plugin-modal"]}
                 subTitle={
                     loadPluginMode ? (
@@ -1323,7 +1351,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             onChange={(e) => {
                                 setLoadMode(e.target.value)
                             }}
-                            options={loadModeInfo.map((item) => ({value: item.value, label: item.label}))}
+                            options={loadModeInfo.map((item) => ({value: item.value, label: t(item.label)}))}
                         ></YakitRadioButtons>
                     )
                 }
@@ -1333,15 +1361,13 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                     <>
                         <div style={{marginLeft: 12, display: "block"}}>
                             <YakitButton onClick={onOk} loading={importLoading}>
-                                导入
+                                {t("YakitButton.import")}
                             </YakitButton>
                         </div>
                     </>
                 }
             >
-                <div className={style.infoBox}>
-                    导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。如果确实需要使用外部资源，建议优先选择官方发布的安全版本，或自行编写可控的数据源。同时，请保持系统和软件的最新版本，及时修复已知漏洞，做好日常安全防护。
-                </div>
+                <div className={style.infoBox}>{t("MitmPage.ImportLocalPlugin.externalResourceWarning")}</div>
                 <Form form={form} className={style["import-local-plugin-form"]}>
                     {getRenderByLoadMode(loadMode)}
                 </Form>
@@ -1357,3 +1383,12 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         </>
     )
 })
+
+function useSortedArrayMemo<T extends string | number>(
+    arr: T[],
+    compareFn: (a: T, b: T) => number = (a, b) => String(a).localeCompare(String(b))
+) {
+    return useMemo(() => {
+        return [...arr].sort(compareFn)
+    }, [JSON.stringify([...arr].sort(compareFn))])
+}

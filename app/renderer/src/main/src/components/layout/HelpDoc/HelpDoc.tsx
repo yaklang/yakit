@@ -16,41 +16,11 @@ const {ipcRenderer} = window.require("electron")
 
 interface HelpDocProps {
     system: YakitSystem
-    engineLink: boolean
 }
 
 /** @name Yakit软件更新下载弹窗 */
 export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
-    const {system, engineLink} = props
-
-    const [currentYakit, setCurrentYakit] = useState<string>("")
-    const [currentYaklang, setCurrentYaklang] = useState<string>("")
-
-    const info = useMemo(() => {
-        const info: LocalInfoProps = {
-            system: system,
-            arch: SystemInfo.architecture || "",
-            localYakit: currentYakit,
-            localYaklang: currentYaklang
-        }
-        return info
-    }, [system, currentYakit, currentYaklang])
-
-    useEffect(() => {
-        grpcFetchLocalYakitVersion(true)
-            .then((res) => {
-                setCurrentYakit(res)
-            })
-            .catch(() => {})
-    }, [])
-
-    useEffect(() => {
-        grpcFetchLocalYakVersion(true)
-            .then((data: string) => {
-                setCurrentYaklang(data)
-            })
-            .catch(() => {})
-    }, [engineLink])
+    const {system} = props
 
     const [show, setShow] = useState<boolean>(false)
     const menu = (

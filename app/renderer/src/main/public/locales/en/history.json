@@ -1,0 +1,225 @@
+{
+  "HTTPHistory": {
+    "websiteTree": "Website Tree",
+    "process": "Process",
+    "pleaseEnterDomainToSearch": "Please enter a domain to search, e.g., baidu.com"
+  },
+  "HTTPFlowTable": {
+    "requestDetailsNotFound": "Request details not found",
+    "crawler": "Crawler",
+    "plugin": "Plugin",
+    "loadBlockedParamsFailed": "Failed to load blocked parameters:",
+    "method": "Method",
+    "statusCode": "Status Code",
+    "fromPlugin": "Related Plugin",
+    "bodyLength": "Body Length",
+    "params": "Parameters",
+    "contentType": "Content Type",
+    "durationMs": "Duration (ms)",
+    "updatedAt": "Request Time",
+    "requestSizeVerbose": "Request Size",
+    "requestPacket": "Request Packet",
+    "responsePacket": "Response Packet",
+    "exportFields": "Export Fields",
+    "partialExportMissing": "Partial export content missing:",
+    "have": "Have",
+    "none": "None",
+    "pleaseSelectData": "Please select data",
+    "maxOperateData": "You can only operate on a maximum of {number} data entries at a time",
+    "copyLimit": "You can only copy a maximum of {number} data entries at a time",
+    "historyDeleteFailed": "History deletion failed:",
+    "deletingPleaseRefresh": "Deleting... If it doesn't refresh automatically, please refresh manually",
+    "batchOperationNoSelectAll": "This batch operation does not support 'select all'",
+    "maxSendData": "You can only send a maximum of {number} data entries at a time",
+    "getPlugin": "Get Plugin",
+    "editTagSuccess": "Edit tag successful",
+    "shareData": "Share Data",
+    "uploadingDataCannotClickAgain": "Data is being uploaded. Please wait until the upload is complete before clicking again",
+    "missingParameter": "Missing parameter",
+    "dataUploading": "Data is being uploaded",
+    "uploadResult": "{SuccessCount} data entries uploaded successfully, {FailedCount} failed",
+    "advancedFilter": "Filter",
+    "configured": "Configured",
+    "protocolType": "Protocol Type",
+    "all": "All",
+    "resetRequestID": "Reset Request ID",
+    "doNotResetRequestID": "Do Not Reset Request ID",
+    "saveFile": "Save File",
+    "RowContextMenu": {
+      "sendToWebFuzzer": "Send to Web Fuzzer",
+      "sendAndRedirect": "Send and Redirect",
+      "sendOnly": "Send Only",
+      "sendToWSFuzzer": "Send to WS Fuzzer",
+      "packetScan": "Packet Scan",
+      "pluginExtension": "Plugin Extension",
+      "aiPlugin": "AI Plugin",
+      "copyURL": "Copy URL",
+      "downloadResponseBody": "Download Response Body",
+      "openURLInBrowser": "Open URL in Browser",
+      "viewResponseInBrowser": "View Response in Browser",
+      "copyAsCSRFPoc": "Copy as CSRF PoC",
+      "copyAsYakPoCTemplate": "Copy as Yak PoC Template",
+      "packetPoCTemplate": "Packet PoC Template",
+      "batchTestPoCTemplate": "Batch Test PoC Template",
+      "tagColor": "Tag Color",
+      "removeColor": "Remove Color",
+      "sendToComparer": "Send to Comparer",
+      "sendToComparerLeft": "Send to Comparer (Left)",
+      "sendToComparerRight": "Send to Comparer (Right)",
+      "block": "Block",
+      "blockRecord": "Block this Record",
+      "blockURL": "Block URL",
+      "blockDomain": "Block Domain",
+      "delete": "Delete",
+      "deleteRecord": "Delete Record",
+      "deleteURL": "Delete URL",
+      "deleteDomain": "Delete Domain",
+      "sharePacket": "Share Packet",
+      "exportData": "Export Data",
+      "exportToExcel": "Export to Excel",
+      "exportToHAR": "Export to HAR",
+      "editTag": "Edit Tag",
+      "openInNewWindow": "Open in New Window",
+      "uploadData": "Upload Data",
+      "batchExecute": "Batch Execute",
+      "networkDevicesAndOASystem": "Network Devices and OA System",
+      "securityProduct": "Security Product",
+      "remoteCodeExecutionScan": "Remote Code Execution (Scan)",
+      "sQLInjection": "SQL Injection"
+    }
+  },
+  "ImportExportProgress": {
+    "exportHARData": "Export HAR traffic data"
+  },
+  "HTTPFlowShield": {
+    "conditionBlocked": "Blocked Condition"
+  },
+  "RangeInputNumberTableWrapper": {
+    "asc": "Asc",
+    "desc": "Desc",
+    "filter": "Filter",
+    "greaterThanZeroOnly": "Only show > 0"
+  },
+  "HistorySearch": {
+    "keyword": "Keyword",
+    "request": "Request",
+    "response": "Response",
+    "fuzzSearchExplanation": "In Yakit, the search feature uses a LIKE search whenever calling the backend FuzzSearch. This means users need to manually escape text like `email_`."
+  },
+  "EditTagsModal": {
+    "editTag": "Edit Tag",
+    "multipleTagsComma": "Separate multiple tags with commas"
+  },
+  "AdvancedSet": {
+    "saveAdvancedConfigAndClose": "Do you want to save the advanced configuration and close the pop-up window?",
+    "advancedConfig": "Advanced Configuration",
+    "refreshConfig": "Refresh Configuration",
+    "backgroundRefresh": "Background Refresh",
+    "keepRefreshingTrafficData": "Check this to keep traffic data refreshing even when not on the current page",
+    "listDisplayFieldsAndOrder": "List display fields and order",
+    "listDisplayConfigTips": "Click to disable a field from being displayed in the list. The display order of the fields is from top to bottom and can be adjusted by dragging. This configuration applies to all traffic tables and traffic analysis tables executed by plugins"
+  },
+  "HTTPFlowTableFormConfiguration": {
+    "saveAdvancedConfigAndClose": "Do you want to save the advanced configuration and close the pop-up window?",
+    "advancedFilter": "Advanced Filter",
+    "filterMode": "Filter Mode",
+    "blockedContent": "Blocked Content",
+    "displayOnly": "Display Only",
+    "uRLPath": "URL Path",
+    "uRIMatchExplanation": "Can be understood as URI matching, e.g., /main/index.php?a=123 or /*/index or /admin*",
+    "fileExtension": "File Extension",
+    "responseType": "Response Type",
+    "keyword": "Keyword",
+    "matchingLogicSameAsSearch": "Matching logic is the same as the keyword search outside",
+    "statusCode": "Status Code"
+  },
+  "HTTPFlowDetail": {
+    "requestDetails": "Request Details",
+    "analyzingDetailedParameters": "Analyzing detailed parameters",
+    "previousRequest": "Previous Request",
+    "nextRequest": "Next Request",
+    "hTTPMethod": "HTTP Method",
+    "requestURL": "Request URL",
+    "bodySize": "Body Size",
+    "gETParameters": "GET Parameters",
+    "pOSTParameters": "POST Parameters",
+    "cookieParameters": "Cookie Parameters",
+    "rawHTTPRequest": "Raw HTTP Request",
+    "rawHTTPResponse": "Raw HTTP Response"
+  },
+  "FuzzerResponseToHTTPFlowDetail": {
+    "analyzeParameterFailed": "Failed to analyze parameter:"
+  },
+  "HTTPFlowExtractedDataTable": {
+    "ruleName": "Rule Name",
+    "ruleData": "Rule Data",
+    "locate": "Locate",
+    "binaryStreamLocateError": "Cannot locate data packets containing binary streams"
+  },
+  "FuzzableParamList": {
+    "parameterName": "Parameter Name",
+    "parameterLocation": "Parameter Location",
+    "originalParameterValue": "Original Parameter Value",
+    "testParameterInWebFuzzer": "Testing this parameter will temporarily move you to Web Fuzzer",
+    "fuzzTestParameter": "Fuzz Test Parameter"
+  },
+  "HTTPFlowDetailMini": {
+    "getRuleExtractDataFailed": "Failed to get rule extracted data",
+    "responseType": "Response Type",
+    "expandLeft": "Expand Left",
+    "collapseRight": "Collapse Right",
+    "previousRule": "Previous Rule",
+    "nextRule": "Next Rule",
+    "domain": "Domain",
+    "object": "Object",
+    "rule": "Rule"
+  },
+  "CodingPopover": {
+    "encoding": "Encoding"
+  },
+  "HTTPFlowDetailRequestAndResponse": {
+    "viewHeader": "View Header",
+    "viewBody": "View Body",
+    "targetFileNotExist": "Target file does not exist!",
+    "fullResponse": "Full Response",
+    "selectHttpRecordToView": "Select an HTTP record to view the request",
+    "request": "Request",
+    "rawRequest": "Raw Request",
+    "containsBinaryStream": "Contains binary stream",
+    "selectHttpRecordResponseToView": "Select an HTTP record to view the response",
+    "response": "Response",
+    "rawResponse": "Raw Response",
+    "oversizedResponse": "Oversized response",
+    "editTag": "Edit tag"
+  },
+  "NewHTTPPacketEditor": {
+    "render": "Render",
+    "compare": "Compare",
+    "noWrap": "No Wrap",
+    "configureEditor": "Configure Editor",
+    "fontSize": "Font Size",
+    "fullScreen": "Full Screen",
+    "showLineBreaks": "Show line breaks"
+  },
+  "DataCompareModal": {
+    "codeCompare": "Code Compare"
+  },
+  "WebsocketFrameHistory": {
+    "websocket_data_frame": "Websocket Data Frame",
+    "data_direction": "Data Direction",
+    "preview": "Preview",
+    "server_response": "Server Response",
+    "client_request": "Client Request",
+    "data_frame_details": "Data Frame Details"
+  },
+  "HTTPFlowForWebsocketViewer": {
+    "request": "Request",
+    "response": "Response",
+    "requestSizeVerbose": "Request Size:",
+    "body_size": "Body Size:",
+    "sendToWSFuzzer": "Send to WS Fuzzer",
+    "sendAndRedirect": "Send and Redirect",
+    "sendOnly": "Send Only",
+    "packetEmpty": "Packet is empty"
+  }
+}

@@ -116,6 +116,17 @@ import {defPluginBatchExecuteExtraFormValue} from "@/defaultConstants/PluginBatc
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitResizeBox} from "../yakitUI/YakitResizeBox/YakitResizeBox"
 import {getRemoteHttpSettingGV} from "@/utils/envfile"
+import {
+    convertKeyboardToUIKey,
+    registerShortcutKeyHandle,
+    unregisterShortcutKeyHandle
+} from "@/utils/globalShortcutKey/utils"
+import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
+import {
+    getChatCSShortcutKeyEvents,
+    getStorageChatCSShortcutKeyEvents
+} from "@/utils/globalShortcutKey/events/page/chatCS"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodecParamsProps {
@@ -274,7 +285,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const [resTime, setResTime, getResTime] = useGetState<string>("")
     const resTimeRef = useRef<any>(null)
 
-    const [chatcsType, setChatcsType] = useState<"ChatCS" | "PluginAI">(userInfo.isLogin ? "ChatCS" : "PluginAI")
+    // const [chatcsType, setChatcsType] = useState<"ChatCS" | "PluginAI">(userInfo.isLogin ? "ChatCS" : "PluginAI")
+    const [chatcsType, setChatcsType] = useState<"ChatCS" | "PluginAI">("PluginAI")
     const [pluginAIParams, setPluginAIParams] = useState<CodecParamsProps>()
     const [pluginAIList, setPluginAIList] = useState<PluginAiItem[]>([])
     // 仅展示当前执行项
@@ -1055,6 +1067,32 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         }
     }, [isShowPrompt])
 
+    useEffect(() => {
+        if (visible) {
+            registerShortcutKeyHandle(ShortcutKeyPage.ChatCS)
+            getStorageChatCSShortcutKeyEvents()
+            return () => {
+                unregisterShortcutKeyHandle(ShortcutKeyPage.ChatCS)
+            }
+        }
+    }, [visible])
+
+    useShortcutKeyTrigger("exit*chatCS", () => {
+        setVisible(false)
+    })
+
+    const isSubmitFocusRef = useRef<boolean>(false)
+    useShortcutKeyTrigger("nextLine*chatCS", () => {
+        if (isSubmitFocusRef.current) {
+            setQuestion(`${question}\n`)
+        }
+    })
+
+    useShortcutKeyTrigger("submit*chatCS", () => {
+        if (isSubmitFocusRef.current) {
+            onBtnSubmit()
+        }
+    })
     return (
         <Resizable
             style={{position: "absolute"}}
@@ -1081,19 +1119,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 setWidth(elementRef.clientWidth)
             }}
         >
-            <div
-                ref={divRef}
-                className={styles["yak-chat-layout"]}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                    const keyCode = e.keyCode ? e.keyCode : e.key
-                    if (keyCode === 27) {
-                        e.stopPropagation()
-                        e.preventDefault()
-                        setVisible(false)
-                    }
-                }}
-            >
+            <div ref={divRef} className={styles["yak-chat-layout"]} tabIndex={0}>
                 <div className={styles["layout-header"]}>
                     <div className={styles["header-title"]}>
                         {/* <YakitChatCSIcon />
@@ -1105,7 +1131,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         >
                             <OutlineInformationcircleIcon className={styles["info-hint"]} />
                         </Tooltip> */}
-                        <YakitRadioButtons
+                        {/* <YakitRadioButtons
                             value={chatcsType}
                             onChange={(e) => {
                                 if (!userInfo.isLogin) {
@@ -1125,7 +1151,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                     label: "插件输出"
                                 }
                             ]}
-                        />
+                        /> */}
+                        插件输出
                     </div>
                     <div className={styles["header-extra"]}>
                         {chatcsType === "ChatCS" && history.length !== 0 && (
@@ -1299,23 +1326,23 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                     <Input.TextArea
                                         className={styles["text-area-wrapper"]}
                                         bordered={false}
-                                        placeholder='问我任何问题...(shift + enter 换行)'
+                                        placeholder={`问我任何问题...(${convertKeyboardToUIKey(
+                                            getChatCSShortcutKeyEvents()["nextLine*chatCS"].keys
+                                        )} 换行)`}
                                         value={question}
                                         autoSize={true}
                                         onChange={(e) => setQuestion(e.target.value)}
                                         onKeyDown={(e) => {
                                             const keyCode = e.keyCode ? e.keyCode : e.key
-                                            const shiftKey = e.shiftKey
-                                            if (keyCode === 13 && shiftKey) {
-                                                e.stopPropagation()
+                                            if (keyCode === 13) {
                                                 e.preventDefault()
-                                                setQuestion(`${question}\n`)
                                             }
-                                            if (keyCode === 13 && !shiftKey) {
-                                                e.stopPropagation()
-                                                e.preventDefault()
-                                                onBtnSubmit()
-                                            }
+                                        }}
+                                        onFocus={() => {
+                                            isSubmitFocusRef.current = true
+                                        }}
+                                        onBlur={() => {
+                                            isSubmitFocusRef.current = false
                                         }}
                                     />
                                     <div className={styles["input-footer"]}>
@@ -1636,8 +1663,8 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                     {progressList && progressList.length === 1 && (
                         <Progress
                             style={{lineHeight: 0}}
-                            strokeColor='#F28B44'
-                            trailColor='#F0F2F5'
+                            strokeColor='var(--Colors-Use-Main-Primary)'
+                            trailColor='var(--Colors-Use-Neutral-Bg)'
                             showInfo={false}
                             percent={Math.trunc(progressList[0].progress * 100)}
                         />

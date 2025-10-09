@@ -1,14 +1,14 @@
-const { service, httpApi } = require("../httpServer")
-const { ipcMain } = require("electron")
+const {service, httpApi} = require("../httpServer")
+const {ipcMain} = require("electron")
 const fs = require("fs")
 const customPath = require("path")
 const FormData = require("form-data")
-const { Readable } = require("stream")
-const { hashChunk } = require("../toolsFunc")
+const {Readable} = require("stream")
+const {hashChunk} = require("../toolsFunc")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("upload-group-data", async (event, params) => {
-        const { path } = params
+        const {path} = params
         // 创建数据流
         try {
             const readerStream = fs.createReadStream(path) // 可以像使用同步接口一样使用它。
@@ -17,7 +17,12 @@ module.exports = (win, getClient) => {
             const headers = {
                 "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`
             }
-            const res = httpApi("post", "update/plugins/group", formData, headers, false)
+            const res = httpApi({
+                method: "post",
+                url: "update/plugins/group",
+                data: formData,
+                headers
+            })
             return res
         } catch (error) {
             throw error
@@ -30,11 +35,8 @@ module.exports = (win, getClient) => {
         return fileData.toString("base64")
     })
 
-    // 上传次数缓存
-    let postPackageHistory = {}
-    const postProject = ({ url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, type, token }) => {
+    const postProject = ({url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, type, token}) => {
         return new Promise((resolve, reject) => {
-            postPackageHistory[hash] ? (postPackageHistory[hash] += 1) : (postPackageHistory[hash] = 1)
             const percent = (chunkIndex + 1) / totalChunks
             const formData = new FormData()
             formData.append("file", chunkStream)
@@ -42,52 +44,55 @@ module.exports = (win, getClient) => {
             formData.append("totalChunks", totalChunks)
             formData.append("hash", fileHash)
             formData.append("fileName", fileName)
-            if (type) {
-                formData.append("type", type)
-            }
+            formData.append("type", type)
             // console.log("参数---", fileName, fileHash)
-            httpApi(
-                "post",
+            httpApi({
+                method: "post",
                 url,
-                formData,
-                { "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}` },
-                false,
-                percent === 1 && totalChunks > 3 ? 60 * 1000 * 10 : 60 * 1000
-            )
+                data: formData,
+                headers: {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+                timeout: percent === 1 && totalChunks > 3 ? 60 * 1000 * 10 : 60 * 1000,
+                argParams: {
+                    retryCount: 3
+                }
+            })
                 .then(async (res) => {
                     const progress = Math.floor(percent * 100)
                     win.webContents.send(`callback-split-upload-${token}`, {
                         res,
                         progress
                     })
-                    if (res.code === 209 && type) {
-                        reject(res.data.reason)
-                    } else {
-                        if (res.code !== 200 && postPackageHistory[hash] <= 3) {
-                            // console.log("重传", postPackageHistory[hash])
-                            // 传输失败 重传3次
-                            await postProject({ url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, type, token })
-                        } else if (postPackageHistory[hash] > 3) {
-                            reject(res.data.reason)
+                    if (res.code !== 200) {
+                        let data = `未知错误`
+                        if (res?.data?.reason) {
+                            data = `code ${res.code}: ${res.data.reason.toString()}`
+                        } else if (res?.data) {
+                            data = `code ${res.code}: ${res.data.toString()}`
+                        } else if (res?.message?.message) {
+                            data = `code ${res.code}: ${res.message.message.toString()}`
+                        } else if (res) {
+                            data = `code ${res.code}: ${res.toString()}`
                         }
+                        reject(data)
+                        return
                     }
                     resolve()
                 })
                 .catch((err) => {
-                    // console.log("catch", err)
-                    reject(err)
+                    reject(`重传三次失败：${err}`)
                 })
         })
     }
 
-    const postProjectFail = ({ fileName, hash, fileIndex }) => {
+    const postProjectFail = ({fileName, hash, fileIndex, type}) => {
         service({
             url: "import/project/fail",
             method: "post",
             data: {
                 fileName,
                 hash,
-                fileIndex
+                fileIndex,
+                type
             }
         }).then((res) => {
             // console.log("rrrr---", res)
@@ -101,7 +106,11 @@ module.exports = (win, getClient) => {
         return new Promise(async (resolve, reject) => {
             // console.log("params---",params);
             // path为文件路径 token为切片进度回调 url为接口
-            const { url, path, token, type = "" } = params
+            const {url, path, token, type = ""} = params
+            if (!type) {
+                reject("type必传")
+                return
+            }
             // 获取文件名
             const fileName = customPath.basename(path)
             // 文件大小（以字节为单位）
@@ -117,18 +126,18 @@ module.exports = (win, getClient) => {
             // 计算分片总数
             const totalChunks = Math.ceil(size / chunkSize)
             // 计算整个文件Hash
-            const fileHash = await hashChunk({ path })
+            const fileHash = await hashChunk({path})
             const fileHashTime = `${fileHash}-${Date.now()}`
             TaskStatus = true
             for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
                 if (TaskStatus) {
                     try {
-                        const hash = await hashChunk({ path, size, chunkSize, chunkIndex })
+                        const hash = await hashChunk({path, size, chunkSize, chunkIndex})
                         let add = chunkIndex === 0 ? 0 : 1
                         const start = chunkIndex * chunkSize + add
                         const end = Math.min((chunkIndex + 1) * chunkSize, size)
                         // 创建当前分片的读取流
-                        const chunkStream = fs.createReadStream(path, { start, end })
+                        const chunkStream = fs.createReadStream(path, {start, end})
                         await postProject({
                             url,
                             chunkStream,
@@ -144,14 +153,14 @@ module.exports = (win, getClient) => {
                         postProjectFail({
                             fileName,
                             hash: fileHashTime,
-                            fileIndex: chunkIndex
+                            fileIndex: chunkIndex,
+                            type
                         })
                         reject(error)
                         TaskStatus = false
                     }
                 }
             }
-            postPackageHistory = {}
             resolve(TaskStatus)
         })
     })
@@ -164,7 +173,7 @@ module.exports = (win, getClient) => {
 
     // http-上传图片-通过路径上传
     ipcMain.handle("http-upload-img-path", async (event, params) => {
-        const { path } = params
+        const {path} = params
         // 创建数据流,可以像使用同步接口一样使用它
         const readerStream = fs.createReadStream(path) // 。
 
@@ -177,27 +186,25 @@ module.exports = (win, getClient) => {
             })
         }
         formData.append("file_name", readerStream)
-        const res = httpApi(
-            "post",
-            "upload/img",
-            formData,
-            { "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}` },
-            false,
-            undefined,
-            { cancelInterrupt: true }
-        )
+        const res = httpApi({
+            method: "post",
+            url: "upload/img",
+            data: formData,
+            headers: {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+            argParams: {cancelInterrupt: true}
+        })
         return res
     })
     // http-上传图片-通过base64上传
     ipcMain.handle("http-upload-img-base64", async (event, params) => {
-        const { base64, imgInfo, type } = params
+        const {base64, imgInfo, type} = params
 
         // 去掉 Base64 字符串前缀
         const data = base64.replace(/^data:image\/\w+;base64,/, "")
         // 将 Base64 转换为二进制 Buffer
         const binaryData = Buffer.from(data, "base64")
         const readable = new Readable()
-        readable._read = () => { }
+        readable._read = () => {}
         readable.push(binaryData)
         readable.push(null)
 
@@ -209,23 +216,21 @@ module.exports = (win, getClient) => {
                 }
             })
         }
-        formData.append("file_name", readable, { ...imgInfo })
-        const res = await httpApi(
-            "post",
-            "upload/img",
-            formData,
-            { "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}` },
-            false,
-            undefined,
-            { cancelInterrupt: true }
-        )
+        formData.append("file_name", readable, {...imgInfo})
+        const res = await httpApi({
+            method: "post",
+            url: "upload/img",
+            data: formData,
+            headers: {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+            argParams: {cancelInterrupt: true}
+        })
 
         return res
     })
 
     // http-上传文件-5MB以下
     ipcMain.handle("http-upload-file", async (event, params) => {
-        const { path, name } = params
+        const {path, name} = params
         // 创建数据流
         try {
             const readerStream = fs.createReadStream(path)
@@ -236,7 +241,13 @@ module.exports = (win, getClient) => {
             const headers = {
                 "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`
             }
-            const res = httpApi("post", "upload/file", formData, headers, false, undefined, { cancelInterrupt: true })
+            const res = httpApi({
+                method: "post",
+                url: "upload/file",
+                data: formData,
+                headers,
+                argParams: {cancelInterrupt: true}
+            })
             return res
         } catch (error) {
             throw error

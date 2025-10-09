@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <title>引擎 Console</title>
+  <link rel="stylesheet" href="./xterm@5.3.0/xterm.css">
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    #terminal {
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="terminal"></div>
+  <script src="./xterm@5.3.0/xterm.js"></script>
+  <script src="./xterm-addon-fit@0.7.0/xterm-addon-fit.js"></script>
+  <script>
+    const { ipcRenderer } = require('electron')
+    const getLocalValue = async (k, defaultValue) => {
+      try {
+        const result = await ipcRenderer.invoke("fetch-local-cache", k)
+        return result ?? defaultValue
+      } catch {
+        return defaultValue
+      }
+    }
+
+    getLocalValue("theme", "light").then((t) => {
+      document.documentElement.setAttribute("data-theme", t)
+    })
+
+    ipcRenderer.on('xterm-theme', (event, data) => {
+      term.options.theme = data.xtermThemeVars
+      document.body.style.backgroundColor = data.xtermThemeVars.background
+      const terminalDom = document.getElementById("terminal")
+      terminalDom.style.backgroundColor = data.xtermThemeVars.background
+    })
+
+    ipcRenderer.on('xterm-data', (event, data) => {
+      term.write(data)
+    })
+
+    const term = new window.Terminal({
+      convertEol: true
+    })
+    const fitAddon = new window.FitAddon.FitAddon()
+    term.loadAddon(fitAddon)
+
+    term.open(document.getElementById('terminal'))
+    fitAddon.fit()
+
+    // 监听窗口大小变化
+    window.addEventListener('resize', () => fitAddon.fit())
+
+    // 复制
+    term.attachCustomKeyEventHandler((event) => {
+      if ((event.ctrlKey || event.metaKey) && event.code === "KeyC") {
+        const selection = term.getSelection()
+        if (selection) {
+          ipcRenderer.send('console-terminal-window-copy', selection)
+          return false
+        }
+      }
+      return true
+    })
+  </script>
+</body>
+
+</html>

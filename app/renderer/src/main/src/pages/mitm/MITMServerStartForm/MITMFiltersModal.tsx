@@ -12,6 +12,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {
     OutlineClockIcon,
     OutlineExportIcon,
+    OutlinePencilaltIcon,
     OutlineSaveIcon,
     OutlineStorageIcon,
     OutlineTrashIcon
@@ -80,8 +81,8 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     const [_mitmFilter, setMITMFilter] = useState<MITMFilterSchema>()
     const [_, setFilterName, getFilterName] = useGetState<string>("")
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
-
     const [filterData, setFilterData] = useState<MITMAdvancedFilter[]>([cloneDeep(defaultMITMAdvancedFilter)])
+    const [editFilterName, setEditFilterName] = useState<string>("")
 
     const mitmContent = useContext(MITMContext)
 
@@ -118,11 +119,41 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         }
     }, [])
     useEffect(() => {
-        if (visible) getMITMFilter()
+        if (visible) {
+            getMITMFilter()
+        } else {
+            setEditFilterName("")
+        }
     }, [visible])
+
     const onSetFilter = useMemoizedFn(() => {
         const params = getMITMFilterData()
         const {baseFilter, advancedFilters} = params
+
+        if (editFilterName) {
+            const filter = baseFilter
+            const saveObj: SaveObjProps = {
+                filterName: editFilterName,
+                filter,
+                advancedFilters: advancedFilters
+            }
+            getRemoteValue(removeFilterKey).then((data) => {
+                try {
+                    const saveFilterData: SaveObjProps[] = JSON.parse(data)
+                    const newSaveFilterData = saveFilterData.map((item) => {
+                        if (item.filterName === editFilterName) {
+                            return saveObj
+                        } else {
+                            return item
+                        }
+                    })
+                    setRemoteValue(removeFilterKey, JSON.stringify(newSaveFilterData))
+                    yakitNotify("success", "编辑" + editFilterName + "成功")
+                    setVisible(false)
+                } catch (error) {}
+            })
+        }
+
         // baseFilter的每个字段都需要为数组，因为后端没有处理字段不存在的情况 会提示报错
         const filter = convertLocalMITMFilterRequest({...params})
         if (filterType === "filter") {
@@ -311,7 +342,11 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             closable={true}
             title={
                 <div className={styles["mitm-filters-title"]}>
-                    <span>{filterType === "hijackFilter" ? "条件劫持" : "过滤器配置"}</span>
+                    <span>
+                        {filterType === "hijackFilter"
+                            ? (editFilterName ? "编辑" : "") + "条件劫持"
+                            : (editFilterName ? "编辑" : "") + "过滤器配置"}
+                    </span>
                     <YakitRadioButtons
                         value={type}
                         onChange={onSetType}
@@ -381,6 +416,8 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                         overlayClassName={styles["http-history-table-drop-down-popover"]}
                         content={
                             <MitmFilterHistoryStore
+                                editFilterName={editFilterName}
+                                onSetEditFilterName={setEditFilterName}
                                 onSelect={(v) => onMenuSelect(v)}
                                 popoverVisible={popoverVisible}
                                 setPopoverVisible={setPopoverVisible}
@@ -414,6 +451,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             onOk={() => {
                 onSetFilter()
             }}
+            okText={editFilterName ? "保存并应用" : "确认"}
             bodyStyle={{padding: 0}}
         >
             <div className={styles.infoBox}>
@@ -453,11 +491,13 @@ export default MITMFiltersModal
 interface MitmFilterHistoryStoreProps {
     removeFilterKey: string
     popoverVisible: boolean
+    editFilterName: string
     setPopoverVisible: (v: boolean) => void
     onSelect: (v: MITMFilterUIProps) => void
+    onSetEditFilterName: (v: string) => void
 }
 const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo((props) => {
-    const {removeFilterKey, popoverVisible, setPopoverVisible, onSelect} = props
+    const {removeFilterKey, popoverVisible, setPopoverVisible, onSelect, editFilterName, onSetEditFilterName} = props
     const [mitmSaveData, setMitmSaveData] = useState<SaveObjProps[]>([])
     useEffect(() => {
         onMitmSaveFilter()
@@ -518,15 +558,30 @@ const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo
                                 [styles["list-item-border-top"]]: index === 0
                             })}
                             onClick={() => {
+                                onSetEditFilterName("")
                                 onSelectItem(item)
                             }}
                         >
                             <div className={styles["name"]}>{item.filterName}</div>
                             <div
-                                className={styles["opt"]}
+                                className={classNames(styles["opt"], styles["opt-edit"])}
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    removeItem(item.filterName)
+                                    onSetEditFilterName(item.filterName)
+                                    onSelectItem(item)
+                                }}
+                            >
+                                <OutlinePencilaltIcon />
+                            </div>
+                            <div
+                                className={classNames(styles["opt"], styles["opt-del"])}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (editFilterName === item.filterName) {
+                                        yakitNotify("info", "正在编辑" + editFilterName + "，暂无法删除")
+                                    } else {
+                                        removeItem(item.filterName)
+                                    }
                                 }}
                             >
                                 <OutlineTrashIcon />
@@ -624,7 +679,7 @@ const ImportFileModal: React.FC<ImportFileModalProps> = (props) => {
             onOk={() => onOk(value)}
         >
             <div className={styles["import-editor"]} onDragOver={handleDragOver} onDrop={handleDrop}>
-                <YakitEditor value={value} setValue={setValue}></YakitEditor>
+                <YakitEditor value={value} setValue={setValue} type="json"></YakitEditor>
             </div>
         </YakitModal>
     )

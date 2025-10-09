@@ -5,8 +5,8 @@ import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "./ut
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
-import {useEeSystemConfig, useGoogleChromePluginPath, useStore, yakitDynamicStatus} from "./store"
-import {aboutLoginUpload, loginHTTPFlowsToOnline, refreshToken} from "./utils/login"
+import {useGoogleChromePluginPath, useStore, yakitDynamicStatus} from "./store"
+import {refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
 import {getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isEnpriTrace, isIRify} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
@@ -19,13 +19,13 @@ import {useRunNodeStore} from "./store/runNode"
 import {LocalGVS} from "./enums/localGlobal"
 import {handleFetchSystemInfo} from "./constants/hardware"
 import {closeWebSocket, startWebSocket} from "./utils/webSocket/webSocket"
+import {startShortcutKeyMonitor, stopShortcutKeyMonitor} from "./utils/globalShortcutKey/utils"
+import {getStorageGlobalShortcutKeyEvents} from "./utils/globalShortcutKey/events/global"
+import { useUploadInfoByEnpriTrace } from "./components/layout/utils"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
 const {ipcRenderer} = window.require("electron")
-
-/** 快捷键目录 */
-const InterceptKeyword = ["KeyR", "KeyW"]
 
 interface OnlineProfileProps {
     BaseUrl: string
@@ -39,6 +39,15 @@ function NewApp() {
     const {userInfo} = useStore()
     const {setGoogleChromePluginPath} = useGoogleChromePluginPath()
 
+    // 快捷键注册+获取全局快捷键事件集合缓存
+    useEffect(() => {
+        getStorageGlobalShortcutKeyEvents()
+        startShortcutKeyMonitor()
+        return () => {
+            stopShortcutKeyMonitor()
+        }
+    }, [])
+
     // 软件初始化配置
     useEffect(() => {
         // 设置echarts颜色(替换原始颜色)
@@ -48,35 +57,11 @@ function NewApp() {
         // 解压Google 插件压缩包
         ipcRenderer.invoke("generate-chrome-plugin").then((res) => {
             setGoogleChromePluginPath(res)
-        })
+        }).catch((e) => {})
         // 获取系统信息
         handleFetchSystemInfo()
         // 告诉主进程软件的版本(CE|EE)
         ipcRenderer.invoke("is-enpritrace-to-domain", !isCommunityEdition())
-    }, [])
-
-    /**
-     * 渲染端全局错误监听，并收集到错误信息文件里
-     */
-    useEffect(() => {
-        const unhandledrejectionError = (e) => {
-            const content = e?.reason?.stack || ""
-            if (content) ipcRenderer.invoke("render-error-log", content)
-        }
-        const errorLog = (err) => {
-            const content = err?.error?.stack || ""
-            if (content) ipcRenderer.invoke("render-error-log", content)
-        }
-        ipcRenderer.invoke("is-dev").then((flag: boolean) => {
-            if (!flag) {
-                window.addEventListener("unhandledrejection", unhandledrejectionError)
-                window.addEventListener("error", errorLog)
-            }
-        })
-        return () => {
-            window.removeEventListener("unhandledrejection", unhandledrejectionError)
-            window.removeEventListener("error", errorLog)
-        }
     }, [])
 
     // 全局记录鼠标坐标位置(为右键菜单提供定位)
@@ -135,6 +120,8 @@ function NewApp() {
         testYak()
     }
 
+    /** 定时器 */
+    const timeRef = useRef<NodeJS.Timeout>()
     const testYak = () => {
         getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
             if (!setting) {
@@ -144,6 +131,9 @@ function NewApp() {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: data.BaseUrl}) // 同步
                         setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({BaseUrl: data.BaseUrl}))
                         refreshLogin()
+                        timeRef.current = setTimeout(() => {
+                            if (timeRef.current) clearTimeout(timeRef.current)
+                        }, 200)
                     })
                     .catch((e) => {
                         failed(`获取失败:${e}`)
@@ -159,6 +149,9 @@ function NewApp() {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: values.BaseUrl}) // 同步
                         setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
                         refreshLogin()
+                        timeRef.current = setTimeout(() => {
+                            if (timeRef.current) clearTimeout(timeRef.current)
+                        }, 200)
                     })
                     .catch((e: any) => failed("设置私有域失败:" + e))
             }
@@ -209,27 +202,6 @@ function NewApp() {
             .catch(() => setRemoteValue(TokenSource, ""))
     })
 
-    /**
-     * 拦截软件全局快捷键[(win:ctrl|mac:command) + 26字母]
-     * 通过 InterceptKeyword 变量进行拦截控制
-     */
-    const handlekey = useMemoizedFn((ev: KeyboardEvent) => {
-        let code = ev.code
-        // 屏蔽当前事件
-        if ((ev.metaKey || ev.ctrlKey) && InterceptKeyword.includes(code)) {
-            ev.stopPropagation()
-            ev.preventDefault()
-            return false
-        }
-        return
-    })
-    useEffect(() => {
-        document.addEventListener("keydown", handlekey)
-        return () => {
-            document.removeEventListener("keydown", handlekey)
-        }
-    }, [])
-
     const {temporaryProjectId, delTemporaryProject} = useTemporaryProjectStore()
     const temporaryProjectIdRef = useRef<string>("")
     useEffect(() => {
@@ -252,7 +224,7 @@ function NewApp() {
 
     // 退出时 确保渲染进程各类事项已经处理完毕
     const {dynamicStatus} = yakitDynamicStatus()
-    const {eeSystemConfig} = useEeSystemConfig()
+    const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
     useEffect(() => {
         ipcRenderer.on("close-windows-renderer", async (e, res: any) => {
             // 如果关闭按钮有其他的弹窗 则不显示 showMessageBox
@@ -273,7 +245,10 @@ function NewApp() {
         ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
             const {token} = userInfo
             if (token && token.length > 0) {
-                isSyncData(token)
+                uploadProjectEvent.startUpload({
+                    isAutoUploadProject: true,
+                    isUploadSyncData: true
+                })
             }
         })
         return () => {
@@ -282,23 +257,6 @@ function NewApp() {
         }
     }, [dynamicStatus.isDynamicStatus, userInfo])
 
-    const isSyncData = useMemoizedFn((token) => {
-        if (isEnpriTrace()) {
-            let syncData = false
-            eeSystemConfig.forEach((item) => {
-                if (item.configName === "syncData") {
-                    syncData = item.isOpen
-                }
-            })
-            if (syncData) {
-                aboutLoginUpload(token)
-                loginHTTPFlowsToOnline(token)
-            }
-        } else {
-            aboutLoginUpload(token)
-            loginHTTPFlowsToOnline(token)
-        }
-    })
 
     useEffect(() => {
         // 登录账号时 连接 WebSocket 服务器

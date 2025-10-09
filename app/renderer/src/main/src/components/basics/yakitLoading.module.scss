@@ -8,7 +8,7 @@
         width: 100%;
         height: 100%;
         overflow: hidden auto;
-        background: #f8f8f8;
+        background: var(--Colors-Use-Neutral-Bg);
         display: flex;
         justify-content: center;
 
@@ -28,7 +28,7 @@
                 text-align: center;
                 font-size: 24px;
                 line-height: 56px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-weight: 600;
             }
 
@@ -37,7 +37,7 @@
                 text-align: center;
                 font-size: 16px;
                 line-height: 24px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
         }
 
@@ -135,7 +135,7 @@
                 }
 
                 &:hover {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
@@ -145,8 +145,8 @@
 .change-port-dropdown-menu {
     padding: 5px;
     border-radius: 4px;
-    box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
-    border: 1px solid var(--yakit-border-color);
+    box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     :global {
         .ant-form-item {
             margin-bottom: 0;

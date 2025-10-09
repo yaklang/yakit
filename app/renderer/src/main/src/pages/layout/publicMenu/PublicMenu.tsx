@@ -43,6 +43,7 @@ import styles from "./PublicMenu.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {usePluginToId} from "@/store/publicMenu"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -65,6 +66,7 @@ interface PublicMenuProps {
 
 const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     const {onMenuSelect, setRouteToLabel, defaultExpand} = props
+    const {t, i18n} = useI18nNamespaces(["layout", "yakitRoute", "yakitUi"])
     // 登录用户状态信息
     const {userInfo} = useStore()
     // 本地菜单数据
@@ -203,7 +205,6 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                     .finally(() => {
                         // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
                         const {menus, isUpdate, pluginName} = publicUnionMenus(filterLocal, caches)
-
                         if (isInitRef.current) {
                             isInitRef.current = false
                             if (pluginName.length > 0) batchDownloadPlugin(menus, pluginName)
@@ -220,7 +221,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                     })
             })
             .catch((e) => {
-                yakitNotify("error", `获取用户菜单失败: ${e}`)
+                yakitNotify("error", `${t("Layout.PublicMenu.getUserMenuFailed")}${e}`)
                 setTimeout(() => setLoading(false), 300)
             })
     })
@@ -261,7 +262,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                 }
             })
             .catch((err) => {
-                yakitNotify("error", "下载菜单插件失败：" + err)
+                yakitNotify("error", t("Layout.HeardMenu.downloadMenuPluginFailed") + err)
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
@@ -279,14 +280,14 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                     .invoke("AddToNavigation", {Data: menus})
                     .then((rsp) => {})
                     .catch((e) => {
-                        yakitNotify("error", `保存菜单失败：${e}`)
+                        yakitNotify("error", `${t("Layout.HeardMenu.saveMenuFailed")}${e}`)
                     })
                     .finally(() => {
                         setTimeout(() => setLoading(false), 300)
                     })
             })
             .catch((e: any) => {
-                yakitNotify("error", `更新菜单失败:${e}`)
+                yakitNotify("error", `${t("Layout.HeardMenu.updateMenuFailed")}${e}`)
                 setTimeout(() => setLoading(false), 300)
             })
     })
@@ -363,11 +364,11 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                         source
                     )
                 } else {
-                    yakitNotify("error", "线上无此插件，无法下载。")
+                    yakitNotify("error", t("Layout.PublicMenu.pluginNotAvailableOnline"))
                 }
                 if (callback) setTimeout(() => callback(), 200)
             })
-            .catch((err) => yakitNotify("error", "下载菜单插件失败：" + err))
+            .catch((err) => yakitNotify("error", t("Layout.HeardMenu.downloadMenuPluginFailed") + err))
     })
     /** 插件菜单未下载提示框 */
     const onOpenDownModal = useMemoizedFn((menuItem: RouteToPageProps, source: string) => {
@@ -377,17 +378,18 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         const m = YakitModalConfirm({
             width: 420,
             closable: false,
-            title: "插件加载失败",
+            title: t("Layout.HeardMenu.pluginLoadFailed"),
             showConfirmLoading: true,
             type: "white",
             content: (
                 <div className={styles["modal-content"]}>
-                    {showName}菜单丢失，需点击重新下载，如仍无法下载，请前往插件商店查找
+                    {showName}
+                    {t("Layout.HeardMenu.menuMissing")}
                     <span className={styles["menuItem-yakScripName"]}>{menuItem.pluginName}</span>
-                    插件
+                    {t("Layout.HeardMenu.plugin")}
                 </div>
             ),
-            onOkText: "重新下载",
+            onOkText: t("YakitButton.redownload"),
             onOk: () => {
                 singleDownloadPlugin(menuItem, source, () => {
                     // 下载插件成功，自动销毁弹框
@@ -442,14 +444,15 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                                           : [
                                                 {
                                                     page: undefined,
-                                                    label: "常用插件",
+                                                    label: t("Layout.MenuPlugin.commonPlugins"),
                                                     menuName: "常用插件",
                                                     children: plugins
                                                 }
                                             ]
-                                  )
+                                  ),
+                                  t
                               )
-                            : routeToMenu(item.children || [])
+                            : routeToMenu(item.children || [], t)
 
                     return (
                         <YakitPopover
@@ -476,14 +479,14 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                                     [styles["active-menu-opt"]]: noExpandMenu === index
                                 })}
                             >
-                                {item.label}
+                                {item.labelUi ? t(item.labelUi) : item.label}
                             </div>
                         </YakitPopover>
                     )
                 })}
             </>
         )
-    }, [defaultMenu, pluginMenu, noExpandMenu])
+    }, [defaultMenu, pluginMenu, noExpandMenu, i18n.language])
 
     return (
         <div
@@ -505,7 +508,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                                         if (activeMenu !== index) setActiveMenu(index)
                                     }}
                                 >
-                                    {item.label}
+                                    {item.labelUi ? t(item.labelUi) : item.label}
                                 </div>
                             )
                         })}
@@ -552,7 +555,6 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                                 }}
                             />
                         )}
-
                         <div
                             className={
                                 defaultMenu[activeMenu]?.label !== "插件"
@@ -591,7 +593,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                                         setActiveTool("codec")
                                     }}
                                 >
-                                    Codec
+                                    {t("YakitRoute.Codec")}
                                 </div>
                                 <div
                                     className={classNames(styles["tab-bar"], {
@@ -602,7 +604,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                                         setActiveTool("dnslog")
                                     }}
                                 >
-                                    DNSLog
+                                    {t("YakitRoute.DNSLog")}
                                 </div>
                             </div>
                         </div>

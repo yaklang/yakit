@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+import React, {memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     EditRuleDrawerProps,
     QuerySyntaxFlowRuleGroupRequest,
@@ -11,40 +11,42 @@ import {
     UpdateSyntaxFlowRuleAndGroupRequest,
     RuleDebugAuditDetailProps,
     RuleDebugAuditListProps,
-    SyntaxflowsProgress,
-    ExportSyntaxFlowsRequest,
-    ImportSyntaxFlowsRequest
+    RuleUploadAndDownloadModalProps,
+    OnlineRuleGroupListProps,
+    AlertMessage,
+    SyntaxFlowRuleOnlineProgress,
+    RelatedHoleListProps
 } from "./RuleManagementType"
-import {
-    useDebounceEffect,
-    useDebounceFn,
-    useMap,
-    useMemoizedFn,
-    useSafeState,
-    useSize,
-    useUpdateEffect,
-    useVirtualList
-} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useMap, useMemoizedFn, useSize, useUpdateEffect, useVirtualList} from "ahooks"
 import {
     OutlineCloseIcon,
+    OutlineClouddownloadIcon,
     OutlineClouduploadIcon,
     OutlineExclamationcircleIcon,
+    OutlineExclamationIcon,
     OutlineLightbulbIcon,
     OutlineOpenIcon,
     OutlinePencilaltIcon,
     OutlinePluscircleIcon,
     OutlinePlusIcon,
     OutlineSearchIcon,
+    OutlineSelectorIcon,
     OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {SolidFolderopenIcon, SolidPlayIcon, SolidReplyIcon} from "@/assets/icon/solid"
-import {Form, InputRef, Modal, Tooltip} from "antd"
+import {
+    SolidCheckIcon,
+    SolidClouddownloadIcon,
+    SolidClouduploadIcon,
+    SolidFolderopenIcon,
+    SolidPlayIcon,
+    SolidReplyIcon
+} from "@/assets/icon/solid"
+import {Descriptions, Form, InputRef, Modal, Progress, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -52,25 +54,24 @@ import {
     grpcCreateLocalRule,
     grpcCreateLocalRuleGroup,
     grpcDeleteLocalRuleGroup,
+    grpcDownloadSyntaxFlowRule,
     grpcFetchLocalRuleGroupList,
     grpcFetchRulesForSameGroup,
+    grpcSyntaxFlowRuleToOnline,
     grpcUpdateLocalRule,
     grpcUpdateLocalRuleGroup,
-    grpcUpdateRuleToGroup
+    grpcUpdateRuleToGroup,
+    httpDeleteOnlineRuleGroup,
+    httpFetchOnlineRuleGroupList
 } from "./api"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {failed, info, yakitNotify} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {
-    DefaultRuleContent,
-    DefaultRuleGroupFilterPageMeta,
-    RuleImportExportModalSize,
-    RuleLanguageList
-} from "@/defaultConstants/RuleManagement"
+import {DefaultRuleContent, DefaultRuleGroupFilterPageMeta, RuleLanguageList} from "@/defaultConstants/RuleManagement"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
@@ -89,381 +90,452 @@ import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamTyp
 import {SyntaxFlowResult} from "../yakRunnerCodeScan/YakRunnerCodeScanType"
 import {AuditTree} from "../yakRunnerAuditCode/AuditCode/AuditCode"
 import {loadAuditFromYakURLRaw} from "../yakRunnerAuditCode/utils"
-import {AuditCodeDetailTopId} from "../yakRunnerCodeScan/AuditCodeDetailDrawer/defaultConstant"
 import {v4 as uuidv4} from "uuid"
 import {AuditEmiterYakUrlProps} from "../yakRunnerAuditCode/YakRunnerAuditCodeType"
-import {HoleBugDetail} from "../yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 import {RightAuditDetail} from "../yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
-import {SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
+import {RightBugAuditResult, SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
-import {openABSFileLocated} from "@/utils/openWebsite"
-import {ImportAndExportStatusInfo} from "@/components/YakitUploadModal/YakitUploadModal"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import NoPermissions from "@/assets/no_permissions.png"
+import {API} from "@/services/swagger/resposeType"
+import Login from "../Login"
+import {isEnpriTraceIRify} from "@/utils/envfile"
 
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+import {CodeScoreModal} from "../plugins/funcTemplate"
+import {MilkdownEditor} from "@/components/MilkdownEditor/MilkdownEditor"
+import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
+import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
 
+const severityOrder = ["critical", "high", "middle", "low", "info"]
+
+const AuditCodeDetailTopId = "top-message-code-scan"
+
 /** @name 规则组列表组件 */
-export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props) => {
-    const {isrefresh, onGroupChange} = props
+export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
+    React.forwardRef((props, ref) => {
+        const {isrefresh, onGroupChange, currentPageTabRouteKey, canUpload, userInfo, onRefreshOnlienRuleManagement} =
+            props
 
-    const [data, setData] = useState<SyntaxFlowGroup[]>([])
-    const groupLength = useMemo(() => {
-        return data.length
-    }, [data])
+        useImperativeHandle(ref, () => ({
+            handleReset
+        }))
 
-    const wrapperRef = useRef<HTMLDivElement>(null)
-    const bodyRef = useRef<HTMLDivElement>(null)
-    const [list] = useVirtualList(data, {
-        containerTarget: wrapperRef,
-        wrapperTarget: bodyRef,
-        itemHeight: 40,
-        overscan: 5
-    })
+        const [data, setData] = useState<SyntaxFlowGroup[]>([])
+        const groupLength = useMemo(() => {
+            return data.length
+        }, [data])
 
-    /** ---------- 获取数据 ---------- */
-    const [loading, setLoading] = useState<boolean>(false)
-    const fetchList = useMemoizedFn(() => {
-        if (loading) return
-
-        const request: QuerySyntaxFlowRuleGroupRequest = {Pagination: DefaultRuleGroupFilterPageMeta, Filter: {}}
-        if (search.current) {
-            request.Filter = {KeyWord: search.current || ""}
-        }
-
-        setLoading(true)
-        grpcFetchLocalRuleGroupList(request)
-            .then(({Group}) => {
-                setData(Group || [])
-            })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    setLoading(false)
-                }, 200)
-            })
-    })
-
-    useEffect(() => {
-        fetchList()
-    }, [isrefresh])
-
-    // 搜索
-    const search = useRef<string>("")
-    const handleSearch = useDebounceFn(
-        (val: string) => {
-            search.current = val
-            fetchList()
-        },
-        {wait: 200}
-    ).run
-
-    /** ---------- 多选逻辑 ---------- */
-    const [select, setSelect] = useState<SyntaxFlowGroup[]>([])
-    const selectGroups = useMemo(() => {
-        return select.map((item) => item.GroupName)
-    }, [select])
-    useUpdateEffect(() => {
-        // 这里的延时触发搜索由外层去控制
-        onGroupChange(select.map((item) => item.GroupName))
-    }, [select])
-    const handleSelect = useMemoizedFn((info: SyntaxFlowGroup) => {
-        const isExist = select.find((el) => el.GroupName === info.GroupName)
-        if (isExist) setSelect((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
-        else setSelect((arr) => [...arr, info])
-    })
-    const handleReset = useMemoizedFn(() => {
-        setSelect([])
-    })
-
-    // 更新数据
-    const handleUpdateData = useMemoizedFn(
-        (type: "modify" | "delete", info: SyntaxFlowGroup, newInfo?: SyntaxFlowGroup) => {
-            if (type === "modify") {
-                if (!newInfo) {
-                    yakitNotify("error", "修改本地规则组名称错误")
-                    return
-                }
-                setData((arr) => {
-                    return arr.map((ele) => {
-                        if (ele.GroupName === info.GroupName) return cloneDeep(newInfo)
-                        return ele
-                    })
-                })
-            }
-            if (type === "delete") {
-                setData((arr) => {
-                    return arr.filter((ele) => ele.GroupName !== info.GroupName)
-                })
-            }
-        }
-    )
-
-    /** ---------- 新建 ---------- */
-    const [activeAdd, setActiveAdd] = useState<boolean>(false)
-    const [groupName, setGroupName] = useState<string>("")
-    const addInputRef = useRef<InputRef>(null)
-    const handleAddGroup = useMemoizedFn(() => {
-        if (activeAdd) return
-        setGroupName("")
-        setActiveAdd(true)
-        setTimeout(() => {
-            // 输入框聚焦
-            addInputRef.current?.focus()
-        }, 10)
-    })
-    const handleAddGroupBlur = useMemoizedFn(() => {
-        if (!groupName) {
-            setActiveAdd(false)
-            setGroupName("")
-            return
-        }
-
-        grpcCreateLocalRuleGroup({GroupName: groupName})
-            .then(() => {
-                setData((arr) => [{GroupName: groupName, Count: 0, IsBuildIn: false}].concat([...arr]))
-                setTimeout(() => {
-                    setActiveAdd(false)
-                    setGroupName("")
-                }, 200)
-            })
-            .catch(() => {})
-    })
-
-    /** ---------- 编辑 ---------- */
-    const [editGroups, setEditGroup] = useState<string[]>([])
-    const editInputRef = useRef<InputRef>(null)
-    const [editInfo, setEditInfo] = useState<SyntaxFlowGroup>()
-    const [editName, setEditName] = useState<string>("")
-    const initEdit = useMemoizedFn(() => {
-        setEditInfo(undefined)
-        setEditName("")
-    })
-    const handleEdit = useMemoizedFn((info: SyntaxFlowGroup) => {
-        const {GroupName, IsBuildIn} = info
-        if (IsBuildIn) return
-        const isExist = editGroups.includes(GroupName)
-        if (isExist) return
-
-        setEditInfo(info)
-        setEditName(GroupName)
-        setTimeout(() => {
-            // 输入框聚焦
-            editInputRef.current?.focus()
-        }, 10)
-    })
-    const handleDoubleEditBlur = useMemoizedFn(() => {
-        if (!editInfo || editInfo.GroupName === editName) {
-            initEdit()
-            return
-        }
-
-        setEditGroup((arr) => [...arr, editInfo.GroupName])
-        grpcUpdateLocalRuleGroup({OldGroupName: editInfo.GroupName, NewGroupName: editName})
-            .then(() => {
-                // 改名后自动把选中里的该条去掉
-                setSelect((arr) => arr.filter((item) => item.GroupName !== editInfo.GroupName))
-                handleUpdateData("modify", editInfo, {...editInfo, GroupName: editName})
-                initEdit()
-            })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    setEditGroup((arr) => arr.filter((ele) => ele !== editInfo.GroupName))
-                }, 200)
-            })
-    })
-    /** ---------- 上传 ---------- */
-    // const [loadingUploadKeys, setLoadingUploadKeys] = useState<string[]>([])
-    // const handleUpload = useMemoizedFn((info: number) => {
-    //     const isExist = loadingUploadKeys.includes(`${info}`)
-    //     if (isExist) return
-
-    //     setLoadingUploadKeys((arr) => {
-    //         return [...arr, `${info}`]
-    //     })
-    //     grpcDeleteRuleGroup({Key: info})
-    //         .then(() => {
-    //             handleUpdateData("delete", info)
-    //         })
-    //         .catch(() => {})
-    //         .finally(() => {
-    //             setTimeout(() => {
-    //                 setLoadingUploadKeys((arr) => arr.filter((ele) => ele !== `${info}`))
-    //             }, 200)
-    //         })
-    // })
-    /** ---------- 删除 ---------- */
-    const [loadingDelKeys, setLoadingDelKeys] = useState<string[]>([])
-    const handleDelete = useMemoizedFn((info: SyntaxFlowGroup) => {
-        const {GroupName, IsBuildIn} = info
-        if (IsBuildIn) return
-        const isExist = loadingDelKeys.includes(GroupName)
-        if (isExist) return
-
-        setLoadingDelKeys((arr) => {
-            return [...arr, GroupName]
+        const wrapperRef = useRef<HTMLDivElement>(null)
+        const bodyRef = useRef<HTMLDivElement>(null)
+        const [list] = useVirtualList(data, {
+            containerTarget: wrapperRef,
+            wrapperTarget: bodyRef,
+            itemHeight: 40,
+            overscan: 5
         })
-        grpcDeleteLocalRuleGroup({Filter: {GroupNames: [GroupName]}})
-            .then(() => {
-                // 删除后自动把选中里的该条去掉
-                setSelect((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
-                handleUpdateData("delete", info)
+
+        /** ---------- 获取数据 ---------- */
+        const [loading, setLoading] = useState<boolean>(false)
+        const fetchList = useMemoizedFn(() => {
+            if (loading) return
+
+            const request: QuerySyntaxFlowRuleGroupRequest = {Pagination: DefaultRuleGroupFilterPageMeta, Filter: {}}
+            if (search.current) {
+                request.Filter = {KeyWord: search.current || ""}
+            }
+
+            setLoading(true)
+            grpcFetchLocalRuleGroupList(request)
+                .then(({Group}) => {
+                    setData(Group || [])
+                })
+                .catch(() => {})
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                })
+        })
+
+        useEffect(() => {
+            fetchList()
+        }, [isrefresh])
+
+        // 搜索
+        const search = useRef<string>("")
+        const handleSearch = useDebounceFn(
+            (val: string) => {
+                search.current = val
+                fetchList()
+            },
+            {wait: 200}
+        ).run
+
+        /** ---------- 多选逻辑 ---------- */
+        const [select, setSelect] = useState<SyntaxFlowGroup[]>([])
+        const selectGroups = useMemo(() => {
+            return select.map((item) => item.GroupName)
+        }, [select])
+        useUpdateEffect(() => {
+            // 这里的延时触发搜索由外层去控制
+            onGroupChange(select.map((item) => item.GroupName))
+        }, [select])
+        const handleSelect = useMemoizedFn((info: SyntaxFlowGroup) => {
+            const isExist = select.find((el) => el.GroupName === info.GroupName)
+            if (isExist) setSelect((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
+            else setSelect((arr) => [...arr, info])
+        })
+        const handleReset = useMemoizedFn(() => {
+            setSelect([])
+        })
+
+        // 更新数据
+        const handleUpdateData = useMemoizedFn(
+            (type: "modify" | "delete", info: SyntaxFlowGroup, newInfo?: SyntaxFlowGroup) => {
+                if (type === "modify") {
+                    if (!newInfo) {
+                        yakitNotify("error", "修改本地规则组名称错误")
+                        return
+                    }
+                    setData((arr) => {
+                        return arr.map((ele) => {
+                            if (ele.GroupName === info.GroupName) return cloneDeep(newInfo)
+                            return ele
+                        })
+                    })
+                }
+                if (type === "delete") {
+                    setData((arr) => {
+                        return arr.filter((ele) => ele.GroupName !== info.GroupName)
+                    })
+                }
+            }
+        )
+
+        /** ---------- 新建 ---------- */
+        const [activeAdd, setActiveAdd] = useState<boolean>(false)
+        const [groupName, setGroupName] = useState<string>("")
+        const addInputRef = useRef<InputRef>(null)
+        const handleAddGroup = useMemoizedFn(() => {
+            if (activeAdd) return
+            setGroupName("")
+            setActiveAdd(true)
+            setTimeout(() => {
+                // 输入框聚焦
+                addInputRef.current?.focus()
+            }, 10)
+        })
+        const handleAddGroupBlur = useMemoizedFn(() => {
+            if (!groupName) {
+                setActiveAdd(false)
+                setGroupName("")
+                return
+            }
+
+            grpcCreateLocalRuleGroup({GroupName: groupName})
+                .then(() => {
+                    setData((arr) => [{GroupName: groupName, Count: 0, IsBuildIn: false}].concat([...arr]))
+                    setTimeout(() => {
+                        setActiveAdd(false)
+                        setGroupName("")
+                    }, 200)
+                })
+                .catch(() => {})
+        })
+
+        /** ---------- 编辑 ---------- */
+        const [editGroups, setEditGroup] = useState<string[]>([])
+        const editInputRef = useRef<InputRef>(null)
+        const [editInfo, setEditInfo] = useState<SyntaxFlowGroup>()
+        const [editName, setEditName] = useState<string>("")
+        const initEdit = useMemoizedFn(() => {
+            setEditInfo(undefined)
+            setEditName("")
+        })
+        const handleEdit = useMemoizedFn((info: SyntaxFlowGroup) => {
+            const {GroupName, IsBuildIn} = info
+            if (IsBuildIn) return
+            const isExist = editGroups.includes(GroupName)
+            if (isExist) return
+
+            setEditInfo(info)
+            setEditName(GroupName)
+            setTimeout(() => {
+                // 输入框聚焦
+                editInputRef.current?.focus()
+            }, 10)
+        })
+        const handleDoubleEditBlur = useMemoizedFn(() => {
+            if (!editInfo || editInfo.GroupName === editName) {
+                initEdit()
+                return
+            }
+
+            setEditGroup((arr) => [...arr, editInfo.GroupName])
+            grpcUpdateLocalRuleGroup({OldGroupName: editInfo.GroupName, NewGroupName: editName})
+                .then(() => {
+                    // 改名后自动把选中里的该条去掉
+                    setSelect((arr) => arr.filter((item) => item.GroupName !== editInfo.GroupName))
+                    handleUpdateData("modify", editInfo, {...editInfo, GroupName: editName})
+                    initEdit()
+                })
+                .catch(() => {})
+                .finally(() => {
+                    setTimeout(() => {
+                        setEditGroup((arr) => arr.filter((ele) => ele !== editInfo.GroupName))
+                    }, 200)
+                })
+        })
+        /** ---------- 上传 ---------- */
+        const [uploadInfoVisible, setUploadInfoVisible] = useState<boolean>(false)
+        const [uploadPercentShow, setUploadPercentShow] = useState<boolean>(false)
+        const uploadTokenRef = useRef<string>(randomString(40))
+        const uploadContainerRef = useRef<string>(currentPageTabRouteKey)
+        const ruleGroupItemRef = useRef<SyntaxFlowGroup>()
+        const handleUpload = useMemoizedFn(() => {
+            if (ruleGroupItemRef.current) {
+                uploadTokenRef.current = randomString(40)
+                grpcSyntaxFlowRuleToOnline(
+                    {Filter: {GroupNames: [ruleGroupItemRef.current.GroupName]}, Token: userInfo.token},
+                    uploadTokenRef.current
+                ).then((res) => {
+                    setUploadInfoVisible(false)
+                    uploadContainerRef.current = currentPageTabRouteKey
+                    setUploadPercentShow(true)
+                })
+            }
+        })
+
+        /** ---------- 删除 ---------- */
+        const [loadingDelKeys, setLoadingDelKeys] = useState<string[]>([])
+        const handleDelete = useMemoizedFn((info: SyntaxFlowGroup) => {
+            const {GroupName, IsBuildIn} = info
+            if (IsBuildIn) return
+            const isExist = loadingDelKeys.includes(GroupName)
+            if (isExist) return
+
+            setLoadingDelKeys((arr) => {
+                return [...arr, GroupName]
             })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    setLoadingDelKeys((arr) => arr.filter((ele) => ele !== GroupName))
-                }, 200)
-            })
-    })
+            grpcDeleteLocalRuleGroup({Filter: {GroupNames: [GroupName]}})
+                .then(() => {
+                    // 删除后自动把选中里的该条去掉
+                    setSelect((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
+                    handleUpdateData("delete", info)
+                })
+                .catch(() => {})
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoadingDelKeys((arr) => arr.filter((ele) => ele !== GroupName))
+                    }, 200)
+                })
+        })
 
-    return (
-        <div className={styles["rule-group-list"]}>
-            <div className={styles["list-header"]}>
-                <div className={styles["title-body"]}>
-                    规则管理 <YakitRoundCornerTag>{groupLength}</YakitRoundCornerTag>
-                </div>
-                <div className={styles["header-extra"]}>
-                    <YakitButton type='text' onClick={handleReset}>
-                        重置
-                    </YakitButton>
-                    <YakitButton type='secondary2' icon={<OutlinePlusIcon />} onClick={handleAddGroup} />
-                </div>
-            </div>
-
-            <div className={styles["list-search-and-add"]}>
-                <YakitInput.Search size='large' allowClear={true} placeholder='请输入组名' onSearch={handleSearch} />
-
-                {/* 新建规则组输入框 */}
-                <YakitInput
-                    ref={addInputRef}
-                    wrapperClassName={activeAdd ? styles["show-add-input"] : styles["hidden-add-input"]}
-                    showCount
-                    maxLength={50}
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    onBlur={handleAddGroupBlur}
-                    onPressEnter={handleAddGroupBlur}
-                />
-            </div>
-
-            <div className={styles["list-container"]}>
-                <YakitSpin spinning={loading}>
-                    <div ref={wrapperRef} className={styles["list-body"]}>
-                        <div ref={bodyRef}>
-                            {list.map((item) => {
-                                const {data} = item
-                                const {GroupName: name, IsBuildIn} = data
-
-                                const isCheck = selectGroups.includes(name)
-                                const activeEdit = editInfo?.GroupName === name
-                                const isEditLoading = editGroups.includes(name)
-                                // const isUpload = loadingUploadKeys.includes(name)
-                                const isDelLoading = loadingDelKeys.includes(name)
-
-                                return (
-                                    <div
-                                        key={name}
-                                        className={classNames(styles["list-local-opt"], {
-                                            [styles["list-local-opt-active"]]: isCheck
-                                        })}
-                                        onClick={() => {
-                                            handleSelect(data)
-                                        }}
-                                    >
-                                        {activeEdit ? (
-                                            <YakitInput
-                                                ref={editInputRef}
-                                                allowClear={true}
-                                                showCount
-                                                maxLength={50}
-                                                value={editName}
-                                                onChange={(e) => {
-                                                    setEditName(e.target.value)
-                                                }}
-                                                onBlur={handleDoubleEditBlur}
-                                                onPressEnter={handleDoubleEditBlur}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                }}
-                                            />
-                                        ) : (
-                                            <>
-                                                <div className={styles["info-wrapper"]}>
-                                                    <YakitCheckbox
-                                                        checked={isCheck}
-                                                        onChange={() => {
-                                                            handleSelect(data)
-                                                        }}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
-                                                    <SolidFolderopenIcon />
-                                                    <span
-                                                        className={classNames(
-                                                            styles["title-style"],
-                                                            "yakit-content-single-ellipsis"
-                                                        )}
-                                                        title={data.GroupName}
-                                                    >
-                                                        {data.GroupName}
-                                                    </span>
-                                                </div>
-
-                                                <div className={styles["total-style"]}>{data.Count}</div>
-                                                {!IsBuildIn && (
-                                                    <div
-                                                        className={styles["btns-wrapper"]}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                        }}
-                                                    >
-                                                        <YakitButton
-                                                            type='secondary2'
-                                                            icon={<OutlinePencilaltIcon />}
-                                                            loading={isEditLoading}
-                                                            onClick={() => {
-                                                                handleEdit(data)
-                                                            }}
-                                                        />
-                                                        {/* <YakitButton
-                                                        type='secondary2'
-                                                        icon={<OutlineClouduploadIcon />}
-                                                        loading={isUpload}
-                                                        onClick={() => {
-                                                            handleUpload(data)
-                                                        }}
-                                                    /> */}
-                                                        <YakitButton
-                                                            type='secondary2'
-                                                            colors='danger'
-                                                            icon={<OutlineTrashIcon />}
-                                                            loading={isDelLoading}
-                                                            onClick={() => {
-                                                                handleDelete(data)
-                                                            }}
-                                                        />
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-                                    </div>
-                                )
-                            })}
-                        </div>
+        return (
+            <div className={styles["rule-group-list"]}>
+                <div className={styles["list-header"]}>
+                    <div className={styles["title-body"]}>
+                        规则管理 <YakitRoundCornerTag>{groupLength}</YakitRoundCornerTag>
                     </div>
-                </YakitSpin>
+                    <div className={styles["header-extra"]}>
+                        <YakitButton type='text' onClick={handleReset}>
+                            重置
+                        </YakitButton>
+                        <YakitButton type='secondary2' icon={<OutlinePlusIcon />} onClick={handleAddGroup} />
+                    </div>
+                </div>
+
+                <div className={styles["list-search-and-add"]}>
+                    <YakitInput.Search size='large' placeholder='请输入组名' onSearch={handleSearch} />
+
+                    {/* 新建规则组输入框 */}
+                    <YakitInput
+                        ref={addInputRef}
+                        allowClear
+                        wrapperClassName={activeAdd ? styles["show-add-input"] : styles["hidden-add-input"]}
+                        showCount
+                        maxLength={50}
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        onBlur={handleAddGroupBlur}
+                        onPressEnter={handleAddGroupBlur}
+                    />
+                </div>
+
+                <div className={styles["list-container"]}>
+                    <YakitSpin spinning={loading}>
+                        <div ref={wrapperRef} className={styles["list-body"]}>
+                            <div ref={bodyRef}>
+                                {list.map((item) => {
+                                    const {data} = item
+                                    const {GroupName: name, IsBuildIn} = data
+
+                                    const isCheck = selectGroups.includes(name)
+                                    const activeEdit = editInfo?.GroupName === name
+                                    const isEditLoading = editGroups.includes(name)
+                                    const isDelLoading = loadingDelKeys.includes(name)
+
+                                    return (
+                                        <div
+                                            key={name}
+                                            className={classNames(styles["list-local-opt"], {
+                                                [styles["list-local-opt-active"]]: isCheck
+                                            })}
+                                            onClick={() => {
+                                                handleSelect(data)
+                                            }}
+                                        >
+                                            {activeEdit ? (
+                                                <YakitInput
+                                                    ref={editInputRef}
+                                                    showCount
+                                                    maxLength={50}
+                                                    value={editName}
+                                                    allowClear
+                                                    onChange={(e) => {
+                                                        setEditName(e.target.value)
+                                                    }}
+                                                    onBlur={handleDoubleEditBlur}
+                                                    onPressEnter={handleDoubleEditBlur}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                    }}
+                                                />
+                                            ) : (
+                                                <>
+                                                    <div className={styles["info-wrapper"]}>
+                                                        <YakitCheckbox
+                                                            checked={isCheck}
+                                                            onChange={() => {
+                                                                handleSelect(data)
+                                                            }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                        <SolidFolderopenIcon />
+                                                        <span
+                                                            className={classNames(
+                                                                styles["title-style"],
+                                                                "yakit-content-single-ellipsis"
+                                                            )}
+                                                            title={data.GroupName}
+                                                        >
+                                                            {data.GroupName}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className={styles["total-style"]}>{data.Count}</div>
+                                                    {!IsBuildIn ? (
+                                                        <div
+                                                            className={styles["btns-wrapper"]}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                            }}
+                                                        >
+                                                            <YakitButton
+                                                                type='secondary2'
+                                                                icon={<OutlinePencilaltIcon />}
+                                                                loading={isEditLoading}
+                                                                onClick={() => {
+                                                                    handleEdit(data)
+                                                                }}
+                                                            />
+                                                            {canUpload && (
+                                                                <YakitButton
+                                                                    type='secondary2'
+                                                                    icon={<OutlineClouduploadIcon />}
+                                                                    onClick={() => {
+                                                                        ruleGroupItemRef.current = data
+                                                                        setUploadInfoVisible(true)
+                                                                    }}
+                                                                />
+                                                            )}
+                                                            <YakitButton
+                                                                type='secondary2'
+                                                                colors='danger'
+                                                                icon={<OutlineTrashIcon />}
+                                                                loading={isDelLoading}
+                                                                onClick={() => {
+                                                                    handleDelete(data)
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div
+                                                            className={styles["btns-wrapper"]}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                            }}
+                                                        >
+                                                            {canUpload && (
+                                                                <YakitButton
+                                                                    type='secondary2'
+                                                                    icon={<OutlineClouduploadIcon />}
+                                                                    onClick={() => {
+                                                                        ruleGroupItemRef.current = data
+                                                                        setUploadInfoVisible(true)
+                                                                    }}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </YakitSpin>
+
+                    {/* 上传 */}
+                    <YakitHint
+                        visible={uploadInfoVisible}
+                        title='上传提示'
+                        content='如果存在同名规则库，会直接覆盖'
+                        okButtonText='确认上传'
+                        mask={true}
+                        onOk={() => {
+                            handleUpload()
+                        }}
+                        onCancel={() => {
+                            ruleGroupItemRef.current = undefined
+                            setUploadInfoVisible(false)
+                        }}
+                    ></YakitHint>
+                    {uploadPercentShow && (
+                        <RuleUploadAndDownloadModal
+                            getContainer={
+                                document.getElementById(`main-operator-page-body-${uploadContainerRef.current}`) ||
+                                undefined
+                            }
+                            type='upload'
+                            apiKey='SyntaxFlowRuleToOnline'
+                            token={uploadTokenRef.current}
+                            onCancel={() => {
+                                setUploadPercentShow(false)
+                            }}
+                            onSuccess={() => {
+                                onRefreshOnlienRuleManagement()
+                            }}
+                        ></RuleUploadAndDownloadModal>
+                    )}
+                </div>
             </div>
-        </div>
-    )
-})
+        )
+    })
+)
 
 type FilterUndefinedAndEmptyArray<T> = {
     [K in keyof T]: T[K] extends undefined | [] ? never : T[K]
 }
 // 转换规则导出筛选参数数据
-const transformFilterData = (filter: RuleImportExportModalProps["filterData"]) => {
+export const transformFilterData = (filter: RuleImportExportModalProps["filterData"]) => {
     if (!filter.allCheck && Array.isArray(filter.RuleNames) && filter.RuleNames.length > 0) {
         return {RuleNames: filter.RuleNames}
     } else {
@@ -471,11 +543,13 @@ const transformFilterData = (filter: RuleImportExportModalProps["filterData"]) =
             Language: filter?.Language,
             GroupNames: filter?.GroupNames,
             Purpose: filter?.Purpose,
-            Keyword: filter?.Keyword
+            Keyword: filter?.Keyword,
+            FilterRuleKind: filter?.FilterRuleKind,
+            FilterLibRuleKind: filter?.FilterLibRuleKind
         }
     }
 }
-const cleanObject = <T extends Record<string, any>>(obj: T): Partial<FilterUndefinedAndEmptyArray<T>> =>
+export const cleanObject = <T extends Record<string, any>>(obj: T): Partial<FilterUndefinedAndEmptyArray<T>> =>
     Object.entries(obj).reduce<Partial<FilterUndefinedAndEmptyArray<T>>>((acc, [key, value]) => {
         if (value !== undefined && !(Array.isArray(value) && value.length === 0)) {
             acc[key as keyof T] = value as T[keyof T]
@@ -483,235 +557,10 @@ const cleanObject = <T extends Record<string, any>>(obj: T): Partial<FilterUndef
         return acc
     }, {})
 
-/** @name 规则导入导出弹窗 */
-export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo((props) => {
-    const {getContainer, extra, onCallback, filterData} = props
-
-    const [form] = Form.useForm()
-
-    const [token, setToken] = useSafeState("")
-    const [showProgressStream, setShowProgressStream] = useSafeState(false)
-    const [progressStream, setProgressStream] = useSafeState<SyntaxflowsProgress>({
-        Progress: 0,
-        Verbose: ""
-    })
-
-    // 规则导出路径
-    const exportPath = useRef<string>("")
-
-    const onSubmit = useMemoizedFn(() => {
-        const formValue = form.getFieldsValue()
-
-        const tragetFilter = cleanObject(transformFilterData(filterData))
-        if (extra.type === "export") {
-            if (!formValue.TargetPath) {
-                failed(`请填写文件夹名`)
-                return
-            }
-            const request: ExportSyntaxFlowsRequest = {
-                Filter: {...cloneDeep(tragetFilter), FilterRuleKind: "unBuildIn"},
-                TargetPath: formValue?.TargetPath || "",
-                Password: formValue?.Password || undefined
-            }
-            if (!request.TargetPath.endsWith(".zip")) {
-                request.TargetPath = request.TargetPath + ".zip"
-            }
-            ipcRenderer
-                .invoke("GenerateProjectsFilePath", request.TargetPath)
-                .then((res) => {
-                    exportPath.current = res
-                    ipcRenderer.invoke("ExportSyntaxFlows", request, token)
-                    setShowProgressStream(true)
-                })
-                .catch(() => {})
-        }
-
-        if (extra.type === "import") {
-            if (!formValue.InputPath) {
-                failed(`请输入本地插件路径`)
-                return
-            }
-            const params: ImportSyntaxFlowsRequest = {
-                InputPath: formValue.InputPath,
-                Password: formValue.Password || undefined
-            }
-            ipcRenderer.invoke("ImportSyntaxFlows", params, token)
-            setShowProgressStream(true)
-        }
-    })
-
-    const onCancelStream = useMemoizedFn(() => {
-        if (!token) return
-
-        if (extra.type === "export") {
-            ipcRenderer.invoke("cancel-ExportSyntaxFlows", token)
-        }
-        if (extra.type === "import") {
-            ipcRenderer.invoke("cancel-ImportSyntaxFlows", token)
-        }
-    })
-    const onSuccessStream = useMemoizedFn((isSuccess: boolean) => {
-        if (isSuccess) {
-            if (extra.type === "export") {
-                exportPath.current && openABSFileLocated(exportPath.current)
-            }
-            onCallback(true)
-        } else {
-            exportPath.current = ""
-        }
-    })
-
-    useEffect(() => {
-        if (!token) {
-            return
-        }
-        const typeTitle = extra.type === "export" ? "ExportSyntaxFlows" : "ImportSyntaxFlows"
-        let success = true
-        ipcRenderer.on(`${token}-data`, async (_, data: SyntaxflowsProgress) => {
-            setProgressStream(data)
-        })
-        ipcRenderer.on(`${token}-error`, (_, error) => {
-            success = false
-            failed(`[${typeTitle}] error:  ${error}`)
-        })
-        ipcRenderer.on(`${token}-end`, () => {
-            info(`[${typeTitle}] finished`)
-            setShowProgressStream(false)
-            onSuccessStream(success)
-            success = true
-        })
-        return () => {
-            if (token) {
-                onCancelStream()
-                ipcRenderer.removeAllListeners(`${token}-data`)
-                ipcRenderer.removeAllListeners(`${token}-error`)
-                ipcRenderer.removeAllListeners(`${token}-end`)
-            }
-        }
-    }, [token])
-
-    const onCancel = useMemoizedFn(() => {
-        onCallback(false)
-    })
-
-    // modal header 描述文字
-    const exportDescribeMemoizedFn = useMemoizedFn((type) => {
-        switch (type) {
-            case "export":
-                return (
-                    <div className={styles["export-hint"]}>
-                        远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
-                    </div>
-                )
-            case "import":
-                return (
-                    <div className={styles["import-hint"]}>
-                        导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。如果确实需要使用外部资源，建议优先选择官方发布的安全版本，或自行编写可控的数据源。同时，请保持系统和软件的最新版本，及时修复已知漏洞，做好日常安全防护。
-                    </div>
-                )
-
-            default:
-                break
-        }
-    })
-
-    // 导入 / 导出 item 节点
-    const exportItemMemoizedFn = useMemoizedFn((type) => {
-        switch (type) {
-            case "export":
-                return (
-                    <Form.Item label={"文件名"} rules={[{required: true, message: "请填写文件名"}]} name={"TargetPath"}>
-                        <YakitInput />
-                    </Form.Item>
-                )
-            case "import":
-                return (
-                    <YakitFormDragger
-                        formItemProps={{
-                            name: "InputPath",
-                            label: "本地规则路径",
-                            rules: [{required: true, message: "请输入本地规则路径"}]
-                        }}
-                        multiple={false}
-                        selectType='file'
-                        fileExtensionIsExist={false}
-                    />
-                )
-
-            default:
-                break
-        }
-    })
-
-    useEffect(() => {
-        if (extra.hint) {
-            setToken(randomString(40))
-            form.resetFields()
-        }
-        // 关闭时重置所有数据
-        return () => {
-            if (extra.hint) {
-                setShowProgressStream(false)
-                setProgressStream({Progress: 0, Verbose: ""})
-                exportPath.current = ""
-            }
-        }
-    }, [extra.hint])
-
-    return (
-        <>
-            <YakitModal
-                getContainer={getContainer}
-                type='white'
-                width={RuleImportExportModalSize[extra.type].width}
-                centered={true}
-                keyboard={false}
-                maskClosable={false}
-                visible={extra.hint}
-                title={extra.title}
-                bodyStyle={{padding: 0}}
-                onOk={onSubmit}
-                onCancel={onCancel}
-                footerStyle={{justifyContent: "flex-end"}}
-                footer={extra.type === "import" ? <YakitButton onClick={onSubmit}>导入</YakitButton> : undefined}
-            >
-                {!showProgressStream ? (
-                    <div className={styles["rule-import-export-modal"]}>
-                        {exportDescribeMemoizedFn(extra.type)}
-                        <Form
-                            form={form}
-                            layout={"horizontal"}
-                            labelCol={{span: RuleImportExportModalSize[extra.type].labelCol}}
-                            wrapperCol={{span: RuleImportExportModalSize[extra.type].wrapperCol}}
-                            onSubmitCapture={(e) => {
-                                e.preventDefault()
-                            }}
-                        >
-                            {exportItemMemoizedFn(extra.type)}
-                            <Form.Item label={"密码"} name={"Password"}>
-                                <YakitInput />
-                            </Form.Item>
-                        </Form>
-                    </div>
-                ) : (
-                    <div style={{padding: "0 16px"}}>
-                        <ImportAndExportStatusInfo
-                            title='导出中'
-                            showDownloadDetail={false}
-                            streamData={progressStream || {Progress: 0}}
-                            logListInfo={[]}
-                        />
-                    </div>
-                )}
-            </YakitModal>
-        </>
-    )
-})
-
 /** @name 新建|编辑规则抽屉 */
 export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     const {getContainer, info, visible, onCallback} = props
-
+    const alertMsgRef = useRef<{[key: string]: AlertMessage}>(info?.AlertMsg || {})
     const getContainerSize = useSize(getContainer)
     // 抽屉展示高度
     const showHeight = useMemo(() => {
@@ -806,9 +655,10 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 // 重置基础信息
                 setExpand(true)
                 setGroups([])
-                setActiveTab("code")
+                setActiveTab(undefined)
                 setProject([])
                 setContent(DefaultRuleContent)
+
                 if (form) form.resetFields()
                 if (debugForm) debugForm.resetFields()
                 // 重置执行结果数据
@@ -862,6 +712,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     const onSubmitApi = useMemoizedFn((request: SyntaxFlowRuleInput) => {
         setLoading(true)
         const api = isEdit ? grpcUpdateLocalRule : grpcCreateLocalRule
+        console.log("提交数据", request)
         api({SyntaxFlowInput: request})
             .then(({Rule}) => {
                 onCallback(true, Rule)
@@ -883,7 +734,8 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             Content: content || "",
             Language: data.Language || "",
             GroupNames: Array.isArray(data.GroupNames) ? data.GroupNames : [],
-            Description: data.Description || ""
+            Description: data.Description || "",
+            AlertMsg: alertMsgRef.current
         }
         return info
     })
@@ -908,13 +760,18 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 if (!expand) handleSetExpand()
             })
     })
+
     /** ---------- 基础信息配置 End ---------- */
 
     // 规则源码
     const [content, setContent] = useState<string>(DefaultRuleContent)
 
     /** ---------- 规则代码调试 Start ---------- */
-    const [activeTab, setActiveTab] = useState<"code" | "debug">("code")
+    const [activeTab, setActiveTab] = useState<"code" | "debug" | "hole">()
+
+    useEffect(() => {
+        visible && setActiveTab(info && Object.keys(info?.AlertMsg || {}).length > 0 ? "hole" : "code")
+    }, [info, visible])
 
     const [debugForm] = Form.useForm()
     // 项目列表
@@ -1030,6 +887,17 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
     /** ---------- 审计详情 End ---------- */
 
+    /** ---------- 代码评分 Start ---------- */
+    const [scoreHint, setScoreHint] = useState<boolean>(false)
+    const handleOpenScoreHint = useMemoizedFn(() => {
+        if (scoreHint) return
+        setScoreHint(true)
+    })
+    const handleScoreHintCallback = useMemoizedFn((value: boolean) => {
+        if (!value) setScoreHint(false)
+    })
+    /** ---------- 代码评分 End ---------- */
+
     const getTabsState = useMemo(() => {
         const tabsState: HoldGRPCStreamProps.InfoTab[] = [
             {tabName: "漏洞与风险", type: "ssa-risk"},
@@ -1065,235 +933,282 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
         return `${isEdit ? "编辑" : "新建"}规则`
     }, [isEdit, auditDetailShow])
 
+    const getOptions = useMemo(() => {
+        if (isEdit && Object.keys(info?.AlertMsg || {}).length > 0) {
+            return [
+                {value: "hole", label: "相关漏洞"},
+                {value: "code", label: "规则内容"},
+                {value: "debug", label: "执行结果"}
+            ]
+        }
+        return [
+            {value: "code", label: "规则内容"},
+            {value: "debug", label: "执行结果"}
+        ]
+    }, [isEdit, info])
+
     return (
-        <YakitDrawer
-            getContainer={getContainer}
-            placement='bottom'
-            mask={false}
-            closable={false}
-            keyboard={false}
-            className={styles["edit-rule-drawer"]}
-            bodyStyle={{padding: 0}}
-            height={showHeight}
-            title={drawerTitle}
-            extra={
-                <div className={styles["drawer-extra"]}>
-                    {!isBuildInRule && (
-                        <>
-                            <YakitButton loading={loading} onClick={handleFormSubmit}>
-                                保存
-                            </YakitButton>
-                            <div className={styles["divider-style"]}></div>
-                        </>
-                    )}
-                    <YakitButton type='text2' icon={<OutlineXIcon />} onClick={handleCancel} />
-                </div>
-            }
-            visible={visible}
-        >
-            {/* 审计详情 */}
-            <div className={classNames(styles["drawer-body"], {[styles["drawer-hidden"]]: !auditDetailShow})}>
-                <React.Suspense fallback={<YakitSpin spinning={true} />}>
-                    {auditDetailShow && auditInfo.current && (
-                        <RuleDebugAuditDetail auditData={auditData} info={auditInfo.current} />
-                    )}
-                </React.Suspense>
-            </div>
-
-            <div className={classNames(styles["drawer-body"], {[styles["drawer-hidden"]]: auditDetailShow})}>
-                {/* 基础信息 */}
-                <div
-                    className={classNames(styles["rule-info"], {
-                        [styles["rule-info-show"]]: expand,
-                        [styles["rule-info-hidden"]]: !expand
-                    })}
-                >
-                    <div className={styles["info-header"]}>
-                        <div className={styles["header-title"]}>基础信息</div>
-                        <Tooltip title='收起基础信息' visible={infoTooltipShow} onVisibleChange={setInfoTooltipShow}>
-                            <YakitButton type='text2' icon={<OutlineCloseIcon />} onClick={handleSetExpand} />
-                        </Tooltip>
+        <>
+            <YakitDrawer
+                getContainer={getContainer}
+                placement='bottom'
+                mask={false}
+                closable={false}
+                keyboard={false}
+                className={styles["edit-rule-drawer"]}
+                bodyStyle={{padding: 0}}
+                height={showHeight}
+                title={drawerTitle}
+                extra={
+                    <div className={styles["drawer-extra"]}>
+                        <YakitButton loading={loading} onClick={handleFormSubmit}>
+                            保存
+                        </YakitButton>
+                        <div className={styles["divider-style"]}></div>
+                        <YakitButton type='text2' icon={<OutlineXIcon />} onClick={handleCancel} />
                     </div>
-
-                    <div className={styles["info-setting"]}>
-                        <Form layout='vertical' form={form} className={styles["info-setting-form"]}>
-                            <Form.Item
-                                label={
-                                    <>
-                                        规则名<span className='form-item-required'>*</span>:
-                                    </>
-                                }
-                                name={"RuleName"}
-                                rules={[{required: true, message: "规则名必填"}]}
-                            >
-                                <YakitInput
-                                    maxLength={100}
-                                    placeholder='请输入规则名'
-                                    disabled={isEdit || isBuildInRule}
-                                />
-                            </Form.Item>
-
-                            <Form.Item
-                                label={
-                                    <>
-                                        语言<span className='form-item-required'>*</span>:
-                                    </>
-                                }
-                                name={"Language"}
-                                rules={[{required: true, message: "语言必填"}]}
-                            >
-                                <YakitSelect
-                                    allowClear
-                                    size='large'
-                                    disabled={isBuildInRule}
-                                    options={RuleLanguageList}
-                                />
-                            </Form.Item>
-
-                            <Form.Item label={"所属分组"} name={"GroupNames"}>
-                                <YakitSelect
-                                    mode='tags'
-                                    placeholder='请选择分组'
-                                    allowClear={true}
-                                    disabled={isBuildInRule}
-                                    options={groups}
-                                    searchValue={groupSearch}
-                                    onSearch={handleGroupSearchChange}
-                                    onChange={() => {
-                                        setGroupSearch("")
-                                    }}
-                                />
-                            </Form.Item>
-
-                            <Form.Item label={"描述"} name={"Description"}>
-                                <YakitInput.TextArea
-                                    disabled={isBuildInRule}
-                                    isShowResize={false}
-                                    maxLength={200}
-                                    showCount={true}
-                                    autoSize={{minRows: 2, maxRows: 4}}
-                                />
-                            </Form.Item>
-                        </Form>
-                    </div>
+                }
+                visible={visible}
+            >
+                {/* 审计详情 */}
+                <div className={classNames(styles["drawer-body"], {[styles["drawer-hidden"]]: !auditDetailShow})}>
+                    <React.Suspense fallback={<YakitSpin spinning={true} />}>
+                        {auditDetailShow && auditInfo.current && (
+                            <RuleDebugAuditDetail auditData={auditData} info={auditInfo.current} />
+                        )}
+                    </React.Suspense>
                 </div>
 
-                <div className={styles["rule-code"]}>
-                    <div className={styles["code-header"]}>
-                        <div className={styles["header-tab"]}>
-                            {!expand && (
-                                <Tooltip
-                                    placement='topLeft'
-                                    title='展开基础信息'
-                                    visible={codeTooltipShow}
-                                    onVisibleChange={setCodeTooltipShow}
+                <div className={classNames(styles["drawer-body"], {[styles["drawer-hidden"]]: auditDetailShow})}>
+                    {/* 基础信息 */}
+                    <div
+                        className={classNames(styles["rule-info"], {
+                            [styles["rule-info-show"]]: expand,
+                            [styles["rule-info-hidden"]]: !expand
+                        })}
+                    >
+                        <div className={styles["info-header"]}>
+                            <div className={styles["header-title"]}>基础信息</div>
+                            <Tooltip
+                                title='收起基础信息'
+                                visible={infoTooltipShow}
+                                onVisibleChange={setInfoTooltipShow}
+                            >
+                                <YakitButton type='text2' icon={<OutlineCloseIcon />} onClick={handleSetExpand} />
+                            </Tooltip>
+                        </div>
+
+                        <div className={styles["info-setting"]}>
+                            <Form layout='vertical' form={form} className={styles["info-setting-form"]}>
+                                <Form.Item
+                                    label={
+                                        <>
+                                            规则名<span className='form-item-required'>*</span>:
+                                        </>
+                                    }
+                                    name={"RuleName"}
+                                    rules={[{required: true, message: "规则名必填"}]}
                                 >
-                                    <YakitButton type='text2' icon={<OutlineOpenIcon />} onClick={handleSetExpand} />
-                                </Tooltip>
-                            )}
+                                    <YakitInput
+                                        maxLength={100}
+                                        placeholder='请输入规则名'
+                                        disabled={isEdit || isBuildInRule}
+                                    />
+                                </Form.Item>
 
-                            <YakitRadioButtons
-                                buttonStyle='solid'
-                                value={activeTab}
-                                options={[
-                                    {value: "code", label: "规则内容"},
-                                    {value: "debug", label: "执行结果"}
-                                ]}
-                                onChange={(e) => setActiveTab(e.target.value)}
-                            />
-                        </div>
+                                <Form.Item
+                                    label={
+                                        <>
+                                            语言<span className='form-item-required'>*</span>:
+                                        </>
+                                    }
+                                    name={"Language"}
+                                    rules={[{required: true, message: "语言必填"}]}
+                                >
+                                    <YakitSelect
+                                        allowClear
+                                        size='large'
+                                        disabled={isBuildInRule}
+                                        options={RuleLanguageList}
+                                    />
+                                </Form.Item>
 
-                        <div className={styles["header-extra"]}>
-                            {!!progress && <PluginExecuteProgress percent={progress} name='执行进度' />}
-                            {isExecuting ? (
-                                <div className={styles["extra-btns"]}>
-                                    <YakitButton danger onClick={handleStop}>
-                                        停止
-                                    </YakitButton>
-                                </div>
-                            ) : (
-                                <YakitButton icon={<SolidPlayIcon />} onClick={handleExecute}>
-                                    执行
-                                </YakitButton>
-                            )}
+                                <Form.Item label={"所属分组"} name={"GroupNames"}>
+                                    <YakitSelect
+                                        mode='tags'
+                                        placeholder='请选择分组'
+                                        allowClear={true}
+                                        disabled={isBuildInRule}
+                                        options={groups}
+                                        searchValue={groupSearch}
+                                        onSearch={handleGroupSearchChange}
+                                        onChange={() => {
+                                            setGroupSearch("")
+                                        }}
+                                    />
+                                </Form.Item>
+
+                                <Form.Item label={"描述"} name={"Description"}>
+                                    <YakitInput.TextArea
+                                        disabled={isBuildInRule}
+                                        isShowResize={false}
+                                        maxLength={200}
+                                        showCount={true}
+                                        autoSize={{minRows: 2, maxRows: 4}}
+                                    />
+                                </Form.Item>
+                            </Form>
                         </div>
                     </div>
 
-                    <div className={styles["code-body"]}>
-                        <div className={styles["code-tab"]}>
-                            <div
-                                tabIndex={activeTab === "code" ? 1 : -1}
-                                className={classNames(styles["tab-pane-show"], {
-                                    [styles["tab-pane-hidden"]]: activeTab !== "code"
-                                })}
-                            >
-                                <div className={styles["tab-pane-code"]}>
-                                    <div className={styles["code-editor"]}>
-                                        <YakitEditor
-                                            readOnly={isBuildInRule}
-                                            type={SyntaxFlowMonacoSpec}
-                                            value={content}
-                                            setValue={setContent}
+                    <div className={styles["rule-code"]}>
+                        <div className={styles["code-header"]}>
+                            <div className={styles["header-tab"]}>
+                                {!expand && (
+                                    <Tooltip
+                                        placement='topLeft'
+                                        title='展开基础信息'
+                                        visible={codeTooltipShow}
+                                        onVisibleChange={setCodeTooltipShow}
+                                    >
+                                        <YakitButton
+                                            type='text2'
+                                            icon={<OutlineOpenIcon />}
+                                            onClick={handleSetExpand}
                                         />
-                                    </div>
-                                </div>
+                                    </Tooltip>
+                                )}
+
+                                <YakitRadioButtons
+                                    buttonStyle='solid'
+                                    value={activeTab}
+                                    options={getOptions}
+                                    onChange={(e) => setActiveTab(e.target.value)}
+                                />
                             </div>
 
-                            <div
-                                tabIndex={activeTab === "debug" ? 1 : -1}
-                                className={classNames(styles["tab-pane-show"], styles["tab-pane-execute"], {
-                                    [styles["tab-pane-hidden"]]: activeTab !== "debug"
-                                })}
-                            >
-                                {isShowResult ? (
-                                    <PluginExecuteResult
-                                        streamInfo={{
-                                            progressState: [],
-                                            cardState: streamInfo.cardState,
-                                            tabsState: getTabsState,
-                                            logState: streamInfo.logState,
-                                            tabsInfoState: {},
-                                            riskState: [],
-                                            rulesState: []
-                                        }}
-                                        runtimeId={runtimeId}
-                                        loading={isExecuting}
-                                        defaultActiveKey={undefined}
-                                    />
-                                ) : (
-                                    <div className={styles["tab-pane-empty"]}>
-                                        <YakitEmpty style={{marginTop: 60}} description={"点击【执行】以开始"} />
+                            <div className={styles["header-extra"]}>
+                                {!!progress && <PluginExecuteProgress percent={progress} name='执行进度' />}
+                                {isExecuting ? (
+                                    <div className={styles["extra-btns"]}>
+                                        <YakitButton danger onClick={handleStop}>
+                                            停止
+                                        </YakitButton>
                                     </div>
+                                ) : (
+                                    <YakitButton icon={<SolidPlayIcon />} onClick={handleExecute}>
+                                        执行
+                                    </YakitButton>
                                 )}
                             </div>
                         </div>
 
-                        <div className={styles["code-params"]}>
-                            <div className={styles["params-header"]}>
-                                <span className={styles["header-title"]}>参数配置</span>
+                        <div className={styles["code-body"]}>
+                            <div className={styles["code-tab"]}>
+                                <div
+                                    tabIndex={activeTab === "hole" ? 1 : -1}
+                                    className={classNames(styles["tab-pane-show"], {
+                                        [styles["tab-pane-hidden"]]: activeTab !== "hole"
+                                    })}
+                                >
+                                    <RelatedHoleList info={info} visible={visible} alertMsgRef={alertMsgRef} />
+                                </div>
+
+                                <div
+                                    tabIndex={activeTab === "code" ? 1 : -1}
+                                    className={classNames(styles["tab-pane-show"], {
+                                        [styles["tab-pane-hidden"]]: activeTab !== "code"
+                                    })}
+                                >
+                                    <div className={styles["tab-pane-code"]}>
+                                        <div className={styles["code-editor"]}>
+                                            <YakitEditor
+                                                readOnly={isBuildInRule}
+                                                type={SyntaxFlowMonacoSpec}
+                                                value={content}
+                                                setValue={setContent}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    tabIndex={activeTab === "debug" ? 1 : -1}
+                                    className={classNames(styles["tab-pane-show"], styles["tab-pane-execute"], {
+                                        [styles["tab-pane-hidden"]]: activeTab !== "debug"
+                                    })}
+                                >
+                                    {isShowResult ? (
+                                        <PluginExecuteResult
+                                            streamInfo={{
+                                                progressState: [],
+                                                cardState: streamInfo.cardState,
+                                                tabsState: getTabsState,
+                                                logState: streamInfo.logState,
+                                                tabsInfoState: {},
+                                                riskState: [],
+                                                rulesState: []
+                                            }}
+                                            runtimeId={runtimeId}
+                                            loading={isExecuting}
+                                            defaultActiveKey={undefined}
+                                        />
+                                    ) : (
+                                        <div className={styles["tab-pane-empty"]}>
+                                            <YakitEmpty style={{marginTop: 60}} description={"点击【执行】以开始"} />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
-                            <div className={styles["params-container"]}>
-                                <Form form={debugForm} className={styles["params-form"]}>
-                                    <Form.Item label={"项目名称"} name={"project"}>
-                                        <YakitSelect
-                                            mode='multiple'
-                                            showSearch={true}
-                                            placeholder='请选择项目后调试'
-                                            options={project}
-                                            defaultActiveFirstOption={false}
-                                            filterOption={false}
-                                            notFoundContent='暂无数据'
-                                            onSearch={handleSearchProject}
-                                        />
-                                    </Form.Item>
-                                </Form>
+                            <div className={styles["code-params"]}>
+                                <div className={styles["params-header"]}>
+                                    <span className={styles["header-title"]}>参数配置</span>
+                                    <YakitButton type='text' onClick={handleOpenScoreHint}>
+                                        自动检测
+                                    </YakitButton>
+                                </div>
+
+                                <div className={styles["params-container"]}>
+                                    <Form form={debugForm} className={styles["params-form"]}>
+                                        <Form.Item label={"项目名称"} name={"project"}>
+                                            <YakitSelect
+                                                mode='multiple'
+                                                showSearch={true}
+                                                placeholder='请选择项目后调试'
+                                                options={project}
+                                                defaultActiveFirstOption={false}
+                                                filterOption={false}
+                                                notFoundContent='暂无数据'
+                                                onSearch={handleSearchProject}
+                                            />
+                                        </Form.Item>
+                                    </Form>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </YakitDrawer>
+            </YakitDrawer>
+            {/* 代码评分弹窗 */}
+            <CodeScoreModal
+                type={SyntaxFlowMonacoSpec}
+                code={content || ""}
+                successHint=' '
+                failedHint=' '
+                specialHint=' '
+                hiddenSpecialBtn={true}
+                visible={scoreHint}
+                onCancel={handleScoreHintCallback}
+                title='SyntaxFlow规则检测'
+                scoreHintData={[
+                    "基础编译测试,判断SyntaxFlow规则的语法是否符合规范,是否存在不正确语法导致编译不通过",
+                    "检查规则中的描述部分是否包含desc和solution字段",
+                    "检查规则中是否包含alert, 规则应该包含alert语句产生检测结果",
+                    "检查规则中的测试用例是否能通过规则检测,SyntaxFlow规则中应该包含正反测试用例,对于正向漏洞代码SyntaxFlow规则应该能正常产生alert,而对于反向测试不应该产生alert(误报)"
+                ]}
+            />
+        </>
     )
 })
 
@@ -1592,7 +1507,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
                                 maxLength={50}
                                 prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                                 value={search}
-                                allowClear={true}
+                                allowClear
                                 onChange={(e) => {
                                     const val = e.target.value.trim()
                                     setSearch(val)
@@ -1995,17 +1910,37 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
     const [isShowAuditDetail, setShowAuditDetail] = useState<boolean>(false)
 
     const bugHash = useRef<string>()
-    const onJump = useMemoizedFn((node: AuditNodeProps) => {
+    const [ssaRisksinfo, setSSARisksInfo] = useState<SSARisk>()
+
+    const getInfoFun = useMemoizedFn((hash) => {
+        ipcRenderer
+            .invoke("QuerySSARisks", {
+                Filter: {
+                    Hash: [hash]
+                }
+            })
+            .then((res: QuerySSARisksResponse) => {
+                const {Data} = res
+                if (Data.length > 0) {
+                    setSSARisksInfo(Data[0])
+                }
+            })
+            .catch((err) => {})
+    })
+
+    const onJump = useMemoizedFn(async (node: AuditNodeProps) => {
         try {
             const arr = node.Extra.filter((item) => item.Key === "risk_hash")
             // 预留打开BUG详情
             if (arr.length > 0 && node.isBug) {
                 const hash = arr[0]?.Value
+                getInfoFun(hash)
                 bugHash.current = hash
                 setShowAuditDetail(true)
             }
             if (!node.isBug) {
                 bugHash.current = undefined
+                setSSARisksInfo(undefined)
             }
             if (node.ResourceType === "value") {
                 if (!currentInfo.current) return
@@ -2027,6 +1962,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
         setAuditRightParams(undefined)
         setShowAuditDetail(false)
         bugHash.current = undefined
+        setSSARisksInfo(undefined)
     })
     /** ---------- 审计详情信息 End ---------- */
 
@@ -2072,7 +2008,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
                 {isShowAuditDetail ? (
                     <>
                         {bugHash.current ? (
-                            <HoleBugDetail bugHash={bugHash.current} />
+                            <>{ssaRisksinfo && <RightBugAuditResult info={ssaRisksinfo} columnSize={1} />}</>
                         ) : (
                             <RightAuditDetail
                                 auditRightParams={auditRightParams}
@@ -2168,6 +2104,559 @@ const RuleDebugAuditList: React.FC<RuleDebugAuditListProps> = memo((props) => {
                         )
                     })}
                 </div>
+            </div>
+        </div>
+    )
+})
+
+/** @name 规则上传下载进度弹窗 */
+export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProps> = memo((props) => {
+    const {getContainer, onCancel, type, apiKey, token, onSuccess} = props
+
+    const timeRef = useRef<any>(null)
+    const streamRef = useRef<SyntaxFlowRuleOnlineProgress[]>([])
+    const [stream, setStream] = useState<SyntaxFlowRuleOnlineProgress[]>([])
+
+    const onStreamCancel = useMemoizedFn(() => {
+        ipcRenderer.invoke(`cancel-${apiKey}`, token)
+        ipcRenderer.removeAllListeners(`${token}-data`)
+        ipcRenderer.removeAllListeners(`${token}-error`)
+        ipcRenderer.removeAllListeners(`${token}-end`)
+        clearInterval(timeRef.current)
+
+        onCancel()
+    })
+
+    useEffect(() => {
+        const updateStream = () => {
+            const data = streamRef.current.slice()
+            setStream(data)
+        }
+        timeRef.current = setInterval(updateStream, 300)
+        ipcRenderer.on(`${token}-data`, async (e, data: SyntaxFlowRuleOnlineProgress) => {
+            streamRef.current.unshift(data)
+        })
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            yakitNotify("error", `error: ${error}`)
+        })
+        return () => {
+            onStreamCancel()
+        }
+    }, [token])
+
+    useEffect(() => {
+        const data = stream[0] || {}
+        const isError = stream.some((item) => item.MessageType === "error")
+        if (data.Progress === 1 && data.MessageType === "success" && !isError) {
+            setTimeout(() => {
+                yakitNotify("success", data.Message)
+                onStreamCancel()
+                onSuccess()
+            }, 300)
+        }
+    }, [JSON.stringify(stream)])
+
+    return (
+        <YakitModal
+            className={styles["RuleUploadAndDownloadModal"]}
+            getContainer={getContainer}
+            visible={true}
+            width={650}
+            type='white'
+            closable={false}
+            footerStyle={{justifyContent: "flex-end"}}
+            footer={
+                <YakitButton type={"outline2"} onClick={onStreamCancel}>
+                    {stream[0]?.Progress === 1 ? "完成" : "取消"}
+                </YakitButton>
+            }
+        >
+            <div className={styles["progressTitle"]}>
+                {type === "upload" ? (
+                    <SolidClouduploadIcon style={{color: "var(--yakit-warning-5)"}} />
+                ) : (
+                    <SolidClouddownloadIcon style={{color: "var(--yakit-warning-5)"}} />
+                )}
+                <span className={styles["text"]}>规则{type === "upload" ? "上传" : "下载"}</span>
+            </div>
+            <Progress
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
+                percent={Math.trunc(stream[0]?.Progress * 100)}
+                format={(percent) => `进度 ${percent}%`}
+            />
+            <div className={styles["log-info"]}>
+                {stream.map((item, index) => (
+                    <div
+                        key={index}
+                        className={styles["log-item"]}
+                        style={{color: item.MessageType === "error" ? "#f00" : "#85899e"}}
+                    >
+                        {item.Message}
+                    </div>
+                ))}
+            </div>
+        </YakitModal>
+    )
+})
+
+export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
+    React.forwardRef((props, ref) => {
+        const {isrefresh, onGroupChange, currentPageTabRouteKey, canDel, userInfo, onRefreshRuleManagement} = props
+
+        useImperativeHandle(ref, () => ({
+            handleReset
+        }))
+
+        const [loginShow, setLoginShow] = useState<boolean>(false)
+        const onLogin = useMemoizedFn(() => {
+            setLoginShow(true)
+        })
+        const onLoadCancel = useMemoizedFn(() => {
+            setLoginShow(false)
+        })
+        useEffect(() => {
+            if (isEnpriTraceIRify()) {
+                fetchList()
+            }
+        }, [userInfo])
+
+        const [data, setData] = useState<API.FlowRuleGroupDetail[]>([])
+
+        const wrapperRef = useRef<HTMLDivElement>(null)
+        const bodyRef = useRef<HTMLDivElement>(null)
+
+        /** ---------- 获取数据 ---------- */
+        const [loading, setLoading] = useState<boolean>(false)
+        const canFetchList = useMemo(() => {
+            if (isEnpriTraceIRify()) {
+                return userInfo.isLogin && userInfo.token
+            } else {
+                return true
+            }
+        }, [userInfo])
+        const fetchList = useMemoizedFn(() => {
+            if (!canFetchList) return
+
+            if (loading) return
+
+            const request: API.FlowRuleGroupRequest = {page: 1, limit: 1000, order_by: "created_at", order: "desc"}
+            if (search.current) {
+                request.keyword = search.current
+            }
+
+            setLoading(true)
+            httpFetchOnlineRuleGroupList(request)
+                .then(({data}) => {
+                    setData(data || [])
+                })
+                .catch(() => {})
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                })
+        })
+
+        useEffect(() => {
+            fetchList()
+        }, [isrefresh])
+
+        // 搜索
+        const search = useRef<string>("")
+        const handleSearch = useDebounceFn(
+            (val: string) => {
+                search.current = val
+                fetchList()
+            },
+            {wait: 200}
+        ).run
+
+        /** ---------- 多选逻辑 ---------- */
+        const [select, setSelect] = useState<API.FlowRuleGroupDetail[]>([])
+        const selectGroups = useMemo(() => {
+            return select.map((item) => item.groupName)
+        }, [select])
+        useUpdateEffect(() => {
+            // 这里的延时触发搜索由外层去控制
+            onGroupChange(select.map((item) => item.groupName || ""))
+        }, [select])
+        const handleSelect = useMemoizedFn((info: API.FlowRuleGroupDetail) => {
+            const isExist = select.find((el) => el.groupName === info.groupName)
+            if (isExist) setSelect((arr) => arr.filter((item) => item.groupName !== info.groupName))
+            else setSelect((arr) => [...arr, info])
+        })
+        const handleReset = useMemoizedFn(() => {
+            setSelect([])
+        })
+
+        // 更新数据
+        const handleUpdateData = useMemoizedFn(
+            (type: "delete", info: API.FlowRuleGroupDetail, newInfo?: API.FlowRuleGroupDetail) => {
+                if (type === "delete") {
+                    setData((arr) => {
+                        return arr.filter((ele) => ele.groupName !== info.groupName)
+                    })
+                }
+            }
+        )
+
+        /** ---------- 下载 ---------- */
+        const [downloadInfoVisible, setDownloadInfoVisible] = useState<boolean>(false)
+        const [downloadPercentShow, setDownloadPercentShow] = useState<boolean>(false)
+        const downloadTokenRef = useRef<string>(randomString(40))
+        const downloadContainerRef = useRef<string>(currentPageTabRouteKey)
+        const ruleGroupItemRef = useRef<API.FlowRuleGroupDetail>()
+        const handleDownload = useMemoizedFn(() => {
+            if (ruleGroupItemRef.current?.groupName) {
+                downloadTokenRef.current = randomString(40)
+                grpcDownloadSyntaxFlowRule(
+                    {
+                        Filter: {GroupNames: [ruleGroupItemRef.current.groupName]},
+                        Token: userInfo.token
+                    },
+                    downloadTokenRef.current
+                ).then((res) => {
+                    setDownloadInfoVisible(false)
+                    downloadContainerRef.current = currentPageTabRouteKey
+                    setDownloadPercentShow(true)
+                })
+            }
+        })
+
+        /** ---------- 删除 ---------- */
+        const [loadingDelKeys, setLoadingDelKeys] = useState<string[]>([])
+        const handleDelete = useMemoizedFn((info: API.FlowRuleGroupDetail) => {
+            const {groupName = "", isBuildIn} = info
+            if (isBuildIn) return
+            const isExist = loadingDelKeys.includes(groupName)
+            if (isExist) return
+
+            setLoadingDelKeys((arr) => {
+                return [...arr, groupName]
+            })
+            httpDeleteOnlineRuleGroup({groupNames: [groupName]})
+                .then(() => {
+                    // 删除后自动把选中里的该条去掉
+                    setSelect((arr) => arr.filter((item) => item.groupName !== info.groupName))
+                    handleUpdateData("delete", info)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoadingDelKeys((arr) => arr.filter((ele) => ele !== groupName))
+                    }, 200)
+                })
+        })
+
+        return (
+            <div className={styles["rule-group-list"]}>
+                {!canFetchList ? (
+                    <>
+                        <YakitEmpty
+                            image={<img src={NoPermissions} alt='' />}
+                            imageStyle={{width: 220, height: 150, margin: "auto"}}
+                            title='暂无查看权限'
+                            description='登录后即可查看'
+                        />
+                        <YakitButton style={{width: 200, marginLeft: 50}} type='outline1' onClick={() => onLogin()}>
+                            立即登录
+                        </YakitButton>
+                        {loginShow && <Login visible={loginShow} onCancel={onLoadCancel} />}
+                    </>
+                ) : (
+                    <>
+                        {data.length === 0 ? (
+                            <YakitSpin spinning={loading}>
+                                <YakitEmpty title='暂无数据' />
+                            </YakitSpin>
+                        ) : (
+                            <>
+                                <div className={styles["list-search-and-add"]}>
+                                    <YakitInput.Search
+                                        size='large'
+                                        placeholder='请输入组名'
+                                        onSearch={handleSearch}
+                                        allowClear
+                                    />
+                                </div>
+
+                                <div className={styles["list-container"]}>
+                                    <YakitSpin spinning={loading}>
+                                        <div ref={wrapperRef} className={styles["list-body"]}>
+                                            <div ref={bodyRef}>
+                                                {data.map((item) => {
+                                                    const {groupName: name = ""} = item
+
+                                                    const isCheck = selectGroups.includes(name)
+                                                    const isDelLoading = loadingDelKeys.includes(name)
+
+                                                    return (
+                                                        <div
+                                                            key={name}
+                                                            className={classNames(styles["list-local-opt"], {
+                                                                [styles["list-local-opt-active"]]: isCheck
+                                                            })}
+                                                            onClick={() => {
+                                                                handleSelect(item)
+                                                            }}
+                                                        >
+                                                            <div className={styles["info-wrapper"]}>
+                                                                <YakitCheckbox
+                                                                    checked={isCheck}
+                                                                    onChange={() => {
+                                                                        handleSelect(item)
+                                                                    }}
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                />
+                                                                <SolidFolderopenIcon />
+                                                                <span
+                                                                    className={classNames(
+                                                                        styles["title-style"],
+                                                                        "yakit-content-single-ellipsis"
+                                                                    )}
+                                                                    title={item.groupName}
+                                                                >
+                                                                    {item.groupName}
+                                                                </span>
+                                                            </div>
+
+                                                            <div className={styles["total-style"]}>{item.count}</div>
+                                                            <div
+                                                                className={styles["btns-wrapper"]}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                }}
+                                                            >
+                                                                <YakitButton
+                                                                    type='secondary2'
+                                                                    icon={<OutlineClouddownloadIcon />}
+                                                                    onClick={() => {
+                                                                        ruleGroupItemRef.current = item
+                                                                        setDownloadInfoVisible(true)
+                                                                    }}
+                                                                />
+                                                                {canDel && (
+                                                                    <YakitButton
+                                                                        type='secondary2'
+                                                                        colors='danger'
+                                                                        icon={<OutlineTrashIcon />}
+                                                                        loading={isDelLoading}
+                                                                        onClick={() => {
+                                                                            handleDelete(item)
+                                                                        }}
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                    </YakitSpin>
+                                    {/* 下载提示 */}
+                                    <YakitHint
+                                        visible={downloadInfoVisible}
+                                        title='下载提示'
+                                        content='如果规则id相同则会直接覆盖，是否确认下载'
+                                        okButtonText='确认'
+                                        mask={true}
+                                        onOk={() => {
+                                            handleDownload()
+                                        }}
+                                        onCancel={() => {
+                                            ruleGroupItemRef.current = undefined
+                                            setDownloadInfoVisible(false)
+                                        }}
+                                    ></YakitHint>
+                                    {downloadPercentShow && (
+                                        <RuleUploadAndDownloadModal
+                                            getContainer={
+                                                document.getElementById(
+                                                    `main-operator-page-body-${downloadContainerRef.current}`
+                                                ) || undefined
+                                            }
+                                            type='download'
+                                            apiKey='DownloadSyntaxFlowRule'
+                                            token={downloadTokenRef.current}
+                                            onCancel={() => {
+                                                setDownloadPercentShow(false)
+                                            }}
+                                            onSuccess={() => {
+                                                onRefreshRuleManagement()
+                                            }}
+                                        ></RuleUploadAndDownloadModal>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </>
+                )}
+            </div>
+        )
+    })
+)
+
+export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
+    const {info, visible, alertMsgRef} = props
+    const [activePanelKey, setActivePanelKey] = useState<string | undefined>(undefined)
+    const [isManualSort, setIsManualSort] = useState(false)
+    const [isRefresh, setRefresh] = useState<boolean>(false)
+
+    useEffect(() => {
+        alertMsgRef.current = info?.AlertMsg || {}
+        setRefresh((v) => !v)
+    }, [info])
+
+    const alertMsgEntries = useMemo(() => {
+        const entries = Object.entries(alertMsgRef.current)
+        if (!isManualSort) {
+            // 初始时排序
+            return entries.sort(([, a], [, b]) => {
+                const aIndex = severityOrder.indexOf((a.Severity || "").toLowerCase())
+                const bIndex = severityOrder.indexOf((b.Severity || "").toLowerCase())
+                return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex)
+            })
+        }
+        // 手动后保持原顺序
+        return entries
+    }, [isRefresh, isManualSort])
+
+    const handleClickSeverity = (alertMsgKey: string, newSeverity: string) => {
+        setIsManualSort(true)
+        alertMsgRef.current = {
+            ...alertMsgRef.current,
+            [alertMsgKey]: {...alertMsgRef.current[alertMsgKey], Severity: newSeverity}
+        }
+        setRefresh((v) => !v)
+    }
+
+    useEffect(() => {
+        return () => {
+            setActivePanelKey(undefined)
+            alertMsgRef.current = {}
+            setIsManualSort(false)
+        }
+    }, [visible])
+
+    /** 编辑器内容的变化，更新数据 */
+    const onMarkdownUpdated = useDebounceFn(
+        (key: "Description" | "Solution" | "RiskType", value: string, alertMsgKey: string) => {
+            alertMsgRef.current = {
+                ...alertMsgRef.current,
+                [alertMsgKey]: {...alertMsgRef.current[alertMsgKey], [key]: value}
+            }
+        },
+        {wait: 200, leading: true}
+    ).run
+
+    return (
+        <div className={styles["related-hole-list"]}>
+            <div className={styles["info-setting-alertMsg"]}>
+                <YakitCollapse
+                    activeKey={activePanelKey}
+                    onChange={(key) => {
+                        setActivePanelKey(Array.isArray(key) ? key[key.length - 1] : key)
+                    }}
+                >
+                    {alertMsgEntries.map(([key, alert]) => {
+                        const title = SeverityMapTag.find((item) => item.key.includes(alert.Severity || ""))
+                        return (
+                            <YakitPanel
+                                header={
+                                    <span
+                                        className={classNames(styles["title"], "yakit-content-single-ellipsis")}
+                                        title={alert.TitleZh || alert.Title || "-"}
+                                    >
+                                        {alert.TitleZh || alert.Title || "-"}
+                                    </span>
+                                }
+                                key={key}
+                                extra={
+                                    <div className={styles["severity"]}>
+                                        <YakitTag
+                                            color={title?.tag as YakitTagColor}
+                                            closable={false}
+                                            icon={<OutlineExclamationIcon className={styles["exclamationIcon"]} />}
+                                        >
+                                            {title ? title.name : alert.Severity || "-"}
+                                        </YakitTag>
+                                        <div onClick={(e) => e.stopPropagation()}>
+                                            <YakitPopover
+                                                trigger='click'
+                                                overlayClassName={styles["severity-menu-popover"]}
+                                                overlayStyle={{paddingTop: 2}}
+                                                content={
+                                                    <div className={styles["severity-menu-cont-wrapper"]}>
+                                                        {SeverityMapTag.map((item) => (
+                                                            <div
+                                                                key={item.name}
+                                                                className={classNames(styles["severity-menu-item"], {
+                                                                    [styles["active"]]: item.key.includes(
+                                                                        alert.Severity || ""
+                                                                    )
+                                                                })}
+                                                                onClick={() => {
+                                                                    const severity = [
+                                                                        "critical",
+                                                                        "high",
+                                                                        "middle",
+                                                                        "low",
+                                                                        "info"
+                                                                    ].filter((sev) => item.key.includes(sev))
+                                                                    if (!severity[0]) return
+                                                                    handleClickSeverity(key, severity[0])
+                                                                }}
+                                                            >
+                                                                {item.name}
+                                                                {item.key.includes(alert.Severity || "") && (
+                                                                    <SolidCheckIcon className={styles["check-icon"]} />
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                }
+                                            >
+                                                <Tooltip title='修改漏洞等级'>
+                                                    <YakitButton
+                                                        icon={<OutlineSelectorIcon />}
+                                                        type='text2'
+                                                        size='small'
+                                                    ></YakitButton>
+                                                </Tooltip>
+                                            </YakitPopover>
+                                        </div>
+                                    </div>
+                                }
+                            >
+                                <Descriptions bordered size='small' labelStyle={{width: 120}}>
+                                    <Descriptions.Item label='类型' span={3}>
+                                        <YakitInput
+                                            defaultValue={alert.RiskType}
+                                            onChange={(e) => {
+                                                const {value} = e.target
+                                                onMarkdownUpdated("RiskType", value, key)
+                                            }}
+                                        />
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label='漏洞描述' span={3}>
+                                        <MilkdownEditor
+                                            type='notepad'
+                                            defaultValue={alert.Description}
+                                            onMarkdownUpdated={(value) => onMarkdownUpdated("Description", value, key)}
+                                        />
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label='修复建议' span={3}>
+                                        <MilkdownEditor
+                                            type='notepad'
+                                            defaultValue={alert.Solution}
+                                            onMarkdownUpdated={(value) => onMarkdownUpdated("Solution", value, key)}
+                                        />
+                                    </Descriptions.Item>
+                                </Descriptions>
+                            </YakitPanel>
+                        )
+                    })}
+                </YakitCollapse>
             </div>
         </div>
     )

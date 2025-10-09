@@ -10,6 +10,15 @@ export interface YakitSideTabProps {
 
     setShow?: (s: boolean) => void
     show?: boolean
+    /**
+     * vertical:单击是隐藏/显示对应的内容
+     * horizontal:单击是切换tabContent
+     */
+    type?: "vertical" | "horizontal"
+    children?: ReactNode
+    onTabPaneRender?: (item: YakitTabsProps) => ReactNode
+
+    className?: string
 }
 
 export interface YakitTabsProps {
@@ -17,4 +26,11 @@ export interface YakitTabsProps {
     label: ReactNode
     value: string
     show?: boolean
+}
+
+export interface YakitTabsItemProps {
+    item: YakitTabsProps
+    className?: string
+    onChange: (v: YakitTabsProps) => void
+    onTabPaneRender?: (item: YakitTabsProps) => ReactNode
 }

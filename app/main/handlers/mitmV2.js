@@ -67,11 +67,13 @@ const createMessageSender = (stream, options) => {
             processQueue() // 触发处理
         },
         destroy: () => {
-            count = 0
-            isProcessing = false
-            messageStreamRequest = []
+            count = null
+            isProcessing = null
+            messageStreamRequest = null
             retryMap.clear()
             stream.cancel()
+            retryMap = null
+            stream = null
         }
     }
 }
@@ -368,5 +370,72 @@ module.exports = (win, getClient) => {
             sendMessage({HijackFilterData: params.FilterData, UpdateHijackFilter: true})
         }
         return await asyncSetMITMHijackFilter(params)
+    })
+
+    // 开始追踪
+    let traceStream
+    let isFirstTraceData = true
+    ipcMain.handle("start-mitm-plugin-trace", async (e, params) => {
+        if (!win) return
+
+        if (!stream) {
+            win.webContents.send("start-mitm-plugin-trace-error", "MITM 劫持未启动")
+            return
+        }
+
+        if (traceStream) {
+            win.webContents.send("mitm-plugin-trace-start-success")
+            return
+        }
+
+        traceStream = getClient().PluginTrace()
+        if (traceStream) {
+            traceStream.write(params)
+        }
+
+        isFirstTraceData = true
+        traceStream.on("data", (data) => {
+            if (data["ResponseType"] === "control_result") {
+                if (data["Success"]) {
+                    if (isFirstTraceData) {
+                        isFirstTraceData = false
+                        win.webContents.send("mitm-plugin-trace-start-success")
+                    }
+                } else if (data.Message) {
+                    win.webContents.send("start-mitm-plugin-trace-error", data.Message)
+                }
+            } else if (data["ResponseType"] === "stats_update") {
+                win.webContents.send("mitm-plugin-stats-update", data)
+            } else if (data["ResponseType"] === "trace_update") {
+                win.webContents.send("mitm-plugin-trace-update", data)
+            }
+        })
+        traceStream.on("error", (err) => {
+            traceStream = null
+            win.webContents.send("start-mitm-plugin-trace-error", `${err}`)
+        })
+        traceStream.on("end", () => {
+            if (traceStream) {
+                traceStream.cancel()
+            }
+            traceStream = null
+            win.webContents.send("mitm-plugin-trace-end")
+        })
+    })
+
+    // 取消特定Trace
+    ipcMain.handle("mitm-plugin-traceID-cancel", (e, traceID) => {
+        if (!traceStream) return
+        traceStream.write({
+            ControlMode: "cancel_trace",
+            TraceID: traceID
+        })
+    })
+
+    // 停止追踪
+    ipcMain.handle("mitm-plugin-trace-stop", () => {
+        if (!traceStream) return
+        traceStream.cancel()
+        traceStream = null
     })
 }

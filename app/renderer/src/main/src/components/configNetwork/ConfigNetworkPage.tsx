@@ -1,10 +1,10 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {FC, useEffect, useMemo, useRef, useState} from "react"
 import {AutoCard} from "@/components/AutoCard"
 import {ManyMultiSelectForString, SwitchItem} from "@/utils/inputUtil"
-import {Divider, Form, Modal, Slider, Space, Upload} from "antd"
+import {Col, Divider, Form, Modal, Row, Slider, Space, Upload} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {yakitInfo, warn, failed, success} from "@/utils/notification"
+import {yakitInfo, warn, failed, success, yakitNotify} from "@/utils/notification"
 import {AutoSpin} from "@/components/AutoSpin"
 import update from "immutability-helper"
 import {useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
@@ -39,6 +39,8 @@ import NewThirdPartyApplicationConfig, {GetThirdPartyAppConfigTemplateResponse} 
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 import emiter from "@/utils/eventBus/eventBus"
+import {CodeCustomize} from "./CustomizeCode"
+import {OutlineCogIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 
 export interface ConfigNetworkPageProp {}
 
@@ -102,30 +104,35 @@ export interface ThirdPartyApplicationConfig {
     ExtraParams?: KVPair[]
 }
 
+type TenumBuffer = Buffer | Uint8Array
+
 export interface IsSetGlobalNetworkConfig {
-    Pkcs12Bytes: Uint8Array
-    Pkcs12Password?: Uint8Array
+    Pkcs12Bytes: Buffer
+    Pkcs12Password?: Buffer
 }
 
 interface ClientCertificatePem {
-    CrtPem: Uint8Array
-    KeyPem: Uint8Array
-    CaCertificates: Uint8Array[]
+    CrtPem: TenumBuffer
+    KeyPem: TenumBuffer
+    CaCertificates: TenumBuffer[]
+    Host: string
 }
 
 interface ClientCertificatePfx {
     name: string
-    Pkcs12Bytes: Uint8Array
-    Pkcs12Password: Uint8Array
+    Pkcs12Bytes: TenumBuffer
+    Pkcs12Password: TenumBuffer
     password?: boolean
+    Host?: string
 }
 
 interface ClientCertificates {
-    CrtPem: Uint8Array
-    KeyPem: Uint8Array
-    CaCertificates: Uint8Array[]
-    Pkcs12Bytes: Uint8Array
-    Pkcs12Password: Uint8Array
+    CrtPem: TenumBuffer
+    KeyPem: TenumBuffer
+    CaCertificates: TenumBuffer[]
+    Pkcs12Bytes: TenumBuffer
+    Pkcs12Password: TenumBuffer
+    Host?: string
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -206,8 +213,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             })
             if (Array.isArray(ClientCertificates) && ClientCertificates.length > 0 && format === 1) {
                 let newArr = ClientCertificates.map((item, index) => {
-                    const {Pkcs12Bytes, Pkcs12Password} = item
-                    return {Pkcs12Bytes, Pkcs12Password, name: `证书${index + 1}`}
+                    const {Pkcs12Bytes, Pkcs12Password, Host} = item
+                    return {Pkcs12Bytes, Pkcs12Password, Host, name: `证书${index + 1}`}
                 })
                 setCertificateParams(newArr)
                 currentIndex.current = ClientCertificates.length
@@ -279,6 +286,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             yakitInfo("更新配置成功")
             update()
             if (isNtml) setVisible(false)
+        }).catch((err) => {
+            yakitNotify("error", err + "")
         })
     })
 
@@ -313,15 +322,15 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 warn("无效证书")
                 return
             }
-            const obj: ClientCertificatePem = {
+            const obj = {
                 CaCertificates: [],
                 CrtPem: new Uint8Array(),
                 KeyPem: new Uint8Array()
             }
             const certificate = (certificateParams || []).filter((item) => item.password !== true)
             const ClientCertificates = certificate.map((item) => {
-                const {Pkcs12Bytes, Pkcs12Password} = item
-                return {Pkcs12Bytes, Pkcs12Password, ...obj}
+                const {Pkcs12Bytes, Pkcs12Password, Host} = item
+                return {Pkcs12Bytes, Pkcs12Password, Host, ...obj}
             })
             const newParams: GlobalNetworkConfig = {
                 ...params,
@@ -337,7 +346,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             ? [StringToUint8Array(values.CaCertificates)]
                             : [],
                     CrtPem: StringToUint8Array(values.CrtPem),
-                    KeyPem: StringToUint8Array(values.CrtPem)
+                    KeyPem: StringToUint8Array(values.CrtPem),
+                    Host: values.Host || ""
                 }
                 const newParams: GlobalNetworkConfig = {
                     ...params,
@@ -348,6 +358,44 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         }
     })
 
+    const hostRef = useRef<string>("")
+    const handleConfigureHost = (key: number, Host?: string) => {
+        hostRef.current = Host || ""
+        const m = showYakitModal({
+            title: "输入 Host 配置",
+            content: (
+                <div style={{paddingTop: 20}}>
+                    <Form labelCol={{span: 5}} wrapperCol={{span: 18}} size={"small"}>
+                        <Form.Item label={"域名"} help='为该证书指定Host地址'>
+                            <YakitInput
+                                defaultValue={hostRef.current}
+                                placeholder='例如baidu.com或者*.baidu.com'
+                                allowClear
+                                onChange={(e) => {
+                                    const {value} = e.target
+                                    hostRef.current = value
+                                }}
+                            />
+                        </Form.Item>
+                    </Form>
+                </div>
+            ),
+            onCancel: () => {
+                m.destroy()
+            },
+            onOkText: "添加",
+            onOk: () => {
+                if (Array.isArray(certificateParams)) {
+                    certificateParams[key].Host = hostRef.current
+                    let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
+                    setCertificateParams(cache)
+                }
+                m.destroy()
+            },
+            width: 400
+        })
+    }
+
     const closeCard = useMemoizedFn((item: ClientCertificatePfx) => {
         if (Array.isArray(certificateParams)) {
             let cache: ClientCertificatePfx[] = certificateParams.filter((itemIn) => item.name !== itemIn.name)
@@ -357,73 +405,83 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
     const failCard = useMemoizedFn((item: ClientCertificatePfx, key: number) => {
         return (
-            <div key={key} className={classNames(styles["certificate-card"], styles["certificate-fail"])}>
-                <div className={styles["decorate"]}>
-                    <RectangleFailIcon />
+            <div className={styles["certificate-card-item"]} key={key}>
+                <div className={classNames(styles["certificate-card"], styles["certificate-fail"])}>
+                    <div className={styles["decorate"]}>
+                        <RectangleFailIcon />
+                    </div>
+                    <div className={styles["card-hide"]}></div>
+                    <div className={styles["fail-main"]}>
+                        <div className={styles["title"]}>{item.name}</div>
+                        <SolidLockClosedIcon />
+                        <div className={styles["content"]}>未解密</div>
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => {
+                                const m = showYakitModal({
+                                    title: "密码解锁",
+                                    content: (
+                                        <div style={{padding: 20}}>
+                                            <YakitInput.Password
+                                                placeholder='请输入证书密码'
+                                                allowClear
+                                                onChange={(e) => {
+                                                    const {value} = e.target
+                                                    if (Array.isArray(certificateParams)) {
+                                                        certificateParams[key].Pkcs12Password =
+                                                            value.length > 0
+                                                                ? StringToUint8Array(value)
+                                                                : new Uint8Array()
+                                                        let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
+                                                        setCertificateParams(cache)
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    ),
+                                    onCancel: () => {
+                                        m.destroy()
+                                    },
+                                    onOk: () => {
+                                        ipcRenderer
+                                            .invoke("ValidP12PassWord", {
+                                                Pkcs12Bytes: item.Pkcs12Bytes,
+                                                Pkcs12Password: item.Pkcs12Password
+                                            } as IsSetGlobalNetworkConfig)
+                                            .then((result: {IsSetPassWord: boolean}) => {
+                                                if (result.IsSetPassWord) {
+                                                    if (Array.isArray(certificateParams)) {
+                                                        certificateParams[key].password = false
+                                                        let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
+                                                        setCertificateParams(cache)
+                                                        m.destroy()
+                                                    }
+                                                } else {
+                                                    failed(`密码错误`)
+                                                }
+                                            })
+                                    },
+                                    width: 400
+                                })
+                            }}
+                        >
+                            密码解锁
+                        </YakitButton>
+                    </div>
                 </div>
-                <div className={styles["card-hide"]}></div>
-                <div className={styles["fail-main"]}>
-                    <div
-                        className={styles["close"]}
+                <div className={styles["certificate-card-item-footer"]}>
+                    <OutlineCogIcon
+                        className={styles["icon-cog"]}
+                        onClick={() => {
+                            handleConfigureHost(key, item.Host)
+                        }}
+                    />
+                    <OutlineTrashIcon
+                        className={styles["icon-trash"]}
                         onClick={() => {
                             closeCard(item)
                         }}
-                    >
-                        <CloseIcon />
-                    </div>
-                    <div className={styles["title"]}>{item.name}</div>
-                    <SolidLockClosedIcon />
-                    <div className={styles["content"]}>未解密</div>
-                    <YakitButton
-                        type='outline2'
-                        onClick={() => {
-                            const m = showYakitModal({
-                                title: "密码解锁",
-                                content: (
-                                    <div style={{padding: 20}}>
-                                        <YakitInput.Password
-                                            placeholder='请输入证书密码'
-                                            allowClear
-                                            onChange={(e) => {
-                                                const {value} = e.target
-                                                if (Array.isArray(certificateParams)) {
-                                                    certificateParams[key].Pkcs12Password =
-                                                        value.length > 0 ? StringToUint8Array(value) : new Uint8Array()
-                                                    let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
-                                                    setCertificateParams(cache)
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                ),
-                                onCancel: () => {
-                                    m.destroy()
-                                },
-                                onOk: () => {
-                                    ipcRenderer
-                                        .invoke("ValidP12PassWord", {
-                                            Pkcs12Bytes: item.Pkcs12Bytes,
-                                            Pkcs12Password: item.Pkcs12Password
-                                        } as IsSetGlobalNetworkConfig)
-                                        .then((result: {IsSetPassWord: boolean}) => {
-                                            if (result.IsSetPassWord) {
-                                                if (Array.isArray(certificateParams)) {
-                                                    certificateParams[key].password = false
-                                                    let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
-                                                    setCertificateParams(cache)
-                                                    m.destroy()
-                                                }
-                                            } else {
-                                                failed(`密码错误`)
-                                            }
-                                        })
-                                },
-                                width: 400
-                            })
-                        }}
-                    >
-                        密码解锁
-                    </YakitButton>
+                    />
                 </div>
             </div>
         )
@@ -431,28 +489,36 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
     const succeeCard = useMemoizedFn((item: ClientCertificatePfx, key: number) => {
         return (
-            <div key={key} className={classNames(styles["certificate-card"], styles["certificate-succee"])}>
-                <div className={styles["decorate"]}>
-                    <RectangleSucceeIcon />
-                </div>
-                <div className={styles["union"]}>
-                    <UnionIcon />
-                </div>
-                <div className={styles["card-hide"]}></div>
+            <div className={styles["certificate-card-item"]} key={key}>
+                <div className={classNames(styles["certificate-card"], styles["certificate-succee"])}>
+                    <div className={styles["decorate"]}>
+                        <RectangleSucceeIcon />
+                    </div>
+                    <div className={styles["union"]}>
+                        <UnionIcon />
+                    </div>
+                    <div className={styles["card-hide"]}></div>
 
-                <div className={styles["success-main"]}>
-                    <div
-                        className={styles["close"]}
+                    <div className={styles["success-main"]}>
+                        <div className={styles["title"]}>{item.name}</div>
+                        <SolidCheckCircleIcon />
+                        <div className={styles["content"]}>可用</div>
+                        <div className={styles["password"]}>******</div>
+                    </div>
+                </div>
+                <div className={styles["certificate-card-item-footer"]}>
+                    <OutlineCogIcon
+                        className={styles["icon-cog"]}
+                        onClick={() => {
+                            handleConfigureHost(key, item.Host)
+                        }}
+                    />
+                    <OutlineTrashIcon
+                        className={styles["icon-trash"]}
                         onClick={() => {
                             closeCard(item)
                         }}
-                    >
-                        <CloseIcon />
-                    </div>
-                    <div className={styles["title"]}>{item.name}</div>
-                    <SolidCheckCircleIcon />
-                    <div className={styles["content"]}>可用</div>
-                    <div className={styles["password"]}>******</div>
+                    />
                 </div>
             </div>
         )
@@ -690,31 +756,29 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                         maskClosable: false,
                                                         footer: null,
                                                         content: (
-                                                            <div style={{margin: 24, marginRight: 45}}>
-                                                                <NewThirdPartyApplicationConfig
-                                                                    formValues={{
-                                                                        Type: i.Type,
-                                                                        ...extraParams
-                                                                    }}
-                                                                    disabledType={true}
-                                                                    onAdd={(data) => {
-                                                                        setParams({
-                                                                            ...params,
-                                                                            AppConfigs: (params.AppConfigs || []).map(
-                                                                                (i) => {
-                                                                                    if (i.Type === data.Type) {
-                                                                                        i = data
-                                                                                    }
-                                                                                    return {...i}
+                                                            <NewThirdPartyApplicationConfig
+                                                                formValues={{
+                                                                    Type: i.Type,
+                                                                    ...extraParams
+                                                                }}
+                                                                disabledType={true}
+                                                                onAdd={(data) => {
+                                                                    setParams({
+                                                                        ...params,
+                                                                        AppConfigs: (params.AppConfigs || []).map(
+                                                                            (i) => {
+                                                                                if (i.Type === data.Type) {
+                                                                                    i = data
                                                                                 }
-                                                                            )
-                                                                        })
-                                                                        setTimeout(() => submit(), 100)
-                                                                        m.destroy()
-                                                                    }}
-                                                                    onCancel={() => m.destroy()}
-                                                                />
-                                                            </div>
+                                                                                return {...i}
+                                                                            }
+                                                                        )
+                                                                    })
+                                                                    setTimeout(() => submit(), 100)
+                                                                    m.destroy()
+                                                                }}
+                                                                onCancel={() => m.destroy()}
+                                                            />
                                                         )
                                                     })
                                                 }}
@@ -743,29 +807,25 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 closable: true,
                                                 maskClosable: false,
                                                 content: (
-                                                    <div style={{margin: 24, marginRight: 45}}>
-                                                        <NewThirdPartyApplicationConfig
-                                                            onAdd={(data) => {
-                                                                let existed = false
-                                                                const existedResult = (params.AppConfigs || []).map(
-                                                                    (i) => {
-                                                                        if (i.Type === data.Type) {
-                                                                            existed = true
-                                                                            return {...i, ...data}
-                                                                        }
-                                                                        return {...i}
-                                                                    }
-                                                                )
-                                                                if (!existed) {
-                                                                    existedResult.push(data)
+                                                    <NewThirdPartyApplicationConfig
+                                                        onAdd={(data) => {
+                                                            let existed = false
+                                                            const existedResult = (params.AppConfigs || []).map((i) => {
+                                                                if (i.Type === data.Type) {
+                                                                    existed = true
+                                                                    return {...i, ...data}
                                                                 }
-                                                                setParams({...params, AppConfigs: existedResult})
-                                                                setTimeout(() => submit(), 100)
-                                                                m.destroy()
-                                                            }}
-                                                            onCancel={() => m.destroy()}
-                                                        />
-                                                    </div>
+                                                                return {...i}
+                                                            })
+                                                            if (!existed) {
+                                                                existedResult.push(data)
+                                                            }
+                                                            setParams({...params, AppConfigs: existedResult})
+                                                            setTimeout(() => submit(), 100)
+                                                            m.destroy()
+                                                        }}
+                                                        onCancel={() => m.destroy()}
+                                                    />
                                                 )
                                             })
                                         }}
@@ -783,6 +843,21 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         />
                                     </div>
                                 </Form.Item>
+                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
+                                    自定义代码片段
+                                    <div className={styles["form-rule-code-customize-describe"]}>
+                                        配置后编写代码时自动补全将会提示，并且选中后可使用自己的代码片段
+                                    </div>
+                                </Divider>
+
+                                <Form.Item
+                                    label='代码片段'
+                                    name='code-customize'
+                                    className={styles["form-rule-code-customize-item"]}
+                                >
+                                    <CodeCustomize />
+                                </Form.Item>
+
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     其他配置
                                 </Divider>
@@ -925,16 +1000,14 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             }
                                             setParams({...params, MaxContentLength: value})
                                         }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                let value = parseInt(params.MaxContentLength + "" || "0", 10)
-                                                if (!value || value === 0) {
-                                                    value = 10
-                                                } else if (value > 50) {
-                                                    value = 50
-                                                }
-                                                setParams({...params, MaxContentLength: value})
+                                        onPressEnter={() => {
+                                            let value = parseInt(params.MaxContentLength + "" || "0", 10)
+                                            if (!value || value === 0) {
+                                                value = 10
+                                            } else if (value > 50) {
+                                                value = 50
                                             }
+                                            setParams({...params, MaxContentLength: value})
                                         }}
                                         onBlur={() => {
                                             let value = parseInt(params.MaxContentLength + "" || "0", 10)
@@ -974,14 +1047,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             }
                                             setSecondaryTabsNum(value)
                                         }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                let value = parseInt(secondaryTabsNum + "" || "0", 10)
-                                                if (!value || value === 0) {
-                                                    value = 100
-                                                }
-                                                setSecondaryTabsNum(value)
+                                        onPressEnter={() => {
+                                            let value = parseInt(secondaryTabsNum + "" || "0", 10)
+                                            if (!value || value === 0) {
+                                                value = 100
                                             }
+                                            setSecondaryTabsNum(value)
                                         }}
                                         onBlur={() => {
                                             let value = parseInt(secondaryTabsNum + "" || "0", 10)
@@ -1527,7 +1598,7 @@ export const AISortContent: React.FC<AISortContentProps> = (props) => {
 
     return (
         <div className={styles["ai-sort-content"]}>
-            <div>优先级为从上到下</div>
+            <div className={styles["ai-sort-describe"]}>优先级为从上到下</div>
             <div className={styles["menu-list"]}>
                 <DragDropContext onDragEnd={onDragEnd}>
                     <Droppable droppableId='droppable-payload' direction='vertical'>

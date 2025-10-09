@@ -11,7 +11,9 @@ import {yakitNotify} from "@/utils/notification"
 import {FiltersItemProps} from "./TableVirtualResize/TableVirtualResizeType"
 import {HistoryHighLightText} from "./HTTPFlowDetail"
 import {ColumnsType} from "antd/lib/table"
-import { useCampare } from "@/hook/useCompare/useCompare"
+import {useCampare} from "@/hook/useCompare/useCompare"
+import {CopyComponents} from "./yakitUI/YakitTag/YakitTag"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {Text} = Typography
 
 export interface HTTPFlowExtractedDataTableRefProps {
@@ -57,6 +59,7 @@ export interface QueryMITMRuleExtractedDataRequest extends QueryGeneralRequest {
 }
 
 export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp> = React.forwardRef((props, ref) => {
+    const {t, i18n} = useI18nNamespaces(["history", "yakitUi"])
     const [pagination, setPagination] = useState<Paging>(genDefaultPagination())
     const [loading, setLoading] = useState(false)
     const [data, setData] = useControllableValue<HTTPFlowExtractedData[]>(props, {
@@ -116,14 +119,10 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             .invoke("QueryMITMRuleExtractedData", query)
             .then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
                 setData(r.Data)
+                setCurrId(undefined)
+                props.onSetHighLightItem(undefined)
+
                 if (r.Data.length && !props.invalidForUTF8Request && !props.InvalidForUTF8Response) {
-                    setCurrId(r.Data[0].Id)
-                    props.onSetHighLightItem({
-                        startOffset: r.Data[0].Index,
-                        highlightLength: r.Data[0].Length,
-                        hoverVal: r.Data[0].RuleName,
-                        IsMatchRequest: r.Data[0].IsMatchRequest
-                    })
                     props.onSetHighLightText(
                         r.Data.map((i) => ({
                             startOffset: i.Index,
@@ -133,8 +132,6 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                         }))
                     )
                 } else {
-                    setCurrId(undefined)
-                    props.onSetHighLightItem(undefined)
                     props.onSetHighLightText([])
                 }
                 setPagination(r.Pagination)
@@ -149,12 +146,16 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
     })
 
     const compareAnalyzedIds = useCampare(props.analyzedIds)
-    useDebounceEffect(() => {
-        if (!props.hiddenIndex) {
-            return
-        }
-        resetUpdate()
-    }, [props.hiddenIndex, compareAnalyzedIds], {wait: 100})
+    useDebounceEffect(
+        () => {
+            if (!props.hiddenIndex) {
+                return
+            }
+            resetUpdate()
+        },
+        [props.hiddenIndex, compareAnalyzedIds],
+        {wait: 100}
+    )
 
     const resetUpdate = useMemoizedFn(() => {
         const newParams = {
@@ -221,7 +222,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
 
     const columns: ColumnsType<HTTPFlowExtractedData> = [
         {
-            title: "规则名",
+            title: t("HTTPFlowExtractedDataTable.ruleName"),
             ellipsis: {
                 showTitle: false
             },
@@ -248,7 +249,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             },
             filterDropdown: ({confirm}) => {
                 return (
-                    <div style={{paddingTop: 5}}>
+                    <div className={styles["filter-dropdown"]}>
                         <MultipleSelect
                             filterProps={{
                                 filterSearch: true,
@@ -300,34 +301,37 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             }
         },
         {
-            title: "规则数据",
+            title: t("HTTPFlowExtractedDataTable.ruleData"),
             ellipsis: {
                 showTitle: false
             },
             render: (i: HTTPFlowExtractedData) => (
-                <Text
-                    ellipsis={{
-                        tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.Data}</div>
-                    }}
-                >
-                    {i.Data}
-                </Text>
+                <div className={styles["table-rule-content"]}>
+                    <Text
+                        ellipsis={{
+                            tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.Data}</div>
+                        }}
+                    >
+                        {i.Data}
+                    </Text>
+                    <CopyComponents copyText={i.Data} />
+                </div>
             )
         },
         {
-            title: "操作",
+            title: t("YakitTable.action"),
             width: 55,
             align: "center",
             render: (i: HTTPFlowExtractedData, record) => {
                 return (
-                    <Tooltip title='定位'>
+                    <Tooltip title={t("HTTPFlowExtractedDataTable.locate")}>
                         <OutlinePositionIcon
                             className={classNames(styles["position-icon"], {
                                 [styles["position-icon-active"]]: currId == i.Id
                             })}
                             onClick={() => {
                                 if (props.invalidForUTF8Request || props.InvalidForUTF8Response) {
-                                    yakitNotify("info", "含有二进制流的数据包无法定位")
+                                    yakitNotify("info", t("HTTPFlowExtractedDataTable.binaryStreamLocateError"))
                                     return
                                 }
                                 setCurrId(+i.Id)

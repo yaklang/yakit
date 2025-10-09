@@ -1,0 +1,225 @@
+{
+  "HTTPHistory": {
+    "websiteTree": "网站树",
+    "process": "进程",
+    "pleaseEnterDomainToSearch": "请输入域名进行搜索，例baidu.com"
+  },
+  "HTTPFlowTable": {
+    "requestDetailsNotFound": "找不到该请求详情",
+    "crawler": "爬虫",
+    "plugin": "插件",
+    "loadBlockedParamsFailed": "加载屏蔽参数失败：",
+    "method": "方法",
+    "statusCode": "状态码",
+    "fromPlugin": "相关插件",
+    "bodyLength": "响应长度",
+    "params": "参数",
+    "contentType": "响应类型",
+    "durationMs": "延迟（ms）",
+    "updatedAt": "请求时间",
+    "requestSizeVerbose": "请求大小",
+    "requestPacket": "请求包",
+    "responsePacket": "响应包",
+    "exportFields": "导出字段",
+    "partialExportMissing": "部分导出内容缺失：",
+    "have": "有",
+    "none": "无",
+    "pleaseSelectData": "请选择数据",
+    "maxOperateData": "最多同时只能操作{number}条数据",
+    "copyLimit": "最多同时只能复制{number}条数据",
+    "historyDeleteFailed": "历史记录删除失败：",
+    "deletingPleaseRefresh": "正在删除...如自动刷新失败请手动刷新",
+    "batchOperationNoSelectAll": "该批量操作不支持全选",
+    "maxSendData": "最多同时只能发送{number}条数据",
+    "getPlugin": "获取插件",
+    "editTagSuccess": "编辑tag成功",
+    "shareData": "分享数据",
+    "uploadingDataCannotClickAgain": "上传数据中，上传完成前无法再次点击上传数据",
+    "missingParameter": "参数缺失",
+    "dataUploading": "数据正在上传中",
+    "uploadResult": "上传成功{SuccessCount}条数据，上传失败{FailedCount}条数据",
+    "advancedFilter": "高级筛选",
+    "configured": "已配置",
+    "protocolType": "协议类型",
+    "all": "全部",
+    "resetRequestID": "重置请求 ID",
+    "doNotResetRequestID": "不重置请求 ID",
+    "saveFile": "保存文件",
+    "RowContextMenu": {
+      "sendToWebFuzzer": "发送到 Web Fuzzer",
+      "sendAndRedirect": "发送并跳转",
+      "sendOnly": "仅发送",
+      "sendToWSFuzzer": "发送到 WS Fuzzer",
+      "packetScan": "数据包扫描",
+      "pluginExtension": "插件扩展",
+      "aiPlugin": "AI插件",
+      "copyURL": "复制 URL",
+      "downloadResponseBody": "下载 Response Body",
+      "openURLInBrowser": "浏览器中打开URL",
+      "viewResponseInBrowser": "浏览器中查看响应",
+      "copyAsCSRFPoc": "复制为 CSRF Poc",
+      "copyAsYakPoCTemplate": "复制为 Yak PoC 模版",
+      "packetPoCTemplate": "数据包 PoC 模版",
+      "batchTestPoCTemplate": "批量检测 PoC 模版",
+      "tagColor": "标注颜色",
+      "removeColor": "移除颜色",
+      "sendToComparer": "发送到对比器",
+      "sendToComparerLeft": "发送到对比器左侧",
+      "sendToComparerRight": "发送到对比器右侧",
+      "block": "屏蔽",
+      "blockRecord": "屏蔽该记录",
+      "blockURL": "屏蔽URL",
+      "blockDomain": "屏蔽域名",
+      "delete": "删除",
+      "deleteRecord": "删除记录",
+      "deleteURL": "删除URL",
+      "deleteDomain": "删除域名",
+      "sharePacket": "分享数据包",
+      "exportData": "导出数据",
+      "exportToExcel": "导出为Excel",
+      "exportToHAR": "导出为HAR",
+      "editTag": "编辑tag",
+      "openInNewWindow": "新窗口打开",
+      "uploadData": "上传数据",
+      "batchExecute": "批量执行",
+      "networkDevicesAndOASystem": "网络设备与OA系统",
+      "securityProduct": "安全产品",
+      "remoteCodeExecutionScan": "远程代码执行（扫描）",
+      "sQLInjection": "SQL注入"
+    }
+  },
+  "ImportExportProgress": {
+    "exportHARData": "导出HAR流量数据"
+  },
+  "HTTPFlowShield": {
+    "conditionBlocked": "已屏蔽条件"
+  },
+  "RangeInputNumberTableWrapper": {
+    "asc": "升序",
+    "desc": "降序",
+    "filter": "筛选",
+    "greaterThanZeroOnly": "仅看大于0"
+  },
+  "HistorySearch": {
+    "keyword": "关键字",
+    "request": "请求",
+    "response": "响应",
+    "fuzzSearchExplanation": "Yakit的搜索功能只要是调用了后端FuzzSearch其实都是用的LIKE搜索，这导致用户如果想搜索`email_`这样的文本需要手动转义"
+  },
+  "EditTagsModal": {
+    "editTag": "编辑tag",
+    "multipleTagsComma": "多个tag请用逗号分割"
+  },
+  "AdvancedSet": {
+    "saveAdvancedConfigAndClose": "请问是否要保存高级配置并关闭弹框？",
+    "advancedConfig": "高级配置",
+    "refreshConfig": "刷新配置",
+    "backgroundRefresh": "后台刷新",
+    "keepRefreshingTrafficData": "勾选后不在当前页面也会刷新流量数据",
+    "listDisplayFieldsAndOrder": "列表展示字段和顺序",
+    "listDisplayConfigTips": "点击禁用则不在列表展示，列表字段展示顺序为从上到下的顺序，可拖拽调整，该配置对插件执行流量表、流量分析表全部生效"
+  },
+  "HTTPFlowTableFormConfiguration": {
+    "saveAdvancedConfigAndClose": "请问是否要保存高级配置并关闭弹框？",
+    "advancedFilter": "高级筛选",
+    "filterMode": "筛选模式",
+    "blockedContent": "屏蔽内容",
+    "displayOnly": "只展示",
+    "uRLPath": "URL路径",
+    "uRIMatchExplanation": "可理解为 URI 匹配，例如 /main/index.php?a=123 或者 /*/index 或 /admin* ",
+    "fileExtension": "文件后缀",
+    "responseType": "响应类型",
+    "keyword": "关键字",
+    "matchingLogicSameAsSearch": "匹配逻辑与外面搜索关键字逻辑一样",
+    "statusCode": "状态码"
+  },
+  "HTTPFlowDetail": {
+    "requestDetails": "请求详情",
+    "analyzingDetailedParameters": "正在分析详细参数",
+    "previousRequest": "上一个请求",
+    "nextRequest": "下一个请求",
+    "hTTPMethod": "HTTP 方法",
+    "requestURL": "请求 URL",
+    "bodySize": "Body大小",
+    "gETParameters": "GET 参数",
+    "pOSTParameters": "POST 参数",
+    "cookieParameters": "POST 参数",
+    "rawHTTPRequest": "原始 HTTP 请求",
+    "rawHTTPResponse": "原始 HTTP 响应"
+  },
+  "FuzzerResponseToHTTPFlowDetail": {
+    "analyzeParameterFailed": "分析参数失败："
+  },
+  "HTTPFlowExtractedDataTable": {
+    "ruleName": "规则名",
+    "ruleData": "规则数据",
+    "locate": "定位",
+    "binaryStreamLocateError": "含有二进制流的数据包无法定位"
+  },
+  "FuzzableParamList": {
+    "parameterName": "参数名",
+    "parameterLocation": "参数位置",
+    "originalParameterValue": "参数原值",
+    "testParameterInWebFuzzer": "测试该参数将会暂时进入 Web Fuzzer",
+    "fuzzTestParameter": "模糊测试该参数"
+  },
+  "HTTPFlowDetailMini": {
+    "getRuleExtractDataFailed": "获取规则提取数据失败",
+    "responseType": "响应类型",
+    "expandLeft": "向左展开",
+    "collapseRight": "向右收起",
+    "previousRule": "上一个规则",
+    "nextRule": "下一个规则",
+    "domain": "域名",
+    "object": "对象",
+    "rule": "规则"
+  },
+  "CodingPopover": {
+    "encoding": "编码"
+  },
+  "HTTPFlowDetailRequestAndResponse": {
+    "viewHeader": "查看Header",
+    "viewBody": "查看Body",
+    "targetFileNotExist": "目标文件已不存在!",
+    "fullResponse": "完整响应",
+    "selectHttpRecordToView": "选择想要查看的 HTTP 记录请求",
+    "request": "请求",
+    "rawRequest": "原始请求",
+    "containsBinaryStream": "含二进制流",
+    "selectHttpRecordResponseToView": "选择想要查看的 HTTP 记录响应",
+    "response": "响应",
+    "rawResponse": "原始响应",
+    "oversizedResponse": "超大响应",
+    "editTag": "编辑tag"
+  },
+  "NewHTTPPacketEditor": {
+    "render": "渲染",
+    "compare": "对比",
+    "noWrap": "不自动换行",
+    "configureEditor": "配置编辑器",
+    "fontSize": "字号",
+    "fullScreen": "全屏",
+    "showLineBreaks": "是否显示换行符"
+  },
+  "DataCompareModal": {
+    "codeCompare": "代码对比"
+  },
+  "WebsocketFrameHistory": {
+    "websocket_data_frame": "Websocket 数据帧",
+    "data_direction": "数据方向",
+    "preview": "预览",
+    "server_response": "服务端响应",
+    "client_request": "客户端请求",
+    "data_frame_details": "数据帧详情"
+  },
+  "HTTPFlowForWebsocketViewer": {
+    "request": "请求",
+    "response": "响应",
+    "requestSizeVerbose": "请求大小：",
+    "body_size": "Body大小：",
+    "sendToWSFuzzer": "发送到 WS Fuzzer",
+    "sendAndRedirect": "发送并跳转",
+    "sendOnly": "仅发送",
+    "packetEmpty": "数据包为空"
+  }
+}

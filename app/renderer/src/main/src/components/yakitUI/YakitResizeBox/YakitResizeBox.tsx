@@ -17,21 +17,22 @@ const convertToNumber = (value: string | number): number | null => {
 
 // 将两个数字转化为整数百分比，并确保它们的总和为100%
 const calculatePercentages = (firstSizeNum: number, secondSizeNum: number) => {
-    const total = firstSizeNum + secondSizeNum;
+    const total = firstSizeNum + secondSizeNum
     // 防止除以0 且此为异常情况 恢复为默认对半分
-    if (total === 0) return {
-        firstSizePercent: "50%",
-        secondSizePercent: "50%"
-    }; 
+    if (total === 0)
+        return {
+            firstSizePercent: "50%",
+            secondSizePercent: "50%"
+        }
 
-    const percentF = Math.round((firstSizeNum / total) * 100);
+    const percentF = Math.round((firstSizeNum / total) * 100)
     // 确保总和为100%
-    const percentS = 100 - percentF; 
+    const percentS = 100 - percentF
 
     return {
-        firstSizePercent:`${percentF}%`,
-        secondSizePercent:`${percentS}%`
-    };
+        firstSizePercent: `${percentF}%`,
+        secondSizePercent: `${percentS}%`
+    }
 }
 
 export interface YakitResizeLineProps {
@@ -184,7 +185,7 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
                 body.removeEventListener("mouseup", mouseUp)
             }
         }
-    }, [min,max])
+    }, [min, max])
 
     return (
         <div
@@ -199,8 +200,8 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
 }
 
 interface MouseUpCallBackProps {
-    firstSizeNum:number
-    secondSizeNum:number
+    firstSizeNum: number
+    secondSizeNum: number
     firstSizePercent: string
     secondSizePercent: string
 }
@@ -242,7 +243,7 @@ export interface YakitResizeBoxProps {
     lineStyle?: React.CSSProperties
     lineInStyle?: React.CSSProperties
     /** 鼠标抬起时的回调 */
-    onMouseUp?: (e:MouseUpCallBackProps) => void
+    onMouseUp?: (e: MouseUpCallBackProps) => void
 }
 
 export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) => {
@@ -349,8 +350,8 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
 
         if (onMouseUp) {
             // 此处返回实际大小 与 比例 用于动态更新块中内容大小及添加缓存
-            const percent = calculatePercentages(firstSizeNum,secondSizeNum)
-            onMouseUp({firstSizeNum,secondSizeNum,...percent})
+            const percent = calculatePercentages(firstSizeNum, secondSizeNum)
+            onMouseUp({firstSizeNum, secondSizeNum, ...percent})
         }
     })
     // 页面大小变化时重新计算 第一/第二 块内容宽高

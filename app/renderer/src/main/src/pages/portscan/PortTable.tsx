@@ -85,7 +85,10 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                             <Col span={12}>开放端口 / Open Ports</Col>
                             <Col span={12} style={{textAlign: "right"}}>
                                 {isSimple && (
-                                    <div style={{fontSize: 14, color: "#1890ff", cursor: "pointer"}} onClick={openMenu}>
+                                    <div
+                                        style={{fontSize: 14, color: "var(--Colors-Use-Blue-Bg)", cursor: "pointer"}}
+                                        onClick={openMenu}
+                                    >
                                         查看完整数据
                                     </div>
                                 )}

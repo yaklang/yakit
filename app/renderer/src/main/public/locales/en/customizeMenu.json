@@ -1,0 +1,36 @@
+{
+  "CustomizeMenu": {
+    "getMenuFailed": "Failed to get menu:",
+    "max_limit": "You can set up to {UpperLimit}",
+    "selectLeftMenuFirst": "Please select a primary menu on the left first",
+    "primaryMenuNameCannotBeEmpty": "Primary menu name cannot be empty",
+    "menuNameDuplicate": "The name 【{repeatMenu}】 is duplicate, please modify",
+    "saveMenuFailed": "Failed to save menu:",
+    "updateMenuFailed": "Failed to update menu:",
+    "saveMenuConfirm": "Do you want to save the menu and close the page?",
+    "editCommonPlugins": "Edit Common Plugins",
+    "editExpertMode": "Edit Expert Mode",
+    "editScanMode": "Edit Scan Mode",
+    "editMenuName": "Edit Menu Name",
+    "emptyMenuDetected": "Empty menu detected",
+    "emptyMenuWarning": "There are {emptyMenuLength} menu items that are empty. Empty menus will not {tip}. Do you still want to continue {tip}?",
+    "SecondMenu": {
+      "unnamedMenu1": "Unnamed1 (Menu name is recommended to be 4–16 English characters for best results)",
+      "deleteMenuConfirm": "Do you want to delete this menu?",
+      "featureAdded": "Feature added",
+      "noFeatureAdded": "No feature added yet",
+      "addFeatureHint": "You can add features here by dragging or clicking the add button"
+    },
+    "FeaturesAndPlugin": {
+      "pluginStore": "Plugin Store",
+      "systemFunctions": "System Functions",
+      "plugin": "Plugins",
+      "addFunctionTip": "You can drag or click the add button to add functions to the left menu."
+    },
+    "PluginLocalInfoIcon": {
+      "officialPlugin": "Official Plugin",
+      "privatePlugin": "Private Plugin",
+      "cloudPlugin": "Cloud Plugin"
+    }
+  }
+}

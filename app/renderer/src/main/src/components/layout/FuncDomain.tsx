@@ -18,18 +18,20 @@ import {YakitSettingCallbackType, YakitSystem, YaklangEngineMode} from "@/yakitG
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
 import Login from "@/pages/Login"
-import {useStore, yakitDynamicStatus} from "@/store"
+import {useEeSystemConfig, useStore, yakitDynamicStatus} from "@/store"
 import {defaultUserInfo, SetUserInfo} from "@/pages/MainOperator"
 import {loginOut} from "@/utils/login"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
-import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
+import {ExecResult, genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "../yakitUI/YakitMenu/YakitMenu"
 import {
     getReleaseEditionName,
+    getRemoteHttpSettingGV,
+    getRemoteI18nGV,
     isCommunityEdition,
     isEnpriTrace,
     isEnpriTraceAgent,
@@ -40,7 +42,7 @@ import {
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {LocalGV, RemoteGV} from "@/yakitGV"
-import {getLocalValue, setLocalValue} from "@/utils/kv"
+import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import {GithubSvgIcon, TerminalIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
@@ -85,6 +87,7 @@ import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {YakitDropdownMenu} from "../yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {
+    grpcFetchIntranetYakitVersion,
     grpcFetchLatestYakitVersion,
     grpcFetchLatestYakVersion,
     grpcFetchLocalYakitVersion,
@@ -101,7 +104,6 @@ import {apiFetchMessageRead, apiFetchQueryMessage} from "../MessageCenter/utils"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {randomString} from "@/utils/randomUtil"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {
@@ -109,12 +111,19 @@ import {
     apiQueryNewSSARisks,
     apiQuerySSARisks
 } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils"
-import {
-    QueryNewSSARisksResponse,
-    SSARisk
-} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import {QueryNewSSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {YakitAuditRiskDetails} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 import SelectUpload from "@/pages/SelectUpload"
+import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
+import useMcpStream, {mcpStreamHooks} from "./hooks/useMcp/useMcp"
+import {ConfigMcpModal} from "@/utils/ConfigSystemMcp"
+import {useCampare} from "@/hook/useCompare/useCompare"
+import {openConsoleNewWindow} from "@/utils/openWebsite"
+import useEngineConsole from "./hooks/useEngineConsole/useEngineConsole"
+import {useTheme} from "@/hook/useTheme"
+import {grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder} from "@/utils/logCollection"
+import {useDownloadYakit} from "./update/DownloadYakit"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -506,6 +515,12 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         }
     }, [])
 
+    // mcp 全局监听
+    const [mcpStreamInfo, mcpStreamEvent] = useMcpStream({})
+
+    // 引擎日志 全局监听
+    useEngineConsole({})
+
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
             <div className={classNames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
@@ -518,16 +533,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 />
 
                 {!showProjectManage && (
-                    <div
-                        className={styles["ui-op-btn-wrapper"]}
-                        onClick={() => {
-                            getLocalValue(RemoteGV.ShowBaseConsole).then((val: boolean) => {
-                                if (!val) {
-                                    typeCallback("console")
-                                }
-                            })
-                        }}
-                    >
+                    <div className={styles["ui-op-btn-wrapper"]} onClick={openConsoleNewWindow}>
                         <div className={styles["op-btn-body"]}>
                             <Tooltip placement='bottom' title='引擎Console'>
                                 <TerminalIcon className={classNames(styles["icon-style"], styles["size-style"])} />
@@ -554,6 +560,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             engineMode={engineMode}
                             onEngineModeChange={onEngineModeChange}
                             typeCallback={typeCallback}
+                            mcp={{
+                                mcpStreamInfo,
+                                mcpStreamEvent
+                            }}
                         />
                     )}
                 </div>
@@ -894,6 +904,7 @@ interface UIOpSettingProp {
     /** yaklang引擎切换启动模式 */
     onEngineModeChange: (type: YaklangEngineMode) => any
     typeCallback: (type: YakitSettingCallbackType) => any
+    mcp: mcpStreamHooks
 }
 
 const GetUIOpSettingMenu = () => {
@@ -923,6 +934,30 @@ const GetUIOpSettingMenu = () => {
                 children: [
                     {label: "本地", key: "local"},
                     {label: "远程", key: "remote"}
+                ]
+            },
+            {
+                key: "i18nSwitching",
+                label: "语言切换",
+                children: [
+                    {
+                        key: "zh",
+                        label: "中文"
+                    },
+                    {
+                        key: "en",
+                        label: "英文"
+                    }
+                ]
+            },
+            {type: "divider"},
+            {
+                key: "logs",
+                label: " 日志收集",
+                children: [
+                    {label: "渲染端日志", key: "renderLog"},
+                    {label: "引擎日志", key: "engineLog"},
+                    {label: "调试信息日志", key: "printLog"}
                 ]
             }
         ]
@@ -970,6 +1005,38 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "webshell-manager",
                     label: "网站管理"
+                },
+                {key: "mcp", label: "Yak Mcp"},
+                {key: "ai-agent", label: "AI Agent"},
+                {key: "ssa-result-diff", label: "ssa-result-diff"},
+                {key: "ai-repository", label: "知识库"}
+            ]
+        },
+        {
+            key: "modeSwitching",
+            label: "模式切换",
+            children: [
+                {
+                    key: "light",
+                    label: "亮色"
+                },
+                {
+                    key: "dark",
+                    label: "暗色"
+                }
+            ]
+        },
+        {
+            key: "i18nSwitching",
+            label: "语言切换",
+            children: [
+                {
+                    key: "zh",
+                    label: "中文"
+                },
+                {
+                    key: "en",
+                    label: "英文"
                 }
             ]
         },
@@ -1007,7 +1074,8 @@ const GetUIOpSettingMenu = () => {
                 {key: "reverse", label: "全局反连"},
                 {key: "agent", label: "系统代理"},
                 // { key: "engineVar",label: "引擎环境变量" },
-                {key: "config-network", label: "全局配置"}
+                {key: "config-network", label: "全局配置"},
+                {key: "setShortcutKey", label: "快捷键设置"}
             ]
         },
         {
@@ -1017,12 +1085,21 @@ const GetUIOpSettingMenu = () => {
         {
             key: "refreshMenu",
             label: "刷新菜单"
+        },
+        {type: "divider"},
+        {
+            key: "logs",
+            label: " 日志收集",
+            children: [
+                {label: "渲染端日志", key: "renderLog"},
+                {label: "引擎日志", key: "engineLog"}
+            ]
         }
     ]
 }
 
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
-    const {engineMode, onEngineModeChange, typeCallback} = props
+    const {engineMode, onEngineModeChange, typeCallback, mcp} = props
 
     const [runNodeModalVisible, setRunNodeModalVisible] = useState<boolean>(false)
     const [show, setShow] = useState<boolean>(false)
@@ -1031,6 +1108,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const [isDiffUpdate, setIsDiffUpdate] = useState(false)
     const {dynamicStatus} = yakitDynamicStatus()
     const {delTemporaryProject} = useTemporaryProjectStore()
+    const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
+    /** 当前主题 */
+    const {setTheme} = useTheme()
 
     useEffect(() => {
         onIsCVEDatabaseReady()
@@ -1045,6 +1125,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 yakitFailed("IsCVEDatabaseReady失败：" + err)
             })
     })
+
     const menuSelect = useMemoizedFn((type: string) => {
         if (show) setShow(false)
         switch (type) {
@@ -1085,6 +1166,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "agent":
                 showConfigSystemProxyForm()
+                return
+            case "mcp":
+                setConfigMcpModalVisible(true)
                 return
             case "engineVar":
                 showConfigYaklangEnvironment()
@@ -1151,6 +1235,44 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "run-node":
                 setRunNodeModalVisible(true)
                 return
+            case "setShortcutKey":
+                emiter.emit(
+                    "openPage",
+                    JSON.stringify({
+                        route: YakitRoute.ShortcutKey,
+                        params: "global" as ShortcutKeyPageName
+                    })
+                )
+                return
+            case "renderLog":
+                grpcOpenRenderLogFolder()
+                return
+            case "engineLog":
+                grpcOpenEngineLogFolder()
+                return
+            case "printLog":
+                grpcOpenPrintLogFolder()
+                return
+            case "ai-agent":
+                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
+                return
+            case "ssa-result-diff":
+                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Ssa_Result_Diff}))
+                return
+            case "ai-repository":
+                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
+                return
+            case "light":
+                setTheme("light")
+                return
+            case "dark":
+                setTheme("dark")
+                return
+            case "zh":
+            case "en":
+                i18n.changeLanguage(type)
+                setRemoteValue(getRemoteI18nGV(), type)
+                return
             default:
                 return
         }
@@ -1189,6 +1311,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 latestMode={isDiffUpdate}
             />
             <RunNodeModal runNodeModalVisible={runNodeModalVisible} onClose={() => setRunNodeModalVisible(false)} />
+            {configMcpModalVisible && <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />}
         </>
     )
 })
@@ -1261,7 +1384,7 @@ interface UIOpUpdateProps {
     lastVersion: string
     role?: string | null
     updateContent?: string
-    onDownload: (type: "yakit" | "yaklang") => any
+    onDownload: (type: "yakit" | "yaklang" | "intranetYakit") => any
     onUpdateEdit?: (type: "yakit" | "yaklang") => any
     isUpdate: boolean
 
@@ -1274,14 +1397,27 @@ interface UIOpUpdateProps {
     isRemoteMode?: boolean // 是否为远程模式
     onNoticeShow?: (visible: boolean) => void
     isUpdateYakit?: boolean // 下载引擎之前判断yakit是否需要先更新
+    // 是否为内网版本
+    intranet?: boolean
 }
 
 /** @name Yakit版本以及更新内容 */
 const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
-    const {version, lastVersion, isUpdate, isUpdateWait, onDownload, role, updateContent = "", onUpdateEdit} = props
+    const {
+        version,
+        lastVersion,
+        isUpdate,
+        isUpdateWait,
+        onDownload,
+        role,
+        updateContent = "",
+        onUpdateEdit,
+        intranet
+    } = props
 
     // 是否可编辑
     const isShowModify = useMemo(() => {
+        if (intranet) return false // 内网版不允许编辑
         if (isCommunityEdition() && role === "superAdmin") return true
         if (isEnpriTrace() && role === "admin") return true
         return false
@@ -1295,9 +1431,14 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
         return []
     }, [updateContent])
 
-    const versionTitle = useMemo(() => {
-        return isCommunityEdition() ? "社区版" : "企业版"
-    }, [])
+    const versionTitle = useMemoizedFn(() => {
+        if (isCommunityEdition()) {
+            return "社区版"
+        } else {
+            if (intranet) return "内网版"
+            return "官方版"
+        }
+    })
 
     return (
         <div
@@ -1311,7 +1452,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                         <YakitWhiteSvgIcon />
                     </div>
                     <div>
-                        <div className={styles["update-title"]}>{`${versionTitle} ${getReleaseEditionName()} ${
+                        <div className={styles["update-title"]}>{`${versionTitle()} ${getReleaseEditionName()} ${
                             lastVersion || version
                         }`}</div>
                         <div className={styles["update-time"]}>{`当前版本: ${version}`}</div>
@@ -1324,7 +1465,10 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     ) : lastVersion === "" ? (
                         "获取失败"
                     ) : isUpdate ? (
-                        <div className={styles["update-btn"]} onClick={() => onDownload("yakit")}>
+                        <div
+                            className={styles["update-btn"]}
+                            onClick={() => onDownload(intranet ? "intranetYakit" : "yakit")}
+                        >
                             <UpdateSvgIcon style={{marginRight: 4}} />
                             立即下载
                         </div>
@@ -1344,26 +1488,31 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                 </div>
             </div>
 
-            <div className={styles["update-content-wrapper"]}>
-                <div
-                    className={classNames({
-                        [styles["update-content"]]: !isShowModify,
-                        [styles["update-admin-content"]]: isShowModify
-                    })}
-                >
-                    {content.length === 0 ? (
-                        <div className={isShowModify ? styles["empty-content"] : ""}>管理员未编辑更新通知</div>
-                    ) : (
-                        content.map((item, index) => {
-                            return (
-                                <div key={index} className={classNames({[styles["paragraph-spacing"]]: index !== 0})}>
-                                    {item}
-                                </div>
-                            )
-                        })
-                    )}
+            {!intranet && (
+                <div className={styles["update-content-wrapper"]}>
+                    <div
+                        className={classNames({
+                            [styles["update-content"]]: !isShowModify,
+                            [styles["update-admin-content"]]: isShowModify
+                        })}
+                    >
+                        {content.length === 0 ? (
+                            <div className={isShowModify ? styles["empty-content"] : ""}>管理员未编辑更新通知</div>
+                        ) : (
+                            content.map((item, index) => {
+                                return (
+                                    <div
+                                        key={index}
+                                        className={classNames({[styles["paragraph-spacing"]]: index !== 0})}
+                                    >
+                                        {item}
+                                    </div>
+                                )
+                            })
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     )
 })
@@ -1603,7 +1752,6 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
                     value={searchVersionVal}
                     size='middle'
                     prefix={<OutlineSearchIcon className='search-icon' />}
-                    allowClear={true}
                     onChange={(e) => onSearchVersion(e.target.value.trim())}
                 />
             </div>
@@ -1743,6 +1891,73 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             })
             .catch((err) => {})
     })
+
+    const isUpdateEnpriTraceRef = useRef<boolean>(true)
+    const {eeSystemConfig} = useEeSystemConfig()
+    const [isShowEnpriTraceUpdateVisible, setShowEnpriTraceUpdateVisible] = useState<boolean>(false)
+    const [intranetHintLoading, setIntranetHintLoading] = useState<boolean>(false)
+    // 是否从内网读取版本号
+    const [isIntranet, setIsIntranet] = useState<boolean>(false)
+    // 内网版号
+    const [yakitLastIntranetVersion, setYakitLastIntranetVersion] = useState<string>("")
+    // 内网版是否下载中
+    const [isYakitIntranetDownloading, setYakitIntranetDownloading] = useState<boolean>(false)
+    // 内网版下载后的文件路径
+    const [yakitIntranetFilePath, setYakitIntranetFilePath] = useState<string>("")
+
+    const onDownloadFinish = useMemoizedFn((filePath: string, status: boolean) => {
+        // 下载完成后的处理逻辑
+        if (status) {
+            setYakitIntranetFilePath(filePath)
+            setShowEnpriTraceUpdateVisible(true)
+            setIsIntranetYakitUpdateWait(true)
+        }
+        setYakitIntranetDownloading(false)
+    })
+    // 后台隐藏下载内网版
+    const [_, {onDownloadStart}] = useDownloadYakit({onDownloadFinish})
+
+    useEffect(() => {
+        if (!isEnpriTrace()) return
+        // 是否从内网读取版本号
+        let intranet = false
+        eeSystemConfig.forEach((item) => {
+            if (item.configName === "clientUpdateType" && item.isOpen) {
+                intranet = true
+            }
+        })
+        setIsIntranet(intranet)
+    }, [eeSystemConfig])
+
+    useUpdateEffect(() => {
+        if (isIntranet) {
+            // 从内网读取版本号
+            grpcFetchIntranetYakitVersion().then((filePath: string) => {
+                const match = filePath.match(/EnpriTrace-([\d.-]+)/)
+                const version = match ? match[1] : ""
+                const data = `v${version.endsWith("-") ? version.slice(0, -1) : version}` // 去掉末尾的'-'符号
+
+                // 企业版初次进入时 如若配置文件为强制更新则隐藏下载更新内容后弹出提示框
+                if (isUpdateEnpriTraceRef.current && data.length > 0) {
+                    const isUpdateYakit = data !== "" && removePrefixV(data) !== removePrefixV(yakitVersion)
+                    // 是否强制更新
+                    let forceUpdate = false
+                    eeSystemConfig.forEach((item) => {
+                        if (item.configName === "forceUpdate") {
+                            forceUpdate = item.isOpen
+                        }
+                    })
+                    if (isUpdateYakit && forceUpdate) {
+                        isUpdateEnpriTraceRef.current = false
+                        setYakitIntranetDownloading(true)
+                        onDownloadStart()
+                    }
+                }
+                setYakitLastIntranetVersion(data)
+            })
+        }
+    }, [isIntranet])
+
     /** 获取最新Yakit版本号 */
     const fetchYakitLastVersion = useMemoizedFn(() => {
         /** 社区版埋点 */
@@ -1867,9 +2082,10 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         }
     }, [isEngineLink])
 
-    const onDownload = useMemoizedFn((type: "yakit" | "yaklang") => {
+    // intranetYakit为内网Yakit
+    const onDownload = useMemoizedFn((type: "yakit" | "yaklang" | "intranetYakit") => {
         setShow(false)
-        if (type === "yakit") {
+        if (["yakit", "intranetYakit"].includes(type)) {
             emiter.emit("activeUpdateYakitOrYaklang", type)
         } else {
             emiter.emit("downYaklangSpecifyVersion", JSON.stringify({version: yaklangLastVersion}))
@@ -1877,14 +2093,20 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     })
 
     const [isYakitUpdateWait, setIsYakitUpdateWait] = useState<boolean>(false)
+    const [isIntranetYakitUpdateWait, setIsIntranetYakitUpdateWait] = useState<boolean>(false)
     /** 监听 yakit 下载后不安装，在 UI 上提示安装按钮 */
     useEffect(() => {
         const onsetIsYakitUpdateWait = () => {
             setIsYakitUpdateWait(true)
         }
+        const onsetIsYakitIntranetUpdateWait = () => {
+            setIsIntranetYakitUpdateWait(true)
+        }
         emiter.on("downloadedYakitFlag", onsetIsYakitUpdateWait)
+        emiter.on("downloadedYakitIntranetFlag", onsetIsYakitIntranetUpdateWait)
         return () => {
             emiter.off("downloadedYakitFlag", onsetIsYakitUpdateWait)
+            emiter.off("downloadedYakitIntranetFlag", onsetIsYakitIntranetUpdateWait)
         }
     }, [])
 
@@ -1901,11 +2123,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         setShow(false)
     })
     const onSubmitEdit = useMemoizedFn(() => {
-        if(editShow.type === "yakit" && yakitLastVersion.length === 0){
+        if (editShow.type === "yakit" && yakitLastVersion.length === 0) {
             warn(`未获取${getReleaseEditionName()}最新版本`)
             return
         }
-        if(editShow.type !== "yakit" && yaklangLastVersion.length === 0){
+        if (editShow.type !== "yakit" && yaklangLastVersion.length === 0) {
             warn(`未获取引擎最新版本`)
             return
         }
@@ -2010,6 +2232,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     const notice = useMemo(() => {
         const isUpdateYakit = yakitLastVersion !== "" && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)
+        const isUpdateYakitIntranet =
+            yakitLastIntranetVersion !== "" && removePrefixV(yakitLastIntranetVersion) !== removePrefixV(yakitVersion)
         const isUpdateYaklang = lowerYaklangLastVersion
 
         return (
@@ -2080,6 +2304,19 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     {noticeType === "update" ? (
                         <div className={styles["notice-version-wrapper"]}>
                             <div className={styles["version-wrapper"]}>
+                                {/* 企业版内网Yakit更新 - 无需显示更新内容 */}
+                                {yakitLastIntranetVersion.length > 0 && !isYakitIntranetDownloading && (
+                                    <UIOpUpdateYakit
+                                        version={yakitVersion}
+                                        lastVersion={yakitLastIntranetVersion}
+                                        isUpdateWait={isIntranetYakitUpdateWait}
+                                        onDownload={onDownload}
+                                        role={userInfo.role}
+                                        isUpdate={isUpdateYakitIntranet}
+                                        intranet={true}
+                                    />
+                                )}
+
                                 <UIOpUpdateYakit
                                     version={yakitVersion}
                                     lastVersion={yakitLastVersion}
@@ -2158,6 +2395,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             content={notice}
             visible={show}
             onVisibleChange={(visible) => {
+                if (isShowEnpriTraceUpdateVisible) return
                 if (editShow.visible) setShow(false)
                 else setShow(visible)
             }}
@@ -2194,6 +2432,45 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     ></YakitInput.TextArea>
                 </div>
             </YakitModal>
+
+            <YakitModal
+                type='white'
+                size='large'
+                visible={isShowEnpriTraceUpdateVisible}
+                title='检测到 内网版 EnpriTrace 版本升级'
+                children={`检测到有新版本${yakitLastIntranetVersion}，请立即更新`}
+                onCancel={() => {
+                    setShowEnpriTraceUpdateVisible(false)
+                }}
+                maskClosable={false}
+                footer={
+                    <div style={{display: "flex", justifyContent: "flex-end", gap: 12, width: "100%"}}>
+                        <YakitButton size='max' type='outline1' onClick={() => ipcRenderer.invoke("open-yakit-path")}>
+                            打开路径
+                        </YakitButton>
+                        <YakitButton
+                            loading={intranetHintLoading}
+                            size='max'
+                            onClick={() => {
+                                setIntranetHintLoading(true)
+                                ipcRenderer
+                                    .invoke("install-intranet-yakit", yakitIntranetFilePath)
+                                    .then(() => {
+                                        setShowEnpriTraceUpdateVisible(false)
+                                    })
+                                    .catch((e) => {
+                                        failed(`内网版更新失败：${e}`)
+                                    })
+                                    .finally(() => {
+                                        setIntranetHintLoading(false)
+                                    })
+                            }}
+                        >
+                            立即更新
+                        </YakitButton>
+                    </div>
+                }
+            />
         </YakitPopover>
     )
 })
@@ -2363,7 +2640,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             .invoke("QueryRisk", {Id: info.Id})
             .then((res: Risk) => {
                 if (!res) return
-                showModal({
+                showYakitModal({
                     width: "80%",
                     title: "详情",
                     content: (
@@ -2371,7 +2648,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                             {isShowCodeScanDetail(res) ? (
                                 <YakitCodeScanRiskDetails info={res} />
                             ) : (
-                                <YakitRiskDetails info={res} />
+                                <YakitRiskDetails info={res} boxStyle={{height: 400}} />
                             )}
                         </div>
                     )
@@ -2732,7 +3009,6 @@ interface ScreenAndScreenshotProps {
     isRecording: boolean
     token: string
 }
-
 const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((props) => {
     const {system, isRecording, token} = props
     const [show, setShow] = useState<boolean>(false)
@@ -2874,6 +3150,8 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
     })
 
     // 性能采样
+    const performanceModalRef = useRef<any>(null)
+    const performanceModalLoading = useRef(false)
     const performanceParamsRef = useRef<{timeout: string}>({timeout: "10"})
     const {performanceSamplingInfo, setPerformanceSamplingLog, setSampling} = usePerformanceSampling()
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
@@ -2885,6 +3163,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
             setSampling(false)
         }
     })
+    const streamInfoCom = useCampare(streamInfo)
     useEffect(() => {
         try {
             if (
@@ -2905,10 +3184,12 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         } catch (error) {
             setPerformanceSamplingLog([])
         }
-    }, [streamInfo])
+    }, [streamInfoCom])
 
     const handlePerformanceSampling = () => {
         if (performanceSamplingInfo.isPerformanceSampling) return
+        if (performanceModalRef.current || performanceModalLoading.current) return // 已有弹窗或正在请求
+        performanceModalLoading.current = true
         grpcFetchLocalPluginDetail({Name: "核心引擎性能采样"}, true)
             .then((res) => {
                 const samplingPlugin = res
@@ -2969,14 +3250,20 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                             debugPluginStreamEvent.start()
                             setSampling(true)
                             m.destroy()
+                            performanceModalRef.current = null
+                            performanceModalLoading.current = false
                         })
                     },
                     onCancel: () => {
                         m.destroy()
+                        performanceModalRef.current = null
+                        performanceModalLoading.current = false
                     }
                 })
+                performanceModalRef.current = m
             })
             .catch(() => {
+                performanceModalLoading.current = false
                 yakitNotify("info", "找不到Yak 原生插件：核心引擎性能采样")
             })
     }

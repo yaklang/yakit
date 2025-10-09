@@ -33,12 +33,14 @@ import {Tooltip} from "antd"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {
     ClientMITMHijackedResponse,
+    MITMContentReplacersRequest,
     MITMForwardModifiedRequest,
     MITMForwardModifiedResponseRequest,
     MITMHijackGetFilterRequest,
     grpcClientMITMHijacked,
     grpcMITMAutoForward,
     grpcMITMCancelHijackedCurrentResponseById,
+    grpcMITMContentReplacers,
     grpcMITMForwardModifiedRequest,
     grpcMITMForwardModifiedResponse,
     grpcMITMForwardRequestById,
@@ -146,6 +148,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     const [calloutColor, setCalloutColor] = useState<string>("")
 
+    // 是否有新数据
+    const [hasNewData, setHasNewData] = useState<boolean>(false)
     const [sourceType, setSourceType] = useState<string>("mitm")
     const [tableTotal, setTableTotal] = useState<number>(0)
     const [tableSelectNum, setTableSelectNum] = useState<number>(0)
@@ -205,7 +209,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 version: mitmVersion
             })
                 .then(() => {
-                    getMITMFilter()
+                    setTimeout(() => {
+                        getMITMFilter()
+                    }, 500)
                 })
                 .catch((err) => {
                     yakitFailed("删除过滤器中包含项的所有内容失败：" + err)
@@ -221,12 +227,15 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 newRules.push({...item, NoReplace: true})
             }
         })
-        ipcRenderer
-            .invoke("mitm-content-replacers", {
-                replacers: newRules
-            })
+        const value: MITMContentReplacersRequest = {
+            replacers: newRules,
+            version: mitmVersion
+        }
+        grpcMITMContentReplacers(value, true)
             .then((val) => {
-                getRules()
+                setTimeout(() => {
+                    getRules()
+                }, 500)
                 yakitNotify("success", "已成功开启规则“全部不替换”按钮")
             })
             .catch((e) => {
@@ -801,6 +810,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         setTempShowPluginHistory={setTempShowPluginHistory}
                         tableTotal={tableTotal}
                         tableSelectNum={tableSelectNum}
+                        hasNewData={hasNewData}
                     />
                 </div>
             </>
@@ -873,6 +883,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         params={{SourceType: sourceType}}
                         onSetTableTotal={setTableTotal}
                         onSetTableSelectNum={setTableSelectNum}
+                        onSetHasNewData={setHasNewData}
                         wrapperStyle={{padding: 0}}
                         onQueryParams={(queryParams) => {
                             const processQuery = JSON.parse(queryParams) || {}
@@ -886,14 +897,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                             )
                         }}
                     />
-                </div>
-
-                {/* 被动日志 */}
-                <div
-                    style={{display: autoForward === "passive" ? "block" : "none"}}
-                    className={styles["mitm-hijacked-passive-content"]}
-                >
-                    <MITMPluginLogViewer messages={logs} status={statusCards} />
                 </div>
             </>
         )
@@ -975,6 +978,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 </div>
             </div>
             {onRenderContent()}
+            {/* 被动日志 */}
+            {autoForward === "passive" && (
+                <div className={styles["mitm-hijacked-passive-content"]}>
+                    <MITMPluginLogViewer messages={logs} status={statusCards} />
+                </div>
+            )}
         </div>
     )
 })

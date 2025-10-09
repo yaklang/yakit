@@ -27,10 +27,11 @@ import emiter from "@/utils/eventBus/eventBus"
 import {randomString} from "@/utils/randomUtil"
 import {generateGroupId} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
 import {MultipleNodeInfo} from "@/pages/layout/mainOperatorContent/MainOperatorContentType"
-import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
+import {defaultAdvancedConfigValue, DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-
+import i18n from "@/i18n/i18n"
+import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
 const {ipcRenderer} = window.require("electron")
 
 const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
@@ -83,7 +84,12 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
         methodGet: value.MutateMethods.find((item) => item.Type === "Get")?.Value || [{Key: "", Value: ""}],
         methodPost: value.MutateMethods.find((item) => item.Type === "Post")?.Value || [{Key: "", Value: ""}],
         inheritCookies: value.InheritCookies,
-        inheritVariables: value.InheritVariables
+        inheritVariables: value.InheritVariables,
+        enableRandomChunked: !!value.EnableRandomChunked,
+        randomChunkedMinLength: value.RandomChunkedMinLength || defaultAdvancedConfigValue.randomChunkedMinLength,
+        randomChunkedMaxLength: value.RandomChunkedMaxLength || defaultAdvancedConfigValue.randomChunkedMaxLength,
+        randomChunkedMinDelay: value.RandomChunkedMinDelay || defaultAdvancedConfigValue.randomChunkedMinDelay,
+        randomChunkedMaxDelay: value.RandomChunkedMaxDelay || defaultAdvancedConfigValue.randomChunkedMaxDelay
     }
     return resProps
 }
@@ -176,7 +182,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
                 onClick: ({key}) => {
                     switch (key) {
                         case "dataPacketId":
-                            onImportShare()
+                            onImportShare(i18n)
                             break
                         case "yamlDocument":
                             onOpenImportYamlPop()
@@ -214,7 +220,6 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
                 m.destroy()
             },
             onOk: (e) => {
-                // BUG 偶现编辑器有内容 yamlContRef.current没有值 暂不清楚原因
                 if (yamlContRef.current) {
                     execImportYaml()
                     m.destroy()
@@ -227,10 +232,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
 
     const onOpenSystemDialog = async () => {
         try {
-            const {canceled, filePaths} = await ipcRenderer.invoke("openDialog", {
-                title: "请选择文件",
-                properties: ["openFile"]
-            })
+            const {canceled, filePaths} = await handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
             if (canceled) return
             if (filePaths.length) {
                 let absolutePath = filePaths[0].replace(/\\/g, "\\")
@@ -381,6 +383,7 @@ const MultimodeImportYaml: React.FC<MultimodeImportYamlProp> = React.memo(({read
     useEffect(() => {
         const updateYamlContent = (cont: string) => {
             setYamlCont(cont)
+            editorContChange(cont)
         }
         emiter.on("onImportYamlPopEditorContent", updateYamlContent)
         return () => {
@@ -424,7 +427,7 @@ const MultimodeImportYaml: React.FC<MultimodeImportYamlProp> = React.memo(({read
 
     return (
         <div className={styles.multimodeImportYaml} ref={multimodeImportYamlRef}>
-            <YakitEditor key={yamlContent} value={yamlContent} setValue={editorContChange}></YakitEditor>
+            <YakitEditor key={yamlContent} value={yamlContent} setValue={editorContChange} type='yaml'></YakitEditor>
         </div>
     )
 })

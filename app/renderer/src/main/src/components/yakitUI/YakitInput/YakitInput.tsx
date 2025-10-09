@@ -1,5 +1,5 @@
 import {Input, InputRef} from "antd"
-import React, {forwardRef, useState} from "react"
+import React, {forwardRef, useMemo, useState} from "react"
 import {
     YakitInputSearchProps,
     YakitInputProps,
@@ -12,7 +12,7 @@ import {YakitButton} from "../YakitButton/YakitButton"
 import {useMemoizedFn} from "ahooks"
 import {ResizerIcon} from "@/assets/newIcon"
 import {TextAreaRef} from "antd/lib/input/TextArea"
-
+import {SolidCloseCircleIcon} from "@/assets/icon/colors"
 
 /**
  * @description: 输入
@@ -20,7 +20,7 @@ import {TextAreaRef} from "antd/lib/input/TextArea"
  */
 const InternalInput: React.FC<YakitInputProps & React.RefAttributes<InputRef>> = forwardRef(
     (props, ref: React.Ref<InputRef>) => {
-        const {size, wrapperClassName, className, wrapperStyle, ...restProps} = props
+        const {size, wrapperClassName, className, wrapperStyle, allowClear, ...restProps} = props
         return (
             <div
                 className={classNames(
@@ -35,6 +35,9 @@ const InternalInput: React.FC<YakitInputProps & React.RefAttributes<InputRef>> =
                 style={{...(wrapperStyle || {})}}
             >
                 <Input
+                    allowClear={
+                        !!allowClear ? {clearIcon: <SolidCloseCircleIcon style={{display: "flex"}} />} : undefined
+                    }
                     spellCheck={false}
                     {...restProps}
                     ref={ref}
@@ -57,7 +60,7 @@ const InternalInput: React.FC<YakitInputProps & React.RefAttributes<InputRef>> =
 
 const InternalSearch: React.FC<YakitInputSearchProps & React.RefAttributes<InputRef>> = forwardRef(
     (props, ref: React.Ref<InputRef>) => {
-        const {size, wrapperClassName, className, wrapperStyle, ...restProps} = props
+        const {size, wrapperClassName, className, wrapperStyle, allowClear = true, ...restProps} = props
         const [focus, setFocus] = useState<boolean>(false)
         const onFocus = useMemoizedFn((e) => {
             setFocus(true)
@@ -83,7 +86,9 @@ const InternalSearch: React.FC<YakitInputSearchProps & React.RefAttributes<Input
                 style={{...(wrapperStyle || {})}}
             >
                 <Input.Search
-                    allowClear
+                    allowClear={
+                        !!allowClear ? {clearIcon: <SolidCloseCircleIcon style={{display: "flex"}} />} : undefined
+                    }
                     enterButton
                     spellCheck={false}
                     {...restProps}
@@ -105,7 +110,7 @@ const InternalSearch: React.FC<YakitInputSearchProps & React.RefAttributes<Input
 
 const InternalTextArea: React.FC<InternalTextAreaProps & React.RefAttributes<TextAreaRef>> = forwardRef(
     (props, ref: React.Ref<TextAreaRef>) => {
-        const {wrapperClassName, wrapperStyle, isShowResize = true,resizeClassName='', ...restProps} = props
+        const {wrapperClassName, wrapperStyle, isShowResize = true, resizeClassName = "", ...restProps} = props
         return (
             <div
                 className={classNames(
@@ -119,7 +124,7 @@ const InternalTextArea: React.FC<InternalTextAreaProps & React.RefAttributes<Tex
                 style={{...(wrapperStyle || {})}}
             >
                 <Input.TextArea spellCheck={false} {...restProps} ref={ref} />
-                {isShowResize && <ResizerIcon className={classNames("textArea-resizer-icon",resizeClassName)} />}
+                {isShowResize && <ResizerIcon className={classNames("textArea-resizer-icon", resizeClassName)} />}
             </div>
         )
     }
@@ -127,7 +132,7 @@ const InternalTextArea: React.FC<InternalTextAreaProps & React.RefAttributes<Tex
 
 const InternalInputPassword: React.FC<InternalInputPasswordProps & React.RefAttributes<InputRef>> = forwardRef(
     (props, ref: React.Ref<InputRef>) => {
-        const {wrapperClassName, wrapperStyle, size, className, ...restProps} = props
+        const {wrapperClassName, wrapperStyle, size, className, allowClear, ...restProps} = props
         return (
             <div
                 className={classNames(
@@ -142,7 +147,14 @@ const InternalInputPassword: React.FC<InternalInputPasswordProps & React.RefAttr
                 )}
                 style={{...(wrapperStyle || {})}}
             >
-                <Input.Password spellCheck={false} {...restProps} ref={ref} />
+                <Input.Password
+                    allowClear={
+                        !!allowClear ? {clearIcon: <SolidCloseCircleIcon style={{display: "flex"}} />} : undefined
+                    }
+                    spellCheck={false}
+                    {...restProps}
+                    ref={ref}
+                />
             </div>
         )
     }

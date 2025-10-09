@@ -5,6 +5,10 @@
     :global {
         .ant-tree .ant-tree-treenode {
             padding-bottom: 0;
+            background-color: var(--Colors-Use-Basic-Background);
+        }
+        .ant-tree-list{
+            background: var(--Colors-Use-Basic-Background)
         }
         .ant-tree-switcher {
             display: none;
@@ -33,7 +37,7 @@
             width: 6px !important;
         }
         .ant-tree-list-scrollbar-thumb{
-            background: #c1c1c1 !important;
+            background: var(--Colors-Use-Basic-Background) !important;
         }
     }
 
@@ -53,7 +57,7 @@
     position: relative;
     height: 22px;
     text-align: center;
-    color: var(--yakit-disable-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     font-size: 11px;
     line-height: 22px;
 }
@@ -75,7 +79,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             transition: transform 0.3s;
         }
         &.expanded {
@@ -116,7 +120,7 @@
         .content-body {
             flex: 1;
             overflow: hidden;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
@@ -135,7 +139,7 @@
 
     &:hover {
         border-radius: 4px;
-        background-color: #f8f8f8;
+        background-color: var(--Colors-Use-Neutral-Bg);
     }
 
     &.node-selected {

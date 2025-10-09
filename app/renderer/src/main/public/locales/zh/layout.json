@@ -1,0 +1,92 @@
+{
+  "Layout": {
+    "PublicMenu": {
+      "getUserMenuFailed": "获取用户菜单失败：",
+      "pluginNotAvailableOnline": "线上无此插件，无法下载。"
+    },
+    "MenuCodec": {
+      "decode": "解码",
+      "encode": "编码",
+      "fuzztag": "fuzztag",
+      "messageCodecInProgress": "请等待上次编解码执行完后再次尝试",
+      "messageCodecNoContent": "请输入需要编解码的内容后再次尝试",
+      "messageCodecEmptyType": "BUG: 空的编解码类型",
+      "base64": "Base64 编码",
+      "htmlencode": "HTML 实体编码（强制）",
+      "htmlencodeHex": "HTML 实体编码（强制十六进制模式）",
+      "htmlescape": "HTML 实体编码（只编码特殊字符）",
+      "urlencode": "URL 编码（强制）",
+      "urlescape": "URL 编码（只编码特殊字符）",
+      "urlescapePath": "URL 路径编码（只编码特殊字符）",
+      "doubleUrlencode": "双重 URL 编码",
+      "hexEncode": "十六进制编码",
+      "jsonUnicode": "Unicode 中文编码",
+      "MD5": "MD5 编码",
+      "SM3": "SM3 编码",
+      "SHA1": "SHA1 编码",
+      "SHA256": "SHA-256 编码",
+      "SHA512": "SHA-512 编码",
+      "base64Decode": "Base64 解码",
+      "htmldecode": "HTML 解码",
+      "urlunescape": "URL 解码",
+      "urlunescapePath": "URL 路径解码",
+      "doubleUrldecode": "双重 URL 解码",
+      "hexDecode": "十六进制解码",
+      "jsonUnicodeDecode": "Unicode 中文解码"
+    },
+    "MenuDNSLog": {
+      "accessRecords": "访问记录",
+      "showOnlyARecords": "只看 A 记录",
+      "type": "类型",
+      "remoteIP": "远端IP",
+      "time": "时间",
+      "useCallbackService": "使用 {v1} 自带 {v2} 反连服务",
+      "generateDomain": "生成域名",
+      "viewAccessRecords": "查看访问记录"
+    },
+    "ExtraMenu": {
+      "localPlugin": "本地插件",
+      "pluginID": "插件 ID",
+      "online": "线上",
+      "local": "本地",
+      "importSharedData": "导入分享数据",
+      "importHARHistoryData": "导入HAR流量数据"
+    },
+    "NotepadMenu": {
+      "list": "{name}管理",
+      "add": "新建{name}"
+    },
+    "HeardMenu": {
+      "editMenu": "编辑菜单",
+      "importJsonConfig": "导入 JSON 配置",
+      "scanMode": "扫描模式",
+      "resetScanMode": "复原扫描模式",
+      "expertMode": "专家模式",
+      "resetExpertMode": "复原专家模式",
+      "getMenuFailed": "获取菜单失败：",
+      "downloadMenuPluginFailed": "下载菜单插件失败：",
+      "saveMenuFailed": "保存菜单失败：",
+      "updateMenuFailed": "更新菜单失败：",
+      "pluginLoadFailed": "插件加载失败",
+      "menuMissing": "菜单丢失，需点击重新下载，如仍无法下载，请前往插件商店查找",
+      "plugin": "插件",
+      "switchMenuModeFailed": "切换菜单模式失败：",
+      "deleteMenuFailed": "删除菜单失败：",
+      "dataCannotBeEmpty": "数据不能为空",
+      "partialDataError": "转换过程中有部分数据错误，已自动丢弃",
+      "importDataFailed": "处理导入数据失败：",
+      "pluginMissingDownload": "插件丢失，点击下载"
+    },
+    "MenuPlugin": {
+      "restoreMenu": "复原菜单",
+      "restoreMenuTip": "复原菜单提醒",
+      "confirmRestoreMenu": "确认复原后，将重置常用插件菜单栏。是否确认复原？",
+      "commonPlugins": "常用插件"
+    },
+    "MenuMode": {
+      "bruteForce": "爆破",
+      "and": "与",
+      "unauthorizedCheck": "未授权检测"
+    }
+  }
+}

@@ -2,13 +2,22 @@
     display: flex;
     gap: 8px;
     justify-content: right;
+    button:not(:first-child),.yak-runner-button {
+            border-color: var(--Colors-Use-Neutral-Border);
+            &:hover {
+                background-color: var(--Colors-Use-Main-Bg);
+                border-color: var(--Colors-Use-Main-Primary);
+                color: var(--Colors-Use-Main-Primary);
+            }
+        }
+    
 }
 
 .import-resource-popover {
     :global {
         .ant-popover-inner {
-            border: 1px solid var(--yakit-border-color);
-            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
             border-radius: 4px;
             .ant-popover-inner-content {
                 padding: 6px 4px 4px 4px;

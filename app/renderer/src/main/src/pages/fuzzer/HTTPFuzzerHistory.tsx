@@ -17,6 +17,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {DeleteFuzzerConfigRequest, apiDeleteFuzzerConfig} from "../layout/mainOperatorContent/utils"
+import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 
 export interface HTTPFuzzerHistorySelectorProp {
     currentSelectId?: number
@@ -120,8 +121,8 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
     })
 
     return (
-        <Card
-            size={"small"}
+        <YakitCard
+            // size={"small"}
             bordered={false}
             title={
                 <Space style={{lineHeight: "16px"}}>
@@ -144,7 +145,8 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                     </YakitPopconfirm>
                 </Space>
             }
-            style={{color: "var(--yakit-header-color)"}}
+            // style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}
+            className={styles["history-card-container"]}
         >
             {/* <Form
                 size={"small"}
@@ -185,7 +187,14 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                     <YakitSwitch checked={showAll} onChange={onSwitchShowAll} />
                 </span>
             </div>
-            <Divider style={{marginTop: 10, marginBottom: 6}} />
+            <Divider
+                style={{
+                    marginTop: 10,
+                    marginBottom: 6,
+                    color: "var(--Colors-Use-Neutral-Border)",
+                    borderTop: "1px solid var(--Colors-Use-Neutral-Border)"
+                }}
+            />
             <List<HTTPFuzzerTaskDetail>
                 className='yakit-list'
                 loading={loading}
@@ -282,6 +291,6 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                     )
                 }}
             />
-        </Card>
+        </YakitCard>
     )
 })

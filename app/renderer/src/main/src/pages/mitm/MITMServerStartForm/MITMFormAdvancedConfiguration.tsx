@@ -22,6 +22,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {RemoteGV} from "@/yakitGV"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
@@ -48,6 +49,7 @@ export interface AdvancedConfigurationFromValue {
     filterWebsocket: boolean
     disableCACertPage: boolean
     DisableWebsocketCompression: boolean
+    PluginConcurrency: number
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -67,6 +69,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [filterWebsocketDef, setFilterWebsocketDef] = useState<boolean>(false)
         const [disableCACertPageDef, setDisableCACertPageDef] = useState<boolean>(false)
         const [disableWebsocketCompressionDef, setDisableWebsocketCompressionDef] = useState<boolean>(false)
+        const [pluginConcurrencyDef, setPluginConcurrencyDef] = useState<number>(20)
 
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
@@ -94,7 +97,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             proxyPassword: enableProxyAuthDef ? proxyPasswordDef : "",
                             filterWebsocket: filterWebsocketDef,
                             disableCACertPage: disableCACertPageDef,
-                            DisableWebsocketCompression: disableWebsocketCompressionDef
+                            DisableWebsocketCompression: disableWebsocketCompressionDef,
+                            PluginConcurrency: pluginConcurrencyDef
                         }
                     }
                 }
@@ -110,6 +114,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 filterWebsocketDef,
                 disableCACertPageDef,
                 disableWebsocketCompressionDef,
+                pluginConcurrencyDef,
                 visible,
                 form
             ]
@@ -194,6 +199,15 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 }
                 setDisableWebsocketCompressionDef(v)
                 form.setFieldsValue({DisableWebsocketCompression: v})
+            })
+            // 插件并发进程
+            getRemoteValue(RemoteGV.MITMPluginConcurrency).then((e) => {
+                let v = 20
+                if (e) {
+                    v = Number(e)
+                }
+                setPluginConcurrencyDef(v)
+                form.setFieldsValue({PluginConcurrency: v})
             })
         }, [visible])
         /**
@@ -280,6 +294,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setRemoteValue(MITMConsts.MITMDefaultFilterWebsocket, `${params.filterWebsocket}`)
                 setRemoteValue(RemoteGV.MITMDisableCACertPage, params.disableCACertPage ? "true" : "")
                 setRemoteValue(RemoteGV.MITMDisableWebsocketCompression, params.DisableWebsocketCompression + "")
+                setRemoteValue(RemoteGV.MITMPluginConcurrency, params.PluginConcurrency + "")
                 onSave(params)
             })
         })
@@ -293,6 +308,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 filterWebsocket: filterWebsocketDef,
                 disableCACertPage: disableCACertPageDef,
                 DisableWebsocketCompression: disableWebsocketCompressionDef,
+                PluginConcurrency: pluginConcurrencyDef,
                 proxyUsername: proxyUsernameDef,
                 proxyPassword: proxyPasswordDef
             }
@@ -342,6 +358,14 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 jumpPage && ipcRenderer.invoke("open-route-page", {route: YakitRoute.Beta_ConfigNetwork})
             }
         })
+
+        const handlePluginConcurrencyBlur = () => {
+            const value = form.getFieldValue("PluginConcurrency")
+            if (value === null || value === undefined || isNaN(value) || value < 1) {
+                form.setFieldsValue({PluginConcurrency: 20})
+            }
+        }
+
         return (
             <YakitDrawer
                 className={styles["advanced-configuration-drawer"]}
@@ -379,8 +403,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
                                 return {value: i, label: i}
                             })}
+                            allowClear
                             mode='tags'
-                            allowClear={true}
                             placeholder={"例如 1.1.1.1"}
                         />
                     </Form.Item>
@@ -469,6 +493,14 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     </Form.Item>
                     <Form.Item label={"启用WebSocket压缩"} name='DisableWebsocketCompression' valuePropName='checked'>
                         <YakitSwitch size='large' />
+                    </Form.Item>
+                    <Form.Item label={"插件并发进程"} name='PluginConcurrency' style={{marginBottom: 12}}>
+                        <YakitInputNumber
+                            type='horizontal'
+                            size='small'
+                            defaultValue={20}
+                            onBlur={handlePluginConcurrencyBlur}
+                        />
                     </Form.Item>
                     <Form.Item label='客户端 TLS 导入' className={styles["advanced-configuration-drawer-TLS"]}>
                         <div className={styles["drawer-TLS-item"]}>
@@ -561,7 +593,12 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         certs={certs}
                         setCerts={setCerts}
                     />
-                    <MITMFiltersModal filterType="filter" visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={false} />
+                    <MITMFiltersModal
+                        filterType='filter'
+                        visible={filtersVisible}
+                        setVisible={setFiltersVisible}
+                        isStartMITM={false}
+                    />
                     <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
                 </React.Suspense>
             </YakitDrawer>

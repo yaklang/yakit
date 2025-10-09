@@ -1,0 +1,108 @@
+{
+  "MitmPage": {
+    "ImportLocalPlugin": {
+      "importLocalPluginSuccess": "Local plugin imported successfully",
+      "pluginSource": "Plugin Source",
+      "proxy": "Proxy",
+      "accessRepoViaProxy": "Access code repositories that are inaccessible from mainland China via proxy: e.g., http://127.0.0.1:7890",
+      "localPluginPath": "Local Plugin Path",
+      "enterLocalPluginPath": "Please enter the local plugin path",
+      "password": "Password",
+      "nucleiPoCLocalPath": "Nuclei PoC Local Path",
+      "pluginID": "Plugin ID",
+      "enterPluginID": "Please enter plugin IDs, separated by 'commas' or 'new lines'...",
+      "importOnlineNuclei": "Import Online Nuclei",
+      "enterNucleiPoCLocalPath": "Please enter the Nuclei PoC local path",
+      "importLocalNuclei": "Import Local Nuclei",
+      "pluginImportSuccess": "Plugin imported successfully",
+      "pluginImportMethod": "Plugin Import Method",
+      "externalResourceWarning": "Importing external resources has potential risks and may introduce malicious code or payloads, leading to data leaks, system compromises, and other serious consequences. Please carefully consider the necessity of importing external resources and ensure the source is trustworthy and the content is safe. If you must use external resources, it is recommended to prioritize official, secure versions or write your own controllable data sources. Additionally, please keep your system and software up to date, promptly fix known vulnerabilities, and maintain daily security protection.",
+      "onlineNuclei": "Online Nuclei",
+      "localPlugin": "Local Plugin",
+      "localNuclei": "Local Nuclei"
+    }
+  },
+  "MITMRule": {
+    "request": "Request",
+    "response": "Response",
+    "execution_order": "Execution Order",
+    "rule_name": "Rule Name",
+    "rule_content": "Rule Content",
+    "replacement_result": "Replacement Result",
+    "http_header_cookie_priority_tip": "HTTP Header and HTTP Cookie have a higher priority and will overwrite the body content",
+    "on_off": "On/Off",
+    "discard_result": "Discard Result",
+    "enable_substitute_then_discard_tip": "After enabling substitution, you can discard the current request/response",
+    "auto_resend": "Auto Resend",
+    "option_no_replace_request_tip": "This option only applies to requests. When enabled, the (request) packet will not be replaced, and the substituted result will be sent as an extra packet",
+    "rule_scope": "Rule Scope",
+    "select_request_or_response_header_body_tip": "After selecting request or response, at least one of Header and Body must be selected",
+    "effective_url": "Effective URL",
+    "hit_color": "Hit Color",
+    "append_tag": "Append Tag",
+    "replace_rule_effect_warning": "A replacement rule has been detected. This may affect interception. Are you sure you want to enable it?",
+    "drag_disabled_tip": "Dragging is disabled. You can only drag rules within the same status",
+    "save_rule_and_close_prompt": "Do you want to save the rule content and close the pop-up window?",
+    "content_rule_configuration": "Content Rule Configuration",
+    "official_website": "Official Website",
+    "existing_mitm_content_rules": "Rules",
+    "total_rules_count": "Total {count}",
+    "no_replace_all": "No Replacement for All",
+    "add_rule": "Add Rule"
+  },
+  "RuleExportAndImportButton": {
+    "import_configuration": "Import",
+    "export_configuration": "Export",
+    "export_configuration_json": "Export Configuration JSON"
+  },
+  "MITMRuleImport": {
+    "please_enter_data": "Please enter data!",
+    "import_from_json": "Import from JSON",
+    "copy_json_into_box_tip": "You can copy JSON code into the box below",
+    "use_default_configuration": "Use default configuration",
+    "overwrite_existing_rules": "Overwrite existing rules"
+  },
+  "MITMRuleFromModal": {
+    "edit_rule": "Edit Rule",
+    "add_rule": "Add Rule",
+    "add_this_rule": "Add this Rule",
+    "rule_group": "Rule Group",
+    "group_matching_tip": "Enter 0 to match all; enter a number to match the entered group; leave blank to match the first group by default",
+    "replacement_result": "Replacement Result",
+    "http_header_cookie_priority_tip": "HTTP Header and HTTP Cookie have a higher priority and will overwrite the body content",
+    "text": "Text",
+    "enter_content_to_replace_tip": "Enter the content you want to replace, can be empty~",
+    "effective_url": "Effective URL",
+    "url_specific_rule_tip": "The rule will only be effective for this URL; regular expressions are supported",
+    "hit_color": "Hit Color",
+    "tag": "Tag"
+  },
+  "ExtractRegular": {
+    "extract_selection_data_error": "Error extracting selection data:",
+    "cannot_generate_data_extraction_rule": "Cannot generate data extraction rule:"
+  },
+  "ExtraHTTPSelect": {
+    "already_set_extra_count_tip": "Already set {{len}} extra {{tip}}"
+  },
+  "InputHTTPHeaderForm": {
+    "enter_new_http_header": "Enter new HTTP Header",
+    "set_this_header": "Set this Header"
+  },
+  "InputHTTPCookieForm": {
+    "enter_new_cookie_value": "Enter new Cookie value",
+    "advanced_configuration": "Advanced Configuration",
+    "cookie_https_only": "Allow Cookie only on HTTPS",
+    "samesite_policy": "SameSite Policy",
+    "default_policy": "Default Policy",
+    "lax_policy": "Lax Policy",
+    "strict_policy": "Strict Policy",
+    "do_not_set": "Do Not Set",
+    "expires_timestamp": "Expires Timestamp",
+    "add_this_cookie": "Add this Cookie"
+  },
+  "RuleContent": {
+    "use_right_tool_generate_regex": "You can use the tool on the right to automatically generate a regex",
+    "auto_extract_regex": "Auto-extract Regex",
+    "select_in_editor_generate_regex": "Select content in the editor to automatically generate a regex"
+  }
+}

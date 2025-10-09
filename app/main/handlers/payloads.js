@@ -1,6 +1,5 @@
 const {ipcMain} = require("electron")
 const fs = require("fs")
-const path = require("path")
 module.exports = (win, getClient) => {
     const asyncQueryPayload = (params) => {
         return new Promise((resolve, reject) => {
@@ -154,11 +153,11 @@ module.exports = (win, getClient) => {
     const handlerHelper = require("./handleStreamWithContext")
 
     // 数据库存储
-    const streamPayloadMap = new Map()
-    ipcMain.handle("cancel-SavePayload", handlerHelper.cancelHandler(streamPayloadMap))
+    const streamSavePayloadMap = new Map()
+    ipcMain.handle("cancel-SavePayload", handlerHelper.cancelHandler(streamSavePayloadMap))
     ipcMain.handle("SavePayloadStream", (e, params, token) => {
         let stream = getClient().SavePayloadStream(params)
-        handlerHelper.registerHandler(win, stream, streamPayloadMap, token)
+        handlerHelper.registerHandler(win, stream, streamSavePayloadMap, token)
     })
 
     // 文件存储
@@ -189,6 +188,28 @@ module.exports = (win, getClient) => {
     ipcMain.handle("ExportAllPayload", async (e, params, token) => {
         let stream = getClient().ExportAllPayload(params)
         handlerHelper.registerHandler(win, stream, streamAllPayloadMap, token)
+    })
+    const streamPayloadBatchMap = new Map()
+    ipcMain.handle("cancel-ExportPayloadDBAndFile", handlerHelper.cancelHandler(streamPayloadBatchMap))
+    ipcMain.handle("ExportPayloadDBAndFile", async (e, params, token) => {
+        let stream = getClient().ExportPayloadDBAndFile(params)
+        handlerHelper.registerHandler(win, stream, streamPayloadBatchMap, token)
+    })
+
+    // 用于上传
+    const streamPayloadToOnlineMap = new Map()
+    ipcMain.handle("cancel-UploadPayloadToOnline", handlerHelper.cancelHandler(streamPayloadToOnlineMap))
+    ipcMain.handle("UploadPayloadToOnline", async (e, params, token) => {
+        let stream = getClient().UploadPayloadToOnline(params)
+        handlerHelper.registerHandler(win, stream, streamPayloadToOnlineMap, token)
+    })
+
+    // 用于下载
+    const streamDownloadPayloadMap = new Map()
+    ipcMain.handle("cancel-DownloadPayload", handlerHelper.cancelHandler(streamDownloadPayloadMap))
+    ipcMain.handle("DownloadPayload", async (e, params, token) => {
+        let stream = getClient().DownloadPayload(params)
+        handlerHelper.registerHandler(win, stream, streamDownloadPayloadMap, token)
     })
 
     // 用于去重
@@ -294,4 +315,5 @@ module.exports = (win, getClient) => {
     ipcMain.handle("YakVersionAtLeast", async (e, params) => {
         return await asyncYakVersionAtLeast(params)
     })
+
 }

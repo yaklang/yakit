@@ -48,6 +48,10 @@ export type YakRunnerAuditEventProps = {
     onExpendRightPath: string
     // 通知再次打开widget
     onWidgetOpenAgain: string
+    // 刷新项目管理列表
+    onRefreshProjectManager?: string
     // 通知打开审计搜索
     onOpenSearchModal?: string
+    // 通知打开左边第二栏
+    onOpenLeftSecondNode: "result" | "history"
 }

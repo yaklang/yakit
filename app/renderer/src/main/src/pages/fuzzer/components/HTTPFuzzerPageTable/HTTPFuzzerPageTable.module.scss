@@ -13,14 +13,14 @@
         @extend .display-flex-center;
         justify-content: center;
         gap: 12px;
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
 
         svg {
             cursor: pointer;
             width: 16px;
             height: 16px;
             &:hover {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -30,7 +30,7 @@
 }
 
 .body-length-text-red {
-    color: var(--yakit-danger-5);
+    color: var(--Colors-Use-Error-Primary);
 }
 
 .http-fuzzer-page-table {
@@ -84,7 +84,7 @@
     }
 }
 .filter-icon {
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     @extend .display-flex-center;
 }
 .search-icon {
@@ -94,7 +94,7 @@
     }
 }
 .active-icon {
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
 }
 
 .fail-reason {
@@ -131,7 +131,7 @@
     .second-node-title-text {
         font-weight: 500;
         font-size: 12px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         line-height: 16px;
     }
     .second-node-title-btns {

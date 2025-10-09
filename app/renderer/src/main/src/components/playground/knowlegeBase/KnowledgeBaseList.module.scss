@@ -1,0 +1,102 @@
+.knowledge-base-list {
+    height: 100%;
+    
+    .kb-list {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+        
+        .kb-item {
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            
+            &:hover {
+                border-color: #1890ff;
+                box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
+            }
+            
+            &.selected {
+                border-color: #1890ff;
+                background-color: #f6ffed;
+                box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
+            }
+            
+            .kb-info {
+                flex: 1;
+                min-width: 0;
+                
+                .kb-name {
+                    font-weight: 500;
+                    font-size: 14px;
+                    color: #262626;
+                    margin-bottom: 4px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                
+                .kb-description {
+                    font-size: 12px;
+                    color: #8c8c8c;
+                    margin-bottom: 4px;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+                
+                .kb-type {
+                    font-size: 12px;
+                    color: #595959;
+                }
+            }
+            
+            .kb-actions {
+                display: flex;
+                gap: 4px;
+                flex-shrink: 0;
+                opacity: 0;
+                transition: opacity 0.2s;
+                align-items: center;
+                
+                .embed-progress {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    opacity: 1;
+                    background: #f6ffed;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    border: 1px solid #b7eb8f;
+                    
+                    .progress-text {
+                        font-size: 12px;
+                        color: #52c41a;
+                        max-width: 120px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+                }
+            }
+            
+            &:hover .kb-actions {
+                opacity: 1;
+            }
+        }
+    }
+    
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #f0f0f0;
+    }
+}

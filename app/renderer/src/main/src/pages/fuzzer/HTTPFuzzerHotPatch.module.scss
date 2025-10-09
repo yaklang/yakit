@@ -10,15 +10,15 @@
 .http-fuzzer-hotPatch {
     :global {
         .ant-form {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-form-item-label > label {
             width: 100%;
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-form-item-explain,
         .ant-form-item-extra {
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
             font-size: 12px;
         }
     }
@@ -38,7 +38,7 @@
                 .info-icon {
                     margin-left: 4px;
                     svg {
-                        color: var(--yakit-helper-text-color);
+                        color: var(--Colors-Use-Neutral-Disable);
                     }
                 }
             }
@@ -49,6 +49,12 @@
             .hotCode-editor {
                 height: 100%;
                 width: calc(100% - 258px);
+            }
+        }
+        .engineConsole-icon-style {
+            svg {
+                width: 18px;
+                height: 18px;
             }
         }
     }
@@ -68,14 +74,14 @@
         font-weight: 600;
         font-size: 14px;
         line-height: 20px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         svg {
             width: 16px;
             height: 16px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
             cursor: pointer;
             &:hover {
-                color: var(--yakit-primary-4);
+                color: var(--Colors-Use-Main-Hover);
             }
         }
     }
@@ -123,7 +129,7 @@
             .hotCode-item-name {
                 width: calc(100% - 10px);
                 font-size: 12px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-weight: 400;
             }
             .extra-opt-btns {
@@ -132,7 +138,7 @@
                 text-align: right;
             }
             &:hover {
-                background-color: var(--yakit-background-color);
+                background-color: var(--Colors-Use-Neutral-Bg);
                 .extra-opt-btns {
                     display: block;
                 }
@@ -141,7 +147,7 @@
     }
     .hotCode-item-select {
         .hotCode-item-name {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }

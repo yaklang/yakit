@@ -11,70 +11,77 @@ import {yakitNotify} from "@/utils/notification"
 
 import classNames from "classnames"
 import styles from "./MenuCodec.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
 interface MenuCodecProps {}
 
-const CodeMenuInfo: YakitMenuItemProps[] = [
-    {key: "base64", label: "Base64 编码"},
-    {key: "htmlencode", label: "HTML 实体编码（强制）"},
-    {key: "htmlencode-hex", label: "HTML 实体编码（强制十六进制模式）"},
-    {key: "htmlescape", label: "HTML 实体编码（只编码特殊字符）"},
-    {key: "urlencode", label: "URL 编码（强制）"},
-    {key: "urlescape", label: "URL 编码（只编码特殊字符）"},
-    {key: "urlescape-path", label: "URL 路径编码（只编码特殊字符）"},
-    {key: "double-urlencode", label: "双重 URL 编码"},
-    {key: "hex-encode", label: "十六进制编码"},
-    {key: "json-unicode", label: "Unicode 中文编码"},
-    {key: "MD5", label: "MD5 编码"},
-    {key: "SM3", label: "SM3 编码"},
-    {key: "SHA1", label: "SHA1 编码"},
-    {key: "SHA-256", label: "SHA-256 编码"},
-    {key: "SHA-512", label: "SHA-512 编码"}
-]
-const DecodeMenuInfo: YakitMenuItemProps[] = [
-    {key: "base64-decode", label: "Base64 解码"},
-    {key: "htmldecode", label: "HTML 解码"},
-    {key: "urlunescape", label: "URL 解码"},
-    {key: "urlunescape-path", label: "URL 路径解码"},
-    {key: "double-urldecode", label: "双重 URL 解码"},
-    {key: "hex-decode", label: "十六进制解码"},
-    {key: "json-unicode-decode", label: "Unicode 中文解码"}
-]
-
 export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["layout"])
     const [avtiveKey, setActiveKey] = useState<string>("")
 
     const [codeShow, setCodeShow] = useState<boolean>(false)
+
+    const codeMenuInfo = useMemo<YakitMenuItemProps[]>(() => {
+        return [
+            {key: "base64", label: t("Layout.MenuCodec.base64")},
+            {key: "htmlencode", label: t("Layout.MenuCodec.htmlencode")},
+            {key: "htmlencode-hex", label: t("Layout.MenuCodec.htmlencodeHex")},
+            {key: "htmlescape", label: t("Layout.MenuCodec.htmlescape")},
+            {key: "urlencode", label: t("Layout.MenuCodec.urlencode")},
+            {key: "urlescape", label: t("Layout.MenuCodec.urlescape")},
+            {key: "urlescape-path", label: t("Layout.MenuCodec.urlescapePath")},
+            {key: "double-urlencode", label: t("Layout.MenuCodec.doubleUrlencode")},
+            {key: "hex-encode", label: t("Layout.MenuCodec.hexEncode")},
+            {key: "json-unicode", label: t("Layout.MenuCodec.jsonUnicode")},
+            {key: "MD5", label: t("Layout.MenuCodec.MD5")},
+            {key: "SM3", label: t("Layout.MenuCodec.SM3")},
+            {key: "SHA1", label: t("Layout.MenuCodec.SHA1")},
+            {key: "SHA-256", label: t("Layout.MenuCodec.SHA256")},
+            {key: "SHA-512", label: t("Layout.MenuCodec.SHA512")}
+        ]
+    }, [i18n.language])
+
     const codeMenu = useMemo(
         () => (
             <YakitMenu
                 width={245}
                 selectedKeys={[]}
-                data={CodeMenuInfo}
+                data={codeMenuInfo}
                 onClick={({key}) => {
                     setActiveKey("code")
                     onCodec(key)
                 }}
             />
         ),
-        []
+        [codeMenuInfo]
     )
     const [decodeShow, setDecodeShow] = useState<boolean>(false)
+    const decodeMenuInfo = useMemo<YakitMenuItemProps[]>(() => {
+        return [
+            {key: "base64-decode", label: t("Layout.MenuCodec.base64Decode")},
+            {key: "htmldecode", label: t("Layout.MenuCodec.htmldecode")},
+            {key: "urlunescape", label: t("Layout.MenuCodec.urlunescape")},
+            {key: "urlunescape-path", label: t("Layout.MenuCodec.urlunescapePath")},
+            {key: "double-urldecode", label: t("Layout.MenuCodec.doubleUrldecode")},
+            {key: "hex-decode", label: t("Layout.MenuCodec.hexDecode")},
+            {key: "json-unicode-decode", label: t("Layout.MenuCodec.jsonUnicodeDecode")}
+        ]
+    }, [i18n.language])
     const decodeMenu = useMemo(
         () => (
             <YakitMenu
                 width={142}
                 selectedKeys={[]}
-                data={DecodeMenuInfo}
+                data={decodeMenuInfo}
                 onClick={({key}) => {
                     setActiveKey("decode")
                     onCodec(key)
                 }}
             />
         ),
-        []
+        [decodeMenuInfo]
     )
 
     const [question, setQuestion] = useState<string>("")
@@ -89,15 +96,15 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
     const isExec = useRef<boolean>(false)
     const onCodec = useMemoizedFn((key: string) => {
         if (isExec.current) {
-            yakitNotify("error", "请等待上次编解码执行完后再次尝试")
+            yakitNotify("error", t("Layout.MenuCodec.messageCodecInProgress"))
             return
         }
         if (!question) {
-            yakitNotify("error", "请输入需要编解码的内容后再次尝试")
+            yakitNotify("error", t("Layout.MenuCodec.messageCodecNoContent"))
             return
         }
         if (!key) {
-            yakitNotify("error", "BUG: 空的编解码类型")
+            yakitNotify("error", t("Layout.MenuCodec.messageCodecEmptyType"))
             return
         }
         isExec.current = true
@@ -110,12 +117,12 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                         CodecType: "Fuzz",
                         Params: [
                             {
-                                "Key": "timeout",
-                                "Value": "10"
+                                Key: "timeout",
+                                Value: "10"
                             },
                             {
-                                "Key": "limit",
-                                "Value": "10000"
+                                Key: "limit",
+                                Value: "10000"
                             }
                         ]
                     }
@@ -184,8 +191,10 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                         type={avtiveKey === "decode" ? "primary" : "outline2"}
                         onClick={(e) => e.preventDefault()}
                     >
-                        解码
-                        {codeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                        <div className={styles["codec-menu-btn"]}>
+                            {t("Layout.MenuCodec.decode")}
+                            {codeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                        </div>
                     </YakitButton>
                 </YakitPopover>
                 <YakitPopover
@@ -200,8 +209,10 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                         type={avtiveKey === "code" ? "primary" : "outline2"}
                         onClick={(e) => e.preventDefault()}
                     >
-                        编码
-                        {decodeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                        <div className={styles["encode-menu-btn"]}>
+                            {t("Layout.MenuCodec.encode")}
+                            {decodeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                        </div>
                     </YakitButton>
                 </YakitPopover>
                 <YakitButton
@@ -210,7 +221,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     onClick={() => onCodec("fuzztag")}
                     style={{height: 24}}
                 >
-                    fuzztag
+                    {t("Layout.MenuCodec.fuzztag")}
                 </YakitButton>
             </div>
 
@@ -225,7 +236,11 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     <CopyComponents
                         className={classNames(styles["copy-icon-style"], {[styles["copy-icon-ban"]]: !question})}
                         copyText={question}
-                        iconColor={!!question ? "#85899e" : "#ccd2de"}
+                        iconColor={
+                            !!question
+                                ? "var(--Colors-Use-Neutral-Text-3-Secondary)"
+                                : "var(--Colors-Use-Neutral-Disable)"
+                        }
                     />
                 </div>
             </div>
@@ -247,7 +262,11 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     <CopyComponents
                         className={classNames(styles["copy-icon-style"], {[styles["copy-icon-ban"]]: !answer})}
                         copyText={answer}
-                        iconColor={!!answer ? "#85899e" : "#ccd2de"}
+                        iconColor={
+                            !!answer
+                                ? "var(--Colors-Use-Neutral-Text-3-Secondary)"
+                                : "var(--Colors-Use-Neutral-Disable)"
+                        }
                     />
                 </div>
             </div>

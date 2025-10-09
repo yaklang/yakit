@@ -73,9 +73,9 @@ export interface YakitRiskDetailsProps {
 }
 
 export interface YakitRiskSelectTagProps {
-    info: SSARisk
+    ids: number[]
     onClose?: () => void
-    onSave: (info: SSARisk) => void
+    onCreate: (params: CreateSSARiskDisposalsRequest) => void
 }
 
 export interface YakitCodeScanRiskDetailsProps {
@@ -133,6 +133,12 @@ export interface YakitAuditRiskDetailsProps {
     border?: boolean
     isShowExtra?: boolean
     isExtraClick?: () => void
+    showType?: "detail" | "code" | "history"
+    setShowType?: (type: "detail" | "code" | "history") => void
+    setLatestDisposalStatus?: (info: SSARisk,status: string) => void
+    disposalData?: SSARiskDisposalData[]
+    setDisposalData?: (data: SSARiskDisposalData[]) => void
+    getSSARiskDisposal?: (info: SSARisk) => void
 }
 
 export interface QueryNewSSARisksRequest {
@@ -144,4 +150,13 @@ export interface QueryNewSSARisksResponse {
     NewRiskTotal: number
     Total: number
     Unread: number
+}
+
+export interface AuditResultHistoryProps {
+    info: SSARisk
+    disposalData: SSARiskDisposalData[]
+    setDisposalData: (data: SSARiskDisposalData[]) => void
+    setShowType?: (type: "detail" | "code" | "history") => void
+    setLatestDisposalStatus?: (info: SSARisk,status: string) => void
+    style?: React.CSSProperties
 }

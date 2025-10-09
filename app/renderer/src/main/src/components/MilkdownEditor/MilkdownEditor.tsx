@@ -33,10 +33,10 @@ import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {tokenOverdue} from "@/services/fetch"
 import {isBoolean} from "lodash"
 import {notepadSaveStatus} from "./WebsocketProvider/constants"
-import {toAddNotepad, toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
 import {API} from "@/services/swagger/resposeType"
 import {apiSaveNotepad} from "@/pages/notepadManage/notepadManage/utils"
 import useInitEditorHooks, {InitEditorHooksCollabProps} from "./utils/initEditor"
+import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
 const markdown1 = `
 
 1. 5565
@@ -73,6 +73,27 @@ export const isDifferenceGreaterThan30Seconds = (timestamp1, timestamp2) => {
     // 判断是否大于30秒（10秒 = 10000毫秒）
     return difference > 1000 * 30
 }
+/**笔记本错误弹窗 */
+export const showOnlineErrorNotification = (event: {code: number; reason: string; onOk: () => void}) => {
+    const m = showYakitModal({
+        title: "异常",
+        content: (
+            <span>
+                错误原因:{event.code}:{event.reason}
+            </span>
+        ),
+        maskClosable: false,
+        closable: false,
+        onOkText: "关闭页面",
+        cancelButtonProps: {style: {display: "none"}},
+        onOk: () => {
+            event.onOk()
+            m.destroy()
+        },
+        bodyStyle: {padding: 24}
+    })
+}
+
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const userInfo = useStore((s) => s.userInfo)
 
@@ -81,6 +102,9 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const milkdownRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(milkdownRef)
     const collabManagerRef = useRef<CollabManager>() // 协作管理器
+
+    const {goEditNotepad, goAddNotepad} = useGoEditNotepad()
+
     useEffect(() => {
         return () => {
             // 统一
@@ -118,6 +142,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     }, [collabProps])
     const {get, loading} = useInitEditorHooks({
         ...props,
+        inViewport,
         collabProps: collabParams
     })
     /**更新最新的editor */
@@ -334,12 +359,15 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                         content: markdownContent
                     }
                     apiSaveNotepad(params).then((hash) => {
-                        toEditNotepad({pageInfo: {notepadHash: hash, title}})
+                        goEditNotepad({
+                            notepadHash: hash,
+                            title
+                        })
                         onCloseCurrentPage()
                         s.destroy()
                     })
                 } else {
-                    toAddNotepad()
+                    goAddNotepad()
                     onCloseCurrentPage()
                     s.destroy()
                 }
@@ -353,22 +381,12 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     })
     const onShowErrorModal = useMemoizedFn((event: CloseEvent) => {
         // 弹出框，显示网络异常，关闭/保存按钮
-        const m = showYakitModal({
-            title: "网络异常",
-            content: (
-                <span>
-                    错误原因:{event.code}:{event.reason}
-                </span>
-            ),
-            maskClosable: false,
-            closable: false,
-            onOkText: "关闭页面",
-            cancelButtonProps: {style: {display: "none"}},
+        showOnlineErrorNotification({
+            code: event.code,
+            reason: event.reason,
             onOk: () => {
                 onCloseCurrentPage()
-                m.destroy()
-            },
-            bodyStyle: {padding: 24}
+            }
         })
         yakitNotify("error", event.reason)
     })

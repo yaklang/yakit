@@ -55,8 +55,9 @@ import {
     filterModeOptions,
     matchersConditionOptions
 } from "../MatcherAndExtractionCard/constants"
-import {DefFuzzerConcurrent} from "@/defaultConstants/HTTPFuzzerPage"
+import {defaultAdvancedConfigValue, DefFuzzerConcurrent} from "@/defaultConstants/HTTPFuzzerPage"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -140,6 +141,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const isGmTLS = Form.useWatch("isGmTLS", form)
     const randomJA3 = Form.useWatch("randomJA3", form)
     const overwriteSNI = Form.useWatch("overwriteSNI", form)
+    const enableRandomChunked = Form.useWatch("enableRandomChunked", form)
     const queryRef = useRef(null)
     const [inViewport = true] = useInViewport(queryRef)
 
@@ -170,9 +172,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         emiter.on("openMatcherAndExtraction", openDrawer)
         getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
             try {
-                // setTimeout(() => {
-                //     setActiveKey(data ? JSON.parse(data) : "请求包配置")
-                // }, 100)
                 setActiveKey(data ? JSON.parse(data) : "请求包配置")
             } catch (error) {
                 yakitFailed("获取折叠面板的激活key失败:" + error)
@@ -438,7 +437,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
                                 <YakitSwitch />
                             </Form.Item>
-                            <Form.Item label='HTTP配置'>
+                            <Form.Item label='TLS配置'>
                                 <div style={{display: "flex"}}>
                                     <Form.Item name='isGmTLS' style={{marginBottom: 0}}>
                                         <YakitCheckableTag
@@ -481,7 +480,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 }
                                 name='actualHost'
                             >
-                                <YakitInput placeholder='请输入...' size='small' />
+                                <YakitInput placeholder='请输入...' size='small' allowClear />
                             </Form.Item>
                             <Form.Item
                                 label={
@@ -619,7 +618,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 dialTimeoutSeconds: 10,
                                                 timeout: 30,
                                                 batchTarget: new Uint8Array(),
-                                                disableHotPatch: false
+                                                disableHotPatch: false,
+                                                enableRandomChunked: false,
+                                                randomChunkedMinLength:
+                                                    defaultAdvancedConfigValue.randomChunkedMinLength,
+                                                randomChunkedMaxLength:
+                                                    defaultAdvancedConfigValue.randomChunkedMaxLength,
+                                                randomChunkedMinDelay: defaultAdvancedConfigValue.randomChunkedMinDelay,
+                                                randomChunkedMaxDelay: defaultAdvancedConfigValue.randomChunkedMaxDelay
                                             }
                                             onReset(restValue)
                                         }}
@@ -676,7 +682,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     <YakitSwitch />
                                 </Form.Item>
 
-                                <Form.Item label='超时时长' style={{marginBottom: 12}}>
+                                <Form.Item label='超时时长'>
                                     <div className={styles["advanced-config-timeout"]}>
                                         <Form.Item
                                             name='dialTimeoutSeconds'
@@ -686,6 +692,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             }}
                                         >
                                             <YakitInput
+                                                allowClear={false}
                                                 prefix='连接'
                                                 suffix='s'
                                                 size='small'
@@ -700,6 +707,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             }}
                                         >
                                             <YakitInput
+                                                allowClear={false}
                                                 prefix='响应'
                                                 suffix='s'
                                                 size='small'
@@ -708,7 +716,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         </Form.Item>
                                     </div>
                                 </Form.Item>
-                                <Form.Item label='批量目标' name='batchTarget' style={{marginBottom: 0}}>
+                                <Form.Item label='批量目标' name='batchTarget'>
                                     <YakitButton
                                         style={{marginTop: 3}}
                                         size='small'
@@ -739,6 +747,86 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         )}
                                     </YakitButton>
                                 </Form.Item>
+                                <Form.Item
+                                    label='随机分块传输'
+                                    name='enableRandomChunked'
+                                    valuePropName='checked'
+                                    style={{marginBottom: enableRandomChunked ? 12 : 0}}
+                                >
+                                    <YakitSwitch />
+                                </Form.Item>
+                                {enableRandomChunked && (
+                                    <>
+                                        <Form.Item label='分块长度'>
+                                            <div className={styles["advanced-config-random-chunked-length"]}>
+                                                <Form.Item
+                                                    name='randomChunkedMinLength'
+                                                    noStyle
+                                                    normalize={(value) => {
+                                                        return value.replace(/\D/g, "")
+                                                    }}
+                                                >
+                                                    <YakitInput
+                                                        allowClear={false}
+                                                        prefix='Min'
+                                                        suffix='B'
+                                                        size='small'
+                                                        className={styles["input-left"]}
+                                                    />
+                                                </Form.Item>
+                                                <Form.Item
+                                                    name='randomChunkedMaxLength'
+                                                    noStyle
+                                                    normalize={(value) => {
+                                                        return value.replace(/\D/g, "")
+                                                    }}
+                                                >
+                                                    <YakitInput
+                                                        allowClear={false}
+                                                        prefix='Max'
+                                                        suffix='B'
+                                                        size='small'
+                                                        className={styles["input-right"]}
+                                                    />
+                                                </Form.Item>
+                                            </div>
+                                        </Form.Item>
+                                        <Form.Item label='随机延迟' style={{marginBottom: 0}}>
+                                            <div className={styles["advanced-config-random-chunked-delay"]}>
+                                                <Form.Item
+                                                    name='randomChunkedMinDelay'
+                                                    noStyle
+                                                    normalize={(value) => {
+                                                        return value.replace(/\D/g, "")
+                                                    }}
+                                                >
+                                                    <YakitInput
+                                                        allowClear={false}
+                                                        prefix='Min'
+                                                        suffix='ms'
+                                                        size='small'
+                                                        className={styles["input-left"]}
+                                                    />
+                                                </Form.Item>
+                                                <Form.Item
+                                                    name='randomChunkedMaxDelay'
+                                                    noStyle
+                                                    normalize={(value) => {
+                                                        return value.replace(/\D/g, "")
+                                                    }}
+                                                >
+                                                    <YakitInput
+                                                        allowClear={false}
+                                                        prefix='Max'
+                                                        suffix='ms'
+                                                        size='small'
+                                                        className={styles["input-right"]}
+                                                    />
+                                                </Form.Item>
+                                            </div>
+                                        </Form.Item>
+                                    </>
+                                )}
                             </YakitPanel>
                             <YakitPanel
                                 header='并发配置'
@@ -789,6 +877,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             }}
                                         >
                                             <YakitInput
+                                                allowClear={false}
                                                 prefix='Min'
                                                 suffix='s'
                                                 size='small'
@@ -803,6 +892,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             }}
                                         >
                                             <YakitInput
+                                                allowClear={false}
                                                 prefix='Max'
                                                 suffix='s'
                                                 size='small'
@@ -846,7 +936,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <Form.Item label='重试次数' name='maxRetryTimes'>
                                     <YakitInputNumber type='horizontal' size='small' min={0} />
                                 </Form.Item>
-                                <YakitCollapse activeKey={retryActive} destroyInactivePanel={true} bordered={false}>
+                                <YakitCollapse activeKey={retryActive} destroyInactivePanel={true}>
                                     <YakitPanel
                                         header={
                                             <Form.Item name='retry' noStyle valuePropName='checked'>
@@ -945,11 +1035,11 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             >
                                 <Form.Item label='DNS服务器' name='dnsServers'>
                                     <YakitSelect
+                                        allowClear
                                         options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
                                             return {value: i, label: i}
                                         })}
                                         mode='tags'
-                                        allowClear={true}
                                         size={"small"}
                                         placeholder={"指定DNS服务器"}
                                     />
@@ -1013,6 +1103,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             activeKey={activeKey}
                             onChange={(key) => onSwitchCollapse(key)}
                             destroyInactivePanel={true}
+                            className={styles["rule-collapse"]}
                         >
                             <MatchersPanel
                                 key='匹配器'
@@ -1385,6 +1476,7 @@ interface MatchersListProps {
 /**匹配器 */
 export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
     const {matcherValue, onAdd, onRemove, onEdit, onChangeMatcher} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const {matchersList} = matcherValue
     return (
         <>
@@ -1398,7 +1490,7 @@ export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                                         <div className={styles["matchers-heard-left"]}>
                                             <YakitRadioButtons
                                                 buttonStyle='solid'
-                                                options={filterModeOptions}
+                                                options={filterModeOptions(t)}
                                                 size='small'
                                                 value={matcherItem.filterMode}
                                                 onChange={(e) => {
@@ -1442,11 +1534,12 @@ export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                                             <div className={styles["matchersList-item"]} key={`ID:${subIndex}`}>
                                                 <div className={styles["matchersList-item-heard"]}>
                                                     <span className={styles["item-id"]}>ID&nbsp;{subIndex}</span>
-                                                    <span>
+                                                    <span className={styles["item-label"]}>
                                                         [
                                                         {
-                                                            matcherTypeList.find((e) => e.value === subItem.MatcherType)
-                                                                ?.label
+                                                            matcherTypeList(t).find(
+                                                                (e) => e.value === subItem.MatcherType
+                                                            )?.label
                                                         }
                                                         ]
                                                     </span>
@@ -1514,7 +1607,7 @@ export const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) 
                                         <span className={styles["item-id"]}>
                                             {extractorItem.Name || `data_${index}`}
                                         </span>
-                                        <span>
+                                        <span className={styles["item-label"]}>
                                             [{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]
                                         </span>
                                         <span className={styles["item-number"]}>{extractorItem.Groups?.length}</span>

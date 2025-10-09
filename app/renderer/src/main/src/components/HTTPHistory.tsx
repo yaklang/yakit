@@ -1,4 +1,4 @@
-import React, {ReactElement, useContext, useEffect, useMemo, useRef, useState} from "react"
+import React, {CSSProperties, ReactElement, useContext, useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
 import {HistoryTableTitleShow, HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
@@ -64,6 +64,7 @@ import styles from "./HTTPHistory.module.scss"
 import MITMContext from "@/pages/mitm/Context/MITMContext"
 import {RemoteGV} from "@/yakitGV"
 import {cloneDeep} from "lodash"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export interface HTTPPacketFuzzable {
@@ -76,7 +77,7 @@ export interface HTTPPacketFuzzable {
 type tabKeys = "web-tree" | "process"
 interface TabsItem {
     key: tabKeys
-    label: ReactElement | string
+    label: (t: (keys: string) => string) => ReactElement | string
     contShow: boolean
 }
 
@@ -101,26 +102,26 @@ interface HTTPHistoryProp extends HistoryTableTitleShow {
 }
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const {pageType} = props
-
+    const {t, i18n} = useI18nNamespaces(["history"])
     // #region 左侧tab
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
     const [curTabKey, setCurTabKey] = useState<tabKeys>("web-tree")
     const [tabsData, setTabsData] = useState<Array<TabsItem>>([
         {
             key: "web-tree",
-            label: (
+            label: (t) => (
                 <>
-                    <OutlineLog2Icon /> 网站树
+                    <span className={styles["tab-item-text"]}>{t("HTTPHistory.websiteTree")}</span> <OutlineLog2Icon />
                 </>
             ),
             contShow: true // 初始为true
         },
         {
             key: "process",
-            label: (
+            label: (t) => (
                 <>
+                    <span className={styles["tab-item-text"]}>{t("HTTPHistory.process")}</span>
                     <OutlineTerminalIcon />
-                    进程
                 </>
             ),
             contShow: false // 初始为false
@@ -293,7 +294,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             handleTabClick(item)
                                         }}
                                     >
-                                        {item.label}
+                                        {item.label(t)}
                                     </div>
                                 ))}
                             </div>
@@ -320,7 +321,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     <WebTree
                                         ref={webTreeRef}
                                         height={treeWrapHeight - 30}
-                                        searchPlaceholder='请输入域名进行搜索，例baidu.com'
+                                        searchPlaceholder={t("HTTPHistory.pleaseEnterDomainToSearch")}
                                         treeExtraQueryparams={treeQueryparams}
                                         refreshTreeFlag={refreshFlag}
                                         onGetUrl={(searchURL, includeInUrl) => {
@@ -380,7 +381,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
 interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     pageType: HTTPHistorySourcePageType
-    wrapperStyle?: any
+    runtimeId?: string
+    httpHistoryTableTitleStyle?: CSSProperties
+    containerClassName?: string
+    titleHeight?: number
+    wrapperStyle?: CSSProperties
+    showFlod?: boolean
     params?: YakQueryHTTPFlowRequest
     searchURL?: string
     includeInUrl?: string | string[]
@@ -389,6 +395,7 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     downstreamProxyStr?: string
     onSetTableTotal?: (t: number) => void
     onSetTableSelectNum?: (s: number) => void
+    onSetHasNewData?: (f: boolean) => void
     setOnlyShowFirstNode?: (only: boolean) => void
     setSecondNodeVisible?: (show: boolean) => void
 }
@@ -398,7 +405,11 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
 export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEditorProps> = React.memo((props) => {
     const {
         pageType,
+        runtimeId,
         wrapperStyle,
+        httpHistoryTableTitleStyle,
+        titleHeight,
+        containerClassName,
         params,
         searchURL,
         includeInUrl,
@@ -407,6 +418,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         downstreamProxyStr,
         onSetTableTotal,
         onSetTableSelectNum,
+        onSetHasNewData,
         noTableTitle = false,
         showSourceType = true,
         showAdvancedSearch = true,
@@ -416,7 +428,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         showBatchActions = true,
         showDelAll = true,
         showSetting = true,
-        showRefresh = true
+        showRefresh = true,
+        showFlod = true
     } = props
 
     const hTTPFlowRealTimeTableAndEditorRef = useRef<HTMLDivElement>(null)
@@ -442,16 +455,13 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
     useDebounceEffect(
         () => {
             if (inViewport) {
+                setDownstreamProxy(downstreamProxyStr || "")
                 getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
                     if (!(pageType === "MITM") && res) {
                         try {
                             const obj = JSON.parse(res) || {}
                             setDownstreamProxy(obj.defaultValue || "")
-                        } catch (error) {
-                            setDownstreamProxy(downstreamProxyStr || "")
-                        }
-                    } else {
-                        setDownstreamProxy(downstreamProxyStr || "")
+                        } catch (error) {}
                     }
                 })
             }
@@ -529,6 +539,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                 firstNode={() => (
                     <div style={{width: "100%", height: "100%"}}>
                         <HTTPFlowTable
+                            containerClassName={containerClassName}
+                            runTimeId={runtimeId}
                             noTableTitle={noTableTitle}
                             showSourceType={showSourceType}
                             showAdvancedSearch={showAdvancedSearch}
@@ -558,6 +570,9 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                             ProcessName={curProcess}
                             onSetTableTotal={onSetTableTotal}
                             onSetTableSelectNum={onSetTableSelectNum}
+                            onSetHasNewData={onSetHasNewData}
+                            httpHistoryTableTitleStyle={httpHistoryTableTitleStyle}
+                            titleHeight={titleHeight}
                         />
                     </div>
                 )}
@@ -574,6 +589,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                                 historyId={historyId}
                                 downstreamProxyStr={downstreamProxy}
                                 pageType={pageType}
+                                showFlod={showFlod}
                             />
                         )}
                     </div>
@@ -839,8 +855,8 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
             <div className={styles["history-process-search-wrapper"]}>
                 <YakitInput.Search
                     wrapperStyle={{width: "calc(100% - 40px)"}}
-                    allowClear={true}
                     onSearch={(value) => setSearchProcessVal(value)}
+                    allowClear
                 />
                 <YakitButton type='text2' icon={<RefreshIcon />} onClick={refreshProcess} />
             </div>

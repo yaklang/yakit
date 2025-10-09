@@ -241,8 +241,8 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
                 {status === "install" && (
                     <div className={styles["content"]}>
                         <Progress
-                            strokeColor='#F28B44'
-                            trailColor='#F0F2F5'
+                            strokeColor='var(--Colors-Use-Main-Primary)'
+                            trailColor='var(--Colors-Use-Neutral-Bg)'
                             percent={Math.floor((yakitProgress?.percent || 0) * 100)}
                         />
                         <div className={styles["download-info-wrapper"]}>
@@ -286,7 +286,7 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
     }, [visible])
 
     const handleCancel = useMemoizedFn(() => {
-        // onCallback(false)
+        onCallback(false)
     })
 
     const [updateLoading, setUpdateLoading] = useState<boolean>(false)
@@ -297,10 +297,12 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
 
         setUpdateLoading(true)
         ipcRenderer
-            .invoke("InitBuildInEngine", {})
+            .invoke("RestoreEngineAndPlugin", {})
             .then(() => {
                 info(`解压内置引擎成功`)
-                onCallback(true)
+                ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
+                    onCallback(true)
+                })
             })
             .catch((e) => {
                 failed(`初始化内置引擎失败：${e}`)
@@ -333,7 +335,7 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
             okButtonText='OK'
             okButtonProps={{loading: updateLoading}}
             cancelButtonText='忽略'
-            cancelButtonProps={{style: {display: "none"}}}
+            cancelButtonProps={{style: {display: updateLoading ? "none" : ""}}}
             onOk={yakitUpdate}
             onCancel={handleCancel}
         />

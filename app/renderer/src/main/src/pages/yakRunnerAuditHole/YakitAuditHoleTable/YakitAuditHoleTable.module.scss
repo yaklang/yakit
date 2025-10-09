@@ -11,22 +11,22 @@
 
 $tagColor: (
     "success": (
-        color: var(--yakit-success-5)
+        color: var(--Colors-Use-Success-Primary)
     ),
     "warning": (
-        color: var(--yakit-warning-5)
+        color: var(--Colors-Use-Warning-Primary)
     ),
     "info": (
-        color: var(--yakit-primary-5)
+        color: var(--Colors-Use-Main-Primary)
     ),
     "danger": (
-        color: var(--yakit-danger-5)
+        color: var(--Colors-Use-Error-Primary)
     ),
     "serious": (
-        color: var(--yakit-serious-5)
+        color: var(--Colors-Use-Status-Serious)
     ),
     "default": (
-        color: var(--yakit-helper-text-color)
+        color: var(--Colors-Use-Neutral-Disable)
     )
 );
 $keyColor: map-keys($tagColor);
@@ -53,13 +53,13 @@ $keyColor: map-keys($tagColor);
         }
     }
     .misstatement-icon {
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         svg {
             width: 16px;
-            height: 16px
+            height: 16px;
         }
         &:hover {
-            color: var(--yakit-primary-5)
+            color: var(--Colors-Use-Main-Primary)
         }
     }
     .yakit-risk-details {
@@ -71,10 +71,10 @@ $keyColor: map-keys($tagColor);
         .yakit-risk-details-title {
             @extend %display-flex-center;
             justify-content: space-between;
-            border-left: 1px solid var(--yakit-border-color);
-            border-right: 1px solid var(--yakit-border-color);
+            border-left: 1px solid var(--Colors-Use-Neutral-Border);
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
 
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
@@ -83,7 +83,7 @@ $keyColor: map-keys($tagColor);
     }
     .yakit-ssa-risk-table-cell-unread {
         // background-color: #f6544a14;
-        background-color: tools.fetch-color-transparen(var(--yakit-color-blue), 5%);
+        background-color: tools.fetch-color-transparen(var(--Colors-Use-Blue-Primary), 5%);
     }
 }
 
@@ -93,7 +93,7 @@ $keyColor: map-keys($tagColor);
     justify-content: space-between;
     padding-bottom: 8px;
 
-    color: var(--yakit-header-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 12px;
     font-weight: 400;
     line-height: 16px; /* 133.333% */
@@ -103,7 +103,7 @@ $keyColor: map-keys($tagColor);
         gap: 8px 16px;
         flex-wrap: wrap;
         .table-renderTitle-text {
-            color: var(--yakit-header-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 16px;
             font-weight: 600;
             line-height: 24px;
@@ -123,13 +123,13 @@ $keyColor: map-keys($tagColor);
             align-items: center;
 
             .virtual-table-heard-right-text {
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 font-size: 12px;
                 margin-right: 4px;
             }
 
             .virtual-table-heard-right-number {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
                 font-size: 12px;
             }
         }
@@ -148,7 +148,7 @@ $keyColor: map-keys($tagColor);
     }
     .table-tag-icon {
         opacity: 0;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         svg {
             width: 16px;
             height: 16px;
@@ -175,11 +175,14 @@ $keyColor: map-keys($tagColor);
     height: 100%;
     display: flex;
     flex-direction: column;
+    flex: 1;
+    overflow: hidden;
     .main-title {
-        border-left: 1px solid #eaecf3;
-        border-bottom: 1px solid #eaecf3;
-        border-right: 1px solid #eaecf3;
-        background: #f8f8f8;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Neutral-Bg);
         display: flex;
         flex-direction: row;
         justify-content: space-between;
@@ -207,7 +210,7 @@ $keyColor: map-keys($tagColor);
                 flex-direction: row;
                 gap: 8px;
                 .name {
-                    color: #31343f;
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 500;
                     overflow: hidden;
@@ -233,10 +236,10 @@ $keyColor: map-keys($tagColor);
 }
 
 .disabled-open {
-    background: var(--ui-background-color);
-    color: var(--yakit-disable-text-color);
+    background: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Neutral-Disable);
     border-radius: 4px;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     height: 24px;
     padding: 3px 8px;
     font-weight: 500;
@@ -246,29 +249,27 @@ $keyColor: map-keys($tagColor);
     display: flex;
     gap: 4px;
     align-items: center;
-    svg{
+    svg {
         width: 16px;
         height: 16px;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
     }
 }
 
 .no-more {
     font-size: 12px;
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     text-align: center;
     padding: 12px;
     width: 100%;
 }
-
-
 
 .yakit-audit-risk-details-content {
     height: 100%;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     :global {
         .ant-descriptions-bordered .ant-descriptions-view > table {
             table-layout: fixed;
@@ -277,8 +278,8 @@ $keyColor: map-keys($tagColor);
     .content-heard {
         @extend %display-flex-center;
         align-items: flex-start;
-        padding: 12px;
-        border-bottom: 1px solid var(--yakit-border-color);
+        padding: 4px 12px;
+        // border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         .content-heard-left {
             @extend %display-flex-center;
             overflow: hidden;
@@ -303,7 +304,7 @@ $keyColor: map-keys($tagColor);
                 overflow: hidden;
                 flex-wrap: wrap;
                 .content-heard-body-title {
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 16px;
                     font-style: normal;
                     font-weight: 600;
@@ -311,7 +312,7 @@ $keyColor: map-keys($tagColor);
                 }
                 .content-heard-body-description {
                     @extend %display-flex-center;
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     font-size: 12px;
                     font-weight: 400;
                     line-height: 16px;
@@ -324,7 +325,7 @@ $keyColor: map-keys($tagColor);
                         gap: 4px;
                         overflow: hidden;
                         .url {
-                            color: var(--yakit-body-text-color);
+                            color: var(--Colors-Use-Neutral-Text-1-Title);
                         }
                     }
                     .content-heard-body-time {
@@ -349,10 +350,10 @@ $keyColor: map-keys($tagColor);
 
 .disabled-open {
     min-width: 134px;
-    background: var(--ui-background-color);
-    color: var(--yakit-disable-text-color);
+    background: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Neutral-Disable);
     border-radius: 4px;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     height: 24px;
     padding: 3px 8px;
     font-weight: 500;
@@ -362,9 +363,204 @@ $keyColor: map-keys($tagColor);
     display: flex;
     gap: 4px;
     align-items: center;
-    svg{
+    svg {
         width: 16px;
         height: 16px;
-        color: var(--yakit-disable-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
+    }
+}
+
+.audit-result-history {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+// ---------- 插件日志各种类型对应样式 ----------
+.audit-result-history-opt {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    .arrow-icon {
+        position: absolute;
+        right: -10px;
+        color: var(--Colors-Use-Neutral-Border);
+        z-index: 9;
+    }
+    .icon-wrapper {
+        width: 24px;
+        height: 36px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        svg {
+            width: 24px;
+            height: 24px;
+        }
+    }
+    .line-tail {
+        width: 24px;
+        flex: 1;
+        position: relative;
+        .line-wrapper {
+            position: absolute;
+            top: -4px;
+            width: 100%;
+            height: calc(100% + 24px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            .line-top-dot {
+                width: 1px;
+                height: 1px;
+                background-color: var(--Colors-Use-Neutral-Bg);
+                border-top-left-radius: 50%;
+                border-top-right-radius: 50%;
+                overflow: hidden;
+            }
+            .line-style {
+                flex: 1;
+                width: 1px;
+                background-color: var(--Colors-Use-Neutral-Bg);
+            }
+            .line-bottom-dot {
+                width: 1px;
+                height: 1px;
+                background-color: var(--Colors-Use-Neutral-Bg);
+                border-bottom-left-radius: 50%;
+                border-bottom-right-radius: 50%;
+                overflow: hidden;
+            }
+        }
+    }
+    .hidden-line-tail {
+        display: none;
+    }
+}
+
+.audit-result-history-info {
+    flex: 1;
+    overflow: hidden;
+    .info-body {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .info-header {
+        padding: 4px 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--Colors-Use-Grey-Bg);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        .header-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+            .img-style {
+                background-color: var(--Colors-Use-Basic-Background);
+            }
+            .author-name {
+                white-space: nowrap;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                margin-right: 4px;
+            }
+            .author-name + .log-content {
+                margin-left: 6px;
+            }
+            .role-tag + .log-content {
+                margin-left: 6px;
+            }
+            .log-content {
+                white-space: nowrap;
+                color: var(--plugin-log-type-content);
+            }
+            .log-content + .reply-name {
+                margin-left: 6px;
+            }
+            .log-time {
+                white-space: nowrap;
+                overflow: hidden;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                margin-right: 4px;
+            }
+            .option {
+                display: flex;
+                flex: 1;
+                justify-content: end;
+            }
+        }
+        .header-operate {
+            display: flex;
+            align-items: center;
+            .divider-style {
+                width: 1px;
+                height: 12px;
+                background-color: var(--Colors-Use-Neutral-Border);
+            }
+            .reply-btn {
+                margin-left: 8px;
+            }
+        }
+    }
+    .info-header-line-additional {
+        border-radius: 4px 4px 0 0;
+    }
+    .info-additional {
+        padding: 10px 12px;
+        border-radius: 0 0 4px 4px;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        border-top: 0;
+        background: var(--Colors-Use-Basic-Background);
+
+        .description-style {
+            width: 100%;
+            overflow: hidden;
+            --yakit-ellipsis-row: 3;
+
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+        }
+
+        .comment-image-style {
+            width: 100%;
+        }
+
+        .comment-style {
+            margin-top: 20px;
+        }
+        .reply-style {
+            width: 100%;
+            display: flex;
+            gap: 8px;
+            .reply-line {
+                width: 2px;
+                background-color: var(--Colors-Use-Neutral-Border);
+            }
+            .reply-content {
+                cursor: pointer;
+                overflow: hidden;
+                display: flex;
+                gap: 8px;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px;
+                .content-style {
+                    flex: 1;
+                    overflow: hidden;
+                }
+            }
+        }
     }
 }

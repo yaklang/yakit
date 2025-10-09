@@ -1,18 +1,18 @@
 // ========================== select ==========================
 .yakit-select {
-    --select-box-shadow-color: var(--yakit-primary-2);
-    --select-border-primary-color: var(--yakit-primary-4);
-    --select-border-color: var(--yakit-border-color);
+    --select-box-shadow-color: var(--Colors-Use-Main-Focus);
+    --select-border-primary-color: var(--Colors-Use-Main-Hover);
+    --select-border-color: var(--Colors-Use-Neutral-Border);
 
-    --select-primary-font-color: var(--yakit-primary-1);
-    --select-font-color: var(--yakit-header-color);
-    --select-font-disabled-color: var(--yakit-helper-text-color);
+    --select-primary-font-color: var(--Colors-Use-Main-Bg);
+    --select-font-color: var(--Colors-Use-Neutral-Text-1-Title);
+    --select-font-disabled-color: var(--Colors-Use-Neutral-Disable);
 
-    --select-background-color: var(--yakit-primary-2);
-    --select-background-disabled-color: var(--yakit-background-color);
-    --select-background-white: var(--yakit-neutral10-color);
+    --select-background-color: var(--Colors-Use-Main-Focus);
+    --select-background-disabled-color: var(--Colors-Use-Neutral-Bg);
+    --select-background-white: var(--Colors-Use-Neutral-Bg);
 
-    --select-primary-icon-color: var(--yakit-primary-5);
+    --select-primary-icon-color: var(--Colors-Use-Main-Primary);
 
     font-weight: 400;
     font-size: 12px;
@@ -21,6 +21,14 @@
         .ant-select {
             display: flex;
             font-size: 12px;
+            background-color: var(--Colors-Use-Basic-Background);
+            .ant-select-selector {
+                background-color: var(--Colors-Use-Basic-Background);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
+            .ant-select-arrow {
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            }
         }
 
         .ant-tag {
@@ -29,6 +37,13 @@
 
         .ant-select-clear {
             right: 12px;
+            background: transparent;
+            .anticon-close-circle {
+                color: var(--Colors-Use-Neutral-Border);
+                svg {
+                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                }
+            }
         }
 
         .ant-select-arrow .anticon:not(.ant-select-suffix) {
@@ -68,15 +83,15 @@
             align-items: center;
             border-radius: 4px;
             border: 1px solid var(--select-border-color);
-            background: var(--yakit-card-background-color);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
             margin: 0;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         // ========================== disabled ==========================
         .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            background: var(--select-background-disabled-color);
-            color: var(--select-font-disabled-color);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Disable);
             border-color: transparent !important;
         }
     }
@@ -84,10 +99,12 @@
 
 // ========================== popup ==========================
 .yakit-select-popup {
-    --select-background-color: var(--yakit-primary-1);
-
+    background-color: var(--Colors-Use-Basic-Background);
     padding: 6px 4px;
     border-radius: 4px;
+    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+    background: var(--Colors-Use-Basic-Background);
+    box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
 
     :global {
         .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
@@ -98,22 +115,33 @@
             border-radius: 4px;
 
             &:hover {
-                background-color: var(--yakit-background-color);
+                background: var(--Colors-Use-Neutral-Bg-Hover);
+                // color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
         .ant-select-item:not(.ant-select-item-option-grouped) {
             padding: 4px 8px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
             font-weight: 400;
-            background-color: var(--select-background-color);
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
+            background: var(--Colors-Use-Main-Bg);
         }
 
+        .yakit-select-notFound {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            .yakit-select-content {
+                color: var(--Colors-Use-Neutral-Disable);
+            }
+        }
         // ------------ 滚动条 ----------
         .rc-virtual-list-scrollbar-thumb {
-            background: #c1c1c1 !important;
+            background: var(--Colors-Use-Neutral-Text-3-Secondary) !important;
         }
     }
 }
@@ -123,20 +151,20 @@
 }
 // ========================== mode tags ==========================
 .yakit-select-wrapper-tags {
-    --select-primary-icon-color: var(--yakit-primary-5);
+    --select-primary-icon-color: var(--Colors-Use-Main-Primary);
 
     :global {
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) .ant-select-item-option-state {
             color: var(--select-primary-icon-color);
         }
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-            color: var(--select-primary-font-color);
-            background: var(--select-background-white);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            background: var(--Colors-Use-Basic-Background);
         }
 
         .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
-            background: var(--select-background-color);
-            color: var(--select-primary-font-color);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-weight: 400;
         }
 
@@ -236,6 +264,9 @@
         .ant-select-selection-overflow {
             min-height: 20px;
         }
+        .ant-select-selection-placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
 
         .ant-select-selection-overflow-item {
             height: 20px;
@@ -291,6 +322,10 @@
             min-height: 16px;
         }
 
+        .ant-select-selection-placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+
         .ant-select-selection-overflow-item {
             height: 16px;
             line-height: 16px;
@@ -338,9 +373,9 @@
             width: 16px;
             height: 16px;
             margin-top: 4px;
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
             &:hover {
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
             }
         }
     }
@@ -349,7 +384,7 @@
             width: 16px;
             height: 16px;
             margin-top: 4px;
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }

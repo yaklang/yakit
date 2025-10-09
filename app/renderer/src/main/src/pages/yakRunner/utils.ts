@@ -18,12 +18,13 @@ import emiter from "@/utils/eventBus/eventBus"
 import {setMapFileDetail} from "./FileTreeMap/FileMap"
 import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {randomString} from "@/utils/randomUtil"
-import { YaklangMonacoSpec } from "@/utils/monacoSpec/yakEditor"
-import { SyntaxFlowMonacoSpec } from "@/utils/monacoSpec/syntaxflowEditor"
+import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
+import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
+import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
 
 const {ipcRenderer} = window.require("electron")
 
-const initFileTreeData = (list, path) => {
+export const initFileTreeData = (list: RequestYakURLResponse, path?: string | null) => {
     return list.Resources.sort((a, b) => {
         // 将 ResourceType 为 'dir' 的对象排在前面
         if (a.ResourceType === "dir" && b.ResourceType !== "dir") {
@@ -44,7 +45,7 @@ const initFileTreeData = (list, path) => {
             path: item.Path,
             isFolder: isFolder,
             icon: isFolder ? FolderDefault : suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
-            isLeaf: isLeaf
+            isLeaf
         }
     })
 }
@@ -392,7 +393,7 @@ export const updateFileTree: (
 /**
  * @name 语法检查
  */
-export const onSyntaxCheck = (code: string, type :string) => {
+export const onSyntaxCheck = (code: string, type: string) => {
     return new Promise(async (resolve, reject) => {
         // StaticAnalyzeError
         ipcRenderer
@@ -417,7 +418,7 @@ export const onSyntaxCheck = (code: string, type :string) => {
  */
 export const judgeAreaExistFileUnSave = (areaInfo: AreaInfoProps[]): Promise<string[]> => {
     return new Promise(async (resolve, reject) => {
-        let unSaveArr:string[] = []
+        let unSaveArr: string[] = []
         const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
         newAreaInfo.forEach((item, index) => {
             item.elements.forEach((itemIn, indexIn) => {
@@ -543,11 +544,16 @@ export const updateAreaFilesPathInfo = (
 /**
  * @name 删除分栏数据里某个节点的file数据
  */
-export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
+export const removeYakRunnerAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    let newActiveFile: FileDetailInfo | undefined = undefined
+    let activeFileArr: FileDetailInfo[] = []
     newAreaInfo.forEach((item, idx) => {
         item.elements.forEach((itemIn, idxin) => {
             itemIn.files.forEach((file, fileIndex) => {
+                if (file.isActive) {
+                    activeFileArr.push(file)
+                }
                 if (file.path === info.path) {
                     // 如若仅存在一项 则删除此大项并更新布局
                     if (item.elements.length > 1 && itemIn.files.length === 1) {
@@ -566,13 +572,21 @@ export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailIn
                         if (info.isActive) {
                             newAreaInfo[idx].elements[idxin].files[fileIndex - 1 < 0 ? 0 : fileIndex - 1].isActive =
                                 true
+                            newActiveFile =
+                                newAreaInfo[idx].elements[idxin].files[fileIndex - 1 < 0 ? 0 : fileIndex - 1]
                         }
                     }
                 }
             })
         })
     })
-    return newAreaInfo
+    if (!newActiveFile && activeFileArr.length > 1) {
+        let delIndex = activeFileArr.findIndex((item) => item.path === info.path)
+        if (delIndex > -1) {
+            newActiveFile = activeFileArr[delIndex - 1 < 0 ? 0 : delIndex - 1]
+        }
+    }
+    return {newAreaInfo, newActiveFile}
 }
 
 /**
@@ -721,13 +735,22 @@ export const addAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo,
  */
 export const getDefaultActiveFile = async (info: FileDetailInfo) => {
     let newActiveFile = info
-    // 注入语法检查结果
-    if (newActiveFile.language === YaklangMonacoSpec || newActiveFile.language === SyntaxFlowMonacoSpec) {
-        const syntaxCheck = (await onSyntaxCheck(newActiveFile.code, newActiveFile.language)) as IMonacoEditorMarker[]
-        if (syntaxCheck) {
-            newActiveFile = {...newActiveFile, syntaxCheck}
+    try {
+        // 注入语法检查结果
+        if (
+            newActiveFile.code &&
+            (newActiveFile.language === YaklangMonacoSpec || newActiveFile.language === SyntaxFlowMonacoSpec)
+        ) {
+            const syntaxCheck = (await onSyntaxCheck(
+                newActiveFile.code,
+                newActiveFile.language
+            )) as IMonacoEditorMarker[]
+            if (syntaxCheck) {
+                newActiveFile = {...newActiveFile, syntaxCheck}
+            }
         }
-    }
+    } catch (error) {}
+
     return newActiveFile
 }
 
@@ -736,24 +759,24 @@ export const getDefaultActiveFile = async (info: FileDetailInfo) => {
  */
 export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> => {
     return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件",
-                properties: ["openFile"]
-            })
-            .then(async (data: {filePaths: string[]}) => {
-                const filesLength = data.filePaths.length
-                if (filesLength === 1) {
-                    const path: string = data.filePaths[0].replace(/\\/g, "\\")
-                    const name: string = await getNameByPath(path)
-                    resolve({
-                        path,
-                        name
-                    })
-                } else if (filesLength > 1) {
-                    warn("只支持单选文件")
+        handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
+            .then(async (data) => {
+                try {
+                    const filesLength = data.filePaths.length
+                    if (filesLength === 1) {
+                        const path: string = data.filePaths[0].replace(/\\/g, "\\")
+                        const name: string = await getNameByPath(path)
+                        resolve({
+                            path,
+                            name
+                        })
+                    } else if (filesLength > 1) {
+                        warn("只支持单选文件")
+                    }
+                    resolve(null)
+                } catch (error) {
+                    reject()
                 }
-                resolve(null)
             })
             .catch(() => {
                 reject()
@@ -763,6 +786,7 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
 
 const YakRunnerOpenHistory = "YakRunnerOpenHistory"
 const YakRunnerLastFolderExpanded = "YakRunnerLastFolderExpanded"
+const YakRunnerLastAreaFile = "YakRunnerLastAreaFile"
 
 /**
  * @name 更改YakRunner历史记录
@@ -815,7 +839,7 @@ interface YakRunnerLastFolderExpandedProps {
 }
 
 /**
- * @name 更改打开的文件夹及其展开项
+ * @name 更改打开的文件夹及其展开项历史
  */
 export const setYakRunnerLastFolderExpanded = (cache: YakRunnerLastFolderExpandedProps) => {
     const newCache = JSON.stringify(cache)
@@ -823,7 +847,7 @@ export const setYakRunnerLastFolderExpanded = (cache: YakRunnerLastFolderExpande
 }
 
 /**
- * @name 获取上次打开的文件夹及其展开项
+ * @name 获取上次打开的文件夹及其展开项历史
  */
 export const getYakRunnerLastFolderExpanded = (): Promise<YakRunnerLastFolderExpandedProps | null> => {
     return new Promise(async (resolve, reject) => {
@@ -834,6 +858,51 @@ export const getYakRunnerLastFolderExpanded = (): Promise<YakRunnerLastFolderExp
                     return
                 }
                 const historyData: YakRunnerLastFolderExpandedProps = JSON.parse(data)
+                resolve(historyData)
+            } catch (error) {
+                resolve(null)
+            }
+        })
+    })
+}
+
+/**
+ * @name 排除掉areaInfo中的code信息,用于下次加载时重新获取
+ */
+export const excludeAreaInfoCode = (areaInfo: AreaInfoProps[]): AreaInfoProps[] => {
+    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    newAreaInfo.forEach((item, index) => {
+        item.elements.forEach((itemIn, indexIn) => {
+            itemIn.files.forEach((file, fileIndex) => {
+                if (!file.isUnSave) {
+                    delete newAreaInfo[index].elements[indexIn].files[fileIndex].code
+                }
+            })
+        })
+    })
+    return newAreaInfo
+}
+
+/**
+ * @name 更改展示的分布及文件历史
+ */
+export const setYakRunnerLastAreaFile = (areaInfo: AreaInfoProps[], activeFile?: FileDetailInfo) => {
+    const newCache = JSON.stringify({areaInfo, activeFile})
+    setRemoteValue(YakRunnerLastAreaFile, newCache)
+}
+
+/**
+ * @name 获取上次打开的展示分布及文件历史
+ */
+export const getYakRunnerLastAreaFile = (): Promise<{activeFile: FileDetailInfo; areaInfo: AreaInfoProps[]} | null> => {
+    return new Promise(async (resolve, reject) => {
+        getRemoteValue(YakRunnerLastAreaFile).then((data) => {
+            try {
+                if (!data) {
+                    resolve(null)
+                    return
+                }
+                const historyData: {activeFile: FileDetailInfo; areaInfo: AreaInfoProps[]} = JSON.parse(data)
                 resolve(historyData)
             } catch (error) {
                 resolve(null)
@@ -946,11 +1015,57 @@ export const loadFolderDetail = (path) => {
  * @name 编辑器代码类型判断
  */
 export const monacaLanguageType = (suffix?: string) => {
-    switch (suffix) {
+    switch ((suffix || "").toLowerCase()) {
         case "yak":
             return YaklangMonacoSpec
-        case "sf": 
+        case "sf":
             return SyntaxFlowMonacoSpec
+        case "json":
+            return "json"
+        case "html":
+        case "htm":
+            return "html"
+        case "css":
+            return "css"
+        case "md":
+        case "markdown":
+            return "markdown"
+        case "svg":
+        case "xml":
+            return "xml"
+        case "yml":
+        case "yaml":
+            return "yaml"
+        case "sh":
+        case "shell":
+        case "bash":
+            return "shell"
+        case "cmd":
+        case "bat":
+            return "bat"
+        case "ini":
+            return "ini"
+        case "sql":
+            return "sql"
+        case "dockerfile":
+            return "dockerfile"
+        case "js":
+            return "javascript"
+        case "java":
+            return "java"
+        case "go":
+            return "go"
+        case "php":
+            return "php"
+        case "c":
+            return "c"
+        case "cpp":
+        case "cc":
+        case "cxx":
+        case "c++":
+            return "cpp"
+        case "txt":
+            return "plaintext"
         default:
             return undefined
     }

@@ -20,7 +20,7 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
 import classNames from "classnames"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {analyzeFuzzerResponse, copyAsUrl, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
+import {analyzeFuzzerResponse, ByteCountTag, copyAsUrl, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
 import styles from "./HTTPFuzzerPageTable.module.scss"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
 import {Alert, Divider, Tooltip} from "antd"
@@ -38,7 +38,7 @@ import {CodingPopover} from "@/components/HTTPFlowDetail"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {isCellRedSingleColor} from "@/components/TableVirtualResize/utils"
-import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
+import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -62,6 +62,7 @@ interface HTTPFuzzerPageTableProps {
     pageId?: string
     /**超过限制数据，alert文案显示 */
     moreLimtAlertMsg?: React.ReactNode
+    noMoreLimtAlertMsg?: React.ReactNode
     tableKeyUpDownEnabled?: boolean
     fuzzerTableMaxData?: number
 }
@@ -171,6 +172,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             onDebug,
             pageId,
             moreLimtAlertMsg,
+            noMoreLimtAlertMsg,
             tableKeyUpDownEnabled = true,
             fuzzerTableMaxData = DefFuzzerTableMaxData
         } = props
@@ -190,8 +192,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const tableRef = useRef<any>(null)
 
         const [scrollToIndex, setScrollToIndex] = useState<number>()
-        const [alertClose, setAlertClose] = useState<boolean>(false)
         const [alertHeight, setAlertHeight] = useState<number>(0)
+        const selectionByteCount = useSelectionByteCount(editor, 500)
 
         // useThrottleEffect(
         //     () => {
@@ -443,7 +445,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                       style={{
                                           color:
                                               !isCellRedSingleColor(rowData.cellClassName) && text.startsWith("1.00")
-                                                  ? "var(--yakit-success-5)"
+                                                  ? "var(--Colors-Use-Success-Primary)"
                                                   : undefined
                                       }}
                                   >
@@ -702,7 +704,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         }
                         // 关键字搜索
                         if (query?.keyWord) {
-                            const responseString = Uint8ArrayToString(record.ResponseRaw)
+                            const responseString = Uint8ArrayToString(record.ResponseRaw || new Uint8Array())
                             const payloadsString = (record.Payloads || []).join("")
                             let extractedResultsString = ""
                             if (extractedMap.size > 0) {
@@ -924,16 +926,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             }
         })
 
-        const [selectionByteCount, setSelectionByteCount] = useState<number>(0)
-        useEffect(() => {
-            try {
-                if (editor) {
-                    getSelectionEditorByteCount(editor, (byteCount) => {
-                        setSelectionByteCount(byteCount)
-                    })
-                }
-            } catch (e) {}
-        }, [editor])
+        const showAlertFlag = useMemo(() => {
+            return (moreLimtAlertMsg || noMoreLimtAlertMsg) && data.length > 1
+        }, [moreLimtAlertMsg, noMoreLimtAlertMsg, data])
 
         return (
             <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>
@@ -944,7 +939,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     secondNodeStyle={{padding: firstFull ? 0 : undefined, display: firstFull ? "none" : ""}}
                     firstNode={
                         <div className={styles["fuzzer-page-table-wrap"]}>
-                            {moreLimtAlertMsg && data.length >= fuzzerTableMaxData && (
+                            {showAlertFlag && (
                                 <div style={{padding: "0 2px"}}>
                                     <ReactResizeDetector
                                         onResize={(w, h) => {
@@ -958,30 +953,17 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                         refreshRate={50}
                                     />
                                     <Alert
-                                        message={moreLimtAlertMsg}
+                                        message={
+                                            data.length >= fuzzerTableMaxData ? moreLimtAlertMsg : noMoreLimtAlertMsg
+                                        }
                                         type='warning'
-                                        // closable
-                                        // closeIcon={
-                                        //     <YakitButton
-                                        //         style={{float: "right"}}
-                                        //         type='text2'
-                                        //         size={"middle"}
-                                        //         icon={<OutlineXIcon />}
-                                        //     />
-                                        // }
                                         style={{margin: "2px 0"}}
-                                        // onClose={(e) => {
-                                        //     setAlertClose(true)
-                                        // }}
                                     />
                                 </div>
                             )}
                             <div
                                 style={{
-                                    height:
-                                        moreLimtAlertMsg && data.length >= fuzzerTableMaxData && !alertClose
-                                            ? `calc(100% - ${alertHeight + 10}px)`
-                                            : "100%"
+                                    height: showAlertFlag ? `calc(100% - ${alertHeight + 10}px)` : "100%"
                                 }}
                             >
                                 <TableVirtualResize<FuzzerResponse>
@@ -1008,180 +990,178 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         </div>
                     }
                     secondNode={
-                        <NewHTTPPacketEditor
-                            language={currentSelectItem?.DisableRenderStyles ? "text" : undefined}
-                            isShowBeautifyRender={!currentSelectItem?.IsTooLargeResponse}
-                            title={
-                                <div className={styles["second-node-title-wrapper"]}>
-                                    <span className={styles["second-node-title-text"]}>快速预览</span>
-                                    <div className={styles["second-node-title-btns"]}>
-                                        <YakitRadioButtons
-                                            size='small'
-                                            value={currentSelectShowType}
-                                            onChange={(e) => {
-                                                setCurrentSelectShowType(e.target.value)
-                                            }}
-                                            buttonStyle='solid'
-                                            options={[
-                                                {
-                                                    value: "request",
-                                                    label: "请求"
-                                                },
-                                                {
-                                                    value: "response",
-                                                    label: "响应"
-                                                }
-                                            ]}
-                                        />
-                                        {currentSelectItem?.IsTooLargeResponse && (
-                                            <YakitTag style={{marginLeft: 8}} color='danger'>
-                                                超大响应
-                                            </YakitTag>
-                                        )}
-                                        {selectionByteCount > 0 && (
-                                            <YakitTag style={{marginLeft: 8}}>{selectionByteCount} bytes</YakitTag>
-                                        )}
+                        currentSelectItem && (
+                            <NewHTTPPacketEditor
+                                language={currentSelectItem?.DisableRenderStyles ? "text" : undefined}
+                                isShowBeautifyRender={!currentSelectItem?.IsTooLargeResponse}
+                                title={
+                                    <div className={styles["second-node-title-wrapper"]}>
+                                        <span className={styles["second-node-title-text"]}>快速预览</span>
+                                        <div className={styles["second-node-title-btns"]}>
+                                            <YakitRadioButtons
+                                                size='small'
+                                                value={currentSelectShowType}
+                                                onChange={(e) => {
+                                                    setCurrentSelectShowType(e.target.value)
+                                                }}
+                                                buttonStyle='solid'
+                                                options={[
+                                                    {
+                                                        value: "request",
+                                                        label: "请求"
+                                                    },
+                                                    {
+                                                        value: "response",
+                                                        label: "响应"
+                                                    }
+                                                ]}
+                                            />
+                                            {currentSelectItem?.IsTooLargeResponse && (
+                                                <YakitTag style={{marginLeft: 8}} color='danger'>
+                                                    超大响应
+                                                </YakitTag>
+                                            )}
+                                            <ByteCountTag selectionByteCount={selectionByteCount} key='httpfuzzerpagetable' style={{marginLeft: 8}}/>
+                                        </div>
                                     </div>
-                                </div>
-                            }
-                            defaultHttps={currentSelectItem?.IsHTTPS}
-                            isResponse={true}
-                            readOnly={true}
-                            hideSearch={true}
-                            noHex={true}
-                            loading={codeLoading}
-                            // noHeader={true}
-                            originValue={codeKey === "utf-8" ? originReqOrResValue : codeValue}
-                            originalPackage={
-                                currentSelectShowType === "request"
-                                    ? currentSelectItem?.RequestRaw
-                                    : currentSelectItem?.ResponseRaw
-                            }
-                            onAddOverlayWidget={(editor) => {
-                                setEditor(editor)
-                            }}
-                            isAddOverlayWidget={showResponseInfoSecondEditor}
-                            contextMenu={responseEditorRightMenu}
-                            webFuzzerValue={Uint8ArrayToString(currentSelectItem?.RequestRaw || new Uint8Array())}
-                            extraEditorProps={{
-                                isShowSelectRangeMenu: true
-                            }}
-                            extra={[
-                                currentSelectItem?.IsTooLargeResponse && (
-                                    <YakitDropdownMenu
-                                        key='allRes'
-                                        menu={{
-                                            data: [
-                                                {key: "tooLargeResponseHeaderFile", label: "查看Header"},
-                                                {key: "tooLargeResponseBodyFile", label: "查看Body"}
-                                            ],
-                                            onClick: ({key}) => {
-                                                switch (key) {
-                                                    case "tooLargeResponseHeaderFile":
-                                                        ipcRenderer
-                                                            .invoke(
-                                                                "is-file-exists",
-                                                                currentSelectItem.TooLargeResponseHeaderFile
-                                                            )
-                                                            .then((flag: boolean) => {
-                                                                if (flag) {
-                                                                    openABSFileLocated(
-                                                                        currentSelectItem.TooLargeResponseHeaderFile
-                                                                    )
-                                                                } else {
-                                                                    failed("目标文件已不存在!")
-                                                                }
-                                                            })
-                                                            .catch(() => {})
-                                                        break
-                                                    case "tooLargeResponseBodyFile":
-                                                        ipcRenderer
-                                                            .invoke(
-                                                                "is-file-exists",
-                                                                currentSelectItem.TooLargeResponseBodyFile
-                                                            )
-                                                            .then((flag: boolean) => {
-                                                                if (flag) {
-                                                                    openABSFileLocated(
-                                                                        currentSelectItem.TooLargeResponseBodyFile
-                                                                    )
-                                                                } else {
-                                                                    failed("目标文件已不存在!")
-                                                                }
-                                                            })
-                                                            .catch(() => {})
-                                                        break
-                                                    default:
-                                                        break
-                                                }
-                                            }
-                                        }}
-                                        dropdown={{
-                                            trigger: ["click"],
-                                            placement: "bottom"
-                                        }}
-                                    >
-                                        <YakitButton type='primary' size='small'>
-                                            完整响应
-                                        </YakitButton>
-                                    </YakitDropdownMenu>
-                                ),
-                                <YakitButton size='small' onClick={onExecResults} key='extractData'>
-                                    提取数据
-                                </YakitButton>
-                            ]}
-                            AfterBeautifyRenderBtn={
-                                <CodingPopover
-                                    key='coding'
-                                    originValue={
-                                        (currentSelectShowType === "request"
-                                            ? currentSelectItem?.RequestRaw
-                                            : currentSelectItem?.ResponseRaw) || new Uint8Array()
-                                    }
-                                    onSetCodeLoading={setCodeLoading}
-                                    codeKey={codeKey}
-                                    onSetCodeKey={(codeKey) => {
-                                        setCodeKey(codeKey)
-                                    }}
-                                    onSetCodeValue={setCodeValue}
-                                />
-                            }
-                            typeOptionVal={typeOptionVal}
-                            onTypeOptionVal={(typeOptionVal) => {
-                                if (typeOptionVal !== undefined) {
-                                    setTypeOptionVal(typeOptionVal)
-                                    setRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify, typeOptionVal)
-                                } else {
-                                    setTypeOptionVal(undefined)
-                                    setRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify, "")
                                 }
-                            }}
-                            onClickUrlMenu={copyUrl}
-                            onClickOpenBrowserMenu={onClickOpenBrowserMenu}
-                            downbodyParams={{
-                                RuntimeId: currentSelectItem?.RuntimeID,
-                                IsRequest: currentSelectShowType === "request"
-                            }}
-                            onClickOpenPacketNewWindowMenu={() => {
-                                openPacketNewWindow({
-                                    request: {
-                                        originValue: currentSelectItem?.RequestRaw
-                                            ? Uint8ArrayToString(currentSelectItem?.RequestRaw)
-                                            : new Uint8Array(),
-                                        originalPackage: currentSelectItem?.RequestRaw
-                                    },
-                                    response: {
-                                        originValue:
-                                            codeKey === "utf-8"
-                                                ? currentSelectItem?.ResponseRaw
-                                                    ? Uint8ArrayToString(currentSelectItem?.ResponseRaw)
-                                                    : new Uint8Array()
-                                                : codeValue,
-                                        originalPackage: currentSelectItem?.ResponseRaw
+                                defaultHttps={currentSelectItem?.IsHTTPS}
+                                isResponse={true}
+                                readOnly={true}
+                                loading={codeLoading}
+                                // noHeader={true}
+                                originValue={codeKey === "utf-8" ? originReqOrResValue : codeValue}
+                                originalPackage={
+                                    currentSelectShowType === "request"
+                                        ? currentSelectItem?.RequestRaw
+                                        : currentSelectItem?.ResponseRaw
+                                }
+                                onAddOverlayWidget={(editor) => {
+                                    setEditor(editor)
+                                }}
+                                isAddOverlayWidget={showResponseInfoSecondEditor}
+                                contextMenu={responseEditorRightMenu}
+                                webFuzzerValue={Uint8ArrayToString(currentSelectItem?.RequestRaw || new Uint8Array())}
+                                extraEditorProps={{
+                                    isShowSelectRangeMenu: true
+                                }}
+                                extra={[
+                                    currentSelectItem?.IsTooLargeResponse && (
+                                        <YakitDropdownMenu
+                                            key='allRes'
+                                            menu={{
+                                                data: [
+                                                    {key: "tooLargeResponseHeaderFile", label: "查看Header"},
+                                                    {key: "tooLargeResponseBodyFile", label: "查看Body"}
+                                                ],
+                                                onClick: ({key}) => {
+                                                    switch (key) {
+                                                        case "tooLargeResponseHeaderFile":
+                                                            ipcRenderer
+                                                                .invoke(
+                                                                    "is-file-exists",
+                                                                    currentSelectItem.TooLargeResponseHeaderFile
+                                                                )
+                                                                .then((flag: boolean) => {
+                                                                    if (flag) {
+                                                                        openABSFileLocated(
+                                                                            currentSelectItem.TooLargeResponseHeaderFile
+                                                                        )
+                                                                    } else {
+                                                                        failed("目标文件已不存在!")
+                                                                    }
+                                                                })
+                                                                .catch(() => {})
+                                                            break
+                                                        case "tooLargeResponseBodyFile":
+                                                            ipcRenderer
+                                                                .invoke(
+                                                                    "is-file-exists",
+                                                                    currentSelectItem.TooLargeResponseBodyFile
+                                                                )
+                                                                .then((flag: boolean) => {
+                                                                    if (flag) {
+                                                                        openABSFileLocated(
+                                                                            currentSelectItem.TooLargeResponseBodyFile
+                                                                        )
+                                                                    } else {
+                                                                        failed("目标文件已不存在!")
+                                                                    }
+                                                                })
+                                                                .catch(() => {})
+                                                            break
+                                                        default:
+                                                            break
+                                                    }
+                                                }
+                                            }}
+                                            dropdown={{
+                                                trigger: ["click"],
+                                                placement: "bottom"
+                                            }}
+                                        >
+                                            <YakitButton type='primary' size='small'>
+                                                完整响应
+                                            </YakitButton>
+                                        </YakitDropdownMenu>
+                                    ),
+                                    <YakitButton size='small' onClick={onExecResults} key='extractData'>
+                                        提取数据
+                                    </YakitButton>
+                                ]}
+                                AfterBeautifyRenderBtn={
+                                    <CodingPopover
+                                        key='coding'
+                                        originValue={
+                                            (currentSelectShowType === "request"
+                                                ? currentSelectItem?.RequestRaw
+                                                : currentSelectItem?.ResponseRaw) || new Uint8Array()
+                                        }
+                                        onSetCodeLoading={setCodeLoading}
+                                        codeKey={codeKey}
+                                        onSetCodeKey={(codeKey) => {
+                                            setCodeKey(codeKey)
+                                        }}
+                                        onSetCodeValue={setCodeValue}
+                                    />
+                                }
+                                typeOptionVal={typeOptionVal}
+                                onTypeOptionVal={(typeOptionVal) => {
+                                    if (typeOptionVal !== undefined) {
+                                        setTypeOptionVal(typeOptionVal)
+                                        setRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify, typeOptionVal)
+                                    } else {
+                                        setTypeOptionVal(undefined)
+                                        setRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify, "")
                                     }
-                                })
-                            }}
-                        />
+                                }}
+                                onClickUrlMenu={copyUrl}
+                                onClickOpenBrowserMenu={onClickOpenBrowserMenu}
+                                downbodyParams={{
+                                    RuntimeId: currentSelectItem?.RuntimeID,
+                                    IsRequest: currentSelectShowType === "request"
+                                }}
+                                onClickOpenPacketNewWindowMenu={() => {
+                                    openPacketNewWindow({
+                                        request: {
+                                            originValue: currentSelectItem?.RequestRaw
+                                                ? Uint8ArrayToString(currentSelectItem?.RequestRaw)
+                                                : new Uint8Array(),
+                                            originalPackage: currentSelectItem?.RequestRaw
+                                        },
+                                        response: {
+                                            originValue:
+                                                codeKey === "utf-8"
+                                                    ? currentSelectItem?.ResponseRaw
+                                                        ? Uint8ArrayToString(currentSelectItem?.ResponseRaw)
+                                                        : new Uint8Array()
+                                                    : codeValue,
+                                            originalPackage: currentSelectItem?.ResponseRaw
+                                        }
+                                    })
+                                }}
+                            />
+                        )
                     }
                     {...ResizeBoxProps}
                 />

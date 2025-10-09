@@ -28,7 +28,7 @@ import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {CurrentHttpFlow, formatJson} from "@/pages/yakitStore/viewers/base"
+import {formatJson} from "@/pages/yakitStore/viewers/base"
 import {EngineConsole} from "@/components/baseConsole/BaseConsole"
 import {WebTree} from "@/components/WebTree/WebTree"
 import classNames from "classnames"
@@ -49,11 +49,14 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {QueryRisksRequest} from "@/pages/risks/YakitRiskTable/YakitRiskTableType"
 import {defQueryRisksRequest} from "@/pages/risks/YakitRiskTable/constants"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
-import {apiQueryRisks} from "@/pages/risks/YakitRiskTable/utils"
+import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
 import {OutlineChartpieIcon, OutlineLogIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import {LocalList, LocalPluginLog, LocalText} from "./LocalPluginLog"
 import {CodeScanResult} from "@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable"
 import {YakitAuditHoleTable} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
+import {HTTPFlowRealTimeTableAndEditor} from "@/components/HTTPHistory"
+import {ErrorBoundary} from "react-error-boundary"
+import moment from "moment"
 
 const {TabPane} = PluginTabs
 
@@ -85,16 +88,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     }, interval)
 
     const getTotal = useMemoizedFn(() => {
-        const params: QueryRisksRequest = {
-            ...defQueryRisksRequest,
-            Pagination: {
-                ...defQueryRisksRequest.Pagination,
-                Page: 1,
-                Limit: 1
-            },
-            RuntimeId: runtimeId
-        }
-        apiQueryRisks(params).then((allRes) => {
+        apiQueryRisksTotalByRuntimeId(runtimeId).then((allRes) => {
             if (+allRes.Total > 0) {
                 setTempTotal(+allRes.Total)
             }
@@ -137,11 +131,15 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
             case "console":
                 return <EngineConsole isMini={true} />
             case "table":
-                const tableInfo: HoldGRPCStreamProps.InfoTable = streamInfo.tabsInfoState[ele.tabName] || {
+                let tableInfo: HoldGRPCStreamProps.InfoTable = streamInfo.tabsInfoState[ele.tabName] || {
                     columns: [],
                     data: [],
                     name: ""
                 }
+                // 过滤掉数据中含有对象与数组的数据
+                tableInfo.data = tableInfo.data.filter((item) =>
+                    Object.values(item).every((value) => !(typeof value === "object"))
+                )
                 return <PluginExecuteCustomTable tableInfo={tableInfo} />
             case "text":
                 const textInfo: HoldGRPCStreamProps.InfoText = streamInfo.tabsInfoState[ele.tabName] || {
@@ -237,7 +235,7 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
     )
 })
 /**HTTP 流量 */
-const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
+export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
     const {runtimeId, website = false} = props
 
     const [height, setHeight] = useState<number>(300) //表格所在div高度
@@ -306,16 +304,31 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
                     </div>
                 }
                 secondNode={
-                    <CurrentHttpFlow
-                        runtimeId={runtimeId}
+                    <HTTPFlowRealTimeTableAndEditor
+                        wrapperStyle={{padding: 0}}
+                        containerClassName={styles["current-http-table-container"]}
                         searchURL={searchURL}
                         includeInUrl={includeInUrl}
-                        isOnlyTable={onlyShowFirstNode}
-                        onIsOnlyTable={setOnlyShowFirstNode}
-                        showDetail={secondNodeVisible}
-                        pageType='Plugin'
-                        containerClassName={styles["current-http-table-container"]}
                         onQueryParams={onQueryParams}
+                        setOnlyShowFirstNode={setOnlyShowFirstNode}
+                        setSecondNodeVisible={setSecondNodeVisible}
+                        pageType='Plugin'
+                        runtimeId={runtimeId}
+                        params={{SourceType: "scan"}}
+                        httpHistoryTableTitleStyle={{
+                            paddingTop: 12,
+                            paddingLeft: 8,
+                            paddingRight: 8
+                        }}
+                        showSourceType={false}
+                        showAdvancedSearch={false}
+                        showProtocolType={false}
+                        showColorSwatch={false}
+                        showDelAll={false}
+                        showSetting={false}
+                        showBatchActions={false}
+                        showFlod={false}
+                        titleHeight={47}
                     />
                 }
             ></YakitResizeBox>
@@ -374,7 +387,8 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
     const renderTabContent = useMemoizedFn((type) => {
         switch (type) {
             case "plugin-log":
-                return <LocalPluginLog loading={loading} list={list} />
+                const currentTime=moment().format("YYYY-MM-DD")
+                return <LocalPluginLog loading={loading} list={list} heard={<> {currentTime} 日志查询结果</>}/>
             case "echarts-statistics":
                 return <LocalList list={echartsLists} />
             case "output-text":
@@ -661,44 +675,58 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
         setSorterTable(sorter)
     })
     return (
-        <PluginExecuteResultTabContent
-            // title={name}
-            title={
-                <span className={styles["table-title"]}>
-                    Total<span className={styles["table-title-number"]}>{data.length}</span>
-                </span>
-            }
-            extra={
-                <ExportExcel
-                    btnProps={{
-                        size: "small",
-                        type: "outline2"
-                    }}
-                    getData={getData}
-                    fileName={name || "输出表"}
-                    text='导出全部'
-                />
-            }
-            className={styles["plugin-execute-custom-table"]}
+        <ErrorBoundary
+            FallbackComponent={({error, resetErrorBoundary}) => {
+                if (!error) {
+                    return <div>未知错误</div>
+                }
+                return (
+                    <div>
+                        <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                        <pre>{error?.message}</pre>
+                    </div>
+                )
+            }}
         >
-            <TableVirtualResize
-                loading={loading}
-                isRefresh={loading}
-                isShowTitle={false}
-                enableDrag={true}
-                data={tableData}
-                renderKey={"uuid"}
-                pagination={{
-                    page: 1,
-                    limit: 50,
-                    total: data.length,
-                    onChange: () => {}
-                }}
-                columns={columnsData}
-                containerClassName={styles["custom-table-container"]}
-                onChange={onTableChange}
-            />
-        </PluginExecuteResultTabContent>
+            <PluginExecuteResultTabContent
+                // title={name}
+                title={
+                    <span className={styles["table-title"]}>
+                        Total<span className={styles["table-title-number"]}>{data.length}</span>
+                    </span>
+                }
+                extra={
+                    <ExportExcel
+                        btnProps={{
+                            size: "small",
+                            type: "outline2"
+                        }}
+                        getData={getData}
+                        fileName={name || "输出表"}
+                        text='导出全部'
+                    />
+                }
+                className={styles["plugin-execute-custom-table"]}
+            >
+                <TableVirtualResize
+                    loading={loading}
+                    isRefresh={loading}
+                    isShowTitle={false}
+                    enableDrag={true}
+                    data={tableData}
+                    renderKey={"uuid"}
+                    pagination={{
+                        page: 1,
+                        limit: 50,
+                        total: data.length,
+                        onChange: () => {}
+                    }}
+                    columns={columnsData}
+                    containerClassName={styles["custom-table-container"]}
+                    onChange={onTableChange}
+                />
+            </PluginExecuteResultTabContent>
+        </ErrorBoundary>
     )
 })
 

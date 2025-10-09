@@ -1,7 +1,15 @@
 import {yakitNotify} from "@/utils/notification"
-import {DeleteSSARisksRequest, QueryNewSSARisksRequest, QueryNewSSARisksResponse, QuerySSARisksRequest, QuerySSARisksResponse, SSARisksFilter} from "./YakitAuditHoleTableType"
+import {
+    DeleteSSARisksRequest,
+    QueryNewSSARisksRequest,
+    QueryNewSSARisksResponse,
+    QuerySSARisksRequest,
+    QuerySSARisksResponse,
+    SSARisksFilter
+} from "./YakitAuditHoleTableType"
 import {FieldGroup} from "@/pages/risks/YakitRiskTable/utils"
-import { FieldName } from "@/pages/risks/RiskTable"
+import {FieldName} from "@/pages/risks/RiskTable"
+import { DbOperateMessage } from "@/pages/layout/mainOperatorContent/utils"
 const {ipcRenderer} = window.require("electron")
 /** QuerySSARisks */
 export const apiQuerySSARisks: (query?: QuerySSARisksRequest) => Promise<QuerySSARisksResponse> = (query) => {
@@ -29,18 +37,72 @@ export const apiDeleteSSARisks: (query?: DeleteSSARisksRequest) => Promise<null>
     })
 }
 
-export interface UpdateSSARiskTagsRequest {
-    ID: number
-    Tags: string[]
+export interface CreateSSARiskDisposalsRequest {
+    RiskIds: number[]
+    Status: string
+    Comment: string
 }
-/** UpdateSSARiskTags */
-export const apiUpdateSSARiskTags: (params: UpdateSSARiskTagsRequest) => Promise<null> = (params) => {
+/** CreateSSARiskDisposals */
+export const apiCreateSSARiskDisposals: (params: CreateSSARiskDisposalsRequest) => Promise<null> = (params) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("UpdateSSARiskTags", params)
+            .invoke("CreateSSARiskDisposals", params)
             .then(resolve)
             .catch((e) => {
                 yakitNotify("error", `设置失败: ${e}`)
+                reject(e)
+            })
+    })
+}
+
+export interface SSARiskDisposalData {
+    Id: number
+    Status: string
+    Comment: string
+    CreatedAt: number
+    UpdatedAt: number
+    RiskId: number
+    TaskName: string
+}
+
+export interface GetSSARiskDisposalResponse {
+    Data: SSARiskDisposalData[]
+}
+
+export const apiGetSSARiskDisposal: (params: {RiskId?: number, RiskHash?: string}) => Promise<GetSSARiskDisposalResponse> = (params) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("GetSSARiskDisposal", params)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify("error", `获取失败: ${e}`)
+                reject(e)
+            })
+    })
+}
+
+export interface SSARiskDisposalsFilter {
+    ID?: number[]
+    Status?: string[]
+    RiskId?: number[]
+    Search?: string
+}
+
+export interface DeleteSSARiskDisposalsRequest {
+    Filter:SSARiskDisposalsFilter
+}
+
+export interface DeleteSSARiskDisposalsResponse {
+    Message: DbOperateMessage
+}
+
+export const apiDeleteSSARiskDisposals: (params: DeleteSSARiskDisposalsRequest) => Promise<DeleteSSARiskDisposalsResponse> = (params) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("DeleteSSARiskDisposals", params)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify("error", `删除失败: ${e}`)
                 reject(e)
             })
     })
@@ -67,7 +129,7 @@ export const apiGetSSARiskFieldGroup: () => Promise<GetSSARiskFieldGroupResponse
 export const apiNewRiskRead: (query?: SSARisksFilter) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("NewSSARiskRead", {Filter:query})
+            .invoke("NewSSARiskRead", {Filter: query})
             .then(resolve)
             .catch((e) => {
                 yakitNotify("error", `已读失败: ${e}`)
@@ -77,9 +139,9 @@ export const apiNewRiskRead: (query?: SSARisksFilter) => Promise<null> = (query)
 }
 
 export interface GroupTableColumnRequest {
-    DatabaseName: "Project"|"Profile"|"SSA"
+    DatabaseName: "Project" | "Profile" | "SSA"
     TableName: string
-    ColumnName:string
+    ColumnName: string
 }
 
 export interface GroupTableColumnResponse {

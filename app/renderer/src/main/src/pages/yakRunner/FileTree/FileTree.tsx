@@ -27,7 +27,7 @@ import {
     judgeAreaExistFilePath,
     judgeAreaExistFilesPath,
     loadFolderDetail,
-    removeAreaFileInfo,
+    removeYakRunnerAreaFileInfo,
     setYakRunnerLastFolderExpanded,
     updateActiveFile,
     updateAreaFileInfo,
@@ -62,9 +62,7 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         props
     const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
-    const [inViewport] = useInViewport(wrapper)
     const size = useSize(wrapper)
-    const getInViewport = useMemoizedFn(() => inViewport)
 
     const [isDownCtrlCmd, setIsDownCtrlCmd] = useState<boolean>(false)
 
@@ -76,38 +74,6 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         emiter.on("onScrollToFileTree", onScrollToFileTreeFun)
         return () => {
             emiter.off("onScrollToFileTree", onScrollToFileTreeFun)
-        }
-    }, [])
-
-    useEffect(() => {
-        let system = SystemInfo.system
-        if (!system) {
-        }
-
-        const handleKeyDown = (e: KeyboardEvent) => {
-            return
-            if (!getInViewport()) {
-                setIsDownCtrlCmd(false)
-                return
-            }
-            // console.log("down", e, SystemInfo)
-            setIsDownCtrlCmd(true)
-        }
-        const handleKeyUp = (e: KeyboardEvent) => {
-            return
-            // console.log("up", e, SystemInfo)
-            if (!getInViewport()) {
-                setIsDownCtrlCmd(false)
-                return
-            }
-            setIsDownCtrlCmd(false)
-        }
-
-        document.addEventListener("keydown", handleKeyDown)
-        document.addEventListener("keyup", handleKeyUp)
-        return () => {
-            document.removeEventListener("keydown", handleKeyDown)
-            document.removeEventListener("keyup", handleKeyUp)
         }
     }, [])
 
@@ -155,27 +121,37 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         }
     })
 
-    const onResetFileTreeFun = useMemoizedFn((path?: string) => {
-        if (path) {
-            if (foucsedKey === path) {
-                setFoucsedKey("")
-            }
-            if (copyPath.length !== 0 && copyPath.startsWith(path)) {
+    const onResetFileTreeFun = useMemoizedFn((data?: string) => {
+        try {
+            const {
+                path,
+                reset
+            }: {
+                path?: string
+                reset?: boolean
+            } = JSON.parse(data || "")
+            if (path) {
+                if (foucsedKey === path) {
+                    setFoucsedKey("")
+                }
+                if (copyPath.length !== 0 && copyPath.startsWith(path)) {
+                    setCopyPath("")
+                }
+                const newSelectedNodes = selectedNodes.filter((item) => !item.path.startsWith(path))
+                const newExpandedKeys = expandedKeys.filter((item) => !item.startsWith(path))
+                setSelectedNodes(newSelectedNodes)
+                onSaveYakRunnerLastExpanded(newExpandedKeys)
+                setExpandedKeys(newExpandedKeys)
+            } else {
+                // 全部清空
                 setCopyPath("")
+                setFoucsedKey("")
+                setSelectedNodes([])
+                reset && onSaveYakRunnerLastExpanded([])
+                // 如若上次打开时有展开项，则不应直接置为空数组
+                setExpandedKeys(reset ? [] : expandedKeys)
             }
-            const newSelectedNodes = selectedNodes.filter((item) => !item.path.startsWith(path))
-            const newExpandedKeys = expandedKeys.filter((item) => !item.startsWith(path))
-            setSelectedNodes(newSelectedNodes)
-            onSaveYakRunnerLastExpanded(newExpandedKeys)
-            setExpandedKeys(newExpandedKeys)
-        } else {
-            // 全部清空
-            setCopyPath("")
-            setFoucsedKey("")
-            setSelectedNodes([])
-            onSaveYakRunnerLastExpanded([])
-            setExpandedKeys([])
-        }
+        } catch (error) {}
     })
 
     useEffect(() => {
@@ -359,9 +335,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             failed(`复制相对路径失败`)
             return
         }
-        const basePath = fileTree[0].path
-        const relativePath = await getRelativePath(basePath, info.path)
-        setClipboardText(relativePath)
+        try {
+            const basePath = fileTree[0].path
+            const relativePath = await getRelativePath(basePath, info.path)
+            setClipboardText(relativePath)
+        } catch (error) {}
     })
 
     // 粘贴
@@ -539,7 +517,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                         if (folderMap.includes(path)) {
                             const file = await judgeAreaExistFilePath(areaInfo, path)
                             if (file) {
-                                cacheAreaInfo = removeAreaFileInfo(areaInfo, file)
+                                cacheAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, file).newAreaInfo
                             }
                             folderMap = folderMap.filter((item) => item !== path)
                         }
@@ -559,7 +537,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                     setActiveFile && setActiveFile(newActiveFile)
                     setAreaInfo && setAreaInfo(newAreaInfo)
                 }
-                emiter.emit("onResetFileTree", info.path)
+                emiter.emit("onResetFileTree", JSON.stringify({path: info.path}))
                 emiter.emit("onRefreshFileTree")
             } else {
                 setInput(false)
@@ -579,7 +557,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             if (newFolderDetail.length === 0) {
                 const fileDetail = getMapFileDetail(info.parent)
                 setMapFileDetail(info.parent, {...fileDetail, isLeaf: true})
-                emiter.emit("onResetFileTree", info.parent)
+                emiter.emit("onResetFileTree", JSON.stringify({path: info.parent}))
             }
             setMapFolderDetail(info.parent, newFolderDetail)
         }
@@ -664,20 +642,24 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
 
     // 新建文件（仅文件夹有这个操作）
     const onNewFile = useMemoizedFn(async (path: string) => {
-        // 判断文件夹内文件是否加载 如若未加载则需要先行加载
-        if (!hasMapFolderDetail(path)) {
-            await loadFolderDetail(path)
-        }
-        emiter.emit("onNewFileInFileTree", path)
+        try {
+            // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+            if (!hasMapFolderDetail(path)) {
+                await loadFolderDetail(path)
+            }
+            emiter.emit("onNewFileInFileTree", path)
+        } catch (error) {}
     })
 
     // 新建文件夹
     const onNewFolder = useMemoizedFn(async (path: string) => {
-        // 判断文件夹内文件是否加载 如若未加载则需要先行加载
-        if (!hasMapFolderDetail(path)) {
-            await loadFolderDetail(path)
-        }
-        emiter.emit("onNewFolderInFileTree", path)
+        try {
+            // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+            if (!hasMapFolderDetail(path)) {
+                await loadFolderDetail(path)
+            }
+            emiter.emit("onNewFolderInFileTree", path)
+        } catch (error) {}
     })
 
     const menuData: YakitMenuItemType[] = useMemo(() => {
@@ -783,17 +765,21 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     }, [info.isFolder])
 
     const iconImage = useMemo(() => {
-        if (info.isBottom) {
-            return ""
-        }
-        if (isFolder) {
-            if (isExpanded) {
-                return KeyToIcon[FolderDefaultExpanded].iconPath
-            } else {
-                return KeyToIcon[FolderDefault].iconPath
+        try {
+            if (info.isBottom) {
+                return ""
             }
-        } else {
-            return KeyToIcon[info.icon].iconPath
+            if (isFolder) {
+                if (isExpanded) {
+                    return KeyToIcon[FolderDefaultExpanded].iconPath
+                } else {
+                    return KeyToIcon[FolderDefault].iconPath
+                }
+            } else {
+                return KeyToIcon[info.icon].iconPath
+            }
+        } catch (error) {
+            return ""
         }
     }, [info.icon, isFolder, isExpanded, info.isBottom])
 

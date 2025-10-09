@@ -1,6 +1,7 @@
 import {yakitNotify} from "@/utils/notification"
 import {PortScanExecuteExtraFormValue} from "./NewPortScanType"
 import {StartBruteParams} from "../newBrute/NewBruteType"
+import { GenerateSSAReportResponse } from "@/pages/yakRunnerScanHistory/YakRunnerScanHistory"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -115,6 +116,34 @@ export const apiSimpleDetectCreatReport: (params: CreatReportRequest, token: str
             .invoke("SimpleDetectCreatReport", executeParams, token)
             .then(() => {
                 resolve(null)
+            })
+            .catch((e: any) => {
+                yakitNotify("error", "生成报告执行出错:" + e)
+                reject(e)
+            })
+    })
+}
+
+export interface GenerateSSAReport {
+    TaskID: string
+    ReportName: string
+}
+
+/**
+ * @description 生成报告 irify 代码扫描
+ */
+export const apiGenerateSSAReport: (params: GenerateSSAReport, token: string) => Promise<GenerateSSAReportResponse> = (
+    params,
+    token
+) => {
+    return new Promise((resolve, reject) => {
+        let executeParams: GenerateSSAReport = {
+            ...params
+        }
+        ipcRenderer
+            .invoke("GenerateSSAReport", executeParams, token)
+            .then((res: GenerateSSAReportResponse) => {
+                resolve(res)
             })
             .catch((e: any) => {
                 yakitNotify("error", "生成报告执行出错:" + e)

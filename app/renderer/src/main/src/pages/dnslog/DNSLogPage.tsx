@@ -1,29 +1,28 @@
 import React, {useEffect, useRef, useState} from "react"
-import {AutoCard} from "../../components/AutoCard"
-import {Alert, Button, Select, Form, Space, Table, Tag, Spin, Divider, Row, Col} from "antd"
-import {useGetState, useMemoizedFn} from "ahooks"
-import {failed, warn, info, yakitFailed} from "../../utils/notification"
-import {CopyableField, SwitchItem} from "../../utils/inputUtil"
+import {Select, Form, Space, Divider, Row, Col} from "antd"
+import {useCreation, useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
+import {failed, warn} from "../../utils/notification"
 import {formatTimestamp} from "../../utils/timeUtil"
-import {YakEditor} from "../../utils/editors"
-import {getReleaseEditionName, isEnpriTraceAgent} from "@/utils/envfile"
-import {SelectItem} from "@/utils/SelectItem"
+import {getReleaseEditionName} from "@/utils/envfile"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {ProjectDescription} from "@/pages/softwareSettings/ProjectManage"
 import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
+import {YakScript} from "@/pages/invoker/schema"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
-import {CodecType} from "@/utils/encodec"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {ReloadOutlined} from "@ant-design/icons"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import { DnslogMenuToPage } from "../layout/publicMenu/MenuDNSLog"
-import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
-
-export interface DNSLogPageProp {
-}
+import {DnslogMenuToPage} from "../layout/publicMenu/MenuDNSLog"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
+import styles from "./DNSLogPage.module.scss"
+import {Uint8ArrayToString} from "@/utils/str"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import useGetSetState from "../pluginHub/hooks/useGetSetState"
+export interface DNSLogPageProp {}
 
 const {ipcRenderer} = window.require("electron")
 
@@ -47,6 +46,7 @@ export interface DNSLogEvent {
     RemoteIP: string
     RemotePort: number
     Raw: Uint8Array
+    RawStr: string // 前端展示
     Timestamp: number
     Index?: number
 }
@@ -54,11 +54,11 @@ export interface DNSLogEvent {
 const {Option} = Select
 
 export interface SendMenuDnslogProps {
-    dnsLogType: "builtIn" | "custom",
-    token: string;
-    domain: string;
-    onlyARecord: boolean,
-    DNSMode?: string,
+    dnsLogType: "builtIn" | "custom"
+    token: string
+    domain: string
+    onlyARecord: boolean
+    DNSMode?: string
     UseLocal?: boolean
 }
 
@@ -71,7 +71,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const [records, setRecords, getRecords] = useGetState<DNSLogEvent[]>([])
     const [loading, setLoading] = useState(false)
     const [btnLoading, setBtnLoading] = useState(false)
-    const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(false)
+    const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetSetState(false)
     const [autoQuery, setAutoQuery] = useState(false)
     const [isLocal, setIsLocal, getIsLocal] = useGetState(true)
     const [expandRows, setExpandRows] = useState<string[]>([])
@@ -85,15 +85,12 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         // 初始化-查看菜单是否开启dnslog并请求获取参数fDNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE
         ipcRenderer.invoke("dnslog-page-to-menu")
         // 获取菜单发送的配置参数
-        ipcRenderer.on(
-            "dnslog-menu-to-page-callback",
-            (e, data: DnslogMenuToPage) => {
-                if(data.isReset){
-                    // 重置
-                    reset()
-                }
-                else{
-                  setOnlyARecord(data.onlyARecord)
+        ipcRenderer.on("dnslog-menu-to-page-callback", (e, data: DnslogMenuToPage) => {
+            if (data.isReset) {
+                // 重置
+                reset()
+            } else {
+                setOnlyARecord(data.onlyARecord)
                 if (getToken() !== data.token || getDomain() !== data.domain) {
                     setToken(data.token || "")
                     setDomain(data.domain || "")
@@ -101,19 +98,16 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                     setSelectedMode(data.dnsMode)
                     setIsLocal(data.useLocal)
                     queryDNSLogByToken()
-                }  
                 }
-                
             }
-        )
+        })
         // 查看单条数据的详情
         ipcRenderer.on("dnslog-info-details-callback", (e, info: DNSLogEvent) => {
             openDetails.current = info
-            if(getRecords().length>0){
+            if (getRecords().length > 0) {
                 openDetailsItem()
-            }
-            else{
-                if(token){
+            } else {
+                if (token) {
                     dnsLogType === "builtIn" ? queryDNSLogByToken() : queryDNSLogTokenByScript()
                 }
             }
@@ -125,9 +119,10 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     }, [])
 
     // 重置
-    const reset = useMemoizedFn(()=>{
+    const reset = useMemoizedFn(() => {
         setToken("")
         setDomain("")
+        setSelectCurDns(undefined)
         setRecords([])
         setLoading(false)
         setBtnLoading(false)
@@ -137,21 +132,22 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
 
     // 打开单条数据
     const openDetailsItem = useMemoizedFn(() => {
-
         if (openDetails.current) {
             for (let item of getRecords()) {
-                if (item.RemoteAddr === openDetails.current.RemoteAddr && item.Timestamp === openDetails.current.Timestamp) {
+                if (
+                    item.RemoteAddr === openDetails.current.RemoteAddr &&
+                    item.Timestamp === openDetails.current.Timestamp
+                ) {
                     setExpandRows(item.Index !== undefined ? [`${item.Index}`] : [])
                     break
                 }
             }
             openDetails.current = undefined
         }
-
     })
 
     // 同步给菜单里dnslog新的参数
-    const sendMenuDnslog = useMemoizedFn((data:SendMenuDnslogProps) => {
+    const sendMenuDnslog = useMemoizedFn((data: SendMenuDnslogProps) => {
         ipcRenderer.invoke("dnslog-page-change-menu", data)
     })
 
@@ -167,10 +163,17 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 DNSMode,
                 UseLocal
             })
-            .then((rsp: { Domain: string; Token: string }) => {
+            .then((rsp: {Domain: string; Token: string}) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
-                sendMenuDnslog({dnsLogType: getDnsLogType(), token: rsp.Token, domain: rsp.Domain, onlyARecord: getOnlyARecord(), DNSMode, UseLocal})
+                sendMenuDnslog({
+                    dnsLogType: getDnsLogType(),
+                    token: rsp.Token,
+                    domain: rsp.Domain,
+                    onlyARecord: getOnlyARecord(),
+                    DNSMode,
+                    UseLocal
+                })
             })
             .catch((e) => {
                 failed(`error: ${e}`)
@@ -185,7 +188,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         type: "builtIn",
                         Addr: "",
                         DNSMode,
-                        UseLocal: DNSMode === "内置" ? false : UseLocal,
+                        UseLocal: DNSMode === "内置" ? false : UseLocal
                     })
                 )
                 // 用于缓存历史勾选项
@@ -209,7 +212,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 DNSMode: getSelectedMode() || "",
                 UseLocal: getSelectedMode() === "内置" ? false : getIsLocal()
             })
-            .then((rsp: { Events: DNSLogEvent[] }) => {
+            .then((rsp: {Events: DNSLogEvent[]}) => {
                 setRecords(
                     rsp.Events.filter((i) => {
                         if (getOnlyARecord()) {
@@ -309,27 +312,32 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         )
     }, [])
 
-    useEffect(()=>{
+    useEffect(() => {
         getRemoteValue(DNS_LOG_COMMON_CACHE).then((data) => {
             if (!data) return
-            else{
+            else {
                 try {
                     let obj = JSON.parse(data)
                     setAutoQuery(obj.autoQuery)
                 } catch (error) {}
             }
         })
-    },[])
+    }, [])
 
     const updateTokenByScript = useMemoizedFn(() => {
         setLoading(true)
         setBtnLoading(true)
         ipcRenderer
             .invoke("RequireDNSLogDomainByScript", {ScriptName: params || ""})
-            .then((rsp: { Domain: string; Token: string }) => {
+            .then((rsp: {Domain: string; Token: string}) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
-                sendMenuDnslog({dnsLogType: getDnsLogType(), token: rsp.Token, domain: rsp.Domain, onlyARecord: getOnlyARecord()})
+                sendMenuDnslog({
+                    dnsLogType: getDnsLogType(),
+                    token: rsp.Token,
+                    domain: rsp.Domain,
+                    onlyARecord: getOnlyARecord()
+                })
             })
             .catch((e) => {
                 failed(`error: ${e}`)
@@ -354,7 +362,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         loading && setLoading(true)
         ipcRenderer
             .invoke("QueryDNSLogTokenByScript", {Token: token, ScriptName: params || ""})
-            .then((rsp: { Events: DNSLogEvent[] }) => {
+            .then((rsp: {Events: DNSLogEvent[]}) => {
                 setRecords(
                     rsp.Events.filter((i) => {
                         if (getOnlyARecord()) {
@@ -378,6 +386,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             return
         }
         setRecords([])
+        setSelectCurDns(undefined)
         dnsLogType === "builtIn" ? queryDNSLogByToken() : queryDNSLogTokenByScript()
         const id = setInterval(() => {
             dnsLogType === "builtIn" ? queryDNSLogByToken(false) : queryDNSLogTokenByScript(false)
@@ -387,228 +396,286 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             clearInterval(id)
         }
     }, [token, autoQuery])
+
+    const [selectCurDnss, setSelectCurDns] = useState<DNSLogEvent>()
+    const onSetCurrentRow = useDebounceFn(
+        (rowDate: DNSLogEvent | undefined) => {
+            setSelectCurDns(rowDate ? {...rowDate, RawStr: Uint8ArrayToString(rowDate.Raw)} : undefined)
+        },
+        {wait: 200, leading: true}
+    ).run
+
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "50%",
+            secondRatio: "50%"
+        }
+        if (!selectCurDnss) {
+            p.firstRatio = "100%"
+            p.secondRatio = "0%"
+        }
+        return {
+            ...p,
+            secondNodeStyle: {
+                display: !selectCurDnss ? "none" : "",
+                padding: !selectCurDnss ? 0 : undefined
+            },
+            lineStyle: {display: !selectCurDnss ? "none" : ""}
+        }
+    }, [selectCurDnss])
+
+    const manuallyRefresh = useMemoizedFn(() => {
+        if (token.length === 0) {
+            warn("请先生成可用域名")
+            return
+        }
+        dnsLogType === "builtIn" ? queryDNSLogByToken() : queryDNSLogTokenByScript()
+    })
+
     return (
-        <AutoCard
-            title={
-                <div>
-                    <Space>
-                        DNSLog
-                        <div style={{color: "#999"}}>使用 {getReleaseEditionName()} 自带的 DNSLog 反连服务</div>
-                    </Space>
-                    <div
-                        style={{
-                            display: "flex",
-                            gap: 16,
-                            paddingTop: 12,
-                            borderRadius: 4,
-                        }}
-                    >
-                        <YakitRadioButtons
-                            value={dnsLogType}
-                            onChange={(e) => {
-                                setToken("")
-                                setDomain("")
-                                setDnsLogType(e.target.value)
+        <YakitResizeBox
+            isVer={true}
+            firstNode={
+                <YakitCard
+                    className={styles["DNSLogPage-card"]}
+                    headStyle={{
+                        height: 100,
+                        minHeight: 100,
+                        boxSizing: "content-box"
+                    }}
+                    bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 100px)"}}
+                    title={
+                        <div className={styles["DNSLogPage-card-title"]}>
+                            <Space>
+                                <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>DNSLog</div>
+                                <div style={{color: "var(--Colors-Use-Neutral-Text-3-Secondary)"}}>
+                                    使用 {getReleaseEditionName()} 自带的 DNSLog 反连服务
+                                </div>
+                            </Space>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    gap: 16,
+                                    paddingTop: 12,
+                                    borderRadius: 4
+                                }}
+                            >
+                                <YakitRadioButtons
+                                    value={dnsLogType}
+                                    onChange={(e) => {
+                                        setToken("")
+                                        setDomain("")
+                                        setDnsLogType(e.target.value)
+                                    }}
+                                    buttonStyle='solid'
+                                    options={[
+                                        {
+                                            value: "builtIn",
+                                            label: "内置"
+                                        },
+                                        {
+                                            value: "custom",
+                                            label: "自定义"
+                                        }
+                                    ]}
+                                />
+                                {dnsLogType === "builtIn" && (
+                                    <Form
+                                        onSubmitCapture={(e) => {
+                                            e.preventDefault()
+                                            updateToken()
+                                        }}
+                                        layout='inline'
+                                        size={"small"}
+                                    >
+                                        <Form.Item label={<span>内置DNSLog</span>}>
+                                            <YakitSelect
+                                                showSearch
+                                                placeholder='请选择...'
+                                                optionFilterProp='children'
+                                                value={selectedMode}
+                                                onChange={(value) => {
+                                                    setToken("")
+                                                    setSelectedMode(value)
+                                                }} // 保存选中的值
+                                                style={{width: 240}}
+                                                size='small'
+                                            >
+                                                {platforms.map((item, index) => (
+                                                    <YakitSelect.Option key={index} value={item}>
+                                                        {item}
+                                                    </YakitSelect.Option>
+                                                ))}
+                                            </YakitSelect>
+                                        </Form.Item>
+                                        {selectedMode !== "内置" && (
+                                            <Form.Item
+                                                style={{
+                                                    marginBottom: 0,
+                                                    marginRight: 10 // 添加右侧间隔isLocal
+                                                }}
+                                                label={"使用本地"}
+                                            >
+                                                <YakitSwitch checked={isLocal} onChange={setIsLocal} />
+                                            </Form.Item>
+                                        )}
+                                        <Divider
+                                            style={{top: 6, margin: "0px 16px 0px 0px", height: "1em"}}
+                                            type={"vertical"}
+                                        />
+                                        <Form.Item colon={false} style={{height: 24}}>
+                                            <YakitButton type='primary' htmlType='submit' loading={btnLoading}>
+                                                生成一个可用域名
+                                            </YakitButton>
+                                        </Form.Item>
+                                    </Form>
+                                )}
+                                {dnsLogType === "custom" && (
+                                    <Form
+                                        layout='inline'
+                                        onSubmitCapture={(e) => {
+                                            e.preventDefault()
+                                            updateTokenByScript()
+                                        }}
+                                        size={"small"}
+                                    >
+                                        <Form.Item label={<span>DNSLog插件</span>}>
+                                            <YakitSelect
+                                                showSearch
+                                                options={scriptNamesList}
+                                                placeholder='请选择...'
+                                                size='small'
+                                                value={params}
+                                                onChange={(ScriptNames) => {
+                                                    setParams(ScriptNames)
+                                                }}
+                                                maxTagCount={10}
+                                                style={{width: 240}}
+                                            />
+                                        </Form.Item>
+                                        <Divider
+                                            style={{top: 6, margin: "0px 16px 0px 0px", height: "1em"}}
+                                            type={"vertical"}
+                                        />
+                                        <Form.Item colon={false} style={{height: 24}}>
+                                            <YakitButton type='primary' htmlType='submit' loading={btnLoading}>
+                                                生成一个可用域名
+                                            </YakitButton>
+                                        </Form.Item>
+                                    </Form>
+                                )}
+                            </div>
+                            {token !== "" && (
+                                <Row style={{marginTop: 5}} align='bottom'>
+                                    <Col style={{fontSize: 12, color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
+                                        当前激活域名为：
+                                    </Col>
+                                    <Col>
+                                        <YakitTag enableCopy={true} color='blue' copyText={tokenDomain}></YakitTag>
+                                    </Col>
+                                </Row>
+                            )}
+                        </div>
+                    }
+                >
+                    <div className={styles["DNSLogPage-card-body"]}>
+                        <TableVirtualResize<DNSLogEvent>
+                            isRefresh={loading}
+                            renderTitle={
+                                <div className={styles["DNSLogPage-table-title"]}>
+                                    <Form size={"small"} layout='inline'>
+                                        <Form.Item
+                                            style={{
+                                                marginBottom: 0,
+                                                marginRight: 10 // 添加右侧间隔
+                                            }}
+                                            label={"只看A记录"}
+                                        >
+                                            <YakitSwitch
+                                                checked={onlyARecord}
+                                                onChange={(flag) => {
+                                                    setOnlyARecord(flag)
+                                                    sendMenuDnslog({
+                                                        dnsLogType,
+                                                        token,
+                                                        domain,
+                                                        onlyARecord: flag
+                                                    })
+                                                    if (flag) {
+                                                        setRecords((prev) => {
+                                                            return prev
+                                                                .filter((i) => i.DNSType === "A")
+                                                                .map((i, index) => {
+                                                                    return {...i, Index: index}
+                                                                })
+                                                                .reverse()
+                                                        })
+                                                    } else {
+                                                        setTimeout(() => {
+                                                            manuallyRefresh()
+                                                        }, 100)
+                                                    }
+                                                }}
+                                            />
+                                        </Form.Item>
+                                        <Form.Item
+                                            style={{
+                                                marginBottom: 0,
+                                                marginRight: 10 // 添加右侧间隔
+                                            }}
+                                            label={"自动刷新记录"}
+                                        >
+                                            <YakitSwitch
+                                                checked={autoQuery}
+                                                onChange={(val) => {
+                                                    setAutoQuery(val)
+                                                    setRemoteValue(
+                                                        DNS_LOG_COMMON_CACHE,
+                                                        JSON.stringify({autoQuery: val})
+                                                    )
+                                                }}
+                                            />
+                                        </Form.Item>
+                                    </Form>
+                                    <YakitButton
+                                        size={"small"}
+                                        type={"text"}
+                                        onClick={manuallyRefresh}
+                                        icon={<ReloadOutlined style={{position: "relative", top: 2}} />}
+                                    />
+                                </div>
+                            }
+                            renderKey='Index'
+                            data={records}
+                            pagination={{
+                                total: records.length,
+                                limit: 1,
+                                page: 20,
+                                onChange: () => {}
                             }}
-                            buttonStyle='solid'
-                            options={[
+                            loading={loading}
+                            columns={[
+                                {title: "域名", dataKey: "Domain"},
+                                {title: "类型", dataKey: "DNSType"},
+                                {title: "远端IP", dataKey: "RemoteIP"},
                                 {
-                                    value: "builtIn",
-                                    label: "内置"
-                                },
-                                {
-                                    value: "custom",
-                                    label: "自定义"
+                                    title: "Timestamp",
+                                    dataKey: "Timestamp",
+                                    render: (i: number) => {
+                                        return <YakitTag color={"blue"}>{formatTimestamp(i)}</YakitTag>
+                                    }
                                 }
                             ]}
+                            onSetCurrentRow={onSetCurrentRow}
                         />
-                        {dnsLogType === "builtIn" && (
-                            <Form
-                                onSubmitCapture={(e) => {
-                                    e.preventDefault()
-                                    updateToken()
-                                }}
-                                layout='inline'
-                                size={"small"}
-                            >
-                                <Form.Item label={<span>内置DNSLog</span>}>
-                                    <YakitSelect
-                                        showSearch
-                                        placeholder='请选择...'
-                                        optionFilterProp='children'
-                                        value={selectedMode}
-                                        onChange={(value) => {
-                                            setToken("")
-                                            setSelectedMode(value)
-                                        }} // 保存选中的值
-                                        style={{width: 240}}
-                                        size='small'
-                                    >
-                                        {platforms.map((item, index) => (
-                                            <YakitSelect.Option key={index} value={item}>
-                                                {item}
-                                            </YakitSelect.Option>
-                                        ))}
-                                    </YakitSelect>
-                                </Form.Item>
-                                {selectedMode !== "内置" && <Form.Item
-                                    style={{
-                                        marginBottom: 0,
-                                        marginRight: 10 // 添加右侧间隔isLocal
-                                    }}
-                                    label={"使用本地"}
-                                >
-                                    <YakitSwitch checked={isLocal} onChange={setIsLocal}/>
-                                </Form.Item>}
-                                <Divider
-                                    style={{top: 6, margin: "0px 16px 0px 0px", height: "1em"}}
-                                    type={"vertical"}
-                                />
-                                <Form.Item colon={false} style={{height: 24}}>
-                                    <YakitButton
-                                        type='primary'
-                                        htmlType='submit'
-                                        loading={btnLoading}
-                                    >
-                                        生成一个可用域名
-                                    </YakitButton>
-                                </Form.Item>
-                            </Form>
-                        )}
-                        {dnsLogType === "custom" && (
-                            <Form
-                                layout='inline'
-                                onSubmitCapture={(e) => {
-                                    e.preventDefault()
-                                    updateTokenByScript()
-                                }}
-                                size={"small"}
-                            >
-                                <Form.Item label={<span>DNSLog插件</span>}>
-                                    <YakitSelect
-                                        showSearch
-                                        options={scriptNamesList}
-                                        placeholder='请选择...'
-                                        size='small'
-                                        value={params}
-                                        onChange={(ScriptNames) => {
-                                            setParams(ScriptNames)
-                                        }}
-                                        maxTagCount={10}
-                                        style={{width: 240}}
-                                    />
-                                </Form.Item>
-                                <Divider
-                                    style={{top: 6, margin: "0px 16px 0px 0px", height: "1em"}}
-                                    type={"vertical"}
-                                />
-                                <Form.Item colon={false} style={{height: 24}}>
-                                    <YakitButton
-                                        type='primary'
-                                        htmlType='submit'
-                                        loading={btnLoading}
-                                    >
-                                        生成一个可用域名
-                                    </YakitButton>
-                                </Form.Item>
-                            </Form>
-                        )}
                     </div>
-                    {token !== "" && (
-                        <Row style={{marginTop: 5}} align="bottom">
-                            <Col style={{fontSize: 12}}>当前激活域名为：</Col>
-                            <Col>
-                                <YakitTag enableCopy={true} color='blue' copyText={tokenDomain}></YakitTag>
-                            </Col>
-                        </Row>
-                    )}
-                </div>
+                </YakitCard>
             }
-            bordered={false}
-            // style={{overflowY: "auto"}}
-            bodyStyle={{overflow: "auto"}}
-        >
-            <Space direction={"vertical"} style={{width: "100%"}}>
-                <Form size={"small"} layout='inline'>
-                    <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
-                        <div style={{display: "flex"}}>
-                            <Form.Item
-                                style={{
-                                    marginBottom: 0,
-                                    marginRight: 10 // 添加右侧间隔
-                                }}
-                                label={"只看A记录"}
-                            >
-                                <YakitSwitch
-                                    checked={onlyARecord}
-                                    onChange={(flag) => {
-                                        setOnlyARecord(flag)
-                                        sendMenuDnslog({dnsLogType, token, domain, onlyARecord: flag})
-                                    }}
-                                />
-                            </Form.Item>
-                            <Form.Item
-                                style={{
-                                    marginBottom: 0,
-                                    marginRight: 10 // 添加右侧间隔
-                                }}
-                                label={"自动刷新记录"}
-                            >
-                                <YakitSwitch checked={autoQuery} onChange={(val)=>{
-                                    setAutoQuery(val)
-                                        setRemoteValue(DNS_LOG_COMMON_CACHE, JSON.stringify({autoQuery: val}))
-                                    }}
-                                />
-                            </Form.Item>
-                        </div>
-
-                        <YakitButton
-                            size={"small"}
-                            type={"text"}
-                            onClick={() => {
-                                if (token.length === 0) {
-                                    warn("请先生成可用域名")
-                                    return
-                                }
-                                dnsLogType === "builtIn" ? queryDNSLogByToken() : queryDNSLogTokenByScript()
-                            }}
-                            icon={<ReloadOutlined style={{position: "relative", top: 2}}/>}
-                        />
-                    </div>
-                </Form>
-                <Table<DNSLogEvent>
-                    size={"small"}
-                    loading={loading}
-                    dataSource={records}
-                    rowKey={(i) => `${i.Index}`}
-                    expandable={{
-                        expandedRowKeys: expandRows,
-                        expandRowByClick: true,
-                        expandedRowRender: (i: DNSLogEvent) => {
-                            return (
-                                <div style={{width: "100%", height: 300}}>
-                                    <AutoCard style={{padding: 0}} bodyStyle={{padding: 0}}>
-                                        <YakEditor readOnly={true} valueBytes={i.Raw} bytes={true}/>
-                                    </AutoCard>
-                                </div>
-                            )
-                        },
-                        onExpandedRowsChange: (rows) => setExpandRows((rows as string[]) || [])
-                    }}
-                    pagination={false}
-                    columns={[
-                        {title: "域名", dataIndex: "Domain"},
-                        {title: "类型", dataIndex: "DNSType"},
-                        {title: "远端IP", dataIndex: "RemoteIP"},
-                        {
-                            title: "Timestamp",
-                            render: (i: DNSLogEvent) => {
-                                return <Tag color={"geekblue"}>{formatTimestamp(i.Timestamp)}</Tag>
-                            }
-                        }
-                    ]}
-                />
-            </Space>
-        </AutoCard>
+            secondNode={<>{selectCurDnss && <YakitEditor readOnly={true} value={selectCurDnss.RawStr} />}</>}
+            firstMinSize={80}
+            secondMinSize={200}
+            lineDirection='top'
+            {...ResizeBoxProps}
+        ></YakitResizeBox>
     )
 }

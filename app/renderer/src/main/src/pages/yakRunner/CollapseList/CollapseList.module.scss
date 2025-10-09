@@ -11,7 +11,7 @@
 
 .to-end {
     text-align: center;
-    color: var(--yakit-disable-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     font-size: 11px;
     line-height: 14px;
     padding-top: 24px;
@@ -23,8 +23,9 @@
         .ant-collapse-item > .ant-collapse-header {
             padding: 3px 12px 3px 8px;
             align-items: center;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             &:hover{
-                background-color: #f8f8f8;
+                background-color: var(--Colors-Use-Neutral-Bg);
             }
         }
         .ant-collapse-item > .ant-collapse-header .ant-collapse-expand-icon {
@@ -35,7 +36,7 @@
             svg {
                 width: 16px;
                 height: 16px;
-                color: #85899e;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
         }
         .ant-collapse-item > .ant-collapse-header .collapse-expand-arrow {
@@ -81,7 +82,7 @@
             .render-tail {
                 width: 1px;
                 height: calc(100% + 6px);
-                background-color: #eaecf3;
+                background-color: var(--Colors-Use-Neutral-Bg);
                 position: absolute;
                 top: -3px;
                 left: 16px;
@@ -105,13 +106,13 @@
         }
     }
     .title-render {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 600;
         line-height: 16px;
     }
     .content-render {
-        color: #31343f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 400;
         line-height: 16px;
@@ -126,13 +127,13 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 12px;
             font-weight: 400;
             line-height: 16px;
         }
         .sub-title {
-            color: #b4bbca;
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
             font-size: 12px;
             font-weight: 400;
             line-height: 16px;
@@ -140,9 +141,9 @@
         .count-box {
             padding: 0px 6px;
             border-radius: 2px;
-            border: 1px solid rgba(136, 99, 247, 0.3);
-            background: rgba(136, 99, 247, 0.1);
-            color: #8863f7;
+            border: 1px solid var(--Colors-Use-Purple-Border);
+            background: var(--Colors-Use-Purple-Bg);
+            color: var(--Colors-Use-Purple-Primary);
             font-size: 11px;
             font-weight: 400;
             line-height: 16px;
@@ -154,7 +155,7 @@
         width: 100%;
         top: 0px;
         left: 0px;
-        background: #fff;
+        background: var(--Colors-Use-Basic-Background);
         display: flex;
         align-items: center;
         justify-content: center;

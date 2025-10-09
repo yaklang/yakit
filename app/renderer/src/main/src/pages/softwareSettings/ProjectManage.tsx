@@ -12,6 +12,7 @@ import {
     OutlinePlusIcon,
     PlusBoldSvgIcon,
     PlusIcon,
+    QuestionMarkCircleIcon,
     ResizerIcon,
     TrashIcon
 } from "@/assets/newIcon"
@@ -30,7 +31,7 @@ import {
 import ReactResizeDetector from "react-resize-detector"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {Cascader, Divider, Dropdown, DropdownProps, Form, Progress, Upload} from "antd"
+import {Cascader, Divider, Dropdown, DropdownProps, Form, Progress, Tooltip, Upload} from "antd"
 import {YakitMenu, YakitMenuProp} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -54,14 +55,17 @@ import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {AutoTextarea} from "../fuzzer/components/AutoTextarea/AutoTextarea"
-import {isCommunityEdition, isIRify} from "@/utils/envfile"
+import {isCommunityEdition, isEnpriTrace, isIRify} from "@/utils/envfile"
 import {setClipboardText} from "@/utils/clipboard"
+import {useEeSystemConfig, useStore} from "@/store"
+import {API} from "@/services/swagger/resposeType"
+import { useUploadInfoByEnpriTrace } from "@/components/layout/utils"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
 export const getEnvTypeByProjects = () => {
-    return isIRify() ? "ssa_project":"project"
+    return isIRify() ? "ssa_project" : "project"
 }
 
 export interface ProjectManageProp {
@@ -77,15 +81,19 @@ export interface ProjectParamsProps {
     Type: string
     FolderId?: number
     ChildFolderId?: number
+    Database?: string
+    ExternalModule?: string
+    ExternalProjectCode?: string
 }
 /** 项目列表查询条件 */
-interface ProjectParamsProp extends QueryGeneralRequest {
+export interface ProjectParamsProp extends QueryGeneralRequest {
     ProjectName?: string
     Description?: string
     Type: string
     FolderId?: number
     ChildFolderId?: number
     FrontendType?: "project" | "ssa_project"
+    AfterUpdatedAt?: number
 }
 /** 单条项目数据 */
 export interface ProjectDescription {
@@ -101,6 +109,8 @@ export interface ProjectDescription {
     ChildFolderName: string
     Type: string
     FileSize: string
+    ExternalModule: string
+    ExternalProjectCode: string
 }
 export interface ProjectsResponse {
     Pagination: {Page: number; Limit: number}
@@ -113,7 +123,8 @@ export interface ProjectsResponse {
 interface HeaderProp<T> {
     key: string
     name: string
-    width: string
+    width?: string
+    style?: React.CSSProperties
     headerRender?: (index: number) => ReactNode
     render?: (data: T, index: number) => ReactNode
 }
@@ -152,6 +163,24 @@ const timeFilter: FilterInfoProps[] = [
 export const timeToName: {[key: string]: string} = {}
 for (let item of timeFilter) timeToName[item.key] = item.label
 
+/** 企业版web配置过滤 */
+const judgeProjectConfig = (eeSystemConfig: API.SystemConfigList[]) => {
+    if (isEnpriTrace()) {
+        let config: {key: string; name: string}[] = []
+        eeSystemConfig.forEach((item) => {
+            if (item.configName === "projectConfig" && item.content) {
+                try {
+                    JSON.parse(item.content).forEach((configItem) => {
+                        config.push(configItem)
+                    })
+                } catch (error) {}
+            }
+        })
+        return config
+    }
+    return []
+}
+
 const DefaultProjectInfo: ProjectDescription = {
     Id: 0,
     ProjectName: "",
@@ -164,7 +193,9 @@ const DefaultProjectInfo: ProjectDescription = {
     ChildFolderId: 0,
     ChildFolderName: "",
     Type: "",
-    FileSize: ""
+    FileSize: "",
+    ExternalModule: "",
+    ExternalProjectCode: ""
 }
 
 const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
@@ -246,13 +277,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
     const [typeShow, setTypeShow] = useState<boolean>(false)
     const [timeShow, setTimeShow] = useState<boolean>(false)
-
+    const {eeSystemConfig} = useEeSystemConfig()
     const projectHeader: HeaderProp<ProjectDescription>[] = useMemo(() => {
-        return [
+        let header: HeaderProp<ProjectDescription>[] = [
             {
                 key: "ProjectName",
                 name: typeToName["all"],
-                width: "15%",
+                style: {width: "15%"},
                 headerRender: (index) => {
                     return (
                         <DropdownMenu
@@ -305,9 +336,33 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 }
             },
             {
+                key: "ExternalProjectCode",
+                name: "项目编号",
+                style: {flex: 1, display: "none"},
+                render: (data) => {
+                    return (
+                        <div style={{overflow: "hidden"}} className={"yakit-content-single-ellipsis"}>
+                            {data.ExternalProjectCode || "-"}
+                        </div>
+                    )
+                }
+            },
+            {
+                key: "ExternalModule",
+                name: "系统模块编号",
+                style: {flex: 1, display: "none"},
+                render: (data) => {
+                    return (
+                        <div style={{overflow: "hidden"}} className={"yakit-content-single-ellipsis"}>
+                            {data.ExternalModule || "-"}
+                        </div>
+                    )
+                }
+            },
+            {
                 key: "Description",
                 name: "备注",
-                width: "30%",
+                style: {flex: 1},
                 render: (data) => {
                     try {
                         const arr: {Key: string; Value: string}[] = JSON.parse(data.Description)
@@ -315,16 +370,28 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         arr.forEach((item) => {
                             str += `${item.Key}：${item.Value}; `
                         })
-                        return str
+                        return (
+                            <Tooltip title={str}>
+                                <div style={{overflow: "hidden"}} className={"yakit-content-single-ellipsis"}>
+                                    {str}
+                                </div>
+                            </Tooltip>
+                        )
                     } catch (error) {
-                        return data.Description
+                        return (
+                            <Tooltip title={data.Description}>
+                                <div style={{overflow: "hidden"}} className={"yakit-content-single-ellipsis"}>
+                                    {data.Description}
+                                </div>
+                            </Tooltip>
+                        )
                     }
                 }
             },
             {
                 key: "DatabasePath",
                 name: "存储路径",
-                width: "30%",
+                style: {flex: 1},
                 render: (data, index) => {
                     return (
                         <div
@@ -364,15 +431,15 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             {
                 key: "FileSize",
                 name: "大小",
-                width: "10%",
+                style: {width: "10%"},
                 render: (data) => {
-                    return <>{!data.Type || data.Type === getEnvTypeByProjects()? data.FileSize : "-"}</>
+                    return <>{!data.Type || data.Type === getEnvTypeByProjects() ? data.FileSize : "-"}</>
                 }
             },
             {
                 key: "CreatedAt",
                 name: timeToName["updated_at"],
-                width: "15%",
+                style: {width: "15%"},
                 headerRender: (index) => {
                     return (
                         <DropdownMenu
@@ -417,6 +484,19 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 }
             }
         ]
+        let arr = judgeProjectConfig(eeSystemConfig)
+        arr.forEach((item) => {
+            if (item.key === "ExternalProjectCode" || item.key === "ExternalModule") {
+                header = header.map((itemIn) => {
+                    if (itemIn.key === item.key) {
+                        itemIn.name = item.name || itemIn.name
+                        itemIn.style = {...itemIn.style, display: "flex"}
+                    }
+                    return itemIn
+                })
+            }
+        })
+        return header
     }, [params, typeShow, timeShow])
 
     const [operateShow, setOperateShow] = useState<number>(-1)
@@ -522,6 +602,14 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             </div>
         )
     })
+    const {userInfo} = useStore()
+    const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
+    useEffect(() => {
+        // 进入项目管理时默认调用一次自动上传
+        uploadProjectEvent.startUpload({
+            isAutoUploadProject: true
+        })
+    }, [userInfo.isLogin])
 
     useEffect(() => {
         emiter.on("onGetProjectInfo", getProjectInfo)
@@ -533,7 +621,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const getProjectInfo = async () => {
         try {
             await delTemporaryProject()
-            const res2: ProjectDescription = await ipcRenderer.invoke("GetCurrentProjectEx",{
+            const res2: ProjectDescription = await ipcRenderer.invoke("GetCurrentProjectEx", {
                 Type: getEnvTypeByProjects()
             })
             setLatestProject(res2 || undefined)
@@ -604,7 +692,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
         setLoading(true)
         ipcRenderer
-            .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel,Type: getEnvTypeByProjects()})
+            .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel, Type: getEnvTypeByProjects()})
             .then((e) => {
                 setStopUpdate(true)
                 info("删除成功")
@@ -615,7 +703,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 }
                 setData(newData)
                 ipcRenderer
-                    .invoke("GetCurrentProject",{
+                    .invoke("GetCurrentProject", {
                         Type: getEnvTypeByProjects()
                     })
                     .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
@@ -685,7 +773,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 }
                 setLoading(true)
                 ipcRenderer
-                    .invoke("SetCurrentProject", {Id: data.Id,Type: getEnvTypeByProjects()})
+                    .invoke("SetCurrentProject", {Id: data.Id, Type: getEnvTypeByProjects()})
                     .then((e) => {
                         info("已切换数据库")
                         onFinish()
@@ -744,7 +832,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const getTemporaryProjectId = async () => {
         let id = ""
         try {
-            const res = await ipcRenderer.invoke("GetTemporaryProjectEx",{
+            const res = await ipcRenderer.invoke("GetTemporaryProjectEx", {
                 Type: getEnvTypeByProjects()
             })
             if (res) {
@@ -765,7 +853,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             })
             const newTemporaryId = res.Id + ""
             setTemporaryProjectId(newTemporaryId)
-            await ipcRenderer.invoke("SetCurrentProject", {Id: newTemporaryId,Type: getEnvTypeByProjects()})
+            await ipcRenderer.invoke("SetCurrentProject", {Id: newTemporaryId, Type: getEnvTypeByProjects()})
             info("切换临时项目成功")
             onFinish()
         } catch (error) {
@@ -787,7 +875,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         Description: projectInfo.Description || "",
                         FolderId: projectInfo.FolderId ? +projectInfo.FolderId : 0,
                         ChildFolderId: projectInfo.ChildFolderId ? +projectInfo.ChildFolderId : 0,
-                        Type: getEnvTypeByProjects()
+                        Database: projectInfo.Database,
+                        Type: getEnvTypeByProjects(),
+                        ExternalModule: projectInfo.ExternalModule || "",
+                        ExternalProjectCode: projectInfo.ExternalProjectCode || ""
                     }
                     if (projectInfo.Id) {
                         newProject.Id = +projectInfo.Id
@@ -918,9 +1009,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                     Pagination: {...params.Pagination, Page: 1}
                                                 })
                                             } else {
-                                                setFiles([
-                                                    {...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName}
-                                                ])
+                                                setFiles([{...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName}])
                                                 setParams({
                                                     Type: "all",
                                                     FolderId: +Id,
@@ -1294,10 +1383,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                             return (
                                                 <div
                                                     key={item.key}
-                                                    style={{
-                                                        flex: `0 0 ${item.width}`,
-                                                        width: item.width
-                                                    }}
+                                                    style={{...item.style}}
                                                     className={styles["title-opt"]}
                                                 >
                                                     <div>
@@ -1397,7 +1483,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                                 operateShow >= 0 && operateShow === +i.data.Id
                                                         })}
                                                         onClick={(e) => {
-                                                            if (!i.data.Type || i.data.Type === getEnvTypeByProjects()) {
+                                                            if (
+                                                                !i.data.Type ||
+                                                                i.data.Type === getEnvTypeByProjects()
+                                                            ) {
                                                                 operateFunc("setCurrent", i.data)
                                                             }
                                                             if (i.data.Type === "file") {
@@ -1405,7 +1494,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                             }
                                                         }}
                                                         onContextMenu={() => {
-                                                            if (!i.data.Type || i.data.Type === getEnvTypeByProjects()) {
+                                                            if (
+                                                                !i.data.Type ||
+                                                                i.data.Type === getEnvTypeByProjects()
+                                                            ) {
                                                                 projectContextMenu(i.data)
                                                             }
                                                         }}
@@ -1416,10 +1508,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                                     return (
                                                                         <div
                                                                             key={`${i.index}-${item.key}`}
-                                                                            style={{
-                                                                                flex: `0 0 ${item.width}`,
-                                                                                width: item.width
-                                                                            }}
+                                                                            style={{...item.style}}
                                                                             className={styles["content-opt"]}
                                                                         >
                                                                             {item.render ? (
@@ -1501,7 +1590,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     setLoading(true)
                     setInquireIntoProjectVisible(false)
                     ipcRenderer
-                        .invoke("SetCurrentProject", {Id: newProjectInfo?.Id,Type: getEnvTypeByProjects()})
+                        .invoke("SetCurrentProject", {Id: newProjectInfo?.Id, Type: getEnvTypeByProjects()})
                         .then((e) => {
                             info("已切换数据库")
                             setNewProjectInfo({Id: "", ProjectName: ""})
@@ -1563,6 +1652,9 @@ interface ProjectFolderInfoProps {
     FolderId?: number
     ChildFolderId?: number
     parent?: ProjectDescription
+    Database?: string
+    ExternalModule?: string
+    ExternalProjectCode?: string
 }
 export interface ExportProjectProps {
     Id: number
@@ -1680,15 +1772,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                             Description: firstDescribe
                         })
                     } else {
-                        onReset({
-                            Description: [{Key: "系统", Value: ""}]
-                        })
                     }
-                } catch (error) {
-                    onReset({
-                        Description: [{Key: "系统", Value: ""}]
-                    })
-                }
+                } catch (error) {}
             }
             setInfo({
                 Id: +project.Id,
@@ -1696,7 +1781,9 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 ProjectName: project.ProjectName,
                 Description: project.Description,
                 FolderId: +project.FolderId,
-                ChildFolderId: +project.ChildFolderId
+                ChildFolderId: +project.ChildFolderId,
+                ExternalProjectCode: project.ExternalProjectCode,
+                ExternalModule: project.ExternalModule
             })
         }
         if (visible && isExport && project) {
@@ -1750,7 +1837,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
     }, [project])
 
     const [isCheck, setIsCheck] = useState<boolean>(false)
-
+    const {eeSystemConfig} = useEeSystemConfig()
     const headerTitle = useMemo(() => {
         if (isNew && isFolder && !project) return "新建文件夹"
         if (isNew && !isFolder && !project) return "新建项目"
@@ -1796,6 +1883,15 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 setTimeout(() => setLoading(false), 300)
                 return
             }
+            if (isShowExternalProjectCode && !info.ExternalProjectCode) {
+                setTimeout(() => setLoading(false), 300)
+                return
+            }
+            if (isShowExternalModule && !info.ExternalModule) {
+                setTimeout(() => setLoading(false), 300)
+                return
+            }
+
             if (info.ProjectName.length > 100) {
                 failed("名称长度应小于100!")
                 setTimeout(() => setLoading(false), 300)
@@ -1986,6 +2082,13 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         })
     }
 
+    const isShowExternalProjectCode = useMemo(() => {
+        return judgeProjectConfig(eeSystemConfig).find((item) => item.key === "ExternalProjectCode")
+    }, [eeSystemConfig])
+
+    const isShowExternalModule = useMemo(() => {
+        return judgeProjectConfig(eeSystemConfig).find((item) => item.key === "ExternalModule")
+    }, [eeSystemConfig])
     return (
         <YakitModal
             title={headerTitle}
@@ -2060,7 +2163,70 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                     dropdownClassName={styles["cascader-dropdown-body"]}
                                     open={dropShow}
                                     onDropdownVisibleChange={(open: boolean) => setDropShow(open)}
-                                    suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                                    suffixIcon={
+                                        <ChevronDownIcon style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />
+                                    }
+                                />
+                            </Form.Item>
+                        )}
+                        {!isFolder && !parentNode && isShowExternalProjectCode && (
+                            <Form.Item
+                                label={
+                                    <div style={{display: "flex", alignItems: "center", gap: 2}}>
+                                        项目编号 :<span className={styles["required-style"]}>*</span>
+                                    </div>
+                                }
+                            >
+                                <YakitInput
+                                    size='large'
+                                    placeholder='存在必须填写；如不存在，请填入“不存在”'
+                                    className={classNames({
+                                        [styles["required-form-item-wrapper"]]: isCheck && !info.ExternalProjectCode
+                                    })}
+                                    value={info.ExternalProjectCode}
+                                    onChange={(e) => setInfo({...info, ExternalProjectCode: e.target.value})}
+                                />
+                            </Form.Item>
+                        )}
+                        {!isFolder && !parentNode && isShowExternalModule && (
+                            <Form.Item
+                                label={
+                                    <div style={{display: "flex", alignItems: "center", gap: 2}}>
+                                        系统模块编号 :<span className={styles["required-style"]}>*</span>
+                                    </div>
+                                }
+                            >
+                                <YakitInput
+                                    size='large'
+                                    placeholder='请输入系统模块编号，精确到系统模块。例如：qwe202501_2345'
+                                    className={classNames({
+                                        [styles["required-form-item-wrapper"]]: isCheck && !info.ExternalModule
+                                    })}
+                                    value={info.ExternalModule}
+                                    onChange={(e) => setInfo({...info, ExternalModule: e.target.value})}
+                                />
+                            </Form.Item>
+                        )}
+                        {!isFolder && isIRify() && (
+                            <Form.Item
+                                label={
+                                    <div style={{display: "flex", alignItems: "center", gap: 2}}>
+                                        配置mysql地址
+                                        <Tooltip title='配置地址以后，所有数据都将存在配置的mysql地址里。参考 mysql://user:password@tcp(ip:port)/database_name'>
+                                            <QuestionMarkCircleIcon className={styles["icon-question"]} />
+                                        </Tooltip>{" "}
+                                        :
+                                    </div>
+                                }
+                            >
+                                <YakitInput
+                                    size='large'
+                                    className={classNames({
+                                        [styles["required-form-item-wrapper"]]: isCheck && !info.Database
+                                    })}
+                                    placeholder='mysql://user:password@tcp(ip:port)/database_name'
+                                    value={info.Database}
+                                    onChange={(e) => setInfo({...info, Database: e.target.value})}
                                 />
                             </Form.Item>
                         )}
@@ -2220,7 +2386,9 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                         }
                                     }}
                                     dropdownClassName={styles["cascader-dropdown-body"]}
-                                    suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                                    suffixIcon={
+                                        <ChevronDownIcon style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}} />
+                                    }
                                 />
                             </Form.Item>
                         )}
@@ -2410,8 +2578,8 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                             </div>
                             <div className={styles["download-progress"]}>
                                 <Progress
-                                    strokeColor='#F28B44'
-                                    trailColor='#F0F2F5'
+                                    strokeColor='var(--Colors-Use-Main-Primary)'
+                                    trailColor='var(--Colors-Use-Neutral-Bg)'
                                     percent={+percent.toFixed(2)}
                                     format={(p, sp) => {
                                         return <div className={styles["progress-content-style"]}>{`进度 ${p}%`}</div>

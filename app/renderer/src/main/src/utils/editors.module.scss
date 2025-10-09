@@ -1,18 +1,18 @@
-.hex-editor-style {
-    :global {
-        .byteValue {
-            .nybbleHighValue {
-                word-spacing: -0.5em;
-            }
-            .nybbleLowValue {
-                word-spacing: -0.5em;
-            }
-        }
-        .asciiValue {
-            word-spacing: -0.5em;
-        }
-    }
-}
+// .hex-editor-style {
+//     :global {
+//         .byteValue {
+//             .nybbleHighValue {
+//                 word-spacing: -0.5em;
+//             }
+//             .nybbleLowValue {
+//                 word-spacing: -0.5em;
+//             }
+//         }
+//         .asciiValue {
+//             word-spacing: -0.5em;
+//         }
+//     }
+// }
 .monaco-editor-style {
     :global {
         .crlf::before {
@@ -24,44 +24,50 @@
     }
 }
 :global {
+    /* 普通 hover 行 */
+    .monaco-editor .suggest-widget .monaco-list-row:hover:not(.focused):not(.selected) {
+        background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary) !important;
+    }
+
     .crlf::before {
         content: "↵";
-        background-color: #808080; /* 灰色背景 */
+        background-color: var(--yakit-colors-Neutral-40); /* 灰色背景 */
         margin: 4px;
         padding: 2px; /* 根据需要添加内边距 */
         border-radius: 3px; /* 添加圆角以使样式更好看 */
-        color: #ffffff; /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+        color: var(--Colors-Use-Neutral-Text-1-Title); /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
         opacity: 0.3;
     }
     .content-length:hover::after {
         content: "发包时自动修复，一般无需指定";
-        background-color: #f9f9f9;
-        color: #333;
+        background-color: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
         padding: 5px;
-        border: 1px solid #ccc;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px;
     }
     .lf::before {
         content: "↓";
-        background-color: #808080; /* 灰色背景 */
+        background-color: var(--Colors-Use-Neutral-Bg); /* 灰色背景 */
         margin: 4px;
         padding: 2px; /* 根据需要添加内边距 */
         border-radius: 3px; /* 添加圆角以使样式更好看 */
-        color: #ffffff; /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+        color: var(--Colors-Use-Neutral-Text-1-Title); /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
         opacity: 0.3;
     }
     .unicode-decode {
-        background-color: rgba(173, 216, 230, 0.5);
+        background-color: var(--Colors-Use-Blue-Bg-Hover);
     }
 
     .unicode-decode::after {
         content: " ";
-        background-color: #f0f2f5;
+        background-color: var(--Colors-Use-Basic-Background);
     }
 
     .unicode-decode-after {
-        color: #ffffff;
-        background-color: #808080;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        background-color: var(--Colors-Use-Neutral-Bg);
         padding-left: 2px;
         border-radius: 3px;
         opacity: 0.3;
@@ -74,13 +80,14 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
+    background-color: var(--Colors-Use-Basic-Background);
     :global {
         .ant-card-head {
-            background-color: #ffffff;
+            background-color: var(--Colors-Use-Basic-Background);
             height: 32px;
             min-height: 32px;
             box-sizing: content-box;
-            border-bottom: 1px solid var(--yakit-border-color);
+            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             .ant-card-head-wrapper {
                 height: 100%;
                 .ant-card-head-title {

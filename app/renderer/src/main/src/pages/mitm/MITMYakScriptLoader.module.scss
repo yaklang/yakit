@@ -3,10 +3,10 @@
     display: flex;
     align-items: center;
     padding: 8px 0px;
-    border-top: 1px solid var(--yakit-border-color);
+    border-top: 1px solid var(--Colors-Use-Neutral-Border);
     flex: 1;
     &:hover {
-        background-color: var(--yakit-card-background-color);
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
     .mitm-plugin-local-left {
         display: flex;
@@ -33,7 +33,7 @@
                 }
                 .plugin-local-scriptName {
                     font-size: 12px;
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                     white-space: nowrap;
                     text-overflow: ellipsis;
                     overflow: hidden;
@@ -53,12 +53,12 @@
         cursor: pointer;
         svg {
             width: 16px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
         margin-left: 12px;
     }
     .lightning-bolt-icon {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
         svg {
             width: 16px;
         }
@@ -71,12 +71,12 @@
 
     .history-icon-def {
         svg {
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
     .history-icon-light {
         svg {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 
@@ -86,7 +86,7 @@
         svg {
             width: 16px;
             height: 16px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
 }
@@ -164,7 +164,7 @@
 }
 
 .plugin-local-icon {
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     cursor: pointer;
 
     svg {

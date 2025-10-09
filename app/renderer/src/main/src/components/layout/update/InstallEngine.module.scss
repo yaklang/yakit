@@ -38,9 +38,9 @@
 .modal-yaklang-engine-hint {
     box-sizing: border-box;
     width: 100%;
-    background: var(--yakit-card-background-color);
-    border: 1px solid var(--yakit-border-color);
-    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
     border-radius: 4px;
 
     .yaklang-engine-hint-wrapper {
@@ -69,7 +69,7 @@
             .qs-icon {
                 width: 20px;
                 height: 20px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 cursor: pointer;
                 svg {
                     width: 20px;
@@ -77,7 +77,7 @@
                 }
             }
             .qs-icon:hover {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
 
@@ -88,7 +88,7 @@
                 font-weight: 600;
                 font-size: 16px;
                 line-height: 24px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
 
             .hint-right-download {
@@ -98,7 +98,7 @@
                     height: 16px;
                     font-size: 12px;
                     line-height: 16px;
-                    color: var(--yakit-helper-text-color);
+                    color: var(--Colors-Use-Neutral-Disable);
                     .divider-wrapper {
                         margin: 0 8px;
                         width: 1px;
@@ -108,7 +108,7 @@
                         .divider-style {
                             width: 100%;
                             height: 12px;
-                            border: 1px solid var(--yakit-border-color);
+                            border: 1px solid var(--Colors-Use-Neutral-Border);
                         }
                     }
                 }
@@ -123,19 +123,19 @@
                 margin-top: 8px;
                 font-size: 14px;
                 line-height: 20px;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             .hint-right-macarm {
                 margin-top: 8px;
                 box-sizing: border-box;
                 padding: 12px;
-                background: var(--yakit-neutral10-color);
-                border: 1px solid var(--yakit-border-color);
+                background: var(--Colors-Use-Neutral-Bg);
+                border: 1px solid var(--Colors-Use-Neutral-Border);
                 border-radius: 4px;
                 .mac-arm-hint {
                     font-size: 12px;
                     line-height: 16px;
-                    color: var(--yakit-header-color);
+                    color: var(--Colors-Use-Neutral-Text-1-Title);
                 }
                 .mac-arm-command {
                     margin-top: 8px;
@@ -143,12 +143,12 @@
                     align-items: center;
                     height: 20px;
                     padding: 4px 6px;
-                    background: var(--yakit-primary-1);
-                    border: 1px solid var(--yakit-primary-3);
+                    background: var(--Colors-Use-Main-Bg);
+                    border: 1px solid var(--Colors-Use-Main-Border);
                     border-radius: 4px;
 
                     font-size: 11px;
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                     .copy-icon {
                         margin-left: 8px;
                         svg {
@@ -222,16 +222,16 @@
                 align-items: center;
                 gap: 8px;
                 font-size: 12px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 .agreement-checkbox {
                     :global {
                         .ant-checkbox-inner {
-                            border: 1px solid var(--yakit-helper-text-color);
+                            border: 1px solid var(--Colors-Use-Neutral-Disable);
                             border-radius: 4px;
                         }
                         .ant-checkbox-checked .ant-checkbox-inner {
-                            background-color: var(--yakit-primary-5);
-                            border-color: var(--yakit-primary-5);
+                            background-color: var(--Colors-Use-Main-Primary);
+                            border-color: var(--Colors-Use-Main-Primary);
                         }
                         .ant-checkbox-checked::after {
                             border: 0px;
@@ -241,7 +241,7 @@
                 .agreement-danger-checkbox {
                     :global {
                         .ant-checkbox-inner {
-                            border: 1px solid var(--yakit-danger-5);
+                            border: 1px solid var(--Colors-Use-Error-Primary);
                             border-radius: 4px;
                         }
                         .ant-checkbox-checked::after {
@@ -251,7 +251,7 @@
                 }
 
                 .agreement-style {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                     cursor: pointer;
                 }
             }
@@ -282,9 +282,9 @@
 }
 .yakit-info-modal {
     width: 100%;
-    background: var(--yakit-neutral10-color);
-    border: 1px solid var(--yakit-border-color);
-    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    background: var(--Colors-Use-Neutral-Bg);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
     border-radius: 4px;
 
     .modal-header {
@@ -293,13 +293,13 @@
         display: flex;
         align-items: center;
 
-        background: var(--yakit-card-background-color);
-        border-bottom: 1px solid var(--yakit-border-color);
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
         border-radius: 4px 4px 0px 0px;
 
         font-weight: 600;
         font-size: 14px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .mac-header {
         gap: 12px;
@@ -315,7 +315,7 @@
                     width: 12px;
                     height: 12px;
                     border-radius: 50%;
-                    background-color: var(--yakit-danger-5);
+                    background-color: var(--Colors-Use-Error-Primary);
                 }
             }
         }
@@ -330,12 +330,12 @@
             height: 36px;
             padding: 8px;
             .icon-style {
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
             }
         }
         .close-wrapper:hover {
             .icon-style {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -348,23 +348,23 @@
                 font-weight: 600;
                 font-size: 16px;
                 line-height: 24px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
             .body-content {
                 margin-top: 8px;
                 font-size: 14px;
                 line-height: 24px;
                 text-align: justify;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 .sign-content {
-                    color: var(--yakit-danger-5);
+                    color: var(--Colors-Use-Error-Primary);
                 }
                 .underline-content {
-                    color: var(--yakit-danger-5);
+                    color: var(--Colors-Use-Error-Primary);
                     text-decoration: underline;
                 }
                 .sign-bold-content {
-                    color: var(--yakit-danger-5);
+                    color: var(--Colors-Use-Error-Primary);
                     font-weight: 500;
                 }
             }
@@ -378,9 +378,9 @@
                 font-size: 14px;
                 line-height: 24px;
                 text-align: justify;
-                color: var(--yakit-body-text-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 .hint-sign {
-                    color: var(--yakit-danger-5);
+                    color: var(--Colors-Use-Error-Primary);
                 }
             }
             .body-link {
@@ -391,7 +391,7 @@
                 align-items: flex-start;
                 padding: 12px;
                 gap: 12px;
-                border: 1px solid var(--yakit-border-color);
+                border: 1px solid var(--Colors-Use-Neutral-Border);
                 border-radius: 4px;
                 .link-opt {
                     display: flex;
@@ -400,19 +400,19 @@
                         font-size: 12px;
                         text-align: justify;
                         text-align-last: justify;
-                        color: var(--yakit-header-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
 
                     .link-style {
                         margin-left: 8px;
                         flex: 1;
                         padding: 4px 6px;
-                        background: var(--yakit-card-background-color);
-                        border: 1px solid var(--yakit-border-color);
+                        background: var(--Colors-Use-Neutral-Bg-Hover);
+                        border: 1px solid var(--Colors-Use-Neutral-Border);
                         border-radius: 4px;
                         font-size: 11px;
                         line-height: 12px;
-                        color: var(--yakit-body-text-color);
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                         word-break: break-all;
                         .copy-icon {
                             margin-left: 8px;

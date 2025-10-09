@@ -22,7 +22,7 @@ export const DefFuzzerConcurrent = 20
 
 export const defaultAdvancedConfigShow: AdvancedConfigShowProps = {
     config: false,
-    rule: false
+    rule: true
 }
 
 export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
@@ -43,6 +43,12 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     actualHost: "",
     dialTimeoutSeconds: 10,
     timeout: 30,
+    // Random Chunked
+    enableRandomChunked: false,
+    randomChunkedMinLength: 10,
+    randomChunkedMaxLength: 25,
+    randomChunkedMinDelay: 50,
+    randomChunkedMaxDelay: 100,
     // 批量目标
     batchTarget: new Uint8Array(),
     // 发包配置
@@ -152,7 +158,8 @@ export const emptyFuzzer: FuzzerResponse = {
     IsAutoFixContentType: false,
     OriginalContentType: "",
     FixContentType: "",
-    IsSetContentTypeOptions: false
+    IsSetContentTypeOptions: false,
+    RandomChunkedData: []
 }
 
 export const HotPatchDefaultContent = `// 使用标签 {{yak(handle|param)}} 可以触发热加载调用
@@ -217,9 +224,56 @@ afterRequest = func(https, originReq, req, originRsp, rsp) {
 // rsp 响应
 // params 之前提取器/mirrorHTTPFlow中提取到的参数
 // 返回值会作为下一个请求的参数
+/** 如需使用，取消注释修改内容即可
 mirrorHTTPFlow = func(req, rsp, params) {
+    // statusCode = poc.GetStatusCodeFromResponse(rsp)
+    // params["current_status_code"] = sprint(statusCode) // 即可在下一个请求中使用，或“提取数据”中发现
     return params
 }
+*/
+
+// retryHandler 允许对重试的请求做处理，定义为 func(https bool, retryCount int,req []byte, rsp []byte, retry func(...[]byte)) 
+// 本函数调用在 1.4.2-beta9 之后支持
+// https 请求是否为https请求
+// retryCount 此请求已重试次数
+// req 请求
+// rsp 响应
+// retry 重试回调，调用此函数即可触发重试，可以接收一个新的请求包，用于使用修改后的请求包重试，若不传则会使用原来的请求包重试
+/* 如需使用，取消注释修改内容即可
+retryHandler = (https,retryCount, req, rsp,retry) => {
+    // 如果响应码为405，则修改方法为 POST 重试
+    if poc.GetStatusCodeFromResponse(rsp) == 405 {
+       retry(poc.ReplaceHTTPPacketMethod(req,"POST"))
+    }
+    return 
+}
+*/
+
+// customFailureChecker 允许自定义失败检查器，即使请求成功也可以将其标记为失败，定义为 func(https bool, req []byte, rsp []byte, fail func(string))
+// https 请求是否为https请求
+// req 请求数据
+// rsp 响应数据
+// fail 失败回调函数，调用后会将请求标记为失败
+// 本函数调用在 1.4.2-beta9 之后支持
+/** 如需使用，取消注释修改内容即可
+customFailureChecker = func(https, req, rsp, fail) {
+    // 检查响应内容，如果包含错误信息则标记为失败
+    // if string(rsp).Contains("error") {
+    //     fail("响应包含错误信息")
+    // }
+    
+    // 检查状态码，如果是5xx错误则标记为失败
+    // statusCode = poc.GetStatusCodeFromResponse(rsp)
+    // if statusCode >= 500 {
+    //     fail("服务器内部错误: " + sprint(statusCode))
+    // }
+    
+    // 检查响应长度，如果过短可能是错误页面
+    // if len(rsp) < 100 {
+    //     fail("响应内容过短，可能是错误页面")
+    // }
+}
+*/
 `
 
 export const HotPatchTempDefault = [
@@ -398,8 +452,8 @@ export const defaultLabel: LabelDataProps[] = [
         Label: "{{int(1-10)}}"
     },
     {
-        DefaultDescription: "插入Payload-fixed",
-        Description: "插入Payload"
+        DefaultDescription: "插入字典-fixed",
+        Description: "插入字典"
     },
     {
         DefaultDescription: "插入临时字典-fixed",

@@ -1,0 +1,14 @@
+.DNSLogPage-card {
+  border: none;
+
+  &-body {
+    padding: 12px 12px 0;
+    height: 100%;
+    .DNSLogPage-table-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+    }
+  }
+}

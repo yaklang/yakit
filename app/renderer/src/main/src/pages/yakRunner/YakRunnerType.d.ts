@@ -53,8 +53,6 @@ export interface OpenFileByPathProps {
     }
     // 是否记录历史
     isHistory?: boolean
-    // 是否为外部选择打开(用于审计文件树打开)
-    isOutside?: boolean
 }
 
 export interface AuditEmiterYakUrlProps extends AuditYakUrlProps {

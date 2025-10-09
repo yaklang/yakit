@@ -198,7 +198,7 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
                 const iWord = getWordWithPointAtPosition(model, position)
                 const type = getModelContext(model, "plugin") || "yak"
                 if (iWord.word.length === 0) return
-                await ipcRenderer
+                ipcRenderer
                     .invoke("YaklangLanguageFind", {
                         InspectType: "reference",
                         YakScriptType: type,
@@ -241,7 +241,7 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
                 const iWord = getWordWithPointAtPosition(model, position)
                 if (iWord.word.length === 0) return
                 const type = getModelContext(model, "plugin") || "yak"
-                await ipcRenderer
+                ipcRenderer
                     .invoke("YaklangLanguageFind", {
                         InspectType: "definition",
                         YakScriptType: type,

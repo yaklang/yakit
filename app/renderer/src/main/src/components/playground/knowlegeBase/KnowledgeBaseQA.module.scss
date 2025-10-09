@@ -1,0 +1,256 @@
+.knowledge-base-qa {
+    height: 100%; /* 抽屉内自适应父容器高度 */
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+
+    .qa-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        background: white;
+        display: flex;
+        justify-content: flex-end;
+        flex-shrink: 0;
+    }
+
+    .no-kb-selected {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+    }
+
+    .messages-container {
+        flex: 1;
+        min-height: 200px; /* 设置最小高度确保可见 */
+        padding: 12px;
+        overflow-y: auto;
+        background: #fafafa;
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+        &::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: #d9d9d9;
+            border-radius: 3px;
+        }
+        &::-webkit-scrollbar-thumb:hover {
+            background: #bfbfbf;
+        }
+
+        .welcome-message {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .messages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+
+            &.message-user {
+                align-self: flex-end;
+                align-items: flex-end;
+
+                .message-content {
+                    background: #1890ff;
+                    color: white;
+                    border-radius: 12px 12px 4px 12px;
+                }
+            }
+
+            &.message-assistant {
+                align-self: flex-start;
+                align-items: flex-start;
+
+                .message-content {
+                    background: white;
+                    color: #262626;
+                    border-radius: 12px 12px 12px 4px;
+                    border: 1px solid #e8e8e8;
+                }
+            }
+
+            .message-content {
+                padding: 12px 16px;
+                position: relative;
+                word-wrap: break-word;
+                white-space: pre-wrap;
+                display: flex;
+                flex-direction: column;
+
+                .message-text {
+                    line-height: 1.5;
+                    margin-bottom: 8px;
+
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+                }
+
+                .streaming-indicator {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-top: 8px;
+                    font-size: 12px;
+                    color: #888;
+                }
+
+                .message-actions {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 8px;
+                    margin-top: 8px;
+                }
+
+                .knowledge-entries {
+                    margin-top: 12px;
+                    border-top: 1px solid #f0f0f0;
+                    padding-top: 8px;
+                    display: none;
+
+                    .entry-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        width: 100%;
+
+                        .entry-title {
+                            font-weight: 500;
+                            color: #262626;
+                            flex: 1;
+                            margin-right: 8px;
+                        }
+                    }
+
+                    .entry-content {
+                        font-size: 12px;
+                        color: #666;
+
+                        .entry-summary,
+                        .entry-details,
+                        .entry-keywords,
+                        .entry-source {
+                            margin-bottom: 8px;
+
+                            &:last-child {
+                                margin-bottom: 0;
+                            }
+
+                            strong {
+                                color: #262626;
+                                margin-right: 8px;
+                            }
+                        }
+
+                        .entry-details {
+                            max-height: 100px;
+                            overflow-y: auto;
+                            padding: 8px;
+                            background: #f9f9f9;
+                            border-radius: 4px;
+                            line-height: 1.4;
+                        }
+                    }
+                }
+
+                &.show-related .knowledge-entries {
+                    display: block;
+                }
+            }
+
+            .message-time {
+                font-size: 11px;
+                color: #999;
+                margin-top: 4px;
+                padding: 0 4px;
+            }
+        }
+    }
+
+    .config-area {
+        border-top: 1px solid #f0f0f0;
+        padding: 8px 12px;
+        background: white;
+        flex-shrink: 0; /* 防止被压缩 */
+
+        .config-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+
+            .config-switch {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 12px;
+                color: #666;
+                white-space: nowrap;
+            }
+        }
+    }
+
+    .input-area {
+        border-top: 1px solid #f0f0f0;
+        padding: 12px;
+        background: white;
+        flex-shrink: 0; /* 防止被压缩 */
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+
+            .input-actions {
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
+            }
+        }
+    }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+    .knowledge-base-qa {
+        .message {
+            max-width: 95%;
+        }
+
+        .config-area {
+            .config-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+
+                .config-switch {
+                    justify-content: space-between;
+                }
+            }
+        }
+
+        .input-area {
+            .input-row {
+                flex-direction: column;
+                gap: 8px;
+
+                .input-actions {
+                    align-self: flex-end;
+                }
+            }
+        }
+    }
+}

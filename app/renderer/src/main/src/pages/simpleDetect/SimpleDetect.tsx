@@ -612,7 +612,9 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             reportName: taskNameRef.current,
             runtimeId
         }
-        onCreateReportModal(params)
+        onCreateReportModal(params, {
+            getContainer: document.getElementById(`main-operator-page-body-${YakitRoute.SimpleDetect}`) || undefined
+        })
     })
     const isExecuting = useCreation(() => {
         if (executeStatus === "process") return true
@@ -815,6 +817,9 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                         setVisibleOnline(v)
                         setRefreshGroup(!refreshGroup)
                     }}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${YakitRoute.SimpleDetect}`) || undefined
+                    }
                 />
             )}
         </>
@@ -996,6 +1001,8 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                     <div>下载进度</div>
                     <div className={styles["filter-opt-progress-modal"]}>
                         <Progress
+                            strokeColor='var(--Colors-Use-Main-Primary)'
+                            trailColor='var(--Colors-Use-Neutral-Bg)'
                             size='small'
                             status={!addLoading && percent !== 0 ? "exception" : undefined}
                             percent={percent}

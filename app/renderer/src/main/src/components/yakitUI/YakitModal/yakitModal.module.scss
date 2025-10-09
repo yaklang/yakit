@@ -1,8 +1,8 @@
 /** -------------------- 类型 start -------------------- */
 // gray类型
 .yakit-modal-gray {
-    --modal-header-footer-background: var(--ui-neutral-20);
-    --modal-header-footer-border: var(--ui-neutral-40);
+    --modal-header-footer-background: var(--Colors-Use-Neutral-Bg);
+    --modal-header-footer-border: var(--Colors-Use-Neutral-Border);
 }
 // white类型
 .yakit-modal-white {
@@ -48,7 +48,7 @@
 
 .yakit-modal-body {
     overflow: hidden;
-    background-color: var(--ui-neutral-10);
+    background: var(--Colors-Use-Basic-Background);
     border-radius: 4px;
 }
 
@@ -67,7 +67,7 @@
         overflow: hidden;
         display: flex;
         align-items: center;
-        color: var(--ui-neutral-100);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 14px;
         font-weight: 600;
         line-height: 20px;
@@ -77,7 +77,7 @@
             margin-left: 16px;
             font-weight: 400;
             font-size: 12px;
-            color: var(--ui-neutral-60);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
     }
 }
@@ -86,6 +86,8 @@
     overflow: hidden;
     width: 100%;
     padding: var(--modal-content-padding);
+    background-color: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 // footer
 .footer-body {

@@ -1,4 +1,3 @@
-import omitBy from "lodash/omitBy"
 import isNil from "lodash/isNil"
 
 /** @name 将传入对象中值为null或undefined的键值对删除 */
@@ -37,3 +36,18 @@ export const isEmptyObject = (obj: object) => {
 export const isNumberNaN = (n: number) => {
     return Number.isNaN(Number(n))
 }
+
+/**
+ * 校验 URL 格式的正则表达式（支持 HTTP/HTTPS/FTP）
+ * 允许：协议、域名/IP、端口、路径、查询参数、哈希
+ * 不允许：用户名密码、空格等非法字符
+ */
+const urlRegex =
+    /^(https?|ftp):\/\/(?:www\.)?(?:[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*|localhost|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[[a-fA-F0-9:]+\])(?::\d{1,5})?(?:\/(?:[-a-zA-Z0-9()@:%_+.~#&/=]*)?)?(?:\?[^#\s]*)?(?:#.*)?$/i
+/** 是否为有效 URL */
+export const isValidURL = (url: string) => {
+    return urlRegex.test(url)
+}
+
+/**将 CSS 变量名转换为对应的值 */
+export const getCssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()

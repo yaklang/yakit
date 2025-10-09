@@ -21,7 +21,7 @@ milkdown-image-block:hover > .image-wrapper .operation {
 }
 
 milkdown-image-block > .image-wrapper .operation > .operation-item {
-    color: var(--yakit-helper-text-color);
+    color: var(--Colors-Use-Neutral-Disable);
     padding: 2px;
     background: rgba(0, 0, 0, 0.4);
     border-radius: 50%;
@@ -37,7 +37,7 @@ milkdown-image-block > .image-wrapper .image-resize-handle {
     bottom: -2px;
     max-width: 160px;
     width: 100%;
-    background: var(--yakit-disable-text-color);
+    background: var(--Colors-Use-Neutral-Disable);
     opacity: 0;
     transition: all 0.2s;
     border-radius: 4px;
@@ -60,7 +60,7 @@ milkdown-image-block > .image-edit {
 }
 
 milkdown-image-block > .image-edit .image-icon {
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 
 milkdown-image-block > .image-edit .image-icon svg {
@@ -69,7 +69,7 @@ milkdown-image-block > .image-edit .image-icon svg {
 }
 
 milkdown-image-block > .image-edit .link-importer .placeholder {
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 
 milkdown-image-block > .image-edit .link-importer .link-input-area {
@@ -79,7 +79,7 @@ milkdown-image-block > .image-edit .link-importer .link-input-area {
 
 milkdown-image-block > .image-edit .link-importer .placeholder .uploader {
     gap: 8px;
-    color: var(--yakit-primary-3);
+    color: var(--Colors-Use-Main-Border);
     justify-content: center;
     transition: color 0.2s;
 }
@@ -89,7 +89,7 @@ milkdown-image-block > .image-edit .link-importer.focus .placeholder .uploader {
 }
 
 milkdown-image-block > .image-edit .link-importer .placeholder .uploader:hover {
-    color: var(--yakit-primary-3);
+    color: var(--Colors-Use-Main-Border);
 }
 
 milkdown-image-block > .image-edit .link-importer .placeholder .text {
@@ -97,7 +97,7 @@ milkdown-image-block > .image-edit .link-importer .placeholder .text {
 }
 
 milkdown-image-block > .image-edit .confirm {
-    background: var(--yakit-body-text-color);
+    background: var(--Colors-Use-Neutral-Text-1-Title);
     color: antiquewhite;
     line-height: 40px;
     padding: 0 24px;
@@ -154,7 +154,7 @@ milkdown-image-block > .caption-input {
     display: block;
     width: 100%;
     text-align: center;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 12px;
     font-weight: 400;
     line-height: 16px;

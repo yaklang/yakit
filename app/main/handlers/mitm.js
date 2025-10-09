@@ -121,9 +121,9 @@ module.exports = (win, getClient) => {
     // MITM 转发 - HTTP 响应
     ipcMain.handle("mitm-forward-modified-response", (e, params) => {
         if (stream) {
-            const {response, id} = params
+            const {response, responseId} = params
             stream.write({
-                responseId: id,
+                responseId: responseId,
                 response: response
             })
         }
@@ -381,6 +381,22 @@ module.exports = (win, getClient) => {
         return await asyncDownloadMITMCert(params)
     })
 
+    // asyncDownloadMITMGMCert wrapper
+    const asyncDownloadMITMGMCert = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadMITMGMCert(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DownloadMITMGMCert", async (e, params) => {
+        return await asyncDownloadMITMGMCert(params)
+    })
+
     // asyncExportMITMReplacerRules wrapper
     const asyncExportMITMReplacerRules = (params) => {
         return new Promise((resolve, reject) => {
@@ -427,6 +443,21 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("GetCurrentRules", async (e, params) => {
         return await asyncGetCurrentRules(params)
+    })
+
+    const asyncQueryMITMReplacerRules = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryMITMReplacerRules(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryMITMReplacerRules", async (e, params) => {
+        return await asyncQueryMITMReplacerRules(params)
     })
 
     // asyncSetCurrentRules wrapper

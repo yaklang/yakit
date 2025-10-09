@@ -32,8 +32,8 @@ import {AddHotCodeTemplate, HotCodeTemplate, HotPatchTempItem} from "@/pages/fuz
 import {cloneDeep} from "lodash"
 import {MITMHotPatchTempDefault} from "@/defaultConstants/mitm"
 import {SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
-import {OutlineRefreshIcon} from "@/assets/icon/outline"
-import MITMContext from "../Context/MITMContext"
+import {OutlineFileUpIcon, OutlineRefreshIcon, OutlineStoreIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {
     grpcClientMITMHooks,
     grpcClientMITMLoading,
@@ -43,10 +43,16 @@ import {
     MITMExecScriptContentRequest,
     MITMRemoveHookRequest
 } from "../MITMHacker/utils"
+import {Tooltip} from "antd"
+import {openConsoleNewWindow} from "@/utils/openWebsite"
+import usePluginTrace from "./PluginTrace/usePluginTrace"
+import {PluginTraceRefProps} from "./PluginTrace/type"
+import {pluginTraceRefFunDef} from "./PluginTrace/PluginTrace"
+const PluginTrace = React.lazy(() => import("./PluginTrace/PluginTrace"))
 
 const {ipcRenderer} = window.require("electron")
 
-type tabKeys = "all" | "loaded" | "hot-patch"
+type tabKeys = "all" | "loaded" | "hot-patch" | "trace"
 interface TabsItem {
     key: tabKeys
     label: ReactElement | string
@@ -102,7 +108,7 @@ const HotLoadDefaultData: YakScript = {
     UserId: 0,
     UUID: ""
 }
-export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (props) => {
+export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = React.memo((props) => {
     const {
         isHasParams,
         onIsHasParams,
@@ -156,6 +162,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         {
             key: "hot-patch",
             label: "热加载",
+            contShow: false // 初始为false
+        },
+        {
+            key: "trace",
+            label: "插件追踪",
             contShow: false // 初始为false
         }
     ])
@@ -366,6 +377,28 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
     const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(MITMHotPatchTempDefault))
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
     const [hotStatus, setHotStatus] = useState<"success" | "failed" | "end">("end")
+    const tempNameRef = useRef<string>("")
+    const onUpdateTemplate = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("UpdateHotPatchTemplate", {
+                Condition: {
+                    Type: "mitm",
+                    Name: [tempNameRef.current]
+                },
+                Data: {
+                    Type: "mitm",
+                    Content: script.Content,
+                    Name: tempNameRef.current
+                }
+            })
+            .then((res) => {
+                yakitNotify("success", "更新模板 " + tempNameRef.current + " 成功")
+            })
+            .catch((error) => {
+                yakitNotify("error", "更新模板 " + tempNameRef.current + " 失败：" + error)
+            })
+    })
+
     const onRenderHeardExtra = useMemoizedFn(() => {
         switch (curTabKey) {
             case "hot-patch":
@@ -375,14 +408,27 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             type='mitm'
                             hotPatchTempLocal={hotPatchTempLocal}
                             onSetHotPatchTempLocal={setHotPatchTempLocal}
-                            onClickHotCode={(temp) => {
+                            onClickHotCode={(temp, tempName) => {
+                                tempNameRef.current = tempName || ""
                                 setScript({...HotLoadDefaultData, Content: temp})
+                            }}
+                            onDeleteLocalTempOk={() => {
+                                tempNameRef.current = ""
                             }}
                         ></HotCodeTemplate>
                         <div className={styles["hot-patch-heard-extra"]}>
+                            <Tooltip placement='bottom' title='引擎Console'>
+                                <YakitButton
+                                    type='text'
+                                    onClick={openConsoleNewWindow}
+                                    icon={<OutlineTerminalIcon className={styles["engineConsole-icon-style"]} />}
+                                    style={{padding: 0}}
+                                ></YakitButton>
+                            </Tooltip>
                             <YakitPopconfirm
                                 title={"确认重置热加载代码？"}
                                 onConfirm={() => {
+                                    tempNameRef.current = ""
                                     setScript(HotLoadDefaultData)
                                 }}
                                 placement='top'
@@ -391,15 +437,31 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                     <OutlineRefreshIcon />
                                 </YakitButton>
                             </YakitPopconfirm>
-                            <YakitButton type='outline1' onClick={() => setAddHotCodeTemplateVisible(true)}>
-                                保存模板
-                            </YakitButton>
+                            <Tooltip title='更新当前模板并保存' placement='top'>
+                                <YakitButton
+                                    disabled={!script.Content || !tempNameRef.current}
+                                    type='text'
+                                    onClick={onUpdateTemplate}
+                                    icon={<OutlineFileUpIcon />}
+                                ></YakitButton>
+                            </Tooltip>
+                            <Tooltip placement='top' title='另存为新模板'>
+                                <YakitButton
+                                    type='text'
+                                    icon={<OutlineStoreIcon />}
+                                    onClick={() => setAddHotCodeTemplateVisible(true)}
+                                ></YakitButton>
+                            </Tooltip>
                             <AddHotCodeTemplate
                                 type='mitm'
+                                title='另存为'
                                 hotPatchTempLocal={hotPatchTempLocal}
                                 hotPatchCode={script.Content}
                                 visible={addHotCodeTemplateVisible}
                                 onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
+                                onSaveHotCodeOk={(tempName) => {
+                                    tempNameRef.current = tempName || ""
+                                }}
                             ></AddHotCodeTemplate>
                             {hotStatus === "success" ? (
                                 <YakitButton
@@ -475,6 +537,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         />
                     </>
                 )
+            case "trace":
+                return <></>
             default:
                 return (
                     <div style={{width: "100%"}}>
@@ -502,6 +566,21 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             ...script,
             Content: value
         })
+    })
+
+    const pluginTraceRef = useRef<PluginTraceRefProps>(pluginTraceRefFunDef)
+    const [puginTraceData, pluginTraceActions] = usePluginTrace({
+        pluginTraceRefFun: () => pluginTraceRef.current,
+        onStart: () => {},
+        onError: () => {},
+        onEnd: () => {}
+    })
+    const startPluginTrace = useMemoizedFn(() => {
+        if (mitmVersion === MITMVersion.V1) {
+            yakitNotify("info", "MITM 交互式劫持v1 暂不支持")
+            return
+        }
+        pluginTraceActions.startPluginTrace()
     })
 
     const onRenderContent = useMemoizedFn(() => {
@@ -584,7 +663,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         </div>
                     </div>
                 )
-            default:
+            case "all":
                 return (
                     <div className={styles["plugin-hijack-content-list"]}>
                         <PluginGroup
@@ -682,6 +761,24 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         </YakitSpin>
                     </div>
                 )
+            case "trace":
+                return (
+                    <PluginTrace
+                        ref={pluginTraceRef}
+                        isInitTrace={puginTraceData.isInitTrace}
+                        startLoading={puginTraceData.startLoading}
+                        tracing={puginTraceData.tracing}
+                        stopLoading={puginTraceData.stopLoading}
+                        startPluginTrace={startPluginTrace}
+                        resetPluginTrace={pluginTraceActions.resetPluginTrace}
+                        stopPluginTrace={pluginTraceActions.stopPluginTrace}
+                        cancelPluginTraceById={pluginTraceActions.cancelPluginTraceById}
+                        pluginTraceStats={pluginTraceActions.pluginTraceStats}
+                        pluginTraceList={pluginTraceActions.pluginTraceList}
+                    />
+                )
+            default:
+                return <></>
         }
     })
 
@@ -765,4 +862,4 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             </div>
         </div>
     )
-}
+})

@@ -1,16 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {AutoCard} from "@/components/AutoCard"
 import {Divider, Empty, Progress, Space, Table, Tag} from "antd"
 import {defQueryCVERequest, QueryCVERequest} from "@/pages/cve/CVEViewer"
-import {
-    useCountDown,
-    useDebounceEffect,
-    useDebounceFn,
-    useGetState,
-    useKeyPress,
-    useMemoizedFn,
-    useUpdateEffect
-} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {ExecResult, genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {ResizeBox} from "@/components/ResizeBox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -37,13 +28,12 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {showByContextMenu} from "@/components/functionTemplate/showByContext"
 import {formatDate, formatTimestamp} from "@/utils/timeUtil"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {CacheDropDownGV} from "@/yakitGV"
-import { YakitAutoCompleteRefProps } from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 export interface CVETableProp {
     available: boolean
@@ -599,7 +589,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                     如果更新失败，可点击该地址下载：
                     <a
                         href={url}
-                        style={{color: "var(--yakit-primary-5)"}}
+                        style={{color: "var(--Colors-Use-Main-Primary)"}}
                         onClick={() => {
                             openExternalWebsite(url)
                         }}
@@ -647,8 +637,8 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                         {tipNode}
                         <div className={styles["download-progress"]}>
                             <Progress
-                                strokeColor='#F28B44'
-                                trailColor='#F0F2F5'
+                                strokeColor='var(--Colors-Use-Main-Primary)'
+                                trailColor='var(--Colors-Use-Neutral-Bg)'
                                 percent={percent}
                                 format={(percent) => `已下载 ${percent}%`}
                             />
@@ -668,12 +658,12 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     })
     const heardIconRender = useMemoizedFn(() => {
         if (status === "done") {
-            return <CheckCircleIcon style={{color: "var(--yakit-success-5)"}} />
+            return <CheckCircleIcon style={{color: "var(--Colors-Use-Success-Primary)"}} />
         }
         if (available) {
-            return <SolidRefreshIcon style={{color: "var(--yakit-warning-5)"}} />
+            return <SolidRefreshIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />
         } else {
-            return <ShieldExclamationIcon style={{color: "var(--yakit-warning-5)"}} />
+            return <ShieldExclamationIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />
         }
     })
     const titleRender = useMemoizedFn(() => {
@@ -747,6 +737,8 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
             cancelButtonProps={{style: {display: status === "progress" && !props.latestMode ? "none" : "flex"}}}
             okButtonProps={{style: {display: status === "progress" ? "none" : "flex"}}}
             content={<div className={styles["database-update-content"]}>{HintContent()}</div>}
+            getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.DB_CVE}`) || undefined}
+            wrapClassName={styles["databaseUpdateModal"]}
         />
     )
 })

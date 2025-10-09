@@ -4,11 +4,13 @@ import {randomString} from "@/utils/randomUtil"
 import {yakitNotify} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {Progress} from "antd"
-import {NoteFilter, OpenDialogRequest, OpenDialogResponse, onOpenLocalFileByPath, openDialog} from "../utils"
+import {NoteFilter, onOpenLocalFileByPath} from "../utils"
 import {OutlineExportIcon, OutlineImportIcon} from "@/assets/icon/outline"
 import {useMemoizedFn} from "ahooks"
 import moment from "moment"
+import { handleOpenFileSystemDialog, OpenDialogOptions, OpenDialogReturnValue } from "@/utils/fileSystemDialog"
 
+import styles from "./NotepadImportAndExport.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 interface ImportNoteRequest {
@@ -23,7 +25,7 @@ interface ImportNoteResponse {
  * @description 笔记本导入
  */
 export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) => {
-    const {onClose, onImportSuccessAfter} = props
+    const {onClose, onImportSuccessAfter, getContainer} = props
 
     const [percent, setPercent] = useState<number>(0)
     const [visible, setVisible] = useState<boolean>(false)
@@ -54,15 +56,15 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
         }
     }, [taskToken])
     useEffect(() => {
-        const data: OpenDialogRequest = {
+        const data: OpenDialogOptions = {
             title: "请选择文件",
             properties: ["openFile"]
         }
-        openDialog(data).then((data: OpenDialogResponse) => {
+        handleOpenFileSystemDialog(data).then((data) => {
             if (data.filePaths.length > 0) {
-                const path = data.filePaths[0].replace(/\\/g, "\\")
+                const filePath = data.filePaths[0].replace(/\\/g, "\\")
                 const importParams: ImportNoteRequest = {
-                    TargetPath: path
+                    TargetPath: filePath
                 }
                 setVisible(true)
                 ipcRenderer
@@ -97,17 +99,19 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
         <YakitHint
             visible={visible}
             title='笔记本导入中'
-            heardIcon={<OutlineImportIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<OutlineImportIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             onCancel={() => {
                 stopImport()
             }}
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}
+            getContainer={getContainer}
+            wrapClassName={styles["notepadImportModal"]}
         >
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={percent}
                 format={(percent) => `已导入 ${percent}%`}
             />
@@ -125,7 +129,7 @@ interface ExportNoteResponse {
 }
 
 export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) => {
-    const {filter, onClose} = props
+    const {filter, onClose, getContainer} = props
     const [percent, setPercent] = useState<number>(0)
     const taskToken = useMemo(() => randomString(40), [])
     const [visible, setVisible] = useState<boolean>(false)
@@ -155,15 +159,19 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
         }
     }, [taskToken])
     useEffect(() => {
-        const data: OpenDialogRequest = {
+        const data: OpenDialogOptions = {
             title: "请选择文件夹",
             properties: ["openDirectory"]
         }
-        openDialog(data).then((data: OpenDialogResponse) => {
+        handleOpenFileSystemDialog(data).then((data) => {
             const {filePaths} = data
             if (filePaths.length > 0) {
-                const path = filePaths[0].replace(/\\/g, "\\")
-                targetPathRef.current = `${path}\\笔记本-${moment().valueOf()}.zip`
+                const selectedPath = filePaths[0]
+                const fileName = `笔记本-${moment().valueOf()}.zip`
+                // 回退方案：根据平台使用适当的路径分隔符
+                const separator = process.platform === "win32" ? "\\" : "/"
+                targetPathRef.current = selectedPath + separator + fileName
+
                 const exportParams: ExportNoteRequest = {
                     TargetPath: targetPathRef.current,
                     Filter: filter
@@ -199,17 +207,19 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
         <YakitHint
             visible={visible}
             title='笔记本导出中'
-            heardIcon={<OutlineExportIcon style={{color: "var(--yakit-warning-5)"}} />}
+            heardIcon={<OutlineExportIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             onCancel={() => {
                 stopExport()
             }}
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}
+            getContainer={getContainer}
+            wrapClassName={styles["notepadExportModal"]}
         >
             <Progress
-                strokeColor='#F28B44'
-                trailColor='#F0F2F5'
+                strokeColor='var(--Colors-Use-Main-Primary)'
+                trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={percent}
                 format={(percent) => `已导出 ${percent}%`}
             />

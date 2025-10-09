@@ -1,6 +1,6 @@
 .yakit-radio-buttons-solid {
-    --yakit-solid-primary-font-color: #fff;
-    --yakit-solid-primary-font-hover-color: var(--yakit-primary-4);
+    --yakit-solid-primary-font-color: var(--Colors-Use-Main-On-Primary);
+    --yakit-solid-primary-font-hover-color: var(--Colors-Use-Main-Hover);
     display: inline-flex;
     align-items: center;
     :global {
@@ -25,17 +25,17 @@
 
 // ========================== middle ==========================
 .yakit-radio-buttons-middle {
-    --radio-buttons-box-shadow-color: var(--yakit-primary-2);
-    --radio-buttons-border-color: var(--yakit-primary-5);
-    --radio-buttons-border-hover-color: var(--yakit-primary-3);
-    --radio-buttons-border-active-color: var(--yakit-primary-6);
+    --radio-buttons-box-shadow-color: var(--Colors-Use-Main-Focus);
+    --radio-buttons-border-color: var(--Colors-Use-Main-Primary);
+    --radio-buttons-border-hover-color: var(--Colors-Use-Main-Border);
+    --radio-buttons-border-active-color: var(--Colors-Use-Main-Pressed);
 
-    --radio-buttons-primary-font-color: var(--yakit-primary-5);
-    --radio-buttons-primary-font-hover-color: var(--yakit-primary-4);
+    --radio-buttons-primary-font-color: var(--Colors-Use-Main-Primary);
+    --radio-buttons-primary-font-hover-color: var(--Colors-Use-Main-Primary);
 
-    --radio-buttons-background-color: var(--yakit-primary-5);
-    --radio-buttons-background-hover-color: var(--yakit-primary-4);
-    --radio-buttons-background-active-color: var(--yakit-primary-6);
+    --radio-buttons-background-color: var(--Colors-Use-Main-Primary);
+    --radio-buttons-background-hover-color: var(--Colors-Use-Main-Hover);
+    --radio-buttons-background-active-color: var(--Colors-Use-Main-Pressed);
 
     :global {
         .ant-radio-button-wrapper:first-child {
@@ -44,6 +44,9 @@
 
         .ant-radio-button-wrapper:last-child {
             border-radius: 0 4px 4px 0;
+            &::before{
+                background-color: var(--Colors-Use-Neutral-Border);
+            }
         }
 
         .ant-radio-button-wrapper {
@@ -53,8 +56,13 @@
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            border-color: var(--yakit-border-color);
+            border-color: var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             word-break: keep-all;
+            &:not(:first-child)::before{
+                background-color: var(--Colors-Use-Neutral-Border);
+            }
         }
 
         .ant-radio-button-wrapper:hover {
@@ -82,7 +90,7 @@
             background: var(--radio-buttons-background-color);
         }
         .ant-radio-button-wrapper-disabled:hover {
-            color: rgba(0, 0, 0, 0.25);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .ant-radio-button-wrapper-checked:not(

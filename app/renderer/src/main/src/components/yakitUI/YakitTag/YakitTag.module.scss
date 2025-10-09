@@ -2,12 +2,13 @@
     height: 20px;
     border-radius: 4px;
     padding: 2px 6px;
-    background: var(--yakit-card-background-color);
-    border: 1px solid var(--yakit-border-color);
-    color: var(--yakit-body-text-color);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border-color: var(--Colors-Use-Neutral-Border);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
     display: inline-flex;
     align-items: center;
     font-size: 12px;
+    border: none;
 
     path {
         stroke-width: 1.5;
@@ -18,18 +19,21 @@
             margin-left: 8px;
             display: inline-flex;
             align-items: center;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             width: 12px;
             height: 12px;
+
             svg {
                 width: 12px;
                 height: 12px;
             }
+
             .anticon {
                 height: 12px;
             }
+
             &:hover {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }
@@ -64,112 +68,147 @@
     }
 }
 
+.yakit-tag-border {
+    border: 1px solid;
+}
+
+.yakit-tag-fullRadius {
+    border-radius: 9999px;
+}
+
+.yakit-tag-default-color {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border-color: var(--Colors-Use-Neutral-Border);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
+    svg {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+}
+
 .yakit-tag-danger {
-    background: rgba(246, 84, 74, 0.08);
-    border: 1px solid rgba(244, 115, 107, 0.3);
-    color: #f4736b;
-    svg {
-        color: #f4736b;
-    }
-}
+    background: var(--Colors-Use-Error-Bg-Hover);
+    border-color: var(--Colors-Use-Error-Border);
+    color: var(--Colors-Use-Status-Serious);
 
-.yakit-tag-info {
-    background: rgba(242, 139, 68, 0.06);
-    border: 1px solid rgba(242, 139, 68, 0.3);
-    color: #f28b44;
     svg {
-        color: #f28b44;
-    }
-}
-
-.yakit-tag-success {
-    background: rgba(86, 201, 145, 0.1);
-    border: 1px solid rgba(86, 201, 145, 0.3);
-    color: #56c991;
-    svg {
-        color: #56c991;
-    }
-}
-
-.yakit-tag-warning {
-    background: rgba(255, 182, 96, 0.1);
-    border: 1px solid rgba(255, 182, 96, 0.3);
-    color: #ffb660;
-    svg {
-        color: #ffb660;
+        color: var(--Colors-Use-Status-Serious);
     }
 }
 
 .yakit-tag-serious {
-    background: rgba(203, 35, 24, 0.2);
-    border: 1px solid #e99a95;
-    color: #cb2318;
+    background: var(--Colors-Use-Error-Bg-Hover);
+    border-color: var(--Colors-Use-Error-Border);
+    color: var(--Colors-Use-Error-Primary);
+
     svg {
-        color: #cb2318;
+        color: var(--Colors-Use-Error-Primary);
+    }
+}
+
+.yakit-tag-info {
+    background: var(--Colors-Use-Orange-Bg);
+    border-color: var(--Colors-Use-Orange-Border);
+    border: 1px solid var(--Colors-Use-Orange-Border);
+    color: var(--Colors-Use-Orange-Primary);
+
+    svg {
+        color: var(--Colors-Use-Orange-Primary);
+    }
+}
+
+.yakit-tag-success {
+    background: var(--Colors-Use-Success-Bg-Hover);
+    border-color: var(--Colors-Use-Success-Border);
+    color: var(--Colors-Use-Success-Primary);
+
+    svg {
+        color: var(--Colors-Use-Success-Primary);
+    }
+}
+
+.yakit-tag-warning {
+    background: var(--Colors-Use-Warning-Bg-Hover);
+    border-color: var(--Colors-Use-Warning-Border);
+    color: var(--Colors-Use-Warning-Primary);
+
+    svg {
+        color: var(--Colors-Use-Warning-Primary);
     }
 }
 
 .yakit-tag-purple {
-    background: rgba(136, 99, 247, 0.1);
-    border: 1px solid rgba(136, 99, 247, 0.3);
-    color: #8863f7;
+    background: var(--Colors-Use-Purple-Bg);
+    border-color: var(--Colors-Use-Purple-Border);
+    color: var(--Colors-Use-Purple-Primary);
+
     svg {
-        color: #8863f7;
+        color: var(--Colors-Use-Purple-Primary);
     }
 }
 
 .yakit-tag-blue {
-    background: rgba(74, 148, 248, 0.1);
-    border: 1px solid rgba(74, 148, 248, 0.3);
-    color: #4a94f8;
+    background: var(--Colors-Use-Blue-Bg);
+    border-color: var(--Colors-Use-Blue-Border);
+    color: var(--Colors-Use-Blue-Primary);
+
     svg {
-        color: #4a94f8;
+        color: var(--Colors-Use-Blue-Primary);
     }
 }
 
 .yakit-tag-cyan {
-    background: rgba(53, 216, 238, 0.1);
-    border: 1px solid rgba(53, 216, 238, 0.3);
-    color: #35d8ee;
+    background: var(--Colors-Use-Cyan-Bg);
+    border-color: var(--Colors-Use-Cyan-Border);
+    color: var(--Colors-Use-Cyan-Primary);
+
     svg {
-        color: #35d8ee;
+        color: var(--Colors-Use-Cyan-Primary);
     }
 }
 
 .yakit-tag-bluePurple {
-    background: rgba(218, 95, 221, 0.1);
-    border: 1px solid rgba(218, 95, 221, 0.3);
-    color: #da5fdd;
+    background: var(--Colors-Use-Magenta-Bg);
+    border-color: var(--Colors-Use-Magenta-Border);
+    color: var(--Colors-Use-Magenta-Primary);
+
     svg {
-        color: #da5fdd;
+        color: var(--Colors-Use-Magenta-Primary);
     }
 }
 
 .yakit-tag-yellow {
-    background: rgba(255, 213, 131, 0.1);
-    border: 1px solid #ffe5c6;
-    color: #ffb660;
+    color: var(--Colors-Use-Yellow-Primary);
+    border-color: var(--Colors-Use-Yellow-Border);
+    background-color: var(--Colors-Use-Yellow-Bg);
+
     svg {
-        color: #ffb660;
+        color: var(--Colors-Use-Yellow-Primary);
     }
 }
 
 .yakit-tag-white {
-    background: #ffffff;
-    border: 1px solid #eaecf3;
-    color: #31343f;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border-color: var(--Colors-Use-Neutral-Border);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+.yakit-tag-main {
+    background: var(--Colors-Use-Main-Bg);
+    border-color: var(--Colors-Use-Main-Border);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 
 .yakit-tag-disable {
-    background: #f8f8f8;
-    border: 1px solid #f0f1f3;
-    color: #ccd2de;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border-color: var(--Colors-Use-Neutral-Border);
+    color: var(--Colors-Use-Neutral-Disable);
     cursor: not-allowed;
 
     :global {
         .ant-tag-close-icon {
             cursor: not-allowed;
-            color: #ccd2de;
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }
@@ -196,15 +235,17 @@
         }
 
         .ant-tag-checkable {
-            background-color: var(--yakit-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .ant-tag-checkable-checked {
-            background-color: var(--yakit-primary-5);
+            background: var(--Colors-Use-Main-Primary);
+            color: var(--Colors-Use-Main-On-Primary);
         }
 
         .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }
@@ -214,11 +255,11 @@
 
     :global {
         .ant-tag-checkable {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
 
         .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {
-            color: var(--yakit-disable-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }
@@ -229,7 +270,7 @@
     :global {
         .ant-tag-checkable-checked {
             color: #fff;
-            background-color: var(--yakit-disable-text-color);
+            background-color: var(--Colors-Use-Neutral-Disable);
         }
 
         .ant-tag-checkable:not(.ant-tag-checkable-checked):hover {

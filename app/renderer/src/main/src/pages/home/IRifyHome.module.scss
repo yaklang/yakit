@@ -7,7 +7,7 @@
     gap: 48px; 
     .main {  
         .header {
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             text-align: center;
             font-size: 24px;
             font-weight: 600;
@@ -24,6 +24,7 @@
                 width: 276px;
                 padding: 24px 24px 32px 24px;
                 flex-direction: column;
+                justify-content: space-between;
                 align-items: center;
                 gap: 20px;
                 border-radius: 8px;
@@ -36,9 +37,8 @@
                     }
                 }
                 .content {
-                    height: 114px;
                     .title {
-                        color: #000;
+                        color: var(--Colors-Use-Neutral-Text-1-Secondary);
                         text-align: center;
                         font-family: "PingFang SC";
                         font-size: 18px;
@@ -48,7 +48,7 @@
                     }
                     .sub-title {
                         margin-top: 8px;
-                        color: #85899e;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         text-align: justify;
                         font-family: "PingFang HK";
                         font-size: 14px;
@@ -90,14 +90,14 @@
                     svg {
                         width: 18px;
                         height: 18px;
-                        color: #85899e;
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         path {
                             stroke-width: 1.5;
                         }
                     }
                 }
                 .data-preview-item-text {
-                    color: #85899e;
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
                     font-size: 14px;
                     font-weight: 400;
                     line-height: 20px;
@@ -110,7 +110,7 @@
                         font-size: 16px;
                         font-weight: 600;
                         line-height: 24px;
-                        color: #31343f;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
                     }
                     .database-warning-icon {
                         margin-top: 2px;
@@ -137,7 +137,7 @@
                         }
                         .risk-num {
                             padding: 2px 6px;
-                            color: #85899e;
+                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
                         }
                     }
                     .seriousRisk-tag {

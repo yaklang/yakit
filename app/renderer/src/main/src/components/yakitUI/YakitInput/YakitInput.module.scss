@@ -1,9 +1,5 @@
 // ========================== input ==========================
 .yakit-input-wrapper {
-    --input-box-shadow-color: var(--yakit-primary-2);
-    --input-border-color: var(--yakit-border-color);
-    --input-hover-border-color: var(--yakit-primary-4);
-
     display: inline-flex;
     width: 100%;
 
@@ -12,17 +8,22 @@
             border: none;
             box-shadow: none !important;
         }
+        .ant-input:has(+ .ant-input-group-addon) {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
         .ant-input-group {
             display: flex;
         }
         .ant-input-group-wrapper {
             padding: 0 !important;
+            background: var(--Colors-Use-Basic-Background);
         }
 
         .ant-input-group-addon {
             border-radius: 4px;
-            border-color: var(--input-border-color);
-            color: var(--yakit-header-color);
+            border-color: var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Neutral-Bg);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             width: auto;
         }
 
@@ -41,23 +42,39 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
 
         .ant-input {
-            border-color: var(--input-border-color);
+            border-color: var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Basic-Background);
             border-radius: 4px;
         }
 
         .ant-input:hover {
-            border-color: var(--input-hover-border-color);
+            border-color: var(--Colors-Use-Main-Hover);
+        }
+        .ant-input::placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+            opacity: 1;
         }
         .ant-input-affix-wrapper {
             padding: 0 8px;
             display: inline-flex;
             align-items: center;
-            color: var(--yakit-header-color);
-            border-color: var(--input-border-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            border-color: var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Basic-Background) !important;
             border-radius: 4px;
+            input {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                background-color: var(--Colors-Use-Basic-Background) !important;
+            }
+        }
+        .ant-input-suffix {
+            .ant-input-show-count-suffix {
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
         }
         .ant-input:focus,
         .ant-input-focused,
@@ -65,26 +82,26 @@
         .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover,
         .ant-input-affix-wrapper-focused,
         .ant-input-affix-wrapper:focus {
-            border-color: var(--input-hover-border-color);
-            box-shadow: 0 0 0 2px var(--input-box-shadow-color);
+            border-color: var(--Colors-Use-Main-Hover);
+            box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
         }
     }
 
     .yakit-input-addonAfter {
-        background: #f8f8f8;
+        background: var(--Colors-Use-Neutral-Bg);
         height: 100%;
         padding: 0 12px;
-        border-left: 1px solid var(--input-border-color);
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
         display: flex;
         align-items: center;
         border-radius: 0 4px 4px 0;
     }
 
     .yakit-input-addonBefore {
-        background: #f8f8f8;
+        background: var(--Colors-Use-Neutral-Bg);
         height: 100%;
         padding: 0 12px;
-        border-right: 1px solid var(--input-border-color);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
         display: flex;
         align-items: center;
         border-radius: 4px 0 0 4px;
@@ -95,8 +112,9 @@
 .yakit-input-disabled {
     :global {
         .ant-input[disabled] {
-            background-color: #f0f1f3;
-            border: 1px solid var(--input-border-color);
+            color: var(--Colors-Use-Neutral-Disable);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
         }
     }
 }
@@ -108,8 +126,8 @@
     border-radius: 4px;
     padding: 6px 12px;
     font-size: 12px;
-    color: #31343f;
-    border-color: var(--yakit-border-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    border-color: var(--Colors-Use-Neutral-Border);
     :global {
         .ant-input {
             font-size: 12px;
@@ -161,15 +179,15 @@
 
 // ========================== search ==========================
 .yakit-search-wrapper {
-    --search-box-shadow-color: var(--yakit-primary-2);
+    --search-box-shadow-color: var(--Colors-Use-Main-Focus);
 
-    --search-background-color: var(--yakit-primary-5);
-    --search-background-hover-color: var(--yakit-primary-4);
-    --search-background-focus-color: var(--yakit-primary-6);
+    --search-background-color: var(--Colors-Use-Main-Primary);
+    --search-background-hover-color: var(--Colors-Use-Main-Hover);
+    --search-background-focus-color: var(--Colors-Use-Main-Pressed);
 
-    --search-border-color: var(--yakit-border-color);
-    --search-border-hover-color: var(--yakit-primary-4);
-    --search-border-focus-color: var(--yakit-primary-6);
+    --search-border-color: var(--Colors-Use-Neutral-Border);
+    --search-border-hover-color: var(--Colors-Use-Main-Hover);
+    --search-border-focus-color: var(--Colors-Use-Main-Pressed);
 
     border-radius: 4px;
     height: 24px;
@@ -180,12 +198,14 @@
             border-right: 0;
             border-radius: 4px;
             border-color: var(--search-border-color);
+            background-color: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-input-affix-wrapper {
             padding: 0 8px;
             height: 24px;
             .ant-input {
-                height: 22px;
+                height: 100%;
             }
         }
 
@@ -198,6 +218,18 @@
         .ant-input-search .ant-input:hover,
         .ant-input-search .ant-input:focus {
             border-color: var(--search-border-hover-color);
+        }
+        .ant-input-affix-wrapper {
+            background: var(--Colors-Use-Basic-Background);
+        }
+        .ant-input-affix-wrapper > input {
+            background: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .ant-input-suffix {
+            .ant-input-show-count-suffix {
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
         }
         .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover {
             border-color: var(--search-border-hover-color);
@@ -212,10 +244,20 @@
 
         .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child {
             left: 0;
+            background: var(--Colors-Use-Basic-Background);
         }
 
-        .ant-input-group .ant-input:hover {
-            border-right: 1px solid var(--input-border-color);
+        // .ant-input-group .ant-input:hover {
+        //     border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        // }
+
+        // .ant-input-clear-icon{
+        //     // color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        //     // background-color: var(--Colors-Use-Neutral-Disable);
+        // }
+        .ant-input::placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+            opacity: 1;
         }
 
         .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child .ant-input-search-button {
@@ -280,7 +322,7 @@
 
         .ant-input-group-addon {
             height: 24px;
-            line-height: 20px;
+            line-height: 18px;
         }
     }
 }
@@ -422,38 +464,53 @@
     position: relative;
 
     :global {
+        .ant-input-affix-wrapper {
+            background-color: var(--Colors-Use-Basic-Background);
+        }
+        .anticon.ant-input-clear-icon,
+        .ant-input-clear-icon {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
         .ant-input {
             border-radius: 4px;
-            border: 1px solid var(--yakit-border-color);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            background-color: var(--Colors-Use-Basic-Background);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .ant-input:hover {
-            border-color: var(--yakit-primary-4);
+            border-color: var(--Colors-Use-Main-Hover);
         }
 
         .ant-input:focus,
         .ant-input-focused {
-            border-color: var(--yakit-primary-4);
-            box-shadow: 0 0 0 2px var(--yakit-primary-2);
+            border-color: var(--Colors-Use-Main-Hover);
+            box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
+        }
+        .ant-input-suffix {
+            .ant-input-show-count-suffix {
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
         }
 
         .ant-input-textarea-show-count::after {
             font-size: 14px;
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+        .ant-input::placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+            opacity: 1;
         }
         .textArea-resizer-icon {
             position: absolute;
             bottom: 2px;
             right: 2px;
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
             z-index: 1;
             pointer-events: none;
-            background-color: #fff;
-        }
-        .ant-input-textarea-show-count + .textArea-resizer-icon {
-            bottom: 23px;
+            background-color: var(--Colors-Use-Basic-Background);
         }
         .ant-input-disabled + .textArea-resizer-icon {
-            background-color: var(--yakit-background-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
         }
     }
 }
@@ -467,12 +524,12 @@
 .yakit-textArea-disabled {
     :global {
         .ant-input[disabled]:hover {
-            border-color: var(--yakit-border-color);
+            border-color: var(--Colors-Use-Neutral-Border);
         }
 
         .ant-input[disabled] {
-            background-color: var(--yakit-background-color);
-            border-color: var(--yakit-border-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
+            border-color: var(--Colors-Use-Neutral-Border);
         }
     }
 }
@@ -482,20 +539,29 @@
         .ant-input-affix-wrapper {
             border-radius: 4px;
             height: 28px;
-            border-color: var(--yakit-border-color);
+            border-color: var(--Colors-Use-Neutral-Border);
             font-size: 12px;
-            color: #31343f;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            background-color: var(--Colors-Use-Basic-Background) !important;
+            .ant-input {
+                background-color: var(--Colors-Use-Basic-Background);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
         }
         .ant-input-password-icon.anticon {
-            color: var(--yakit-helper-text-color);
+            color: var(--Colors-Use-Neutral-Disable);
         }
         .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover {
-            border-color: var(--yakit-primary-4);
+            border-color: var(--Colors-Use-Main-Hover);
+        }
+        .ant-input::placeholder {
+            color: var(--Colors-Use-Neutral-Disable);
+            opacity: 1;
         }
         .ant-input-affix-wrapper:focus,
         .ant-input-affix-wrapper-focused {
-            border-color: var(--yakit-primary-5);
-            box-shadow: 0 0 0 2px var(--yakit-primary-2);
+            border-color: var(--Colors-Use-Main-Primary);
+            box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
         }
     }
 }
@@ -527,12 +593,12 @@
 .yakit-password-disabled {
     :global {
         .ant-input[disabled]:hover {
-            border-color: var(--yakit-border-color);
+            border-color: var(--Colors-Use-Neutral-Border);
         }
 
         .ant-input[disabled] {
-            background-color: var(--yakit-background-color);
-            border-color: var(--yakit-border-color);
+            background-color: var(--Colors-Use-Neutral-Bg);
+            border-color: var(--Colors-Use-Neutral-Border);
         }
     }
 }

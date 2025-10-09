@@ -34,7 +34,9 @@ import {
     isBreachTrace,
     isEnterpriseOrSimpleEdition,
     isEnterpriseEdition,
-    isIRify
+    isIRify,
+    isCommunityIRify,
+    isEnpriTraceIRify
 } from "@/utils/envfile"
 import {
     useCreation,
@@ -118,7 +120,10 @@ import {
     defPage,
     getFuzzerProcessedCacheData,
     saveFuzzerCache,
-    usePageInfo
+    usePageInfo,
+    AIForgeEditorPageInfoProps,
+    AIToolEditorPageInfoProps,
+    YakRunnerScanHistoryPageInfoProps
 } from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
@@ -155,11 +160,20 @@ import {APIFunc} from "@/apiUtils/type"
 import {getHotPatchCodeInfo} from "@/pages/fuzzer/HTTPFuzzerHotPatch"
 import {PublicHTTPHistoryIcon} from "@/routes/publicIcon"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
-import {defaultMITMHackerPageInfo} from "@/defaultConstants/mitmV2"
 import {defaultHTTPHistoryAnalysisPageInfo} from "@/defaultConstants/hTTPHistoryAnalysis"
 import {BatchAddNewGroupFormItem} from "./BatchAddNewGroup"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
+import {getGlobalShortcutKeyEvents} from "@/utils/globalShortcutKey/events/global"
+import {
+    convertKeyEventToKeyCombination,
+    sortKeysCombination,
+    unregisterShortcutFocusHandle
+} from "@/utils/globalShortcutKey/utils"
+import { keepSearchNameMapStore } from "@/store/keepSearchName"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
+const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
 
@@ -210,7 +224,16 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
         key: "removeOtherItems"
     }
 ]
-
+/**
+ * 获取oldArray中被删除的数据
+ * @param oldArray
+ * @param newArray
+ * @returns
+ */
+const getDeletedItems = (oldArray: MultipleNodeInfo[], newArray: MultipleNodeInfo[]): MultipleNodeInfo[] => {
+    const newArrayIds = new Set(newArray.map((item) => item.id))
+    return oldArray.filter((oldItem) => !newArrayIds.has(oldItem.id))
+}
 /**
  * 生成组id
  * @returns {string} 生成的组id
@@ -346,7 +369,7 @@ const getColor = (subPage) => {
     return colorList[randNum] || "purple"
 }
 // 软件初始化时的默认打开页面数据
-export const getInitPageCache: () => PageCache[] = () => {
+export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCache[] = (routeKeyToLabel) => {
     if (isEnpriTraceAgent()) {
         return []
     }
@@ -377,6 +400,11 @@ export const getInitPageCache: () => PageCache[] = () => {
         ]
     }
 
+    const time = new Date().getTime().toString()
+    const tabId = `${YakitRoute.DB_HTTPHistoryAnalysis}-[${randomString(6)}]-${time}`
+    const menuName = YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis]?.label || ""
+    let tabName = routeKeyToLabel.get(YakitRoute.DB_HTTPHistoryAnalysis) || menuName
+    let verbose = `${tabName}-1`
     return [
         {
             routeKey: routeConvertKey(YakitRoute.NewHome, ""),
@@ -400,7 +428,16 @@ export const getInitPageCache: () => PageCache[] = () => {
             menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis].label,
             route: YakitRoute.DB_HTTPHistoryAnalysis,
             singleNode: false,
-            multipleNode: []
+            multipleLength: 1,
+            multipleNode: [
+                {
+                    id: tabId,
+                    verbose,
+                    time,
+                    groupId: "0",
+                    sortFieId: 1
+                }
+            ]
         }
     ]
 }
@@ -461,10 +498,15 @@ const getSubPageTotal = (subPage) => {
     return total
 }
 
+export let childWindowHash = ""
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
     const {routeKeyToLabel} = props
 
     const [loading, setLoading] = useState(false)
+
+    useShortcutKeyTrigger("screenshot", () => {
+        ipcRenderer.invoke("activate-screenshot")
+    })
 
     const {
         setPagesData,
@@ -489,12 +531,24 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         shallow
     )
 
+    useEffect(() => {
+        ipcRenderer.on("child-window-hash", (event, {hash}) => {
+            childWindowHash = hash
+        })
+        return () => {
+            childWindowHash = ""
+            ipcRenderer.send("close-childWin")
+            ipcRenderer.removeAllListeners("child-window-hash")
+        }
+    }, [])
+
     // tab数据
-    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(_.cloneDeepWith(getInitPageCache()) || [])
+    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(
+        _.cloneDeepWith(getInitPageCache(routeKeyToLabel)) || []
+    )
     const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey())
     useEffect(() => {
         setCurrentPageTabRouteKey(currentTabKey)
-
         // 固定页面多开，如果从未打开，则默认新增一个标签页
         if (defaultFixedTabsNoSinglPageRoute.includes(currentTabKey as YakitRoute)) {
             const item = getPageCache().find((i) => i.routeKey === currentTabKey)
@@ -645,15 +699,77 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.Rule_Management:
                 addRuleManagement()
                 break
+            case YakitRoute.YakRunner_Project_Manager:
+                addProjectManager()
+                break
+            case YakitRoute.YakRunner_ScanHistory:
+                addScanHistory(params)
+                break
             case YakitRoute.MITMHacker:
                 addMITMHacker(params)
                 break
             case YakitRoute.DB_HTTPHistoryAnalysis:
                 addHTTPHistoryAnalysis(params)
                 break
+            case YakitRoute.ShortcutKey:
+                addShortcutKey(params)
+                break
+            case YakitRoute.ModifyAIForge:
+                modifyAIForge(params)
+                break
+            case YakitRoute.ModifyAITool:
+                modifyAITool(params)
+                break
+            case YakitRoute.DB_Report:
+                dbReport()
+                break
             default:
                 break
         }
+    })
+
+    const dbReport = useMemoizedFn(()=>{
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.DB_Report).length
+        if (isExist) {
+            emiter.emit("onRefreshDBReport")
+        }
+        openMenuPage({route: YakitRoute.DB_Report})
+    })
+
+    const addProjectManager = useMemoizedFn(() => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Project_Manager).length
+        if (isExist) {
+            emiter.emit("onRefreshProjectManager")
+        }
+        openMenuPage({route: YakitRoute.YakRunner_Project_Manager})
+    })
+
+    const addScanHistory = useMemoizedFn((data: YakRunnerScanHistoryPageInfoProps) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_ScanHistory).length
+        if (isExist && data) {
+            emiter.emit("onYakRunnerScanHistoryPageInfo", JSON.stringify(data))
+        }
+        openMenuPage(
+            {route: YakitRoute.YakRunner_ScanHistory},
+            {
+                pageParams: {
+                    yakRunnerScanHistoryPageInfo: {
+                        ...data
+                    }
+                }
+            }
+        )
+    })
+
+    const addShortcutKey = useMemoizedFn((data: ShortcutKeyPageName) => {
+        openMenuPage(
+            {route: YakitRoute.ShortcutKey},
+            {
+                pageParams: {
+                    shortcutKeyPage: data
+                }
+            }
+        )
     })
 
     const addRuleManagement = useMemoizedFn(() => {
@@ -780,6 +896,25 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /** HTTPHackerPage v2 */
     const addMITMHacker = useMemoizedFn((data: MITMHackerPageInfoProps) => {
+        const pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [
+                {
+                    id: randomString(8),
+                    routeKey: YakitRoute.MITMHacker,
+                    pageGroupId: "0",
+                    pageId: YakitRoute.MITMHacker,
+                    pageName: YakitRouteToPageInfo[YakitRoute.MITMHacker]?.label || "",
+                    pageParamsInfo: {
+                        mitmHackerPageInfo: data
+                    },
+                    sortFieId: 0
+                }
+            ],
+            routeKey: YakitRoute.MITMHacker,
+            singleNode: true
+        }
+        setPagesData(YakitRoute.MITMHacker, pageNodeInfo)
         openMenuPage(
             {route: YakitRoute.MITMHacker},
             {
@@ -938,6 +1073,62 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage({route: YakitRoute.Plugin_Hub})
     })
 
+    /**
+     * @name 新建forge模板
+     * @param source 触发打开页面的父页面路由
+     */
+    const modifyAIForge = useMemoizedFn((data: AIForgeEditorPageInfoProps) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.ModifyAIForge).length
+        if (isExist) {
+            const modalProps = getSubscribeClose(YakitRoute.ModifyAIForge)
+            if (modalProps) {
+                judgeDataIsFuncOrSettingForConfirm(
+                    modalProps["reset"],
+                    (setting) => {
+                        onModalSecondaryConfirm(setting, isModalVisibleRef)
+                    },
+                    () => {}
+                )
+            }
+        }
+        openMenuPage(
+            {route: YakitRoute.ModifyAIForge},
+            {
+                pageParams: {
+                    modifyAIForgePageInfo: {...data}
+                }
+            }
+        )
+    })
+
+    /**
+     * @name 编辑AI tool
+     * @param source 触发打开页面的父页面路由
+     */
+    const modifyAITool = useMemoizedFn((data: AIToolEditorPageInfoProps) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.ModifyAITool).length
+        if (isExist) {
+            const modalProps = getSubscribeClose(YakitRoute.ModifyAITool)
+            if (modalProps) {
+                judgeDataIsFuncOrSettingForConfirm(
+                    modalProps["reset"],
+                    (setting) => {
+                        onModalSecondaryConfirm(setting, isModalVisibleRef)
+                    },
+                    () => {}
+                )
+            }
+        }
+        openMenuPage(
+            {route: YakitRoute.ModifyAITool},
+            {
+                pageParams: {
+                    modifyAIToolPageInfo: {...data}
+                }
+            }
+        )
+    })
+
     /** @name 渲染端通信-关闭一个指定页面 */
     useEffect(() => {
         emiter.on("closePage", onClosePage)
@@ -963,6 +1154,18 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
                 removeMenuPage({route: route, menuName: ""}, addNext ? {route: addNext, menuName: ""} : undefined)
                 break
+            case YakitRoute.AddAIForge:
+            case YakitRoute.ModifyAIForge:
+                // 新建|编辑 forge 的关闭后跳转回 ai-agent 页面
+                removeMenuPage({route: route, menuName: ""}, {route: YakitRoute.AI_Agent, menuName: ""})
+                break
+
+            case YakitRoute.AddAITool:
+            case YakitRoute.ModifyAITool:
+                // 新建|编辑 tool 的关闭后跳转回 ai-agent 页面
+                removeMenuPage({route: route, menuName: ""}, {route: YakitRoute.AI_Agent, menuName: ""})
+                break
+
             default:
                 removeMenuPage({route: route, menuName: ""})
                 break
@@ -994,6 +1197,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
             if (type === YakitRoute.HTTPHacker) {
                 openMenuPage({route: YakitRoute.HTTPHacker})
+            }
+            if (type === YakitRoute.MITMHacker) {
+                openMenuPage({route: YakitRoute.MITMHacker})
             }
             if (type === YakitRoute.DB_HTTPHistory) {
                 openMenuPage({route: YakitRoute.DB_HTTPHistory})
@@ -1103,7 +1309,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             }
             if (downstreamProxyStr) {
-                newAdvancedConfigValue.proxy = [downstreamProxyStr]
+                newAdvancedConfigValue.proxy = downstreamProxyStr.split(",")
             }
 
             // 获取全局热加载缓存信息
@@ -1152,6 +1358,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage(
             {route: YakitRoute.DB_HTTPHistoryAnalysis},
             {
+                verbose: data.verbose,
                 pageParams: {
                     hTTPHistoryAnalysisPageInfo: {
                         ...data
@@ -1262,7 +1469,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         })
         ipcRenderer.on("fetch-close-all-tab", () => {
             // delFuzzerList(1)
-            setPageCache(getInitPageCache())
+            setPageCache(getInitPageCache(routeKeyToLabel))
             setCurrentTabKey(getInitActiveTabKey())
         })
         return () => {
@@ -1274,36 +1481,33 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     /** ---------- @name 全局功能快捷键 Start ---------- */
     const isModalVisibleRef = useRef<boolean>(false)
-    const documentKeyDown = useMemoizedFn((e: KeyboardEvent) => {
-        // ctrl/command + w 关闭当前页面
-        e.stopPropagation()
-        if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault()
-            if (!isModalVisibleRef.current) {
-                if (pageCache.length === 0 || defaultFixedTabs.includes(currentTabKey as YakitRoute)) return
-                const data = KeyConvertRoute(currentTabKey)
-                if (data) {
-                    const info: OnlyPageCache = {
-                        route: data.route,
-                        menuName:
-                            data.route === YakitRoute.Plugin_OP
-                                ? data.pluginName || ""
-                                : YakitRouteToPageInfo[data.route]?.label || "",
-                        pluginId: data.pluginId,
-                        pluginName: data.pluginName
-                    }
-                    onBeforeRemovePage(info)
-                }
+    useShortcutKeyTrigger("removePage", (focus) => {
+        if (focus) {
+            let item = focus.find((i) => i.startsWith(currentTabKey))
+            if (item) {
+                // 在此处进行关闭二级页面
+                emiter.emit("onRemoveSecondPageByFocus", item)
+                return
             }
-            return
+        }
+        // 此处如若在webfuuzer monaco中执行关闭时不会走 onKeyDown关闭 逻辑 而是走此处关闭逻辑
+        if (!isModalVisibleRef.current) {
+            if (pageCache.length === 0 || defaultFixedTabs.includes(currentTabKey as YakitRoute)) return
+            const data = KeyConvertRoute(currentTabKey)
+            if (data) {
+                const info: OnlyPageCache = {
+                    route: data.route,
+                    menuName:
+                        data.route === YakitRoute.Plugin_OP
+                            ? data.pluginName || ""
+                            : YakitRouteToPageInfo[data.route]?.label || "",
+                    pluginId: data.pluginId,
+                    pluginName: data.pluginName
+                }
+                onBeforeRemovePage(info)
+            }
         }
     })
-    useEffect(() => {
-        document.addEventListener("keydown", documentKeyDown)
-        return () => {
-            document.removeEventListener("keydown", documentKeyDown)
-        }
-    }, [])
     /** ---------- @name 全局功能快捷键 End ---------- */
 
     /** ---------- 操作系统 start ---------- */
@@ -1481,6 +1685,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.MITMHacker:
                 onMITMHackerPage(singleUpdateNode, 1)
                 break
+            case YakitRoute.ModifyAIForge:
+                onSetModifyAIForgeData(singleUpdateNode, 1)
+                break
+            case YakitRoute.ModifyAITool:
+                onSetModifyAIToolData(singleUpdateNode, 1)
+                break
+            case YakitRoute.YakRunner_ScanHistory:
+                onSetYakRunnerScanHistory(singleUpdateNode, 1)
+                break
             default:
                 break
         }
@@ -1549,6 +1762,72 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             routeKey: YakitRoute.AddYakitScript
         }
         setPagesData(YakitRoute.AddYakitScript, pageNodeInfo)
+    })
+    const onSetModifyAIForgeData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.ModifyAIForge,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                modifyAIForgePageInfo: node.pageParams?.modifyAIForgePageInfo
+                    ? {...node.pageParams.modifyAIForgePageInfo}
+                    : undefined
+            },
+            sortFieId: order
+        }
+        let pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [newPageNode],
+            routeKey: YakitRoute.ModifyAIForge
+        }
+        setPagesData(YakitRoute.ModifyAIForge, pageNodeInfo)
+    })
+    const onSetModifyAIToolData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.ModifyAITool,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                modifyAIToolPageInfo: node.pageParams?.modifyAIToolPageInfo
+                    ? {...node.pageParams.modifyAIToolPageInfo}
+                    : undefined
+            },
+            sortFieId: order
+        }
+        let pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [newPageNode],
+            routeKey: YakitRoute.ModifyAITool
+        }
+        setPagesData(YakitRoute.ModifyAITool, pageNodeInfo)
+    })
+
+    const onSetYakRunnerScanHistory = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.YakRunner_ScanHistory,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                yakRunnerScanHistory: node.pageParams?.yakRunnerScanHistoryPageInfo
+                    ? {
+                          ...node.pageParams.yakRunnerScanHistoryPageInfo
+                      }
+                    : undefined
+            },
+            sortFieId: order
+        }
+        let pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [newPageNode],
+            routeKey: YakitRoute.YakRunner_ScanHistory
+        }
+        setPagesData(YakitRoute.YakRunner_ScanHistory, pageNodeInfo)
     })
     const onBatchExecutorPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
         const newPageNode: PageNodeItemProps = {
@@ -1650,10 +1929,28 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         switch (data.route) {
             case YakitRoute.AddYakitScript:
             case YakitRoute.HTTPFuzzer:
+            case YakitRoute.Codec:
+            case YakitRoute.AddAIForge:
+            case YakitRoute.ModifyAIForge:
                 const modalProps = getSubscribeClose(data.route)
                 if (modalProps) {
                     judgeDataIsFuncOrSettingForConfirm(
                         modalProps["close"],
+                        (setting) => {
+                            onModalSecondaryConfirm(setting, isModalVisibleRef, data.route)
+                        },
+                        () => {
+                            removeMenuPage(data)
+                        }
+                    )
+                }
+                break
+            case YakitRoute.AddAITool:
+            case YakitRoute.ModifyAITool:
+                const toolModalProps = getSubscribeClose(data.route)
+                if (toolModalProps) {
+                    judgeDataIsFuncOrSettingForConfirm(
+                        toolModalProps["close"],
                         (setting) => {
                             onModalSecondaryConfirm(setting, isModalVisibleRef)
                         },
@@ -1665,6 +1962,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
             case YakitRoute.YakScript:
                 emiter.emit("onCloseYakRunner")
+                break
+            case YakitRoute.MITMHacker:
+                removeMenuPage(data)
+                keepSearchNameMapStore.removeKeepSearchRouteNameMap(YakitRoute.MITMHacker)
                 break
             default:
                 removeMenuPage(data)
@@ -1846,6 +2147,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             unFuzzerCacheData.current = usePageInfo.subscribe(
                 (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
                 (selectedState, previousSelectedState) => {
+                    if (Array.isArray(selectedState) && Array.isArray(previousSelectedState)) return
                     saveFuzzerCache(selectedState as PageProps)
                 }
             )
@@ -1860,7 +2162,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     }, [])
     const onInitFuzzer = useMemoizedFn(async () => {
-        if (!isEnpriTraceAgent()) {
+        if (!isEnpriTraceAgent() && !isCommunityIRify() && !isEnpriTraceIRify()) {
             // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
             if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) === -1) {
                 // 触发获取web-fuzzer的缓存
@@ -2237,7 +2539,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pageId: node.id,
             pageName: node.verbose,
             pageParamsInfo: {
-                mitmHackerPageInfo: node.pageParams?.mitmHackerPageInfo || defaultMITMHackerPageInfo
+                mitmHackerPageInfo: node.pageParams?.mitmHackerPageInfo
             },
             sortFieId: order
         }
@@ -2371,6 +2673,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     const onSaveHTTPFuzzer = useMemoizedFn(async () => {
+        if (loading) return
         const wfPageInfo = pages.get(YakitRoute.HTTPFuzzer)?.pageList || []
         const pageData: FuzzerConfig[] = getFuzzerProcessedCacheData(wfPageInfo).map((item) => ({
             PageId: item.id,
@@ -2393,9 +2696,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         JSON.stringify(historySequenceList)
                     )
                 }
+                yakitNotify("success", "保存fuzzer历史成功")
             })
             .finally(() => setTimeout(() => setLoading(false), 200))
     })
+    // webfuzzer页面触发快捷键事件
+    useEffect(() => {
+        emiter.on("onSaveHistoryDataHttpFuzzer", onSaveHTTPFuzzer)
+        return () => {
+            emiter.off("onSaveHistoryDataHttpFuzzer", onSaveHTTPFuzzer)
+        }
+    }, [])
     return (
         <Content>
             <YakitSpin spinning={loading}>
@@ -2455,7 +2766,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         }
                     >
                         <YakitSelect
-                            allowClear={true}
+                            allowClear
                             onChange={(value, option: any) => {
                                 setBugTestValue(value)
                             }}
@@ -2847,8 +3158,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const [inViewport = true] = useInViewport(tabsRef)
 
     useEffect(() => {
-        // 切换一级页面时,缓存当前选择的key
-        onSetSelectFirstMenuTabKey(currentTabKey)
         // 切换一级页面时聚焦
         const key = routeConvertKey(pageItem.route, pageItem.pluginName)
         if (currentTabKey === key) {
@@ -2864,6 +3173,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             emiter.off("switchSubMenuItem", onSelectSubMenuById)
             ipcRenderer.removeListener("fetch-add-group", onAddGroup)
         }
+    }, [currentTabKey])
+    useUpdateEffect(() => {
+        // 切换一级页面时,缓存当前选择的key
+        onSetSelectFirstMenuTabKey(currentTabKey)
     }, [currentTabKey])
 
     useEffect(() => {
@@ -2928,9 +3241,16 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }, 200)
     })
     /**快捷关闭或者新增 */
-    const onKeyDown = useMemoizedFn((e: React.KeyboardEvent, subItem: MultipleNodeInfo) => {
+    const onKeyDown = useMemoizedFn((e, subItem: MultipleNodeInfo) => {
+        const keys = convertKeyEventToKeyCombination(e)
+        if (!keys) return
+        const triggerKeys = sortKeysCombination(keys).join("")
+
+        const event = getGlobalShortcutKeyEvents()
+        const closeEvent = sortKeysCombination(event.removePage.keys).join("")
+        const openEvent = sortKeysCombination(event.addSubPage.keys).join("")
         // 快捷键关闭
-        if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
+        if (triggerKeys === closeEvent) {
             e.preventDefault()
             e.stopPropagation()
             if (pageCache.length === 0) return
@@ -2938,13 +3258,30 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             return
         }
         // 快捷键新增
-        if (e.code === "KeyT" && (e.ctrlKey || e.metaKey)) {
+        if (triggerKeys === openEvent) {
             e.preventDefault()
             e.stopPropagation()
             subTabsRef.current?.onAddSubPage()
             return
         }
     })
+
+    const onRemoveSecondPageByFocusFun = useMemoizedFn((focus: string) => {
+        if (focus === selectSubMenu.id) {
+            if (pageCache.length === 0) return
+            unregisterShortcutFocusHandle(focus)
+            subTabsRef.current?.onRemove(selectSubMenu)
+        }
+    })
+
+    // 序列导入更新菜单
+    useEffect(() => {
+        emiter.on("onRemoveSecondPageByFocus", onRemoveSecondPageByFocusFun)
+        return () => {
+            emiter.off("onRemoveSecondPageByFocus", onRemoveSecondPageByFocusFun)
+        }
+    }, [])
+
     const flatSubPage = useMemo(() => {
         const newData: MultipleNodeInfo[] = []
         subPage.forEach((ele) => {
@@ -3733,8 +4070,12 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
             onRemoveSubPage(removeItem)
         })
+
         /** 关闭当前标签页 */
-        const onRemoveSubPage = useMemoizedFn((removeItem: MultipleNodeInfo) => {
+        const onRemoveSubPageFun = useMemoizedFn((removeItem: MultipleNodeInfo) => {
+            // 固定tab的多开页面，最后一个页面不能删除
+            if (defaultFixedTabsNoSinglPageRoute.includes(pageItem.route) && subPage.length === 1) return
+
             //  先更改当前选择item,在删除
             if (removeItem.id === selectSubMenu.id) onUpdateSelectSubPage(removeItem)
             const {index, subIndex} = getPageItemById(subPage, removeItem.id)
@@ -3764,6 +4105,33 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             onUpdatePageCache([...subPage])
             onUpdateSorting(subPage, currentTabKey)
         })
+
+        /** @description 多开页面的二级页面关闭事件 */
+        const onRemoveSubPage = useMemoizedFn((removeItem: MultipleNodeInfo) => {
+            switch (pageItem.route) {
+                case YakitRoute.Codec:
+                    emiter.emit("onCloseSubPageByJudge", JSON.stringify(removeItem))
+                    break
+                default:
+                    onRemoveSubPageFun(removeItem)
+                    break
+            }
+        })
+
+        const onCloseSubPageByInfoFun = useMemoizedFn((res) => {
+            try {
+                const data: MultipleNodeInfo = JSON.parse(res)
+                if (data.id === selectSubMenu.id) {
+                    onRemoveSubPageFun(data)
+                }
+            } catch (error) {}
+        })
+        useEffect(() => {
+            emiter.on("onCloseSubPageByInfo", onCloseSubPageByInfoFun)
+            return () => {
+                emiter.off("onCloseSubPageByInfo", onCloseSubPageByInfoFun)
+            }
+        }, [])
         /**
          * @description 页面节点的右键点击事件
          */
@@ -3964,7 +4332,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 content: (
                     <BatchAddNewGroup
                         initialValues={{
-                            groupName: '',
+                            groupName: "",
                             tabIds: [item.id]
                         }}
                         allGroup={collectGroupsWithChildren(cloneDeep(subPage))}
@@ -4308,6 +4676,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                             case "closeOtherTabs":
                                 onCloseOtherTabs(group)
                                 break
+                            case "editGroup":
+                                onEditGroup(group)
+                                break
+
                             default:
                                 break
                         }
@@ -4319,6 +4691,74 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 true
             )
         })
+        /**编辑组合 */
+        const onEditGroup = useMemoizedFn((group: MultipleNodeInfo) => {
+            const groupChildren = (group.groupChildren || []).map((ele) => ({
+                ...ele,
+                pageParams: undefined
+            }))
+            const m = showYakitModal({
+                title: "编辑组",
+                footer: null,
+                content: (
+                    <BatchEditGroup
+                        groupName={group.verbose}
+                        groupChildren={groupChildren}
+                        tabList={collectLeafNodes(subPage)}
+                        onFinish={(l) =>
+                            onEditGroupSave(group, l, () => {
+                                m.destroy()
+                            })
+                        }
+                        onCancel={() => {
+                            m.destroy()
+                        }}
+                    ></BatchEditGroup>
+                )
+            })
+        })
+
+        const onEditGroupSave = useMemoizedFn(
+            (group: MultipleNodeInfo, list: MultipleNodeInfo[], callback: () => void) => {
+                const {index} = getPageItemById(subPage, group.id)
+                if (index === -1) return
+                let newSubPage: MultipleNodeInfo[] = []
+                if (list.length === 0) {
+                    // 清空该组,页面游离
+                    newSubPage = subPage.filter((ele) => ele.id !== group.id)
+                    newSubPage.splice(index, 0, ...(group.groupChildren || []))
+                } else {
+                    const ids = list.map((ele) => ele.id)
+                    const length = subPage.length
+                    for (let i = 0; i < length; i++) {
+                        let current: MultipleNodeInfo = subPage[i]
+                        if (current.id === group.id) {
+                            current = {
+                                ...current,
+                                groupChildren: list
+                            }
+                            const deletedItems = getDeletedItems(group.groupChildren || [], list).reverse()
+                            newSubPage.push(current)
+                            newSubPage.splice(newSubPage.length, 0, ...(deletedItems || []))
+                            continue
+                        }
+                        if (ids.includes(current.id)) continue
+                        let groupChildren: MultipleNodeInfo[] = []
+                        const childrenLength = current.groupChildren?.length || 0
+                        if (childrenLength) {
+                            groupChildren = current.groupChildren?.filter((ele) => !ids.includes(ele.id)) || []
+                        }
+
+                        if (childrenLength && groupChildren.length === 0) continue
+                        current.groupChildren = groupChildren
+                        newSubPage.push(current)
+                    }
+                }
+                onUpdatePageCache(newSubPage)
+                onUpdateSorting(newSubPage, currentTabKey)
+                callback()
+            }
+        )
         /**@description 取消组/将组内的页面变成游离的状态 */
         const onCancelGroup = useMemoizedFn((groupItem: MultipleNodeInfo) => {
             const index = subPage.findIndex((ele) => ele.id === groupItem.id)
@@ -5062,6 +5502,26 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
         setGroup({...group})
         onUpdateGroup({...group})
     })
+    const menu = useCreation(() => {
+        return [
+            {
+                label: "取消组合",
+                key: "cancelGroup"
+            },
+            {
+                label: "关闭组",
+                key: "closeGroup"
+            },
+            {
+                label: "关闭其他标签页",
+                key: "closeOtherTabs"
+            },
+            {
+                label: "编辑组合",
+                key: "editGroup"
+            }
+        ]
+    }, [])
 
     return (
         <div
@@ -5100,7 +5560,9 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
                             }}
                             key={color}
                         >
-                            {group.color === color && <CheckIcon className={styles["check-icon"]} />}
+                            {group.color === color && (
+                                <CheckIcon className={classNames(styles["check-icon"], `color-text-${color}`)} />
+                            )}
                         </div>
                     ))}
                 </div>
@@ -5108,20 +5570,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
             <YakitMenu
                 type='grey'
                 width={232}
-                data={[
-                    {
-                        label: "取消组合",
-                        key: "cancelGroup"
-                    },
-                    {
-                        label: "关闭组",
-                        key: "closeGroup"
-                    },
-                    {
-                        label: "关闭其他标签页",
-                        key: "closeOtherTabs"
-                    }
-                ]}
+                data={menu}
                 onClick={({key}) => {
                     onOperateGroup(key as OperateGroup, group)
                 }}
@@ -5225,7 +5674,7 @@ const judgeDataIsFuncOrSettingForConfirm = async (
 }
 
 // 多开页面的一级页面关闭的确认弹窗
-const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?: React.MutableRefObject<boolean>) => {
+const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?: React.MutableRefObject<boolean>, route?: YakitRoute) => {
     if (visibleRef) visibleRef.current = true
     let m = YakitModalConfirm({
         width: 420,
@@ -5234,24 +5683,37 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?
         onOkText: "保存",
         keyboard: false,
         zIndex: 1010,
+        onCloseX: () => {
+            m.destroy()
+        },
+        footerStyle: {padding: "0 24px 24px"},
+        footer: undefined,
         ...(props || {}),
         onOk: () => {
+            if (visibleRef) {
+                visibleRef.current = false
+            }
+            if(route){
+                keepSearchNameMapStore.removeKeepSearchRouteNameMap(route)
+            }
             if (props?.onOk) {
                 props.onOk(m)
             } else {
                 m.destroy()
             }
-            if (visibleRef) visibleRef.current = false
         },
         onCancel: () => {
+            if (visibleRef) {
+                visibleRef.current = false
+            }
             if (props?.onCancel) {
                 props?.onCancel(m)
             } else {
                 m.destroy()
             }
-            if (visibleRef) visibleRef.current = false
         },
         content: props?.content
     })
+    props?.getModal?.(m)
     return m
 }

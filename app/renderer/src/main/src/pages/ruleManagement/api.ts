@@ -5,6 +5,7 @@ import {
     CreateSyntaxFlowRuleRequest,
     DeleteSyntaxFlowRuleGroupRequest,
     DeleteSyntaxFlowRuleRequest,
+    DownloadSyntaxFlowRuleRequest,
     QuerySyntaxFlowRuleGroupRequest,
     QuerySyntaxFlowRuleGroupResponse,
     QuerySyntaxFlowRuleRequest,
@@ -12,10 +13,13 @@ import {
     QuerySyntaxFlowSameGroupRequest,
     QuerySyntaxFlowSameGroupResponse,
     SyntaxFlowRule,
+    SyntaxFlowRuleToOnlineRequest,
     UpdateSyntaxFlowRuleAndGroupRequest,
     UpdateSyntaxFlowRuleGroupRequest,
     UpdateSyntaxFlowRuleRequest
 } from "./RuleManagementType"
+import {NetWorkApi} from "@/services/fetch"
+import {API} from "@/services/swagger/resposeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -162,6 +166,102 @@ export const grpcFetchRulesForSameGroup: APIFunc<QuerySyntaxFlowSameGroupRequest
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "查询规则所属于组交集失败:" + e)
                 reject(e)
+            })
+    })
+}
+
+/** @name 规则上传 */
+export const grpcSyntaxFlowRuleToOnline: (params: SyntaxFlowRuleToOnlineRequest, token: string) => Promise<unknown> = (
+    request,
+    token
+) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("SyntaxFlowRuleToOnline", request, token)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify("error", "规则上传失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 规则下载 */
+export const grpcDownloadSyntaxFlowRule: (params: DownloadSyntaxFlowRuleRequest, token: string) => Promise<unknown> = (
+    request,
+    token
+) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("DownloadSyntaxFlowRule", request, token)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify("error", "规则下载失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 获取线上规则组列表数据 */
+export const httpFetchOnlineRuleGroupList: APIFunc<API.FlowRuleGroupRequest, API.FlowRuleGroupResponse> = (request) => {
+    return new Promise((resolve, reject) => {
+        NetWorkApi<API.FlowRuleGroupRequest, API.FlowRuleGroupResponse>({
+            method: "post",
+            url: "flow/rule/group",
+            data: request
+        })
+            .then(resolve)
+            .catch((err) => {
+                reject(err)
+                yakitNotify("error", "获取线上规则组失败：" + err)
+            })
+    })
+}
+
+/** @name 删除线上规则组 */
+export const httpDeleteOnlineRuleGroup: APIFunc<API.FlowRuleGroupWhere, API.ActionSucceeded> = (request) => {
+    return new Promise(async (resolve, reject) => {
+        NetWorkApi<API.FlowRuleGroupWhere, API.ActionSucceeded>({
+            method: "delete",
+            url: "flow/rule/group",
+            data: request
+        })
+            .then(resolve)
+            .catch((err) => {
+                reject(err)
+                yakitNotify("error", "线上规则组删除失败：" + err)
+            })
+    })
+}
+
+/** @name 获取线上规则列表数据 */
+export const httpFetchOnlineRuleList: APIFunc<API.FlowRuleRequest, API.FlowRuleResponse> = (request) => {
+    return new Promise(async (resolve, reject) => {
+        NetWorkApi<API.FlowRuleRequest, API.FlowRuleResponse>({
+            method: "post",
+            url: "flow/rule",
+            data: request
+        })
+            .then(resolve)
+            .catch((err) => {
+                reject(err)
+                yakitNotify("error", "查询线上规则组失败:" + err)
+            })
+    })
+}
+
+/** @name 线上删除本地规则 */
+export const httpDeleteOnlineRule: APIFunc<API.FlowRuleRequest, API.ActionSucceeded> = (request) => {
+    return new Promise(async (resolve, reject) => {
+        NetWorkApi<API.FlowRuleRequest, API.ActionSucceeded>({
+            method: "delete",
+            url: "flow/rule",
+            data: request
+        })
+            .then(resolve)
+            .catch((err) => {
+                reject(err)
+                yakitNotify("error", "删除线上规则失败:" + err)
             })
     })
 }

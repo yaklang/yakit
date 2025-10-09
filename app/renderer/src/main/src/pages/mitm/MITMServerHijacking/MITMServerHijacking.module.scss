@@ -16,7 +16,7 @@
                 font-weight: 600;
                 font-size: 16px;
                 line-height: 24px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 word-break: keep-all;
                 white-space: nowrap;
             }
@@ -25,14 +25,14 @@
                 font-size: 12px;
                 line-height: 16px;
                 margin-left: 16px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
             }
         }
         .mitm-server-extra {
             display: flex;
             align-items: center;
             .mitm-server-links {
-                color: var(--yakit-primary-5);
+                color: var(--Colors-Use-Main-Primary);
                 font-size: 12px;
                 margin-right: 8px;
                 display: flex;
@@ -44,11 +44,11 @@
                     padding: 4px 8px;
                     border-radius: 4px;
                     &:hover {
-                        color: var(--yakit-primary-4);
-                        background-color: var(--yakit-background-color);
+                        color: var(--Colors-Use-Main-Hover);
+                        background-color: var(--Colors-Use-Neutral-Bg);
                     }
                     &:active {
-                        color: var(--yakit-primary-6);
+                        color: var(--Colors-Use-Main-Pressed);
                     }
                 }
             }
@@ -62,7 +62,7 @@
             }
             .mitm-server-quit-icon {
                 margin-left: 16px;
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
                 display: flex;
                 align-items: center;
             }
@@ -84,7 +84,7 @@
         .mitm-hijacked-heard-left {
             display: flex;
             align-items: center;
-            margin-right: 8px;
+            margin-right: 5px;
         }
         .mitm-hijacked-heard-right {
             display: flex;
@@ -97,7 +97,7 @@
 .expand-icon {
     display: inline-flex;
     align-items: center;
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     cursor: pointer;
     margin-left: 8px;
     svg {
@@ -105,10 +105,10 @@
         height: 16px;
     }
     &:hover {
-        color: var(--yakit-primary-4);
+        color: var(--Colors-Use-Main-Hover);
     }
     &:active {
-        color: var(--yakit-primary-6);
+        color: var(--Colors-Use-Main-Pressed);
     }
 }
 .autoForward-manual {
@@ -140,7 +140,7 @@
                 font-weight: 500;
                 font-size: 12px;
                 line-height: 24px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
                 user-select: none;
                 margin-right: 4px;
                 width: max-content;
@@ -160,14 +160,14 @@
     .manual-url-info {
         font-size: 11px;
         line-height: 16px;
-        color: var(--yakit-body-text-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .manual-ip-info {
         display: inline-flex;
         font-weight: 400;
         font-size: 11px;
         line-height: 16px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         align-items: center;
     }
 
@@ -186,12 +186,23 @@
     &-left {
         display: flex;
         align-items: center;
-        gap: 8px;
     }
     &-right {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 5px;
+        .advancedSearch {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 2px;
+            .check-icon {
+                svg {
+                    width: 14px;
+                    height: 14px;
+                }
+            }
+        }
     }
 }
 
@@ -201,10 +212,10 @@
     position: relative;
     flex: 1;
     .body-length-text-red {
-        color: var(--yakit-danger-4);
+        color: var(--Colors-Use-Error-Border);
     }
     .status-code {
-        color: var(--yakit-success-4);
+        color: var(--Colors-Use-Success-Hover);
     }
     .action-btn-group {
         height: 16px;
@@ -215,14 +226,14 @@
 
         .divider-style {
             height: 100%;
-            border-left: 1px solid var(--yakit-border-color);
+            border-left: 1px solid var(--Colors-Use-Neutral-Border);
         }
 
         .icon-style {
-            color: var(--yakit-body-text-color);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
         }
         .icon-style:hover {
-            color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
         }
     }
 }
@@ -277,18 +288,18 @@
                 font-weight: 400;
                 font-size: 12px;
                 line-height: 16px;
-                color: var(--yakit-helper-text-color);
+                color: var(--Colors-Use-Neutral-Disable);
                 span {
-                    color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
             .plugin-loaded-list-heard-empty {
                 font-size: 12px;
-                color: var(--yakit-danger-5);
+                color: var(--Colors-Use-Error-Primary);
                 cursor: pointer;
                 padding-right: 6px;
                 &:hover {
-                    color: var(--yakit-danger-4);
+                    color: var(--Colors-Use-Error-Border);
                 }
                 &:active {
                     color: var(--yakit-danger-6);
@@ -308,8 +319,8 @@
         .mitm-hijack-tab {
             width: 24px;
             height: 100%;
-            border-right: 1px solid var(--yakit-border-color);
-            background: #f0f1f3;
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Neutral-Bg-Hover);
             &-item {
                 padding: 12px 4px;
                 cursor: pointer;
@@ -320,19 +331,19 @@
 
                 text-orientation: sideways-right;
                 writing-mode: vertical-rl;
-                border-top: 1px solid #fff;
+                border-top: 1px solid var(--Colors-Use-Neutral-Border);
                 &:hover {
-                    background: rgba(204, 210, 222, 0.5);
+                    background: var(--Colors-Use-Neutral-Bg-Hover)
                 }
                 &-active {
-                    color: #ffffff;
-                    background-color: var(--yakit-primary-5);
+                    color: var(--Colors-Use-Main-On-Primary);
+                    background-color: var(--Colors-Use-Main-Primary);
                     &:hover {
-                        background-color: var(--yakit-primary-4);
+                        background-color: var(--Colors-Use-Main-Hover);
                     }
                 }
                 &-unshowCont {
-                    background-color: var(--yakit-primary-3);
+                    background-color: var(--Colors-Use-Main-Border);
                 }
             }
         }
@@ -341,6 +352,8 @@
             width: 100%;
             height: 100%;
             padding-left: 15px;
+            display: flex;
+            flex-direction: column;
         }
     }
 }
@@ -356,11 +369,17 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    .engineConsole-icon-style {
+        svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
 }
 
 .hot-patch-code {
     margin-top: 12px;
-    border: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px;
     flex: 1;
     display: flex;
@@ -371,7 +390,7 @@
         align-items: center;
         justify-content: space-between;
         font-size: 12px;
-        color: var(--yakit-header-color);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
         padding: 6px 8px;
     }
     .hot-patch-code-editor {
@@ -400,8 +419,8 @@
     overflow: hidden;
     :global {
         .ant-timeline-item-head-blue {
-            color: var(--yakit-primary-5);
-            border-color: var(--yakit-primary-5);
+            color: var(--Colors-Use-Main-Primary);
+            border-color: var(--Colors-Use-Main-Primary);
         }
     }
 }
@@ -409,14 +428,14 @@
 .mitm-alert-msg {
     line-height: 25px;
     margin-bottom: 12px;
-    background-color: #fffbe6;
-    border: 1px solid #ffe58f;
+    background-color: var(--Colors-Use-Yellow-Bg);
+    border: 1px solid var(--Colors-Use-Yellow-Border);
     padding: 8px 15px;
     border-radius: 2px;
     .circle-icon {
         position: relative;
         top: 1px;
-        color: var(--yakit-helper-text-color);
+        color: var(--Colors-Use-Neutral-Disable);
         svg {
             width: 16px;
             height: 16px;
@@ -436,7 +455,7 @@
 }
 
 .agent-down-stream-proxy {
-    color: var(--yakit-primary-5);
+    color: var(--Colors-Use-Main-Primary);
     display: inline-flex;
     cursor: pointer;
 }
@@ -453,7 +472,7 @@
         width: 200px;
         padding: 10px;
         .search-icon {
-            color: #85899e;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
             svg {
                 height: 12px;
                 width: 12px;
@@ -498,12 +517,12 @@
                 }
                 &-active {
                     .process-item-label {
-                        color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Main-Primary);
                     }
                 }
                 .check-icon {
                     svg {
-                        color: var(--yakit-primary-5);
+                        color: var(--Colors-Use-Main-Primary);
                     }
                 }
             }
@@ -513,6 +532,9 @@
 
 .mitm-hijacked-heard-tab {
     :global {
+        .ant-radio-button-wrapper {
+            padding: 0 5px;
+        }
         .ant-radio-button-wrapper:nth-child(2) {
             padding: 0 2px;
         }
@@ -528,13 +550,13 @@
 }
 
 .unconfiguredIcon {
-    color: var(--yakit-body-text-color);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     svg {
         width: 16px;
         height: 16px;
     }
     &:hover {
-        color: var(--yakit-primary-5);
+        color: var(--Colors-Use-Main-Primary);
     }
 }
 
@@ -553,7 +575,7 @@
                 font-weight: 500;
                 font-size: 12px;
                 line-height: 24px;
-                color: var(--yakit-header-color);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
             }
         }
     }

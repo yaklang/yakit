@@ -5,7 +5,9 @@ import {
     ManualHijackInfoRefProps,
     MITMManualProps,
     MITMV2ManualEditorProps,
-    PackageTypeProps
+    PackageTypeProps,
+    RenderAndHexTypeOptions,
+    RenderAndHexTypeOptionVal
 } from "./MITMManualType"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {
@@ -19,7 +21,9 @@ import {
     useControllableValue,
     useCounter,
     useCreation,
+    useGetState,
     useInterval,
+    useInViewport,
     useMap,
     useMemoizedFn,
     useUpdateEffect
@@ -33,11 +37,10 @@ import {
 } from "@/defaultConstants/mitmV2"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {availableColors, onSendToTab} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import classNames from "classnames"
 import styles from "./MITMManual.module.scss"
-import {convertKeyboard} from "@/components/yakitUI/YakitEditor/editorUtils"
 import {SystemInfo} from "@/constants/hardware"
 import {
     grpcMITMSetColor,
@@ -69,6 +72,18 @@ import {setClipboardText} from "@/utils/clipboard"
 import {OutlineArrowleftIcon, OutlineArrowrightIcon, OutlineLoadingIcon} from "@/assets/icon/outline"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
+import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
+import {
+    getGlobalShortcutKeyEvents,
+    GlobalShortcutKey,
+    ShortcutKeyFocusType
+} from "@/utils/globalShortcutKey/events/global"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "@/utils/prettifyPacket"
+import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import {YakitKeyBoard, YakitKeyMod} from "@/utils/globalShortcutKey/keyboard"
+import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
     forwardRef((props, ref) => {
@@ -82,9 +97,11 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             hijackFilterFlag,
             setAutoForward
         } = props
+        const {t, i18n} = useI18nNamespaces(["history"])
         const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
-        const [currentSelectItem, setCurrentSelectItem] = useState<SingleManualHijackInfoMessage>()
+        const [currentSelectItem, setCurrentSelectItem, getCurrentSelectItem] =
+            useGetState<SingleManualHijackInfoMessage>()
         const [editorShowIndex, setEditorShowIndexShowIndex] = useState<number>(0) // request 编辑器中显示的index
         const [scrollToIndex, setScrollToIndex] = useState<number>()
 
@@ -335,10 +352,10 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                                 <div className={styles["context-menu-keybind-wrapper"]}>
                                     <div className={styles["content-style"]}>发送并跳转</div>
                                     <div className={classNames(styles["keybind-style"], "keys-style")}>
-                                        {convertKeyboard(SystemInfo.system || "Darwin", [
-                                            YakitEditorKeyCode.Control,
-                                            YakitEditorKeyCode.KEY_R
-                                        ])}
+                                        {convertKeyboardToUIKey(
+                                            getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer]
+                                                .keys
+                                        )}
                                     </div>
                                 </div>
                             )
@@ -349,11 +366,9 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                                 <div className={styles["context-menu-keybind-wrapper"]}>
                                     <div className={styles["content-style"]}>仅发送</div>
                                     <div className={classNames(styles["keybind-style"], "keys-style")}>
-                                        {convertKeyboard(SystemInfo.system || "Darwin", [
-                                            YakitEditorKeyCode.Control,
-                                            YakitEditorKeyCode.Shift,
-                                            YakitEditorKeyCode.KEY_R
-                                        ])}
+                                        {convertKeyboardToUIKey(
+                                            getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys
+                                        )}
                                     </div>
                                 </div>
                             )
@@ -366,7 +381,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                     children: availableColors.map((i) => {
                         return {
                             key: i.title,
-                            label: i.render
+                            label: i.render(t)
                         }
                     })
                 },
@@ -382,6 +397,22 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                 menu = menu.filter((item) => ["copy-url", "send-webFuzzer"].includes(item.key))
             }
             return menu
+        })
+
+        const mitmV2ManualTableRef = useRef<HTMLDivElement>(null)
+        const [inViewport] = useInViewport(mitmV2ManualTableRef)
+        useShortcutKeyTrigger("sendAndJump*common", (focus) => {
+            let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+            if (inViewport && !item) {
+                onSendToTab(getCurrentSelectItem(), true, downstreamProxyStr)
+            }
+        })
+
+        useShortcutKeyTrigger("send*common", (focus) => {
+            let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+            if (inViewport && !item) {
+                onSendToTab(getCurrentSelectItem(), false, downstreamProxyStr)
+            }
         })
 
         const onRowContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
@@ -661,30 +692,32 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             <YakitResizeBox
                 firstMinSize={70}
                 firstNode={
-                    <TableVirtualResize<SingleManualHijackInfoMessage>
-                        isRefresh={isRefresh}
-                        isShowTitle={false}
-                        data={data}
-                        renderKey='TaskID'
-                        pagination={{
-                            page: 1,
-                            limit: 50,
-                            total: data.length,
-                            onChange: () => {}
-                        }}
-                        columns={columns}
-                        onSetCurrentRow={onSetCurrentRow}
-                        currentSelectItem={currentSelectItem}
-                        onRowContextMenu={onRowContextMenu}
-                        scrollToIndex={scrollToIndex}
-                        rowSelection={{
-                            isAll: allSelected,
-                            type: "checkbox",
-                            selectedRowKeys,
-                            onSelectAll,
-                            onChangeCheckboxSingle
-                        }}
-                    />
+                    <div className={styles["mitm-v2-manual-table-wrapper"]} ref={mitmV2ManualTableRef}>
+                        <TableVirtualResize<SingleManualHijackInfoMessage>
+                            isRefresh={isRefresh}
+                            isShowTitle={false}
+                            data={data}
+                            renderKey='TaskID'
+                            pagination={{
+                                page: 1,
+                                limit: 50,
+                                total: data.length,
+                                onChange: () => {}
+                            }}
+                            columns={columns}
+                            onSetCurrentRow={onSetCurrentRow}
+                            currentSelectItem={currentSelectItem}
+                            onRowContextMenu={onRowContextMenu}
+                            scrollToIndex={scrollToIndex}
+                            rowSelection={{
+                                isAll: allSelected,
+                                type: "checkbox",
+                                selectedRowKeys,
+                                onSelectAll,
+                                onChangeCheckboxSingle
+                            }}
+                        />
+                    </div>
                 }
                 isVer={true}
                 freeze={!onlyShowFirstNode}
@@ -719,7 +752,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                     )
                 }}
                 {...ResizeBoxProps}
-            ></YakitResizeBox>
+            />
         )
     })
 )
@@ -747,7 +780,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 TotalDurationMs: 0
             }
         })
-        const [requestTypeOptionVal, setRequestTypeOptionVal] = useState<RenderTypeOptionVal>()
         // response
         const [currentResponsePacketInfo, setCurrentResponsePacketInfo] = useState<CurrentPacketInfoProps>({
             requestPacket: "",
@@ -762,7 +794,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 TotalDurationMs: 0
             }
         })
-        const [responseTypeOptionVal, setResponseTypeOptionVal] = useState<RenderTypeOptionVal>()
 
         const [type, setType] = useState<PackageTypeProps>("response")
 
@@ -777,12 +808,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             []
         )
         useEffect(() => {
-            // Request
-            getRequestEditorBeautify()
-            // Response
-            getResponseEditorBeautify()
-        }, [])
-        useEffect(() => {
             if (info.IsWebsocket) {
                 // WS Request
                 onSetRequest(info)
@@ -796,22 +821,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         useEffect(() => {
             if (isOnlyLookResponse) setType("response")
         }, [isOnlyLookResponse])
-        /**TODO - Request 美化缓存 */
-        const getRequestEditorBeautify = useMemoizedFn(() => {
-            // getRemoteValue(RemoteGV.MITMManualHijackRequestEditorBeautify).then((res) => {
-            //     if (!!res) {
-            //         setRequestTypeOptionVal(res)
-            //     }
-            // })
-        })
-        /**TODO - Response 美化缓存 */
-        const getResponseEditorBeautify = useMemoizedFn(() => {
-            // getRemoteValue(RemoteGV.MITMManualHijackResponseEditorBeautify).then((res) => {
-            //     if (!!res) {
-            //         setResponseTypeOptionVal(res)
-            //     }
-            // })
-        })
         const onSetRequest = useMemoizedFn((info: SingleManualHijackInfoMessage) => {
             const currentRequestPacket = !!info?.IsWebsocket
                 ? Uint8ArrayToString(info.Payload)
@@ -1034,17 +1043,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             }
         }, [type, disabledRequest, disabledResponse])
 
-        const typeOptionVal = useCreation(() => {
-            switch (type) {
-                case PackageType.Request:
-                case PackageType.WS:
-                    return requestTypeOptionVal
-                case PackageType.Response:
-                    return responseTypeOptionVal
-                default:
-                    return "render"
-            }
-        }, [type, requestTypeOptionVal, responseTypeOptionVal])
         const isResponse = useCreation(() => {
             return type === "response"
         }, [type])
@@ -1091,8 +1089,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                             currentPacketInfo={currentPacketInfo}
                             disabled={disabled}
                             handleAutoForward={handleAutoForward}
-                            typeOptionVal={typeOptionVal}
-                            onTypeOptionVal={onTypeOptionVal}
                             onHijackingResponse={onHijackingResponse}
                             isResponse={isResponse}
                             isOnlyLookResponse={true}
@@ -1115,8 +1111,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                                     currentPacketInfo={currentRequestPacketInfo}
                                     disabled={disabledRequest}
                                     handleAutoForward={handleAutoForward}
-                                    typeOptionVal={requestTypeOptionVal}
-                                    onTypeOptionVal={onRequestTypeOptionVal}
                                     onHijackingResponse={onHijackingResponse}
                                 />
                             </div>
@@ -1135,8 +1129,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                                         currentPacketInfo={currentResponsePacketInfo}
                                         disabled={disabledResponse}
                                         handleAutoForward={handleAutoForward}
-                                        typeOptionVal={responseTypeOptionVal}
-                                        onTypeOptionVal={onResponseTypeOptionVal}
                                         onHijackingResponse={onHijackingResponse}
                                     />
                                 </div>
@@ -1164,8 +1156,6 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         handleAutoForward,
         onHijackingResponse,
         isResponse,
-        typeOptionVal,
-        onTypeOptionVal,
         isOnlyLookResponse
     } = props
     const {currentPacket, requestPacket} = currentPacketInfo
@@ -1193,11 +1183,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
             {
                 key: "trigger-auto-hijacked",
                 label: "切换为自动劫持模式",
-                keybindings: [
-                    YakitEditorKeyCode.Shift,
-                    SystemInfo.system === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                    YakitEditorKeyCode.KEY_T
-                ]
+                keybindings: YakEditorOptionShortcutKey.TriggerAutoHijacked
             },
             {
                 key: "submit-data",
@@ -1249,19 +1235,86 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     const btnDisable = useCreation(() => {
         return info.Status === ManualHijackListStatus.WaitHijack
     }, [info])
+
+    // #region 美化、渲染、hex
+    const [renderAndHexTypeOptions, setRenderAndHexTypeOptions] = useState<RenderAndHexTypeOptions[]>([])
+    const [renderAndHexTag, setRenderAndHexTag] = useState<RenderAndHexTypeOptionVal>()
+    const [renderHtml, setRenderHtml] = useState<React.ReactNode>()
+    const updateRender = useMemoizedFn(() => {
+        setRenderAndHexTypeOptions([
+            {
+                value: "hex",
+                label: "HEX"
+            }
+        ])
+        setRenderAndHexTag(undefined)
+        setRenderHtml(undefined)
+        if (modifiedPacket) {
+            if (isResponse) {
+                formatPacketRender(StringToUint8Array(modifiedPacket), (packet) => {
+                    if (packet) {
+                        setRenderAndHexTypeOptions([
+                            {
+                                value: "hex",
+                                label: "HEX"
+                            },
+                            {
+                                value: "render",
+                                label: "渲染"
+                            }
+                        ])
+                    }
+                })
+            }
+        }
+    })
+    useEffect(() => {
+        updateRender()
+    }, [currentPacket])
+    const onSetBeautify = useMemoizedFn(() => {
+        setRenderAndHexTag(undefined)
+        setRenderHtml(undefined)
+        if (modifiedPacket === "") {
+            return
+        }
+        const encoder = new TextEncoder()
+        const bytes = encoder.encode(modifiedPacket)
+        const mb = bytes.length / 1024 / 1024
+        if (mb > 0.5) {
+            return
+        } else {
+            prettifyPacketCode(modifiedPacket).then((res) => {
+                if (!!res) {
+                    setModifiedPacket(Uint8ArrayToString(res as Uint8Array))
+                    setRefreshTrigger((prev) => !prev)
+                }
+            })
+        }
+    })
+    const onSetRenderHTML = useMemoizedFn(async () => {
+        let renderValue = await prettifyPacketRender(StringToUint8Array(modifiedPacket))
+        setRenderHtml(
+            <iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} sandbox='' />
+        )
+    })
+    useEffect(() => {
+        if (renderAndHexTag === "render") {
+            onSetRenderHTML()
+        } else {
+            setRenderHtml(undefined)
+        }
+    }, [renderAndHexTag])
+    // #endregion
+
     return (
         <NewHTTPPacketEditor
             noMinimap={!isResponse}
-            noHex={true}
             noHeader={false}
-            hideSearch={true}
-            isShowBeautifyRender={true}
             noPacketModifier={true}
             readOnly={disabled}
             isResponse={isResponse}
             titleStyle={{overflow: "hidden"}}
-            // typeOptionVal={typeOptionVal}
-            // onTypeOptionVal={(v) => onTypeOptionVal && onTypeOptionVal(v)}
+            isShowBeautifyRender={false}
             title={
                 isOnlyLookResponse ? (
                     <div className={styles["mitm-v2-manual-editor-title"]}>
@@ -1347,37 +1400,65 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                 )
             }
             extra={
-                !disabled && (
-                    <div className={styles["mitm-v2-manual-editor-btn"]}>
-                        {!isResponse && !info.IsWebsocket && (
-                            <YakitButton
-                                disabled={btnDisable}
-                                type='outline1'
-                                size='small'
-                                onClick={onHijackCurrentResponse}
-                            >
-                                劫持响应
-                            </YakitButton>
+                <div className={styles["mitm-v2-manual-editor-btn"]}>
+                    <>
+                        {!disabled && (
+                            <>
+                                {!isResponse && !info.IsWebsocket && (
+                                    <YakitButton
+                                        disabled={btnDisable}
+                                        type='outline1'
+                                        size='small'
+                                        onClick={onHijackCurrentResponse}
+                                    >
+                                        劫持响应
+                                    </YakitButton>
+                                )}
+                                <YakitButton
+                                    disabled={btnDisable}
+                                    type='outline1'
+                                    size='small'
+                                    onClick={() => onDiscardData && onDiscardData(info)}
+                                >
+                                    丢弃
+                                </YakitButton>
+                                <YakitButton
+                                    disabled={btnDisable}
+                                    type='primary'
+                                    size='small'
+                                    onClick={() => onSubmitData && onSubmitData(info)}
+                                >
+                                    放行
+                                </YakitButton>
+                            </>
                         )}
-                        <YakitButton
-                            disabled={btnDisable}
-                            type='outline1'
-                            size='small'
-                            onClick={() => onDiscardData && onDiscardData(info)}
-                        >
-                            丢弃
-                        </YakitButton>
-                        <YakitButton
-                            disabled={btnDisable}
-                            type='primary'
-                            size='small'
-                            onClick={() => onSubmitData && onSubmitData(info)}
-                        >
-                            放行
-                        </YakitButton>
-                    </div>
-                )
+                        <>
+                            <YakitButton type='primary' size='small' onClick={onSetBeautify}>
+                                美化
+                            </YakitButton>
+                            <div>
+                                {renderAndHexTypeOptions.map((item) => (
+                                    <YakitCheckableTag
+                                        key={item.value}
+                                        checked={renderAndHexTag === item.value}
+                                        onChange={(checked) => {
+                                            if (checked) {
+                                                setRenderAndHexTag(item.value as RenderAndHexTypeOptionVal)
+                                            } else {
+                                                setRenderAndHexTag(undefined)
+                                            }
+                                        }}
+                                    >
+                                        {item.label}
+                                    </YakitCheckableTag>
+                                ))}
+                            </div>
+                        </>
+                    </>
+                </div>
             }
+            noShowHex={renderAndHexTag != "hex"}
+            renderHtml={renderHtml}
             defaultHttps={info.IsHttps}
             url={info.URL}
             originValue={modifiedPacket}

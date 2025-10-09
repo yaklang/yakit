@@ -59,6 +59,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {setClipboardText} from "@/utils/clipboard"
 import yaml from "js-yaml"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
@@ -71,6 +72,7 @@ export interface PluginEditorRefProps {
     setNewPlugin: (value: AddYakitScriptPageInfoProps) => void
     onCheckUnSaved: () => Promise<boolean>
     onSaveAndExit: (onEnd?: (flag?: ModifyPluginCallback) => void) => void
+    onBtnLocalSave: () => void
 }
 
 export interface ModifyPluginCallback {
@@ -106,7 +108,8 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 setEditPlugin: handleFetchPluginDetail,
                 setNewPlugin: handleNewPluginInitValue,
                 onCheckUnSaved: handleCheckUnSaved,
-                onSaveAndExit: onHintLocalSaveAndExit
+                onSaveAndExit: onHintLocalSaveAndExit,
+                onBtnLocalSave: onBtnLocalSave
             }),
             []
         )
@@ -264,12 +267,11 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 }
             } catch (e) {}
             const codeObjectInfo = codeObject?.info || {}
-            const scriptName = codeObjectInfo?.name || ""
-            setInitBaseInfo({
-                ...initBaseInfo,
-                ScriptName: scriptName.slice(0, 100),
-                Help: codeObjectInfo?.description || ""
-            } as YakitPluginBaseInfo)
+            const scriptName = (codeObjectInfo?.name || "").slice(0, 100)
+            if (baseInfoRef.current) {
+                baseInfoRef.current.setNameForm(scriptName)
+                baseInfoRef.current.setHelpForm(codeObjectInfo?.description || "")
+            }
         })
 
         // 检查退出时是否有未保存的情况(暂时只能给编辑使用)
@@ -373,38 +375,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             {wait: 300}
         ).run
 
-        // 获取操作系统
-        const system = useRef<YakitSystem>("Windows_NT")
-        const handleFetchSystem = useMemoizedFn(async () => {
-            const systemName: YakitSystem = await ipcRenderer.invoke("fetch-system-name")
-            system.current = systemName
-        })
-        // 注册保存快捷键
         const wrapperRef = useRef<HTMLDivElement>(null)
-        useEffect(() => {
-            handleFetchSystem()
-            const onKeydownSave = (e: KeyboardEvent) => {
-                const {code, ctrlKey, metaKey} = e
-                if (system.current === "Darwin") {
-                    if (code === "KeyS" && metaKey) {
-                        onBtnLocalSave()
-                    }
-                } else {
-                    if (code === "KeyS" && ctrlKey) {
-                        onBtnLocalSave()
-                    }
-                }
-            }
-
-            if (wrapperRef.current) {
-                wrapperRef.current.addEventListener("keydown", onKeydownSave)
-            }
-            return () => {
-                if (wrapperRef.current) {
-                    wrapperRef.current.removeEventListener("keydown", onKeydownSave)
-                }
-            }
-        }, [])
         /** ---------- 全局基础逻辑 End ---------- */
 
         // 插件基础信息组件 ref
@@ -610,7 +581,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     } else {
                         emiter.emit("editorLocalNewToLocalList", JSON.stringify(info))
                         try {
-                            if (modalRef.current) modalRef.current.destroy()
+                            destroySaveModal()
                         } catch (error) {}
                         if (modalTypeRef.current === "reset") {
                             onReset()
@@ -884,6 +855,12 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
         const modalRef = useRef<any>(null)
         // 二次提示框的操作类型
         const modalTypeRef = useRef<string>("close")
+        const destroySaveModal = useMemoizedFn(() => {
+            if (modalRef.current) {
+                modalRef.current.destroy()
+                modalRef.current = null
+            }
+        })
         useEffect(() => {
             setSubscribeClose(YakitRoute.AddYakitScript, {
                 close: async () => {
@@ -892,15 +869,25 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     return {
                         title: "插件未保存",
                         content: "是否要将插件保存到本地?",
-                        confirmLoading: localLoading,
                         maskClosable: false,
+                        confirmLoading: localLoading,
+                        cancelText: "不保存",
+                        okText: "保存",
+                        footerExtra: (
+                            <YakitButton type='outline2' onClick={destroySaveModal}>
+                                取消
+                            </YakitButton>
+                        ),
                         onOk: (m) => {
-                            modalRef.current = m
                             modalTypeRef.current = "close"
                             onBtnLocalSaveAndExit()
                         },
-                        onCancel: () => {
+                        onCancel: (m) => {
+                            destroySaveModal()
                             handleClosePage()
+                        },
+                        getModal: (m) => {
+                            modalRef.current = m
                         }
                     }
                 },
@@ -910,15 +897,25 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     return {
                         title: "插件未保存",
                         content: "是否要将插件保存到本地，并新建插件?",
-                        confirmLoading: localLoading,
                         maskClosable: false,
+                        confirmLoading: localLoading,
+                        cancelText: "不保存",
+                        okText: "保存",
+                        footerExtra: (
+                            <YakitButton type='outline2' onClick={destroySaveModal}>
+                                取消
+                            </YakitButton>
+                        ),
                         onOk: (m) => {
-                            modalRef.current = m
                             modalTypeRef.current = "reset"
                             onBtnLocalSaveAndExit()
                         },
-                        onCancel: () => {
+                        onCancel: (m) => {
+                            destroySaveModal()
                             onReset()
+                        },
+                        getModal: (m) => {
+                            modalRef.current = m
                         }
                     }
                 }

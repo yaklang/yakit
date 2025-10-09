@@ -5143,18 +5143,18 @@ const OutlineStore = () => (
         <path
             d='M20.25 8.55938V19.5C20.25 19.6989 20.171 19.8897 20.0303 20.0303C19.8897 20.171 19.6989 20.25 19.5 20.25H4.5C4.30109 20.25 4.11032 20.171 3.96967 20.0303C3.82902 19.8897 3.75 19.6989 3.75 19.5V4.5C3.75 4.30109 3.82902 4.11033 3.96967 3.96967C4.11032 3.82902 4.30109 3.75 4.5 3.75H15.4406C15.538 3.74966 15.6345 3.76853 15.7246 3.80553C15.8147 3.84253 15.8966 3.89694 15.9656 3.96563L20.0344 8.03438C20.1031 8.10341 20.1575 8.18532 20.1945 8.27541C20.2315 8.36549 20.2503 8.46199 20.25 8.55938V8.55938Z'
             stroke='currentColor'
-            strokeWidth='2'
+            strokeWidth='1.5'
             strokeLinecap='round'
             strokeLinejoin='round'
         />
         <path
             d='M7.5 20.25V14.25C7.5 14.0511 7.57902 13.8603 7.71967 13.7197C7.86032 13.579 8.05109 13.5 8.25 13.5H15.75C15.9489 13.5 16.1397 13.579 16.2803 13.7197C16.421 13.8603 16.5 14.0511 16.5 14.25V20.25'
             stroke='currentColor'
-            strokeWidth='2'
+            strokeWidth='1.5'
             strokeLinecap='round'
             strokeLinejoin='round'
         />
-        <path d='M14.25 6.75H9' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
+        <path d='M14.25 6.75H9' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
     </svg>
 )
 /**
@@ -5646,4 +5646,204 @@ const UnConfiguredIcon = () => (
 
 export const OutlineUnConfiguredIcon = (props: Partial<IconProps>) => {
     return <Icon component={UnConfiguredIcon} {...props} />
+}
+
+const listOneIcon = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path d='M8 6H21' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+        <path d='M8 12H21' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+        <path d='M8 18H21' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+        <path d='M3 6H3.01' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+        <path d='M3 12H3.01' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+        <path d='M3 18H3.01' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+    </svg>
+)
+/**
+ * @description  Outline/list 1
+ */
+export const OutlineListOneIcon = (props: Partial<IconProps>) => {
+    return <Icon component={listOneIcon} {...props} />
+}
+
+const listTwoIcon = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M9 14H4C3.44772 14 3 14.4477 3 15V20C3 20.5523 3.44772 21 4 21H9C9.55228 21 10 20.5523 10 20V15C10 14.4477 9.55228 14 9 14Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M9 3H4C3.44772 3 3 3.44772 3 4V9C3 9.55228 3.44772 10 4 10H9C9.55228 10 10 9.55228 10 9V4C10 3.44772 9.55228 3 9 3Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M14 4H21' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+        <path d='M14 9H21' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+        <path d='M14 15H21' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+        <path d='M14 20H21' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+    </svg>
+)
+/**
+ * @description  Outline/list 2
+ */
+export const OutlineListTwoIcon = (props: Partial<IconProps>) => {
+    return <Icon component={listTwoIcon} {...props} />
+}
+
+const RocketLaunchIcon = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M7.35156 14.4219C6.46094 17.0703 2.92969 17.0703 2.92969 17.0703C2.92969 17.0703 2.92969 13.5391 5.57813 12.6484'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M15.3047 8.2344L10 13.5391L6.46094 10L11.7656 4.69534C13.7734 2.68753 15.7812 2.71097 16.6406 2.83597C16.7732 2.85366 16.8963 2.9145 16.9909 3.0091C17.0855 3.1037 17.1464 3.2268 17.1641 3.3594C17.2891 4.21878 17.3125 6.22659 15.3047 8.2344Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M14.4219 9.11719V14.1641C14.4195 14.3289 14.3521 14.4862 14.2344 14.6016L11.7109 17.1328C11.6309 17.2128 11.5306 17.2695 11.4208 17.297C11.3111 17.3244 11.1959 17.3215 11.0876 17.2886C10.9794 17.2558 10.882 17.1941 10.8061 17.1102C10.7301 17.0264 10.6783 16.9235 10.6562 16.8125L10 13.5391'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M10.8828 5.57812H5.83588C5.67102 5.58047 5.51377 5.64787 5.39838 5.76563L2.86713 8.28906C2.78716 8.36912 2.73043 8.46939 2.70299 8.57916C2.67554 8.68894 2.67842 8.8041 2.7113 8.91237C2.74418 9.02064 2.80584 9.11796 2.8897 9.19393C2.97355 9.2699 3.07646 9.32168 3.18744 9.34375L6.46088 10'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description  Outline/RocketLaunch
+ */
+export const OutlineRocketLaunchIcon = (props: Partial<IconProps>) => {
+    return <Icon component={RocketLaunchIcon} {...props} />
+}
+
+const FileUpIcon = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M14.5 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V7.5L14.5 2Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M14 2V8H20' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
+        <path d='M12 12V18' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
+        <path
+            d='M15 15L12 12L9 15'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Outline/FileUp
+ */
+export const OutlineFileUpIcon = (props: Partial<IconProps>) => {
+    return <Icon component={FileUpIcon} {...props} />
+}
+
+const AtomIcon = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M20.1999 20.1999C22.2399 18.1699 20.2199 12.8399 15.6999 8.29989C11.1599 3.77989 5.82989 1.75989 3.79989 3.79989C1.75989 5.82989 3.77989 11.1599 8.29989 15.6999C12.8399 20.2199 18.1699 22.2399 20.1999 20.1999Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M15.6999 15.6999C20.2199 11.1599 22.2399 5.82989 20.1999 3.79989C18.1699 1.75989 12.8399 3.77989 8.29989 8.29989C3.77989 12.8399 1.75989 18.1699 3.79989 20.1999C5.82989 22.2399 11.1599 20.2199 15.6999 15.6999Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Outline/Atom
+ */
+export const OutlineAtomIcon = (props: Partial<IconProps>) => {
+    return <Icon component={AtomIcon} {...props} />
+}
+
+const SpeechToText = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M4 4.89474C4 4.34245 3.55228 3.89474 3 3.89474C2.44772 3.89474 2 4.34245 2 4.89474H4ZM2 9.63158C2 10.1839 2.44772 10.6316 3 10.6316C3.55228 10.6316 4 10.1839 4 9.63158H2ZM11.5789 4.89474C11.5789 4.34245 11.1312 3.89474 10.5789 3.89474C10.0267 3.89474 9.57895 4.34245 9.57895 4.89474H11.5789ZM9.57895 9.63158C9.57895 10.1839 10.0267 10.6316 10.5789 10.6316C11.1312 10.6316 11.5789 10.1839 11.5789 9.63158H9.57895ZM7.78947 3C7.78947 2.44772 7.34176 2 6.78947 2C6.23719 2 5.78947 2.44772 5.78947 3H7.78947ZM5.78947 11.5263C5.78947 12.0786 6.23719 12.5263 6.78947 12.5263C7.34176 12.5263 7.78947 12.0786 7.78947 11.5263H5.78947ZM17.2105 11.5263L18.139 11.1549C17.9871 10.7753 17.6194 10.5263 17.2105 10.5263C16.8016 10.5263 16.4339 10.7753 16.2821 11.1549L17.2105 11.5263ZM20.0715 21.3714C20.2766 21.8842 20.8586 22.1336 21.3714 21.9285C21.8842 21.7234 22.1336 21.1414 21.9285 20.6286L20.0715 21.3714ZM12.4926 20.6286C12.2875 21.1414 12.5369 21.7234 13.0497 21.9285C13.5624 22.1336 14.1444 21.8842 14.3495 21.3714L12.4926 20.6286ZM8.68421 22C9.2365 22 9.68421 21.5523 9.68421 21C9.68421 20.4477 9.2365 20 8.68421 20V22ZM4 15.3158C4 14.7635 3.55228 14.3158 3 14.3158C2.44772 14.3158 2 14.7635 2 15.3158H4ZM14.3684 2C13.8161 2 13.3684 2.44772 13.3684 3C13.3684 3.55228 13.8161 4 14.3684 4V2ZM19.0526 8.68421C19.0526 9.2365 19.5003 9.68421 20.0526 9.68421C20.6049 9.68421 21.0526 9.2365 21.0526 8.68421H19.0526ZM3 4.89474H2V9.63158H3H4V4.89474H3ZM10.5789 4.89474H9.57895V9.63158H10.5789H11.5789V4.89474H10.5789ZM6.78947 3H5.78947V11.5263H6.78947H7.78947V3H6.78947ZM17.2105 11.5263L16.2821 11.8977L20.0715 21.3714L21 21L21.9285 20.6286L18.139 11.1549L17.2105 11.5263ZM13.4211 21L14.3495 21.3714L18.139 11.8977L17.2105 11.5263L16.2821 11.1549L12.4926 20.6286L13.4211 21ZM14.8421 17.6842V18.6842H19.5789V17.6842V16.6842H14.8421V17.6842ZM8.68421 21V20C6.09719 20 4 17.9028 4 15.3158H3H2C2 19.0074 4.99262 22 8.68421 22V21ZM14.3684 3V4C16.9554 4 19.0526 6.09719 19.0526 8.68421H20.0526H21.0526C21.0526 4.99262 18.06 2 14.3684 2V3Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+
+/**
+ * @description  Outline/Speech-to-text
+ */
+export const OutlineSpeechToTextIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SpeechToText} {...props} />
+}
+
+const Codepen = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='currentColor'>
+        <path
+            d='M12 2L22 8.5M12 2L2 8.5M12 2V8.5M22 8.5V15.5M22 8.5L12 15.5M22 15.5L12 22M22 15.5L12 8.5M12 22L2 15.5M12 22V15.5M2 15.5V8.5M2 15.5L12 8.5M2 8.5L12 15.5'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Outline/Codepen
+ */
+export const OutlineCodepenIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Codepen} {...props} />
+}
+
+const Siren = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M7 18V12C7 10.6739 7.52678 9.40215 8.46447 8.46447C9.40215 7.52678 10.6739 7 12 7C13.3261 7 14.5979 7.52678 15.5355 8.46447C16.4732 9.40215 17 10.6739 17 12V18M7 18H17M7 18C6.46957 18 5.96086 18.2107 5.58579 18.5858C5.21071 18.9609 5 19.4696 5 20V21C5 21.2652 5.10536 21.5196 5.29289 21.7071C5.48043 21.8946 5.73478 22 6 22H18C18.2652 22 18.5196 21.8946 18.7071 21.7071C18.8946 21.5196 19 21.2652 19 21V20C19 19.4696 18.7893 18.9609 18.4142 18.5858C18.0391 18.2107 17.5304 18 17 18M21 12H22M18.5 4.5L18 5M2 12H3M12 2V3M4.9292 4.92896L5.6362 5.63596M12 12V18'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Outline/Siren
+ */
+export const OutlineSirenIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Siren} {...props} />
 }

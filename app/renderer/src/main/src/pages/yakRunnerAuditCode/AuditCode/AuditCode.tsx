@@ -51,20 +51,18 @@ import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {failed, success, warn, yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
-import {
-    CustomPluginExecuteFormValue,
-    FormExtraSettingProps
-} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
-import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
+import {FormExtraSettingProps} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import useStore from "../hooks/useStore"
-import {getNameByPath, grpcFetchAuditTree, grpcFetchDeleteAudit, loadAuditFromYakURLRaw} from "../utils"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {loadAuditFromYakURLRaw} from "../utils"
 import {
     OutlineArrowcirclerightIcon,
     OutlineBugIcon,
     OutlineChevronrightIcon,
+    OutlineClockIcon,
     OutlineDeprecatedIcon,
     OutlineDocumentduplicateIcon,
+    OutlineDotshorizontalIcon,
+    OutlineEyeIcon,
     OutlinePencilaltIcon,
     OutlineRefreshIcon,
     OutlineReloadScanIcon,
@@ -130,8 +128,10 @@ import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStart
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {FileDefault, FileSuffix, KeyToIcon} from "../FileTree/icon"
+import {FileDefault, FileSuffix, KeyToIcon} from "../../yakRunner/FileTree/icon"
+import {RiskTree} from "../RunnerFileTree/RunnerFileTree"
+import {getNameByPath} from "@/pages/yakRunner/utils"
+import {FuncFilterPopover} from "@/pages/plugins/funcTemplate"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -153,9 +153,9 @@ export const isBugFun = (info: AuditNodeProps) => {
 export const getDetailFun = (info: AuditNodeProps | AuditDetailItemProps) => {
     try {
         if (info.ResourceType === "value") {
-            const arr = info.Extra.filter((item) => item.Key === "code_range")
-            if (arr.length > 0) {
-                const item: CodeRangeProps = JSON.parse(arr[0].Value)
+            const result = info.Extra.find((item) => item.Key === "code_range")?.Value
+            if (result) {
+                const item: CodeRangeProps = JSON.parse(result)
                 const {url, start_line, start_column, end_line, end_column} = item
                 const lastSlashIndex = url.lastIndexOf("/")
                 const fileName = url.substring(lastSlashIndex + 1)
@@ -203,9 +203,9 @@ const showIcon = (severity) => {
 }
 
 export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
-    const {info, foucsedKey, onSelected, onExpanded, expandedKeys, onJump, loadTreeMore} = props
+    const {info, foucsedKey, onSelected, onExpanded, expandedKeys, loadTreeMore, customizeContent} = props
     const handleSelect = useMemoizedFn(() => {
-        onSelected(true, info, getDetail)
+        onSelected(info, getDetail)
     })
 
     const isExpanded = useMemo(() => {
@@ -232,11 +232,6 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
     const getDetail = useMemo(() => {
         return getDetailFun(info)
     }, [info])
-
-    const goBUGDetail = useMemoizedFn((e) => {
-        e.stopPropagation()
-        onJump({...info, isBug: true})
-    })
 
     const dom = useMemo(() => {
         if (info.isBottom) {
@@ -267,40 +262,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                         <LoadingOutlined />
                     </div>
 
-                    <div className={styles["node-content"]}>
-                        <div className={classNames(styles["content-body"])}>
-                            {getDetail && (
-                                <Tooltip title={`${getDetail.url}:${getDetail.start_line}`}>
-                                    <div className={classNames(styles["detail"], "yakit-content-single-ellipsis")}>
-                                        {getDetail.fileName}
-                                        <YakitTag className={styles["detail-tag"]} size='small' color='info'>
-                                            {getDetail.start_line}
-                                        </YakitTag>
-                                    </div>
-                                </Tooltip>
-                            )}
-
-                            <div
-                                className={classNames("yakit-content-single-ellipsis", styles["name"], {
-                                    [styles["name-active"]]: !info.isLeaf
-                                })}
-                            >
-                                {info.name}
-                            </div>
-                        </div>
-                        {isBugFun(info) && (
-                            <div
-                                className={classNames(styles["bug"], {
-                                    [styles["active-bug"]]:
-                                        info.Extra.filter((item) => item.Key === "risk_hash").length > 0
-                                })}
-                                onClick={goBUGDetail}
-                            >
-                                <OutlineBugIcon />
-                            </div>
-                        )}
-                        {info.ResourceType === "variable" && <div className={styles["count"]}>{info.Size}</div>}
-                    </div>
+                    <div className={styles["node-content"]}>{customizeContent(info)}</div>
                 </div>
             )
         }
@@ -385,23 +347,23 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
         wrapClassName,
         loadTreeMore
     } = props
-    // const {pageInfo} = useStore()
+    const {pageInfo} = useStore()
     const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
     const size = useSize(wrapper)
 
     // PS: 之前的逻辑是匹配到此项时打开对应文件，可能会造成卡在欢迎页的情况，因此改为根据参数直接打开对应文件
-    // const defaultOpenIdRef = useRef<string>()
-    // useEffect(() => {
-    //     if (pageInfo) {
-    //         const {Path, Variable, Value} = pageInfo
-    //         if (Variable && Value) {
-    //             defaultOpenIdRef.current = `${Path}${Variable}${Value}`
-    //         }
-    //     }
-    // }, [pageInfo])
+    const defaultOpenIdRef = useRef<string>()
+    useEffect(() => {
+        if (pageInfo) {
+            const {Path, Variable, Value} = pageInfo
+            if (Variable && Value) {
+                defaultOpenIdRef.current = `${Path}${Variable}${Value}`
+            }
+        }
+    }, [pageInfo])
 
-    const handleSelect = useMemoizedFn((selected: boolean, node: AuditNodeProps, detail?: AuditNodeDetailProps) => {
+    const handleSelect = useMemoizedFn((node: AuditNodeProps, detail?: AuditNodeDetailProps) => {
         if (onlyJump) {
             onJump(node)
             return
@@ -459,7 +421,52 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
             }
         } catch (error) {}
     })
+    const goBUGDetail = useMemoizedFn((info) => {
+        handleSelect({...info, isBug: true})
+    })
+    const customizeContent = useMemoizedFn((info) => {
+        // 获取详情
+        const getDetail = getDetailFun(info)
 
+        return (
+            <>
+                <div className={classNames(styles["content-body"])}>
+                    {getDetail && (
+                        <Tooltip title={`${getDetail.url}:${getDetail.start_line}`}>
+                            <div className={classNames(styles["detail"], "yakit-content-single-ellipsis")}>
+                                {getDetail.fileName}
+                                <YakitTag className={styles["detail-tag"]} size='small' color='info'>
+                                    {getDetail.start_line}
+                                </YakitTag>
+                            </div>
+                        </Tooltip>
+                    )}
+
+                    <div
+                        className={classNames("yakit-content-single-ellipsis", styles["name"], {
+                            [styles["name-active"]]: !info.isLeaf
+                        })}
+                    >
+                        {info.name}
+                    </div>
+                </div>
+                {isBugFun(info) && (
+                    <div
+                        className={classNames(styles["bug"], {
+                            [styles["active-bug"]]: info.Extra.filter((item) => item.Key === "risk_hash").length > 0
+                        })}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            goBUGDetail(info)
+                        }}
+                    >
+                        <OutlineBugIcon />
+                    </div>
+                )}
+                {info.ResourceType === "variable" && <div className={styles["count"]}>{info.Size}</div>}
+            </>
+        )
+    })
     return (
         <div ref={wrapper} className={classNames(styles["audit-tree"], wrapClassName)}>
             <Tree
@@ -475,10 +482,10 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                 // 解决重复打开一个节点时 能加载
                 loadedKeys={[]}
                 titleRender={(nodeData) => {
-                    // if (nodeData.id === defaultOpenIdRef.current) {
-                    //     defaultOpenIdRef.current = undefined
-                    //     handleSelect(true, nodeData, getDetailFun(nodeData))
-                    // }
+                    if (nodeData.id === defaultOpenIdRef.current) {
+                        defaultOpenIdRef.current = undefined
+                        handleSelect(nodeData, getDetailFun(nodeData))
+                    }
                     return (
                         <AuditTreeNode
                             info={nodeData}
@@ -486,8 +493,8 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                             expandedKeys={expandedKeys}
                             onSelected={handleSelect}
                             onExpanded={handleExpand}
-                            onJump={onJump}
                             loadTreeMore={loadTreeMore}
+                            customizeContent={customizeContent}
                         />
                     )
                 }}
@@ -559,34 +566,115 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         const initTreeLeaf = initTree.filter((item) => item.isLeaf)
         const initTreeNoLeaf = initTree.filter((item) => !item.isLeaf)
         const newInitTree = [...initTreeNoLeaf, ...initTreeLeaf]
-        newInitTree.push({
-            parent: null,
-            name: "已经到底啦~",
-            id: "111",
-            depth: 1,
-            isBottom: true,
-            Extra: [],
-            ResourceType: "",
-            VerboseType: "",
-            Size: 0
-        })
+        if (newInitTree.length > 0) {
+            newInitTree.push({
+                parent: null,
+                name: "已经到底啦~",
+                id: "111",
+                depth: 1,
+                isBottom: true,
+                Extra: [],
+                ResourceType: "",
+                VerboseType: "",
+                Size: 0
+            })
+        }
+
         return newInitTree
     }, [refreshTree])
 
     const lastValue = useRef<string>("")
     const handleAuditLoadData = useMemoizedFn((id: string) => {
         return new Promise(async (resolve, reject) => {
-            // 校验其子项是否存在
-            const childArr = getMapAuditChildDetail(id)
-            if (id === TopId) {
-                resolve("")
-                return
+            try {
+                // 校验其子项是否存在
+                const childArr = getMapAuditChildDetail(id)
+                if (id === TopId) {
+                    resolve("")
+                    return
+                }
+                if (childArr.length > 0) {
+                    setRefreshTree(!refreshTree)
+                    resolve("")
+                } else {
+                    const path = id
+                    let params: AuditYakUrlProps = {
+                        Schema: "syntaxflow",
+                        Location: projectName || "",
+                        Path: path
+                    }
+                    const body: Buffer = StringToUint8Array(lastValue.current)
+                    if (pageInfo) {
+                        const {Variable, Value, ...rest} = pageInfo
+                        params = {
+                            ...rest,
+                            Path: path
+                        }
+                    }
+                    // 沿用审计时的Query值
+                    params.Query = runQueryRef.current
+                    // 每次拿30条
+                    const result = await loadAuditFromYakURLRaw(params, body, 1, 30)
+                    if (result) {
+                        let variableIds: string[] = []
+                        result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
+                            const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
+                            let value: string = `${index}`
+                            const obj = Extra.find((item) => item.Key === "index")
+                            if (obj) {
+                                value = obj.Value
+                            }
+                            const newId = `${id}/${value}`
+                            variableIds.push(newId)
+                            setMapAuditDetail(newId, {
+                                parent: path,
+                                id: newId,
+                                name: ResourceName,
+                                ResourceType,
+                                VerboseType,
+                                Size,
+                                Extra
+                            })
+                        })
+                        let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
+                        // 如若请求数据未全部拿完 则显示加载更多
+                        if (!isEnd) {
+                            const newId = `${id}/load`
+                            setMapAuditDetail(newId, {
+                                parent: path,
+                                id: newId,
+                                name: "",
+                                ResourceType: "value",
+                                VerboseType: "",
+                                Size: 0,
+                                Extra: [],
+                                page: result.Page,
+                                hasMore: true
+                            })
+                            variableIds.push(newId)
+                        }
+
+                        setMapAuditChildDetail(path, variableIds)
+                        setTimeout(() => {
+                            setRefreshTree(!refreshTree)
+                            resolve("")
+                        }, 300)
+                    } else {
+                        reject()
+                    }
+                }
+            } catch (error) {
+                reject()
             }
-            if (childArr.length > 0) {
-                setRefreshTree(!refreshTree)
-                resolve("")
-            } else {
-                const path = id
+        })
+    })
+
+    // 树加载更多
+    const loadTreeMore = useMemoizedFn(async (node: AuditNodeProps) => {
+        try {
+            if (node.parent && node.page) {
+                const path = node.parent
+                const page = parseInt(node.page + "") + 1
                 let params: AuditYakUrlProps = {
                     Schema: "syntaxflow",
                     Location: projectName || "",
@@ -603,7 +691,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 // 沿用审计时的Query值
                 params.Query = runQueryRef.current
                 // 每次拿30条
-                const result = await loadAuditFromYakURLRaw(params, body, 1, 30)
+                const result = await loadAuditFromYakURLRaw(params, body, page, 30)
                 if (result) {
                     let variableIds: string[] = []
                     result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
@@ -613,7 +701,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         if (obj) {
                             value = obj.Value
                         }
-                        const newId = `${id}/${value}`
+                        const newId = `${path}/${value}`
                         variableIds.push(newId)
                         setMapAuditDetail(newId, {
                             parent: path,
@@ -627,8 +715,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     })
                     let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
                     // 如若请求数据未全部拿完 则显示加载更多
+                    const newId = `${path}/load`
                     if (!isEnd) {
-                        const newId = `${id}/load`
                         setMapAuditDetail(newId, {
                             parent: path,
                             id: newId,
@@ -642,88 +730,16 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         })
                         variableIds.push(newId)
                     }
-
-                    setMapAuditChildDetail(path, variableIds)
+                    // 此处为累加并移除原有加载更多项
+                    const auditChilds = getMapAuditChildDetail(path)
+                    const childs = auditChilds.filter((item) => item !== newId)
+                    setMapAuditChildDetail(path, [...childs, ...variableIds])
                     setTimeout(() => {
                         setRefreshTree(!refreshTree)
-                        resolve("")
                     }, 300)
-                } else {
-                    reject()
                 }
             }
-        })
-    })
-
-    // 树加载更多
-    const loadTreeMore = useMemoizedFn(async (node: AuditNodeProps) => {
-        if (node.parent && node.page) {
-            const path = node.parent
-            const page = parseInt(node.page + "") + 1
-            let params: AuditYakUrlProps = {
-                Schema: "syntaxflow",
-                Location: projectName || "",
-                Path: path
-            }
-            const body: Buffer = StringToUint8Array(lastValue.current)
-            if (pageInfo) {
-                const {Variable, Value, ...rest} = pageInfo
-                params = {
-                    ...rest,
-                    Path: path
-                }
-            }
-            // 沿用审计时的Query值
-            params.Query = runQueryRef.current
-            // 每次拿30条
-            const result = await loadAuditFromYakURLRaw(params, body, page, 30)
-            if (result) {
-                let variableIds: string[] = []
-                result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
-                    const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
-                    let value: string = `${index}`
-                    const obj = Extra.find((item) => item.Key === "index")
-                    if (obj) {
-                        value = obj.Value
-                    }
-                    const newId = `${path}/${value}`
-                    variableIds.push(newId)
-                    setMapAuditDetail(newId, {
-                        parent: path,
-                        id: newId,
-                        name: ResourceName,
-                        ResourceType,
-                        VerboseType,
-                        Size,
-                        Extra
-                    })
-                })
-                let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
-                // 如若请求数据未全部拿完 则显示加载更多
-                const newId = `${path}/load`
-                if (!isEnd) {
-                    setMapAuditDetail(newId, {
-                        parent: path,
-                        id: newId,
-                        name: "",
-                        ResourceType: "value",
-                        VerboseType: "",
-                        Size: 0,
-                        Extra: [],
-                        page: result.Page,
-                        hasMore: true
-                    })
-                    variableIds.push(newId)
-                }
-                // 此处为累加并移除原有加载更多项
-                const auditChilds = getMapAuditChildDetail(path)
-                const childs = auditChilds.filter((item) => item !== newId)
-                setMapAuditChildDetail(path, [...childs, ...variableIds])
-                setTimeout(() => {
-                    setRefreshTree(!refreshTree)
-                }, 300)
-            }
-        }
+        } catch (error) {}
     })
 
     const onLoadData = useMemoizedFn((node: AuditNodeProps) => {
@@ -744,10 +760,12 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         setRefreshTree(!refreshTree)
     }, [projectName])
 
+    const [resultId, setResultId] = useState<string>()
     const onAuditRuleSubmitFun = useMemoizedFn(
         async (textArea: string = "", Query?: {Key: string; Value: number}[]) => {
             try {
                 resetMap()
+                setResultId(undefined)
                 setLoading(true)
                 setShowEmpty(false)
                 setOnlyFileTree(false)
@@ -831,6 +849,11 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     setRefreshTree(!getRefreshTree())
                 } else {
                     setShowEmpty(true)
+                }
+                // 获取ID并展示
+                if (params.Query) {
+                    let showId = params.Query.find((item) => item.Key === "result_id")?.Value
+                    showId && setResultId(showId)
                 }
                 setLoading(false)
             } catch (error: any) {
@@ -947,12 +970,18 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         onCancelAuditStream()
     })
 
+    const onOpenLeftSecondNodeFun = useMemoizedFn((v: "result" | "history") => {
+        setOnlyFileTree(false)
+        setAuditType(v)
+    })
     useEffect(() => {
         emiter.on("onAuditRuleSubmit", onAuditStreamRuleSubmitFun)
         emiter.on("onStopAuditRule", onStopAuditRuleFun)
+        emiter.on("onOpenLeftSecondNode", onOpenLeftSecondNodeFun)
         return () => {
             emiter.off("onAuditRuleSubmit", onAuditStreamRuleSubmitFun)
             emiter.off("onStopAuditRule", onStopAuditRuleFun)
+            emiter.off("onOpenLeftSecondNode", onOpenLeftSecondNodeFun)
         }
     }, [])
 
@@ -1004,6 +1033,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     })
 
     const [query, setQuery] = useState<QuerySyntaxFlowResultRequest>(defaultQuery)
+    const [isShowRiskTree, setShowRiskTree] = useState<boolean>(false)
 
     return (
         <YakitSpin spinning={loading}>
@@ -1026,8 +1056,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                 },
                                 {
                                     label: "审计历史",
-                                    value: "history",
-                                    disabled: !projectName
+                                    value: "history"
                                 }
                             ]}
                         />
@@ -1035,14 +1064,14 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     {auditExecuting ? (
                         <div className={styles["extra"]}>
                             <Progress
-                                strokeColor='#F28B44'
-                                trailColor='#F0F2F5'
+                                strokeColor='var(--Colors-Use-Main-Primary)'
+                                trailColor='var(--Colors-Use-Neutral-Bg)'
                                 percent={Math.floor((resultInfo?.progress || 0) * 100)}
                             />
                         </div>
                     ) : (
                         <>
-                            {auditType === "history" && (
+                            {auditType === "history" ? (
                                 <div className={styles["extra"]}>
                                     <YakitButton
                                         type='text'
@@ -1090,6 +1119,37 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                             icon={<DeleteOutlined />}
                                         />
                                     </YakitDropdownMenu>
+                                    <YakitButton
+                                        type='text'
+                                        icon={<OutlineXIcon />}
+                                        onClick={() => setOnlyFileTree(true)}
+                                    />
+                                </div>
+                            ) : (
+                                <div className={styles["extra"]}>
+                                    {resultId && (
+                                        <>
+                                            <div style={{flex: 1}}>
+                                                <YakitTag color='info'>ID:{resultId}</YakitTag>
+                                            </div>
+                                            <Tooltip title={isShowRiskTree ? "隐藏漏洞树" : "查看漏洞树"}>
+                                                <YakitButton
+                                                    type='text'
+                                                    size={"small"}
+                                                    icon={<OutlineEyeIcon />}
+                                                    onClick={() => {
+                                                        setShowRiskTree(!isShowRiskTree)
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                        </>
+                                    )}
+
+                                    <YakitButton
+                                        type='text'
+                                        icon={<OutlineXIcon />}
+                                        onClick={() => setOnlyFileTree(true)}
+                                    />
                                 </div>
                             )}
                         </>
@@ -1110,29 +1170,47 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                         />
                                     </div>
                                 ) : (
-                                    <AuditTree
-                                        data={auditDetailTree}
-                                        expandedKeys={expandedKeys}
-                                        setExpandedKeys={setExpandedKeys}
-                                        onLoadData={onLoadData}
-                                        foucsedKey={foucsedKey}
-                                        setFoucsedKey={setFoucsedKey}
-                                        onJump={onJump}
-                                        loadTreeMore={loadTreeMore}
-                                    />
+                                    <>
+                                        {isShowRiskTree && resultId ? (
+                                            <RiskTree type='file' projectName={projectName} result_id={resultId} />
+                                        ) : (
+                                            <>
+                                                {auditDetailTree.length > 0 ? (
+                                                    <AuditTree
+                                                        data={auditDetailTree}
+                                                        expandedKeys={expandedKeys}
+                                                        setExpandedKeys={setExpandedKeys}
+                                                        onLoadData={onLoadData}
+                                                        foucsedKey={foucsedKey}
+                                                        setFoucsedKey={setFoucsedKey}
+                                                        onJump={onJump}
+                                                        loadTreeMore={loadTreeMore}
+                                                    />
+                                                ) : (
+                                                    <div className={styles["no-data"]}>暂无数据</div>
+                                                )}
+                                            </>
+                                        )}
+                                    </>
                                 )}
                             </>
                         )}
                     </>
                 ) : (
-                    <AuditHistoryList
-                        ref={auditHistoryListRef}
-                        setAuditType={setAuditType}
-                        onAuditRuleSubmitFun={onAuditRuleSubmitFun}
-                        onOpenEditorDetails={onOpenEditorDetails}
-                        query={query}
-                        setQuery={setQuery}
-                    />
+                    <>
+                        {!projectName ? (
+                            <div className={styles["no-data"]}>暂无数据</div>
+                        ) : (
+                            <AuditHistoryList
+                                ref={auditHistoryListRef}
+                                setAuditType={setAuditType}
+                                onAuditRuleSubmitFun={onAuditRuleSubmitFun}
+                                onOpenEditorDetails={onOpenEditorDetails}
+                                query={query}
+                                setQuery={setQuery}
+                            />
+                        )}
+                    </>
                 )}
                 <YakitHint
                     visible={removeVisible}
@@ -1320,7 +1398,7 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                 </div>
                 <div className={styles["onlyRisk-box"]}>
                     <YakitCheckbox
-                        value={query.Filter.OnlyRisk}
+                        checked={query.Filter.OnlyRisk}
                         onChange={(e) => {
                             setQuery({
                                 ...query,
@@ -1418,9 +1496,11 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
     // 获取参数
     const handleFetchParams = useDebounceFn(
         useMemoizedFn(async () => {
-            const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目探测"}, true)
-            setLoading(false)
-            setPlugin(newPlugin)
+            try {
+                const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目探测"}, true)
+                setLoading(false)
+                setPlugin(newPlugin)
+            } catch (error) {}
         }),
         {wait: 300}
     ).run
@@ -1612,7 +1692,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
 
 // 公共封装组件用于编译项目
 export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) => {
-    const {onCancel, onSuccee, title, warrpId} = props
+    const {onCancel, onSuccee, title, warrpId, initForm} = props
     const [isShowCompileModal, setShowCompileModal] = useState<boolean>(true)
     const tokenRef = useRef<string>(randomString(40))
     const [isShowRunAuditModal, setShowRunAuditModal] = useState<boolean>(false)
@@ -1779,6 +1859,11 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
         }
     }, [streamInfo])
 
+    useEffect(() => {
+        if (initForm) {
+            form.setFieldsValue({...initForm})
+        }
+    }, [initForm])
     return (
         <>
             <YakitModal
@@ -1982,7 +2067,7 @@ export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = mem
         <div className={styles["project-manager-edit-form"]}>
             <Form layout='vertical' form={form} onFinish={(v) => onFinish(v)}>
                 <Form.Item name='Name' label='项目名称' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input disabled allowClear size='small' placeholder='请输入项目名称...' />
+                    <YakitInput disabled size='small' placeholder='请输入项目名称...' />
                 </Form.Item>
                 <Form.Item name='Description' label='项目描述'>
                     <YakitInput.TextArea rows={3} allowClear size='small' placeholder='请输入项目描述...' />
@@ -2183,12 +2268,13 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             title: "漏洞数",
             dataIndex: "LowRiskNumber",
             render: (text, record) => {
-                const {CriticalRiskNumber, HighRiskNumber, WarnRiskNumber, LowRiskNumber} = record
+                const {CriticalRiskNumber, HighRiskNumber, WarnRiskNumber, LowRiskNumber, InfoRiskNumber} = record
                 const countNum =
                     parseInt(CriticalRiskNumber + "") +
                     parseInt(HighRiskNumber + "") +
                     parseInt(WarnRiskNumber + "") +
-                    parseInt(LowRiskNumber + "")
+                    parseInt(LowRiskNumber + "") +
+                    parseInt(InfoRiskNumber + "")
                 return <>{countNum !== 0 ? <YakitTag color='info'>{countNum}</YakitTag> : "-"}</>
             },
             width: 120
@@ -2278,46 +2364,126 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 }}
                             />
                         </Tooltip>
-                        <Tooltip title={"编辑"}>
+                        <Tooltip title={"扫描历史"}>
                             <YakitButton
                                 type='text'
-                                icon={<OutlinePencilaltIcon />}
+                                icon={<OutlineClockIcon />}
                                 onClick={() => {
-                                    const m = showYakitModal({
-                                        title: "编辑",
-                                        width: 448,
-                                        type: "white",
-                                        footer: null,
-                                        centered: true,
-                                        content: (
-                                            <ProjectManagerEditForm
-                                                record={record}
-                                                setData={setData}
-                                                onClose={() => m.destroy()}
-                                            />
-                                        )
-                                    })
+                                    emiter.emit(
+                                        "openPage",
+                                        JSON.stringify({
+                                            route: YakitRoute.YakRunner_ScanHistory,
+                                            params: {
+                                                Programs: [record.Name]
+                                            }
+                                        })
+                                    )
                                 }}
                             />
                         </Tooltip>
                         <Divider type={"vertical"} style={{margin: 0}} />
-                        <YakitPopconfirm
-                            title={`确定删除${record.Name}`}
-                            onConfirm={() =>
-                                onDelete({
-                                    Filter: {
-                                        Ids: [parseInt(record.Id + "")]
+                        <FuncFilterPopover
+                            icon={<OutlineDotshorizontalIcon />}
+                            button={{type: "text2"}}
+                            menu={{
+                                type: "primary",
+                                data: [
+                                    {
+                                        key: "edit",
+                                        label: "编辑",
+                                        itemIcon: <OutlinePencilaltIcon />,
+                                        type: undefined
+                                    },
+                                    {
+                                        key: "del",
+                                        label: "删除",
+                                        itemIcon: <OutlineTrashIcon />,
+                                        type: "danger"
                                     }
-                                })
-                            }
+                                ],
+                                onClick: ({key}) => handleOperates(key, record)
+                            }}
+                            placement='bottomRight'
+                        />
+                        {/* <YakitDropdownMenu
+                            menu={{
+                                width: 40,
+                                data: [
+                                    {
+                                        key: "edit",
+                                        label: (
+                                            <YakitButton
+                                                type='text'
+                                                icon={<OutlinePencilaltIcon />}
+                                                onClick={() => {
+                                                    const m = showYakitModal({
+                                                        title: "编辑",
+                                                        width: 448,
+                                                        type: "white",
+                                                        footer: null,
+                                                        centered: true,
+                                                        content: (
+                                                            <ProjectManagerEditForm
+                                                                record={record}
+                                                                setData={setData}
+                                                                onClose={() => m.destroy()}
+                                                            />
+                                                        )
+                                                    })
+                                                }}
+                                            />
+                                        )
+                                    },
+                                    {
+                                        key: "del",
+                                        label: (
+                                            <YakitPopconfirm
+                                                title={`确定删除${record.Name}`}
+                                                onConfirm={() =>
+                                                    onDelete({
+                                                        Filter: {
+                                                            Ids: [parseInt(record.Id + "")]
+                                                        }
+                                                    })
+                                                }
+                                            >
+                                                <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
+                                            </YakitPopconfirm>
+                                        )
+                                    }
+                                ]
+                            }}
+                            dropdown={{
+                                trigger: ["click"],
+                                placement: "bottom"
+                            }}
                         >
-                            <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
-                        </YakitPopconfirm>
+                            <YakitButton type='text' icon={<OutlineDotshorizontalIcon />} />
+                        </YakitDropdownMenu> */}
                     </div>
                 )
             }
         }
     ]
+
+    const handleOperates = (type: string, record) => {
+        if (type === "del") {
+            onDelete({
+                Filter: {
+                    Ids: [parseInt(record.Id + "")]
+                }
+            })
+        } else if (type === "edit") {
+            const m = showYakitModal({
+                title: "编辑",
+                width: 448,
+                type: "white",
+                footer: null,
+                centered: true,
+                content: <ProjectManagerEditForm record={record} setData={setData} onClose={() => m.destroy()} />
+            })
+        }
+    }
 
     const loadMoreData = useMemoizedFn(() => {
         if (data.length > 0) {
@@ -2354,7 +2520,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             setParams({...params, Keyword: e.target.value})
                         }}
                         onSearch={() => {
-                            update(true)
+                            setTimeout(() => {
+                                update(true)
+                            }, 100)
                         }}
                     />
                     <YakitPopconfirm

@@ -1,15 +1,15 @@
 // ========================== switch ==========================
 .yakit-switch-wrapper-item {
 
-    --switch-box-shadow-color: var(--yakit-primary-2);
-    --switch-border-color: var(--yakit-primary-3);
-    --switch-border-close-color: var(--yakit-border-color); // switch关闭的时候
+    --switch-box-shadow-color: var(--Colors-Use-Main-Focus);
+    --switch-border-color: var(--Colors-Use-Main-Border);
+    --switch-border-close-color: var(--Colors-Use-Neutral-Border); // switch关闭的时候
 
-    --switch-background-color: var(--yakit-primary-5);
-    --switch-background-close-color: var(--yakit-disable-text-color); // switch关闭的时候的背景色
-    --switch-background-disable-color: var(--yakit-background-color);
+    --switch-background-color: var(--Colors-Use-Main-Primary);
+    --switch-background-close-color: var(--Colors-Use-Neutral-Disable); // switch关闭的时候的背景色
+    --switch-background-disable-color: var(--Colors-Use-Neutral-Bg);
 
-    --switch-inner-circular-background-color: var(--yakit-neutral10-color); // 里面的圆圈
+    --switch-inner-circular-background-color: var(--Colors-Use-Main-On-Primary); // 里面的圆圈
 
     padding: 3px;
 
@@ -109,6 +109,9 @@
         .ant-switch-checked {
             .ant-switch-handle {
                 left: calc(100% - 16px - 2px);
+                &::before{
+                    background-color: var(--Colors-Use-Main-On-Primary);
+                }
             }
 
             .ant-switch-inner {

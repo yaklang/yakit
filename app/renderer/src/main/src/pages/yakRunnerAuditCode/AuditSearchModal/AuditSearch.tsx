@@ -1,5 +1,13 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
+import {
+    useDebounceEffect,
+    useDebounceFn,
+    useGetState,
+    useInViewport,
+    useMemoizedFn,
+    useThrottleFn,
+    useUpdateEffect
+} from "ahooks"
 import styles from "./AuditSearchModal.module.scss"
 import {failed, success, warn, info, yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
@@ -18,7 +26,7 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {Progress} from "antd"
 import {AuditDetailItemProps, AuditYakUrlProps} from "../AuditCode/AuditCodeType"
-import {getNameByPath, loadAuditFromYakURLRaw} from "../utils"
+import {loadAuditFromYakURLRaw, onJumpByCodeRange} from "../utils"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {AuditNodeSearchItem} from "../AuditCode/AuditCode"
 import {YakRiskCodemirror} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
@@ -28,6 +36,8 @@ import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import {KVPair} from "@/models/kv"
 
 let selectedSearchVal: string = ""
 export const onSetSelectedSearchVal = (v: string = "") => {
@@ -73,54 +83,55 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     }, [projectName])
 
     const getData = useMemoizedFn(async (page: number, pageSize: number = 10) => {
-        if (!resultIdRef.current) return
-        setLoading(true)
-        const params: AuditYakUrlProps = {
-            Schema: "syntaxflow",
-            Location: projectName,
-            Path: `/${activeKey}`,
-            Query: [
-                {Key: "result_id", Value: resultIdRef.current},
-                {Key: "have_range", Value: "true"}
-            ]
-        }
-        const result = await loadAuditFromYakURLRaw(params, undefined, page, pageSize)
-
-        if (result) {
-            const initAuditDetail = result.Resources.filter((item) => item.VerboseType !== "result_id").map(
-                (item, index) => {
-                    const {ResourceType, VerboseType, ResourceName, Size, Extra} = item
-                    let value: string = `${index}`
-                    const arr = Extra.filter((item) => item.Key === "index")
-                    if (arr.length > 0) {
-                        value = arr[0].Value
+        try {
+            if (!resultIdRef.current) return
+            setLoading(true)
+            const params: AuditYakUrlProps = {
+                Schema: "syntaxflow",
+                Location: projectName,
+                Path: `/${activeKey}`,
+                Query: [
+                    {Key: "result_id", Value: resultIdRef.current},
+                    {Key: "have_range", Value: "true"}
+                ]
+            }
+            const result = await loadAuditFromYakURLRaw(params, undefined, page, pageSize)
+            if (result) {
+                const initAuditDetail = result.Resources.filter((item) => item.VerboseType !== "result_id").map(
+                    (item, index) => {
+                        const {ResourceType, VerboseType, ResourceName, Size, Extra} = item
+                        let value: string = `${index}`
+                        const arr = Extra.filter((item) => item.Key === "index")
+                        if (arr.length > 0) {
+                            value = arr[0].Value
+                        }
+                        const newId = `/${value}`
+                        return {
+                            id: newId,
+                            name: ResourceName,
+                            ResourceType,
+                            VerboseType,
+                            Size,
+                            Extra
+                        }
                     }
-                    const newId = `/${value}`
-                    return {
-                        id: newId,
-                        name: ResourceName,
-                        ResourceType,
-                        VerboseType,
-                        Size,
-                        Extra
+                )
+                let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
+                const newAuditDetail = page === 1 ? initAuditDetail : auditDetail.concat(initAuditDetail)
+                if (isEnd) {
+                    setHasMore(false)
+                }
+                if (page === 1) {
+                    setIsRefresh(!isRefresh)
+                    if (newAuditDetail.length > 0) {
+                        setActiveInfo(newAuditDetail[0])
                     }
                 }
-            )
-            let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
-            const newAuditDetail = page === 1 ? initAuditDetail : auditDetail.concat(initAuditDetail)
-            if (isEnd) {
-                setHasMore(false)
+                setAuditDetail(newAuditDetail)
+                setCureentPage(page)
             }
-            if (page === 1) {
-                setIsRefresh(!isRefresh)
-                if (newAuditDetail.length > 0) {
-                    setActiveInfo(newAuditDetail[0])
-                }
-            }
-            setAuditDetail(newAuditDetail)
-            setCureentPage(page)
-        }
-        setLoading(false)
+            setLoading(false)
+        } catch (error) {}
     })
 
     useUpdateEffect(() => {
@@ -151,29 +162,32 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
             warn("请等待上一次搜索结束")
             return
         }
+        let requestParamsExecParams: KVPair[] = [
+            {
+                Key: "progName",
+                Value: projectName || ""
+            },
+            {
+                Key: "rule",
+                Value: newKeywords || keywords
+            },
+            {
+                Key: "kind",
+                Value: activeKey
+            }
+        ]
+        if (checked) {
+            requestParamsExecParams.push({
+                Key: "fuzz",
+                Value: `${checked}`
+            })
+        }
         const requestParams: DebugPluginRequest = {
             Code: "",
             PluginType: "yak",
             Input: "",
             HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
-            ExecParams: [
-                {
-                    Key: "progName",
-                    Value: projectName || ""
-                },
-                {
-                    Key: "rule",
-                    Value: newKeywords || keywords
-                },
-                {
-                    Key: "kind",
-                    Value: activeKey
-                },
-                {
-                    Key: "fuzz",
-                    Value: `${checked}`
-                }
-            ],
+            ExecParams: requestParamsExecParams,
             PluginName: "SyntaxFlow Searcher"
         }
         debugPluginStreamEvent.reset()
@@ -188,10 +202,12 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     // 获取参数
     const handleFetchParams = useDebounceFn(
         useMemoizedFn(async () => {
-            const newPlugin = await grpcFetchLocalPluginDetail({Name: "SyntaxFlow Searcher"}, true)
-            const ExtraSetting = newPlugin?.Params.find((item) => item.Field === "kind")?.ExtraSetting || ""
-            let obj = JSON.parse(ExtraSetting) as ExtraSettingProps
-            setExtraSettingData(obj.data)
+            try {
+                const newPlugin = await grpcFetchLocalPluginDetail({Name: "SyntaxFlow Searcher"}, true)
+                const ExtraSetting = newPlugin?.Params.find((item) => item.Field === "kind")?.ExtraSetting || ""
+                let obj = JSON.parse(ExtraSetting) as ExtraSettingProps
+                setExtraSettingData(obj.data)
+            } catch (error) {}
         }),
         {wait: 300}
     ).run
@@ -241,41 +257,42 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
         }
     })
 
-    const handleKeyPress = useMemoizedFn((event) => {
-        const {key} = event
-        if (key === "Tab") {
+    const keyDownRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(keyDownRef)
+
+    useShortcutKeyTrigger("searchTab*aduit", () => {
+        if (inViewport) {
             if (getExecuting()) {
                 warn("当前已有搜索，请等待完毕后切换")
             } else {
                 onNextSearchTabFun()
             }
-            event.preventDefault()
-        } else if (key === "ArrowUp") {
-            onSetActiveInfo("last")
-            event.preventDefault()
-        } else if (key === "ArrowDown") {
-            onSetActiveInfo("next")
-            event.preventDefault()
-        } else if (key === "Escape") {
-            onClose && onClose()
-            event.preventDefault()
-        } else if (key === "Enter") {
-            activeInfo && onJump(activeInfo)
-            event.preventDefault()
         }
     })
-    const keyDownRef = useRef<HTMLDivElement>(null)
-    useEffect(() => {
-        if (keyDownRef.current) {
-            keyDownRef.current.addEventListener("keydown", handleKeyPress)
+
+    useShortcutKeyTrigger("searchArrowUp*aduit", () => {
+        if (inViewport) {
+            onSetActiveInfo("last")
         }
-        return () => {
-            // 在组件卸载时移除事件监听器
-            if (keyDownRef.current) {
-                keyDownRef.current.removeEventListener("keydown", handleKeyPress)
-            }
+    })
+
+    useShortcutKeyTrigger("searchArrowDown*aduit", () => {
+        if (inViewport) {
+            onSetActiveInfo("next")
         }
-    }, [])
+    })
+
+    useShortcutKeyTrigger("searchEscape*aduit", () => {
+        if (inViewport) {
+            onClose && onClose()
+        }
+    })
+
+    useShortcutKeyTrigger("searchEnter*aduit", () => {
+        if (inViewport) {
+            activeInfo && onJump(activeInfo)
+        }
+    })
 
     const onStopExecute = useMemoizedFn(() => {
         keyDownRef.current?.focus()
@@ -309,39 +326,9 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     }, [activeInfo])
 
     const onJump = useMemoizedFn(async (data: AuditDetailItemProps) => {
-        try {
-            const arr = data.Extra.filter((item) => item.Key === "code_range")
-            if (arr.length > 0) {
-                const item: CodeRangeProps = JSON.parse(arr[0].Value)
-                const {url, start_line, start_column, end_line, end_column} = item
-                const name = await getNameByPath(url)
-                // console.log("monaca跳转", item, name)
-                const highLightRange: Selection = {
-                    startLineNumber: start_line,
-                    startColumn: start_column,
-                    endLineNumber: end_line,
-                    endColumn: end_column
-                }
-                const OpenFileByPathParams: OpenFileByPathProps = {
-                    params: {
-                        path: url,
-                        name,
-                        highLightRange
-                    }
-                }
-                emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
-                // 纯跳转行号
-                setTimeout(() => {
-                    const obj: JumpToAuditEditorProps = {
-                        selections: highLightRange,
-                        path: url,
-                        isSelect: false
-                    }
-                    emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
-                }, 100)
-                onClose && onClose()
-            }
-        } catch (error) {}
+        onJumpByCodeRange(data).then(() => {
+            onClose && onClose()
+        })
     })
 
     const rightContextRef = useRef<any>()
@@ -460,8 +447,8 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
                             <div className={styles["progress-opt"]}>
                                 <Progress
                                     size='small'
-                                    strokeColor='#F28B44'
-                                    trailColor='#F0F2F5'
+                                    strokeColor='var(--Colors-Use-Main-Primary)'
+                                    trailColor='var(--Colors-Use-Neutral-Bg)'
                                     percent={Math.floor(
                                         (streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100
                                     )}

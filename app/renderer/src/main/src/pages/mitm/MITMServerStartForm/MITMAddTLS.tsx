@@ -47,7 +47,7 @@ const MITMAddTLS: React.FC<AddTLSProps> = React.memo((props) => {
             width='50%'
             bodyStyle={{padding: 0}}
         >
-            <InputCertificateForm ref={cerFormRef} formProps={{layout:'vertical',style:{padding:"24px 16px"}}}/>
+            <InputCertificateForm ref={cerFormRef} formProps={{layout: "vertical", style: {padding: "24px 16px"}}} />
         </YakitModal>
     )
 })
@@ -61,7 +61,7 @@ interface InputCertificateFormProp {
 }
 
 export const InputCertificateForm: React.FC<InputCertificateFormProp> = React.forwardRef((props, ref) => {
-    const {isShowCerName = true,formProps} = props
+    const {isShowCerName = true, formProps} = props
     const [form] = Form.useForm()
     useImperativeHandle(
         ref,
@@ -73,10 +73,17 @@ export const InputCertificateForm: React.FC<InputCertificateFormProp> = React.fo
     )
     return (
         <Form className={styles["input-certificate-form"]} form={form} {...formProps}>
-            {isShowCerName&&<Form.Item name='CerName' rules={[{required: true, message: "该项必填"}]}>
-                <YakitInput placeholder='请为你的证书对取一个名字（必填）' />
-            </Form.Item>}
-            <Form.Item label={"客户端证书(PEM)"} name='CrtPem' rules={[{required: true, message: "该项必填"}]}>
+            {isShowCerName && (
+                <Form.Item name='CerName' rules={[{required: true, message: "该项必填"}]}>
+                    <YakitInput placeholder='请为你的证书对取一个名字（必填）' />
+                </Form.Item>
+            )}
+            <Form.Item
+                label={"客户端证书(PEM)"}
+                name='CrtPem'
+                rules={[{required: true, message: "该项必填"}]}
+                className={styles["pem-code-wrapper"]}
+            >
                 <YakEditor
                     type={"html"}
                     noMiniMap={true}
@@ -88,7 +95,12 @@ export const InputCertificateForm: React.FC<InputCertificateFormProp> = React.fo
                     // value={Uint8ArrayToString(params.CrtPem)}
                 />
             </Form.Item>
-            <Form.Item label={"客户端私钥(PEM)"} name='KeyPem' rules={[{required: true, message: "该项必填"}]}>
+            <Form.Item
+                label={"客户端私钥(PEM)"}
+                name='KeyPem'
+                rules={[{required: true, message: "该项必填"}]}
+                className={styles["pem-code-wrapper"]}
+            >
                 <YakEditor
                     type={"html"}
                     setValue={(KeyPem) => {
@@ -100,7 +112,12 @@ export const InputCertificateForm: React.FC<InputCertificateFormProp> = React.fo
                     noWordWrap={true}
                 />
             </Form.Item>
-            <Form.Item label={"CA 根证书"} name='CaCertificates' required={false}>
+            <Form.Item
+                label={"CA 根证书"}
+                name='CaCertificates'
+                required={false}
+                className={styles["pem-code-wrapper"]}
+            >
                 <YakEditor
                     type={"html"}
                     setValue={(CaCertBytes) => {
@@ -111,6 +128,9 @@ export const InputCertificateForm: React.FC<InputCertificateFormProp> = React.fo
                     noMiniMap={true}
                     noWordWrap={true}
                 />
+            </Form.Item>
+            <Form.Item label={"指定host地址"} name={"Host"}>
+                <YakitInput placeholder='例如baidu.com或者*.baidu.com' />
             </Form.Item>
         </Form>
     )

@@ -21,6 +21,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {setClipboardText} from "@/utils/clipboard"
 import {grpcFetchLatestOSSDomain} from "@/apiUtils/grpc"
 import classNames from "classnames"
+import {YakitRoute} from "@/enums/yakitRoute"
 export interface VulinboxManagerProp {}
 
 const {ipcRenderer} = window.require("electron")
@@ -64,7 +65,6 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                 if (res.Ok) {
                     setAvailable(true)
                 } else {
-                    failed(res.Reason)
                     setAvailable(false)
                 }
             })
@@ -226,7 +226,11 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 }}
                                             />
                                         </div>
-                                    )
+                                    ),
+                                    getContainer:
+                                        document.getElementById(
+                                            `main-operator-page-body-${YakitRoute.Beta_VulinboxManager}`
+                                        ) || undefined
                                 })
                             }}
                         >
@@ -339,7 +343,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 <div
                                                     style={{
                                                         width: "calc(50% - 8px)",
-                                                        backgroundColor: "#f7f7f7",
+                                                        backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
                                                         padding: 16,
                                                         borderRadius: 8
                                                     }}
@@ -382,7 +386,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 <div
                                                     style={{
                                                         width: "calc(50% - 8px)",
-                                                        backgroundColor: "#f7f7f7",
+                                                        backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
                                                         padding: 16,
                                                         borderRadius: 8
                                                     }}
@@ -416,7 +420,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 <div
                                                     style={{
                                                         width: "calc(50% - 8px)",
-                                                        backgroundColor: "#f7f7f7",
+                                                        backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
                                                         padding: 16,
                                                         borderRadius: 8
                                                     }}
@@ -440,7 +444,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 <div
                                                     style={{
                                                         width: "calc(50% - 8px)",
-                                                        backgroundColor: "#f7f7f7",
+                                                        backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
                                                         padding: 16,
                                                         borderRadius: 8
                                                     }}
@@ -474,7 +478,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                                 style={{
                                                     marginTop: 16,
                                                     padding: 12,
-                                                    backgroundColor: "#f5f5f5",
+                                                    backgroundColor: 'var(--Colors-Use-Neutral-Bg)',
                                                     borderRadius: 4
                                                 }}
                                             >
@@ -564,7 +568,7 @@ export interface InstallVulinboxPromptProp {
     onFinished: () => any
 }
 
-export const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
+const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
     const [token, setToken] = useState(randomString(60))
     const [data, setData, getData] = useGetState<string[]>([])
     const [percent, setPercent] = useState(0)
@@ -610,8 +614,8 @@ export const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props
         <Space direction={"vertical"}>
             <div className={classNames(styles["download-progress"], "yakit-progress-wrapper")}>
                 <Progress
-                    strokeColor='#F28B44'
-                    trailColor='#F0F2F5'
+                    strokeColor='var(--Colors-Use-Main-Primary)'
+                    trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={percent}
                     format={(percent) => `已下载 ${percent}%`}
                 />

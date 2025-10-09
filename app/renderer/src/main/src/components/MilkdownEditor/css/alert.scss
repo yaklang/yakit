@@ -3,26 +3,27 @@
     padding: 12px;
     border-radius: 0 8px 8px 0;
     margin-bottom: 20px;
+    min-height: 48px;
 }
 
 .alter-custom-warning,
 .alter-custom-caution {
-    background-color: tools.fetch-color-transparen(var(--yakit-warning-5), 10%);
-    border-left: 3px solid var(--yakit-warning-5);
+    background-color: tools.fetch-color-transparen(var(--Colors-Use-Warning-Primary), 10%);
+    border-left: 3px solid var(--Colors-Use-Warning-Primary);
 }
 
 .alter-custom-danger {
-    background-color: tools.fetch-color-transparen(var(--yakit-danger-5), 10%);
-    border-left: 3px solid var(--yakit-danger-5);
+    background-color: tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 10%);
+    border-left: 3px solid var(--Colors-Use-Error-Primary);
 }
 
 .alter-custom-success,
 .alter-custom-tip {
-    background-color: tools.fetch-color-transparen(var(--yakit-success-5), 10%);
-    border-left: 3px solid var(--yakit-success-5);
+    background-color: tools.fetch-color-transparen(var(--Colors-Use-Success-Primary), 10%);
+    border-left: 3px solid var(--Colors-Use-Success-Primary);
 }
 
 .alter-custom-note {
-    background-color: var(--yakit-card-background-color);
-    border-left: 3px solid var(--yakit-border-color);
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    border-left: 3px solid var(--Colors-Use-Neutral-Border);
 }
