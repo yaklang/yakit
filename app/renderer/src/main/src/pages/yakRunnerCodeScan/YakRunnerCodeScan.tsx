@@ -1158,14 +1158,15 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                 break
                         }
                     }
-                    if (!!data?.RuntimeID && getRuntimeId() !== data.RuntimeID) {
-                        setRuntimeId(data.RuntimeID)
+                    if (res.TaskID && getRuntimeId() !== res.TaskID) {
+                        // console.log("RuntimeID changed:", data.RuntimeID);
+                        setRuntimeId(res.TaskID)
                         if (pageInfoCacheRef.current) {
                             setPageInfo({...pageInfoCacheRef.current, runtimeId: data.RuntimeID})
                         }
 
                         /**更新该页面最新的runtimeId */
-                        onUpdateExecutorPageInfo(data.RuntimeID)
+                        onUpdateExecutorPageInfo(res.TaskID)
                     }
                     if (data && data.IsMessage) {
                         try {
