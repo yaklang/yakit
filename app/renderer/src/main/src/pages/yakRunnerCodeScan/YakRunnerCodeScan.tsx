@@ -73,7 +73,7 @@ import {v4 as uuidv4} from "uuid"
 import {grpcFetchLocalPluginDetail} from "../pluginHub/utils/grpc"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {ExtraParamsNodeByType} from "../plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
-import {getYakExecutorParam, ParamsToGroupByGroupName} from "../plugins/editDetails/utils"
+import {getValueByType, getYakExecutorParam, ParamsToGroupByGroupName} from "../plugins/editDetails/utils"
 import {apiCancelDebugPlugin, apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
@@ -97,6 +97,7 @@ import {RuleDebugAuditDetail} from "../ruleManagement/template"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateReport"
 import CodeScanExtraParamsDrawer, {CodeScanExtraParam} from "./CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer"
+import { YakParamProps } from "../plugins/pluginsType"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -1662,6 +1663,24 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         // 由于此流还包含表单校验功能 因此需判断校验是否通过，是否已经真正的执行了
         const isRealStartRef = useRef<boolean>(false)
 
+        /** 填充表单默认值 */
+        const handleInitFormValue = useMemoizedFn((arr:YakParamProps[]) => {
+            // 表单内数据
+            let formData = {}
+            if (form) formData = (form.getFieldsValue() || {})
+            let defaultValue = {...formData}
+            let newFormValue = {}
+            arr.forEach((ele) => {
+                let initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
+                const value = getValueByType(initValue, ele.TypeVerbose)
+                newFormValue = {
+                    ...newFormValue,
+                    [ele.Field]: value
+                }
+            })
+            form.setFieldsValue({...cloneDeep(defaultValue || {}), ...newFormValue})
+        })
+
         /** 选填参数 */
         const groupParams = useMemo(() => {
             const arr =
@@ -1678,6 +1697,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                 plugin?.Params.filter(
                     (item) => item.Required && (item.Group || "").length > 0 && item.Group === "significant"
                 ) || []
+            handleInitFormValue(arr)     
             return ParamsToGroupByGroupName(arr)
         }, [plugin?.Params])
 
