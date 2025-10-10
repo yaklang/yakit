@@ -937,6 +937,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     lineDirection='bottom'
                     lineStyle={{display: firstFull ? "none" : ""}}
                     secondNodeStyle={{padding: firstFull ? 0 : undefined, display: firstFull ? "none" : ""}}
+                    //隐藏详情框 只需要清除选中项
+                    onClickHiddenBox={()=> onRowClick(undefined)}
                     firstNode={
                         <div className={styles["fuzzer-page-table-wrap"]}>
                             {showAlertFlag && (

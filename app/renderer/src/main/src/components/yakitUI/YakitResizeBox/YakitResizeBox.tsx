@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from "react"
 import {useMemoizedFn, useClickAway} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import classNames from "classnames"
+import { DoubleRightOutlined } from "@ant-design/icons"
 import styles from "./YakitResizeBox.module.scss"
 
 // 将像素与number都返回为number
@@ -244,6 +245,8 @@ export interface YakitResizeBoxProps {
     lineInStyle?: React.CSSProperties
     /** 鼠标抬起时的回调 */
     onMouseUp?: (e: MouseUpCallBackProps) => void
+    /** 点击隐藏整个区域 */
+    onClickHiddenBox?: () => void
 }
 
 export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) => {
@@ -265,13 +268,15 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         style,
         lineStyle,
         lineInStyle,
-        onMouseUp
+        onMouseUp,
+        onClickHiddenBox,
     } = props
 
     const bodyRef = useRef<HTMLDivElement>(null)
     const firstRef = useRef<HTMLDivElement>(null)
     const secondRef = useRef<HTMLDivElement>(null)
     const lineRef = useRef<HTMLDivElement>(null)
+    const handleRef = useRef<HTMLDivElement>(null)
     const maskRef = useRef<HTMLDivElement>(null)
     const [bodyWidth, setBodyWidth] = useState<number>(0)
     const [bodyHeight, setBodyHeight] = useState<number>(0)
@@ -410,6 +415,28 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         bodyResize()
     }, [bodyWidth, bodyHeight])
 
+    // 阻止隐藏按钮操作向上冒泡
+    useEffect(() => {
+        const handle = handleRef.current
+        if (!handle) return;
+
+        const stop = (e: Event) => {
+            e.stopPropagation()
+        }
+
+        handle.addEventListener("mousedown", stop, {capture: true})
+        handle.addEventListener("pointerdown", stop, {capture: true})
+        handle.addEventListener("touchstart", stop, {capture: true})
+        handle.addEventListener("dragstart", stop, {capture: true})
+
+        return () => {
+            handle.removeEventListener("mousedown", stop, {capture: true})
+            handle.removeEventListener("pointerdown", stop, {capture: true})
+            handle.removeEventListener("touchstart", stop, {capture: true})
+            handle.removeEventListener("dragstart", stop, {capture: true})
+        }
+    }, [])
+
     return (
         <div ref={bodyRef} style={{...style, flexFlow: `${isVer ? "column" : "row"}`}} className={styles["resize-box"]}>
             <ReactResizeDetector
@@ -472,6 +499,17 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                         [styles["resize-split-line-right"]]: lineDirection === "right" && !isVer
                     })}
                 >
+                    {isVer && !!onClickHiddenBox &&
+                        <div 
+                            className={classNames(styles["resize-split-handle"], 
+                                lineDirection === "bottom" ? styles["resize-split-handle-bottom"] : styles["resize-split-handle-top"])}
+                            ref={handleRef}
+                            onClick={onClickHiddenBox}
+                        >
+                            <DoubleRightOutlined className={styles["resize-split-handle-icon"]}/>
+                            <span className={styles["resize-split-handle-text"]}>收起</span>
+                        </div>
+                    }
                     <div
                         style={{
                             ...lineInStyle
