@@ -1396,7 +1396,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                     className={styles["textarea-body"]}
                     value={value}
                     bordered={false}
-                    autoSize={{minRows: 2, maxRows: 3}}
+                    autoSize={{minRows: 1, maxRows: 3}}
                     placeholder='请留下对处置的说明...'
                     spellCheck={false}
                     onFocus={handleFocus}
@@ -1405,7 +1405,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                     size='small'
                 />
                 <div className={styles["right-footer"]}>
-                    <YakitButton loading={loading} disabled={disabled} onClick={onSubmit}>
+                    <YakitButton size="small" loading={loading} disabled={disabled} onClick={onSubmit}>
                         <SolidPaperairplaneIcon />
                         发布处置
                     </YakitButton>

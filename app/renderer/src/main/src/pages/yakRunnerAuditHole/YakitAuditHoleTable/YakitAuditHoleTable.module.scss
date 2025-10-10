@@ -577,10 +577,10 @@ $keyColor: map-keys($tagColor);
    
         .footer-textarea {
             width: 100%;
-            padding: 12px;
+            padding: 6px 8px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 2px;
             border-radius: 4px;
             border: 1px solid var(--Colors-Use-Neutral-Border);
             cursor: text;
