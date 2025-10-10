@@ -25,7 +25,10 @@ import {genDefaultPagination, QueryGeneralResponse, YakScript} from "@/pages/inv
 import {Badge, Divider, Form, FormInstance, Input, Progress, Slider, Tooltip, Tree} from "antd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ExtraParamsNodeByType} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
-import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {
+    ExecuteEnterNodeByPluginParams,
+    FormContentItemByType
+} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {
     getValueByType,
@@ -132,6 +135,7 @@ import {FileDefault, FileSuffix, KeyToIcon} from "../../yakRunner/FileTree/icon"
 import {RiskTree} from "../RunnerFileTree/RunnerFileTree"
 import {getNameByPath} from "@/pages/yakRunner/utils"
 import {FuncFilterPopover} from "@/pages/plugins/funcTemplate"
+import cloneDeep from "lodash/cloneDeep"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -1509,11 +1513,42 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
         handleFetchParams()
     }, [])
 
+    /** 填充表单默认值 */
+    const handleInitFormValue = useMemoizedFn((arr: YakParamProps[]) => {
+        // 表单内数据
+        let formData = {}
+        if (form) formData = form.getFieldsValue() || {}
+        let defaultValue = {...formData}
+        let newFormValue = {}
+        arr.forEach((ele) => {
+            let initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
+            const value = getValueByType(initValue, ele.TypeVerbose)
+            newFormValue = {
+                ...newFormValue,
+                [ele.Field]: value
+            }
+        })
+        form.setFieldsValue({...cloneDeep(defaultValue || {}), ...newFormValue})
+    })
+
     /** 选填参数 */
     const groupParams = useMemo(() => {
-        const arr = plugin?.Params.filter((item) => !item.Required) || []
-        const showArr = arr.filter((item) => (item.Group || "").length > 0)
-        return ParamsToGroupByGroupName(showArr)
+        const arr =
+            plugin?.Params.filter(
+                (item) => !item.Required && (item.Group || "").length > 0
+            ) || []
+
+        return ParamsToGroupByGroupName(arr)
+    }, [plugin?.Params])
+
+    /** 必填参数（头部展示） */
+    const groupParamsHeader = useMemo(() => {
+        const arr =
+            plugin?.Params.filter(
+                (item) => item.Required && (item.Group || "").length > 0
+            ) || []
+        handleInitFormValue(arr)
+        return ParamsToGroupByGroupName(arr)
     }, [plugin?.Params])
 
     /** 自定义控件数据 */
@@ -1603,6 +1638,20 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                         // accept=""
                     />
                 </Form.Item>
+
+                {groupParamsHeader.length > 0 && (
+                    <>
+                        {groupParamsHeader.map((item, index) => (
+                            <>
+                                {item.data?.map((formItem) => (
+                                    <React.Fragment key={formItem.Field + formItem.FieldVerbose}>
+                                        <FormContentItemByType item={formItem} pluginType={"yak"} />
+                                    </React.Fragment>
+                                ))}
+                            </>
+                        ))}
+                    </>
+                )}
 
                 {groupParams.length > 0 && (
                     <>

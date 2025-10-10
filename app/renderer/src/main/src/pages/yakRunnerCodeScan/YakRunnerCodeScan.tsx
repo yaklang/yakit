@@ -1685,9 +1685,8 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         const groupParams = useMemo(() => {
             const arr =
                 plugin?.Params.filter(
-                    (item) => !item.Required && (item.Group || "").length > 0 && item.Group !== "significant"
+                    (item) => !item.Required && (item.Group || "").length > 0
                 ) || []
-
             return ParamsToGroupByGroupName(arr)
         }, [plugin?.Params])
 
@@ -1695,7 +1694,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         const groupParamsHeader = useMemo(() => {
             const arr =
                 plugin?.Params.filter(
-                    (item) => item.Required && (item.Group || "").length > 0 && item.Group === "significant"
+                    (item) => item.Required && (item.Group || "").length > 0
                 ) || []
             handleInitFormValue(arr)     
             return ParamsToGroupByGroupName(arr)
