@@ -346,7 +346,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             ? [StringToUint8Array(values.CaCertificates)]
                             : [],
                     CrtPem: StringToUint8Array(values.CrtPem),
-                    KeyPem: StringToUint8Array(values.CrtPem),
+                    KeyPem: StringToUint8Array(values.KeyPem),
                     Host: values.Host || ""
                 }
                 const newParams: GlobalNetworkConfig = {
