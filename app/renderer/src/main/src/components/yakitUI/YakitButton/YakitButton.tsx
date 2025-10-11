@@ -3,6 +3,7 @@ import {Button, ButtonProps} from "antd"
 
 import styles from "./yakitButton.module.scss"
 import classNames from "classnames"
+import {isNumber, isString} from "lodash"
 
 export interface YakitButtonProp extends Omit<ButtonProps, "size" | "type" | "ghost" | "shape"> {
     type?: "primary" | "secondary2" | "outline1" | "outline2" | "text" | "text2"
@@ -11,11 +12,12 @@ export interface YakitButtonProp extends Omit<ButtonProps, "size" | "type" | "gh
     size?: "small" | "middle" | "large" | "max"
     isHover?: boolean
     isActive?: boolean
+    radius?: boolean | number | string
 }
 
 /** @name Yakit 主题按钮组件 */
 export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
-    const {size, type, colors, isHover, isActive, children, className, danger, ...resePopover} = props
+    const {size, type, colors, isHover, isActive, children, className, danger, radius, ...resePopover} = props
     const typeClass = useMemo(() => {
         if (type === "secondary2") return "yakit-button-secondary2"
         if (type === "outline1") return "yakit-button-outline1"
@@ -39,6 +41,21 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
         return "yakit-button-size"
     }, [size])
 
+    const style: React.CSSProperties = useMemo(() => {
+        let styleObj = {}
+        if (isNumber(radius)) {
+            styleObj = {
+                "--yakit-button-border-radius": `${radius}px`
+            }
+        }
+        if (isString(radius)) {
+            styleObj = {
+                "--yakit-button-border-radius": radius
+            }
+        }
+        return styleObj as React.CSSProperties
+    }, [radius])
+
     return (
         <Button
             {...resePopover}
@@ -51,8 +68,10 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
                 styles[sizeClass],
                 {[styles["yakit-hover-button"]]: !!isHover},
                 {[styles["yakit-active-button"]]: !!isActive},
+                {[styles["yakit-border-radius-button"]]: !!radius},
                 className || ""
             )}
+            style={{...style, ...(props.style || {})}}
         >
             {children}
         </Button>
