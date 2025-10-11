@@ -6,15 +6,11 @@ import {
     CreateSSARiskDisposalsRequest,
     SSARiskDisposalData
 } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils"
-import {
-    AuditResultHistory,
-    YakitRiskSelectTag
-} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
+import {AuditResultHistory} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {RightBugAuditResultHeader} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import styles from "./HoleDispose.module.scss"
+import emiter from "@/utils/eventBus/eventBus"
 export interface HoleDisposeProps {
     RiskHash: string
     info?: SSARisk
@@ -22,7 +18,7 @@ export interface HoleDisposeProps {
 export const HoleDispose: React.FC<HoleDisposeProps> = (props) => {
     const {RiskHash, info} = props
     const [disposalData, setDisposalData] = useState<SSARiskDisposalData[]>()
-    const getSSARiskDisposal = useMemoizedFn((RiskHash) => {
+    const getSSARiskDisposal = useMemoizedFn(() => {
         apiGetSSARiskDisposal({RiskHash}).then((data) => {
             setDisposalData(data.Data || [])
         })
@@ -30,50 +26,25 @@ export const HoleDispose: React.FC<HoleDisposeProps> = (props) => {
 
     useEffect(() => {
         setDisposalData(undefined)
-        getSSARiskDisposal(RiskHash)
+        getSSARiskDisposal()
     }, [RiskHash])
 
-    const onCreateTags = useMemoizedFn((params: CreateSSARiskDisposalsRequest) => {
-        apiCreateSSARiskDisposals(params).then(() => {
-            if (RiskHash) {
-                getSSARiskDisposal(RiskHash)
-            }
-        })
-    })
-
-    const onOpenSelect = useMemoizedFn((record: SSARisk) => {
-        const m = showYakitModal({
-            title: (
-                <div className='content-ellipsis'>
-                    序号【{record.Id}】- {record.TitleVerbose || record.Title}
-                </div>
-            ),
-            content: <YakitRiskSelectTag ids={[record.Id]} onClose={() => m.destroy()} onCreate={onCreateTags} />,
-            footer: null,
-            onCancel: () => {
-                m.destroy()
-            }
-        })
-    })
-
     return (
-        <div>
+        <div className={styles["hole-dispose-container"]}>
             {info && disposalData && (
                 <>
-                    <RightBugAuditResultHeader
+                    <RightBugAuditResultHeader info={info} />
+
+                    <AuditResultHistory
                         info={info}
-                        extra={<YakitButton type="text" onClick={() => onOpenSelect(info)}>处置漏洞</YakitButton>}
+                        disposalData={disposalData}
+                        setDisposalData={setDisposalData}
+                        style={{padding: 12}}
+                        getSSARiskDisposal={getSSARiskDisposal}
+                        refreshFileOrRuleTree={()=>{
+                            emiter.emit("onRefreshFileOrRuleTree")
+                        }}
                     />
-                    {disposalData.length > 0 ? (
-                        <AuditResultHistory
-                            info={info}
-                            disposalData={disposalData}
-                            setDisposalData={setDisposalData}
-                            style={{padding: "4px 12px 0px"}}
-                        />
-                    ) : (
-                        <YakitEmpty title='暂无漏洞处置信息' />
-                    )}
                 </>
             )}
         </div>

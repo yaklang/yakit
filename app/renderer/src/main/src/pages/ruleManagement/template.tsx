@@ -32,14 +32,14 @@ import {
     OutlineSearchIcon,
     OutlineSelectorIcon,
     OutlineTrashIcon,
-    OutlineXIcon
+    OutlineXIcon,
+    OutlineReplyIcon
 } from "@/assets/icon/outline"
 import {
     SolidCheckIcon,
     SolidClouddownloadIcon,
     SolidClouduploadIcon,
     SolidFolderopenIcon,
-    SolidPlayIcon,
     SolidReplyIcon
 } from "@/assets/icon/solid"
 import {Descriptions, Form, InputRef, Modal, Progress, Tooltip} from "antd"
@@ -653,7 +653,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             }
             return () => {
                 // 重置基础信息
-                setExpand(true)
+                setExpand(false)
                 setGroups([])
                 setActiveTab(undefined)
                 setProject([])
@@ -673,7 +673,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     }, [visible])
 
     /** ---------- 展开|收起 Start ---------- */
-    const [expand, setExpand] = useState<boolean>(true)
+    const [expand, setExpand] = useState<boolean>(false)
     const handleSetExpand = useMemoizedFn(() => {
         setExpand((val) => !val)
         setInfoTooltipShow(false)
@@ -947,6 +947,11 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
         ]
     }, [isEdit, info])
 
+    const goBackForm = useMemoizedFn(() => {
+        onStop()
+        onReset()
+    })
+
     return (
         <>
             <YakitDrawer
@@ -1089,15 +1094,12 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
                             <div className={styles["header-extra"]}>
                                 {!!progress && <PluginExecuteProgress percent={progress} name='执行进度' />}
-                                {isExecuting ? (
-                                    <div className={styles["extra-btns"]}>
-                                        <YakitButton danger onClick={handleStop}>
-                                            停止
-                                        </YakitButton>
-                                    </div>
-                                ) : (
-                                    <YakitButton icon={<SolidPlayIcon />} onClick={handleExecute}>
-                                        执行
+                                <YakitButton type='text' onClick={handleOpenScoreHint}>
+                                    自动检测
+                                </YakitButton>
+                                {isShowResult && (
+                                    <YakitButton type='outline2' onClick={goBackForm} icon={<OutlineReplyIcon />}>
+                                        返回
                                     </YakitButton>
                                 )}
                             </div>
@@ -1154,36 +1156,41 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                             defaultActiveKey={undefined}
                                         />
                                     ) : (
-                                        <div className={styles["tab-pane-empty"]}>
-                                            <YakitEmpty style={{marginTop: 60}} description={"点击【执行】以开始"} />
+                                        <div className={styles["params-container"]}>
+                                            <Form
+                                                labelCol={{span: 4}}
+                                                wrapperCol={{span: 18}}
+                                                form={debugForm}
+                                                className={styles["params-form"]}
+                                            >
+                                                <Form.Item label={"项目名称"} name={"project"} rules={[{required: true, message: "该项为必填"}]}>
+                                                    <YakitSelect
+                                                        mode='multiple'
+                                                        showSearch={true}
+                                                        placeholder='请选择项目后调试'
+                                                        options={project}
+                                                        defaultActiveFirstOption={false}
+                                                        filterOption={false}
+                                                        notFoundContent='暂无数据'
+                                                        onSearch={handleSearchProject}
+                                                    />
+                                                </Form.Item>
+                                                <Form.Item label={" "} colon={false}>
+                                                    {isExecuting ? (
+                                                        <div className={styles["extra-btns"]}>
+                                                            <YakitButton size='large' danger onClick={handleStop}>
+                                                                停止
+                                                            </YakitButton>
+                                                        </div>
+                                                    ) : (
+                                                        <YakitButton size='large' onClick={handleExecute}>
+                                                            执行
+                                                        </YakitButton>
+                                                    )}
+                                                </Form.Item>
+                                            </Form>
                                         </div>
                                     )}
-                                </div>
-                            </div>
-
-                            <div className={styles["code-params"]}>
-                                <div className={styles["params-header"]}>
-                                    <span className={styles["header-title"]}>参数配置</span>
-                                    <YakitButton type='text' onClick={handleOpenScoreHint}>
-                                        自动检测
-                                    </YakitButton>
-                                </div>
-
-                                <div className={styles["params-container"]}>
-                                    <Form form={debugForm} className={styles["params-form"]}>
-                                        <Form.Item label={"项目名称"} name={"project"}>
-                                            <YakitSelect
-                                                mode='multiple'
-                                                showSearch={true}
-                                                placeholder='请选择项目后调试'
-                                                options={project}
-                                                defaultActiveFirstOption={false}
-                                                filterOption={false}
-                                                notFoundContent='暂无数据'
-                                                onSearch={handleSearchProject}
-                                            />
-                                        </Form.Item>
-                                    </Form>
                                 </div>
                             </div>
                         </div>

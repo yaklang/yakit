@@ -59,7 +59,7 @@ $keyColor: map-keys($tagColor);
             height: 16px;
         }
         &:hover {
-            color: var(--Colors-Use-Main-Primary)
+            color: var(--Colors-Use-Main-Primary);
         }
     }
     .yakit-risk-details {
@@ -563,4 +563,52 @@ $keyColor: map-keys($tagColor);
             }
         }
     }
+}
+
+.audit-result-history-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    .audit-result-history-list {
+        flex: 1;
+        overflow: auto;
+    }
+   
+        .footer-textarea {
+            width: 100%;
+            padding: 6px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border-radius: 4px;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            cursor: text;
+            .select-wrapper {
+                display: flex;
+                align-items: center;
+                .label {
+                }
+                .option {
+                    width: 280px;
+                }
+            }
+            .textarea-body {
+                padding: 0;
+            }
+            .right-footer {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                justify-content: end;
+            }
+        }
+        .footer-textarea:hover {
+            border-color: var(--Colors-Use-Main-Border);
+        }
+        .footer-textarea-focus {
+            border-color: var(--Colors-Use-Main-Border);
+            box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
+        }
+ 
 }

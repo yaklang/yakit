@@ -11,7 +11,7 @@ import {
 } from "./YakitAuditHoleTableType"
 import styles from "./YakitAuditHoleTable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {Badge, Divider, Form, Tooltip} from "antd"
+import {Badge, Divider, Form, Input, Tooltip} from "antd"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useControllableValue, useCreation, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
@@ -77,6 +77,9 @@ import {RemoteAuditHoleGV} from "@/enums/auditHole"
 import {useStore} from "@/store"
 import {PopoverArrowIcon} from "@/pages/pluginHub/pluginLog/PluginLogOpt"
 import {LogNodeStatusModifyIcon} from "@/assets/icon/colors"
+import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
+import {TextAreaRef} from "antd/lib/input/TextArea"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 
 export const defQuerySSARisksRequest: QuerySSARisksRequest = {
     Pagination: {Page: 1, Limit: 20, OrderBy: "id", Order: "desc"},
@@ -501,9 +504,9 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     const [disposalData, setDisposalData] = useState<SSARiskDisposalData[]>([])
     const getSSARiskDisposal = useMemoizedFn((newInfo) => {
         apiGetSSARiskDisposal({RiskId: newInfo.Id}).then((data) => {
-            if ((data.Data || []).length === 0 && showType === "history") {
-                setShowType("detail")
-            }
+            // if ((data.Data || []).length === 0 && showType === "history") {
+            //     setShowType("detail")
+            // }
             setDisposalData(data.Data || [])
         })
     })
@@ -1015,12 +1018,12 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                 value: "code"
             }
         ]
-        if (disposalData.length > 0) {
+        // if (disposalData.length > 0) {
             options.push({
                 label: "处置历史",
                 value: "history"
             })
-        }
+        // }
         return options
     }, [disposalData])
 
@@ -1173,7 +1176,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                 )}
             </div>
             <YakitRadioButtons
-                style={{margin: 6 }}
+                style={{margin: 6}}
                 value={showType}
                 onChange={(e) => {
                     const value = e.target.value
@@ -1202,8 +1205,8 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                     info={info}
                     disposalData={disposalData}
                     setDisposalData={setDisposalData}
-                    setShowType={setShowType}
                     setLatestDisposalStatus={setLatestDisposalStatus}
+                    getSSARiskDisposal={getSSARiskDisposal}
                 />
             )}
         </div>
@@ -1211,23 +1214,28 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
 })
 
 export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props) => {
-    const {info, setShowType, setLatestDisposalStatus,style} = props
+    const {info, setLatestDisposalStatus, style, getSSARiskDisposal,refreshFileOrRuleTree} = props
     const [disposalData, setDisposalData] = useControllableValue<SSARiskDisposalData[]>(props, {
         defaultValue: [],
         valuePropName: "disposalData",
         trigger: "setDisposalData"
     })
+    // 文本内容相关
+    const textAreaRef = useRef<TextAreaRef>(null)
+    const [value, setValue] = useState<string>("")
+    const [loading, setLoading] = useState<boolean>(false)
+    const [selectValue, setSelectValue] = useState<string>("")
+    const disabled = useMemo(() => {
+        return value.length === 0 || selectValue.length === 0
+    }, [value, selectValue])
     const onDeleteSSARiskDisposals = useMemoizedFn((id: number) => {
         apiDeleteSSARiskDisposals({Filter: {ID: [id]}})
             .then(() => {
                 const newDisposalData = disposalData.filter((item) => item.Id !== id)
-                // 删除完毕后跳转至漏洞详情
-                if (newDisposalData.length === 0) {
-                    setShowType && setShowType("detail")
-                }
                 setLatestDisposalStatus &&
                     setLatestDisposalStatus(info, newDisposalData.length > 0 ? newDisposalData[0].Status : "not_set")
                 setDisposalData(newDisposalData)
+                refreshFileOrRuleTree?.()
                 yakitNotify("success", "删除成功")
             })
             .catch((e) => {
@@ -1244,7 +1252,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
             return option ? option.label : "未识别状态"
         }
         return (
-            <div className={classNames(styles["audit-result-history"])} style={style}>
+            <div className={classNames(styles["audit-result-history"])}>
                 <div className={styles["audit-result-history-opt"]}>
                     <PopoverArrowIcon className={styles["arrow-icon"]} />
                     <div className={styles["icon-wrapper"]}>
@@ -1306,9 +1314,103 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
             </div>
         )
     })
+
+    const onSubmit = useMemoizedFn(() => {
+        setLoading(true)
+        const params: CreateSSARiskDisposalsRequest = {
+            RiskIds: [info.Id],
+            Status: selectValue,
+            Comment: value
+        }
+        apiCreateSSARiskDisposals(params).then(() => {
+            setLatestDisposalStatus && setLatestDisposalStatus(info, selectValue)
+            getSSARiskDisposal && getSSARiskDisposal(info)
+            setValue("")
+            setSelectValue("")
+            setLoading(false)
+            yakitNotify("success", "处置成功")
+            refreshFileOrRuleTree?.()
+        })
+    })
+    /** ----------  操作相关 Start ---------- */
+    const [textareaFocus, setTextareaFocus] = useState<boolean>(false)
+    // 文本区域聚焦状态
+    const handleFocus = useMemoizedFn(() => {
+        setTextareaFocus(true)
+        textAreaRef.current!.focus({cursor: "end"})
+    })
+    // 文本区域失焦状态
+    const handleBlur = useMemoizedFn(() => {
+        setTextareaFocus(false)
+    })
+    // 文本区域聚焦后光标设置到文本内容最后
+    const handleTextareaFocus = useMemoizedFn(() => {
+        textAreaRef.current!.focus({cursor: "end"})
+    })
+    /** ---------- 操作相关 End ---------- */
     return (
-        <div style={{overflow: "auto"}}>
-            {(disposalData || []).map((item, index) => AuditResultHistoryItem(item, index))}
+        <div className={styles["audit-result-history-wrapper"]} style={style}>
+            <div className={styles["audit-result-history-list"]}>
+                {disposalData.length > 0 ? (
+                    <>{disposalData.map((item, index) => AuditResultHistoryItem(item, index))}</>
+                ) : (
+                    <YakitEmpty title='暂无漏洞处置信息' />
+                )}
+            </div>
+
+            <div
+                className={classNames(styles["footer-textarea"], {
+                    [styles["footer-textarea-focus"]]: textareaFocus
+                })}
+                onClick={handleTextareaFocus}
+            >
+                <div className={styles["select-wrapper"]}>
+                    <div className={styles["label"]}>处置状态：</div>
+                    <div
+                        className={styles["option"]}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                    >
+                        <YakitSelect
+                            allowClear
+                            value={selectValue}
+                            onChange={(v) => {
+                                setSelectValue(v)
+                            }}
+                            size='small'
+                        >
+                            {defaultTags.map((item) => {
+                                return (
+                                    <YakitSelect.Option key={item.value} value={item.value}>
+                                        {item.label}
+                                    </YakitSelect.Option>
+                                )
+                            })}
+                        </YakitSelect>
+                    </div>
+                </div>
+
+                <Input.TextArea
+                    ref={textAreaRef}
+                    className={styles["textarea-body"]}
+                    value={value}
+                    bordered={false}
+                    autoSize={{minRows: 1, maxRows: 3}}
+                    placeholder='请留下对处置的说明...'
+                    spellCheck={false}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    onChange={(e) => setValue(e.target.value)}
+                    size='small'
+                />
+                <div className={styles["right-footer"]}>
+                    <YakitButton size="small" loading={loading} disabled={disabled} onClick={onSubmit}>
+                        <SolidPaperairplaneIcon />
+                        发布处置
+                    </YakitButton>
+                </div>
+            </div>
         </div>
     )
 })

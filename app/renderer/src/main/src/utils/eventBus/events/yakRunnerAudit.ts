@@ -54,4 +54,6 @@ export type YakRunnerAuditEventProps = {
     onOpenSearchModal?: string
     // 通知打开左边第二栏
     onOpenLeftSecondNode: "result" | "history"
+    // 刷新文件树或者规则树
+    onRefreshFileOrRuleTree?: string
 }
