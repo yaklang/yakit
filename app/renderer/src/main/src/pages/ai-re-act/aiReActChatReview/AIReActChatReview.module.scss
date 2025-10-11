@@ -176,7 +176,7 @@
     flex-direction: column;
     gap: 12px;
     border-radius: 8px;
-    background: var(--Colors-Use-Neutral-Bg-Hover);
+    background: var(--Colors-Use-Basic-Background);
     .task-tool-info {
         display: flex;
         flex-direction: column;
@@ -256,6 +256,7 @@
                 line-height: 14px;
                 letter-spacing: 0.5px;
                 cursor: pointer;
+                padding: 3px 0;
             }
         }
     }
@@ -325,4 +326,30 @@
     display: flex;
     align-items: center;
     gap: 8px;
+}
+.task-review-summary-popover {
+    max-width: 700px;
+    padding-bottom: 4px;
+    .task-long-summary {
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        font-size: 12px;
+        font-weight: 400;
+
+        .summary-header {
+            height: 16px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+        .summary-content {
+            width: 400px;
+            max-height: 64px;
+            overflow: hidden auto;
+            line-height: 16px;
+        }
+    }
 }

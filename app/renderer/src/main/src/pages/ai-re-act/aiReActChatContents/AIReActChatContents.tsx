@@ -148,7 +148,7 @@ export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.mem
                     {nodeLabel}
                 </div>
                 <div className={styles["ai-stream-content"]}>
-                    {stream.length > 150 && <div className={styles["ai-mask"]} />}
+                    {stream.length > 100 && <div className={styles["ai-mask"]} />}
                     {content}
                 </div>
             </div>

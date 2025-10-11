@@ -164,7 +164,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                         <div className={styles["summary-content"]}>{short_summary}</div>
                         <div className={styles["summary-detail"]}>
                             <YakitPopover
-                                overlayStyle={{paddingBottom: 4}}
                                 overlayClassName={styles["task-review-summary-popover"]}
                                 content={
                                     <div className={styles["task-long-summary"]}>
@@ -265,7 +264,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                 key={el.value}
                                 type='outline2'
                                 onClick={() => handleShowEdit(el)}
-                                isRadius={true}
+                                radius={true}
                             >
                                 {el.prompt || el.value}
                             </YakitButton>
@@ -361,7 +360,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                 type='outline2'
                                 onClick={() => onSetAIOptionsSelect(ele.prompt || ele.prompt_title)}
                                 isHover={isHover}
-                                isRadius={true}
+                                radius={true}
                             >
                                 {ele.prompt || ele.prompt_title}
                             </YakitButton>
@@ -433,11 +432,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                         })}
                                     </div>
                                 )}
-                                {/* <YakitButton onClick={handleContinue}>
-                                    继续执行
-                                    <OutlineWarpIcon />
-                                </YakitButton> */}
-                                <button className={styles["continue-btn"]}>
+                                <button className={styles["continue-btn"]} onClick={handleContinue}>
                                     立即执行
                                     <OutlineWarpColorsIcon />
                                 </button>
@@ -543,13 +538,13 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                                         type='outline2'
                                                         icon={<OutlineXIcon />}
                                                         onClick={() => handleCallbackEdit(false)}
-                                                        isRadius={true}
+                                                        radius={true}
                                                     />
                                                     <YakitButton
                                                         className={styles["btn-style"]}
                                                         icon={<OutlineArrowrightIcon />}
                                                         onClick={() => handleCallbackEdit(true)}
-                                                        isRadius={true}
+                                                        radius={true}
                                                     />
                                                 </div>
                                             </div>
