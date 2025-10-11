@@ -16,6 +16,13 @@ interface TDeleteConfirmProps extends Required<Pick<TKnowledgeBaseProps, "refres
     onVisible: (v: boolean) => void
 }
 
+interface TExportModalProps extends Required<Pick<TKnowledgeBaseProps, "refreshAsync" | "visible">> {
+    KnowledgeBaseId: number
+    onVisible: (v: boolean) => void
+}
 
+interface TImportModalProps extends Required<Pick<TKnowledgeBaseProps, "refreshAsync" | "visible">> {
+    onVisible: (v: boolean) => void
+}
 
-export type {TKnowledgeBaseProps, TDeleteConfirmProps}
+export type {TKnowledgeBaseProps, TDeleteConfirmProps, TExportModalProps, TImportModalProps}
