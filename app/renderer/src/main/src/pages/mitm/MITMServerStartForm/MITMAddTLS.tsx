@@ -32,7 +32,7 @@ const MITMAddTLS: React.FC<AddTLSProps> = React.memo((props) => {
                                 ? [StringToUint8Array(values.CaCertificates)]
                                 : [],
                         CrtPem: StringToUint8Array(values.CrtPem),
-                        KeyPem: StringToUint8Array(values.CrtPem)
+                        KeyPem: StringToUint8Array(values.KeyPem)
                     }
                     if (certs.findIndex((ele) => ele.CerName === params.CerName) !== -1) {
                         yakitFailed("该名称已存在")
