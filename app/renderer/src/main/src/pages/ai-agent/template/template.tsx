@@ -161,6 +161,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
                     {extraFooterRight || null}
                     <YakitButton
                         className={styles["round-btn"]}
+                        radius='50%'
                         loading={loading}
                         disabled={!isQuestion}
                         icon={<OutlineArrowupIcon />}

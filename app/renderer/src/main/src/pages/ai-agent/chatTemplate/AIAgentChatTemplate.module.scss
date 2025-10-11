@@ -504,34 +504,9 @@
 }
 
 .task-review-wrapper {
-   
-}
-.task-review-summary-popover {
-    .task-long-summary {
-        color: var(--Colors-Use-Neutral-Text-4-Help-text, #9ca3b1);
-        font-size: 12px;
-        font-weight: 400;
-        .summary-header {
-            height: 16px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-        }
-        .summary-content {
-            width: 400px;
-            max-height: 64px;
-            overflow: hidden auto;
-            line-height: 16px;
-        }
-    }
 }
 
 .tool-review-wrapper {
-   
 }
 
 .ai-require-review-wrapper {
