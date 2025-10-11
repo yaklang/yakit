@@ -1734,6 +1734,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.DB_HTTPHistoryAnalysis:
                 onHTTPHistoryAnalysis(node, order)
                 break
+            case YakitRoute.DataCompare:
+                onDataCompare(node, order)
+                break
             default:
                 break
         }
@@ -2026,6 +2029,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         clearDataByRoute(data.route)
         if (data.route === YakitRoute.HTTPFuzzer) {
             clearFuzzerSequence()
+        }
+        if(data.route === YakitRoute.DataCompare) {
+            ipcRenderer.invoke("reset-data-compare")
         }
     })
 
@@ -2584,6 +2590,20 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         addPagesDataCache(YakitRoute.Modify_Notepad, newPageNode)
     })
 
+    /** 数据对比 */
+    const onDataCompare = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.DataCompare,
+            pageGroupId: node.groupId,
+            pageId: node.id, 
+            pageName: node.verbose,
+            pageParamsInfo: {},
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.DataCompare, newPageNode)
+    })
+
     /**
      * @description 设置专项漏洞
      */
@@ -2604,16 +2624,26 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
         addPagesDataCache(YakitRoute.PoC, newPageNode)
     })
+
+    const switchComparePage = () => {
+        const dataCompareSub = getPageCache().find(item => item.route === YakitRoute.DataCompare)?.multipleNode
+        const last = dataCompareSub?.[dataCompareSub.length - 1] || {}
+        emiter.emit("switchSubMenuItem", JSON.stringify({pageId: last.id, forceRefresh: true}))
+    }
+
     // 新增数据对比页面
     useEffect(() => {
         ipcRenderer.on("main-container-add-compare", (e, params) => {
-            openMenuPage({route: YakitRoute.DataCompare})
-
-            // 区分新建对比页面还是别的页面请求对比的情况
-            ipcRenderer.invoke("created-data-compare")
+            openMenuPage({route: YakitRoute.DataCompare}, {openFlag: params.openFlag ?? true})
+            switchComparePage()
+        })
+        ipcRenderer.on("switch-compare-page",() => {
+            setCurrentTabKey(YakitRoute.DataCompare)
+            switchComparePage()
         })
         return () => {
             ipcRenderer.removeAllListeners("main-container-add-compare")
+            ipcRenderer.removeAllListeners("switch-compare-page")
         }
     }, [pageCache])
     /**从历史记录中恢复数据 */

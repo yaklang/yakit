@@ -231,12 +231,12 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             {
                                 key: "code-compare-left",
                                 label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft"),
-                                disabled: [false, true, false][compareState]
+                                // disabled: [false, true, false][compareState]
                             },
                             {
                                 key: "code-compare-right",
                                 label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight"),
-                                disabled: [false, false, true][compareState]
+                                // disabled: [false, false, true][compareState]
                             }
                         ]
                     }
@@ -1252,12 +1252,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             {
                                 key: "code-compare-left",
                                 label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft"),
-                                disabled: [false, true, false][compareState]
+                                // disabled: [false, true, false][compareState]
                             },
                             {
                                 key: "code-compare-right",
                                 label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight"),
-                                disabled: [false, false, true][compareState]
+                                // disabled: [false, false, true][compareState]
                             }
                         ]
                     }

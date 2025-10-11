@@ -5,17 +5,11 @@ module.exports = (win, getClient) => {
   const dataMap = new Map();
   // 当前token值
   var token = "";
-  /**
-   * 新增页面的入口
-   * @type {boolean}
-   * true : 其他页面的请求新增
-   * false : 主页新增
-   */
-  var type = false;
+
+  var flag = ''
 
   // 接收http-history页面的数据对比请求,生成对映码并转发通知主页新增data-compare页面
   ipcMain.handle("add-data-compare", (e, params) => {
-    type = true;
     const infoType = ["", "left", "right"][+params.type];
 
     if (token) {
@@ -28,8 +22,16 @@ module.exports = (win, getClient) => {
         token: token,
         info: info,
       });
-      token = "";
-      type = false;
+      if(flag !== infoType){
+        token = "";
+        flag = ''
+      }
+      if(infoType === 'right'){
+        win.webContents.send('switch-compare-page',{
+          token,
+          info,
+        })
+      }
     } else {
       token = `compare-${new Date().getTime()}-${Math.floor(
         Math.random() * 50
@@ -38,29 +40,28 @@ module.exports = (win, getClient) => {
       info.type = +params.type;
       info[infoType] = params.info;
       dataMap.set(token, info);
-      win.webContents.send("main-container-add-compare");
+      win.webContents.send("main-container-add-compare", {
+        openFlag: infoType === 'right'
+      });
+      flag = infoType
     }
   });
 
-  ipcMain.handle("created-data-compare", (e) => {
-    type = true;
-  });
+  ipcMain.handle("reset-data-compare", () => {
+    dataMap.clear();
+    flag = ''
+    token = ''
+  })
 
-  // 转发数据
-  const sendDataCompare = () => {
-    return new Promise((resolve, reject) => {
-      if (type) return resolve({ token: token, info: dataMap.get(token) });
-      else {
-        return resolve({
-          token: `compare-${new Date().getTime()}-${Math.floor(
-            Math.random() * 50
-          )}`,
-        });
-      }
-    });
-  };
   // 接收主页收到的对比数据，并传入数据对比页面中
   ipcMain.handle("create-compare-token", async (e) => {
-    return await sendDataCompare();
+    if(token){
+      return { token, info: dataMap.get(token) }
+    }
+    const data = Array.from(dataMap.entries()).pop()
+    return  {
+      token: data[0],
+      info: data[1],
+    }
   });
 };

@@ -3161,12 +3161,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     {
                         key: "发送到对比器左侧",
                         label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft"),
-                        disabled: [false, true, false][compareState]
+                        // disabled: [false, true, false][compareState]
                     },
                     {
                         key: "发送到对比器右侧",
                         label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight"),
-                        disabled: [false, false, true][compareState]
+                        // disabled: [false, false, true][compareState]
                     }
                 ]
             },

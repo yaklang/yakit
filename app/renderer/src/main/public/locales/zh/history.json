@@ -65,7 +65,7 @@
       "removeColor": "移除颜色",
       "sendToComparer": "发送到对比器",
       "sendToComparerLeft": "发送到对比器左侧",
-      "sendToComparerRight": "发送到对比器右侧",
+      "sendToComparerRight": "发送到对比器右侧并跳转",
       "block": "屏蔽",
       "blockRecord": "屏蔽该记录",
       "blockURL": "屏蔽URL",
