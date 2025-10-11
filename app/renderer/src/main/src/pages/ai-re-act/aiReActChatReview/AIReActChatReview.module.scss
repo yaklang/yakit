@@ -17,20 +17,33 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            svg {
-                width: 24px;
-                height: 24px;
-                color: var(--Colors-Use-Neutral-Text-2-Primary);
+            height: 20px;
+
+            .hand-colors-icon {
+                svg {
+                    width: 20px;
+                    height: 20px;
+                }
             }
             .title-style {
                 color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 14px;
                 font-weight: 600;
+                display: flex;
+                justify-content: center;
+                height: 20px;
+                gap: 4px;
             }
             .sub-title-style {
                 color: var(--Colors-Use-Neutral-Text-4-Help-text);
-                font-size: 12px;
-                font-weight: 400;
+                font-size: 11px;
+                font-weight: 500;
+                display: flex;
+                justify-content: center;
+                gap: 4px;
+                .ai-countdown {
+                    color: var(--Colors-Use-Main-Primary);
+                }
             }
         }
         .review-header-extra {
@@ -39,14 +52,12 @@
             gap: 8px;
             font-size: 14px;
             font-weight: 600;
-            .ai-countdown {
-                color: var(--Colors-Use-Main-Primary);
-            }
+            height: 20px;
             .ai-score-low {
-                color: var(--Colors-Use-Success-Primary);
+                color: var(--Colors-Use-Status-Safe);
             }
             .ai-score-middle {
-                color: var(--Colors-Use-Warning-Primary);
+                color: var(--Colors-Use-Status-Medium);
             }
             .ai-score-high {
                 color: var(--Colors-Use-Status-Serious);
@@ -114,6 +125,32 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    .continue-btn {
+        display: flex;
+        padding: 4px 8px;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        border-radius: 4px;
+        height: 24px;
+        background: linear-gradient(
+            108deg,
+            var(--Colors-Use-Magenta-Primary) 0%,
+            var(--Colors-Use-Purple-Primary) 63.94%,
+            var(--Colors-Use-Blue-Primary) 100%
+        );
+        color: var(--Colors-Use-Main-On-Primary);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        border: none;
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
 }
 .review-content-hidden {
     height: 0;
@@ -125,7 +162,7 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 4px;
 }
 .ai-require-input {
     border-radius: 8px;
@@ -226,15 +263,29 @@
 .forge-wrapper {
     display: flex;
     flex-direction: column;
-    border-radius: 4px;
-    background: var(--Colors-Use-Neutral-Border);
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--Colors-Use-Basic-Background);
 
-    .name {
-        padding: 8px;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        font-size: 14px;
-        font-weight: 600;
-        border-radius: 4px 4px 0 0;
+    .forge-header {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        .name {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+        }
+        .description {
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            font-size: 12px;
+            font-weight: 400;
+        }
     }
     .forge-form-body {
         width: 100%;
@@ -242,20 +293,30 @@
         overflow: hidden auto;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        background-color: var(--Colors-Use-Basic-Background);
-        border-radius: 0 0 4px 4px;
-        padding: 12px 12px 0 12px;
         gap: 8px;
         :global {
             .ant-form {
                 width: 100%;
             }
         }
-        .description {
+        .forge-form-heard {
+            display: flex;
+            align-items: center;
+            gap: 4px;
             color: var(--Colors-Use-Neutral-Text-4-Help-text);
             font-size: 12px;
-            font-weight: 400;
+            line-height: 16px;
+            svg {
+                height: 16px;
+                width: 16px;
+            }
+        }
+
+        .forge-form-more {
+            border-radius: 4px;
+            padding: 8px;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            background: var(--Colors-Use-Neutral-Bg);
         }
     }
 }

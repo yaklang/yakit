@@ -23,6 +23,8 @@ import {AIAgentGrpcApi} from "../hooks/grpcApi"
 import classNames from "classnames"
 import styles from "./AIReActChatReview.module.scss"
 import {AIChatIPCSendParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
+import {OutlineHandleColorsIcon, OutlineWarpColorsIcon} from "@/assets/icon/colors"
+import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
     const {
@@ -34,7 +36,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         expand,
         className
     } = props
-
+    const {chatIPCData} = useChatIPCStore()
     const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
     const [reviewTrees, setReviewTrees] = useState<AIAgentGrpcApi.PlanTask[]>([])
     const [currentPlansId, setCurrentPlansId] = useState<string>("")
@@ -62,22 +64,50 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 break
         }
     }, [type, review])
+    //#region ai评分
+    const [targetDate, setTargetDate] = useState<number>()
+    const [countdown] = useCountDown({
+        targetDate
+    })
+    useEffect(() => {
+        if (!chatIPCData.execute) return
+        const data = review as AIAgentGrpcApi.ToolUseReviewRequire
+        if (!!data?.aiReview?.seconds) {
+            setTargetDate(Date.now() + data.aiReview.seconds * 1000)
+        }
+    }, [review, chatIPCData.execute])
+    //#endregion
     const reviewTitle = useCreation(() => {
+        const subTitle = !!countdown ? (
+            <>
+                <span className={styles["ai-countdown"]}>{Math.round(countdown / 1000)}s</span>
+                <span>后将自动执行</span>
+            </>
+        ) : (
+            <></>
+        )
+        let title = "异常错误"
         switch (type) {
             case "tool_use_review_require":
-                return {title: "工具审阅", subTitle: "请审核是否要继续执行？"}
+                title = "工具调用"
+                break
             case "require_user_interactive":
-                return {title: "主动询问", subTitle: "请选择以下决策？"}
+                title = "主动询问"
+                break
             case "plan_review_require":
-                return {title: "计划审阅", subTitle: "请审核是否要按以下计划继续执行？"}
+                title = "计划审阅"
+                break
             case "task_review_require":
-                return {title: "任务审阅", subTitle: "请审核是否要继续执行任务？"}
+                title = "任务审阅"
+                break
             case "exec_aiforge_review_require":
-                return {title: "启动智能应用", subTitle: "请审核是否要继续执行？"}
+                title = "启动智能应用"
+                break
             default:
-                return {title: "异常错误", subTitle: ""}
+                break
         }
-    }, [type])
+        return {title: <span>{title}</span>, subTitle}
+    }, [type, countdown])
     const toolReview = useCreation(() => {
         if (type !== "tool_use_review_require") return null
         const {tool, tool_description, params} = review as AIAgentGrpcApi.ToolUseReviewRequire
@@ -231,7 +261,12 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 <div className={styles["review-selectors-wrapper"]}>
                     {noAIOptionsList.allowShowInput.map((el) => {
                         return (
-                            <YakitButton key={el.value} type='outline2' onClick={() => handleShowEdit(el)}>
+                            <YakitButton
+                                key={el.value}
+                                type='outline2'
+                                onClick={() => handleShowEdit(el)}
+                                isRadius={true}
+                            >
                                 {el.prompt || el.value}
                             </YakitButton>
                         )
@@ -326,6 +361,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                 type='outline2'
                                 onClick={() => onSetAIOptionsSelect(ele.prompt || ele.prompt_title)}
                                 isHover={isHover}
+                                isRadius={true}
                             >
                                 {ele.prompt || ele.prompt_title}
                             </YakitButton>
@@ -397,10 +433,14 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                         })}
                                     </div>
                                 )}
-                                <YakitButton onClick={handleContinue}>
+                                {/* <YakitButton onClick={handleContinue}>
                                     继续执行
                                     <OutlineWarpIcon />
-                                </YakitButton>
+                                </YakitButton> */}
+                                <button className={styles["continue-btn"]}>
+                                    立即执行
+                                    <OutlineWarpColorsIcon />
+                                </button>
                             </>
                         )}
                     </>
@@ -413,18 +453,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             </div>
         )
     }, [isContinue, reviewTreeOption, type, aiOptionsLength, isRequireQS, requireLoading, noAIOptionsList.showButton])
-    //#region ai评分
-    const [targetDate, setTargetDate] = useState<number>()
-    const [countdown] = useCountDown({
-        targetDate
-    })
-    useEffect(() => {
-        const data = review as AIAgentGrpcApi.ToolUseReviewRequire
-        if (!!data?.aiReview?.seconds) {
-            setTargetDate(Date.now() + data.aiReview.seconds * 1000)
-        }
-    }, [review])
-    //#endregion
+
     const reviewHeardExtra = useCreation(() => {
         let node: ReactNode = <></>
         switch (type) {
@@ -439,7 +468,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                             {!!interactive_id && !score && !countdown && <div>评估中...</div>}
                             {!!score && (
                                 <div>
-                                    AI风险评分:
+                                    AI&nbsp;&nbsp;风险评分&nbsp;&nbsp;
                                     <span
                                         className={classNames(styles["ai-countdown"], {
                                             [styles["ai-score-low"]]: level === "low",
@@ -449,13 +478,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                     >
                                         {toolReviewData.aiReview.score || 0}
                                     </span>
-                                </div>
-                            )}
-
-                            {!!countdown && (
-                                <div>
-                                    倒计时:
-                                    <span className={styles["ai-countdown"]}>{Math.round(countdown / 1000)}s</span>
                                 </div>
                             )}
                         </>
@@ -483,9 +505,11 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             >
                 <div className={styles["review-header"]}>
                     <div className={styles["review-header-title"]}>
-                        <OutlineHandIcon />
-                        <div className={styles["title-style"]}>{reviewTitle.title || "异常错误"}</div>
-                        <div className={styles["sub-title-style"]}>{reviewTitle.subTitle || ""}</div>
+                        <div className={styles["title-style"]}>
+                            <OutlineHandleColorsIcon className={styles["hand-colors-icon"]} />
+                            {reviewTitle.title}
+                        </div>
+                        <div className={styles["sub-title-style"]}>{reviewTitle.subTitle}</div>
                     </div>
                     <div className={styles["review-header-extra"]}>{reviewHeardExtra}</div>
                 </div>
@@ -519,11 +543,13 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                                         type='outline2'
                                                         icon={<OutlineXIcon />}
                                                         onClick={() => handleCallbackEdit(false)}
+                                                        isRadius={true}
                                                     />
                                                     <YakitButton
                                                         className={styles["btn-style"]}
                                                         icon={<OutlineArrowrightIcon />}
                                                         onClick={() => handleCallbackEdit(true)}
+                                                        isRadius={true}
                                                     />
                                                 </div>
                                             </div>
@@ -573,8 +599,8 @@ const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo((props) => {
                 }, 200)
             )
     })
-    const params: YakParamProps[] | null = useCreation(() => {
-        if (!forge) return null
+    const params: YakParamProps[] = useCreation(() => {
+        if (!forge) return []
         const {ParamsUIConfig} = forge
 
         if (!ParamsUIConfig) {
@@ -592,7 +618,7 @@ const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo((props) => {
             const param: YakParamProps[] = handleFetchParams(ParamsUIConfig)
             return param
         } catch (error) {
-            return null
+            return []
         }
     }, [forge, forge_params])
     useEffect(() => {
@@ -617,31 +643,43 @@ const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo((props) => {
     return (
         <YakitSpin spinning={loading} tip='加载中...'>
             <div className={styles["forge-wrapper"]}>
-                <div className={styles["name"]}>
-                    智能应用:{forge?.ForgeVerboseName || forge_verbose_name || forge?.ForgeName || forge_name}
-                </div>
-
-                <div className={classNames(styles["forge-form-body"])}>
+                <div className={styles["forge-header"]}>
+                    <div className={styles["name"]}>
+                        {forge?.ForgeVerboseName || forge_verbose_name || forge?.ForgeName || forge_name}
+                    </div>
                     <div className={styles["description"]}>描述:{forge?.Description || forge_desc}</div>
-                    <Form
-                        form={form}
-                        labelWrap={true}
-                        labelCol={{span: 6}}
-                        wrapperCol={{span: 14}}
-                        validateMessages={{
-                            /* eslint-disable no-template-curly-in-string */
-                            required: "${label} 是必填字段"
-                        }}
-                        disabled={true}
+                </div>
+                <div className={classNames(styles["forge-form-body"])}>
+                    {params?.length > 1 && (
+                        <div className={styles["forge-form-heard"]}>
+                            <SolidVariableIcon />
+                            参数组
+                        </div>
+                    )}
+                    <div
+                        className={classNames({
+                            [styles["forge-form-more"]]: params?.length > 1
+                        })}
                     >
-                        {params && (
-                            <ExecuteEnterNodeByPluginParams
-                                paramsList={params}
-                                pluginType={"yak"}
-                                isExecuting={false}
-                            />
-                        )}
-                    </Form>
+                        <Form
+                            form={form}
+                            labelWrap={true}
+                            validateMessages={{
+                                /* eslint-disable no-template-curly-in-string */
+                                required: "${label} 是必填字段"
+                            }}
+                            disabled={true}
+                            layout='vertical'
+                        >
+                            {params && (
+                                <ExecuteEnterNodeByPluginParams
+                                    paramsList={params}
+                                    pluginType={"yak"}
+                                    isExecuting={false}
+                                />
+                            )}
+                        </Form>
+                    </div>
                 </div>
             </div>
         </YakitSpin>
