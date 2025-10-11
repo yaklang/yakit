@@ -63,8 +63,8 @@
         background: #fff;
         border: 1px solid var(--Colors-Use-Neutral-Border);
 
-        .resize-split-handle-icon {
-            transform: rotate(90deg);
+        svg {
+            width: 12px;
         }
 
         .resize-split-handle-text {

@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react"
 import {useMemoizedFn, useClickAway} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import classNames from "classnames"
-import { DoubleRightOutlined } from "@ant-design/icons"
+import { OutlineChevrondoubledownIcon } from "@/assets/icon/outline"
 import styles from "./YakitResizeBox.module.scss"
 
 // 将像素与number都返回为number
@@ -506,7 +506,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                             ref={handleRef}
                             onClick={onClickHiddenBox}
                         >
-                            <DoubleRightOutlined className={styles["resize-split-handle-icon"]}/>
+                            <OutlineChevrondoubledownIcon />
                             <span className={styles["resize-split-handle-text"]}>收起</span>
                         </div>
                     }
