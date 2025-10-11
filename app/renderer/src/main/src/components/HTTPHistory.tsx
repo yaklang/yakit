@@ -602,7 +602,10 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                     display: !secondNodeVisible ? "none" : "",
                     padding: !secondNodeVisible ? 0 : undefined
                 }}
-                lineStyle={{display: !secondNodeVisible ? "none" : ""}}
+                lineStyle={{
+                    display: !secondNodeVisible ? "none" : "", 
+                    marginTop: pageType === 'MITM'? 6 : 0 // MITM列表需要和拖拽线有间距
+                }}
                 lineDirection='top'
                 onMouseUp={({firstSizePercent, secondSizePercent}) => {
                     lastRatioRef.current = {
