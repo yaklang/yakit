@@ -10,6 +10,7 @@ export const RoundedStopButton: React.FC<YakitButtonProp> = React.memo((props) =
             className={styles["rounded-icon-btn"]}
             colors='danger'
             icon={<SolidStopIcon className={styles["stop-icon"]} />}
+            radius='50%'
             {...props}
         />
     )
@@ -22,6 +23,7 @@ export const ChevrondownButton: React.FC<YakitButtonProp> = React.memo((props) =
             className={styles["side-header-btn"]}
             icon={<OutlineChevrondownIcon />}
             size='small'
+            radius='50%'
             {...props}
         />
     )
