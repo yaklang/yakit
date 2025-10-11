@@ -432,11 +432,12 @@
     }
 }
 .yakit-button {
+    --yakit-button-border-radius: 4px;
     display: inline-flex;
     justify-content: center;
     align-items: center;
     box-shadow: none;
-    border-radius: 4px;
+    border-radius: var(--yakit-button-border-radius);
     border: 1px solid transparent;
     &:global(.ant-btn-icon-only) {
         width: unset;
@@ -507,4 +508,8 @@
 }
 .yakit-button-text2 {
     @include generateText2("primary");
+}
+
+.yakit-border-radius-button {
+    --yakit-button-border-radius: 8px;
 }
