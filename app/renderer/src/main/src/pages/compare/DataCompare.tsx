@@ -183,10 +183,15 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                     }
 
                     if (info.type === 2) {
-                        const { right } = info
+                        const { right, left } = info
                         setLanguage(right.language)
                         if (setRightCode) setRightCode(right.content)
-                        setModelEditor(undefined, right, right.language)
+                        if(left){
+                            setLeftCode?.(left.content)
+                            setModelEditor(left, right, right.language)
+                        }else{
+                            setModelEditor(undefined, right, right.language)
+                        }
                     }
                 } else {
                     setLanguage("yak")
@@ -201,13 +206,13 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                     })
                 }
 
-                ipcRenderer.on(`${res.token}-data`, (e, res) => {
-                    const { left, right } = res.info
+                ipcRenderer.on(`${res.token}-data`, (e, tokenDataRes) => {
+                    const { left, right } = tokenDataRes.info
 
-                    setModelEditor(left, right, language || left.language)
+                    setModelEditor(left, right, language || left?.language|| right?.language)
 
-                    if (res.info.type === 1) if (setLeftCode) setLeftCode(left.content)
-                    if (res.info.type === 2) if (setRightCode) setRightCode(right.content)
+                    if (tokenDataRes.info.type === 1) if (setLeftCode) setLeftCode(left.content)
+                    if (tokenDataRes.info.type === 2) if (setRightCode) setRightCode(right.content)
                 })
             })
             .catch((err) => { })
