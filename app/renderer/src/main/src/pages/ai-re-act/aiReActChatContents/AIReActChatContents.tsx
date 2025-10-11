@@ -1,12 +1,17 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {AIMarkdownProps, AIReActChatContentsPProps, AIStreamChatContentProps} from "./AIReActChatContentsType.d"
+import {
+    AIMarkdownProps,
+    AIReActChatContentsPProps,
+    AIStreamChatContentProps,
+    TaskUpdateNoticeProps
+} from "./AIReActChatContentsType.d"
 import styles from "./AIReActChatContents.module.scss"
 import {AITriageChatContent} from "@/pages/ai-agent/aiTriageChat/AITriageChat"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {AIChatToolColorCard, AIChatToolItem} from "@/pages/ai-agent/chatTemplate/AIChatTool"
 import {AIReActChatReview} from "../aiReActChatReview/AIReActChatReview"
 import {Tooltip} from "antd"
-import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
 import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import {AIChatQSData} from "../hooks/aiRender"
@@ -16,8 +21,14 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitRadioButtonsProps} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType"
 import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon} from "@/assets/icon/outline"
 import {isToolExecStream} from "../hooks/utils"
+import {
+    OutlineChatIcon,
+    OutlineChevrondoubledownIcon,
+    OutlineChevrondoubleupIcon,
+    OutlineListTodoIcon
+} from "@/assets/icon/outline"
+import {SolidSpeakerphoneIcon} from "@/assets/icon/solid"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -117,6 +128,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 )
                 break
             default:
+                // contentNode=<TaskUpdateNotice/>
                 break
         }
         return <React.Fragment key={id}>{contentNode}</React.Fragment>
@@ -124,6 +136,41 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     return (
         <div ref={listRef} className={styles["ai-re-act-chat-contents"]}>
             <div className={styles["re-act-contents-list"]}>{chats.map((item) => renderContent(item))}</div>
+        </div>
+    )
+})
+/**任务队列更新通知 */
+const TaskUpdateNotice: React.FC<TaskUpdateNoticeProps> = React.memo((props) => {
+    return (
+        <div className={styles["task-update-notice"]}>
+            <div className={styles["task-update-notice-heard"]}>
+                <SolidSpeakerphoneIcon />
+                <span>任务队列更新通知</span>
+            </div>
+            <div className={styles["user-update-content"]}>移出任务：这里是用户输入内容</div>
+            <div className={styles["update-reason"]}>
+                移出原因：将任务信息补充到深度规划任务“京东云的 DeepSeek-V3 模型如何进行私有化部署”，作为子任务 1.1.7。
+            </div>
+            <div className={styles["latest-query"]}>
+                <div className={styles["latest-query-heard"]}>
+                    <div className={styles["latest-query-title"]}>
+                        <OutlineListTodoIcon />
+                        <span>最新队列</span>
+                    </div>
+
+                    <YakitTag color='warning' fullRadius={true}>
+                        4
+                    </YakitTag>
+                </div>
+                <div className={styles["latest-query-list"]}>
+                    {["项目规划", "市场分析", "技术选型", "风险评估"].map((item) => (
+                        <div key={item} className={styles["latest-query-list-item"]}>
+                            <OutlineChatIcon />
+                            <span>{item}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
         </div>
     )
 })

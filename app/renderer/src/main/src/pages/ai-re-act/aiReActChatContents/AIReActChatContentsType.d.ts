@@ -10,5 +10,7 @@ export interface AIStreamChatContentProps {
 }
 
 export interface AIMarkdownProps extends AIStreamChatContentProps {
-    className?:string
+    className?: string
 }
+
+export interface TaskUpdateNoticeProps {}
