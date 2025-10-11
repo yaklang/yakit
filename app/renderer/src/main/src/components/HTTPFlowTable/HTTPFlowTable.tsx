@@ -1678,6 +1678,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setOnlyShowFirstNode && setOnlyShowFirstNode(!onlyShowFirstNode)
         }
     })
+
+    // 如果YakitResizeBox只展示第一个节点，则要清除Selected
+    useEffect(() => {
+        onlyShowFirstNode && setCurrentIndex(undefined)
+    },[onlyShowFirstNode] )
+
     const onSetCurrentRow = useDebounceFn(
         (rowDate: HTTPFlow | undefined) => {
             onRowClick(rowDate ? getHTTPFlowReqAndResToString(rowDate) : undefined)

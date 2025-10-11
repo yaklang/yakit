@@ -48,6 +48,52 @@
             width: 2px;
         }
     }
+
+    .resize-split-handle {
+        position: absolute;
+        z-index: 10;
+        cursor: pointer;
+        left: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 20px;
+        min-width: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+
+        svg {
+            width: 12px;
+        }
+
+        .resize-split-handle-text {
+            max-width: 0;
+            overflow: hidden;
+        }
+
+        &:hover {
+            padding: 0 6px;
+            border-radius: 20px;
+            gap: 4px;
+            border-color: var(--Colors-Use-Main-Hover);
+            color: var(--Colors-Use-Main-Hover);
+            
+            .resize-split-handle-text {
+                max-width: 160px; 
+                color: var(--Colors-Use-Main-Hover);
+            }
+        }
+    }
+    
+    .resize-split-handle-top{
+        transform: translate(-50%, -50%);
+    }
+
+    .resize-split-handle-bottom{
+        transform: translate(-50%, 50%);
+    }
+ 
     .mask-body {
         position: absolute;
         top: 0;

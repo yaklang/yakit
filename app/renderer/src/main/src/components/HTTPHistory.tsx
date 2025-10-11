@@ -536,6 +536,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         >
             <YakitResizeBox
                 isVer={true}
+                // 隐藏详情只需要展示第一个节点
+                onClickHiddenBox={() => setOnlyShowFirstNode(true)}
                 firstNode={() => (
                     <div style={{width: "100%", height: "100%"}}>
                         <HTTPFlowTable
