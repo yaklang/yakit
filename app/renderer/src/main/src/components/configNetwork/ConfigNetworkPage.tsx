@@ -12,7 +12,7 @@ import styles from "./ConfigNetworkPage.module.scss"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {InputCertificateForm} from "@/pages/mitm/MITMServerStartForm/MITMAddTLS"
-import {StringToUint8Array} from "@/utils/str"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import {CloseIcon, RectangleFailIcon, RectangleSucceeIcon, UnionIcon} from "./icon"
 import {SolidCheckCircleIcon, SolidLockClosedIcon} from "@/assets/icon/colors"
@@ -124,6 +124,9 @@ interface ClientCertificatePfx {
     Pkcs12Password: TenumBuffer
     password?: boolean
     Host?: string
+    CrtPem?: TenumBuffer
+    KeyPem?: TenumBuffer
+    CaCertificates?: TenumBuffer[]
 }
 
 interface ClientCertificates {
@@ -211,10 +214,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 }
                 setNetInterfaceList(interfaceList)
             })
-            if (Array.isArray(ClientCertificates) && ClientCertificates.length > 0 && format === 1) {
+            if (Array.isArray(ClientCertificates) && ClientCertificates.length > 0) {
                 let newArr = ClientCertificates.map((item, index) => {
-                    const {Pkcs12Bytes, Pkcs12Password, Host} = item
-                    return {Pkcs12Bytes, Pkcs12Password, Host, name: `证书${index + 1}`}
+                    return {...item, name: `证书${index + 1}`}
                 })
                 setCertificateParams(newArr)
                 currentIndex.current = ClientCertificates.length
@@ -230,7 +232,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     })
     useEffect(() => {
         update()
-    }, [format])
+    }, [])
 
     const onCertificate = useMemoizedFn((file: any) => {
         if (!["application/x-pkcs12"].includes(file.type)) {
@@ -282,13 +284,17 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             ...params,
             MaxContentLength: +params.MaxContentLength * 1024 * 1024
         }
-        ipcRenderer.invoke("SetGlobalNetworkConfig", realParams).then(() => {
-            yakitInfo("更新配置成功")
-            update()
-            if (isNtml) setVisible(false)
-        }).catch((err) => {
-            yakitNotify("error", err + "")
-        })
+        ipcRenderer
+            .invoke("SetGlobalNetworkConfig", realParams)
+            .then(() => {
+                cerFormRef.current?.resetFields()
+                yakitInfo("更新配置成功")
+                update()
+                if (isNtml) setVisible(false)
+            })
+            .catch((err) => {
+                yakitNotify("error", err + "")
+            })
     })
 
     const onNtmlSave = useMemoizedFn(() => {
@@ -308,53 +314,79 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         // 更新 二级页签数量
         onSetSecondaryTabsNum()
 
-        if (format === 1) {
-            // if (!(Array.isArray(certificateParams)&&certificateParams.length>0)) {
-            //     warn("请添加证书")
-            //     return
-            // }
-
-            if (
-                Array.isArray(certificateParams) &&
-                certificateParams.length > 0 &&
-                certificateParams.filter((item) => item.password === true).length === certificateParams.length
-            ) {
-                warn("无效证书")
-                return
-            }
-            const obj = {
-                CaCertificates: [],
-                CrtPem: new Uint8Array(),
-                KeyPem: new Uint8Array()
-            }
+        const newParams: GlobalNetworkConfig = {
+            ...params,
+            ClientCertificates: []
+        }
+        if (
+            Array.isArray(certificateParams) &&
+            certificateParams.length > 0 &&
+            certificateParams.filter((item) => item.password === true).length === certificateParams.length
+        ) {
+            warn("无效证书")
+            return
+        } else {
             const certificate = (certificateParams || []).filter((item) => item.password !== true)
             const ClientCertificates = certificate.map((item) => {
-                const {Pkcs12Bytes, Pkcs12Password, Host} = item
-                return {Pkcs12Bytes, Pkcs12Password, Host, ...obj}
+                const {
+                    Pkcs12Bytes,
+                    Pkcs12Password,
+                    Host,
+                    CrtPem = new Uint8Array(),
+                    KeyPem = new Uint8Array(),
+                    CaCertificates = []
+                } = item
+                if (Uint8ArrayToString(CrtPem) && Uint8ArrayToString(KeyPem)) {
+                    // pem 格式
+                    return {
+                        CrtPem,
+                        KeyPem,
+                        CaCertificates,
+                        Host,
+                        Pkcs12Bytes: new Uint8Array(),
+                        Pkcs12Password: new Uint8Array()
+                    }
+                } else {
+                    // p12/pfx 格式
+                    return {
+                        Pkcs12Bytes,
+                        Pkcs12Password,
+                        Host,
+                        CrtPem: new Uint8Array(),
+                        KeyPem: new Uint8Array(),
+                        CaCertificates: []
+                    }
+                }
             })
-            const newParams: GlobalNetworkConfig = {
-                ...params,
-                ClientCertificates: ClientCertificates.length > 0 ? ClientCertificates : undefined
-            }
-            ipcSubmit(newParams, isNtml)
+            newParams.ClientCertificates = ClientCertificates.length > 0 ? ClientCertificates : []
         }
-        if (format === 2) {
-            cerFormRef.current.validateFields().then((values) => {
-                const obj: ClientCertificatePem = {
-                    CaCertificates:
-                        values.CaCertificates && values.CaCertificates.length > 0
-                            ? [StringToUint8Array(values.CaCertificates)]
-                            : [],
-                    CrtPem: StringToUint8Array(values.CrtPem),
-                    KeyPem: StringToUint8Array(values.KeyPem),
-                    Host: values.Host || ""
-                }
-                const newParams: GlobalNetworkConfig = {
-                    ...params,
-                    ClientCertificates: [{...obj, Pkcs12Bytes: new Uint8Array(), Pkcs12Password: new Uint8Array()}]
-                }
-                ipcSubmit(newParams, isNtml)
-            })
+
+        if (format === 1) {
+            ipcSubmit(newParams, isNtml)
+        } else {
+            // 校验 pem 格式
+            cerFormRef.current
+                .validateFields()
+                .then((values) => {
+                    if (values.CrtPem && values.KeyPem) {
+                        const obj: ClientCertificatePem = {
+                            CrtPem: StringToUint8Array(values.CrtPem),
+                            KeyPem: StringToUint8Array(values.KeyPem),
+                            CaCertificates:
+                                values.CaCertificates && values.CaCertificates.length > 0
+                                    ? [StringToUint8Array(values.CaCertificates)]
+                                    : [],
+                            Host: values.Host || ""
+                        }
+                        newParams.ClientCertificates = newParams.ClientCertificates?.concat({
+                            ...obj,
+                            Pkcs12Bytes: new Uint8Array(),
+                            Pkcs12Password: new Uint8Array()
+                        })
+                    }
+                    ipcSubmit(newParams, isNtml)
+                })
+                .catch(() => {})
         }
     })
 
@@ -385,11 +417,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             },
             onOkText: "添加",
             onOk: () => {
-                if (Array.isArray(certificateParams)) {
-                    certificateParams[key].Host = hostRef.current
-                    let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
-                    setCertificateParams(cache)
-                }
+                setCertificateParams((prev) => {
+                    if (Array.isArray(prev)) {
+                        prev[key].Host = hostRef.current
+                    }
+                    return prev?.slice()
+                })
                 m.destroy()
             },
             width: 400
@@ -427,14 +460,15 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 allowClear
                                                 onChange={(e) => {
                                                     const {value} = e.target
-                                                    if (Array.isArray(certificateParams)) {
-                                                        certificateParams[key].Pkcs12Password =
-                                                            value.length > 0
-                                                                ? StringToUint8Array(value)
-                                                                : new Uint8Array()
-                                                        let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
-                                                        setCertificateParams(cache)
-                                                    }
+                                                    setCertificateParams((prev) => {
+                                                        if (Array.isArray(prev)) {
+                                                            prev[key].Pkcs12Password =
+                                                                value.length > 0
+                                                                    ? StringToUint8Array(value)
+                                                                    : new Uint8Array()
+                                                        }
+                                                        return prev?.slice()
+                                                    })
                                                 }}
                                             />
                                         </div>
@@ -450,12 +484,13 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             } as IsSetGlobalNetworkConfig)
                                             .then((result: {IsSetPassWord: boolean}) => {
                                                 if (result.IsSetPassWord) {
-                                                    if (Array.isArray(certificateParams)) {
-                                                        certificateParams[key].password = false
-                                                        let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
-                                                        setCertificateParams(cache)
-                                                        m.destroy()
-                                                    }
+                                                    setCertificateParams((prev) => {
+                                                        if (Array.isArray(prev)) {
+                                                            prev[key].password = false
+                                                        }
+                                                        return prev?.slice()
+                                                    })
+                                                    m.destroy()
                                                 } else {
                                                     failed(`密码错误`)
                                                 }
@@ -689,7 +724,6 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                     添加 TLS 客户端证书（双向认证）
                                                 </YakitButton>
                                             </Upload>
-                                            {certificateList}
                                         </Form.Item>
                                     </>
                                 )}
@@ -703,6 +737,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         }}
                                     />
                                 )}
+                                <Form.Item colon={false} label={<> </>}>
+                                    {certificateList}
+                                </Form.Item>
                                 <Form.Item label={"客户端tls版本支持"}>
                                     <Slider
                                         style={{width: "33%"}}
