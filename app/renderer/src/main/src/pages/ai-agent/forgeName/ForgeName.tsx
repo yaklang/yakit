@@ -84,7 +84,16 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                 }, 100)
             })
     })
-
+    // 点击使用 Forge
+    const handleOnClick = useMemoizedFn((info: AIForge) => {
+        emiter.emit(
+            "onReActChatEvent",
+            JSON.stringify({
+                type: "open-forge-form",
+                params: {value: info}
+            })
+        )
+    })
     // #region AI-Forge 列表数据
     const [total, setTotal] = useState(0)
     const [loading, setLoading] = useState(false)
@@ -324,17 +333,15 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                                             </div>
                                         }
                                     >
-                                        <div
-                                            className={styles["forge-list-opt"]}
-                                        >
+                                        <div className={styles["forge-list-opt"]} onClick={() => handleOnClick(data)}>
                                             <div
                                                 className={classNames(
                                                     styles["opt-title"],
                                                     "yakit-content-single-ellipsis"
                                                 )}
-                                                title={ForgeVerboseName||ForgeName}
+                                                title={ForgeVerboseName || ForgeName}
                                             >
-                                                {ForgeVerboseName||ForgeName}
+                                                {ForgeVerboseName || ForgeName}
                                             </div>
 
                                             <div className={styles["item-extra"]}>

@@ -31,6 +31,13 @@ import {AIChatReview} from "@/pages/ai-re-act/hooks/aiRender"
 
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
+import {AIForge} from "../AIForge/type"
+import {yakitNotify} from "@/utils/notification"
+import {AIForgeForm} from "../aiTriageChatTemplate/AITriageChatTemplate"
+import {grpcGetAIForge} from "../grpc"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 const AIReActTaskChat = React.lazy(() => import("../../ai-re-act/aiReActTaskChat/AIReActTaskChat"))
 
@@ -59,7 +66,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     ForgeParams: request.ForgeParams
                 }
             })
-        handleStart("")
+        handleStart(
+            `我要使用 ${request.ForgeName}forge执行任务,${
+                !!request.ForgeParams ? `参数是${JSON.stringify(request.ForgeParams)},` : "无参数"
+            }`
+        )
     })
 
     /**自由对话中触发任务开始 */
@@ -78,34 +89,41 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             setRemoteValue(RemoteAIAgentGV.AIAgentReplaceForgeNoPrompt, "true")
         }
     })
-
-    useEffect(() => {
-        // 获取 replaceForgeNoPrompt 的缓存值
-        getRemoteValue(RemoteAIAgentGV.AIAgentReplaceForgeNoPrompt)
-            .then((res) => {
-                replaceForgeNoPromptCache.current = !!res
-                setReplaceForgeNoPrompt(!!res)
-            })
-            .catch(() => {})
-
-        // ai-agent 页面左侧侧边栏向 chatUI 发送的事件
-        const onEvents = (res: string) => {
-            try {
-                const data = JSON.parse(res) as AIAgentTriggerEventInfo
-                if (!data.type) return
-
-                // 新开聊天对话窗
-                if (data.type === "new-chat") {
-                    if (["welcome"].includes(getMode())) return
-                    setMode("welcome")
+    /** 从别的元素上触发使用 forge 模板的功能 */
+    const handleTriggerExecForge = useMemoizedFn((forge: AIForge) => {
+        console.log("onReActChatEvent-forge", forge)
+        if (!forge || !forge.Id) {
+            yakitNotify("error", "准备使用的模板数据异常，请稍后再试")
+            return
+        }
+        if (!chatIPCData.execute) {
+            handleReplaceActiveForge(forge.Id)
+        } else {
+            const m = YakitModalConfirm({
+                title: "切换forge模板",
+                width: 420,
+                footer: undefined,
+                footerStyle: {padding: "0 24px 24px"},
+                content: (
+                    <div className={styles["forge-modal-content"]}>
+                        是否<b>中断</b>当前正在进行的对话,使用
+                        <b>
+                            {forge.ForgeVerboseName}({forge.ForgeName})
+                        </b>
+                        forge模板?
+                    </div>
+                ),
+                onOk: () => {
+                    m.destroy()
+                    onStop()
+                    handleReplaceActiveForge(forge.Id)
+                },
+                onCancel: () => {
+                    m.destroy()
                 }
-            } catch (error) {}
+            })
         }
-        emiter.on("onServerChatEvent", onEvents)
-        return () => {
-            emiter.off("onServerChatEvent", onEvents)
-        }
-    }, [])
+    })
 
     // review数据中树的数据中需要的解释和关键词工具
     const [planReviewTreeKeywordsMap, {set: setPlanReviewTreeKeywords, reset: resetPlanReviewTreeKeywords}] = useMap<
@@ -249,10 +267,17 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     })
 
     useEffect(() => {
+        getRemoteValue(RemoteAIAgentGV.AIAgentReplaceForgeNoPrompt)
+            .then((res) => {
+                replaceForgeNoPromptCache.current = !!res
+                setReplaceForgeNoPrompt(!!res)
+            })
+            .catch(() => {})
         // ai-re-act 页面左侧侧边栏向 chatUI 发送的事件
         const onEvents = (res: string) => {
             try {
                 const data = JSON.parse(res) as AIAgentTriggerEventInfo
+                console.log("onReActChatEvent-data", data)
                 if (!data.type) return
                 // 新开聊天对话窗
                 if (data.type === "new-chat") {
@@ -260,6 +285,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     handleSaveChatInfo()
                     events.onReset()
                     handleStart("")
+                }
+                // 替换当前使用的 forge 模板
+                if (data.type === "open-forge-form") {
+                    const {value} = data.params || {}
+                    handleTriggerExecForge(value)
                 }
             } catch (error) {}
         }
@@ -282,6 +312,63 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         }
     })
 
+    //#region 使用 AI-Forge 模板
+    const [activeForge, setActiveForge] = useState<AIForge>()
+    const [replaceShow, setReplaceShow] = useState<boolean>(false)
+    const wrapperRef = useRef<HTMLDivElement>(null)
+    const replaceForge = useRef<AIForge>()
+
+    const handleClearActiveForge = useMemoizedFn(() => {
+        setActiveForge(undefined)
+    })
+
+    const handleTaskSubmit = useMemoizedFn((request: AIStartParams) => {
+        handleStartTaskChatByForge(request)
+        setActiveForge(undefined)
+    })
+
+    const handleReplaceActiveForge = useMemoizedFn((id: number) => {
+        const forgeID = Number(id) || 0
+        if (!forgeID) {
+            yakitNotify("error", `准备使用的模板异常: id('${id}'), 操作失败`)
+            return
+        }
+
+        grpcGetAIForge({ID: forgeID})
+            .then((res) => {
+                const forgeInfo = cloneDeep(res)
+                if (!activeForge) setActiveForge(forgeInfo)
+                else {
+                    if (forgeInfo.Id === activeForge.Id) {
+                        // 同一个forge模板, 检查名字和参数是否一至
+                        let isReplace = false
+                        isReplace = forgeInfo.ForgeName !== activeForge.ForgeName
+                        isReplace = forgeInfo.ParamsUIConfig !== activeForge.ParamsUIConfig
+                        if (isReplace) setActiveForge(forgeInfo)
+                    } else {
+                        // 不同forge模板，弹出提示框是否替换
+                        if (replaceForgeNoPrompt) {
+                            setActiveForge({...forgeInfo})
+                        } else {
+                            replaceForge.current = {...forgeInfo}
+                            setReplaceShow(true)
+                        }
+                    }
+                }
+            })
+            .catch(() => {})
+    })
+    const handleReplaceOK = useMemoizedFn(() => {
+        setActiveForge(cloneDeep(replaceForge.current))
+        handleSetReplaceForgeNoPrompt()
+        handleReplaceCancel()
+    })
+    const handleReplaceCancel = useMemoizedFn(() => {
+        replaceForge.current = undefined
+        setReplaceShow(false)
+    })
+    // #endregion
+
     const store: ChatIPCContextStore = useCreation(() => {
         return {chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage}
     }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, timelineMessage])
@@ -302,29 +389,49 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     }, [chatIPCData])
 
     return (
-        <div className={styles["ai-agent-chat"]}>
-            {mode === "welcome" ? (
-                <div className={styles["chat-body"]}>
-                    <AIAgentWelcome
-                        replaceForgeNoPrompt={replaceForgeNoPrompt}
-                        setReplaceForgeNoPrompt={setReplaceForgeNoPrompt}
-                        setCacheReplaceForgeNoPrompt={handleSetReplaceForgeNoPrompt}
-                        onTriageSubmit={handleStartTriageChat}
-                        onTaskSubmit={handleStartTaskChatByForge}
-                    />
-                </div>
-            ) : (
-                <ChatIPCContent.Provider value={{store, dispatcher}}>
-                    <div className={styles["chat-wrapper"]}>
+        <div ref={wrapperRef} className={styles["ai-agent-chat"]}>
+            <div className={styles["chat-wrapper"]}>
+                {mode === "welcome" ? (
+                    <AIAgentWelcome onTriageSubmit={handleStartTriageChat} />
+                ) : (
+                    <ChatIPCContent.Provider value={{store, dispatcher}}>
                         {isShowTask && (
                             <React.Suspense fallback={<div>loading...</div>}>
                                 <AIReActTaskChat execute={execute} onStop={onStop} />
                             </React.Suspense>
                         )}
                         <AIReActChat mode={mode} />
-                    </div>
-                </ChatIPCContent.Provider>
-            )}
+                    </ChatIPCContent.Provider>
+                )}
+                <div className={styles["footer-forge-form"]}>
+                    {activeForge && (
+                        <AIForgeForm
+                            wrapperRef={wrapperRef}
+                            info={activeForge}
+                            onBack={handleClearActiveForge}
+                            onSubmit={handleTaskSubmit}
+                        />
+                    )}
+                </div>
+            </div>
+            <YakitHint
+                getContainer={wrapperRef.current || undefined}
+                visible={replaceShow}
+                title='警告'
+                content={"是否要替换当前使用的forge模板?"}
+                footerExtra={
+                    <YakitCheckbox
+                        checked={replaceForgeNoPrompt}
+                        onChange={(e) => setReplaceForgeNoPrompt(e.target.checked)}
+                    >
+                        不再提醒
+                    </YakitCheckbox>
+                }
+                okButtonText='替换'
+                onOk={handleReplaceOK}
+                cancelButtonText='取消'
+                onCancel={handleReplaceCancel}
+            />
         </div>
     )
 })
