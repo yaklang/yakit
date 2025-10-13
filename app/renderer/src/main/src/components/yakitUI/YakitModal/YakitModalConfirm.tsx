@@ -47,6 +47,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
             yakitModalConfirmRootDiv.render(
                 <>
                     <YakitBaseModal
+                        type='white'
                         {...(targetConfig as YakitModalProp)}
                         onVisibleSetter={(r) => {
                             setter = r
