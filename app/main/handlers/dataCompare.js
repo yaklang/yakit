@@ -58,6 +58,11 @@ module.exports = (win, getClient) => {
     if(token){
       return { token, info: dataMap.get(token) }
     }
+    if(dataMap.size === 0){
+      return { token: `compare-${new Date().getTime()}-${Math.floor(
+        Math.random() * 50
+      )}`,}
+    }
     const data = Array.from(dataMap.entries()).pop()
     return  {
       token: data[0],
