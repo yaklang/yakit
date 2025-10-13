@@ -2,7 +2,7 @@ import React, {memo, useEffect, useRef, useState} from "react"
 import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps} from "./type"
 import {AIAgentWelcome} from "../AIAgentWelcome/AIAgentWelcome"
 import {useCreation, useDebounceFn, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {AIChatInfo, AIChatReviewExtra} from "../type/aiChat"
+import {AIChatInfo, AIChatReviewExtra, AITool} from "../type/aiChat"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
@@ -123,6 +123,48 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 }
             })
         }
+    })
+
+    const handleAITool = useMemoizedFn((toolValue: AITool) => {
+        if (!toolValue || !toolValue.ID) {
+            yakitNotify("error", "准备使用的工具数据异常，请稍后再试")
+            return
+        }
+        const m = YakitModalConfirm({
+            title: "执行工具",
+            width: 420,
+            footer: undefined,
+            footerStyle: {padding: "0 24px 24px"},
+            content: (
+                <div className={styles["forge-modal-content"]}>
+                    {!!chatIPCData.execute ? (
+                        <>
+                            是否<b>中断</b>当前正在进行的对话,使用
+                            <b>
+                                {toolValue.VerboseName}({toolValue.Name})
+                            </b>
+                            forge模板?
+                        </>
+                    ) : (
+                        <>
+                            确定要执行{toolValue.VerboseName}({toolValue.Name})工具?
+                        </>
+                    )}
+                </div>
+            ),
+            onOk: () => {
+                m.destroy()
+                onStop()
+                setTimeout(() => {
+                    setActiveForge(undefined)
+                    setMode("re-act")
+                    handleStart(`我要使用 ${toolValue.VerboseName}(${toolValue.Name})工具执行任务"`)
+                }, 200)
+            },
+            onCancel: () => {
+                m.destroy()
+            }
+        })
     })
 
     // review数据中树的数据中需要的解释和关键词工具
@@ -279,17 +321,33 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 const data = JSON.parse(res) as AIAgentTriggerEventInfo
                 console.log("onReActChatEvent-data", data)
                 if (!data.type) return
+                switch (data.type) {
+                    // 新开聊天对话窗
+                    case "new-chat":
+                        onStop()
+                        handleSaveChatInfo()
+                        events.onReset()
+                        handleStart("")
+
+                        break
+                    // 替换当前使用的 forge 模板
+                    case "open-forge-form":
+                        const {value: forgeValue} = data.params || {}
+                        handleTriggerExecForge(forgeValue)
+                        break
+                    case "use-ai-tool":
+                        const {value: toolValue} = data.params || {}
+                        handleAITool(toolValue)
+                        break
+
+                    default:
+                        break
+                }
                 // 新开聊天对话窗
                 if (data.type === "new-chat") {
-                    onStop()
-                    handleSaveChatInfo()
-                    events.onReset()
-                    handleStart("")
                 }
                 // 替换当前使用的 forge 模板
                 if (data.type === "open-forge-form") {
-                    const {value} = data.params || {}
-                    handleTriggerExecForge(value)
                 }
             } catch (error) {}
         }

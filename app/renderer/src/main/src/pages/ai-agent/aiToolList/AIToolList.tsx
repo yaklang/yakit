@@ -131,9 +131,18 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
         }))
         setRecalculation((v) => !v)
     })
-    // 新建 forge 模板
-    const handleNewAIForge = useMemoizedFn(() => {
+    // 新建 Tool 模板
+    const handleNewAITool = useMemoizedFn(() => {
         emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AddAITool}))
+    })
+    const onSelect = useMemoizedFn((record) => {
+        emiter.emit(
+            "onReActChatEvent",
+            JSON.stringify({
+                type: "use-ai-tool",
+                params: {value: record}
+            })
+        )
     })
     return (
         <div className={styles["ai-tool-list-wrapper"]} ref={toolListRef}>
@@ -148,7 +157,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
                     />
                     <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
                 </div>
-                <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIForge} />
+                <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAITool} />
             </div>
             <YakitInput.Search
                 value={keyWord}
@@ -165,7 +174,12 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
                     renderRow={(rowData: AITool, index: number) => {
                         return (
                             <React.Fragment key={rowData.Name}>
-                                <AIToolListItem item={rowData} onSetData={onSetData} onRefresh={getList} />
+                                <AIToolListItem
+                                    item={rowData}
+                                    onSetData={onSetData}
+                                    onRefresh={getList}
+                                    onSelect={onSelect}
+                                />
                             </React.Fragment>
                         )
                     }}
@@ -186,10 +200,10 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
 export default AIToolList
 
 const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
-    const {item, onSetData, onRefresh} = props
+    const {item, onSetData, onRefresh, onSelect} = props
     const [visible, setVisible] = useState<boolean>(false)
-    const onFavorite = useMemoizedFn(() => {
-        // e.stopPropagation()
+    const onFavorite = useMemoizedFn((e) => {
+        e.stopPropagation()
         const params: ToggleAIToolFavoriteRequest = {
             ID: item.ID
         }
@@ -267,6 +281,10 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
             })
         )
     })
+    const onToolClick = useMemoizedFn((e) => {
+        e.stopPropagation()
+        onSelect(item)
+    })
     return (
         <>
             <YakitPopover
@@ -274,13 +292,20 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                 overlayClassName={styles["terminal-popover"]}
                 content={<YakitEditor type={"yak"} value={item.Content} readOnly={true} />}
             >
-                <div className={styles["ai-tool-list-item-content"]}>
+                <div className={styles["ai-tool-list-item-content"]} onClick={onToolClick}>
                     <div className={styles["ai-tool-list-item-heard"]}>
                         <div className={styles["ai-tool-list-item-heard-name"]}>
                             <SolidToolIcon className={styles["tool-icon"]} />
-                            <span className={styles["ai-tool-list-item-heard-name-text"]}>{item.VerboseName||item.Name}</span>
+                            <span className={styles["ai-tool-list-item-heard-name-text"]}>
+                                {item.VerboseName || item.Name}
+                            </span>
                         </div>
-                        <div className={styles["ai-tool-list-item-heard-extra"]}>
+                        <div
+                            className={styles["ai-tool-list-item-heard-extra"]}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                            }}
+                        >
                             {item.IsFavorite ? (
                                 <YakitButton
                                     type='text2'

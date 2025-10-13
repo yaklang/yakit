@@ -7,4 +7,5 @@ export interface AIToolListItemProps {
     item: AITool
     onSetData: (value: AITool) => void
     onRefresh: () => void
+    onSelect: (value: AITool) => void
 }
