@@ -19,6 +19,7 @@ import {KnowledgeBaseDemo} from "@/components/playground/knowlegeBase/KnowledgeB
 import {RagManagerDemo} from "@/components/playground/ragManager/RagManagerDemo"
 import {ThirdPartyBinaryManager} from "@/components/playground/thirdPartyBinary/ThirdPartyBinaryManager"
 import { EntityRepositoryPage } from "@/components/playground/entityRepository/EntityRepositoryPage"
+import MCPServerTest from "@/components/playground/mcpServerTest"
 export interface DebugMonacoEditorPageProp {}
 
 const TAG = "DEBUG_PLAYGROUND_DEFAULT_MODE"
@@ -76,7 +77,8 @@ a=1&b=2 Content-Length: a
                             {value: "knowledge-base", label: "知识库管理"},
                             {value: "rag-manager", label: "RAG 向量存储管理"},
                             {value: "third-party-binary", label: "第三方应用管理"},
-                            {value: "entity-repository", label: "实体仓库"}
+                            {value: "entity-repository", label: "实体仓库"},
+                            {value: "mcp-server-test", label: "MCP Server 管理"}
                         ]}
                         formItemStyle={{margin: 0}}
                         value={mode}
@@ -112,6 +114,8 @@ a=1&b=2 Content-Length: a
                             return <ThirdPartyBinaryManager />
                         case "entity-repository":
                             return <EntityRepositoryPage />
+                        case "mcp-server-test":
+                            return <MCPServerTest />
                         }
                     return <div>NO PLUGIN DEMO</div>
                 })()}
