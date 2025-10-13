@@ -19,6 +19,7 @@ import {AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import classNames from "classnames"
 import styles from "./AITriageChatTemplate.module.scss"
 import {AIModelSelect} from "../aiModelList/aiModelSelect/AIModelSelect"
+import AIReviewRuleSelect from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
 
 /** @name 可选择的 forge 模块选项 */
 export const AIForgeInfoOpt: React.FC<AIForgeInfoOptProps> = memo((props) => {
@@ -144,8 +145,7 @@ export const AIForgeInfoOpt: React.FC<AIForgeInfoOptProps> = memo((props) => {
     )
 })
 
-/** 
- * @deprecated
+/**
  * @name 可选择的 forge 模块选项 */
 export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
     const {wrapperRef, info, onBack, onSubmit} = props
@@ -210,7 +210,7 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
 
     const [loading, setLoading] = useState(false)
     const handleParamsSubmit = useMemoizedFn(() => {
-        if (!info || !info.ForgeName) {
+        if (!info || (!info.ForgeName && !info.ForgeVerboseName)) {
             yakitNotify("warning", " Forge 模板信息异常，请关闭重试")
             return
         }
@@ -218,7 +218,7 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
         setLoading(true)
 
         const request: AIStartParams = {
-            ForgeName: info.ForgeName,
+            ForgeName: `${info.ForgeVerboseName}(${info.ForgeName})`,
             UserQuery: ""
         }
 
@@ -254,13 +254,16 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
             <div className={styles["forge-form-header"]}>
                 <div
                     className={classNames(styles["header-title"], "yakit-content-single-ellipsis")}
-                    title={info.ForgeName}
+                    title={`${info.ForgeVerboseName}(${info.ForgeName})`}
                 >
-                    {info.ForgeName}
+                    {info.ForgeVerboseName}({info.ForgeName})
                 </div>
 
                 <div className={styles["header-extra"]}>
                     <AIModelSelect />
+                    <React.Suspense fallback={<div>loading...</div>}>
+                        <AIReviewRuleSelect />
+                    </React.Suspense>
                     <YakitButton loading={loading} onClick={handleParamsSubmit}>
                         开始执行
                     </YakitButton>
@@ -273,8 +276,8 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
                     <Form
                         form={form}
                         onFinish={() => {}}
-                        labelCol={{span: 6}}
-                        wrapperCol={{span: 12}}
+                        labelCol={{span: 8}}
+                        wrapperCol={{span: 14}}
                         labelWrap={true}
                         validateMessages={{
                             /* eslint-disable no-template-curly-in-string */

@@ -44,7 +44,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
             default:
                 break
         }
-        if (info.type) emiter.emit("onServerChatEvent", JSON.stringify(info))
+        if (info.type) emiter.emit("onReActChatEvent", JSON.stringify(info))
     })
 
     return (
