@@ -5,7 +5,6 @@ import {AITriageChatContent} from "@/pages/ai-agent/aiTriageChat/AITriageChat"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {AIChatToolColorCard, AIChatToolItem} from "@/pages/ai-agent/chatTemplate/AIChatTool"
 import {AIReActChatReview} from "../aiReActChatReview/AIReActChatReview"
-import {isShowToolColorCard} from "@/pages/ai-agent/utils"
 import {Tooltip} from "antd"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
@@ -18,6 +17,7 @@ import {YakitRadioButtonsProps} from "@/components/yakitUI/YakitRadioButtons/Yak
 import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon} from "@/assets/icon/outline"
+import {isToolExecStream} from "../hooks/utils"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -54,7 +54,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 break
             case "stream":
                 const {NodeId, NodeLabel, content} = data
-                if (isShowToolColorCard(NodeId)) {
+                if (isToolExecStream(NodeId)) {
                     contentNode = <AIChatToolColorCard toolCall={data} />
                 } else if (NodeId === "re-act-loop-answer-payload") {
                     contentNode = (
