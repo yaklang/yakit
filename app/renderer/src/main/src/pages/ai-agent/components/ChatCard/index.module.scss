@@ -1,0 +1,26 @@
+.chat-card{
+  width: 100%;
+  padding: 8px 12px;
+  background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 8px;
+  &-title{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &-left{
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+    }
+    &-icon{
+      width: 16px;
+      height: 16px;
+    }
+    &-text{
+      font-size: 16px;
+      line-height: 24px;
+    }
+  }
+}
