@@ -49,6 +49,7 @@ import {isToolExecStream} from "@/pages/ai-re-act/hooks/utils"
 import ChatCard from "../components/ChatCard"
 import FileList from "../components/FileList"
 import FileSystemCard from "../components/FileSystemCard"
+import SummaryCard from "../components/SummaryCard"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -343,44 +344,9 @@ export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props
         defaultValuePropName: "defaultExpand",
         valuePropName: "expand"
     })
-    return <FileSystemCard name='gen-code.yak' path='C:\bo\software\nexus\nexus' suffix='yak' />
-    // <ChatCard titleText="Summary" titleIcon="#" titleExtra={<>111</>} >
-    //     <FileList fileList={[
-    //           {
-    //             name: "dir",
-    //             isDir: true,
-    //             desc: "这是目录名字",
-    //             status: "danger",
-    //             label: "删除",
-    //             time: "2023-05-01 12:00:00"
-    //         },
-    //         {
-    //             name: "file1.pdf",
-    //             desc: "file1.txt",
-    //             status: "success",
-    //             label: "创建",
-    //             time: "2023-05-01 12:00:00"
-    //         },
-    //         {
-    //             name: "file2.xls",
-    //             desc: "修改方法",
-    //             status: "white",
-    //             label: "file2.txt",
-    //         },
-    //         {
-    //             name: "file2.yak",
-    //             desc: "修改方法",
-    //             status: "white",
-    //             label: "file2.yak",
-    //         },
-    //         {
-    //             name: "file2.yak",
-    //             desc: "修改方法",
-    //             status: "danger",
-    //             label: "file2.yak",
-    //         }
-    //     ]}/>
-    // </ChatCard>
+    return <SummaryCard />
+    // <FileSystemCard name="gen-code.yak" path="C:\bo\software\nexus\nexus" suffix="yak" />
+
     // return (
     //     <div id={id} className={classNames(className, styles["chat-stream-collapse"])} style={style}>
     //         <div className={styles["collapse-header"]}>
