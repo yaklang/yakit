@@ -62,6 +62,9 @@
     flex-direction: column;
     height: 100%;
 }
+.tab-wrap-vertical{
+    flex-direction: row;
+}
 .yakit-side-tab {
     @include tab() {
         height: 100%;

@@ -81,7 +81,15 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
         }
     })
     return (
-        <div className={classNames(styles['tab-wrap'],className)}>
+        <div
+            className={classNames(
+                styles["tab-wrap"],
+                {
+                    [styles["tab-wrap-vertical"]]: type === "vertical"
+                },
+                className
+            )}
+        >
             {renderContent()}
             {children}
         </div>
