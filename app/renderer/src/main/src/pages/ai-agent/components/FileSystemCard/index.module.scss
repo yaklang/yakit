@@ -13,6 +13,10 @@
           display: flex;
           align-items: center;
           gap: 8px;
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+          font-size: 14px;
+          font-weight: 400;
+          line-height: 20px;
         }
         svg {
             width: 20px;
