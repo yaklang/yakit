@@ -7,8 +7,9 @@ interface ChatCardProps {
     titleText?: string
     titleExtra?: ReactNode
     children?: ReactNode
+    footer?: ReactNode
 }
-const ChatCard: FC<ChatCardProps> = ({titleIcon, titleText, titleExtra, children}) => {
+const ChatCard: FC<ChatCardProps> = ({titleIcon, titleText, titleExtra, children, footer}) => {
     return (
         <div className={styles["chat-card"]}>
             <div className={styles["chat-card-title"]}>
@@ -18,11 +19,10 @@ const ChatCard: FC<ChatCardProps> = ({titleIcon, titleText, titleExtra, children
                 </div>
                 <div className={styles["chat-card-title-more"]}>{titleExtra}</div>
             </div>
-            <div className={styles["chat-card-content"]}>
-              {children}
-            </div>
+            <div className={styles["chat-card-content"]}>{children}</div>
             <div className={styles["chat-card-footer"]}>
-              <ModalInfo/>
+                <ModalInfo />
+                {footer}
             </div>
         </div>
     )
