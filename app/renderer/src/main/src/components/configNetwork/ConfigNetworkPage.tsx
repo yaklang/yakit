@@ -220,6 +220,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 })
                 setCertificateParams(newArr)
                 currentIndex.current = ClientCertificates.length
+            } else {
+                setCertificateParams([])
+                currentIndex.current = 0
             }
             setParams((v) => ({
                 ...v,
@@ -1138,6 +1141,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 onResetPprofFileAutoAnalyze()
                                                 onResetSecondaryTabsNum()
                                                 ipcRenderer.invoke("ResetGlobalNetworkConfig", {}).then(() => {
+                                                    cerFormRef.current?.resetFields()
                                                     update()
                                                     yakitInfo("重置配置成功")
                                                 })
