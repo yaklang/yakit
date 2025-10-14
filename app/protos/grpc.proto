@@ -965,10 +965,30 @@ service Yak {
   rpc QuerySubERM(QuerySubERMRequest) returns (QuerySubERMResponse);
   rpc GenerateERMDot(GenerateERMDotRequest) returns (GenerateERMDotResponse);
 
+  // Export and Import Knowledge Base
+  rpc ExportKnowledgeBase(ExportKnowledgeBaseRequest) returns (stream GeneralProgress);
+  rpc ImportKnowledgeBase(ImportKnowledgeBaseRequest) returns (stream GeneralProgress);
+
   rpc AddMCPServer(AddMCPServerRequest) returns (GeneralResponse);
   rpc DeleteMCPServer(DeleteMCPServerRequest) returns (GeneralResponse);
   rpc UpdateMCPServer(UpdateMCPServerRequest) returns (GeneralResponse);
   rpc GetAllMCPServers(GetAllMCPServersRequest) returns (GetAllMCPServersResponse);
+}
+
+message ExportKnowledgeBaseRequest {
+  int64 KnowledgeBaseId = 1;
+  string TargetPath = 2;
+}
+
+message ImportKnowledgeBaseRequest {
+  string NewKnowledgeBaseName = 1;
+  string InputPath = 2;
+}
+
+message GeneralProgress {
+  double Percent = 1;
+  string Message = 2;
+  string MessageType = 3;
 }
 
 message AddMCPServerRequest {
@@ -976,6 +996,7 @@ message AddMCPServerRequest {
   string Type = 2;
   string URL = 3;
   string Command = 4;
+  bool Enable = 5;
 }
 
 message DeleteMCPServerRequest {
@@ -988,6 +1009,7 @@ message UpdateMCPServerRequest {
   string Type = 3;
   string URL = 4;
   string Command = 5;
+  bool Enable = 6;
 }
 
 // 支持分页查询
@@ -995,6 +1017,7 @@ message GetAllMCPServersRequest {
   string Keyword = 1;
   int64 ID = 2;
   Paging Pagination = 3;
+  bool IsEnable = 5;
   bool IsShowToolList = 4;
 }
 
@@ -1018,6 +1041,7 @@ message MCPServer {
   string Type = 3;
   string URL = 4;
   string Command = 5;
+  bool Enable = 7;
   repeated MCPServerTool Tools = 6;
 }
 
