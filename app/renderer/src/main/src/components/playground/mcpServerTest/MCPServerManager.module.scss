@@ -37,10 +37,26 @@
                 background-color: #e6f7ff;
             }
             
+            &.disabled {
+                opacity: 0.6;
+                background-color: #f5f5f5;
+            }
+            
+            .item-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 4px;
+                
+                .item-header-right {
+                    display: flex;
+                    align-items: center;
+                }
+            }
+            
             .item-title {
                 font-weight: 500;
                 font-size: 14px;
-                margin-bottom: 4px;
             }
             
             .item-type {

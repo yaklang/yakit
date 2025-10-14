@@ -3,6 +3,8 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {Form} from "antd"
 import {MCPServer, MCPServerFormData, MCPServerDetailProps} from "./types"
 import {failed, success} from "@/utils/notification"
@@ -66,7 +68,8 @@ export const MCPServerDetail: React.FC<MCPServerDetailProps> = (props) => {
                 Name: server.Name,
                 Type: server.Type,
                 URL: server.URL,
-                Command: server.Command
+                Command: server.Command,
+                Enable: server.Enable
             })
             setEditModalVisible(true)
         }
@@ -97,6 +100,15 @@ export const MCPServerDetail: React.FC<MCPServerDetailProps> = (props) => {
                 <div className={styles["info-item"]}>
                     <div className={styles["info-label"]}>服务器名称</div>
                     <div className={styles["info-value"]}>{server.Name}</div>
+                </div>
+
+                <div className={styles["info-item"]}>
+                    <div className={styles["info-label"]}>服务器状态</div>
+                    <div className={styles["info-value"]}>
+                        <YakitTag color={server.Enable ? "success" : "danger"}>
+                            {server.Enable ? "已启用" : "已禁用"}
+                        </YakitTag>
+                    </div>
                 </div>
 
                 <div className={styles["info-item"]}>
@@ -132,11 +144,11 @@ export const MCPServerDetail: React.FC<MCPServerDetailProps> = (props) => {
                                         <div className={styles["tool-params"]}>
                                             <div style={{fontWeight: 500, marginBottom: 4}}>参数:</div>
                                             {tool.Params.map((param, paramIdx) => (
-                                                <div key={paramIdx} className={styles["param-item"]}>
-                                                    <span className={styles["param-name"]}>{param.Name}</span>
-                                                    {param.Required&& (
-                                                        <span className={styles["param-required"]}>*</span>
-                                                    )}
+                                                  <div key={paramIdx} className={styles["param-item"]}>
+                                                      <span className={styles["param-name"]}>{param.Name}</span>
+                                                     {param.Required && (
+                                                          <span className={styles["param-required"]}>*</span>
+                                                      )}
                                                     <span style={{color: "#666", marginLeft: 4}}>
                                                         ({param.Type})
                                                     </span>
@@ -215,6 +227,10 @@ export const MCPServerDetail: React.FC<MCPServerDetailProps> = (props) => {
                                 )
                             }
                         }}
+                    </Form.Item>
+
+                    <Form.Item label='启用服务器' name='Enable' valuePropName='checked'>
+                        <YakitSwitch />
                     </Form.Item>
                 </Form>
             </YakitModal>

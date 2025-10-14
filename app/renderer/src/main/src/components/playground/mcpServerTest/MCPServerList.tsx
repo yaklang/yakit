@@ -3,6 +3,8 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {Form} from "antd"
 import {MCPServer, MCPServerFormData, MCPServerListProps} from "./types"
 import {failed, success} from "@/utils/notification"
@@ -65,6 +67,24 @@ export const MCPServerList: React.FC<MCPServerListProps> = (props) => {
         }
     }
 
+    const handleToggleEnable = async (server: MCPServer, checked: boolean) => {
+        try {
+            await ipcRenderer.invoke("UpdateMCPServer", {
+                ID: server.ID,
+                Name: server.Name,
+                Type: server.Type,
+                URL: server.URL,
+                Command: server.Command,
+                Enable: checked
+            })
+            success(`已${checked ? "启用" : "禁用"}服务器`)
+            loadServers()
+            onRefresh()
+        } catch (error: any) {
+            failed(`切换服务器状态失败: ${error}`)
+        }
+    }
+
     return (
         <div className={styles["list-container"]}>
             <div className={styles["list-header"]}>
@@ -90,10 +110,21 @@ export const MCPServerList: React.FC<MCPServerListProps> = (props) => {
                             key={server.ID}
                             className={`${styles["server-item"]} ${
                                 selectedServerId === server.ID ? styles["selected"] : ""
-                            }`}
+                            } ${!server.Enable ? styles["disabled"] : ""}`}
                             onClick={() => onSelectServer(server)}
                         >
-                            <div className={styles["item-title"]}>{server.Name}</div>
+                            <div className={styles["item-header"]}>
+                                <div className={styles["item-title"]}>{server.Name}</div>
+                                <div className={styles["item-header-right"]} onClick={(e) => e.stopPropagation()}>
+                                    <span style={{fontSize: 12, color: "#666", marginRight: 8}}>
+                                        {server.Enable ? "已启用" : "已禁用"}
+                                    </span>
+                                    <YakitSwitch
+                                        checked={server.Enable}
+                                        onChange={(checked) => handleToggleEnable(server, checked)}
+                                    />
+                                </div>
+                            </div>
                             <div className={styles["item-type"]}>类型: {server.Type}</div>
                             <div className={styles["item-info"]}>
                                 {server.Type === "sse" ? `URL: ${server.URL}` : `命令: ${server.Command}`}
@@ -173,6 +204,10 @@ export const MCPServerList: React.FC<MCPServerListProps> = (props) => {
                                 )
                             }
                         }}
+                    </Form.Item>
+
+                    <Form.Item label='启用服务器' name='Enable' valuePropName='checked' initialValue={true}>
+                        <YakitSwitch />
                     </Form.Item>
                 </Form>
             </YakitModal>

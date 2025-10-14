@@ -4,7 +4,7 @@ export interface MCPServerToolParamInfo {
     Type: string
     Description: string
     Default: string
-    Required: string
+    Required: boolean
     Name: string
 }
 
@@ -20,6 +20,7 @@ export interface MCPServer {
     Type: string
     URL: string
     Command: string
+    Enable: boolean
     Tools: MCPServerTool[]
 }
 
@@ -28,6 +29,7 @@ export interface MCPServerFormData {
     Type: string
     URL: string
     Command: string
+    Enable: boolean
 }
 
 export interface AddMCPServerRequest {
@@ -35,6 +37,7 @@ export interface AddMCPServerRequest {
     Type: string
     URL: string
     Command: string
+    Enable: boolean
 }
 
 export interface DeleteMCPServerRequest {
@@ -47,6 +50,7 @@ export interface UpdateMCPServerRequest {
     Type: string
     URL: string
     Command: string
+    Enable: boolean
 }
 
 export interface GetAllMCPServersRequest {
