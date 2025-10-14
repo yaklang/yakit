@@ -343,7 +343,7 @@ export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props
         defaultValuePropName: "defaultExpand",
         valuePropName: "expand"
     })
-    return <FileSystemCard />
+    return <FileSystemCard name='gen-code.yak' path='C:\bo\software\nexus\nexus' suffix='yak' />
     // <ChatCard titleText="Summary" titleIcon="#" titleExtra={<>111</>} >
     //     <FileList fileList={[
     //           {
