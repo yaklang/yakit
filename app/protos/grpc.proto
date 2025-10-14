@@ -2918,7 +2918,7 @@ message GetProjectsRequest {
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6;
-  // this type effect response.ProjectTotal, this type mark kind of frontend 
+  // this type effect response.ProjectTotal, this type mark kind of frontend
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
@@ -6659,7 +6659,7 @@ message EchoResposne {
   string result = 1;
 }
 
-// handshake 
+// handshake
 message HandshakeRequest {
   string Name = 1;
 }
@@ -7313,7 +7313,7 @@ message SyntaxFlowScanRequest{
   // 并发，默认5
   uint32  Concurrency = 7;
 
-  // compile data only in memory 
+  // compile data only in memory
   bool Memory = 8;
   // 根据项目扫描
   uint64 SSAProjectId = 9;
@@ -7449,7 +7449,7 @@ message SyntaxFlowResult {
 
   string RuleContent = 12;
   string Kind = 13; // "query" | "debug" | "scan"
-  string SaveKind = 14; // "memory" | "database"  
+  string SaveKind = 14; // "memory" | "database"
 }
 
 message DeleteSyntaxFlowResultRequest{
@@ -7601,9 +7601,9 @@ message QueryNewSSARisksRequest{
 }
 
 message QueryNewSSARisksResponse{
-  repeated SSARisk Data = 1; // new ssa-risk unread data 
+  repeated SSARisk Data = 1; // new ssa-risk unread data
   int64 NewRiskTotal = 2; // new ssa-risk unread count
-  int64 Total = 3; // total ssa-risk count 
+  int64 Total = 3; // total ssa-risk count
   int64 Unread = 4;// total unread ssa-risk count
 }
 
@@ -8058,6 +8058,9 @@ message MITMV2Request{
 
   bool RecoverContext = 45; // recover mitm context plugin config...
   int64 PluginConcurrency = 47; // 设置插件并发数，默认30
+
+  // optional host/domain whitelist for downstream proxy
+  repeated string DownstreamProxyHosts = 48;
 }
 
 message MITMV2Response {
