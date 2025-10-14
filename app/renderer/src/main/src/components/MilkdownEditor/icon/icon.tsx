@@ -338,6 +338,28 @@ const flipVertical = () => (
 export const IconFlipVertical = (props: Partial<IconProps>) => {
     return <Icon component={flipVertical} {...props} />
 }
+const notepadFileTypeDir = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M14.3543 13.7969H1.63011C1.29028 13.7969 1.01562 13.5526 1.01562 13.2504V4.3277C1.01562 4.0255 1.29028 3.78125 1.63011 3.78125H14.3543C14.6941 3.78125 14.9688 4.0255 14.9688 4.3277V13.2504C14.9688 13.5512 14.6925 13.7969 14.3543 13.7969Z'
+            fill='#FFE9B4'
+        />
+        <path
+            d='M8 6.42188H1.01562V3.28703C1.01562 2.94683 1.29059 2.67188 1.6308 2.67188H6.4108C6.68267 2.67188 6.92189 2.84897 6.99956 3.10994L8 6.42188Z'
+            fill='#FFB02C'
+        />
+        <path
+            d='M14.3543 13.7969H1.63011C1.29028 13.7969 1.01562 13.5222 1.01562 13.1823V5.23956C1.01562 4.89969 1.29028 4.625 1.63011 4.625H14.3543C14.6941 4.625 14.9688 4.89969 14.9688 5.23956V13.1823C14.9688 13.5206 14.6925 13.7969 14.3543 13.7969Z'
+            fill='#FFCA28'
+        />
+    </svg>
+)
+/**
+ * @description icon/记事本/文件类型/文件夹 Icon/notepad/file type/dir
+ */
+export const IconNotepadFileTypeDir = (props: Partial<IconProps>) => {
+    return <Icon component={notepadFileTypeDir} {...props} />
+}
 
 const notepadFileTypeUnknown = () => (
     <svg width='48' height='48' viewBox='0 0 48 48' fill='none' xmlns='http://www.w3.org/2000/svg'>
