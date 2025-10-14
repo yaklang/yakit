@@ -1,0 +1,101 @@
+.file-list {
+    width: 100%;
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    &-title {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+        line-height: 16px;
+    }
+    &-item {
+        width: 100%;
+        height: 20px;
+        padding: 6px 0;
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
+        box-sizing: content-box;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+
+        &:hover &-name {
+            color: var(--Colors-Use-Main-Primary);
+        }
+        &:hover &-actions {
+            svg {
+                color: var(--Colors-Use-Main-Primary);
+            }
+            &-time {
+                opacity: 1;
+            }
+        }
+        &-tag{
+            margin-right: 0;
+        }
+        &-main {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            &-dot {
+                border-radius: 10px;
+                padding: 2px 6px;
+                font-size: 11px;
+                font-weight: 400;
+                line-height: 14px;
+            }
+            &-info {
+                background-color: var(--Colors-Use-Neutral-Border);
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+            }
+            &-success {
+                background-color: var(--Colors-Use-Success-Focus);
+                color: var(--Colors-Use-Success-Primary);
+            }
+            &-error {
+                background-color: var(--Colors-Use-Error-Focus);
+                color: var(--Colors-Use-Error-Primary);
+            }
+        }
+        &-icon {
+            width: 16px;
+            height: 16px;
+            svg {
+                width: 100%;
+                height: 100%;
+                font-size: 16px;
+            }
+        }
+        &-name {
+            color: var(--Colors-Use-Neutral-Text-2-Primary);
+        }
+        &-desc {
+            border-radius: var(--Radius-System-Extra-small-2, 2px);
+            border: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            font-weight: 400;
+            font-size: 11px;
+            padding: 2px 6px;
+        }
+        &-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            &-time {
+                display: flex;
+                align-items: center;
+                opacity: 0;
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px;
+            }
+            svg{
+                width: 16px;
+                height: 16px;
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
+        }
+    }
+}

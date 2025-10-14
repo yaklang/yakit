@@ -38,7 +38,7 @@ import {getFileNameByUrl} from "../utils/trackDeletePlugin"
 import {httpDeleteOSSResource} from "@/apiUtils/http"
 import {useStore} from "@/store"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {LogNodeStatusFileIcon} from "@/assets/icon/colors"
+import {LogNodeStatusFileIcon, SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 
 interface CustomFileItem {
     name: string
@@ -99,6 +99,9 @@ export const renderFileTypeIcon = (params: {type: string; iconClassName?: string
         case ".txt":
         case "txt":
             return <LogNodeStatusFileIcon className={iconClassName} />
+        case ".yak":
+        case "yak":
+            return <SolidYakCattleNoBackColorIcon className={iconClassName} />
         default:
             return <IconNotepadFileTypeUnknown className={iconClassName} />
     }
