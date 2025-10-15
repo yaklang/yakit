@@ -3,11 +3,11 @@ import {defaultChatIPCData} from "../../defaultConstant"
 import {cloneDeep} from "lodash"
 import {UseChatIPCEvents, UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
 import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
-import {AIChatReview} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
 
 export interface ChatIPCContextStore {
     chatIPCData: UseChatIPCState
-    reviewInfo?: AIChatReview
+    reviewInfo?: AIChatQSData
     planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
     reviewExpand: boolean
     timelineMessage?: string

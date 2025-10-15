@@ -64,15 +64,19 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 )
                 break
             case "stream":
-                const {NodeId, NodeLabel, content} = data
+                const {NodeId, NodeIdVerbose, content} = data
                 if (isToolExecStream(NodeId)) {
                     contentNode = <AIChatToolColorCard toolCall={data} />
                 } else if (NodeId === "re-act-loop-answer-payload") {
                     contentNode = (
-                        <AIMarkdown stream={content} nodeLabel={NodeLabel} className={styles["ai-mark-down-wrapper"]} />
+                        <AIMarkdown
+                            stream={content}
+                            nodeLabel={NodeIdVerbose.Zh}
+                            className={styles["ai-mark-down-wrapper"]}
+                        />
                     )
                 } else {
-                    contentNode = <AIStreamChatContent stream={content} nodeLabel={NodeLabel} />
+                    contentNode = <AIStreamChatContent stream={content} nodeLabel={NodeIdVerbose.Zh} />
                 }
 
                 break
@@ -97,7 +101,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
             case "tool_use_review_require":
                 contentNode = (
                     <AIReActChatReview
-                        info={{type, data}}
+                        info={item}
                         onSendAI={handleSendCasual}
                         isEmbedded={true}
                         expand={true}
@@ -108,7 +112,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
             case "exec_aiforge_review_require":
                 contentNode = (
                     <AIReActChatReview
-                        info={{type, data}}
+                        info={item}
                         onSendAI={handleSendCasual}
                         isEmbedded={true}
                         expand={true}
@@ -119,7 +123,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
             case "require_user_interactive":
                 contentNode = (
                     <AIReActChatReview
-                        info={{type, data}}
+                        info={item}
                         onSendAI={handleSendCasual}
                         isEmbedded={true}
                         expand={true}

@@ -6,12 +6,6 @@ import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetw
 import {UseCasualChatState, UseChatIPCState, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
 import {AIAgentGrpcApi, AIOutputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 // #region AI-(Task|Triage)
-
-export interface AIChatReviewExtra {
-    type: "plan_task_analysis"
-    data: AIAgentGrpcApi.PlanReviewRequireExtra
-}
-
 /** UI-chat 信息 */
 export interface AIChatInfo {
     /** 唯一标识 */
