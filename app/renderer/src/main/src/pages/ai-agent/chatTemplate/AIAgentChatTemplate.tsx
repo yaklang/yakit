@@ -37,7 +37,7 @@ import {
 } from "@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard"
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
-import {AIStreamNodeIdToLabel} from "@/pages/ai-re-act/hooks/defaultConstant"
+import {convertNodeIdToVerbose} from "@/pages/ai-re-act/hooks/defaultConstant"
 import {v4 as uuidv4} from "uuid"
 import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
 import {AIMarkdown} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
@@ -273,12 +273,12 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                             const {id, Timestamp, type, data} = info
                             switch (type) {
                                 case "stream":
-                                    const {NodeId, EventUUID, content, NodeLabel} = data
+                                    const {NodeId, EventUUID, content, NodeIdVerbose} = data
                                     if (isToolExecStream(NodeId)) {
                                         return <AIChatToolColorCard key={id} toolCall={data} />
                                     }
                                     if (NodeId === "re-act-loop-answer-payload") {
-                                        return <AIMarkdown stream={content} nodeLabel={NodeLabel} />
+                                        return <AIMarkdown stream={content} nodeLabel={NodeIdVerbose.Zh} />
                                     }
                                     return (
                                         <ChatStreamCollapseItem
@@ -307,7 +307,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 })
 const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo((props) => {
     const {expandKey, info, className, defaultExpand, timestamp} = props
-    const {NodeId, NodeLabel, content} = info
+    const {NodeId, NodeIdVerbose, content} = info
     return (
         <ChatStreamCollapse
             key={expandKey}
@@ -316,7 +316,7 @@ const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo
             title={
                 <div className={styles["task-type-header"]}>
                     {taskAnswerToIconMap[NodeId] || <SolidLightningboltIcon />}
-                    <div className={styles["task-type-header-title"]}>{NodeLabel}</div>
+                    <div className={styles["task-type-header-title"]}>{NodeIdVerbose.Zh}</div>
                     <div className={styles["task-type-header-time"]}>{formatTimestamp(timestamp)}</div>
                 </div>
             }
@@ -393,12 +393,13 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                         type: "stream",
                         Timestamp: Timestamp,
                         data: {
+                            CallToolID: item.CallToolID,
                             NodeId: item.NodeId,
-                            NodeLabel: AIStreamNodeIdToLabel[item.NodeId]?.label || "",
+                            NodeIdVerbose: item.NodeIdVerbose || convertNodeIdToVerbose(item.NodeId),
                             content: ipcContent + ipcStreamDelta,
+                            ContentType: item.ContentType,
                             EventUUID: item.EventUUID,
-                            status: "end",
-                            DisableMarkdown: item.DisableMarkdown
+                            status: "end"
                         }
                     }
                     list.push(current)

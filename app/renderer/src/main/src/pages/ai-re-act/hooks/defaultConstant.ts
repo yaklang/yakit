@@ -1,4 +1,5 @@
-import {AIToolResult, ToolStreamSelectors} from "./aiRender"
+import {AIToolResult} from "./aiRender"
+import {AIOutputI18n} from "./grpcApi"
 
 export const DefaultAIToolResult: AIToolResult = {
     callToolId: "",
@@ -10,14 +11,9 @@ export const DefaultAIToolResult: AIToolResult = {
         isShowAll: false
     }
 }
-export const DefaultToolStdOutSelectors: ToolStreamSelectors = {
-    callToolId: "",
-    InteractiveId: "",
-    selectors: []
-}
 
 /** AI 流式输出中, NodeId 对应展示的内容 */
-export const AIStreamNodeIdToLabel: Record<string, {label: string}> = {
+const AIStreamNodeIdToLabel: Record<string, {label: string}> = {
     "re-act-loop": {label: "推理与行动"},
     "call-forge": {label: "智能应用"},
     "call-tools": {label: "工具调用"},
@@ -40,6 +36,15 @@ export const AIStreamNodeIdToLabel: Record<string, {label: string}> = {
     "re-act-loop-thought": {label: "思考"},
     "re-act-loop-answer-payload": {label: "AI 响应"},
     "enhance-query": {label: "知识增强"}
+}
+/** 传入 NodeId, 输出展示内容的18n 结构 */
+export const convertNodeIdToVerbose = (nodeId: string) => {
+    const label = AIStreamNodeIdToLabel[nodeId]?.label || nodeId
+    const verbose18n: AIOutputI18n = {
+        Zh: label,
+        En: label
+    }
+    return verbose18n
 }
 
 /** AI 判断 review 的风险阈值等级对应的展示内容 */

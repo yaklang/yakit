@@ -202,7 +202,7 @@ export const defaultChatIPCData: UseChatIPCState = {
     taskChat: {
         coordinatorId: "",
         plan: [],
-        streams: {}
+        streams: []
     }
 }
 export const defaultAIPerfData: UseAIPerfDataState = {

@@ -1,9 +1,9 @@
 import {AIChatIPCSendParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
-import {AIChatReview} from "../hooks/aiRender"
+import {AIChatQSData} from "../hooks/aiRender"
 import {AIAgentGrpcApi} from "../hooks/grpcApi"
 
 export interface AIReActChatReviewProps {
-    info: AIChatReview
+    info: AIChatQSData
     onSendAI: (params: AIChatIPCSendParams) => void
     planReviewTreeKeywordsMap?: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
     isEmbedded?: boolean
