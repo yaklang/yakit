@@ -1,0 +1,64 @@
+@use "../../../../styles/mixin.scss" as mixin;
+
+.divider {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    > div:first-child {
+        border-top: 1px dashed var(--Colors-Use-Neutral-Border);
+        margin: 8px 0;
+    }
+    &-content {
+        width: 100%;
+        display: flex;
+        align-items: center;
+
+        &-text {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 6px;
+            flex: 1;
+            width: 0;
+            height: 32px;
+            >span:first-child{
+                width: fit-content;
+                white-space: nowrap;
+            }
+            &-desc {
+                flex: 1;
+                min-width: 0;
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                font-weight: 400;
+                font-size: 11px;
+                line-height: 14px;
+                @include mixin.text-ellipsis(1, false, false, true);
+            }
+        }
+
+        &-success {
+            span {
+                margin: 0;
+                white-space: nowrap;
+            }
+
+            &-tag {
+                width: 16px;
+                height: 16px;
+                text-align: center;
+                display: flex;
+                justify-content: center;
+            }
+        }
+
+        &-error svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
+}
+
+.icon-danger {
+    color: var(--Colors-Use-Error-Primary);
+}
