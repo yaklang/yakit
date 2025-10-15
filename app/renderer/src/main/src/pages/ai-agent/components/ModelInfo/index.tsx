@@ -1,12 +1,13 @@
-import type {FC, ReactNode} from "react"
+import type {FC} from "react"
 import {AIOnlineModelIconMap} from "../../defaultConstant"
 import styles from "./index.module.scss"
 import {DocumentDuplicateSvgIcon} from "@/assets/newIcon"
-import {OutlineLogIcon, OutlinePlussmIcon, OutlineRocketLaunchIcon} from "@/assets/icon/outline"
+import {OutlineLogIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setClipboardText} from "@/utils/clipboard"
 import {RocketSvgIcon} from "@/components/layout/icons"
 import {Tooltip} from "antd"
+import { SolidAnnotationIcon } from "@/assets/icon/solid"
 
 interface ModalInfoProps {
     icon?: string
@@ -37,7 +38,7 @@ const ModalInfo: FC<ModalInfoProps> = ({icon, title, time, copyStr}) => {
                     <YakitButton type='text2' color='default' icon={<OutlineLogIcon />} />
                 </Tooltip>
                 <Tooltip placement='top' title=''>
-                    <YakitButton type='text2' color='default' icon={<OutlinePlussmIcon />} />
+                    <YakitButton type='text2' color='default' icon={<SolidAnnotationIcon />} />
                 </Tooltip>
                 <Tooltip placement='top' title=''>
                     <YakitButton type='text2' color='default' icon={<RocketSvgIcon />} />

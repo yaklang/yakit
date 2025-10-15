@@ -24,14 +24,16 @@ const PromptCard: FC<{prompt?: string}> = ({prompt = "模型在京东云上的�
 
 const SummaryCard: FC<SummaryCardProps> = ({content, fileList, prompt}) => {
     return (
-        <ChatCard
-            titleText='Summary'
-            titleIcon={<SolidHashtagIcon className={styles["summary-icon"]} />}
-            footer={<PromptCard prompt={prompt} />}
-        >
-            <div className={styles["summary-content"]}>{content}</div>
-            {!!fileList?.length && <FileList fileList={fileList} />}
-        </ChatCard>
+        <>
+            <ChatCard
+                titleText='Summary'
+                titleIcon={<SolidHashtagIcon className={styles["summary-icon"]} />}
+                footer={<PromptCard prompt={prompt} />}
+            >
+                <div className={styles["summary-content"]}>{content}</div>
+                {!!fileList?.length && <FileList fileList={fileList} />}
+            </ChatCard>
+        </>
     )
 }
 
