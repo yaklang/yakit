@@ -1,0 +1,82 @@
+.tool-invoker-card-extra {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    span {
+        margin-left: 4px;
+        color: var(--Colors-Use-Main-Primary);
+    }
+    > span:nth-child(2) {
+        margin: 0 12px;
+        color: var(--Colors-Use-Neutral-Border);
+    }
+}
+
+.file-system {
+    width: 100%;
+    margin: 4px 0;
+    --title-bg-color: var(--Colors-Use-Neutral-Border);
+    --content-color: var(--Colors-Use-Neutral-Text-1-Title);
+    &-success {
+        --title-bg-color: var(--Colors-Use-Success-Focus);
+        --content-color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    }
+    &-fail {
+        --title-bg-color: var(--Colors-Use-Error-Focus);;
+        --content-color: var(--Colors-Use-Error-Primary);
+    }
+    &-cancel {
+        --title-bg-color: var(--Colors-Use-Neutral-Border);
+        --content-color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    }
+    &-title {
+        height: 32px;
+        padding: 6px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-radius: 8px 8px 0 0;
+        background-color: var(--title-bg-color);
+        div {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+        }
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+    &-content {
+        background: var(--Colors-Use-Basic-Background);
+        padding: 8px;
+        border-radius: 0 0 8px 8px;
+        border: 1px solid var(--title-bg-color);
+        div {
+            color: var(--content-color);
+        }
+    }
+    &-wrapper {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        padding: 8px;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+        margin-bottom: 0;
+        margin-top: 4px;
+        border-radius: 4px;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        background-color: var(--Colors-Use-Neutral-Bg);
+    }
+    code {
+        white-space: break-spaces;
+    }
+}
+.file-system-icon svg {
+    width: 16px;
+    height: 16px;
+}
