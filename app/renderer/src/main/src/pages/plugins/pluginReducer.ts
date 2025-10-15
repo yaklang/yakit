@@ -192,7 +192,7 @@ export const pluginLocalReducer = (
     switch (action.type) {
         case "add":
             if (!response) return state
-            if (+response?.Pagination.Page === 1) {
+            if (+response?.Pagination?.Page === 1) {
                 return {
                     Data: response?.Data || [],
                     Pagination: response?.Pagination || {

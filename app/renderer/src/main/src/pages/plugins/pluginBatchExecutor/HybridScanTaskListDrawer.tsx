@@ -486,8 +486,8 @@ const HybridScanTaskList: React.FC<HybridScanTaskListProps> = React.memo(
                 enableDrag={true}
                 columns={columns}
                 pagination={{
-                    page: response?.Pagination.Page || 0,
-                    limit: response?.Pagination.Limit || 20,
+                    page: response?.Pagination?.Page || 0,
+                    limit: response?.Pagination?.Limit || 20,
                     total: response?.Total && response?.Total > 0 ? Number(response.Total) : 0,
                     onChange: update
                 }}
