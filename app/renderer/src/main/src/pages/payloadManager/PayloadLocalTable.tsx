@@ -231,7 +231,7 @@ export interface DeletePayloadProps {
 
 export interface EditingObjProps {
     // 操作的行id
-    Id: number
+    Id: number | string
     // 操作的列
     dataIndex: string
 }

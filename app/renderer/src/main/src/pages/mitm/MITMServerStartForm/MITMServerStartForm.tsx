@@ -13,7 +13,7 @@ import {yakitFailed} from "@/utils/notification"
 import {CogIcon, RefreshIcon} from "@/assets/newIcon"
 import {RuleExportAndImportButton} from "../MITMRule/MITMRule"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceEffect, useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AdvancedConfigurationFromValue} from "./MITMFormAdvancedConfiguration"
 import ReactResizeDetector from "react-resize-detector"
 import {useWatch} from "antd/es/form/Form"
@@ -34,6 +34,7 @@ import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectTy
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
+const ConfigureProxyAuthentication = React.lazy(() => import("./ConfigureProxyAuthentication"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -278,6 +279,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [width, setWidth] = useState<number>(0)
 
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
+    const [configureProxyAuthenticationVisible, setConfigureProxyAuthenticationVisible] = useState<boolean>(false)
+
     const [alertVisible, setAlertVisible] = useState<boolean>(true)
     return (
         <>
@@ -340,7 +343,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描，代理如有密码格式为：http://user:pass@ip:port
                                 <span
                                     className={styles["form-rule-help-setting"]}
-                                    onClick={() => setAgentConfigModalVisible(true)}
+                                    onClick={() => setConfigureProxyAuthenticationVisible(true)}
                                 >
                                     配置代理认证&nbsp;
                                 </span>
@@ -502,6 +505,12 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         ref={advancedFormRef}
                     />
                 </React.Suspense>
+                <React.Suspense fallback={<div>loading...</div>}>
+                    <ConfigureProxyAuthentication
+                        visible={configureProxyAuthenticationVisible}
+                        onSetVisible={setConfigureProxyAuthenticationVisible}
+                    />
+                </React.Suspense>
             </div>
         </>
     )
@@ -515,14 +524,14 @@ interface GenerateURLRequest {
     Password: string
 }
 
-interface GenerateURLResponse {
+export interface GenerateURLResponse {
     URL: string
 }
 interface AgentConfigModalParams extends Omit<GenerateURLRequest, "Host" | "Port"> {
     Address?: string
 }
 
-const initAgentConfigModalParams = {
+export const initAgentConfigModalParams = {
     Scheme: "http",
     Address: "",
     Username: "",
@@ -531,17 +540,25 @@ const initAgentConfigModalParams = {
 
 interface AgentConfigModalProp {
     agentConfigModalVisible: boolean
+    initParams?: AgentConfigModalParams
     onCloseModal: () => void
-    generateURL: (url: string) => void
+    generateURL: (url: string, params?: AgentConfigModalParams) => void
 }
 
 // 代理劫持弹窗
 export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
-    const {agentConfigModalVisible, onCloseModal, generateURL} = props
+    const {agentConfigModalVisible, initParams = initAgentConfigModalParams, onCloseModal, generateURL} = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "mitm"])
 
     const [form] = Form.useForm()
-    const [params, setParams] = useState<AgentConfigModalParams>(initAgentConfigModalParams)
+    const [params, setParams, getParams] = useGetState<AgentConfigModalParams>(initParams)
+
+    useEffect(() => {
+        if (agentConfigModalVisible) {
+            setParams(initParams)
+            form.setFieldsValue(initParams)
+        }
+    }, [agentConfigModalVisible])
 
     const onValuesChange = useMemoizedFn((changedValues, allValues) => {
         const key = Object.keys(changedValues)[0]
@@ -575,7 +592,7 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
             }
 
             const res: GenerateURLResponse = await ipcRenderer.invoke("mitm-agent-hijacking-config", params)
-            generateURL(res.URL)
+            generateURL(res.URL, getParams())
             onClose()
         } catch (error) {
             yakitFailed(error + "")
