@@ -1376,7 +1376,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                             allowClear
                             value={selectValue}
                             onChange={(v) => {
-                                setSelectValue(v)
+                                setSelectValue(v || "")
                             }}
                             size='small'
                         >
