@@ -7,6 +7,7 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {v4 as uuidv4} from "uuid"
 import {AIAgentGrpcApi, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {AIChatQSData} from "./aiRender"
+import {convertNodeIdToVerbose} from "./defaultConstant"
 
 /** 将接口数据(AIOutputEvent)转换为日志数据(AIAgentGrpcApi.Log), 并push到日志队列中 */
 export const handleGrpcDataPushLog = (params: {
@@ -21,6 +22,8 @@ export const handleGrpcDataPushLog = (params: {
             id: uuidv4(),
             type: "log",
             data: {
+                NodeId: info.NodeId,
+                NodeIdVerbose: info.NodeIdVerbose || convertNodeIdToVerbose(info.NodeId),
                 level: type || "info",
                 message: `${JSON.stringify({...info, Content: ipcContent, StreamDelta: undefined})}`
             },
@@ -63,9 +66,8 @@ export const isToolStdoutStream = (nodeID: string) => {
     if (!nodeID) return false
     return nodeID.startsWith("tool-") && nodeID.endsWith("-stdout")
 }
-/** 判断是否为工具执行的流程类型数据 */
+/** 判断是否为工具执行的流程类型数据(call-tools 和 tool-xxx-stdout) */
 export const isToolExecStream = (nodeID: string) => {
-    if (nodeID === "execute") return true
     if (nodeID === "call-tools") return true
     if (isToolStdoutStream(nodeID)) return true
     return false

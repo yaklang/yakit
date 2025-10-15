@@ -2,7 +2,7 @@ import React, {memo, useEffect, useRef, useState} from "react"
 import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps} from "./type"
 import {AIAgentWelcome} from "../AIAgentWelcome/AIAgentWelcome"
 import {useCreation, useDebounceFn, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {AIChatInfo, AIChatReviewExtra, AITool} from "../type/aiChat"
+import {AIChatInfo, AITool} from "../type/aiChat"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
@@ -27,7 +27,7 @@ import {ChatIPCSendType} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
-import {AIChatReview} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIChatQSData, AIReviewType} from "@/pages/ai-re-act/hooks/aiRender"
 
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
@@ -173,24 +173,22 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         AIAgentGrpcApi.PlanReviewRequireExtra
     >(new Map())
 
-    const [reviewInfo, setReviewInfo] = useState<AIChatReview>()
+    const [reviewInfo, setReviewInfo] = useState<AIChatQSData>()
     const [reviewExpand, setReviewExpand] = useState<boolean>(true)
 
     const [timelineMessage, setTimelineMessage] = useState<string>()
 
-    const handleShowReview = useMemoizedFn((info: AIChatReview) => {
+    const handleShowReview = useMemoizedFn((info: AIChatQSData) => {
         console.log("reviewInfo", info)
         setReviewExpand(true)
         setReviewInfo(cloneDeep(info))
     })
-    const handleShowReviewExtra = useMemoizedFn((info: AIChatReviewExtra) => {
-        if (info.type === "plan_task_analysis") {
-            setPlanReviewTreeKeywords(info.data.index, info.data)
-        }
+    const handleShowReviewExtra = useMemoizedFn((info: AIAgentGrpcApi.PlanReviewRequireExtra) => {
+        setPlanReviewTreeKeywords(info.index, info)
     })
     const handleReleaseReview = useMemoizedFn((id: string) => {
         if (!reviewInfo) return
-        if (reviewInfo.data.id === id) {
+        if ((reviewInfo.data as AIReviewType).id === id) {
             // if (!delayLoading) yakitNotify("warning", "审阅自动执行，弹框将自动关闭")
             handleStopAfterChangeState()
         }

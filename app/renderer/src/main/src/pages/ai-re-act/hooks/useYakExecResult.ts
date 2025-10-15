@@ -59,7 +59,10 @@ function useYakExecResult(params?: UseYakExecResultParams) {
             let ipcContent = Uint8ArrayToString(res.Content) || ""
 
             if (res.Type === "yak_exec_result") {
+                console.log("yak_exec_result---", res)
+
                 const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIPluginExecResult
+                console.log("yak_exec_result---data---", data)
                 onHandleYakExecResult(data)
                 return
             }
@@ -72,6 +75,7 @@ function useYakExecResult(params?: UseYakExecResultParams) {
             if (!value?.IsMessage) return
             const message = value?.Message || ""
             const obj: AIAgentGrpcApi.AICardMessage = JSON.parse(Buffer.from(message, "base64").toString("utf8"))
+            console.log("yak_exec_result---obj---", obj)
 
             if (obj.type !== "log") return
             const content = obj.content as StreamResult.Log

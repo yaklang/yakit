@@ -242,7 +242,9 @@ const AIReActLog: React.FC<AIReActLogProps> = React.memo((props) => {
                                 </div>
                             )
                         case "stream":
-                            return <AIStreamChatContent key={id} stream={data.content} nodeLabel={data.NodeLabel} />
+                            return (
+                                <AIStreamChatContent key={id} stream={data.content} nodeLabel={data.NodeIdVerbose.Zh} />
+                            )
 
                         default:
                             return <React.Fragment key={id}></React.Fragment>

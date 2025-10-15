@@ -25,6 +25,7 @@ import styles from "./AIReActChatReview.module.scss"
 import {AIChatIPCSendParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
 import {OutlineHandleColorsIcon, OutlineWarpColorsIcon} from "@/assets/icon/colors"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
+import {AIReviewType} from "../hooks/aiRender"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
     const {
@@ -396,7 +397,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     const onSendAIByValue = useMemoizedFn((value: string) => {
         const params: AIChatIPCSendParams = {
             value,
-            id: review.id
+            id: (review as AIReviewType).id
         }
         onSendAI(params)
     })

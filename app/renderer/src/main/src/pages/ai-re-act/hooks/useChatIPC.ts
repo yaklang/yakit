@@ -13,6 +13,7 @@ import {handleGrpcDataPushLog} from "./utils"
 import {AIChatSendParams, UseCasualChatEvents, UseChatIPCEvents, UseChatIPCParams, UseChatIPCState} from "./type"
 import {AIChatQSData} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
+import {convertNodeIdToVerbose} from "./defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -21,7 +22,7 @@ const UseCasualAndTaskTypes = [
     "tool_use_review_require",
     "require_user_interactive",
     "review_release",
-    // "stream",
+    "stream",
     "tool_call_start",
     "tool_call_user_cancel",
     "tool_call_done",
@@ -31,7 +32,10 @@ const UseCasualAndTaskTypes = [
     // 对 tool_review 的 ai 评分
     "ai_review_start",
     "ai_review_countdown",
-    "ai_review_end"
+    "ai_review_end",
+    // 文件系统操作相关
+    "filesystem_pin_directory",
+    "filesystem_pin_filename"
 ]
 
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
@@ -178,6 +182,14 @@ function useChatIPC(params?: UseChatIPCParams) {
                 if (UseYakExecResultTypes.includes(res.Type)) {
                     // 执行过程中插件输出的卡片
                     yakExecResultEvent.handleSetData(res)
+
+                    // 其中的文件输出也要和对话内容绑定一次
+                    if (planCoordinatorId.current === res.CoordinatorId) {
+                        taskChatEvent.handleSetData(res)
+                    } else {
+                        casualChatEvent.handleSetData(res)
+                    }
+
                     return
                 }
 
@@ -188,7 +200,16 @@ function useChatIPC(params?: UseChatIPCParams) {
                     if (obj.level) {
                         // 执行日志信息
                         const data = obj as AIAgentGrpcApi.Log
-                        pushLog({id: uuidv4(), type: "log", data: data, Timestamp: res.Timestamp})
+                        pushLog({
+                            id: uuidv4(),
+                            type: "log",
+                            data: {
+                                ...data,
+                                NodeId: res.NodeId,
+                                NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId)
+                            },
+                            Timestamp: res.Timestamp
+                        })
                     } else if (res.NodeId === "timeline") {
                         const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineDump
                         onTimelineMessage && onTimelineMessage(data.dump)
@@ -229,16 +250,6 @@ function useChatIPC(params?: UseChatIPCParams) {
                     return
                 }
 
-                // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
-                if (res.Type === "stream") {
-                    if (planCoordinatorId.current === res.CoordinatorId && !!res.TaskIndex) {
-                        taskChatEvent.handleSetData(res)
-                    } else {
-                        casualChatEvent.handleSetData(res)
-                    }
-                    return
-                }
-
                 if (UseCasualAndTaskTypes.includes(res.Type)) {
                     // 自由对话和任务规划共用的类型
                     if (planCoordinatorId.current === res.CoordinatorId) {
@@ -250,19 +261,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 }
 
                 console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
-                setLogs((pre) =>
-                    pre.concat([
-                        {
-                            id: uuidv4(),
-                            type: "log",
-                            Timestamp: res.Timestamp,
-                            data: {
-                                level: "info",
-                                message: `${JSON.stringify({...res, Content: ipcContent, StreamDelta: undefined})}`
-                            }
-                        }
-                    ])
-                )
+                handleGrpcDataPushLog({type: "info", info: res, pushLog: pushLog})
             } catch (error) {
                 handleGrpcDataPushLog({type: "error", info: res, pushLog})
             }

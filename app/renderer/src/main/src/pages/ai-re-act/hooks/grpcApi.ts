@@ -108,6 +108,11 @@ export interface AIInputEvent {
     FreeInput?: string // 自由输入的文本
 }
 
+export interface AIOutputI18n {
+    Zh: string
+    En: string
+}
+
 export interface AIOutputEvent {
     CoordinatorId: string
     Type: string
@@ -133,6 +138,12 @@ export interface AIOutputEvent {
     SyncID: string
     /** 事件的唯一标识 */
     EventUUID: string
+    /** 节点 ID 的展示内容, 包含18n */
+    NodeIdVerbose: AIOutputI18n
+    /** 内容的类型: markdown / yaklang_code / plain_code / text/plain */
+    ContentType: string
+    /** 如果是调用工具相关的事件，那么这里是调用的ID */
+    CallToolID: string
 }
 // #endregion
 
@@ -381,6 +392,12 @@ export declare namespace AIAgentGrpcApi {
         entries: TimelineDumpOpt[]
         limit: number
         total_entries: number
+    }
+
+    /** 文件系统操作相关 */
+    export interface FileSystemPin {
+        path: string
+        timestamp: number
     }
 }
 

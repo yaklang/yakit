@@ -1,6 +1,5 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatReviewExtra} from "@/pages/ai-agent/type/aiChat"
-import {AIChatQSData, AIChatReview, AITokenConsumption} from "./aiRender"
+import {AIChatQSData, AITokenConsumption} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {Dispatch, SetStateAction} from "react"
 
@@ -64,9 +63,9 @@ export interface UseTaskChatParams extends UseHookBaseParams {
     /** 更新日志数据 */
     updateLog: Dispatch<SetStateAction<AIChatQSData[]>>
     /** review 触发回调事件 */
-    onReview?: (data: AIChatReview) => void
+    onReview?: (data: AIChatQSData) => void
     /** plan_review 补充数据 */
-    onReviewExtra?: (data: AIChatReviewExtra) => void
+    onReviewExtra?: (data: AIAgentGrpcApi.PlanReviewRequireExtra) => void
     /** 触发 review-release 后的回调事件 */
     onReviewRelease?: (id: string) => void
 }
@@ -77,7 +76,7 @@ export interface UseTaskChatState {
     /** 正在执行的任务列表 */
     plan: AIAgentGrpcApi.PlanTask[]
     /** 流式输出 */
-    streams: Record<string, AIChatQSData[]>
+    streams: AIChatQSData[]
 }
 export interface UseTaskChatEvents extends UseHookBaseEvents {
     handleSetCoordinatorId: (id: string) => void
@@ -95,9 +94,9 @@ export interface UseChatIPCParams {
     /** 出现任务规划的触发回调(id 是 coordinatorId) */
     onTaskStart?: (id: string) => void
     /** 任务规划的 review 事件 */
-    onTaskReview?: (data: AIChatReview) => void
+    onTaskReview?: (data: AIChatQSData) => void
     /** 任务规划中 plan_review 事件的补充数据 */
-    onTaskReviewExtra?: (data: AIChatReviewExtra) => void
+    onTaskReviewExtra?: (data: AIAgentGrpcApi.PlanReviewRequireExtra) => void
     /** 主动 review-release 的回调事件 */
     onReviewRelease?: (type: ChatIPCSendType, id: string) => void
     /** timeline 时间线消息回调事件 */
