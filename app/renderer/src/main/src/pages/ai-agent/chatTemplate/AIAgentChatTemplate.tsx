@@ -50,6 +50,7 @@ import ChatCard from "../components/ChatCard"
 import FileList from "../components/FileList"
 import FileSystemCard from "../components/FileSystemCard"
 import SummaryCard from "../components/SummaryCard"
+import ToolInvokerCard from "../components/ToolInvokerCard"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -344,7 +345,8 @@ export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props
         defaultValuePropName: "defaultExpand",
         valuePropName: "expand"
     })
-    return <SummaryCard />
+    return <ToolInvokerCard/>
+    // <SummaryCard />
     // <FileSystemCard name="gen-code.yak" path="C:\bo\software\nexus\nexus" suffix="yak" />
 
     // return (
