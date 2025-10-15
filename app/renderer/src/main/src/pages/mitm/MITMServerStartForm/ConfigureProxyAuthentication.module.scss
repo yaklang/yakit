@@ -1,0 +1,86 @@
+.ConfigureProxyAuthentication {
+  &-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &-text {
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+
+    &-btns {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  &-table {
+    height: 100%;
+    &-header {
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 12px;
+
+      gap: 8px;
+
+      .header-body {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 24px;
+
+        .header-extra {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+      }
+    }
+
+    &-body {
+      overflow-y: auto;
+      height: calc(100% - 30px);
+
+      .basic {
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+      }
+
+      .table-operation {
+        display: flex;
+        justify-content: center;
+
+        .delete {
+          color: var(--Colors-Use-Error-Primary);
+        }
+
+        .edit {
+          cursor: pointer;
+          color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        }
+
+        svg {
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+}
+
+.td-active-border {
+  padding: 7px 15px !important;
+  border: 1px solid var(--Colors-Use-Main-Primary) !important;
+}
+
+.editableCell-select {
+  :global {
+    .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+      border-radius: 0;
+    }
+  }
+}
