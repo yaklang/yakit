@@ -8,6 +8,8 @@ import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
 import { RemoveIcon } from "@/assets/newIcon"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { useHttpFlowStore } from "@/store/httpFlow"
+import { useTheme } from "@/hook/useTheme"
+import { useMemoizedFn } from "ahooks"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -118,12 +120,23 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
     const [language, setLanguage] = useState<string>("")
     // 从store获取对比数据
     const { token, dataMap } = useHttpFlowStore()
+    const { theme } = useTheme()
     useImperativeHandle(ref, () => ({
         // 减少父组件获取的DOM元素属性,只暴露给父组件需要用到的方法
         onChangeLineConversion: (newVal) => {
             changeLineConversion()
         }
     }), [leftCode, rightCode, noWrap]);
+
+    const setCompareTheme = useMemoizedFn((theme) => {
+        monaco.setTheme(`vs${theme === 'dark' ? '-dark' : ''}`)
+    })
+
+    //监听theme设置monaco主题
+    useEffect(() => {
+        setCompareTheme(theme)
+    }, [theme])
+
     const changeLineConversion = () => {
         if (!diffDivRef || !diffDivRef.current) return
         if (!diffEditorRef.current) return
@@ -131,6 +144,7 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
         diffEditorRef.current.dispose()
 
         const isWrap = !noWrap
+        setCompareTheme(theme)
         diffEditorRef.current = monaco.createDiffEditor(diff, {
             enableSplitViewResizing: false,
             originalEditable,
@@ -182,6 +196,7 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                 if (!diffDivRef || !diffDivRef.current) return
 
                 const diff = diffDivRef.current as unknown as HTMLDivElement
+                setCompareTheme(theme)
                 diffEditorRef.current = monaco.createDiffEditor(diff, {
                     enableSplitViewResizing: false,
                     originalEditable,
