@@ -134,7 +134,7 @@ const KnowledgeBaseManage: FC<{
                         <div className={styles["repository-manage-box-content"]}>
                             <div>
                                 <div>{it.KnowledgeBaseName}</div>
-                                <YakitTag color='main'>{it.KnowledgeBaseType || "-"}</YakitTag>
+                                <YakitTag color='warning'>{it.KnowledgeBaseType || "-"}</YakitTag>
                             </div>
                             <div>{it.KnowledgeBaseDescription || "-"}</div>
                         </div>
