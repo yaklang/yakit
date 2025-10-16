@@ -10,12 +10,10 @@ import {OutlineXIcon} from "@/assets/icon/outline"
 import {createRoot} from "react-dom/client"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
-interface YakitBaseModalProp
-    extends Omit<YakitModalProp, "okType" | "okButtonProps" | "cancelButtonProps">,
-        React.ComponentProps<any> {
+interface YakitBaseModalProp extends Omit<YakitModalProp, "okType">, React.ComponentProps<any> {
     onVisibleSetter?: (setter: (i: boolean) => any) => any
     showConfirmLoading?: boolean
-    subTitle?:string
+    subTitle?: string
 }
 
 export interface YakitModalConfirmProps extends YakitBaseModalProp {
@@ -41,7 +39,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
     document.body.appendChild(div)
     let setter: (r: boolean) => any = () => {}
     let yakitModalConfirmRootDiv
-    const render = (targetConfig: ShowModalProps) => {
+    const render = (targetConfig: YakitModalConfirmProps) => {
         setTimeout(() => {
             if (!yakitModalConfirmRootDiv) {
                 yakitModalConfirmRootDiv = createRoot(div)
