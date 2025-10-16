@@ -294,7 +294,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         if (option?.tip) {
             option.tip()
         } else {
-            yakitNotify("info", "useChatIPC AI 任务已取消")
+            // yakitNotify("info", "useChatIPC AI 任务已取消")
         }
     })
 
