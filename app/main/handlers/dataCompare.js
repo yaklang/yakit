@@ -69,4 +69,17 @@ module.exports = (win, getClient) => {
       info: data[1],
     }
   });
+
+  //渲染层之间不能直接发送消息，所以通过主进程进行转发
+  ipcMain.handle("forward-data-compare", (_, params)=> {
+      win.webContents.send(`${params.token}-data`, params);
+  })
+
+  ipcMain.handle("forward-switch-compare-page",(_,params)=>{
+    win.webContents.send('switch-compare-page',params)
+  })
+
+  ipcMain.handle("forward-main-container-add-compare",(_,params)=>{
+    win.webContents.send("main-container-add-compare", params);
+  })
 };

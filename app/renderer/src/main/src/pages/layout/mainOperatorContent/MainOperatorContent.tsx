@@ -171,6 +171,7 @@ import {
     unregisterShortcutFocusHandle
 } from "@/utils/globalShortcutKey/utils"
 import { keepSearchNameMapStore } from "@/store/keepSearchName"
+import { useHttpFlowStore } from "@/store/httpFlow"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
@@ -563,6 +564,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [bugList, setBugList] = useState<GroupCount[]>([])
     const [bugTestValue, setBugTestValue] = useState<string>()
     const [bugUrl, setBugUrl] = useState<string>("")
+    const { resetCompareData }  = useHttpFlowStore() 
 
     // 在组件启动的时候，执行一次，用于初始化服务端推送（DuplexConnection）
     useEffect(() => {
@@ -2031,7 +2033,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             clearFuzzerSequence()
         }
         if(data.route === YakitRoute.DataCompare) {
-            ipcRenderer.invoke("reset-data-compare")
+            //替换ipcRenderer.invoke("reset-data-compare")
+            resetCompareData()
+            
+            // ipcRenderer.invoke("reset-data-compare")
         }
     })
 
@@ -3479,6 +3484,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             shallow
         )
 
+        const { resetCompareData } = useHttpFlowStore()
+
+
         useImperativeHandle(
             ref,
             () => ({
@@ -4007,6 +4015,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 yakitNotify("error", "超过标签页数量限制")
                 return
             }
+
+            //新增对比tab清除当前store数据
+            pageItem.route === YakitRoute.DataCompare && resetCompareData();
             openMultipleMenuPage({
                 route: pageItem.route,
                 pluginId: pageItem.pluginId,
