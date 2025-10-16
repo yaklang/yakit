@@ -262,7 +262,16 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                     yakitNotify("warning", "保存成功但未获取到执行的模板数据")
                     return
                 }
-                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))    
+                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
+                setTimeout(() => {
+                    emiter.emit(
+                        "onReActChatEvent",
+                        JSON.stringify({
+                            type: "open-forge-form",
+                            params: {value: forgeData.current}
+                        })
+                    )
+                }, 100)
             })
             .catch(() => {})
     })
