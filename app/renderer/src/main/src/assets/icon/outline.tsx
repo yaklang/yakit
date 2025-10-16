@@ -5847,3 +5847,33 @@ const Siren = () => (
 export const OutlineSirenIcon = (props: Partial<IconProps>) => {
     return <Icon component={Siren} {...props} />
 }
+
+const MCP = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M14.1652 3.25L12.0001 2L3.33984 7V17L12.0001 22L20.6604 17V12V9.5'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M8 14.9999V9.11794C8 8.59032 8.71126 8.42242 8.94721 8.89433L12 14.9999L15.0528 8.89433C15.2887 8.42242 16 8.59032 16 9.11794V14.9999'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M19.9113 1.22493C19.943 1.14442 20.057 1.14443 20.0887 1.22493C20.5734 2.45383 21.5461 3.4266 22.775 3.91127C22.8555 3.94302 22.8555 4.05695 22.775 4.0887C21.5461 4.57337 20.5734 5.54614 20.0887 6.77504C20.057 6.85555 19.943 6.85555 19.9113 6.77504C19.4266 5.54614 18.4538 4.57337 17.2249 4.0887C17.1444 4.05695 17.1444 3.94302 17.2249 3.91127C18.4538 3.4266 19.4266 2.45383 19.9113 1.22493Z'
+            fill='currentColor'
+        />
+    </svg>
+)
+
+/**
+ * @description  Outline/MCP
+ */
+export const OutlineMCPIcon = (props: Partial<IconProps>) => {
+    return <Icon component={MCP} {...props} />
+}

@@ -19,7 +19,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
 
     const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.History)
-    const [show, setShow] = useState<boolean>(false)
+    const [show, setShow] = useState<boolean>(true)
 
     const handleSetActive = useMemoizedFn((value: AIAgentTabListEnum) => {
         setActive(value)
