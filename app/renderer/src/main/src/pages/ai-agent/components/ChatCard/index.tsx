@@ -1,4 +1,3 @@
-import ModalInfo from "../ModelInfo"
 import styles from "./index.module.scss"
 import {type FC, type ReactNode} from "react"
 
@@ -21,7 +20,6 @@ const ChatCard: FC<ChatCardProps> = ({titleIcon, titleText, titleExtra, children
             </div>
             <div className={styles["chat-card-content"]}>{children}</div>
             <div className={styles["chat-card-footer"]}>
-                <ModalInfo />
                 {footer}
             </div>
         </div>
