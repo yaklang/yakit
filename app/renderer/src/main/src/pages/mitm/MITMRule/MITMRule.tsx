@@ -4,7 +4,8 @@ import {
     MITMContentReplacerRule,
     MITMRuleProp,
     RuleExportAndImportButtonProps,
-    YakitSwitchMemoProps
+    YakitSwitchMemoProps,
+    RuleExportAndImportHandle
 } from "./MITMRuleType"
 import styles from "./MITMRule.module.scss"
 import {
@@ -194,7 +195,9 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         const [isNoReplace, setIsNoReplace] = useState<boolean>(false)
         const [currentItem, setCurrentItem] = useState<MITMContentReplacerRule>()
         const [currentIndex, setCurrentIndex] = useState<number>()
-
+        const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
+        const ruleButtonRef = useRef<RuleExportAndImportHandle | null>(null)
+        
         useImperativeHandle(
             ref,
             () => ({
@@ -919,7 +922,23 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         const extra = () => {
             return (
                 <div className={styles["heard-right-operation"]}>
-                    <RuleExportAndImportButton onOkImport={onOkImport} />
+                    <YakitButton 
+                        type='text' 
+                        icon={<RefreshIcon />} 
+                        onClick={() => { 
+                            setIsUseDefRules(true)
+                            ruleButtonRef.current?.onSetImportVisible(true)
+                        }}
+                    >
+                        默认配置
+                    </YakitButton>
+                    <Divider type='vertical' className={styles["heard-right-operation_divider"]} />
+                    <RuleExportAndImportButton 
+                        onOkImport={onOkImport}
+                        ref={ruleButtonRef} 
+                        isUseDefRules={isUseDefRules}
+                        setIsUseDefRules={setIsUseDefRules}
+                    />
                     <YakitButton type='primary' className={styles["button-save"]} onClick={() => onSaveToDataBase()}>
                         {t("YakitButton.save")}
                     </YakitButton>

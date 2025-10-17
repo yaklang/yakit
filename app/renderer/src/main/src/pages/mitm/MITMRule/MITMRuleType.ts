@@ -133,3 +133,8 @@ export interface RuleExportAndImportButtonProps {
     isUseDefRules?: boolean
     setIsUseDefRules?: (b: boolean) => void
 }
+
+export interface RuleExportAndImportHandle {
+    onSetImportVisible: (newVal: boolean) => void
+    onSetExportVisible: (newVal: boolean) => void
+}
