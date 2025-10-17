@@ -1,4 +1,4 @@
-import {memo, useEffect, useState, type FC} from "react"
+import {memo, useEffect, type FC} from "react"
 
 import {KnowledgeBaseSidebar} from "./KnowledgeBaseSidebar"
 

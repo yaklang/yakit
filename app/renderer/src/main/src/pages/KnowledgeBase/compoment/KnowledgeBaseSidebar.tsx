@@ -1,36 +1,63 @@
 import type {FC} from "react"
-import {useMemoizedFn, useSafeState} from "ahooks"
+import {useMemoizedFn, useRequest, useSafeState} from "ahooks"
 
-import {OutlineAiChatIcon, OutlineChevrondownIcon, OutlineChevronrightIcon} from "@/assets/icon/outline"
+import {
+    OutlineAiChatIcon,
+    OutlineChevrondownIcon,
+    OutlineChevronrightIcon,
+    OutlineLoadingIcon
+} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import styles from "../knowledgeBase.module.scss"
 import classNames from "classnames"
-import {createMenuList, manageMenuList, targetIcon} from "../utils"
-import {PlusIcon} from "@/assets/newIcon"
+import {manageMenuList, targetIcon} from "../utils"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {type KnowledgeBaseItem} from "../hooks/useKnowledgeBase"
+import {useKnowledgeBase, type KnowledgeBaseItem} from "../hooks/useKnowledgeBase"
 import {SolidDotsverticalIcon, SolidLightningBoltIcon, SolidOutlineSearchIcon} from "@/assets/icon/solid"
+import {AddKnowledgenBaseDropdownMenu} from "./AddKnowledgenBaseDropdownMenu"
+import {CreateKnowledgeBaseData, KnowledgeBaseContentProps} from "../TKnowledgeBase"
 export interface TKnowledgeBaseSidebarProps {
     knowledgeBases: KnowledgeBaseItem[]
     knowledgeBaseID: string
     setKnowledgeBaseID: (knowledgeBaseID: TKnowledgeBaseSidebarProps["knowledgeBaseID"]) => void
 }
 
+const {ipcRenderer} = window.require("electron")
+
 const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     knowledgeBases,
     knowledgeBaseID,
     setKnowledgeBaseID
 }) => {
+    const initializeKnowledgeBase = useKnowledgeBase((s) => s.initialize)
     const [expand, setExpand] = useSafeState(true)
-    const [createMenuOpen, setCreateMenuOpen] = useSafeState(false)
-    const [visible, setVisible] = useSafeState(false)
+
     const [sidebarSearchValue, setSidebarSearchValue] = useSafeState("")
 
     const handleChangeExpand = useMemoizedFn(() => {
         setExpand((old) => !old)
     })
+
+    // 查询知识库
+    const {runAsync: knowledgeBasesRunAsync} = useRequest(
+        async (Keyword?: string, createKnwledgeData?: CreateKnowledgeBaseData) => {
+            const result: KnowledgeBaseContentProps = await ipcRenderer.invoke("GetKnowledgeBase", {Keyword})
+            const {KnowledgeBases} = result
+            const resultData = KnowledgeBases?.map((it) => ({
+                ...createKnwledgeData,
+                ...it
+            }))
+            return resultData
+        },
+        {
+            manual: true,
+            onSuccess: (value) => {
+                if (value) initializeKnowledgeBase(value)
+            }
+        }
+    )
 
     return (
         <div
@@ -55,34 +82,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                             <OutlineAiChatIcon />
                             AI问答
                         </div>
-                        <YakitDropdownMenu
-                            menu={{
-                                data: createMenuList,
-                                onClick: ({key}) => {
-                                    setCreateMenuOpen(false)
-                                    switch (key) {
-                                        case "import":
-                                            setVisible((prevalue) => !prevalue)
-                                            break
-                                        case "create":
-                                            // handOpenKnowledgeBasesModal()
-                                            break
-                                        default:
-                                            break
-                                    }
-                                }
-                            }}
-                            dropdown={{
-                                trigger: ["click"],
-                                placement: "bottomRight",
-                                onVisibleChange: (v) => {
-                                    setCreateMenuOpen(v)
-                                },
-                                visible: createMenuOpen
-                            }}
-                        >
-                            <YakitButton icon={<PlusIcon />} size='small' />
-                        </YakitDropdownMenu>
+                        <AddKnowledgenBaseDropdownMenu knowledgeBasesRunAsync={knowledgeBasesRunAsync} />
                     </div>
                 </div>
                 <div className={styles["repository-manage-search"]}>
@@ -92,8 +92,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                         prefix={<SolidOutlineSearchIcon />}
                         value={sidebarSearchValue}
                         onChange={(e) => setSidebarSearchValue(e.target.value)}
-                        onPressEnter={(e) => console.log(sidebarSearchValue)}
-                        // onSearch={(value) => knowledgeBasesRunAsync(value)}
+                        onPressEnter={(e) => knowledgeBasesRunAsync(sidebarSearchValue)}
                     />
                 </div>
 
@@ -108,11 +107,23 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                 key={it.ID}
                                 onClick={() => setKnowledgeBaseID(it.ID)}
                             >
-                                <div className={styles["content"]}>
+                                <div
+                                    className={classNames({
+                                        [styles["initial"]]: it.streamToken,
+                                        [styles["content"]]: !it.streamToken
+                                    })}
+                                >
                                     <div className={styles["header"]}>
                                         <Icon className={styles["icon"]} />
                                         <div className={styles["title"]}>{it.KnowledgeBaseName}</div>
-                                        <div className={styles["type-tag"]}>{it.KnowledgeBaseType}</div>
+                                        {it.streamToken ? (
+                                            <div className={styles["tag"]}>
+                                                <OutlineLoadingIcon className={styles["loading-icon"]} />
+                                                生成中
+                                            </div>
+                                        ) : (
+                                            <div className={styles["type-tag"]}>{it.KnowledgeBaseType}</div>
+                                        )}
                                         <div className={styles["operate"]}>
                                             <SolidLightningBoltIcon
                                                 className={styles["lightning-bolt-icon"]}
@@ -128,7 +139,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                                         //    setMenuOpen?.(false)
                                                         switch (key) {
                                                             case "edit":
-                                                                setVisible((prevalue) => !prevalue)
+                                                                // setVisible((prevalue) => !prevalue)
                                                                 break
                                                             case "delete":
                                                                 //    setDeletConfirm((preValue) => !preValue)
@@ -159,7 +170,11 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                                             </YakitDropdownMenu>
                                         </div>
                                     </div>
-                                    <div className={styles["description"]}>{it.KnowledgeBaseDescription}</div>
+                                    <div className={styles["description"]}>
+                                        {it.streamToken
+                                            ? "知识库生成中，大概需要 3～5 秒，请耐心等待..."
+                                            : it.KnowledgeBaseDescription}
+                                    </div>
                                 </div>
                             </div>
                         )

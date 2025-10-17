@@ -119,6 +119,11 @@ const KnowledgeBase: FC = () => {
         createKnowledgRunAsync(transformFormData)
     }
 
+    useEffect(() => {
+        // TODO 此处需要去卸载流 apiCancelDebugPlugin
+        return () => console.log(222)
+    }, [])
+
     const knowledgeBaseEntrance = useMemo(() => {
         switch (true) {
             // 缺失插件时展示需下载插件页面

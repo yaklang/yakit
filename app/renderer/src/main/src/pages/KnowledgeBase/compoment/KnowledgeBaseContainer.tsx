@@ -1,4 +1,4 @@
-import {type FC, memo, useMemo} from "react"
+import {type FC, memo, useEffect, useMemo} from "react"
 import type {TKnowledgeBaseSidebarProps} from "./KnowledgeBaseSidebar"
 
 import styles from "../knowledgeBase.module.scss"
@@ -12,13 +12,12 @@ import {OutlineLoadingIcon} from "@/assets/icon/outline"
 
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {useBuildingKnowledgeBase} from "../hooks/useBuildingKnowledgeBase"
-import {useGRPCStreamCollector} from "../hooks/useGRPCStreamCollector"
 
 type TKnowledgeBaseContainerProps = Omit<TKnowledgeBaseSidebarProps, "setKnowledgeBaseID">
 
 const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({knowledgeBaseID, knowledgeBases}) => {
     const getKnowledgeBase = useKnowledgeBase((s) => s.getKnowledgeBase)
-    const collector = useGRPCStreamCollector()
+    const editKnowledgeBase = useKnowledgeBase((s) => s.editKnowledgeBase)
 
     // 当前知识库信息
     const knowledgeBaseItems = useMemo(() => {
@@ -28,16 +27,14 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({knowledgeBase
         return {...result, icon: Icon}
     }, [knowledgeBaseID, knowledgeBases])
 
-    const findBasesToken = knowledgeBaseItems?.streamToken ?? ""
+    const findBasesToken = useMemo(() => {
+        return knowledgeBaseItems?.streamToken ?? ""
+    }, [knowledgeBaseID, knowledgeBases])
 
     // Hook 参数
     const files = knowledgeBaseItems.KnowledgeBaseFile?.map((it) => it.path) ?? []
     const kbName = knowledgeBaseItems.KnowledgeBaseName ?? ""
     const kbLength = knowledgeBaseItems.KnowledgeBaseLength ?? 1000
-
-    // 获取已有流（如果存在）
-    const existingStream = collector.getStreamByToken(findBasesToken)
-
     // 调用 Hook，复用已有流
     const {streamInfo, runtimeId, isExecuting, stop} = useBuildingKnowledgeBase(findBasesToken, files, kbName, kbLength)
 
@@ -46,7 +43,14 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({knowledgeBase
         return {name, id: parseInt(knowledgeBaseID, 10)}
     }, [knowledgeBaseID, knowledgeBases])
 
-    return knowledgeBaseItems.streamToken ? (
+    const onStop = () => {
+        editKnowledgeBase(knowledgeBaseID, {
+            ...knowledgeBaseItems
+        })
+        stop()
+    }
+
+    return findBasesToken ? (
         <div className={styles["building-knowledge-base"]}>
             {/* header */}
             <div className={styles["header"]}>
@@ -60,7 +64,7 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({knowledgeBase
                 </div>
                 <div className={styles["header-right"]}>
                     <div className={styles["ai-button"]}>
-                        <LightningBoltIcon />
+                        <LightningBoltIcon onClick={onStop} />
                         AI 召回
                     </div>
                     <RoundedStopButton />
@@ -86,7 +90,6 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({knowledgeBase
                 loading={isExecuting}
                 defaultActiveKey='日志'
             />
-            {/* <DebugTaskContainer token={token} knowledgeBaseItems={knowledgeBaseItems} existingStream={existingStream} /> */}
         </div>
     ) : (
         <KnowledgeBaseTable knowledgeBaseitems={KnowledgeBaseTableItemProps} />

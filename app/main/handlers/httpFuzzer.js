@@ -1,6 +1,5 @@
-const { ipcMain } = require("electron");
-const handlerHelper = require("./handleStreamWithContext");
-
+const {ipcMain} = require("electron")
+const handlerHelper = require("./handleStreamWithContext")
 
 module.exports = (win, getClient) => {
     // asyncStringFuzzer wrapper
@@ -68,20 +67,21 @@ module.exports = (win, getClient) => {
     })
 
     ipcMain.handle("string-fuzzer", (e, params) => {
-        getClient().StringFuzzer({ Template: params.template }, (err, data) => {
+        getClient().StringFuzzer({Template: params.template}, (err, data) => {
             if (win) {
                 win.webContents.send(params.token, {
                     error: err,
-                    data: err ? undefined : {
-                        Results: (data || { Results: [] }).Results.map(i => {
-                            return i.toString()
-                        })
-                    },
+                    data: err
+                        ? undefined
+                        : {
+                              Results: (data || {Results: []}).Results.map((i) => {
+                                  return i.toString()
+                              })
+                          }
                 })
             }
         })
     })
-
 
     const asyncGetAllFuzztagInfo = (params) => {
         return new Promise((resolve, reject) => {
@@ -113,34 +113,34 @@ module.exports = (win, getClient) => {
         return await asyncGenerateFuzztag(params)
     })
 
-    const handlerHelper = require("./handleStreamWithContext");
-    const streamHTTPFuzzerMap = new Map();
-    ipcMain.handle("cancel-HTTPFuzzer", handlerHelper.cancelHandler(streamHTTPFuzzerMap));
+    const handlerHelper = require("./handleStreamWithContext")
+    const streamHTTPFuzzerMap = new Map()
+    ipcMain.handle("cancel-HTTPFuzzer", handlerHelper.cancelHandler(streamHTTPFuzzerMap))
     ipcMain.handle("HTTPFuzzer", (e, params, token) => {
-        let stream = getClient().HTTPFuzzer(params);
-        stream.on("data", data => {
+        let stream = getClient().HTTPFuzzer(params)
+        stream.on("data", (data) => {
             if (win && data) win.webContents.send(`fuzzer-data-${token}`, data)
-        });
-        stream.on("error", err => {
+        })
+        stream.on("error", (err) => {
             if (win && err) win.webContents.send(`fuzzer-error-${token}`, err.details)
         })
-        stream.on("end", data => {
+        stream.on("end", (data) => {
             if (win && data) win.webContents.send(`fuzzer-end-${token}`)
         })
         handlerHelper.registerHandler(win, stream, streamHTTPFuzzerMap, token)
     })
 
-    const streamHTTPFuzzerSequenceMap = new Map();
-    ipcMain.handle("cancel-HTTPFuzzerSequence", handlerHelper.cancelHandler(streamHTTPFuzzerSequenceMap));
+    const streamHTTPFuzzerSequenceMap = new Map()
+    ipcMain.handle("cancel-HTTPFuzzerSequence", handlerHelper.cancelHandler(streamHTTPFuzzerSequenceMap))
     ipcMain.handle("HTTPFuzzerSequence", (e, params, token) => {
-        let stream = getClient().HTTPFuzzerSequence(params);
-        stream.on("data", data => {
+        let stream = getClient().HTTPFuzzerSequence(params)
+        stream.on("data", (data) => {
             if (win && data) win.webContents.send(`fuzzer-sequence-data-${token}`, data)
-        });
-        stream.on("error", err => {
+        })
+        stream.on("error", (err) => {
             if (win && err) win.webContents.send(`fuzzer-sequence-error-${token}`, err.details)
         })
-        stream.on("end", data => {
+        stream.on("end", (data) => {
             if (win && data) win.webContents.send(`fuzzer-sequence-end-${token}`)
         })
         handlerHelper.registerHandler(win, stream, streamHTTPFuzzerSequenceMap, token)
@@ -161,7 +161,6 @@ module.exports = (win, getClient) => {
     ipcMain.handle("ExtractUrl", async (e, params) => {
         return await asyncExtractUrl(params)
     })
-
 
     // asyncConvertFuzzerResponseToHTTPFlow wrapper
     const asyncConvertFuzzerResponseToHTTPFlow = (params) => {
@@ -335,10 +334,10 @@ module.exports = (win, getClient) => {
     })
 
     /*
-    * WebsocketFuzzer 套件
-    * */
-    const streamCreateWebsocketFuzzerMap = new Map();
-    ipcMain.handle("cancel-CreateWebsocketFuzzer", handlerHelper.cancelHandler(streamCreateWebsocketFuzzerMap));
+     * WebsocketFuzzer 套件
+     * */
+    const streamCreateWebsocketFuzzerMap = new Map()
+    ipcMain.handle("cancel-CreateWebsocketFuzzer", handlerHelper.cancelHandler(streamCreateWebsocketFuzzerMap))
     ipcMain.handle("CreateWebsocketFuzzer", async (e, params, token) => {
         if (!token) {
             throw Error(`no token set`)
@@ -346,7 +345,7 @@ module.exports = (win, getClient) => {
 
         let exitedStream = streamCreateWebsocketFuzzerMap.get(token)
         if (!exitedStream) {
-            let stream = getClient().CreateWebsocketFuzzer();
+            let stream = getClient().CreateWebsocketFuzzer()
             stream.write(params)
             handlerHelper.registerHandler(win, stream, streamCreateWebsocketFuzzerMap, token)
         } else {
@@ -418,15 +417,15 @@ module.exports = (win, getClient) => {
         return await asyncGenerateExtractRule(params)
     })
 
-    const streamExtractDataMap = new Map();
-    ipcMain.handle("cancel-ExtractData", handlerHelper.cancelHandler(streamExtractDataMap));
+    const streamExtractDataMap = new Map()
+    ipcMain.handle("cancel-ExtractData", handlerHelper.cancelHandler(streamExtractDataMap))
     ipcMain.handle("ExtractData", (e, params, token) => {
         let existedStream = streamExtractDataMap.get(token)
         if (existedStream) {
             existedStream.write(params)
             return
         }
-        let stream = getClient().ExtractData();
+        let stream = getClient().ExtractData()
         handlerHelper.registerHandler(win, stream, streamExtractDataMap, token)
         stream.write(params)
     })
@@ -500,10 +499,10 @@ module.exports = (win, getClient) => {
         return await asyncHTTPRequestBuilder(params)
     })
 
-    const streamDebugPluginMap = new Map();
-    ipcMain.handle("cancel-DebugPlugin", handlerHelper.cancelHandler(streamDebugPluginMap));
+    const streamDebugPluginMap = new Map()
+    ipcMain.handle("cancel-DebugPlugin", handlerHelper.cancelHandler(streamDebugPluginMap))
     ipcMain.handle("DebugPlugin", (e, params, token) => {
-        let stream = getClient().DebugPlugin(params);
+        let stream = getClient().DebugPlugin(params)
         handlerHelper.registerHandler(win, stream, streamDebugPluginMap, token)
     })
 

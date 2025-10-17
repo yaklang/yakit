@@ -384,7 +384,6 @@
             gap: 4px;
             cursor: pointer;
             &:hover{
-
                 .content{
                     width: 100%;
                     .header{
@@ -463,6 +462,86 @@
                     }
                 }
                 .description{
+                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                    font-size: 12px;
+                    font-style: normal;
+                    font-weight: 400;
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 2;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    line-height: 1.5em;
+                    max-height: 3em;
+                    margin-top: 4px;
+                }
+            }
+            .initial{
+                width: 100%;
+                .header{
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 4px;
+                    .icon{
+                        svg{
+                            width: 24px;
+                            height: 24px;
+                            border-radius: 4px;
+                        }
+                    }
+                    .title{
+                        line-height: 24px;
+                        color: var(--Colors-Use-Neutral-Text-1-Title);
+                        font-size: 14px;
+                        font-style: normal;
+                        font-weight: 500;
+                        width: calc(100% - 102px);
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                    .tag{
+                        display: flex;
+                        height: 16px;
+                        padding: 2px 6px;
+                        align-items: center;
+                        gap: 4px;
+                        border-radius: 12px;
+                        background: var(--Colors-Use-Warning-Focus);
+                        font-weight: 400;
+                        font-size: 11px;
+                        color: var(--Colors-Use-Warning-Primary);
+                        .loading-icon {
+                            width: 18px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+
+                            svg {
+                                height: 12px;
+                                animation: spin 2s linear infinite;
+                                transform-origin: center;
+                            }
+                        }
+
+                        // 关键帧动画
+                        @keyframes spin {
+                            from {
+                                transform: rotate(0deg);
+                            }
+                            to {
+                              transform: rotate(360deg); // 顺时针旋转
+                            }
+                        }
+                    }
+                    .operate{
+                        display: none;
+                    }
+                }               
+                .description{
+                    margin-top: 4px;
                     color: var(--Colors-Use-Neutral-Text-4-Help-text);
                     font-size: 12px;
                     font-style: normal;

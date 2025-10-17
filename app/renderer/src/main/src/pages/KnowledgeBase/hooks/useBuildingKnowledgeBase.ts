@@ -1,4 +1,4 @@
-import {useState, useEffect} from "react"
+import {useState, useEffect, useRef} from "react"
 import {apiDebugPlugin, apiCancelDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
 import {failed, yakitNotify} from "@/utils/notification"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
@@ -7,43 +7,49 @@ import {useMemoizedFn} from "ahooks"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {useGRPCStreamCollector} from "./useGRPCStreamCollector"
 
-/**
- * 构建知识库 Hook
- * 负责启动/复用 gRPC 流，管理状态与流注册
- */
 export const useBuildingKnowledgeBase = (token: string, files: string[], kbName: string, kbLength: number) => {
     const collector = useGRPCStreamCollector()
-    const existingStream = collector.getStreamByToken(token)
 
-    const [runtimeId, setRuntimeId] = useState(existingStream?.runtimeId ?? "")
-    const [isExecuting, setIsExecuting] = useState(existingStream?.isExecuting ?? false)
+    // 只记录第一次有效 token（防止重新初始化流）
+    const tokenRef = useRef<string>("")
+    useEffect(() => {
+        if (!tokenRef.current && token) {
+            tokenRef.current = token
+        }
+    }, [token])
 
-    // 顶层 hook 调用（每个 token 只会有一条 stream）
+    // 稳定的 token（始终用第一次记录的）
+    const stableToken = tokenRef.current
+
+    const [runtimeId, setRuntimeId] = useState("")
+    const [isExecuting, setIsExecuting] = useState(false)
+
+    // 只执行一次，不随 token 改变
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
-        token,
+        token: stableToken,
         taskName: "debug-plugin",
         apiKey: "DebugPlugin",
         onEnd: () => {
             setIsExecuting(false)
-            collector.setStreamExecuting?.(token, false)
-            console.log("构建任务结束")
+            collector.setStreamExecuting(stableToken, false)
         },
         setRuntimeId: (rId) => {
-            yakitNotify("info", `知识库任务启动成功，运行时 ID: ${rId}`)
+            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
             setRuntimeId(rId)
         }
     })
 
-    // 每当流变化时注册到 collector
+    // 注册进 collector（只注册一次）
     useEffect(() => {
-        if (token) {
-            collector.collectStreamInfo(token, streamInfo, debugPluginStreamEvent, runtimeId, isExecuting)
+        if (stableToken && !collector.getStreamByToken(stableToken)) {
+            collector.collectStreamInfo(stableToken, streamInfo, debugPluginStreamEvent, runtimeId, isExecuting)
         }
-    }, [token, streamInfo, debugPluginStreamEvent, runtimeId, isExecuting])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [stableToken])
 
-    // 启动任务逻辑
+    // 启动构建流程
     const start = useMemoizedFn(async () => {
-        if (!token) return
+        if (!stableToken) return
         setIsExecuting(true)
 
         try {
@@ -52,7 +58,11 @@ export const useBuildingKnowledgeBase = (token: string, files: string[], kbName:
                 Code: "",
                 PluginType: plugin.Type,
                 Input: "",
-                HTTPRequestTemplate: {...defPluginExecuteFormValue, IsHttpFlowId: false, HTTPFlowId: []},
+                HTTPRequestTemplate: {
+                    ...defPluginExecuteFormValue,
+                    IsHttpFlowId: false,
+                    HTTPFlowId: []
+                },
                 ExecParams: [
                     {Key: "files", Value: files.join(",")},
                     {Key: "kbName", Value: kbName || "default"},
@@ -65,34 +75,33 @@ export const useBuildingKnowledgeBase = (token: string, files: string[], kbName:
                 PluginName: plugin.ScriptName
             }
 
-            await apiDebugPlugin({params: executeParams, token, pluginCustomParams: plugin.Params})
+            await apiDebugPlugin({
+                params: executeParams,
+                token: stableToken,
+                pluginCustomParams: plugin.Params
+            })
             debugPluginStreamEvent.start()
-            collector.setStreamExecuting?.(token, true)
         } catch (err) {
-            failed(`构建知识库失败: ${err}`)
+            failed(`查询插件失败: ${err}`)
             setIsExecuting(false)
-            collector.setStreamExecuting?.(token, false)
         }
     })
 
-    // 如果之前没有流，启动新流；否则复用旧流
+    // 停止构建流程
+    const stop = useMemoizedFn(() => {
+        if (!stableToken) return
+        apiCancelDebugPlugin(stableToken).then(() => {
+            debugPluginStreamEvent.stop()
+            setIsExecuting(false)
+            collector.setStreamExecuting(stableToken, false)
+        })
+    })
+
+    // 初次启动
     useEffect(() => {
-        if (!token) return
-        if (!existingStream) {
-            start()
-        } else {
-            setRuntimeId(existingStream.runtimeId)
-            setIsExecuting(existingStream.isExecuting)
-        }
-    }, [token, existingStream, start])
-
-    // 停止任务
-    const stop = useMemoizedFn(async () => {
-        await apiCancelDebugPlugin(token)
-        debugPluginStreamEvent.stop()
-        setIsExecuting(false)
-        collector.setStreamExecuting?.(token, false)
-    })
+        if (stableToken) start()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [stableToken])
 
     return {
         streamInfo,
