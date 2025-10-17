@@ -1,4 +1,4 @@
-import styles from "./index.module.scss"
+import styles from "./ChatCard.module.scss"
 import {type FC, type ReactNode} from "react"
 
 interface ChatCardProps {
