@@ -272,7 +272,6 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
                 <YakitTag
                     size='large'
                     key={it}
-                    color='main'
                     className={styles["code-tag-containaer"]}
                     onClick={() => onUpdateCustomCode(it)}
                 >
@@ -376,7 +375,12 @@ const CodeCustomizeModal: FC<CodeCustomizeModalProps> = (props) => {
                 >
                     <YakitSelect placeholder='请选择' options={selectOptions} />
                 </Item>
-                <Item label='代码类型' name='Level' rules={[{required: true, message: "请选择类型定义"}]} initialValue={'method'}>
+                <Item
+                    label='代码类型'
+                    name='Level'
+                    rules={[{required: true, message: "请选择类型定义"}]}
+                    initialValue={"method"}
+                >
                     <YakitSelect options={LevelOptions} placeholder='请选择' />
                 </Item>
                 <Item label='描述' name='Description' rules={[{max: 200, message: "代码片段描述最多200个字"}]}>

@@ -57,20 +57,27 @@ export interface GraphData {
 export const transform = (data) => {
     const {nodes, links} = data
 
-    // 生成 childrenMap 和 parentMap
+    // 统计入度和出度
+    const inDegree = {}
+    const outDegree = {}
+
+    links.forEach(({source, target}) => {
+        outDegree[source] = (outDegree[source] || 0) + 1
+        inDegree[target] = (inDegree[target] || 0) + 1
+    })
+
+    // 生成子节点映射表（用于层级计算）
     const childrenMap = {}
-    const parentMap = {}
-    links.forEach((link) => {
-        if (!childrenMap[link.source]) childrenMap[link.source] = []
-        childrenMap[link.source].push(link.target)
-        parentMap[link.target] = link.source
+    links.forEach(({source, target}) => {
+        if (!childrenMap[source]) childrenMap[source] = []
+        childrenMap[source].push(target)
     })
 
     // 递归获取每个节点的层级
     const levelMemo = {}
     const getLevel = (id, visited = new Set()) => {
         if (levelMemo[id] !== undefined) return levelMemo[id]
-        if (visited.has(id)) return 1 // 检测到环，直接返回1
+        if (visited.has(id)) return 1
         visited.add(id)
         const children = childrenMap[id] || []
         if (!children.length) {
@@ -85,29 +92,38 @@ export const transform = (data) => {
         return level
     }
 
-    // 递归获取每个节点的子孙数
-    const memo = {}
-    const getChildCount = (id, visited = new Set()) => {
-        if (memo[id] !== undefined) return memo[id]
-        if (visited.has(id)) return 0 // 避免环
-        visited.add(id)
-        const children = childrenMap[id] || []
-        if (!children.length) {
-            memo[id] = 1
-            return 1
-        }
-        const childSum = children.reduce((sum, childId) => sum + getChildCount(childId, new Set(visited)), 0)
-        memo[id] = childSum > 0 ? childSum : 1
-        return memo[id]
-    }
+    // 计算每个节点的 degree
+    const degrees = nodes.map((node) => {
+        const inCount = inDegree[node.id] || 0
+        const outCount = outDegree[node.id] || 0
+        return inCount + outCount
+    })
+
+    const minDegree = Math.min(...degrees)
+    const maxDegree = Math.max(...degrees)
+
+    const minSize = 50
+    const maxSize = 100
+
+    // 避免 log(0)
+    const logMin = Math.log(minDegree + 1)
+    const logMax = Math.log(maxDegree + 1)
 
     return nodes.map((node) => {
-        const count = getChildCount(node.id)
-        const symbolSize = 50 + Math.log(count) * 50
+        const inCount = inDegree[node.id] || 0
+        const outCount = outDegree[node.id] || 0
+        const degree = inCount + outCount
+
+        const logVal = Math.log(degree + 1)
+        // ✅ 将 logVal 线性映射到 [minSize, maxSize]
+        const normalized = logMax === logMin ? 0.5 : (logVal - logMin) / (logMax - logMin)
+        const symbolSize = minSize + normalized * (maxSize - minSize)
+
         const level = getLevel(node.id)
+
         return {
             ...node,
-            symbolSize: Math.max(symbolSize, 50),
+            symbolSize,
             level
         }
     })
