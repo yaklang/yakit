@@ -20,6 +20,7 @@ export interface MCPServer {
     Command: string
     Enable: boolean
     Tools: MCPServerTool[]
+    ErrorMsg: string
 }
 
 export interface MCPServerTool {
