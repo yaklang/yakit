@@ -93,7 +93,7 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                     )}
                     <ByteCountTag
                         selectionByteCount={mode === "request" ? reqSelectionByteCount : resSelectionByteCount}
-                        key='websocketViewer'
+                        itemKey='websocketViewer'
                     />
                 </div>
             }

@@ -88,5 +88,11 @@
       "and": " And ",
       "unauthorizedCheck": "Unauthorized Detection"
     }
+  },
+  "MainOperatorContent": {
+    "save_fuzzer_history_success": "Fuzzer history saved successfully",
+    "SubTabs": {
+      "save_webfuzzer_history": "Save WebFuzzer history data"
+    }
   }
 }

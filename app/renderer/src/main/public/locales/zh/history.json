@@ -95,8 +95,6 @@
     "conditionBlocked": "已屏蔽条件"
   },
   "RangeInputNumberTableWrapper": {
-    "asc": "升序",
-    "desc": "降序",
     "filter": "筛选",
     "greaterThanZeroOnly": "仅看大于0"
   },
@@ -146,6 +144,13 @@
     "cookieParameters": "POST 参数",
     "rawHTTPRequest": "原始 HTTP 请求",
     "rawHTTPResponse": "原始 HTTP 响应"
+  },
+  "RandomChunkedDataTable": {
+    "chunkDetails": "分块详情",
+    "content": "内容",
+    "chunkLength": "分块长度",
+    "singleDurationMs": "单个耗时（ms）",
+    "totalDurationMs": "总耗时（ms）"
   },
   "FuzzerResponseToHTTPFlowDetail": {
     "analyzeParameterFailed": "分析参数失败："

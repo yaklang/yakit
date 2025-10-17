@@ -3,9 +3,6 @@
 .http-query-advanced-config {
     display: flex;
     flex-direction: column;
-    min-width: 335px;
-    max-width: 335px;
-    width: 335px;
     border-right: 1px solid var(--Colors-Use-Neutral-Border);
     animation: show 0.2s cubic-bezier(0.12, 0.4, 0.29, 1.46);
     background-color: var(--Colors-Use-Neutral-Bg);
@@ -286,7 +283,7 @@
 }
 
 .terminal-popover {
-    width: 650px;
+    width: 675px;
     padding: 12px 0;
     $_arrow-top: var(--arrow-top, 50%);
 

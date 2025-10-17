@@ -69,6 +69,8 @@ import {TableCellToColorTag} from "@/components/TableVirtualResize/utils"
 import {openPacketNewWindow} from "@/utils/openWebsite"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {Trans} from "react-i18next"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -295,7 +297,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         return
                     }
                     showYakitModal({
-                        title: "提取结果",
+                        title: t("MatcherAndExtraction.extractionResult"),
                         width: "60%",
                         footer: <></>,
                         content: <ExtractionResultsContent list={obj.Values || []} />
@@ -458,13 +460,17 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                             ) : (
                                 t("MatcherAndExtraction.matcher")
                             )}
-                            <span className={styles["matching-extraction-title-tip"]}>
-                                已添加
-                                <span className={styles["primary-number"]}>
-                                    {type === "matchers" ? matcher.matchersList.length : extractor.extractorList.length}
-                                </span>
-                                条
-                            </span>
+                            <Trans
+                                i18nKey='MatcherAndExtraction.matching_extraction_tip'
+                                ns='webFuzzer'
+                                components={{count: <span className={styles["primary-number"]} />}}
+                                values={{
+                                    num:
+                                        type === "matchers"
+                                            ? matcher.matchersList.length
+                                            : extractor.extractorList.length
+                                }}
+                            />
                         </div>
                         <div className={styles["matching-extraction-extra"]}>
                             <>
@@ -779,8 +785,9 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
                                                 <span>
                                                     [
                                                     {
-                                                        matcherTypeList(t).find((e) => e.value === matcherItem.MatcherType)
-                                                            ?.label
+                                                        matcherTypeList(t).find(
+                                                            (e) => e.value === matcherItem.MatcherType
+                                                        )?.label
                                                     }
                                                     ]
                                                 </span>
@@ -1062,7 +1069,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                                         />
                                     </YakitPopover>
                                 </span>
-                                <span>[{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]</span>
+                                <span>[{extractorTypeList(t).find((e) => e.value === extractorItem.Type)?.label}]</span>
                                 {extractorItem.Groups.length > 0 ? (
                                     <span className={classNames("content-ellipsis", styles["header-number"])}>
                                         {extractorItem.Groups.length}
@@ -1155,7 +1162,7 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
                             onEdit("Type", e.target.value)
                         }}
                         buttonStyle='solid'
-                        options={extractorTypeList}
+                        options={extractorTypeList(t)}
                     />
                 </LabelNodeItem>
                 <LabelNodeItem label={t("ExtractorItem.extraction_scope")} column={isSmallMode}>
@@ -1208,7 +1215,7 @@ export const LabelNodeItem: React.FC<labelNodeItemProps> = React.memo((props) =>
                 props.className
             )}
         >
-            <span className={classNames(styles["label"], props.labelClassName)}>{props.label}</span>
+            <span className={classNames(styles["label"], props.labelClassName)} style={{width: i18n.language === "zh" ? 104 : 130}}>{props.label}</span>
             {props.children}
         </div>
     )

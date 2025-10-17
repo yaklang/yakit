@@ -12,6 +12,7 @@ import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {YakitPanel} = YakitCollapse
 
@@ -41,6 +42,7 @@ export const VariableList: React.FC<VariableListProps> = React.forwardRef(
             }),
             shallow
         )
+        const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
         const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
 
         const formListRef = useRef<HTMLDivElement>(null)
@@ -119,7 +121,7 @@ export const VariableList: React.FC<VariableListProps> = React.forwardRef(
                                 {fields.map(({key, name}, i) => (
                                     <YakitPanel
                                         key={`${key + ""}`}
-                                        header={`变量 ${name}`}
+                                        header={`${t("VariableList.variable")} ${name}`}
                                         className={styles["variable-list-panel"]}
                                         extra={
                                             <div className={styles["extra-wrapper"]}>
@@ -152,7 +154,7 @@ export const VariableList: React.FC<VariableListProps> = React.forwardRef(
                                         icon={<PlusIcon />}
                                         block
                                     >
-                                        添加
+                                        {t("YakitButton.add")}
                                     </YakitButton>
                                 </>
                             )}

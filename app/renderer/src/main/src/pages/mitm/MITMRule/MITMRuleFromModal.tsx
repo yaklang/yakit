@@ -35,6 +35,7 @@ import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNum
 import {SizeType} from "antd/lib/config-provider/SizeContext"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {Trans} from "react-i18next"
+import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -345,7 +346,7 @@ const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
     return (
         <div className={styles["yakit-extract-regular-editor"]}>
             <div className={styles["yakit-editor"]}>
-                <YakEditor
+                <YakitEditor
                     value={codeValue}
                     setValue={(c) => setCodeValue(c)}
                     editorDidMount={(e) => {

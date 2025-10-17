@@ -16,28 +16,32 @@ import cloneDeep from "lodash/cloneDeep"
 import {defaultWebFuzzerPageInfo} from "@/defaultConstants/HTTPFuzzerPage"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
-export const webFuzzerTabs = [
-    {
-        key: "config",
-        label: "配置",
-        icon: <OutlineAdjustmentsIcon />
-    },
-    {
-        key: "rule",
-        label: "规则",
-        icon: <OutlineClipboardlistIcon />
-    },
-    {
-        key: "sequence",
-        label: "序列",
-        icon: <OutlineCollectionIcon />
-    }
-]
+export const webFuzzerTabs = (t: (text: string) => string) => {
+    return [
+        {
+            key: "config",
+            label: t("WebFuzzerPage.config"),
+            icon: <OutlineAdjustmentsIcon />
+        },
+        {
+            key: "rule",
+            label: t("WebFuzzerPage.rule"),
+            icon: <OutlineClipboardlistIcon />
+        },
+        {
+            key: "sequence",
+            label: t("WebFuzzerPage.sequence"),
+            icon: <OutlineCollectionIcon />
+        }
+    ]
+}
 /**包裹 配置和规则，不包裹序列 */
 const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const {id} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
     const {queryPagesDataById, selectGroupId, getPagesDataByGroupId} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById,
@@ -170,9 +174,14 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     }, [type, advancedConfigShow, advancedConfigShow])
 
     return (
-        <ShortcutKeyFocusHook className={styles["web-fuzzer"]} boxRef={webFuzzerRef} focusId={props.id?[props.id]:undefined} isUpdateFocus={false}>
+        <ShortcutKeyFocusHook
+            className={styles["web-fuzzer"]}
+            boxRef={webFuzzerRef}
+            focusId={props.id ? [props.id] : undefined}
+            isUpdateFocus={false}
+        >
             <div className={styles["web-fuzzer-tab"]}>
-                {webFuzzerTabs.map((item) => (
+                {webFuzzerTabs(t).map((item) => (
                     <div
                         key={item.key}
                         className={classNames(styles["web-fuzzer-tab-item"], {
@@ -190,7 +199,6 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                 ))}
             </div>
             <div className={classNames(styles["web-fuzzer-tab-content"])}>{props.children}</div>
-    
         </ShortcutKeyFocusHook>
     )
 })

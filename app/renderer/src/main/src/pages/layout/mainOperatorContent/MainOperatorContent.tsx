@@ -172,6 +172,7 @@ import {
 } from "@/utils/globalShortcutKey/utils"
 import { keepSearchNameMapStore } from "@/store/keepSearchName"
 import { useHttpFlowStore } from "@/store/httpFlow"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
@@ -502,6 +503,7 @@ const getSubPageTotal = (subPage) => {
 export let childWindowHash = ""
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
     const {routeKeyToLabel} = props
+    const {t, i18n} = useI18nNamespaces(["layout"])
 
     const [loading, setLoading] = useState(false)
 
@@ -2731,7 +2733,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         JSON.stringify(historySequenceList)
                     )
                 }
-                yakitNotify("success", "保存fuzzer历史成功")
+                yakitNotify("success", t("MainOperatorContent.save_fuzzer_history_success"))
             })
             .finally(() => setTimeout(() => setLoading(false), 200))
     })
@@ -3397,6 +3399,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             onRestoreHistory,
             onSaveHistory
         } = props
+        const {t, i18n} = useI18nNamespaces(["layout"])
 
         //拖拽组件相关
         const [combineIds, setCombineIds] = useState<string[]>([]) //组合中的ids
@@ -5229,7 +5232,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                         )
                                     )}
                                     {isWebFuzzerRoute && (
-                                        <Tooltip title='保存WebFuzzer历史数据' placement={isExpand ? "left" : "top"}>
+                                        <Tooltip title={t("MainOperatorContent.SubTabs.save_webfuzzer_history")} placement={isExpand ? "left" : "top"}>
                                             <OutlineStoreIcon
                                                 className={styles["extra-operate-icon"]}
                                                 onClick={() => onSaveHistory(currentTabKey)}

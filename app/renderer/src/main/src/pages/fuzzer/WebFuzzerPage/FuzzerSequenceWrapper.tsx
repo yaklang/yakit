@@ -1,13 +1,15 @@
-import React, {} from "react"
+import React from "react"
 import {FuzzerSequenceWrapperProps, WebFuzzerType} from "./WebFuzzerPageType"
 import styles from "./WebFuzzerPage.module.scss"
 import classNames from "classnames"
 import {useMemoizedFn} from "ahooks"
 import emiter from "@/utils/eventBus/eventBus"
 import {webFuzzerTabs} from "./WebFuzzerPage"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 /**只包裹序列 */
 const FuzzerSequenceWrapper: React.FC<FuzzerSequenceWrapperProps> = React.memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     /**点击切换tab，带其他操作 */
     const onSetType = useMemoizedFn((key: WebFuzzerType) => {
         switch (key) {
@@ -23,7 +25,7 @@ const FuzzerSequenceWrapper: React.FC<FuzzerSequenceWrapperProps> = React.memo((
     return (
         <div className={styles["web-fuzzer"]}>
             <div className={styles["web-fuzzer-tab"]}>
-                {webFuzzerTabs.map((item) => (
+                {webFuzzerTabs(t).map((item) => (
                     <div
                         key={item.key}
                         className={classNames(styles["web-fuzzer-tab-item"], {

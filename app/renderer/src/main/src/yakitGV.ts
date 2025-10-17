@@ -79,7 +79,7 @@ export enum RemoteGV {
     /**@name fuzzer序列页面中,页面配置内容的显/隐 */
     FuzzerSequenceSettingShow = "fuzzer_sequence_setting_show",
     /**@name 漏洞风险导出字段缓存 */
-    RiskExportFields = "risk-export-fields",
+    RiskExportFields = "risk-export-fields-new",
     /**@name RiskPage页面中,高级查询内容的显/隐 */
     RiskQueryShow = "risk-query-show",
     /**@name Home开始扫描 */

@@ -40,6 +40,7 @@
         "iKnow": "Got it",
         "startScan": "Start Scan",
         "execute": "Execute",
+        "start_execution": "Start Execution",
         "startAudit": "Start Audit",
         "reset": "Reset",
         "batchOperation": "Batch Operation",
@@ -55,9 +56,19 @@
         "do_not_replace": "Do Not Replace",
         "more": "More",
         "custom": "Custom",
-        "beautify": "Beautify"
+        "beautify": "Beauty",
+        "preview": "Preview",
+        "view_all_button": "View All",
+        "sendRequest": "Send Request",
+        "pause": "Pause",
+        "history": "History",
+        "retryAll": "Retry All",
+        "debugExecution": "Debug Execution",
+        "restore": "Restore",
+        "share": "Share"
     },
     "YakitNotification": {
+        "unknown_error": "Unknown Error",
         "success": "Operation successful",
         "failed": "Operation failed{colon}",
         "imported": "Import successful",
@@ -87,7 +98,9 @@
         "loadFailed": "Load failed{colon}",
         "sendSuccess": "Sent successfully",
         "executeFailed": "Execution failed{colon}",
-        "search_failed": "Search failed{colon}"
+        "search_failed": "Search failed{colon}",
+        "complete_variable_before_add": "Please complete the settings for Variable {index} before adding another one",
+        "shareFailed": "Share failed{colon}"
     },
     "YakitFormDragger": {
         "filePath": "File Path",
@@ -96,6 +109,7 @@
         "dragFileHereOr": "Drag {fileType} file here or",
         "enterFilePath": "Enter {fileType} File Path",
         "dragOrClickHere": "You can drag files here or click to select ",
+        "drag_folder_or_click_here": "You can drag a folder into the box or click here",
         "uploadFile": "Upload File",
         "uploadFolder": "Upload Folder",
         "detected": "Detected ",
@@ -111,6 +125,21 @@
         "autoFilteredData": "Data that does not meet the criteria has been automatically filtered",
         "filePathCountError": "File path count error, please separate paths with commas"
     },
+    "YakitDraggerContent": {
+        "file_too_large": "File is too large to process",
+        "unsupported_file_type": "Unsupported file type",
+        "multi_file_single_process": "Only one of the selected files will be processed",
+        "file_read_error": "File data read exception:",
+        "single_file_only": "Only single file upload is supported",
+        "data_fetch_failed": "Data fetch failed:",
+        "drag_file_tip": "You can drag files into the box or ",
+        "click_here": "click here",
+        "drag_files_tip": "You can drag TXT or Excel files into the box or"
+    },
+    "YakitForm": {
+        "requiredField": "This is a required field",
+        "field_required_with_label": "{label} is a required field"
+    },
     "YakitInput": {
         "please_enter": "Please enter...",
         "searchKeyWordPlaceholder": "Please enter keywords to search",
@@ -118,7 +147,8 @@
     },
     "YakitEmpty": {
         "noData": "No data available",
-        "noMoreData": "No More Data"
+        "noMoreData": "No More Data",
+        "end_of_list": "You've reached the end~"
     },
     "YakitDatePicker": {
         "oneMinute": "1 Minute",
@@ -128,6 +158,8 @@
     "YakitTable": {
         "order": "Order",
         "action": "Action",
+        "asc": "Asc",
+        "desc": "Desc",
         "red": "Red",
         "green": "Green",
         "blue": "Blue",
@@ -138,19 +170,18 @@
         "grey": "Grey"
     },
     "YakitModal": {
-        "friendlyReminder": "Friendly Reminder"
+        "friendlyReminder": "Friendly Reminder",
+        "closePrompt": "Close Prompt"
     },
     "YakitTag": {
         "critical": "critical",
         "high": "high",
         "warning": "warning",
-        "low": "low"
+        "low": "low",
+        "info": "info"
     },
     "YakitSpin": {
         "loading": "loading"
-    },
-    "YakitForm": {
-        "requiredField": "This is a required field"
     },
     "YakitSelect": {
         "YakitSelectCustom": {

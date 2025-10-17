@@ -57,6 +57,7 @@ import {YakitAuditHoleTable} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTabl
 import {HTTPFlowRealTimeTableAndEditor} from "@/components/HTTPHistory"
 import {ErrorBoundary} from "react-error-boundary"
 import moment from "moment"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {TabPane} = PluginTabs
 
@@ -69,6 +70,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         pluginExecuteResultWrapper = "",
         PluginTabsRightNode
     } = props
+    const {t, i18n} = useI18nNamespaces(["plugin"])
 
     const [allTotal, setAllTotal] = useState<number>(0)
     const [tempTotal, setTempTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数
@@ -338,6 +340,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
 /** 基础插件信息 / 日志 */
 export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
     const {loading, messageList, wrapperClassName} = props
+    const {t, i18n} = useI18nNamespaces(["plugin"])
     const [activeKey, setActiveKey] = useState<string>("plugin-log")
 
     const list: StreamResult.Log[] = useCreation(() => {
@@ -359,7 +362,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
     const logTabs = useCreation(() => {
         const tab = [
             {
-                name: "插件日志",
+                name: t("PluginExecuteLog.plugin_log"),
                 icon: <OutlineLogIcon />,
                 number: 0,
                 type: "plugin-log"
@@ -367,7 +370,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
         ]
         if (!!echartsLists.length) {
             tab.push({
-                name: "统计图表",
+                name: t("PluginExecuteLog.statistical_chart"),
                 icon: <OutlineChartpieIcon />,
                 number: echartsLists.length,
                 type: "echarts-statistics"
@@ -375,20 +378,20 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
         }
         if (!!textLists.length) {
             tab.push({
-                name: "输出文本",
+                name: t("PluginExecuteLog.output_text"),
                 icon: <OutlineTerminalIcon />,
                 number: textLists.length,
                 type: "output-text"
             })
         }
         return tab
-    }, [echartsLists, textLists])
+    }, [echartsLists, textLists, i18n.language])
 
     const renderTabContent = useMemoizedFn((type) => {
         switch (type) {
             case "plugin-log":
-                const currentTime=moment().format("YYYY-MM-DD")
-                return <LocalPluginLog loading={loading} list={list} heard={<> {currentTime} 日志查询结果</>}/>
+                const currentTime = moment().format("YYYY-MM-DD")
+                return <LocalPluginLog loading={loading} list={list} heard={<> {currentTime} {t("PluginExecuteLog.log_query_result")}</>} />
             case "echarts-statistics":
                 return <LocalList list={echartsLists} />
             case "output-text":
@@ -434,6 +437,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
 /**风险与漏洞tab表 */
 export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
     const {runtimeId} = props
+    const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
     const [riskLoading, setRiskLoading] = useState<boolean>(false)
     const [allTotal, setAllTotal] = useControllableValue<number>(props, {
         defaultValue: 0,
@@ -466,11 +470,11 @@ export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps>
                     renderTitle={
                         <div className={styles["table-renderTitle"]}>
                             <div className={styles["table-renderTitle-left"]}>
-                                <span>风险与漏洞</span>
+                                <span>{t("VulnerabilitiesRisksTable.risks_and_vulnerabilities")}</span>
                                 <TableTotalAndSelectNumber total={allTotal} />
                             </div>
                             <YakitButton type='outline2' size='small' onClick={onJumpRisk}>
-                                查看全部
+                                {t("YakitButton.view_all_button")}
                             </YakitButton>
                         </div>
                     }

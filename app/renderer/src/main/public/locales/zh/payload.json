@@ -1,0 +1,22 @@
+{
+  "ReadOnlyNewPayload": {
+    "selected": "已选中：",
+    "totalCheckedItems": "{count}个",
+    "insert": "插入",
+    "supportInsertFileForFuzz": "支持插入文件进行Fuzz",
+    "pleaseSelectDictionaryOrFolder": "请选择要插入的字典或文件夹"
+  },
+  "NewPayloadLocalList": {
+    "selectDictionaryToInsert": "选择想要插入的字典",
+    "goToDictionaryManagement": "前往 字典管理"
+  },
+  "PayloadLocalContent": {
+    "fuzzModuleRenderHint": "可以通过 fuzz 模块 {{x(字典名)}} 来渲染"
+  },
+  "NewPayloadTable": {
+    "dictionaryContent": "字典内容",
+    "addHitCountFieldNotice": "新增命中次数字段，命中次数越高，在爆破时优先级也会越高",
+    "hitCount": "命中次数",
+    "recordCount": "共{i}条记录"
+  }
+}

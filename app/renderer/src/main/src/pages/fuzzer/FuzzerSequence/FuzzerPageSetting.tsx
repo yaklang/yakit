@@ -19,6 +19,7 @@ import {
 } from "../HttpQueryAdvancedConfig/FuzzerConfigPanels"
 import {MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {defaultWebFuzzerPageInfo} from "@/defaultConstants/HTTPFuzzerPage"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface DebugProps {
     httpResponse: string
@@ -37,6 +38,7 @@ interface FuzzerPageSettingProps {
 }
 const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) => {
     const {pageId, defaultHttpResponse, onDebug, triggerIn, triggerOut, setTriggerOut} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById,
@@ -66,7 +68,7 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
             try {
                 setActiveKey(data ? JSON.parse(data) : ["匹配器", "数据提取器", "设置变量"])
             } catch (error) {
-                yakitFailed("获取序列配置折叠面板的激活key失败:" + error)
+                yakitFailed(t("FuzzerPageSetting.getSequenceConfigKeyFailed") + error)
             }
         })
     }, [])
@@ -194,7 +196,7 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
                     />
                 </YakitCollapse>
 
-                <div className={styles["to-end"]}>已经到底啦～</div>
+                <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>
             </Form>
         </div>
     )

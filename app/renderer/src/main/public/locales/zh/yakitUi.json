@@ -40,6 +40,7 @@
         "iKnow": "知道了",
         "startScan": "开始扫描",
         "execute": "执行",
+        "start_execution": "开始执行",
         "startAudit": "开始审计",
         "reset": "重置",
         "batchOperation": "批量操作",
@@ -55,9 +56,19 @@
         "do_not_replace": "不替换",
         "more": "更多",
         "custom": "自定义",
-        "beautify": "美化"
+        "beautify": "美化",
+        "preview": "预览",
+        "view_all_button": "查看全部",
+        "sendRequest": "发送请求",
+        "pause": "暂停",
+        "history": "历史",
+        "retryAll": "一键重试",
+        "debugExecution": "调试执行",
+        "restore": "复原",
+        "share": "分享"
     },
     "YakitNotification": {
+        "unknown_error": "未知错误",
         "success": "操作成功",
         "failed": "操作失败{colon}",
         "imported": "导入成功",
@@ -87,7 +98,9 @@
         "loadFailed": "加载失败{colon}",
         "sendSuccess": "发送成功",
         "executeFailed": "执行失败{colon}",
-        "search_failed": "搜索失败{colon}"
+        "search_failed": "搜索失败{colon}",
+        "complete_variable_before_add": "请将已添加【变量{index}】设置完成后再进行添加",
+        "shareFailed": "分享失败{colon}"
     },
     "YakitFormDragger": {
         "filePath": "文件路径",
@@ -96,6 +109,7 @@
         "dragFileHereOr": "可将 {fileType} 文件拖入框内或",
         "enterFilePath": "请输入 {fileType} 数据路径",
         "dragOrClickHere": "可将文件拖入框内或点击此处",
+        "drag_folder_or_click_here": "可将文件夹拖入框内或点击此处",
         "uploadFile": "上传文件",
         "uploadFolder": "上传文件夹",
         "detected": "识别到",
@@ -111,6 +125,21 @@
         "autoFilteredData": "已自动过滤不符合条件的数据",
         "filePathCountError": "文件路径数识别错误,请以逗号进行分割"
     },
+    "YakitDraggerContent": {
+        "file_too_large": "文件过大，无法操作",
+        "unsupported_file_type": "文件类型不支持",
+        "multi_file_single_process": "多选的文件只会选择其中一个文件处理",
+        "file_read_error": "文件数据读取异常：",
+        "single_file_only": "只支持单文件上传",
+        "data_fetch_failed": "数据获取失败：",
+        "drag_file_tip": "可将文件拖入框内或",
+        "click_here": "点击此处",
+        "drag_files_tip": "可将TXT、Excel文件拖入框内或"
+    },
+    "YakitForm": {
+        "requiredField": "该项为必填项",
+        "field_required_with_label": "{label} 是必填字段"
+    },
     "YakitInput": {
         "please_enter": "请输入...",
         "searchKeyWordPlaceholder": "请输入关键词搜索",
@@ -118,7 +147,8 @@
     },
     "YakitEmpty": {
         "noData": "暂无数据",
-        "noMoreData": "暂无更多数据"
+        "noMoreData": "暂无更多数据",
+        "end_of_list": "已经到底啦～"
     },
     "YakitDatePicker": {
         "oneMinute": "1分钟",
@@ -128,6 +158,8 @@
     "YakitTable": {
         "order": "序号",
         "action": "操作",
+        "asc": "升序",
+        "desc": "降序",
         "red": "红色",
         "green": "绿色",
         "blue": "蓝色",
@@ -138,19 +170,18 @@
         "grey": "灰色"
     },
     "YakitModal": {
-        "friendlyReminder": "温馨提示"
+        "friendlyReminder": "温馨提示",
+        "closePrompt": "关闭提示"
     },
     "YakitTag": {
         "critical": "严重",
         "high": "高危",
         "warning": "中危",
-        "low": "低危"
+        "low": "低危",
+        "info": "信息"
     },
     "YakitSpin": {
         "loading": "加载中"
-    },
-    "YakitForm": {
-        "requiredField": "该项为必填项"
     },
     "YakitSelect": {
         "YakitSelectCustom": {

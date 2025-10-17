@@ -42,7 +42,6 @@
         height: 100%;
         border-right: 1px solid var(--Colors-Use-Neutral-Border);
         background-color: var(--Colors-Use-Neutral-Bg);
-        width: 335px;
         flex-shrink: 0;
 
         &-heard {
@@ -52,7 +51,6 @@
             border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
             height: 49px;
             font-size: 12px;
-            width: 335px;
             flex-shrink: 0;
 
             &-text {
@@ -332,6 +330,7 @@
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
+            margin-right: 5px;
         }
 
         &-extra {
@@ -348,7 +347,7 @@
         align-items: center;
 
         &-item {
-            width: 72px !important;
+            width: 85px !important;
         }
     }
 }

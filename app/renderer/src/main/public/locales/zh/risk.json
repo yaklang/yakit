@@ -1,0 +1,104 @@
+{
+  "RiskQuery": {
+    "advanced_query": "高级查询",
+    "collapseFilter": "收起筛选"
+  },
+  "IPList": {
+    "ipStatistics": "IP 统计"
+  },
+  "VulnerabilityLevel": {
+    "vulnerabilityLevel": "漏洞等级"
+  },
+  "VulnerabilityType": {
+    "top10VulnerabilityTypes": "漏洞类型 Top 10",
+    "resetTipAfterManualSelection": "手动选择所有漏洞类型后，点击重置即可查看所有数据"
+  },
+  "YakitRiskTable": {
+    "title": "标题",
+    "type": "类型",
+    "level": "等级",
+    "disposal_status": "处置状态",
+    "discovery_time": "发现时间",
+    "port_colon": "端口",
+    "vulnerability_description": "漏洞描述",
+    "solution": "解决方案",
+    "source": "来源",
+    "reverse_token": "反连Token",
+    "parameter": "参数",
+    "retest": "复测",
+    "false_positive_feedback": "误报反馈",
+    "please_login_first": "请先登录账号",
+    "feedback_success": "反馈成功",
+    "vulnerability_not_scanned_by_plugin": "该漏洞未经插件扫描",
+    "select_export_fields": "选择导出字段",
+    "risk_and_vulnerabilities": "风险与漏洞",
+    "export_html_failed": "导出html失败：",
+    "delete_duplicate_title_data": "删除重复标题数据",
+    "expand_filter": "展开筛选",
+    "all": "全部",
+    "unread": "未读",
+    "mark_all_as_read": "全部已读",
+    "export_as": "导出为...",
+    "confirm_delete_all_risks": "确定删除所有风险与漏洞吗? 不可恢复",
+    "confirm_delete_selected_risks": "确定删除选择的风险与漏洞吗?不可恢复",
+    "false_positive_feedback_reminder": "误报反馈提醒",
+    "confirm_feedback_prompt": "确认反馈后，整条漏洞信息将会被上传至后台，开发人员将获取漏洞信息进行误报修复。是否确认反馈？",
+    "export_csv": "导出 CSV",
+    "export_html": "导出 html",
+    "vulnerability_detection": "漏洞检测"
+  },
+  "YakitRiskSelectTag": {
+    "false_positive": "误报",
+    "ignore": "忽略",
+    "processed": "已处理",
+    "pending": "待处理"
+  },
+  "YakitRiskDetails": {
+    "vulnerability_details": "漏洞详情",
+    "data_packet": "数据包",
+    "port_colon": "端口：",
+    "discovery_time_colon": "发现时间：",
+    "no_data_packet": "无数据包",
+    "retest": "复测",
+    "type": "类型",
+    "source": "来源",
+    "vulnerability_detection": "漏洞检测",
+    "reverse_token": "反连Token",
+    "verification_status": "验证状态",
+    "verified": "已验证",
+    "not_verified": "未验证",
+    "vulnerability_description": "漏洞描述",
+    "solution": "解决方案",
+    "details": "详情"
+  },
+  "YakitRiskDetailContent": {
+    "related_code_snippet": "相关代码段"
+  },
+  "YakitCodeScanRiskDetails": {
+    "project": "所属项目：",
+    "discovery_time_colon": "发现时间：",
+    "open_in_code_audit": "在代码审计中打开",
+    "related_data_deleted": "相关数据已被删除"
+  },
+  "AuditResultDescribe": {
+    "vulnerability_detection": "漏洞检测",
+    "type": "类型",
+    "scan_rules": "扫描规则",
+    "vulnerability_description": "漏洞描述",
+    "solution": "解决方案"
+  },
+  "RightBugAuditResultHeader": {
+    "discovery_time_colon": "发现时间：",
+    "project": "所属项目："
+  },
+  "RightBugAuditResult": {
+    "vulnerability_detection": "漏洞检测",
+    "type": "类型",
+    "scan_rules": "扫描规则",
+    "vulnerability_description": "漏洞描述",
+    "solution": "解决方案"
+  },
+  "AuditResultCollapse": {
+    "open_in_code_audit": "在代码审计中打开"
+  }
+}

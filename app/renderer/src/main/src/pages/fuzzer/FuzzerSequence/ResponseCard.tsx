@@ -8,6 +8,7 @@ import {Divider} from "antd"
 import {HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {OutlineReplyIcon} from "@/assets/icon/outline"
 import {emptyFuzzer} from "@/defaultConstants/HTTPFuzzerPage"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -15,6 +16,7 @@ const cachedTotal = 2
 const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
     //   const {allSuccessResponse,allFailedResponse}=props;
     const {responseMap, showAllResponse, setShowAllResponse} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const [showSuccess, setShowSuccess] = useState<FuzzerShowSuccess>("true")
     const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
     const [affixSearch, setAffixSearch] = useState<string>("")
@@ -133,7 +135,7 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         type='text2'
                         icon={<OutlineReplyIcon />}
                     >
-                        返回
+                        {t("YakitButton.back")}
                     </YakitButton>
                 </div>
             </div>

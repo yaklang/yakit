@@ -5,6 +5,7 @@ import {execPacketScan, execPacketScanFromRaw} from "@/pages/packetScanner/Packe
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import styles from "./packetScanner.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 /**
  * @description 数据包扫描的默认菜单数据
@@ -64,15 +65,16 @@ export interface PacketScanButtonProp {
 }
 
 export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "history"])
     const [visible, setVisible] = useState<false | undefined>(undefined)
     return (
         <YakitPopover
             key={"数据包扫描"}
-            title={"数据包扫描"}
+            title={t("PacketScanButton.packetScan")}
             trigger={["click"]}
             visible={visible}
             content={
-                <Space direction={"vertical"} style={{width: 150}}>
+                <Space direction={"vertical"} style={{width: i18n.language === "zh" ? 150 : 200}}>
                     {packetScanDefaultValue.map((i, n) => {
                         return (
                             <YakitButton
@@ -88,7 +90,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
                                 }}
                                 key={`${i.Verbose}+${n}`}
                             >
-                                {i.Verbose}
+                                {t(i.VerboseUi || i.Verbose )}
                             </YakitButton>
                         )
                     })}
@@ -96,7 +98,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
             }
         >
             <YakitButton size={"small"} type='outline2'>
-                数据包扫描
+                {t("PacketScanButton.packetScan")}
             </YakitButton>
         </YakitPopover>
     )

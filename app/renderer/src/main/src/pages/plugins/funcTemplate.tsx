@@ -98,6 +98,8 @@ import {onPluginTagsToName} from "./baseTemplate"
 import classNames from "classnames"
 import "./plugins.scss"
 import styles from "./funcTemplate.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {Trans} from "react-i18next"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1523,16 +1525,17 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
         code,
         isStart,
         successWait = 1000,
-        successHint = "（表现良好，开始上传插件中...）",
-        failedHint = "（上传失败，请修复后再上传）",
+        successHint,
+        failedHint,
         callback,
         hiddenScoreHint,
-        specialHint = "(无法判断，是否需要转人工审核)",
-        specialBtnText = "转人工审核",
+        specialHint,
+        specialBtnText,
         specialExtraBtn = null,
         hiddenSpecialBtn = false,
         scoreHintData
     } = props
+    const {t, i18n} = useI18nNamespaces(["plugin"])
 
     const [loading, setLoading] = useState<boolean>(true)
     const [response, setResponse] = useState<CodeScoreSmokingEvaluateResponseProps>()
@@ -1570,7 +1573,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                 }
             })
             .catch((e) => {
-                yakitNotify("error", `插件基础测试失败: ${e}`)
+                yakitNotify("error", `${t("CodeScoreModule.plugin_basic_test_failed")}${e}`)
                 callback(false)
             })
             .finally(() => {
@@ -1599,7 +1602,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
         <div className={styles["code-score-modal"]}>
             {!hiddenScoreHint && (
                 <div className={styles["header-wrapper"]}>
-                    <div className={styles["title-style"]}>检测项包含：</div>
+                    <div className={styles["title-style"]}>{t("CodeScoreModule.detection_items_include")}</div>
                     {Array.isArray(scoreHintData) ? (
                         <div className={styles["header-body"]}>
                             {scoreHintData.map((item, index) => (
@@ -1613,15 +1616,15 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                         <div className={styles["header-body"]}>
                             <div className={styles["opt-content"]}>
                                 <div className={styles["content-order"]}>1</div>
-                                基础编译测试，判断语法是否符合规范，是否存在不正确语法；
+                                {t("CodeScoreModule.basic_compile_test_description")}
                             </div>
                             <div className={styles["opt-content"]}>
                                 <div className={styles["content-order"]}>2</div>
-                                把基础防误报服务器作为测试基准，防止条件过于宽松导致的误报；
+                                {t("CodeScoreModule.use_basic_false_positive_server")}
                             </div>
                             <div className={styles["opt-content"]}>
                                 <div className={styles["content-order"]}>3</div>
-                                检查插件执行过程是否会发生崩溃。
+                                {t("CodeScoreModule.check_plugin_crash")}
                             </div>
                         </div>
                     )}
@@ -1634,9 +1637,15 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                             <YakitSpin spinning={true} />
                         </div>
                         <div className={styles["loading-title"]}>
-                            <div className={styles["title-style"]}>检测中，请耐心等待...</div>
+                            <div className={styles["title-style"]}>{t("CodeScoreModule.detecting_please_wait")}</div>
                             <div className={styles["subtitle-style"]}>
-                                一般来说，检测将会在 <span className={styles["active-style"]}>10-20s</span> 内结束
+                                <Trans
+                                    i18nKey='CodeScoreModule.detection_expected_duration'
+                                    ns='plugin'
+                                    components={{
+                                        duration: <span className={styles["active-style"]} />
+                                    }}
+                                />
                             </div>
                         </div>
                     </div>
@@ -1680,28 +1689,38 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                         {response && (+response?.Score || 0) < 60 && (
                             <div className={styles["opt-results"]}>
                                 <SolidExclamationIcon />
-                                <div className={styles["content-style"]}>{isSpecial ? specialHint : failedHint}</div>
+                                <div className={styles["content-style"]}>
+                                    {isSpecial
+                                        ? specialHint || t("CodeScoreModule.unable_to_judge_manual_review")
+                                        : failedHint || t("CodeScoreModule.upload_failed_fix_and_retry")}
+                                </div>
                             </div>
                         )}
                         {response && (+response?.Score || 0) >= 60 && (
                             <div className={styles["opt-results"]}>
                                 <div className={styles["success-score"]}>
                                     {+response?.Score}
-                                    <span className={styles["suffix-style"]}>分</span>
+                                    <span className={styles["suffix-style"]}>{t("CodeScoreModule.score")}</span>
                                 </div>
-                                <div className={styles["content-style"]}>{successHint}</div>
+                                <div className={styles["content-style"]}>
+                                    {successHint || t("CodeScoreModule.uploading_plugin_good_performance")}
+                                </div>
                             </div>
                         )}
                         {!response && (
                             <div className={styles["opt-results"]}>
-                                <div className={styles["content-style"]}>检查错误，请关闭后再次尝试!</div>
+                                <div className={styles["content-style"]}>
+                                    {t("CodeScoreModule.check_error_try_again")}
+                                </div>
                             </div>
                         )}
 
                         {!hiddenSpecialBtn && response && isSpecial && (
                             <div className={styles["footer-btn"]}>
                                 {specialExtraBtn}
-                                <YakitButton onClick={onManualReview}>{specialBtnText}</YakitButton>
+                                <YakitButton onClick={onManualReview}>
+                                    {specialBtnText || t("CodeScoreModule.manual_review")}
+                                </YakitButton>
                             </div>
                         )}
                     </div>
@@ -1714,6 +1733,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
 /** @name 插件源码评分弹窗 */
 export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
     const {visible, onCancel, title, ...rest} = props
+    const {t, i18n} = useI18nNamespaces(["plugin"])
 
     // 不合格|取消
     const onFailed = useMemoizedFn(() => {
@@ -1732,7 +1752,7 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
 
     return (
         <YakitModal
-            title={title || "插件基础检测"}
+            title={title || t("CodeScoreModal.plugin_basic_detection")}
             type='white'
             width={"50%"}
             centered={true}

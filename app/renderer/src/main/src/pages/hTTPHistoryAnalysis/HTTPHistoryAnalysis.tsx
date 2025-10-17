@@ -961,7 +961,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                                     <span style={{fontSize: 12}}>Request</span>
                                                                     <ByteCountTag
                                                                         selectionByteCount={reqSelectionByteCount}
-                                                                        key='httpHistoryAnalysis'
+                                                                        itemKey='httpHistoryAnalysis'
                                                                     />
                                                                 </div>
                                                             }
@@ -1003,7 +1003,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                                     <span style={{fontSize: 12}}>Response</span>
                                                                     <ByteCountTag
                                                                         selectionByteCount={resSelectionByteCount}
-                                                                        key='httpHistoryAnalysis'
+                                                                        itemKey='httpHistoryAnalysis'
                                                                     />
                                                                 </div>
                                                             }

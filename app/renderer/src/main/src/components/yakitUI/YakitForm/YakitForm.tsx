@@ -595,12 +595,13 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
         valueSeparator = ",",
         ...restProps
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const renderContent = useMemoizedFn((helpNode: ReactNode) => {
         return (
             <YakitSpin spinning={uploadLoading}>
                 <YakitInput.TextArea
-                    placeholder='路径支持手动输入,输入多个请用逗号分隔'
+                    placeholder={t("YakitFormDragger.pathManualInput")}
                     value={value}
                     disabled={disabled}
                     {...textareaProps}
@@ -641,7 +642,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
     /**默认10M之内，读取文件内容 */
     const onHandlerFile = useMemoizedFn((item: {size: number; path: string}) => {
         if (item.size / 1024 > 10 * 1024) {
-            yakitNotify("warning", `文件过大，无法操作`)
+            yakitNotify("warning", t("YakitDraggerContent.file_too_large"))
             return
         }
 
@@ -649,7 +650,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
         if (isAcceptEligible(path, props.accept || ".*")) {
             onGetContent(path)
         } else {
-            yakitNotify("error", "文件类型不支持")
+            yakitNotify("error", t("YakitDraggerContent.unsupported_file_type"))
         }
     })
     /**拖拽文件后的处理 */
@@ -658,7 +659,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
         const {files = []} = e.dataTransfer
         const filesLength = files.length
         if (filesLength > 1) {
-            yakitNotify("error", "多选的文件只会选择其中一个文件处理")
+            yakitNotify("error", t("YakitDraggerContent.multi_file_single_process"))
         }
         if (filesLength > 0) {
             const item = files[0]
@@ -669,7 +670,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
     const onUploadFile = useMemoizedFn((e) => {
         e.stopPropagation()
         if (disabled) return
-            handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
+            handleOpenFileSystemDialog({title: t("YakitFormDragger.selectFile"), properties: ["openFile"]})
             .then((data) => {
                 const filesLength = data.filePaths.length
                 if (filesLength === 1) {
@@ -683,10 +684,10 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                             })
                         })
                         .catch((err) => {
-                            yakitNotify("error", "文件数据读取异常:" + err)
+                            yakitNotify("error", t("YakitDraggerContent.file_read_error") + err)
                         })
                 } else if (filesLength > 1) {
-                    yakitNotify("error", "只支持单文件上传")
+                    yakitNotify("error", t("YakitDraggerContent.single_file_only"))
                 }
             })
     })
@@ -710,7 +711,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                 }
             })
             .catch((err) => {
-                failed("数据获取失败：" + err)
+                failed(t("YakitDraggerContent.data_fetch_failed") + err)
             })
             .finally(() => setTimeout(() => setUploadLoading(false), 200))
     })
@@ -731,16 +732,16 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                 {renderContent(
                     <div className={classNames(styles["form-item-help"], styles["form-item-content-help"])}>
                         <label>
-                            {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
+                            {help ? help : showDefHelp ? t("YakitDraggerContent.drag_file_tip") : ""}
                             <span
                                 className={classNames(styles["dragger-help-active"], {
                                     [styles["dragger-help-active-disabled"]]: disabled
                                 })}
                                 onClick={onUploadFile}
                             >
-                                <OutlineUploadIcon className={styles["upload-icon"]} /> 点击此处
+                                <OutlineUploadIcon className={styles["upload-icon"]} /> {t("YakitDraggerContent.click_here")}
                             </span>
-                            上传
+                            {t("YakitButton.upload")}
                         </label>
                     </div>
                 )}

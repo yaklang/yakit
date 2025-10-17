@@ -78,7 +78,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {ExportSelect} from "@/components/DataExport/DataExport"
 import {RemoteGV} from "@/yakitGV"
-import {getHtmlTemplate} from "./htmlTemplate"
+import {getHtmlEnTemplate, getHtmlTemplate} from "./htmlTemplate"
 import {yakitNotify} from "@/utils/notification"
 import moment from "moment"
 import {FieldName} from "../RiskTable"
@@ -112,6 +112,7 @@ import {Selection} from "@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType"
 import MDEditor from "@uiw/react-md-editor"
 import {getNameByPath} from "@/pages/yakRunner/utils"
 import {shallow} from "zustand/shallow"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -121,26 +122,30 @@ export const isShowCodeScanDetail = (selectItem: Risk) => {
     return false
 }
 
-const batchExportMenuData: YakitMenuItemProps[] = [
-    {
-        key: "export-csv",
-        label: "导出 CSV"
-    },
-    {
-        key: "export-html",
-        label: "导出 html"
-    }
-]
-const batchRefreshMenuData: YakitMenuItemProps[] = [
-    {
-        key: "noResetRefresh",
-        label: "仅刷新"
-    },
-    {
-        key: "resetRefresh",
-        label: "重置查询条件刷新"
-    }
-]
+const batchExportMenuData: (t: (text: string) => string) => YakitMenuItemProps[] = (t) => {
+    return [
+        {
+            key: "export-csv",
+            label: t("YakitRiskTable.export_csv")
+        },
+        {
+            key: "export-html",
+            label: t("YakitRiskTable.export_html")
+        }
+    ]
+}
+const batchRefreshMenuData: (t: (text: string) => string) => YakitMenuItemProps[] = (t) => {
+    return [
+        {
+            key: "noResetRefresh",
+            label: t("YakitButton.refreshOnly")
+        },
+        {
+            key: "resetRefresh",
+            label: t("YakitButton.resetQueryAndRefresh")
+        }
+    ]
+}
 
 /**name字段里面的内容不可随意更改，与查询条件有关 */
 export const SeverityMapTag = [
@@ -148,120 +153,127 @@ export const SeverityMapTag = [
         key: ["info", "fingerprint", "infof", "default"],
         value: "title-info",
         name: "信息",
+        nameUi: "YakitTag.info",
         tag: "success"
     },
-    {key: ["low"], value: "title-low", name: "低危", tag: "warning"},
+    {key: ["low"], value: "title-low", name: "低危", nameUi: "YakitTag.low", tag: "warning"},
     {
         key: ["middle", "warn", "warning", "medium"],
         value: "title-middle",
         name: "中危",
+        nameUi: "YakitTag.warning",
         tag: "info"
     },
-    {key: ["high"], value: "title-high", name: "高危", tag: "danger"},
+    {key: ["high"], value: "title-high", name: "高危", nameUi: "YakitTag.high", tag: "danger"},
     {
         key: ["fatal", "critical", "panic"],
         value: "title-fatal",
         name: "严重",
+        nameUi: "YakitTag.critical",
         tag: "serious"
     }
 ]
 /**漏洞风险导出字段及其属性 */
-const exportFields = [
-    {
-        label: "漏洞标题",
-        value: "TitleVerbose",
-        isDefaultChecked: true
-    },
-    {
-        label: "IP",
-        value: "IP",
-        isDefaultChecked: true
-    },
-    {
-        label: "漏洞等级",
-        value: "Severity",
-        isDefaultChecked: true
-    },
-    {
-        label: "漏洞类型",
-        value: "Type",
-        isDefaultChecked: true
-    },
-    {
-        label: "URL",
-        value: "Url",
-        isDefaultChecked: true
-    },
-    {
-        label: "Tag",
-        value: "Tags",
-        isDefaultChecked: false
-    },
-    {
-        label: "发现时间",
-        value: "CreatedAt",
-        isDefaultChecked: true
-    },
-    {
-        label: "端口",
-        value: "Port",
-        isDefaultChecked: true
-    },
-    {
-        label: "漏洞描述",
-        value: "Description",
-        isDefaultChecked: true
-    },
-    {
-        label: "解决方案",
-        value: "Solution",
-        isDefaultChecked: true
-    },
-    {
-        label: "来源",
-        value: "FromYakScript",
-        isDefaultChecked: false
-    },
-    {
-        label: "反连 Token",
-        value: "ReverseToken",
-        isDefaultChecked: false
-    },
-    {
-        label: "参数",
-        value: "Parameter",
-        isDefaultChecked: false
-    },
-    {
-        label: "Payload",
-        value: "Payload",
-        isDefaultChecked: false
-    }
-]
-const yakitRiskCellStyle = {
-    信息: {
-        font: {
-            color: {rgb: "56c991"}
+const exportFields = (t: (text: string) => string) => {
+    return [
+        {
+            label: t("YakitRiskTable.title"),
+            value: "TitleVerbose",
+            isDefaultChecked: true
+        },
+        {
+            label: "IP",
+            value: "IP",
+            isDefaultChecked: true
+        },
+        {
+            label: t("YakitRiskTable.level"),
+            value: "Severity",
+            isDefaultChecked: true
+        },
+        {
+            label: t("YakitRiskTable.type"),
+            value: "Type",
+            isDefaultChecked: true
+        },
+        {
+            label: "URL",
+            value: "Url",
+            isDefaultChecked: true
+        },
+        {
+            label: "Tag",
+            value: "Tags",
+            isDefaultChecked: false
+        },
+        {
+            label: t("YakitRiskTable.discovery_time"),
+            value: "CreatedAt",
+            isDefaultChecked: true
+        },
+        {
+            label: t("YakitRiskTable.port_colon"),
+            value: "Port",
+            isDefaultChecked: true
+        },
+        {
+            label: t("YakitRiskTable.vulnerability_detection"),
+            value: "Description",
+            isDefaultChecked: true
+        },
+        {
+            label: t("YakitRiskTable.solution"),
+            value: "Solution",
+            isDefaultChecked: true
+        },
+        {
+            label: t("YakitRiskTable.source"),
+            value: "FromYakScript",
+            isDefaultChecked: false
+        },
+        {
+            label: t("YakitRiskTable.reverse_token"),
+            value: "ReverseToken",
+            isDefaultChecked: false
+        },
+        {
+            label: t("YakitRiskTable.parameter"),
+            value: "Parameter",
+            isDefaultChecked: false
+        },
+        {
+            label: "Payload",
+            value: "Payload",
+            isDefaultChecked: false
         }
-    },
-    低危: {
-        font: {
-            color: {rgb: "ffb660"}
-        }
-    },
-    中危: {
-        font: {
-            color: {rgb: "f28b44"}
-        }
-    },
-    高危: {
-        font: {
-            color: {rgb: "f6544a"}
-        }
-    },
-    严重: {
-        font: {
-            color: {rgb: "bd2a21"}
+    ]
+}
+const yakitRiskCellStyle = (t: (text: string) => string) => {
+    return {
+        [t("YakitTag.info")]: {
+            font: {
+                color: {rgb: "56c991"}
+            }
+        },
+        [t("YakitTag.low")]: {
+            font: {
+                color: {rgb: "ffb660"}
+            }
+        },
+        [t("YakitTag.warning")]: {
+            font: {
+                color: {rgb: "f28b44"}
+            }
+        },
+        [t("YakitTag.high")]: {
+            font: {
+                color: {rgb: "f6544a"}
+            }
+        },
+        [t("YakitTag.critical")]: {
+            font: {
+                color: {rgb: "bd2a21"}
+            }
         }
     }
 }
@@ -277,6 +289,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         yakitRiskDetailsBorder = true,
         excludeColumnsKey = []
     } = props
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
     const {currentPageTabRouteKey} = usePageInfo(
         (s) => ({
             currentPageTabRouteKey: s.currentPageTabRouteKey
@@ -305,7 +318,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         trigger: "setQuery"
     })
 
-    const [exportTitle, setExportTitle] = useState<string[]>([])
+    const [exportDataKey, setExportDataKey] = useState<string[]>([])
 
     const [riskTypeVerbose, setRiskTypeVerbose] = useState<FieldName[]>([])
 
@@ -454,7 +467,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }))
         const columnArr: ColumnsTypeProps[] = [
             {
-                title: "序号",
+                title: t("YakitTable.order"),
                 dataKey: "Id",
                 fixed: "left",
                 ellipsis: false,
@@ -466,7 +479,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }
             },
             {
-                title: "标题",
+                title: t("YakitRiskTable.title"),
                 dataKey: "TitleVerbose",
                 filterProps: {
                     filterKey: "Title",
@@ -476,7 +489,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 render: (_, record) => record?.TitleVerbose || record.Title || "-"
             },
             {
-                title: "类型",
+                title: t("YakitRiskTable.type"),
                 dataKey: "RiskTypeVerbose",
                 filterProps: {
                     filterKey: "RiskTypeList",
@@ -486,15 +499,15 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }
             },
             {
-                title: "等级",
+                title: t("YakitRiskTable.level"),
                 dataKey: "Severity",
-                width: 75,
+                width: 100,
                 align: "center",
                 render: (_, i: Risk) => {
                     const title = SeverityMapTag.filter((item) => item.key.includes(i.Severity || ""))[0]
                     return (
                         <YakitTag color={title?.tag as YakitTagColor} className={styles["table-severity-tag"]}>
-                            {title ? title.name : i.Severity || "-"}
+                            {title ? t(title.nameUi) : i.Severity || "-"}
                         </YakitTag>
                     )
                 },
@@ -505,23 +518,23 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     filters: [
                         {
                             value: "critical",
-                            label: "严重"
+                            label: t("YakitTag.critical")
                         },
                         {
                             value: "high",
-                            label: "高危"
+                            label: t("YakitTag.high")
                         },
                         {
                             value: "warning",
-                            label: "中危"
+                            label: t("YakitTag.warning")
                         },
                         {
                             value: "low",
-                            label: "低危"
+                            label: t("YakitTag.low")
                         },
                         {
                             value: "info",
-                            label: "信息"
+                            label: t("YakitTag.info")
                         }
                     ]
                 }
@@ -541,7 +554,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 dataKey: "Url"
             },
             {
-                title: "处置状态",
+                title: t("YakitRiskTable.disposal_status"),
                 dataKey: "Tags",
                 filterProps: {
                     filterKey: "TagList",
@@ -565,7 +578,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 )
             },
             {
-                title: "发现时间",
+                title: t("YakitRiskTable.discovery_time"),
                 dataKey: "CreatedAt",
                 filterProps: {
                     filterKey: "CreatedAt",
@@ -574,7 +587,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 render: (text) => (text ? formatTimestamp(text) : "-")
             },
             {
-                title: "操作",
+                title: t("YakitTable.action"),
                 dataKey: "action",
                 width: 140,
                 fixed: "right",
@@ -591,7 +604,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         />
                         <Divider type='vertical' />
                         <Tooltip
-                            title='复测'
+                            title={t("YakitRiskTable.retest")}
                             destroyTooltipOnHide={true}
                             overlayStyle={{paddingBottom: 0}}
                             placement='top'
@@ -607,7 +620,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         </Tooltip>
                         <Divider type='vertical' />
                         <Tooltip
-                            title='误报反馈'
+                            title={t("YakitRiskTable.false_positive_feedback")}
                             destroyTooltipOnHide={true}
                             overlayStyle={{paddingBottom: 0}}
                             placement='top'
@@ -625,7 +638,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             }
         ]
         return columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
-    }, [riskTypeVerbose, tag, excludeColumnsKey])
+    }, [riskTypeVerbose, tag, excludeColumnsKey, i18n.language])
 
     /**误报上传 start */
     const [misstatementVisible, setMisstatementVisible] = useState<boolean>(false)
@@ -645,7 +658,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     }
     const onClickRiskFeedbackToOnline = useMemoizedFn((record: Risk) => {
         if (!userInfo.isLogin) {
-            yakitNotify("info", "请先登录账号")
+            yakitNotify("info", t("YakitRiskTable.please_login_first"))
             return
         }
         riskFeedbackToOnlineParams.current = {
@@ -662,7 +675,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         const params = riskFeedbackToOnlineParams.current
         if (params) {
             apiRiskFeedbackToOnline(params).then(() => {
-                yakitNotify("success", "反馈成功")
+                yakitNotify("success", t("YakitRiskTable.feedback_success"))
             })
         }
     }
@@ -688,7 +701,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }
             )
         } else {
-            yakitNotify("error", "该漏洞未经插件扫描")
+            yakitNotify("error", t("YakitRiskTable.vulnerability_not_scanned_by_plugin"))
         }
     })
     const onRefRiskList = useDebounceFn(
@@ -712,7 +725,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         const m = showYakitModal({
             title: (
                 <div className='content-ellipsis'>
-                    序号【{record.Id}】- {record.TitleVerbose || record.Title}
+                    {t("YakitTable.order")}【{record.Id}】- {record.TitleVerbose || record.Title}
                 </div>
             ),
             content: <YakitRiskSelectTag info={record} onClose={() => m.destroy()} onSave={onSaveTags} />,
@@ -791,19 +804,23 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const onExportCSV = useMemoizedFn(() => {
         if (+response.Total === 0) return
         percentContainerRef.current = currentPageTabRouteKey
-        const exportValue = exportFields.map((item) => item.label)
-        const initCheckFields = exportFields.filter((ele) => ele.isDefaultChecked).map((item) => item.label)
+        const exportValue = exportFields(t).map((item) => ({title: item.label, key: item.value}))
+        const initCheckFields = exportFields(t)
+            .filter((ele) => ele.isDefaultChecked)
+            .map((item) => ({title: item.label, key: item.value}))
         const m = showYakitModal({
-            title: "选择导出字段",
+            title: t("YakitRiskTable.select_export_fields"),
             content: (
                 <ExportSelect
                     exportValue={exportValue}
                     initCheckValue={initCheckFields}
-                    setExportTitle={setExportTitle}
+                    setExportTitle={(v: string[]) => {
+                        setExportDataKey([...v])
+                    }}
                     exportKey={RemoteGV.RiskExportFields}
                     getData={getExcelData}
                     onClose={() => m.destroy()}
-                    fileName='风险与漏洞'
+                    fileName={t("YakitRiskTable.risk_and_vulnerabilities")}
                     getContainer={
                         document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
                     }
@@ -814,7 +831,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 setSelectList([])
             },
             footer: null,
-            width: 650,
+            width: 750,
             getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
         })
     })
@@ -826,7 +843,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     return value.replaceAll("|", ",")
                 }
                 if (j === "FromYakScript") {
-                    const value = v["FromYakScript"] || "漏洞检测"
+                    const value = v["FromYakScript"] || t("YakitRiskTable.vulnerability_detection")
                     return value
                 }
                 if (j === "TitleVerbose") {
@@ -839,7 +856,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }
                 if (j === "Severity") {
                     const title = SeverityMapTag.filter((item) => item.key.includes(v["Severity"] || ""))[0]
-                    return title ? title.name : v["Severity"] || "-"
+                    return title ? t(title.nameUi) : v["Severity"] || "-"
                 }
                 if (j === "CreatedAt") {
                     return formatTimestamp(v[j])
@@ -856,9 +873,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             let exportData: any = []
             const header: string[] = []
             const filterVal: string[] = []
-            exportTitle.forEach((item) => {
-                const itemData = exportFields.filter((itemIn) => itemIn.label === item)[0]
-                header.push(item)
+            exportDataKey.forEach((item) => {
+                const itemData = exportFields(t).filter((itemIn) => itemIn.value === item)[0]
+                header.push(itemData.label)
                 filterVal.push(itemData.value)
             })
             const number = filterVal.findIndex((ele) => ele === "Severity")
@@ -866,7 +883,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             if (number !== -1) {
                 optsSingleCellSetting = {
                     c: number, // 第*列，
-                    colorObj: yakitRiskCellStyle // 字体颜色设置
+                    colorObj: yakitRiskCellStyle(t) // 字体颜色设置
                 }
             }
             const resolveData = {
@@ -932,14 +949,14 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             RequestString: Buffer.from(ele.Request || new Uint8Array()).toString("utf8"),
             ResponseString: Buffer.from(ele.Response || new Uint8Array()).toString("utf8")
         }))
-        const htmlContent = getHtmlTemplate()
+        const htmlContent = i18n.language === "zh" ? getHtmlTemplate() : getHtmlEnTemplate()
         const params: ExportHtmlProps = {
             htmlContent,
             fileName: `riskTable-${moment().valueOf()}`,
             data: newRisks
         }
         apiExportHtml(params).catch((error) => {
-            yakitNotify("error", `导出html失败:${error}`)
+            yakitNotify("error", `${t("YakitRiskTable.export_html_failed")}${error}`)
         })
         setTimeout(() => {
             setRiskLoading(false)
@@ -1154,7 +1171,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         if (!rowData) return
         showByRightContext({
             width: 180,
-            data: [{key: "delete-repeat-title", label: "删除重复标题数据"}],
+            data: [{key: "delete-repeat-title", label: t("YakitRiskTable.delete_duplicate_title_data")}],
             onClick: ({key}) => onRightMenuSelect(key, rowData)
         })
     })
@@ -1267,7 +1284,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                     <div className={styles["table-renderTitle-left"]}>
                                         {!advancedQuery && (
                                             <Tooltip
-                                                title='展开筛选'
+                                                title={t("YakitRiskTable.expand_filter")}
                                                 placement='topLeft'
                                                 overlayClassName='plugins-tooltip'
                                             >
@@ -1278,7 +1295,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                                 ></YakitButton>
                                             </Tooltip>
                                         )}
-                                        <div className={styles["table-renderTitle-text"]}>风险与漏洞</div>
+                                        <div className={styles["table-renderTitle-text"]}>
+                                            {t("YakitRiskTable.risk_and_vulnerabilities")}
+                                        </div>
                                         <YakitRadioButtons
                                             value={type}
                                             onChange={(e) => {
@@ -1288,11 +1307,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                             options={[
                                                 {
                                                     value: "all",
-                                                    label: "全部"
+                                                    label: t("YakitRiskTable.all")
                                                 },
                                                 {
                                                     value: "false",
-                                                    label: "未读"
+                                                    label: t("YakitRiskTable.unread")
                                                 }
                                             ]}
                                         />
@@ -1322,7 +1341,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                         <YakitInput.Search
                                             value={keywords}
                                             onChange={(e) => setKeywords(e.target.value)}
-                                            placeholder='请输入关键词搜索'
+                                            placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                                             onSearch={onSearch}
                                             onPressEnter={onPressEnter}
                                         />
@@ -1332,11 +1351,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                             type='outline2'
                                             icon={<OutlineEyeIcon />}
                                             onClick={onAllRead}
-                                            name='全部已读'
+                                            name={t("YakitRiskTable.mark_all_as_read")}
                                         />
                                         <YakitDropdownMenu
                                             menu={{
-                                                data: batchExportMenuData,
+                                                data: batchExportMenuData(t),
                                                 onClick: ({key}) => {
                                                     onExportMenuSelect(key)
                                                 }
@@ -1351,15 +1370,15 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                                 maxWidth={1200}
                                                 type='outline2'
                                                 icon={<OutlineExportIcon />}
-                                                name=' 导出为...'
+                                                name={" " + t("YakitRiskTable.export_as")}
                                                 disabled={allTotal === 0}
                                             />
                                         </YakitDropdownMenu>
                                         <YakitPopconfirm
                                             title={
                                                 allCheck
-                                                    ? "确定删除所有风险与漏洞吗? 不可恢复"
-                                                    : "确定删除选择的风险与漏洞吗?不可恢复"
+                                                    ? t("YakitRiskTable.confirm_delete_all_risks")
+                                                    : t("YakitRiskTable.confirm_delete_selected_risks")
                                             }
                                             onConfirm={onRemove}
                                         >
@@ -1369,12 +1388,14 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                                 colors='danger'
                                                 icon={<OutlineTrashIcon />}
                                                 disabled={allTotal === 0}
-                                                name={selectNum === 0 ? "清空" : "删除"}
+                                                name={
+                                                    selectNum === 0 ? t("YakitButton.clear") : t("YakitButton.delete")
+                                                }
                                             />
                                         </YakitPopconfirm>
                                         <YakitDropdownMenu
                                             menu={{
-                                                data: batchRefreshMenuData,
+                                                data: batchRefreshMenuData(t),
                                                 onClick: ({key}) => {
                                                     onRefreshMenuSelect(key)
                                                 }
@@ -1433,34 +1454,37 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             {/* 误报反馈提示 */}
             <NoPromptHint
                 visible={misstatementVisible}
-                title='误报反馈提醒'
-                content='确认反馈后，整条漏洞信息将会被上传至后台，开发人员将获取漏洞信息进行误报修复。是否确认反馈？'
+                title={t("YakitRiskTable.false_positive_feedback_reminder")}
+                content={t("YakitRiskTable.confirm_feedback_prompt")}
                 cacheKey={RemoteRiskGV.RiskMisstatementNoPrompt}
                 onCallback={handleMisstatementHint}
             />
         </div>
     )
 })
-const defaultTags = [
-    {
-        label: "误报",
-        value: "误报"
-    },
-    {
-        label: "忽略",
-        value: "忽略"
-    },
-    {
-        label: "已处理",
-        value: "已处理"
-    },
-    {
-        label: "待处理",
-        value: "待处理"
-    }
-]
+const defaultTags = (t: (text: string) => string) => {
+    return [
+        {
+            label: t("YakitRiskSelectTag.false_positive"),
+            value: "误报"
+        },
+        {
+            label: t("YakitRiskSelectTag.ignore"),
+            value: "忽略"
+        },
+        {
+            label: t("YakitRiskSelectTag.processed"),
+            value: "已处理"
+        },
+        {
+            label: t("YakitRiskSelectTag.pending"),
+            value: "待处理"
+        }
+    ]
+}
 const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props) => {
     const {info, onClose, onSave} = props
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
     const initSelectTags = useCreation(() => {
         let tagList: {label: string; value: string}[] = []
         if (!!info?.Tags) {
@@ -1474,9 +1498,9 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
     }, [info.Tags])
     const tags = useCreation(() => {
         const list = initSelectTags.filter((item) => {
-            return !defaultTags.find((i) => i.value === item.value)
+            return !defaultTags(t).find((i) => i.value === item.value)
         })
-        return defaultTags.concat(list)
+        return defaultTags(t).concat(list)
     }, [info.Tags, initSelectTags])
     const onFinish = useMemoizedFn((value) => {
         onSave({
@@ -1506,9 +1530,9 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
                             if (onClose) onClose()
                         }}
                     >
-                        取消
+                        {t("YakitButton.cancel")}
                     </YakitButton>
-                    <YakitButton htmlType='submit'>确定</YakitButton>
+                    <YakitButton htmlType='submit'>{t("YakitButton.ok")}</YakitButton>
                 </div>
             </Form>
         </div>
@@ -1517,6 +1541,7 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 
 export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((props) => {
     const {info, isShowTime = true, className = "", border = true, isShowExtra, onRetest, boxStyle} = props
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
     // 目前可展示的请求和响应类型
     const [currentShowType, setCurrentShowType] = useState<("request" | "response")[]>([])
     const [isShowCode, setIsShowCode] = useState<boolean>(true)
@@ -1566,7 +1591,8 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         return {
             icon,
             tag: severity?.tag || "default",
-            name: severity?.name || info?.Severity || "-"
+            name: severity?.name || info?.Severity || "-",
+            nameUi: severity?.nameUi
         }
     }, [info.Severity])
     const onClickIP = useMemoizedFn(() => {
@@ -1624,16 +1650,16 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     const getOptions = useMemo(() => {
         let options = [
             {
-                label: "漏洞详情",
+                label: t("YakitRiskDetails.vulnerability_details"),
                 value: "detail"
             },
             {
-                label: "数据包",
+                label: t("YakitRiskDetails.data_packet"),
                 value: "code"
             }
         ]
         return options
-    }, [])
+    }, [i18n.language])
 
     const extraResizeBoxProps = useCreation(() => {
         let p: YakitResizeBoxProps = {
@@ -1682,7 +1708,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                     styles[`severity-${severityInfo.tag}`]
                                 )}
                             >
-                                {severityInfo.name}
+                                {t(severityInfo.nameUi || severityInfo.name)}
                             </span>
                         </div>
                         <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
@@ -1696,7 +1722,10 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                 </YakitTag>
                                 <span>IP:{info.IP || "-"}</span>
                                 <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                                <span className={styles["description-port"]}>端口:{info.Port || "-"}</span>
+                                <span className={styles["description-port"]}>
+                                    {t("YakitRiskDetails.port_colon")}
+                                    {info.Port || "-"}
+                                </span>
                                 <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
                                 <span className={styles["url-info"]}>
                                     URL:
@@ -1709,14 +1738,15 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                     <>
                                         <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
                                         <span className={styles["content-heard-body-time"]}>
-                                            发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                                            {t("YakitRiskDetails.discovery_time_colon")}
+                                            {!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
                                         </span>
                                     </>
                                 )}
                                 {!isShowCode && (
                                     <>
                                         <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                                        <YakitTag color='warning'>无数据包</YakitTag>
+                                        <YakitTag color='warning'>{t("YakitRiskDetails.no_data_packet")}</YakitTag>
                                     </>
                                 )}
                             </div>
@@ -1732,7 +1762,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                     e.stopPropagation()
                                     if (onRetest) onRetest(info)
                                 }}
-                                name='复测'
+                                name={t("YakitRiskDetails.retest")}
                             />
                         </div>
                     )}
@@ -1753,30 +1783,37 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                     <div className={styles["content-resize-second"]} ref={descriptionsRef}>
                         <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
                             <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
-                            <Descriptions.Item label='类型'>
+                            <Descriptions.Item label={t("YakitRiskDetails.type")}>
                                 {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
                             </Descriptions.Item>
-                            <Descriptions.Item label='来源'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
-                            <Descriptions.Item label='反连Token' contentStyle={{minWidth: 120}}>
+                            <Descriptions.Item label={t("YakitRiskDetails.source")}>
+                                {info?.FromYakScript || t("YakitRiskDetails.vulnerability_detection")}
+                            </Descriptions.Item>
+                            <Descriptions.Item
+                                label={t("YakitRiskDetails.reverse_token")}
+                                contentStyle={{minWidth: 120}}
+                            >
                                 {info?.ReverseToken || "-"}
                             </Descriptions.Item>
                             <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                            <Descriptions.Item label='验证状态'>
+                            <Descriptions.Item label={t("YakitRiskDetails.verification_status")}>
                                 <YakitTag color={`${!info.WaitingVerified ? "success" : "info"}`}>
-                                    {!info.WaitingVerified ? "已验证" : "未验证"}
+                                    {!info.WaitingVerified
+                                        ? t("YakitRiskDetails.verified")
+                                        : t("YakitRiskDetails.not_verified")}
                                 </YakitTag>
                             </Descriptions.Item>
 
                             <>
                                 <Descriptions.Item
-                                    label='漏洞描述'
+                                    label={t("YakitRiskDetails.vulnerability_description")}
                                     span={column}
                                     contentStyle={{whiteSpace: "pre-wrap"}}
                                 >
                                     {info.Description || "-"}
                                 </Descriptions.Item>
                                 <Descriptions.Item
-                                    label='解决方案'
+                                    label={t("YakitRiskDetails.solution")}
                                     span={column}
                                     contentStyle={{whiteSpace: "pre-wrap"}}
                                 >
@@ -1788,14 +1825,14 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                 <Descriptions.Item label='Payload' span={column}>
                                     <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Payload}` || "-"}</div>
                                 </Descriptions.Item>
-                                <Descriptions.Item label='详情' span={column}>
+                                <Descriptions.Item label={t("YakitRiskDetails.details")} span={column}>
                                     <div style={{height: 180}}>
                                         <YakitEditor type='yak' value={`${info.Details || ""}`} readOnly={true} />
                                     </div>
                                 </Descriptions.Item>
                             </>
                         </Descriptions>
-                        <div className={styles["no-more"]}>暂无更多</div>
+                        <div className={styles["no-more"]}>{t("YakitEmpty.noMoreData")}</div>
                     </div>
                 )}
 
@@ -1816,6 +1853,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
 
 export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = React.memo((props) => {
     const {info, isShowCollapse, setIsShowCollapse, jumpCodeScanPage, isShowExtra, isScroll} = props
+    const {t, i18n} = useI18nNamespaces(["risk"])
     const [loading, setLoading] = useState<boolean>(false)
     const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
     const extraResizeBoxProps = useCreation(() => {
@@ -1899,7 +1937,7 @@ export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = Rea
             {...extraResizeBoxProps}
             firstNode={
                 <div className={styles["content-resize-collapse"]}>
-                    <div className={styles["main-title"]}>相关代码段</div>
+                    <div className={styles["main-title"]}>{t("YakitRiskDetailContent.related_code_snippet")}</div>
                     <YakitSpin spinning={loading}>
                         <AuditResultCollapse
                             data={yakURLData}
@@ -1918,6 +1956,7 @@ export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = Rea
 
 export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> = React.memo((props) => {
     const {info, className, border, isShowExtra} = props
+    const {t, i18n} = useI18nNamespaces(["risk"])
     const [isShowCollapse, setIsShowCollapse] = useState<boolean>(false)
 
     const onClickIP = useMemoizedFn(() => {
@@ -1950,7 +1989,8 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
         return {
             icon,
             tag: severity?.tag || "default",
-            name: severity?.name || info?.Severity || "-"
+            name: severity?.name || info?.Severity || "-",
+            nameUi: severity?.nameUi
         }
     }, [info.Severity])
 
@@ -1999,7 +2039,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                                 styles[`severity-${severityInfo.tag}`]
                             )}
                         >
-                            {severityInfo.name}
+                            {t(severityInfo.nameUi || severityInfo.name)}
                         </span>
                     </div>
                     <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
@@ -2012,10 +2052,14 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                                 ID:{info.Id}
                             </YakitTag>
                             <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                            <span className={styles["description-port"]}>所属项目:{info.ProgramName || "-"}</span>
+                            <span className={styles["description-port"]}>
+                                {t("YakitCodeScanRiskDetails.project")}
+                                {info.ProgramName || "-"}
+                            </span>
                             <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
                             <span className={styles["content-heard-body-time"]}>
-                                发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                                {t("YakitCodeScanRiskDetails.discovery_time_colon")}
+                                {!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
                             </span>
                         </div>
                     </div>
@@ -2031,13 +2075,13 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                                     jumpCodeScanPage()
                                 }}
                             >
-                                在代码审计中打开
+                                {t("YakitCodeScanRiskDetails.open_in_code_audit")}
                             </YakitButton>
                         ) : (
-                            <Tooltip title={`相关数据已被删除`} placement='topLeft'>
+                            <Tooltip title={t("YakitCodeScanRiskDetails.related_data_deleted")} placement='topLeft'>
                                 <div className={styles["disabled-open"]}>
                                     <OutlineTerminalIcon />
-                                    在代码审计中打开
+                                    {t("YakitCodeScanRiskDetails.open_in_code_audit")}
                                 </div>
                             </Tooltip>
                         )}
@@ -2057,6 +2101,7 @@ export interface AuditResultDescribeProps {
 
 export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.memo((props) => {
     const {info, columnSize, isScroll = true} = props
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
 
     const column = useCreation(() => {
         if (columnSize) return columnSize
@@ -2065,7 +2110,7 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
 
     const getRule = useMemoizedFn(() => {
         const newInfo = info as any
-        return newInfo?.FromYakScript || newInfo?.FromRule || "漏洞检测"
+        return newInfo?.FromYakScript || newInfo?.FromRule || t("AuditResultDescribe.vulnerability_detection")
     })
     return (
         <div
@@ -2074,13 +2119,13 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
             })}
         >
             <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
-                <Descriptions.Item label='类型'>
+                <Descriptions.Item label={t("AuditResultDescribe.type")}>
                     {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
                 </Descriptions.Item>
                 <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
+                <Descriptions.Item label={t("AuditResultDescribe.scan_rules")}>{getRule()}</Descriptions.Item>
                 <>
-                    <Descriptions.Item label='漏洞描述' span={column}>
+                    <Descriptions.Item label={t("AuditResultDescribe.vulnerability_description")} span={column}>
                         {info.Description ? (
                             <MDEditor.Markdown
                                 className={classNames(styles["md-content"])}
@@ -2091,7 +2136,7 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                             "-"
                         )}
                     </Descriptions.Item>
-                    <Descriptions.Item label='解决方案' span={column}>
+                    <Descriptions.Item label={t("AuditResultDescribe.solution")} span={column}>
                         {info.Solution ? (
                             <MDEditor.Markdown
                                 className={classNames(styles["md-content"])}
@@ -2104,7 +2149,7 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                     </Descriptions.Item>
                 </>
             </Descriptions>
-            <div className={styles["no-more"]}>暂无更多</div>
+            <div className={styles["no-more"]}>{t("YakitEmpty.noMoreData")}</div>
         </div>
     )
 })
@@ -2116,6 +2161,7 @@ interface RightBugAuditResultHeaderProps {
 
 export const RightBugAuditResultHeader: React.FC<RightBugAuditResultHeaderProps> = React.memo((props) => {
     const {info, extra} = props
+    const {t, i18n} = useI18nNamespaces(["risk"])
     const severityInfo = useCreation(() => {
         const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
         let icon = <></>
@@ -2142,7 +2188,8 @@ export const RightBugAuditResultHeader: React.FC<RightBugAuditResultHeaderProps>
         return {
             icon,
             tag: severity?.tag || "default",
-            name: severity?.name || info?.Severity || "-"
+            name: severity?.name || info?.Severity || "-",
+            nameUi: severity?.nameUi
         }
     }, [info.Severity])
 
@@ -2188,7 +2235,7 @@ export const RightBugAuditResultHeader: React.FC<RightBugAuditResultHeaderProps>
                             styles[`severity-${severityInfo.tag}`]
                         )}
                     >
-                        {severityInfo.name}
+                        {t(severityInfo.nameUi || severityInfo.name)}
                     </span>
                 </div>
                 <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
@@ -2206,10 +2253,14 @@ export const RightBugAuditResultHeader: React.FC<RightBugAuditResultHeaderProps>
                     <div className={styles["content-heard-body-description"]} style={{flexWrap: "wrap"}}>
                         <YakitTag color='info'>ID:{info.Id}</YakitTag>
                         <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                        <span className={styles["description-port"]}>所属项目:{info.ProgramName || "-"}</span>
+                        <span className={styles["description-port"]}>
+                            {t("RightBugAuditResultHeader.project")}
+                            {info.ProgramName || "-"}
+                        </span>
                         <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
                         <span className={styles["content-heard-body-time"]}>
-                            发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                            {t("RightBugAuditResultHeader.discovery_time_colon")}
+                            {!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
                         </span>
                     </div>
                 </div>
@@ -2221,6 +2272,7 @@ export const RightBugAuditResultHeader: React.FC<RightBugAuditResultHeaderProps>
 
 export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.memo((props) => {
     const {info, columnSize} = props
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
     const column = useCreation(() => {
         if (columnSize) return columnSize
         return 1
@@ -2228,7 +2280,7 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
 
     const getRule = useMemoizedFn(() => {
         const newInfo = info as any
-        return newInfo?.FromYakScript || newInfo?.FromRule || "漏洞检测"
+        return newInfo?.FromYakScript || newInfo?.FromRule || t("RightBugAuditResult.vulnerability_detection")
     })
 
     return (
@@ -2240,13 +2292,17 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
             <RightBugAuditResultHeader info={info} />
             <div className={styles["content-resize-second"]}>
                 <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
-                    <Descriptions.Item label='类型'>
+                    <Descriptions.Item label={t("RightBugAuditResult.type")}>
                         {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
                     </Descriptions.Item>
                     <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                    <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
+                    <Descriptions.Item label={t("RightBugAuditResult.scan_rules")}>{getRule()}</Descriptions.Item>
                     <>
-                        <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
+                        <Descriptions.Item
+                            label={t("RightBugAuditResult.vulnerability_description")}
+                            span={column}
+                            contentStyle={{whiteSpace: "pre-wrap"}}
+                        >
                             {info.Description ? (
                                 <MDEditor.Markdown
                                     className={classNames(styles["md-content"])}
@@ -2256,7 +2312,11 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
                                 "-"
                             )}
                         </Descriptions.Item>
-                        <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
+                        <Descriptions.Item
+                            label={t("RightBugAuditResult.solution")}
+                            span={column}
+                            contentStyle={{whiteSpace: "pre-wrap"}}
+                        >
                             {info.Solution ? (
                                 <MDEditor.Markdown
                                     className={classNames(styles["md-content"])}
@@ -2268,7 +2328,7 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
                         </Descriptions.Item>
                     </>
                 </Descriptions>
-                <div className={styles["no-more"]}>暂无更多</div>
+                <div className={styles["no-more"]}>{t("YakitEmpty.noMoreData")}</div>
             </div>
         </div>
     )
@@ -2283,6 +2343,7 @@ interface AuditResultCollapseProps {
 
 export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.memo((props) => {
     const {data, jumpCodeScanPage, isShowExtra, collapseProps} = props
+    const {t, i18n} = useI18nNamespaces(["risk"])
 
     const titleRender = (info: YakURLDataItemProps) => {
         const {index, code_range, source, ResourceName} = info
@@ -2299,7 +2360,7 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
                     </Tooltip>
                 </div>
                 {isShowExtra && (
-                    <Tooltip title={"在代码审计中打开"}>
+                    <Tooltip title={t("AuditResultCollapse.open_in_code_audit")}>
                         <YakitButton
                             type='text2'
                             icon={<OutlineTerminalIcon />}

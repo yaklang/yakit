@@ -95,6 +95,7 @@ import {DeleteOnlinePayloadProps, NewPayloadOnlineTable} from "./onlinePayload/P
 import {API} from "@/services/swagger/resposeType"
 import {useTheme} from "@/hook/useTheme"
 import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 // 是否为Payload操作员
@@ -884,6 +885,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
         setShowType,
         showType
     } = props
+    const {t, i18n} = useI18nNamespaces(["payload", "yakitUi"])
 
     const [dropType, setDropType] = useState<string>(droppable)
     const [subDropType, setSubDropType] = useState<string>(droppableGroup)
@@ -1314,7 +1316,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
             <div className={styles["new-payload-list"]}>
                 <div className={styles["header"]}>
                     <div className={styles["title-box"]}>
-                        <div className={styles["title"]}>{onlyInsert ? "选择想要插入的字典" : "字典管理"}</div>
+                        <div className={styles["title"]}>{onlyInsert ? t("NewPayloadLocalList.selectDictionaryToInsert") : "字典管理"}</div>
                         <div className={styles["count"]}>{getPayloadCount}</div>
                         {!onlyInsert && (
                             <YakitButton
@@ -1329,7 +1331,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                     <div className={styles["extra"]}>
                         {onlyInsert ? (
                             <>
-                                <Tooltip title={"前往 字典管理"}>
+                                <Tooltip title={t("NewPayloadLocalList.goToDictionaryManagement")}>
                                     <YakitButton
                                         type='text2'
                                         icon={<OutlineCogIcon />}
@@ -1489,7 +1491,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                                             />
                                         )
                                     })}
-                                    <div className={styles["to-end"]}>已经到底啦～</div>
+                                    <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>
                                 </>
                             ) : (
                                 <>
@@ -2978,6 +2980,7 @@ type ExportTypeProps = "csv" | "file" | "all"
 
 export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) => {
     const {isExpand, setExpand, showContentType, group, folder, onlyInsert, onClose} = props
+    const {t, i18n} = useI18nNamespaces(["payload"])
     const [isEditMonaco, setEditMonaco] = useState<boolean>(false)
     const [editorValue, setEditorValue] = useState<string>("")
     const [payloadFileData, setPayloadFileData] = useState<PayloadFileDataProps>()
@@ -3271,7 +3274,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                                 <span className={styles["total-item-number"]}>{selectPayloadArr?.length}</span>
                             </div>
                         ) : (
-                            `可以通过 fuzz 模块 {{x(字典名)}} 来渲染`
+                            t("PayloadLocalContent.fuzzModuleRenderHint")
                         )}
                     </div>
                 </div>
@@ -4447,6 +4450,7 @@ export interface ReadOnlyNewPayloadProps {
 }
 export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => {
     const {selectorHandle, onClose, Nodes} = props
+    const {t, i18n} = useI18nNamespaces(["payload", "yakitUi"])
     const [showContentType, setContentType] = useState<"editor" | "table">()
 
     // table/editor 筛选条件
@@ -4513,9 +4517,13 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                 />
                 <div className={styles["payload-list-bottom"]}>
                     <div className={styles["show"]}>
-                        <div className={styles["text"]}>已选中：</div>
+                        <div className={styles["text"]}>{t("ReadOnlyNewPayload.selected")}</div>
                         {checkedItem.length + floderChecked.length > 0 ? (
-                            <YakitTag color='info'>{checkedItem.length + floderChecked.length}个</YakitTag>
+                            <YakitTag color='info'>
+                                {t("ReadOnlyNewPayload.totalCheckedItems", {
+                                    count: checkedItem.length + floderChecked.length
+                                })}
+                            </YakitTag>
                         ) : (
                             <></>
                         )}
@@ -4527,7 +4535,7 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                                 onClose()
                             }}
                         >
-                            取消
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton
                             disabled={checkedItem.length + floderChecked.length === 0}
@@ -4542,7 +4550,7 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                                 selectorHandle(str)
                             }}
                         >
-                            插入
+                            {t("ReadOnlyNewPayload.insert")}
                         </YakitButton>
                     </div>
                 </div>
@@ -4572,10 +4580,10 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                                 <PropertyNoAddIcon />
                             </div>
                             <div className={styles["title"]}>{selectInfo}</div>
-                            <div className={styles["sub-title"]}>支持插入文件进行Fuzz</div>
+                            <div className={styles["sub-title"]}>{t("ReadOnlyNewPayload.supportInsertFileForFuzz")}</div>
                         </div>
                     ) : (
-                        <YakitEmpty title='请选择要插入的字典或文件夹' />
+                        <YakitEmpty title={t("ReadOnlyNewPayload.pleaseSelectDictionaryOrFolder")} />
                     )}
                 </div>
             )}

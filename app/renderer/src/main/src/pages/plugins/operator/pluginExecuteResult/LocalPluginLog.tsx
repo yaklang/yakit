@@ -22,6 +22,7 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {renderFileTypeIcon} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 import {PluginExecuteLogFile} from "./PluginExecuteResultType"
 import {isPluginExecuteLogFileItem} from "@/pages/invoker/utils"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface LocalPluginLogList extends StreamResult.Log {}
 interface LocalPluginLogProps {
@@ -42,6 +43,7 @@ const getFileExtension = (filename) => {
 /**插件日志 */
 export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) => {
     const {loading, list, heard} = props
+    const {t, i18n} = useI18nNamespaces(["plugin"])
     const logLevelToDot = useMemoizedFn((item) => {
         let key = item.level
         if (key === "file") {
@@ -104,7 +106,7 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
         <div className={styles["log-body"]}>
             {heard && <div className={styles["log-heard"]}>{heard}</div>}
             {!loading && list.length === 0 ? (
-                <YakitEmpty style={{paddingTop: 48}} title='暂无日志信息' />
+                <YakitEmpty style={{paddingTop: 48}} title={t("LocalPluginLog.no_log_information")} />
             ) : (
                 <Timeline
                     reverse={true}
