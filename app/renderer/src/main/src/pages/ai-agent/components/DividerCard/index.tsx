@@ -2,9 +2,9 @@ import {SolidCheckCircleIcon} from "@/assets/icon/colors"
 import styles from "./index.module.scss"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {useMemo, type FC} from "react"
-import {OutlineXcircleIcon, OutlineXIcon} from "@/assets/icon/outline"
-import {SolidXcircleIcon} from "@/assets/icon/solid"
+import {OutlineLoadingIcon, OutlineXcircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
+import { TaskInProgressIcon } from "../../aiTree/icon"
 
 export enum StreamsStatus {
     success = "success",
@@ -54,11 +54,13 @@ const DividerCard: FC<DividerCardProps> = (props) => {
             }
             case StreamsStatus.inProgress:
                 return [
-                    <OutlineXcircleIcon className={styles["icon-danger"]} />,
+                    <div className={styles["icon-danger"]} >
+                        <TaskInProgressIcon/>
+                    </div>,
                     <div className={styles["divider-content-text"]}>
                         <span>{name}</span>
                         <YakitTag fullRadius className={styles["divider-content-error"]} size='small' color='warning'>
-                           <OutlineXIcon />
+                           <OutlineLoadingIcon />
                            <p className={styles["divider-content-error-text"]}>
                              {desc}
                            </p>
