@@ -29,6 +29,7 @@ interface DownstreamAgent {
     Scheme: string
     Username: string
     Password: string
+    UrlLable: string
     Url: string
 }
 
@@ -53,10 +54,13 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
                 if (res) {
                     try {
                         const arr = JSON.parse(res)
+                        console.log(arr)
                         setData(arr)
                     } catch (error) {
                         yakitNotify("error", error + "")
                     }
+                } else {
+                    setData([])
                 }
             })
         }
@@ -89,7 +93,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
             Modal.confirm({
                 title: t("YakitModal.friendlyReminder"),
                 icon: <ExclamationCircleOutlined />,
-                content: "123",
+                content: "请问是否要保存配置代理认证并关闭弹框？",
                 okText: t("YakitButton.save"),
                 cancelText: t("YakitButton.doNotSave"),
                 closable: true,
@@ -115,12 +119,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
     })
 
     const onSave = useMemoizedFn(() => {
-        setRemoteValue(
-            RemoteMitmGV.MitmConfigureProxyAuthentication,
-            JSON.stringify({
-                data
-            })
-        )
+        setRemoteValue(RemoteMitmGV.MitmConfigureProxyAuthentication, JSON.stringify(data))
         onSetVisible(false)
         yakitNotify("success", "保存成功")
     })
@@ -196,7 +195,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
                     className={classNames(styles["basic"], "yakit-content-single-ellipsis")}
                     style={{overflow: "hidden"}}
                 >
-                    ***
+                    {text ? "***" : ""}
                 </div>
             )
         },
@@ -352,7 +351,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
     })
 
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
-    const [editInfo, setEditInfo, getEditInfo] = useGetSetState<Omit<DownstreamAgent, "Url">>()
+    const [editInfo, setEditInfo, getEditInfo] = useGetSetState<Omit<DownstreamAgent, "Url" | "UrlLable">>()
     const initParams = useMemo(() => {
         if (editInfo) {
             const obj = {...editInfo}
@@ -366,6 +365,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
 
     const generateURL = useMemoizedFn((url, params) => {
         setData((prev) => {
+            const urlLable = url.replace(/(\/\/[^\/:@]+):[^@]+@/g, "$1:***@")
             const index = prev.findIndex((item) => item.Url === url)
             if (index !== -1) {
                 yakitNotify("info", "下游代理已存在")
@@ -379,12 +379,16 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
                                 ...params,
                                 Id,
                                 Address: params.Address!,
-                                Url: url
+                                Url: url,
+                                UrlLable: urlLable
                             }
                             return prev.slice()
                         }
                     } else {
-                        return [...prev, {...params, Id: uuidv4(), Address: params.Address!, Url: url}]
+                        return [
+                            ...prev,
+                            {...params, Id: uuidv4(), Address: params.Address!, Url: url, UrlLable: urlLable}
+                        ]
                     }
                 }
             }
@@ -401,12 +405,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
                 <div className={styles["ConfigureProxyAuthentication-title"]}>
                     <div className={styles["ConfigureProxyAuthentication-title-text"]}>配置代理认证</div>
                     <div className={styles["ConfigureProxyAuthentication-title-btns"]}>
-                        <YakitButton
-                            type='outline2'
-                            onClick={() => {
-                                onSetVisible(false)
-                            }}
-                        >
+                        <YakitButton type='outline2' onClick={onClose}>
                             {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton type='primary' onClick={onSave}>
