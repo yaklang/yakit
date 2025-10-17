@@ -116,6 +116,67 @@ module.exports = (win, callback, getClient, newClient) => {
         return await asyncIsPortAvailable(port)
     })
 
+    const asyncStartSecretLocalYakEngineServer = (win, params) => {
+        const {version} = params
+        engineCount += 1
+
+        const {isEnpriTraceAgent, isIRify} = params
+        const SECRET_LOCAL_PORT = 9011
+
+        return new Promise((resolve, reject) => {
+            engineLogOutputFileAndUI(win, `----- 启动本地引擎进程(Random Local Password, Port: ${SECRET_LOCAL_PORT}) -----`)
+            if (isIRify) {
+                dbFile = ["--profile-db", "irify-profile-rule.db", "--project-db", "default-irify.db"]
+            }
+            
+            try {
+                const grpcParams = ["grpc", "--local-password", "admin123", "--frontend", `${version || "yakit"}`]
+                const extraParams = dbFile ? [...grpcParams, ...dbFile] : grpcParams
+                const resultParams = isEnpriTraceAgent ? [...extraParams, "--disable-output"] : extraParams
+
+                engineLogOutputFileAndUI(win, `Start command: ${getLocalYaklangEngine()} ${resultParams.join(" ")}`)
+                const subprocess = childProcess.spawn(getLocalYaklangEngine(), resultParams, {
+                    detached: false,
+                    windowsHide: true,
+                    stdio: ["ignore", "pipe", "pipe"],
+                    env: {
+                        ...process.env,
+                        YAKIT_HOME: YakitProjectPath
+                    }
+                })
+
+                subprocess.unref()
+                process.on("exit", () => {
+                    // 终止子进程
+                    subprocess.kill()
+                })
+                subprocess.on("error", (err) => {
+                    engineLogOutputFileAndUI(win, `----- Engine encountered an error -----`)
+                    engineLogOutputFileAndUI(win, err)
+                    win.webContents.send("start-yaklang-engine-error", `Engine encountered an error: ${err}`)
+                    reject(err)
+                })
+                subprocess.on("close", async (e) => {
+                    engineLogOutputFileAndUI(win, `----- Engine process exited with code: ${e} -----`)
+                })
+
+                subprocess.stdout.on("data", (data) => {
+                    try {
+                        engineLogOutputFileAndUI(win, `${data.toString("utf-8")}`)
+                    } catch (error) {}
+                })
+                subprocess.stderr.on("data", (data) => {
+                    try {
+                        engineLogOutputFileAndUI(win, `${data.toString("utf-8")}`)
+                    } catch (error) {}
+                })
+                resolve()
+            } catch (e) {
+                reject(e)
+            }
+        })
+    }
+
     /**
      * @name 手动启动yaklang引擎进程
      * @param {Object} params
@@ -183,6 +244,83 @@ module.exports = (win, callback, getClient, newClient) => {
             }
         })
     }
+
+    const asyncAllowSecretLocal = () => {
+        return new Promise((resolve, reject) => {
+            try {
+                const command = getLocalYaklangEngine()
+                const args = ['check-secret-local-grpc']
+                engineLogOutputFileAndUI(win, `----- 检查本地随机密码模式支持 -----`)
+                engineLogOutputFileAndUI(win, `执行命令: ${command} ${args.join(' ')}`)
+
+                const subprocess = childProcess.spawn(command, args, {
+                    stdio: ['ignore', 'pipe', 'pipe'],
+                    env: {
+                        ...process.env,
+                        YAKIT_HOME: YakitProjectPath
+                    }
+                })
+
+                let stdout = ''
+                let stderr = ''
+                let timeoutId = setTimeout(() => {
+                    subprocess.kill()
+                    engineLogOutputFileAndUI(win, `----- 检查随机密码模式超时 -----`)
+                    reject('检查随机密码模式超时')
+                }, 30000) // 30秒超时
+
+                subprocess.stdout.on('data', (data) => {
+                    const output = data.toString('utf-8')
+                    stdout += output
+                    engineLogOutputFileAndUI(win, output)
+                })
+
+                subprocess.stderr.on('data', (data) => {
+                    const output = data.toString('utf-8')
+                    stderr += output
+                    engineLogOutputFileAndUI(win, output)
+                })
+
+                subprocess.on('error', (error) => {
+                    clearTimeout(timeoutId)
+                    engineLogOutputFileAndUI(win, `----- 检查随机密码模式失败 -----`)
+                    engineLogOutputFileAndUI(win, `错误: ${error.message}`)
+                    reject(`${error.message}`)
+                })
+
+                subprocess.on('close', (code) => {
+                    clearTimeout(timeoutId)
+                    const combinedOutput = stdout + stderr
+
+                    if (code !== 0) {
+                        engineLogOutputFileAndUI(win, `----- 检查随机密码模式失败，退出码: ${code} -----`)
+                        reject(combinedOutput)
+                        return
+                    }
+
+                    // 检查输出是否包含成功标志
+                    if (combinedOutput.includes('[SUCCESS] Local GRPC server with secret authentication test passed')) {
+                        engineLogOutputFileAndUI(win, `----- 随机密码模式检查通过 -----`)
+                        resolve(true)
+                    } else {
+                        engineLogOutputFileAndUI(win, `----- 随机密码模式检查失败，输出不符合预期 -----`)
+                        reject(combinedOutput)
+                    }
+                })
+            } catch (e) {
+                engineLogOutputFileAndUI(win, `----- 执行检查命令时发生异常 -----`)
+                engineLogOutputFileAndUI(win, `${e}`)
+                reject(`${e}`)
+            }
+        })
+    }
+    ipcMain.handle("check-allow-secret-local-yaklang-engine", async (e) => {
+        return await asyncAllowSecretLocal()
+    })
+
+    ipcMain.handle("start-secret-local-yaklang-engine", async(e, params) => {
+        return await asyncStartSecretLocalYakEngineServer(win, params)
+    })
 
     /** 本地启动yaklang引擎 */
     ipcMain.handle("start-local-yaklang-engine", async (e, params) => {
