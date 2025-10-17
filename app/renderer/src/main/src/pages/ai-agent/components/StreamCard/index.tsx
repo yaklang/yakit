@@ -13,25 +13,27 @@ interface StreamCardProps {
     titleIcon?: ReactNode
 
     modalInfo?: ModalInfoProps
+
+    contentExtra?: ReactNode
 }
 
 const PromptCard: FC<{prompt?: string}> = ({prompt}) => {
     return (
-        <div className={styles["summary-prompt"]}>
-            <div className={styles["summary-prompt-title"]}>
+        <div className={styles["stream-prompt"]}>
+            <div className={styles["stream-prompt-title"]}>
                 <SolidAnnotationIcon />
                 Prompt
             </div>
-            <div className={styles["summary-prompt-content"]}>{prompt}</div>
+            <div className={styles["stream-prompt-content"]}>{prompt}</div>
         </div>
     )
 }
 
-const StreamCard: FC<StreamCardProps> = ({titleText, titleIcon, content, fileList, prompt, modalInfo}) => {
+const StreamCard: FC<StreamCardProps> = ({titleText, titleIcon, content, fileList, prompt, modalInfo, contentExtra}) => {
     return (
         <ChatCard
             titleText={titleText}
-            titleIcon={<div className={styles["summary-icon"]}>{titleIcon ?? <SolidHashtagIcon />}</div>}
+            titleIcon={<div className={styles["stream-icon"]}>{titleIcon ?? <SolidHashtagIcon />}</div>}
             footer={
                 <>
                     {modalInfo?.title && <ModalInfo {...modalInfo} />}
@@ -39,7 +41,8 @@ const StreamCard: FC<StreamCardProps> = ({titleText, titleIcon, content, fileLis
                 </>
             }
         >
-            <div className={styles["summary-content"]}>{content}</div>
+            <div className={styles["stream-content"]}>{content}</div>
+            {contentExtra}
             {!!fileList?.length && <FileList fileList={fileList} />}
         </ChatCard>
     )
