@@ -1,6 +1,5 @@
 import {FC} from "react"
-import styles from "./index.module.scss"
-import classNames from "classnames"
+import styles from "./FileList.module.scss"
 import {renderFileTypeIcon} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 import {IconNotepadFileTypeDir} from "@/components/MilkdownEditor/icon/icon"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"

@@ -1,6 +1,6 @@
 import type {FC} from "react"
-import {AIOnlineModelIconMap} from "../../defaultConstant"
-import styles from "./index.module.scss"
+import {AIOnlineModelIconMap} from "../defaultConstant"
+import styles from "./ModelInfo.module.scss"
 import {DocumentDuplicateSvgIcon} from "@/assets/newIcon"
 import {OutlineLogIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"

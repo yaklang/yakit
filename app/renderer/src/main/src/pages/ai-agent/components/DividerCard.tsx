@@ -1,10 +1,10 @@
 import {SolidCheckCircleIcon} from "@/assets/icon/colors"
-import styles from "./index.module.scss"
+import styles from "./DividerCard.module.scss"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {useMemo, type FC} from "react"
 import {OutlineLoadingIcon, OutlineXcircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
-import { TaskInProgressIcon } from "../../aiTree/icon"
+import { TaskInProgressIcon } from "../aiTree/icon"
 
 export enum StreamsStatus {
     success = "success",
