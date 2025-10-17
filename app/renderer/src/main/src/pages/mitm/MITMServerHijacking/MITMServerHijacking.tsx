@@ -15,7 +15,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "../MITMConsts"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {AgentConfigModal} from "../MITMServerStartForm/MITMServerStartForm"
+import {AgentConfigModal, maskProxyPassword} from "../MITMServerStartForm/MITMServerStartForm"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -385,12 +385,15 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         grpcMITMSetDownstreamProxy(proxyValue)
         if (downstreamProxy.length) {
             if (tip.indexOf("下游代理") === -1) {
-                onSetTip(`下游代理：${downstreamProxy}` + (tip.indexOf("|") === 0 ? tip : `|${tip}`))
+                onSetTip(
+                    `下游代理：${downstreamProxy.map((item) => maskProxyPassword(item))}` +
+                        (tip.indexOf("|") === 0 ? tip : `|${tip}`)
+                )
             } else {
                 const tipStr = tipArr
                     .map((item) => {
                         if (item.startsWith("下游代理")) {
-                            return `下游代理：${downstreamProxy}`
+                            return `下游代理：${downstreamProxy.map((item) => maskProxyPassword(item))}`
                         } else {
                             return item
                         }
@@ -461,6 +464,15 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                                 mode='tags'
                                 maxTagCount={2}
                                 placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890'
+                                tagRender={(props) => {
+                                    return (
+                                        <YakitTag size={"middle"} {...props}>
+                                            <span className='content-ellipsis' style={{width: "100%"}}>
+                                                {maskProxyPassword(props.value)}
+                                            </span>
+                                        </YakitTag>
+                                    )
+                                }}
                             />
                         </Form.Item>
                     </Form>
