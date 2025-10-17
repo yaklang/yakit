@@ -687,7 +687,7 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
                         style={{marginBottom: 4}}
                         rules={[{required: false, message: t("AgentConfigModal.please_enter_password")}]}
                     >
-                        <YakitInput type="password" placeholder={t("AgentConfigModal.please_enter_password")} />
+                        <YakitInput placeholder={t("AgentConfigModal.please_enter_password")} />
                     </Form.Item>
                 </Form>
             </div>
