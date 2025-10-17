@@ -104,5 +104,17 @@
     "use_right_tool_generate_regex": "You can use the tool on the right to automatically generate a regex",
     "auto_extract_regex": "Auto-extract Regex",
     "select_in_editor_generate_regex": "Select content in the editor to automatically generate a regex"
+  },
+  "AgentConfigModal": {
+    "proxy_auth_config": "Configure Proxy Authentication",
+    "protocol": "Protocol",
+    "address": "Address",
+    "please_enter_address": "Please enter the address",
+    "invalid_address_format": "Invalid address format",
+    "example_address": "E.g.: 127.0.0.1:7890",
+    "username": "Username",
+    "please_enter_username": "Please enter the username",
+    "password": "Password",
+    "please_enter_password": "Please enter the password"
   }
 }

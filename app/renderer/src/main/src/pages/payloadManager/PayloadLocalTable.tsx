@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import { useMemoizedFn} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import styles from "./PayloadLocalTable.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
@@ -20,6 +20,7 @@ import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../in
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setClipboardText} from "@/utils/clipboard"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 interface EditableCellProps {
@@ -264,6 +265,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         setParams,
         onlyInsert
     } = props
+    const {t, i18n} = useI18nNamespaces(["payload", "yakitUi"])
     // 编辑
     const [editingObj, setEditingObj] = useState<EditingObjProps>()
     // 单击边框
@@ -303,7 +305,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                             }}
                         />
                     )}
-                    序号
+                    {t("YakitTable.order")}
                 </div>
             ),
             dataIndex: "index",
@@ -333,7 +335,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             }
         },
         {
-            title: "字典内容",
+            title: t("NewPayloadTable.dictionaryContent"),
             dataIndex: "Content",
             editable: true,
             render: (text) => (
@@ -346,9 +348,11 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             )
         },
         {
-            title: () => <Tooltip title={"新增命中次数字段，命中次数越高，在爆破时优先级也会越高"}>命中次数</Tooltip>,
+            title: () => (
+                <Tooltip title={t("NewPayloadTable.addHitCountFieldNotice")}>{t("NewPayloadTable.hitCount")}</Tooltip>
+            ),
             dataIndex: "HitCount",
-            width: 102,
+            width: 120,
             editable: true,
             filterIcon: (filtered) => (
                 <OutlineSelectorIcon
@@ -369,7 +373,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                         <div className={styles["icon"]}>
                             <OutlineArrowupIcon />
                         </div>
-                        <div className={styles["content"]}>升序</div>
+                        <div className={styles["content"]}>{t("YakitTable.asc")}</div>
                     </div>
                     <div
                         className={classNames(styles["filter-item"], {
@@ -381,14 +385,14 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                         <div className={styles["icon"]}>
                             <OutlineArrowdownIcon />
                         </div>
-                        <div className={styles["content"]}>降序</div>
+                        <div className={styles["content"]}>{t("YakitTable.desc")}</div>
                     </div>
                 </div>
             ),
             render: (text) => <div className={styles["basic"]}>{text}</div>
         },
         {
-            title: "操作",
+            title: t("YakitTable.action"),
             dataIndex: "operation",
             width: 132,
             // @ts-ignore
@@ -436,7 +440,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
 
     const InsertColumns: ColumnTypes[number][] = [
         {
-            title: "序号",
+            title: t("YakitTable.order"),
             dataIndex: "index",
             width: 88,
             render: (text, record, index) => {
@@ -465,14 +469,16 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             }
         },
         {
-            title: "字典内容",
+            title: t("NewPayloadTable.dictionaryContent"),
             dataIndex: "Content",
             render: (text) => <div className={styles["basic"]}>{text}</div>
         },
         {
-            title: () => <Tooltip title={"新增命中次数字段，命中次数越高，在爆破时优先级也会越高"}>命中次数</Tooltip>,
+            title: () => (
+                <Tooltip title={t("NewPayloadTable.addHitCountFieldNotice")}>{t("NewPayloadTable.hitCount")}</Tooltip>
+            ),
             dataIndex: "HitCount",
-            width: 102,
+            width: 120,
             filterIcon: (filtered) => (
                 <OutlineSelectorIcon
                     className={classNames(styles["selector-icon"], {
@@ -492,7 +498,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                         <div className={styles["icon"]}>
                             <OutlineArrowupIcon />
                         </div>
-                        <div className={styles["content"]}>升序</div>
+                        <div className={styles["content"]}>{t("YakitTable.asc")}</div>
                     </div>
                     <div
                         className={classNames(styles["filter-item"], {
@@ -504,7 +510,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                         <div className={styles["icon"]}>
                             <OutlineArrowdownIcon />
                         </div>
-                        <div className={styles["content"]}>降序</div>
+                        <div className={styles["content"]}>{t("YakitTable.desc")}</div>
                     </div>
                 </div>
             ),
@@ -675,7 +681,9 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                     total: response?.Total || 0,
                     pageSizeOptions: ["10", "20", "30", "40"], // 指定每页显示条目数量的选项
                     showSizeChanger: true, // 是否显示切换每页条目数量的控件
-                    showTotal: (i) => <span className={styles["show-total"]}>共{i}条记录</span>,
+                    showTotal: (i) => (
+                        <span className={styles["show-total"]}>{t("NewPayloadTable.recordCount", {i})}</span>
+                    ),
                     onChange: (page: number, limit?: number) => {
                         setSelectPayloadArr([])
                         onQueryPayload(page, limit)

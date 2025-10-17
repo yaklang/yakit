@@ -32,6 +32,7 @@ import {shallow} from "zustand/shallow"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {defaultRiskPageInfo} from "@/defaultConstants/RiskPage"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const RiskPage: React.FC<RiskPageProp> = (props) => {
     const {queryPagesDataById} = usePageInfo(
@@ -105,6 +106,7 @@ export const RiskPage: React.FC<RiskPageProp> = (props) => {
 
 const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
     const {inViewport, advancedQuery, setAdvancedQuery, query, setQuery} = props
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
     const [ipList, setIpList] = useState<FieldGroup[]>([])
     const [levelList, setLevelList] = useState<FieldName[]>([])
     const [typeList, setTypeList] = useState<FieldName[]>([])
@@ -168,8 +170,8 @@ const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
     return (
         <div className={classNames(styles["risk-query"], {[styles["risk-query-hidden"]]: !advancedQuery})}>
             <div className={styles["risk-query-heard"]}>
-                <span>高级查询</span>
-                <Tooltip title='收起筛选' placement='top' overlayClassName='plugins-tooltip'>
+                <span>{t("RiskQuery.advanced_query")}</span>
+                <Tooltip title={t("RiskQuery.collapseFilter")} placement='top' overlayClassName='plugins-tooltip'>
                     <YakitButton type='text2' onClick={onClose} icon={<OutlineCloseIcon />}></YakitButton>
                 </Tooltip>
             </div>
@@ -187,7 +189,7 @@ const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
                     data={typeList}
                     onSelect={(val) => onSelect(val, "RiskTypeList")}
                 />
-                <div className={styles["to-end"]}>已经到底啦～</div>
+                <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>
             </div>
         </div>
     )
@@ -195,11 +197,12 @@ const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
 
 const IPList: React.FC<IPListProps> = React.memo((props) => {
     const {list, onSelect, selectList, onReset} = props
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
 
     return (
         <div className={styles["ip-list-body"]}>
             <div className={styles["ip-list-heard"]}>
-                <div className={styles["ip-list-heard-title"]}>IP 统计</div>
+                <div className={styles["ip-list-heard-title"]}>{t("IPList.ipStatistics")}</div>
                 <YakitButton
                     type='text'
                     colors='danger'
@@ -207,7 +210,7 @@ const IPList: React.FC<IPListProps> = React.memo((props) => {
                     onClick={onReset}
                     size='small'
                 >
-                    重置
+                    {t("YakitButton.reset")}
                 </YakitButton>
             </div>
             <div className={styles["ip-list-content"]}>
@@ -244,6 +247,7 @@ const IPListItem: React.FC<IPListItemProps> = React.memo((props) => {
 /**漏洞等级 */
 const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props) => {
     const {data, onSelect, selectList} = props
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
     const pieRef = useRef<VulnerabilityLevelPieRefProps>({onReset: () => {}})
     const onReset = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -252,7 +256,7 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
     return (
         <div className={styles["vulnerability-level"]}>
             <div className={styles["vulnerability-level-heard"]}>
-                <div className={styles["vulnerability-level-heard-title"]}>漏洞等级</div>
+                <div className={styles["vulnerability-level-heard-title"]}>{t("VulnerabilityLevel.vulnerabilityLevel")}</div>
                 <YakitButton
                     type='text'
                     colors='danger'
@@ -260,7 +264,7 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
                     onClick={onReset}
                     size='small'
                 >
-                    重置
+                    {t("YakitButton.reset")}
                 </YakitButton>
             </div>
             <VulnerabilityLevelPie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} />
@@ -270,6 +274,7 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
 
 const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) => {
     const {data, onSelect, selectList} = props
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
     const pieRef = useRef<VulnerabilityTypePieRefProps>({onReset: () => {}})
     const onReset = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -279,8 +284,8 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
         <div className={styles["vulnerability-type"]}>
             <div className={styles["vulnerability-type-heard"]}>
                 <div className={styles["vulnerability-type-heard-title"]}>
-                    漏洞类型 Top 10
-                    <Tooltip title='手动选择所有漏洞类型后，点击重置即可查看所有数据'>
+                    {t("VulnerabilityType.top10VulnerabilityTypes")}
+                    <Tooltip title={t("VulnerabilityType.resetTipAfterManualSelection")}>
                         <OutlineInformationcircleIcon className={styles["info-icon"]} />
                     </Tooltip>
                 </div>
@@ -291,7 +296,7 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
                     onClick={onReset}
                     size='small'
                 >
-                    重置
+                    {t("YakitButton.reset")}
                 </YakitButton>
             </div>
             <VulnerabilityTypePie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} />

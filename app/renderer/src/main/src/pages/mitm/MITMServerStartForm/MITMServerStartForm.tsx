@@ -538,6 +538,8 @@ interface AgentConfigModalProp {
 // 代理劫持弹窗
 export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
     const {agentConfigModalVisible, onCloseModal, generateURL} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "mitm"])
+
     const [form] = Form.useForm()
     const [params, setParams] = useState<AgentConfigModalParams>(initAgentConfigModalParams)
 
@@ -589,13 +591,13 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
     return (
         <YakitModal
             visible={agentConfigModalVisible}
-            title='配置代理认证'
+            title={t("AgentConfigModal.proxy_auth_config")}
             width={506}
             maskClosable={false}
             destroyOnClose={true}
             closable
             centered
-            okText='确认'
+            okText={t("YakitButton.confirm")}
             onCancel={onClose}
             onOk={onOKFun}
             bodyStyle={{padding: 0}}
@@ -611,7 +613,7 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
                     style={{height: "100%"}}
                     onValuesChange={onValuesChange}
                 >
-                    <Form.Item label='协议' name='Scheme' style={{marginBottom: 4}}>
+                    <Form.Item label={t("AgentConfigModal.protocol")} name='Scheme' style={{marginBottom: 4}}>
                         <YakitSelect
                             options={["http", "https", "socks4", "socks4a", "socks5"].map((item) => ({
                                 value: item,
@@ -621,35 +623,35 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
                         />
                     </Form.Item>
                     <Form.Item
-                        label='地址'
+                        label={t("AgentConfigModal.address")}
                         name='Address'
                         style={{marginBottom: 4}}
                         rules={[
-                            {required: true, message: "请输入地址"},
+                            {required: true, message: t("AgentConfigModal.please_enter_address")},
                             {
                                 pattern:
                                     /^((([a-z\d]([a-z\d-]*[a-z\d])*)\.)*[a-z]([a-z\d-]*[a-z\d])?|(?:\d{1,3}\.){3}\d{1,3})(:\d+)?$/,
-                                message: "输入地址格式不正确"
+                                message: t("AgentConfigModal.invalid_address_format")
                             }
                         ]}
                     >
-                        <YakitInput placeholder='例如：127.0.0.1:7890' />
+                        <YakitInput placeholder={t("AgentConfigModal.example_address")} />
                     </Form.Item>
                     <Form.Item
-                        label='用户名'
+                        label={t("AgentConfigModal.username")}
                         name='Username'
                         style={{marginBottom: 4}}
-                        rules={[{required: false, message: "请输入用户名"}]}
+                        rules={[{required: false, message: t("AgentConfigModal.please_enter_username")}]}
                     >
-                        <YakitInput placeholder='请输入用户名' />
+                        <YakitInput placeholder={t("AgentConfigModal.please_enter_username")} />
                     </Form.Item>
                     <Form.Item
-                        label='密码'
+                        label={t("AgentConfigModal.password")}
                         name='Password'
                         style={{marginBottom: 4}}
-                        rules={[{required: false, message: "请输入密码"}]}
+                        rules={[{required: false, message: t("AgentConfigModal.please_enter_password")}]}
                     >
-                        <YakitInput placeholder='请输入密码' />
+                        <YakitInput placeholder={t("AgentConfigModal.please_enter_password")} />
                     </Form.Item>
                 </Form>
             </div>

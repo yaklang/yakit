@@ -44,6 +44,7 @@ import {defPluginExecuteFormValue} from "./constants"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {grpcFetchExpressionToResult} from "@/pages/pluginHub/utils/grpc"
 import {getJsonSchemaListResult, JsonFormWrapper} from "@/components/JsonFormWrapper/JsonFormWrapper"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
 
@@ -523,6 +524,7 @@ export const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginPa
 /**插件执行输入》输出form表单的组件item */
 export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React.memo((props) => {
     const {item, disabled, pluginType, jsonSchemaListRef, jsonSchemaInitial} = props
+    const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
     let extraSetting: FormExtraSettingProps | undefined = undefined
     try {
         extraSetting = JSON.parse(item.ExtraSetting || "{}") || {
@@ -539,7 +541,7 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
             })
         }
     } catch (error) {
-        failed("获取参数配置数据错误，请重新打开该页面")
+        failed(t("FormContentItemByType.parameter_config_data_error"))
     }
     switch (item.TypeVerbose) {
         // 单选并获取文件内容
@@ -554,10 +556,10 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
                     }}
                     accept='.txt,.xlsx,.xls,.csv'
                     textareaProps={{
-                        placeholder: "请输入内容，多条内容用“英文逗号”分隔",
+                        placeholder: t("FormContentItemByType.enter_content_comma_separated"),
                         rows: 3
                     }}
-                    help='可将TXT、Excel文件拖入框内或'
+                    help={t("YakitDraggerContent.drag_files_tip")}
                     disabled={disabled}
                 />
             )
@@ -605,7 +607,7 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
                     isShowPathNumber={false}
                     selectType='folder'
                     multiple={false}
-                    help='可将文件夹拖入框内或点击此处'
+                    help={t("YakitFormDragger.drag_folder_or_click_here")}
                     disabled={disabled}
                     autoCompleteProps={{
                         ref: item.cacheRef,
@@ -632,6 +634,7 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
 /**执行表单单个项 */
 export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (props) => {
     const {item, extraSetting, codeType, disabled, pluginType, jsonSchemaListRef, jsonSchemaInitial} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [validateStatus, setValidateStatus] = useState<"success" | "error">("success")
 
     const formProps = {
@@ -689,14 +692,14 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
             return (
                 <Form.Item {...formProps}>
                     <YakitAutoComplete options={additionalConfig?.inputOption || []} disabled={disabled}>
-                        <YakitInput placeholder='请输入' />
+                        <YakitInput placeholder={t("YakitInput.please_enter")} />
                     </YakitAutoComplete>
                 </Form.Item>
             )
         case "text":
             return (
                 <Form.Item {...formProps}>
-                    <YakitInput.TextArea placeholder='请输入' disabled={disabled} />
+                    <YakitInput.TextArea placeholder={t("YakitInput.please_enter")} disabled={disabled} />
                 </Form.Item>
             )
         case "uint":
@@ -762,7 +765,11 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     trigger='setValue'
                     validateTrigger='setValue'
                     validateStatus={validateStatus}
-                    help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
+                    help={
+                        validateStatus === "error"
+                            ? t("YakitForm.field_required_with_label", {label: formProps.label})
+                            : ""
+                    }
                 >
                     <HTTPPacketYakitEditor
                         type='http'
@@ -805,7 +812,11 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     trigger='setValue'
                     validateTrigger='setValue'
                     validateStatus={validateStatus}
-                    help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
+                    help={
+                        validateStatus === "error"
+                            ? t("YakitForm.field_required_with_label", {label: formProps.label})
+                            : ""
+                    }
                 >
                     <YakitEditor type={language} readOnly={disabled} noLineNumber={true} noMiniMap={true} />
                 </Form.Item>
@@ -858,53 +869,54 @@ export const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React
 /**固定的插件类型 mitm/port-scan/nuclei 显示的UI */
 export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((props) => {
     const {form, disabled, type = "single", rawHTTPRequest = "", inputType, setInputType} = props
+    const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
 
     const requestType: RequestType = Form.useWatch("requestType", form)
     const rawItem = useMemo(() => {
         const codeItem: YakParamProps = {
             Field: "rawHTTPRequest",
-            FieldVerbose: "数据包",
+            FieldVerbose: t("PluginFixFormParams.data_packet"),
             Required: true,
             TypeVerbose: "http-packet",
             DefaultValue: rawHTTPRequest,
             Help: ""
         }
         return codeItem
-    }, [rawHTTPRequest])
+    }, [rawHTTPRequest, i18n.language])
     const requestTypeOptions = useCreation(() => {
         if (type === "single") {
             return [
                 {
                     value: "original",
-                    label: "原始请求"
+                    label: t("PluginFixFormParams.original_request")
                 },
                 {
                     value: "input",
-                    label: "请求配置"
+                    label: t("PluginFixFormParams.request_configuration")
                 }
             ]
         }
         return [
             {
                 value: "original",
-                label: "原始请求"
+                label: t("PluginFixFormParams.original_request")
             },
             {
                 value: "input",
-                label: "请求配置"
+                label: t("PluginFixFormParams.request_configuration")
             },
             {
                 value: "httpFlowId",
-                label: "请求ID"
+                label: t("PluginFixFormParams.request_id")
             }
         ]
-    }, [type])
+    }, [type, i18n.language])
     return (
         <>
             <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked' initialValue={false}>
                 <YakitSwitch size='large' disabled={disabled} />
             </Form.Item>
-            <Form.Item label='请求类型' name='requestType' initialValue='input'>
+            <Form.Item label={t("PluginFixFormParams.request_type")} name='requestType' initialValue='input'>
                 <YakitRadioButtons buttonStyle='solid' options={requestTypeOptions} disabled={disabled} />
             </Form.Item>
             {requestType === "original" && <OutputFormComponentsByType item={rawItem} />}
@@ -915,15 +927,22 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
                             className={styles["plugin-execute-form-item"]}
                             formItemProps={{
                                 name: "Input",
-                                label: "扫描目标",
-                                rules: [{required: true}]
+                                label: t("PluginFixFormParams.scan_target"),
+                                rules: [
+                                    {
+                                        required: true,
+                                        message: t("YakitForm.field_required_with_label", {
+                                            label: t("PluginFixFormParams.scan_target")
+                                        })
+                                    }
+                                ]
                             }}
                             accept='.txt,.xlsx,.xls,.csv'
                             textareaProps={{
-                                placeholder: "请输入扫描目标，多个目标用“英文逗号”或换行分隔",
+                                placeholder: t("PluginFixFormParams.please_enter_scan_target"),
                                 rows: 3
                             }}
-                            help='可将TXT、Excel文件拖入框内或'
+                            help={t("YakitDraggerContent.drag_files_tip")}
                             disabled={disabled}
                             valueSeparator={"\r\n"}
                             onTextAreaType={setInputType}
@@ -934,15 +953,22 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
                             className={styles["plugin-execute-form-item"]}
                             formItemProps={{
                                 name: "Input",
-                                label: "扫描目标",
-                                rules: [{required: true}]
+                                label: t("PluginFixFormParams.scan_target"),
+                                rules: [
+                                    {
+                                        required: true,
+                                        message: t("YakitForm.field_required_with_label", {
+                                            label: t("PluginFixFormParams.scan_target")
+                                        })
+                                    }
+                                ]
                             }}
                             accept='.txt,.xlsx,.xls,.csv'
                             textareaProps={{
-                                placeholder: "请输入扫描目标，多个目标用“英文逗号”或换行分隔",
+                                placeholder: t("PluginFixFormParams.please_enter_scan_target"),
                                 rows: 3
                             }}
-                            help='可将TXT、Excel文件拖入框内或'
+                            help={t("YakitDraggerContent.drag_files_tip")}
                             disabled={disabled}
                             valueSeparator={"\r\n"}
                         />
@@ -950,8 +976,11 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
                 </>
             )}
             {requestType === "httpFlowId" && (
-                <Form.Item label='请求ID' name='httpFlowId' rules={[{required: true}]}>
-                    <YakitInput.TextArea placeholder='请输入请求ID,多个请求Id用“英文逗号”分隔' disabled={disabled} />
+                <Form.Item label={t("PluginFixFormParams.request_id")} name='httpFlowId' rules={[{required: true}]}>
+                    <YakitInput.TextArea
+                        placeholder={t("PluginFixFormParams.enter_request_id_comma_separated")}
+                        disabled={disabled}
+                    />
                 </Form.Item>
             )}
         </>

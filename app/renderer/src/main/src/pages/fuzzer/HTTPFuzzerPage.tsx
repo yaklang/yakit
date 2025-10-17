@@ -163,6 +163,7 @@ import {debugToPrintLog} from "@/utils/logCollection"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {formatTimeYMD} from "@/utils/timeUtil"
 import {type LoggerData, useLogger} from "@/hook/useLogger/useLogger"
+import i18n from "@/i18n/i18n"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -177,7 +178,7 @@ const httpFuzzerLog = ({name, title, content, status}: Partial<LoggerData>) => {
     return {
         name: name || "HTTPFuzzerPage",
         title: title || "sendRequest",
-        content: content || "发送请求",
+        content: content || i18n.language === "zh" ? "发送请求" : "Send Request",
         status,
         time: formatTimeYMD(Date.now())
     }
@@ -390,7 +391,11 @@ export const showDictsAndSelect = (fun: (i: string) => any) => {
         .invoke("GetAllPayloadGroup")
         .then((res: {Nodes: PayloadGroupNodeProps[]}) => {
             if (res.Nodes.length === 0) {
-                warn("暂无字典，请先添加后再使用")
+                warn(
+                    i18n.language === "zh"
+                        ? "暂无字典，请先添加后再使用"
+                        : "No dictionary available, please add one before using"
+                )
             } else {
                 const y = showYakitModal({
                     title: null,
@@ -415,7 +420,7 @@ export const showDictsAndSelect = (fun: (i: string) => any) => {
             }
         })
         .catch((e: any) => {
-            failed(`获取字典列表失败：${e}`)
+            failed(`${i18n.language === "zh" ? "获取字典列表失败：" : "Failed to get dictionary list:"}${e}`)
         })
         .finally()
 }
@@ -427,7 +432,11 @@ export function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
             setClipboardText(data.Url)
         })
         .catch((e) => {
-            failed("复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整")
+            failed(
+                i18n.language === "zh"
+                    ? "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整"
+                    : "Failed to copy URL: including Fuzz tags may result in an incomplete URL"
+            )
         })
 }
 
@@ -577,30 +586,37 @@ export const newWebFuzzerTab = (params: {
             data: {...params}
         })
         .then(() => {
-            params.openFlag && info("发送成功")
+            params.openFlag && info(i18n.language === "zh" ? "发送成功" : "Sent Successfully")
         })
 }
 
 /**@description 插入 yak.fuzz 语法 */
 export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
     const m = showYakitModal({
-        title: "Fuzzer Tag 调试工具",
+        title: i18n.language === "zh" ? "Fuzzer Tag 调试工具" : "Fuzzer Tag Debug Tool",
         width: "70%",
         footer: null,
         subTitle:
-            "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag",
+            i18n.language === "zh"
+                ? "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag"
+                : 'Debug mode is suitable for generating or modifying payloads. Nesting defaults to the outermost level, but you can select a position to nest. "Insert" simply inserts the fuzztag at the cursor position.',
         content: (
             <StringFuzzer
                 insertCallback={(template: string) => {
                     if (!template) {
-                        yakitNotify("warning", "Payload 为空 / Fuzz 模版为空")
+                        yakitNotify(
+                            "warning",
+                            i18n.language === "zh"
+                                ? "Payload 为空 / Fuzz 模版为空"
+                                : "Payload is empty / Fuzz template is empty"
+                        )
                     } else {
                         if (reqEditor && template) {
                             reqEditor.trigger("keyboard", "type", {
                                 text: template
                             })
                         } else {
-                            yakitNotify("error", "BUG: 编辑器失效")
+                            yakitNotify("error", i18n.language === "zh" ? "BUG: 编辑器失效" : "BUG: Editor not working")
                         }
                         m.destroy()
                     }
@@ -662,6 +678,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }),
         shallow
     )
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi", "yakitRoute"])
     const initWebFuzzerPageInfo = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
         if (currentItem && currentItem.pageParamsInfo.webFuzzerPageInfo) {
@@ -887,21 +904,20 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     useEffect(() => {
-        if (getSubscribeClose(YakitRoute.HTTPFuzzer)) return
         setSubscribeClose(YakitRoute.HTTPFuzzer, {
             close: {
-                title: "关闭提示",
+                title: t("YakitModal.closePrompt"),
                 content: (
                     <div style={{color: "var(--Colors-Use-Neutral-Text-3-Secondary)"}}>
-                        关闭一级菜单会关闭一级菜单下的所有二级菜单?
+                        {t("HTTPFuzzerPage.closeMenuPrompt")}
                     </div>
                 ),
-                onOkText: "确定",
-                onCancelText: "取消",
+                onOkText: t("YakitButton.ok"),
+                onCancelText: t("YakitButton.cancel"),
                 onOk: (m) => onCloseTab(m)
             }
         })
-    }, [])
+    }, [i18n.language])
 
     const onCloseTab = useMemoizedFn((m) => {
         ipcRenderer
@@ -969,7 +985,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             isSaveFuzzerLabelFun()
                         })
                         .catch((err) => {
-                            failed(`清空老数据失败：${err}`)
+                            failed(`${t("HTTPFuzzerPage.clearOldDataFailed")}${err}`)
                         })
                     setRemoteValue("IS_DELETE_FUZZ_LABEL", JSON.stringify({isDelete: false}))
                     return
@@ -1054,7 +1070,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }
                 } catch (error) {
                     setAdvancedConfigValue((v) => ({...v, ...history}))
-                    yakitNotify("error", `WF历史数据恢复失败:${error}`)
+                    yakitNotify("error", `${t("HTTPFuzzerPage.wfHistoryDataRestoreFailed")}${error}`)
                 }
             })
             .catch((err) => {
@@ -1069,7 +1085,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onValidateHTTPFuzzer = useMemoizedFn(() => {
         logger(
             httpFuzzerLog({
-                title: "运行函数-开始：",
+                title: t("HTTPFuzzerPage.run_function_start"),
                 content: "onValidateHTTPFuzzer"
             })
         )
@@ -1089,7 +1105,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         submitToHTTPFuzzer()
                         logger(
                             httpFuzzerLog({
-                                title: "运行函数-结束：",
+                                title: t("HTTPFuzzerPage.run_function_end"),
                                 content: "onValidateHTTPFuzzer"
                             })
                         )
@@ -1099,7 +1115,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             submitToHTTPFuzzer()
             logger(
                 httpFuzzerLog({
-                    title: "运行函数-结束：",
+                    title: t("HTTPFuzzerPage.run_function_end"),
                     content: "onValidateHTTPFuzzer"
                 })
             )
@@ -1120,7 +1136,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const submitToHTTPFuzzer = useMemoizedFn(() => {
         logger(
             httpFuzzerLog({
-                title: "运行函数-开始：",
+                title: t("HTTPFuzzerPage.run_function_start"),
                 content: "submitToHTTPFuzzer"
             })
         )
@@ -1158,7 +1174,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             matchRef.current = false
             const matchTaskID = successFuzzer?.length > 0 ? successFuzzer[0]?.TaskId : undefined
             const params = {...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID}
-            setLoadingText("匹配中")
+            setLoadingText(t("HTTPFuzzerPage.matchingInProgress"))
             ipcRenderer.invoke("HTTPFuzzer", params, tokenRef.current)
         } else {
             ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
@@ -1166,7 +1182,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         onSaveHTTPFuzzerByPageId()
         logger(
             httpFuzzerLog({
-                title: "运行函数-结束：",
+                title: t("HTTPFuzzerPage.run_function_end"),
                 content: "submitToHTTPFuzzer"
             })
         )
@@ -1245,7 +1261,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         let successCount = 0
         let failedCount = 0
         ipcRenderer.on(errToken, (e, details) => {
-            yakitNotify("error", `提交模糊测试请求失败 ${details}`)
+            yakitNotify("error", `${t("HTTPFuzzerPage.fuzzTestRequestFailed")}${details}`)
         })
         let count: number = 0 // 用于数据项请求字段
 
@@ -1370,7 +1386,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 getTotal()
             }, 500)
             stop()
-            logger(httpFuzzerLog({content: "发送完成", status: "end"}))
+            logger(httpFuzzerLog({content: t("HTTPFuzzerPage.send_complete"), status: "end"}))
         })
 
         return () => {
@@ -1527,7 +1543,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }
             })
             .catch((err) => {
-                failed("加载失败:" + err)
+                failed(t("YakitNotification.loadFailed", {colon: true}) + err)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -1719,7 +1735,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         refreshRequest()
                     }}
                 >
-                    美化
+                    {t("YakitButton.beautify")}
                 </YakitButton>
                 <YakitCheckableTag checked={hex} onChange={setHex}>
                     HEX
@@ -1732,7 +1748,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }}
                     style={{marginLeft: -8}}
                 >
-                    热加载
+                    {t("HTTPFuzzerPage.hotReload")}
                 </YakitButton>
                 <YakitPopover
                     trigger={"click"}
@@ -1789,7 +1805,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </Form.Item>
                                 <Form.Item style={{marginBottom: 8, marginTop: 8}}>
                                     <YakitButton type={"primary"} htmlType={"submit"}>
-                                        构造请求
+                                        {t("HTTPFuzzerPage.buildRequest")}
                                     </YakitButton>
                                 </Form.Item>
                             </Form>
@@ -1797,7 +1813,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }
                 >
                     <YakitButton size={"small"} type={"primary"}>
-                        构造请求
+                        {t("HTTPFuzzerPage.buildRequest")}
                     </YakitButton>
                 </YakitPopover>
             </div>
@@ -1899,7 +1915,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const getNewCurrentPage = useMemoizedFn(() => {
         logger(
             httpFuzzerLog({
-                title: "运行函数-开始：",
+                title: t("HTTPFuzzerPage.run_function_start"),
                 content: "getNewCurrentPage"
             })
         )
@@ -1914,7 +1930,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setCurrentPage(Number(data.Total) + 1)
                 logger(
                     httpFuzzerLog({
-                        title: "运行函数-结束：",
+                        title: t("HTTPFuzzerPage.run_function_end"),
                         content: "getNewCurrentPage"
                     })
                 )
@@ -1942,7 +1958,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     /**同步WF数据 */
     const onSynWF = useMemoizedFn(() => {
         const m = showYakitModal({
-            title: "同步配置",
+            title: t("HTTPFuzzerPage.syncConfig"),
             content: (
                 <React.Suspense>
                     <WebFuzzerSynSetting pageId={props.id} onClose={() => m.destroy()} />
@@ -1979,8 +1995,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             if (successFuzzerRef.current.length < 10000 && failedFuzzerRef.current.length < 10000) return
             logFn(
                 httpFuzzerLog({
-                    title: "成功与失败的长度",
-                    content: `成功：${successFuzzerRef.current.length}——失败：${failedFuzzerRef.current.length}`
+                    title: t("HTTPFuzzerPage.success_and_failure_length"),
+                    content: t("HTTPFuzzerPage.success_and_failure_length", {
+                        success: successFuzzerRef.current.length,
+                        failed: failedFuzzerRef.current.length
+                    })
                 })
             )
         },
@@ -1992,13 +2011,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         logger(
             httpFuzzerLog({
                 status: "start",
-                content: "发送请求"
+                content: t("HTTPFuzzerPage.send_request")
             })
         )
         const {repeatTimes, resNumlimit, concurrent} = advancedConfigValue
         logger(
             httpFuzzerLog({
-                title: "参数",
+                title: t("HTTPFuzzerPage.parameter"),
                 content: JSON.stringify({
                     repeatTimes,
                     resNumlimit,
@@ -2023,7 +2042,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     webFuzzer: true,
                     runtimeId: runtimeIdRef.current.split(","),
                     sourceType: "scan",
-                    verbose: currentItem?.pageName ? `${currentItem?.pageName}-全部流量` : "",
+                    verbose: currentItem?.pageName ? `${currentItem?.pageName}-${t("HTTPFuzzerPage.allTraffic")}` : "",
                     pageId: currentItem?.pageId || ""
                 }
             })
@@ -2033,27 +2052,26 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const moreLimtAlertMsg = useMemo(
         () => (
             <div style={{fontSize: 12}}>
-                响应数量超过{fuzzerTableMaxData}
-                ，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
+                {t("HTTPFuzzerPage.response_overflow", {maxData: fuzzerTableMaxData})}
                 <YakitButton type='text' onClick={jumpHTTPHistoryAnalysis} style={{padding: 0}}>
-                    查看全部
+                    {t("YakitButton.view_all_button")}
                 </YakitButton>
-                查看所有数据
+                {t("HTTPFuzzerPage.view_all_suffix")}
             </div>
         ),
-        [fuzzerTableMaxData]
+        [fuzzerTableMaxData, i18n.language]
     )
     const noMoreLimtAlertMsg = useMemo(
         () => (
             <div style={{fontSize: 12}}>
-                需要进行高级筛选，多条件组合查询或其他复杂操作时，建议点击跳转到
+                {t("HTTPFuzzerPage.advanced_filter_suggestion")}
                 <YakitButton type='text' onClick={jumpHTTPHistoryAnalysis} style={{padding: 0}}>
-                    流量分析器
+                    {t("YakitRoute.historyAnalyzer")}
                 </YakitButton>
-                进行操作
+                {t("HTTPFuzzerPage.performAction")}
             </div>
         ),
-        []
+        [i18n.language]
     )
 
     const [skipSaveHTTPFlow, setSkipSaveHTTPFlow] = useState<boolean>(false)
@@ -2068,7 +2086,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     return (
         <>
             <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
-                <React.Suspense fallback={<>加载中...</>}>
+                <React.Suspense fallback={<>{t("YakitSpin.loading")}...</>}>
                     <HttpQueryAdvancedConfig
                         advancedConfigValue={advancedConfigValue}
                         visible={advancedConfigVisible}
@@ -2101,11 +2119,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             type={"primary"}
                                             size='large'
                                         >
-                                            继续
+                                            {t("YakitButton.continue")}
                                         </YakitButton>
                                     ) : (
                                         <YakitButton onClick={sendRequest} type={"primary"} size='large'>
-                                            发送请求{" "}
+                                            {t("YakitButton.sendRequest")}{" "}
                                             {convertKeyboardToUIKey(
                                                 getHttpFuzzerShortcutKeyEvents()["sendRequest*httpFuzzer"].keys
                                             )}
@@ -2121,7 +2139,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         type={"primary"}
                                         size='large'
                                     >
-                                        暂停
+                                        {t("YakitButton.pause")}
                                     </YakitButton>
                                     <YakitButton
                                         onClick={() => {
@@ -2133,12 +2151,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         size='large'
                                         style={{marginLeft: -8}}
                                     >
-                                        停止
+                                        {t("YakitButton.stop")}
                                     </YakitButton>
                                 </>
                             )}
                             <div className={styles["fuzzer-heard-force"]}>
-                                <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
+                                <span className={styles["fuzzer-heard-https"]}>
+                                    {t("HttpQueryAdvancedConfig.force_https")}
+                                </span>
                                 <YakitCheckbox
                                     checked={advancedConfigValue.isHttps}
                                     onChange={(e) =>
@@ -2171,7 +2191,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     }
                                 >
                                     <YakitButton type='text' icon={<ClockIcon />} style={{padding: "4px 0px"}}>
-                                        历史
+                                        {t("YakitButton.history")}
                                     </YakitButton>
                                 </YakitPopover>
                             </div>
@@ -2180,7 +2200,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 onClick={() => {
                                     const m = showYakitModal({
                                         type: "white",
-                                        title: "WebFuzzer 爆破动画演示",
+                                        title: t("HTTPFuzzerPage.webFuzzerDemo"),
                                         width: 480,
                                         content: <BlastingAnimationAemonstration></BlastingAnimationAemonstration>,
                                         footer: null,
@@ -2189,7 +2209,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     })
                                 }}
                             >
-                                爆破示例
+                                {t("HTTPFuzzerPage.bruteForceExample")}
                                 <QuestionMarkCircleIcon />
                             </div>
                             {loading && (
@@ -2228,7 +2248,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     }}
                                     type='outline2'
                                 >
-                                    跟随重定向
+                                    {t("HTTPFuzzerPage.followRedirects")}
                                 </YakitButton>
                             )}
                             <FuzzerExtraShow
@@ -2258,14 +2278,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 type='outline2'
                                 icon={<OutlineSwitchhorizontalIcon />}
                                 onClick={onSynWF}
-                                name='同步配置'
+                                name={t("HTTPFuzzerPage.syncConfig")}
                                 style={{marginRight: 8}}
                             />
                             <YakitDropdownMenu
                                 menu={{
                                     data: [
-                                        {key: "pathTemplate", label: "生成为 Path 模板"},
-                                        {key: "rawTemplate", label: "生成为 Raw 模板"}
+                                        {key: "pathTemplate", label: t("HTTPFuzzerPage.generatePathTemplate")},
+                                        {key: "rawTemplate", label: t("HTTPFuzzerPage.generateRawTemplate")}
                                     ],
                                     onClick: ({key}) => {
                                         switch (key) {
@@ -2286,7 +2306,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 }}
                             >
                                 <YakitButton type='primary' icon={<OutlineCodeIcon />}>
-                                    生成 Yaml 模板
+                                    {t("HTTPFuzzerPage.generateYamlTemplate")}
                                 </YakitButton>
                             </YakitDropdownMenu>
                         </div>
@@ -2408,6 +2428,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                             overflowY: "auto",
                                                             overflowX: "hidden"
                                                         }}
+                                                        key={i18n.language}
                                                     >
                                                         <FuzzerConcurrentLoad
                                                             inViewportCurrent={inViewport && currentFuzzerPage}
@@ -2419,14 +2440,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         ) : (
                                             <Result
                                                 status={"warning"}
-                                                title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
+                                                title={t("HTTPFuzzerPage.editAndSendRequest")}
                                                 subTitle={
                                                     <div>
-                                                        本栏结果针对模糊测试的多个 HTTP
-                                                        请求结果展示做了优化，可以自动识别单个/多个请求的展示。
+                                                        {t("HTTPFuzzerPage.fuzzTestResultsInfo")}
                                                         {skipSaveHTTPFlow ? (
                                                             <>
-                                                                响应数量超过前端限制请确认开启
+                                                                {t("HTTPFuzzerPage.responseLimitExceeded")}
                                                                 <YakitButton
                                                                     type='text'
                                                                     icon={<OutlineCogIcon />}
@@ -2444,7 +2464,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                         )
                                                                     }}
                                                                 >
-                                                                    保存HTTP流量设置
+                                                                    {t("HTTPFuzzerPage.saveHttpTrafficSettings")}
                                                                 </YakitButton>
                                                             </>
                                                         ) : (
@@ -2519,6 +2539,7 @@ interface FuzzerExtraShowProps {
 }
 export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props) => {
     const {droppedCount, advancedConfigValue, setAdvancedConfigValue, onlyOneResponse, httpResponse} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const [systemProxy, setSystemProxy] = useState<GetSystemProxyResult>()
     const divRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(divRef)
@@ -2551,7 +2572,9 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
     })
     return (
         <div className={styles["display-flex"]} ref={divRef}>
-            {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
+            {droppedCount > 0 && (
+                <YakitTag color='danger'>{t("FuzzerExtraShow.responsesDiscarded", {droppedCount})}</YakitTag>
+            )}
             {advancedConfigValue.proxy.length > 0 && (
                 <Tooltip title={advancedConfigValue.proxy}>
                     <YakitTag
@@ -2564,7 +2587,7 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
                             })
                         }}
                     >
-                        代理：
+                        {t("FuzzerExtraShow.proxy")}
                         {(() => {
                             const maxDisplay = 3 // 最多显示3条
                             const {proxy} = advancedConfigValue
@@ -2576,24 +2599,32 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
                     </YakitTag>
                 </Tooltip>
             )}
-            {isShowSystemProxy && <YakitTag color='green'>系统代理:{systemProxy?.CurrentProxy}</YakitTag>}
+            {isShowSystemProxy && (
+                <YakitTag color='green'>
+                    {t("FuzzerExtraShow.systemProxy")}
+                    {systemProxy?.CurrentProxy}
+                </YakitTag>
+            )}
 
             {advancedConfigValue.actualHost && (
                 <YakitTag color='danger' className={classNames(styles["actualHost-text"], "content-ellipsis")}>
-                    真实Host:{advancedConfigValue.actualHost}
+                    {t("FuzzerExtraShow.realHost")}
+                    {advancedConfigValue.actualHost}
                 </YakitTag>
             )}
             {onlyOneResponse && (
                 <>
-                    {httpResponse.MatchedByMatcher && <YakitTag color='success'>匹配成功</YakitTag>}
+                    {httpResponse.MatchedByMatcher && (
+                        <YakitTag color='success'>{t("FuzzerExtraShow.matchSuccess")}</YakitTag>
+                    )}
                     {!httpResponse.MatchedByMatcher && advancedConfigValue.matchers?.length > 0 && (
-                        <YakitTag color='danger'>匹配失败</YakitTag>
+                        <YakitTag color='danger'>{t("FuzzerExtraShow.matchFailed")}</YakitTag>
                     )}
                 </>
             )}
             {advancedConfigValue.enableRandomChunked && (
                 <YakitTag closable onClose={onCloseRandomChunked}>
-                    开启分块传输
+                    {t("FuzzerExtraShow.enableChunkedTransfer")}
                 </YakitTag>
             )}
         </div>
@@ -2663,7 +2694,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         retryNoPopconfirm = true,
         cancelCurrentHTTPFuzzer
     } = props
-    const {t, i18n} = useI18nNamespaces(["history"])
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "history", "yakitUi"])
     const [color, setColor] = useState<string[]>()
     const [keyWord, setKeyWord] = useState<string>()
     const [statusCode, setStatusCode] = useState<string>()
@@ -2742,7 +2773,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         const searchNode = (
             <YakitInput.Search
                 size='small'
-                placeholder='请输入定位响应'
+                placeholder={t("SecondNodeExtra.enterTargetResponse")}
                 value={valueSearch}
                 onChange={(e) => {
                     const {value} = e.target
@@ -2786,7 +2817,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         {((rsp.Payloads && rsp.Payloads.length > 0) ||
                             rsp.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0) && (
                             <YakitButton type='outline2' size={size} onClick={() => setShowExtra(true)}>
-                                查看提取结果
+                                {t("SecondNodeExtra.viewExtractionResults")}
                             </YakitButton>
                         )}
                     </>
@@ -2794,8 +2825,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     <YakitDropdownMenu
                         menu={{
                             data: [
-                                {key: "tooLargeResponseHeaderFile", label: "查看Header"},
-                                {key: "tooLargeResponseBodyFile", label: "查看Body"}
+                                {key: "tooLargeResponseHeaderFile", label: t("SecondNodeExtra.viewHeader")},
+                                {key: "tooLargeResponseBodyFile", label: t("SecondNodeExtra.viewBody")}
                             ],
                             onClick: ({key}) => {
                                 switch (key) {
@@ -2806,7 +2837,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                                 if (flag) {
                                                     openABSFileLocated(rsp.TooLargeResponseHeaderFile)
                                                 } else {
-                                                    failed("目标文件已不存在!")
+                                                    failed(t("SecondNodeExtra.targetFileNotExist"))
                                                 }
                                             })
                                             .catch(() => {})
@@ -2818,7 +2849,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                                 if (flag) {
                                                     openABSFileLocated(rsp.TooLargeResponseBodyFile)
                                                 } else {
-                                                    failed("目标文件已不存在!")
+                                                    failed(t("SecondNodeExtra.targetFileNotExist"))
                                                 }
                                             })
                                             .catch(() => {})
@@ -2834,7 +2865,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         }}
                     >
                         <YakitButton type='primary' size='small'>
-                            完整响应
+                            {t("SecondNodeExtra.fullResponse")}
                         </YakitButton>
                     </YakitDropdownMenu>
                 )}
@@ -2845,9 +2876,15 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     }}
                     size={size}
                 >
-                    详情
+                    {t("YakitButton.detail")}
                 </YakitButton>
-                <Tooltip title={showResponseInfoSecondEditor ? "隐藏响应信息" : "显示响应信息"}>
+                <Tooltip
+                    title={
+                        showResponseInfoSecondEditor
+                            ? t("SecondNodeExtra.hideResponseInfo")
+                            : t("SecondNodeExtra.showResponseInfo")
+                    }
+                >
                     <YakitButton
                         type='text2'
                         size='small'
@@ -2866,7 +2903,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         const searchNode = (
             <YakitInput.Search
                 size={size === "small" ? "small" : "middle"}
-                placeholder='请输入关键词搜索'
+                placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                 value={keyWord}
                 onChange={(e) => {
                     setKeyWord(e.target.value)
@@ -2916,7 +2953,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     content={
                         <div className={styles["second-node-search-content"]}>
                             <div className={styles["second-node-search-item"]}>
-                                <span>标注颜色</span>
+                                <span>{t("SecondNodeExtra.highlightColor")}</span>
                                 <YakitSelect
                                     size='small'
                                     mode='tags'
@@ -2927,7 +2964,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 ></YakitSelect>
                             </div>
                             <div className={styles["second-node-search-item"]}>
-                                <span>状态码</span>
+                                <span>{t("SecondNodeExtra.statusCode")}</span>
                                 <YakitInput
                                     value={statusCode}
                                     onChange={(e) => {
@@ -2936,11 +2973,11 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         val = val.replace(/[^0-9,-]/g, "")
                                         setStatusCode(val)
                                     }}
-                                    placeholder='支持输入200,200-204格式，多个用逗号分隔'
+                                    placeholder={t("YakitInput.supportInputFormat")}
                                 ></YakitInput>
                             </div>
                             <div className={styles["second-node-search-item"]}>
-                                <span>响应大小</span>
+                                <span>{t("SecondNodeExtra.responseSize")}</span>
                                 <BodyLengthInputNumber
                                     ref={bodyLengthRef}
                                     query={bodyLength}
@@ -2949,7 +2986,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 />
                             </div>
                             <div className={styles["second-node-search-item"]}>
-                                <span>延迟</span>
+                                <span>{t("SecondNodeExtra.latency")}</span>
                                 <DurationMsInputNumber
                                     ref={durationMsRef}
                                     query={durationMsLength}
@@ -2958,14 +2995,14 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 />
                             </div>
                             <div className={styles["second-node-search-item"]}>
-                                <span>提取数据</span>
+                                <span>{t("SecondNodeExtra.extractData")}</span>
                                 <YakitInput
                                     value={extractedResults}
                                     onChange={(e) => {
                                         let val = e.target.value
                                         setExtractedResults(val)
                                     }}
-                                    placeholder='请输入关键词搜索'
+                                    placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                                 ></YakitInput>
                             </div>
                         </div>
@@ -3017,11 +3054,11 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                             matchSubmit && matchSubmit()
                                         }}
                                     >
-                                        仅匹配
+                                        {t("SecondNodeExtra.matchOnly")}
                                     </YakitButton>
                                 ) : (
                                     <YakitPopconfirm
-                                        title={"操作仅匹配会结束暂停状态，是否确定操作？"}
+                                        title={t("SecondNodeExtra.matchOnlyConfirm")}
                                         onConfirm={() => {
                                             cancelCurrentHTTPFuzzer && cancelCurrentHTTPFuzzer()
                                             matchSubmit && matchSubmit()
@@ -3029,7 +3066,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         placement='top'
                                     >
                                         <YakitButton type='outline2' size={size}>
-                                            仅匹配
+                                            {t("SecondNodeExtra.matchOnly")}
                                         </YakitButton>
                                     </YakitPopconfirm>
                                 )}
@@ -3037,7 +3074,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         ) : (
                             <>
                                 {noPopconfirm ? (
-                                    <Tooltip title='仅匹配'>
+                                    <Tooltip title={t("SecondNodeExtra.matchOnly")}>
                                         <YakitButton
                                             type='outline2'
                                             size={size}
@@ -3049,14 +3086,14 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                     </Tooltip>
                                 ) : (
                                     <YakitPopconfirm
-                                        title={"操作仅匹配会结束暂停状态，是否确定操作？"}
+                                        title={t("SecondNodeExtra.matchOnlyConfirm")}
                                         onConfirm={() => {
                                             cancelCurrentHTTPFuzzer && cancelCurrentHTTPFuzzer()
                                             matchSubmit && matchSubmit()
                                         }}
                                         placement='top'
                                     >
-                                        <Tooltip title='仅匹配'>
+                                        <Tooltip title={t("SecondNodeExtra.matchOnly")}>
                                             <YakitButton type='outline2' size={size} icon={<OutlinePlugsIcon />} />
                                         </Tooltip>
                                     </YakitPopconfirm>
@@ -3073,7 +3110,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         onClick={() => {
                             if (successFuzzer.length === 0) {
                                 showYakitModal({
-                                    title: "无 Web Fuzzer Response 以供提取信息",
+                                    title: t("SecondNodeExtra.noWebFuzzerResponse"),
                                     content: <></>,
                                     footer: null
                                 })
@@ -3082,10 +3119,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             setResponseExtractorVisible(true)
                         }}
                     >
-                        提取响应数据
+                        {t("SecondNodeExtra.extractResponseData")}
                     </YakitButton>
                 ) : (
-                    <Tooltip title='提取响应数据'>
+                    <Tooltip title={t("SecondNodeExtra.extractResponseData")}>
                         <YakitButton
                             type='outline2'
                             size={size}
@@ -3093,7 +3130,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             onClick={() => {
                                 if (successFuzzer.length === 0) {
                                     showYakitModal({
-                                        title: "无 Web Fuzzer Response 以供提取信息",
+                                        title: t("SecondNodeExtra.noWebFuzzerResponse"),
                                         content: <></>,
                                         footer: null
                                     })
@@ -3106,7 +3143,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 )}
                 {+(secondNodeSize?.width || 0) >= 610 ? (
                     <YakitPopover
-                        title={"导出数据"}
+                        title={t("SecondNodeExtra.exportData")}
                         trigger={["click"]}
                         content={
                             <>
@@ -3125,7 +3162,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                             )
                                         }}
                                     >
-                                        导出所有
+                                        {t("SecondNodeExtra.exportAll")}
                                     </YakitButton>
                                     <YakitButton
                                         size={size}
@@ -3141,7 +3178,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                             )
                                         }}
                                     >
-                                        仅导出 Payload
+                                        {t("SecondNodeExtra.exportPayloadOnly")}
                                     </YakitButton>
                                 </Space>
                             </>
@@ -3152,12 +3189,12 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         }}
                     >
                         <YakitButton type='outline2' size={size}>
-                            导出数据
+                            {t("SecondNodeExtra.exportData")}
                         </YakitButton>
                     </YakitPopover>
                 ) : (
                     <YakitPopover
-                        title={"导出数据"}
+                        title={t("SecondNodeExtra.exportData")}
                         trigger={["click"]}
                         content={
                             <>
@@ -3176,7 +3213,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                             )
                                         }}
                                     >
-                                        导出所有
+                                        {t("SecondNodeExtra.exportAll")}
                                     </YakitButton>
                                     <YakitButton
                                         size={size}
@@ -3192,7 +3229,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                             )
                                         }}
                                     >
-                                        仅导出 Payload
+                                        {t("SecondNodeExtra.exportPayloadOnly")}
                                     </YakitButton>
                                 </Space>
                             </>
@@ -3202,14 +3239,14 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             setExportDataVisible(visible)
                         }}
                     >
-                        <Tooltip title='导出数据'>
+                        <Tooltip title={t("SecondNodeExtra.exportData")}>
                             <YakitButton type='outline2' icon={<OutlineExportIcon />} size={size} />
                         </Tooltip>
                     </YakitPopover>
                 )}
 
                 <YakitModal
-                    title='提取响应数据包中内容'
+                    title={t("SecondNodeExtra.extractFromResponsePacket")}
                     onCancel={() => setResponseExtractorVisible(false)}
                     visible={responseExtractorVisible}
                     width='80%'
@@ -3235,7 +3272,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         }}
                         disabled={failedFuzzer.length === 0}
                     >
-                        一键重试
+                        {t("YakitButton.retryAll")}
                     </YakitButton>
                 ) : (
                     // <YakitPopconfirm
@@ -3257,7 +3294,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     //     </YakitButton>
                     // </YakitPopconfirm>
                     <YakitButton type={"primary"} size='small' disabled={true}>
-                        一键重试
+                        {t("YakitButton.retryAll")}
                     </YakitButton>
                 )}
             </>
@@ -3296,12 +3333,13 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
         showConcurrentAndLoad,
         selectionByteCount
     } = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
 
     if (onlyOneResponse) {
         if (rsp.IsTooLargeResponse) {
             return (
                 <YakitTag style={{marginLeft: 8}} color='danger'>
-                    超大响应
+                    {t("SecondNodeTitle.oversizedResponse")}
                 </YakitTag>
             )
         }
@@ -3309,7 +3347,7 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
             <>
                 {rsp.IsHTTPS && <YakitTag>{rsp.IsHTTPS ? "https" : ""}</YakitTag>}
                 {selectionByteCount ? (
-                    <ByteCountTag selectionByteCount={selectionByteCount || 0} key='webfuzzerOneRes'></ByteCountTag>
+                    <ByteCountTag selectionByteCount={selectionByteCount || 0} itemKey='webfuzzerOneRes'></ByteCountTag>
                 ) : (
                     <YakitTag>
                         {rsp.BodyLength}bytes / {rsp.DurationMs}ms
@@ -3317,7 +3355,7 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
                 )}
                 {rsp.IsAutoFixContentType && (
                     <YakitTag color='danger'>
-                        <Tooltip title='Content-Type被修改，修改前的内容展示在对应字段旁'>Content-Type</Tooltip>
+                        <Tooltip title={t("SecondNodeTitle.contentTypeModified")}>Content-Type</Tooltip>
                     </YakitTag>
                 )}
             </>
@@ -3327,18 +3365,18 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
         const options = [
             {
                 value: "true",
-                label: `成功[${successFuzzerLength > 9999 ? "9999+" : successFuzzerLength}]`
+                label: t("SecondNodeTitle.success", {count: successFuzzerLength > 9999 ? "9999+" : successFuzzerLength})
             },
             {
                 value: "false",
-                label: `失败[${failedFuzzerLength > 9999 ? "9999+" : failedFuzzerLength}]`
+                label: t("SecondNodeTitle.failure", {count: failedFuzzerLength > 9999 ? "9999+" : failedFuzzerLength})
             }
         ]
 
         if (showConcurrentAndLoad) {
             options.push({
                 value: "Concurrent/Load",
-                label: "并发/负载"
+                label: t("SecondNodeTitle.concurrencyLoad")
             })
         }
 
@@ -3404,14 +3442,46 @@ interface EditorOverlayWidgetProps {
 
 const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((props) => {
     const {rsp} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     if (!rsp) return <></>
     return (
         <div className={styles["editor-overlay-widget"]}>
-            {Number(rsp.DNSDurationMs) > 0 ? <span>DNS耗时:{rsp.DNSDurationMs}ms</span> : ""}
-            {rsp.RemoteAddr && <span>远端地址:{rsp.RemoteAddr}</span>}
-            {rsp.Proxy && <span>代理:{rsp.Proxy}</span>}
-            {Number(rsp.FirstByteDurationMs) > 0 ? <span>响应时间:{rsp.FirstByteDurationMs}ms</span> : ""}
-            {Number(rsp.TotalDurationMs) > 0 ? <span>总耗时:{rsp.TotalDurationMs}ms</span> : ""}
+            {Number(rsp.DNSDurationMs) > 0 ? (
+                <span>
+                    {t("EditorOverlayWidget.dnsTime")}
+                    {rsp.DNSDurationMs}ms
+                </span>
+            ) : (
+                ""
+            )}
+            {rsp.RemoteAddr && (
+                <span>
+                    {t("EditorOverlayWidget.remoteAddress")}
+                    {rsp.RemoteAddr}
+                </span>
+            )}
+            {rsp.Proxy && (
+                <span>
+                    {t("EditorOverlayWidget.proxy")}
+                    {rsp.Proxy}
+                </span>
+            )}
+            {Number(rsp.FirstByteDurationMs) > 0 ? (
+                <span>
+                    {t("EditorOverlayWidget.responseTime")}
+                    {rsp.FirstByteDurationMs}ms
+                </span>
+            ) : (
+                ""
+            )}
+            {Number(rsp.TotalDurationMs) > 0 ? (
+                <span>
+                    {t("EditorOverlayWidget.totalTime")}
+                    {rsp.TotalDurationMs}ms
+                </span>
+            ) : (
+                ""
+            )}
             {rsp.Url && <span>URL:{rsp.Url.length > 30 ? rsp.Url.substring(0, 30) + "..." : rsp.Url}</span>}
         </div>
     )
@@ -3467,13 +3537,14 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             keepSearchName,
             onSetOnlyOneResEditor
         } = props
+        const {t, i18n} = useI18nNamespaces(["webFuzzer"])
 
         const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useControllableValue<boolean>(props, {
             defaultValuePropName: "showMatcherAndExtraction",
             valuePropName: "showMatcherAndExtraction",
             trigger: "setShowMatcherAndExtraction"
         })
-        const [reason, setReason] = useState<string>("未知原因")
+        const [reason, setReason] = useState<string>(t("ResponseViewer.unknownReason"))
 
         const [activeKey, setActiveKey] = useState<string>("")
         const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
@@ -3493,7 +3564,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
 
         useEffect(() => {
             try {
-                let r = "未知原因"
+                let r = t("ResponseViewer.unknownReason")
                 r = fuzzerResponse!.Reason
                 setReason(r)
                 setShowExtra(
@@ -3501,7 +3572,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                         fuzzerResponse.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0
                 )
             } catch (e) {}
-        }, [fuzzerResponse])
+        }, [fuzzerResponse, i18n.language])
 
         const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
             return {
@@ -3509,7 +3580,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                     menu: [
                         {
                             key: "is-show-add-overlay-widgetv",
-                            label: showResponseInfoSecondEditor ? "隐藏响应信息" : "显示响应信息"
+                            label: showResponseInfoSecondEditor
+                                ? t("ResponseViewer.hideResponseInfo")
+                                : t("ResponseViewer.showResponseInfo")
                         }
                     ],
                     onRun: () => {
@@ -3522,11 +3595,11 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                         {type: "divider"},
                         {
                             key: "show-matchers",
-                            label: "匹配器"
+                            label: t("ResponseViewer.matcher")
                         },
                         {
                             key: "show-extractors",
-                            label: "提取器"
+                            label: t("ResponseViewer.extractor")
                         }
                     ],
                     onRun: (editor, key) => {
@@ -3545,7 +3618,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                     }
                 }
             }
-        }, [showResponseInfoSecondEditor])
+        }, [showResponseInfoSecondEditor, i18n.language])
         const ResizeBoxProps = useCreation(() => {
             let p = {
                 firstRatio: "100%",
@@ -3614,7 +3687,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                     openExternalWebsite(data.Url)
                 })
                 .catch((e) => {
-                    yakitNotify("error", "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整")
+                    yakitNotify("error", t("ResponseViewer.copyUrlFailed"))
                 })
         })
 
@@ -3668,27 +3741,30 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                                 ? "warning"
                                                 : "error"
                                         }
-                                        title={"请求失败或服务端（代理）异常"}
+                                        title={t("ResponseViewer.requestFailedOrServerError")}
                                         // no such host
                                         subTitle={(() => {
                                             const reason = fuzzerResponse?.Reason || "unknown"
                                             if (reason.includes("tcp: i/o timeout")) {
-                                                return `网络超时（请检查目标主机是否在线？）`
+                                                return t("ResponseViewer.networkTimeout")
                                             }
                                             if (reason.includes("no such host")) {
-                                                return `DNS 错误或主机错误 (请检查域名是否可以被正常解析？)`
+                                                return t("ResponseViewer.dnsOrHostError")
                                             }
                                             if (reason.includes("cannot create proxy")) {
-                                                return `无法设置代理（请检查代理是否可用）`
+                                                return t("ResponseViewer.cannotSetProxy")
                                             }
                                             if (reason.includes("empty response")) {
-                                                return `服务端没有任何返回数据`
+                                                return t("ResponseViewer.serverNoResponse")
                                             }
                                             return undefined
                                         })()}
                                         style={{height: "100%", backgroundColor: "var(--Colors-Use-Basic-Background)"}}
                                     >
-                                        <>详细原因：{fuzzerResponse.Reason}</>
+                                        <>
+                                            {t("ResponseViewer.detailedReason")}
+                                            {fuzzerResponse.Reason}
+                                        </>
                                     </Result>
                                 )
                             }
@@ -3729,7 +3805,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             originalContentType={fuzzerResponse.OriginalContentType}
                             fixContentTypeHoverMessage={
                                 fuzzerResponse.IsSetContentTypeOptions === true
-                                    ? "返回包中设置了X-Content-Type-Options字段，content-type是否应该被修复请关注此字段"
+                                    ? t("ResponseViewer.xContentTypeOptionsNotice")
                                     : ""
                             }
                             {...otherEditorProps}
@@ -3785,6 +3861,7 @@ interface ResponseViewerSecondNodeProps {
 type tabType = "payload" | "extractContent"
 const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.memo((props) => {
     const {fuzzerResponse, onClose} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const [type, setType] = useState<tabType>("payload")
     const option = useMemo(() => {
         return [
@@ -3796,7 +3873,7 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
             {
                 icon: <OutlineBeakerIcon />,
                 value: "extractContent",
-                label: "提取内容"
+                label: t("ResponseViewerSecondNode.extractContent")
             }
         ]
     }, [])
@@ -3823,7 +3900,7 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
             </div>
             <div className={styles["payload-extract-content-body"]} style={{display: type === "payload" ? "" : "none"}}>
                 {fuzzerResponse.Payloads?.map((item, index) => <p key={index}>{item}</p>)}
-                {fuzzerResponse.Payloads?.length === 0 && "暂无"}
+                {fuzzerResponse.Payloads?.length === 0 && t("ResponseViewerSecondNode.none")}
             </div>
             <div
                 className={classNames(styles["payload-extract-content-body"], "yakit-descriptions")}
@@ -3837,7 +3914,7 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
                     ))}
                 </Descriptions>
 
-                {fuzzerResponse.ExtractedResults?.length === 0 && "暂无"}
+                {fuzzerResponse.ExtractedResults?.length === 0 && t("ResponseViewerSecondNode.none")}
             </div>
         </div>
     )
@@ -3849,6 +3926,7 @@ interface BlastingAnimationAemonstrationProps {
     videoStyle?: CSSProperties
 }
 export const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstrationProps> = React.memo((props) => {
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const [animationType, setAnimationType] = useState<string>(props.animationType || "id")
 
     const [animationResources, setAnimationResources] = useState<string>(blastingIdmp4)
@@ -3873,15 +3951,15 @@ export const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstra
                     options={[
                         {
                             value: "id",
-                            label: "爆破 ID"
+                            label: t("BlastingAnimationAemonstration.bruteForceId")
                         },
                         {
                             value: "pwd",
-                            label: "爆破密码"
+                            label: t("BlastingAnimationAemonstration.bruteForcePassword")
                         },
                         {
                             value: "count",
-                            label: "爆破账号"
+                            label: t("BlastingAnimationAemonstration.bruteForceAccount")
                         }
                     ]}
                     onChange={(e) => setAnimationType(e.target.value)}
@@ -3895,13 +3973,13 @@ export const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstra
     )
 })
 
-export const ByteCountTag: React.FC<{selectionByteCount?: number; key: string; style?: CSSProperties}> = ({
+export const ByteCountTag: React.FC<{selectionByteCount?: number; itemKey: string; style?: CSSProperties}> = ({
     selectionByteCount = 0,
-    key,
+    itemKey,
     style = {}
 }) => {
     return selectionByteCount > 0 ? (
-        <YakitTag key={key} style={style}>
+        <YakitTag key={itemKey} style={style}>
             {selectionByteCount} bytes
         </YakitTag>
     ) : (

@@ -20,6 +20,7 @@ import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {OutlinePlusIcon} from "@/assets/icon/outline"
 import {defMatcherAndExtractionCode} from "../MatcherAndExtractionCard/constants"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
@@ -36,6 +37,7 @@ interface MatchersPanelProps {
 }
 export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) => {
     const {onAddMatchingAndExtractionCard, onEdit, onSetValue, ...restProps} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const form = Form.useFormInstance()
     const matchers: HTTPResponseMatcher[] = Form.useWatch("matchers", form) || []
     const onReset = useMemoizedFn((restValue) => {
@@ -93,7 +95,7 @@ export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) =>
                 {...restProps}
                 header={
                     <div className={styles["matchers-panel"]}>
-                        匹配器
+                        {t("MatchersPanel.matcher")}
                         <div className={styles["matchers-number"]}>{matchers?.length}</div>
                     </div>
                 }
@@ -112,7 +114,7 @@ export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) =>
                             }}
                             size='small'
                         >
-                            重置
+                            {t("YakitButton.reset")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         <YakitButton
@@ -124,7 +126,7 @@ export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) =>
                             }}
                             className={styles["btn-padding-right-0"]}
                         >
-                            添加/调试
+                            {t("MatchersPanel.add_debug")}
                             <HollowLightningBoltIcon />
                         </YakitButton>
                     </>
@@ -148,6 +150,7 @@ interface ExtractorsPanelProps extends Omit<MatchersPanelProps, "onEdit"> {
 }
 export const ExtractorsPanel: React.FC<ExtractorsPanelProps> = React.memo((props) => {
     const {onAddMatchingAndExtractionCard, onEdit, onSetValue, ...restProps} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const form = Form.useFormInstance()
     const extractors = Form.useWatch("extractors", form) || []
     const onReset = useMemoizedFn((restValue) => {
@@ -187,7 +190,7 @@ export const ExtractorsPanel: React.FC<ExtractorsPanelProps> = React.memo((props
                 {...restProps}
                 header={
                     <div className={styles["matchers-panel"]}>
-                        数据提取器
+                        {t("ExtractorsPanel.dataExtractor")}
                         <div className={styles["matchers-number"]}>{extractors?.length}</div>
                     </div>
                 }
@@ -206,7 +209,7 @@ export const ExtractorsPanel: React.FC<ExtractorsPanelProps> = React.memo((props
                             }}
                             size='small'
                         >
-                            重置
+                            {t("YakitButton.reset")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         <YakitButton
@@ -218,7 +221,7 @@ export const ExtractorsPanel: React.FC<ExtractorsPanelProps> = React.memo((props
                             }}
                             className={styles["btn-padding-right-0"]}
                         >
-                            添加/调试
+                            {t("ExtractorsPanel.add_debug")}
                             <HollowLightningBoltIcon />
                         </YakitButton>
                     </>
@@ -256,6 +259,7 @@ interface VariablePanelProps {
 }
 export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) => {
     const {defaultHttpResponse, onAdd, pageId, onSetValue, ...restProps} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const form = Form.useFormInstance()
     const params = Form.useWatch("params", form) || []
 
@@ -281,7 +285,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
             })
             .then((rsp: {Results: {Key: string; Value: string}[]}) => {
                 showYakitModal({
-                    title: "渲染后变量内容",
+                    title: t("VariablePanel.renderedVariableContent"),
                     footer: <></>,
                     width: "60%",
                     content: (
@@ -294,7 +298,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
                 })
             })
             .catch((err) => {
-                yakitNotify("error", "预览失败:" + err)
+                yakitNotify("error", t("VariablePanel.previewFailed") + err)
             })
     })
     const onAddPrams = useMemoizedFn(() => {
@@ -310,7 +314,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
             })
             onSetActiveKey()
         } else {
-            yakitFailed(`请将已添加【变量${index}】设置完成后再进行添加`)
+            yakitFailed(t("YakitNotification.complete_variable_before_add", {index}))
         }
     })
 
@@ -341,7 +345,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
         <>
             <YakitPanel
                 {...restProps}
-                header='设置变量'
+                header={t("VariablePanel.setVariable")}
                 key='设置变量'
                 extra={
                     <>
@@ -354,11 +358,11 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
                             }}
                             size='small'
                         >
-                            重置
+                            {t("YakitButton.reset")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         <YakitButton type='text' onClick={onRenderVariables} size='small'>
-                            预览
+                            {t("YakitButton.preview")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         <YakitButton
@@ -370,7 +374,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
                             className={styles["btn-padding-right-0"]}
                             size='small'
                         >
-                            添加
+                            {t("YakitButton.add")}
                             <OutlinePlusIcon />
                         </YakitButton>
                     </>

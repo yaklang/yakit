@@ -18,12 +18,14 @@ import {v4 as uuidv4} from "uuid"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {IMonacoEditor} from "@/utils/editors"
 import styles from "./StringFuzzer.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 export interface QueryFuzzerLabelResponseProps {
     Id: number
     Label: string
     Description: string
+    DescriptionUi?: string
     DefaultDescription: string
     Hash: string
 }
@@ -65,6 +67,7 @@ interface StringFuzzerProps {
 
 export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
     const {insertCallback, close} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const [templateEditor, setTemplateEditor] = useState<IMonacoEditor>()
     const [template, setTemplate] = useState<string>("")
     const [loading, setLoading] = useState(false)
@@ -76,7 +79,7 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
 
     const onSubmit = useMemoizedFn(() => {
         if (!template) {
-            yakitNotify("warning", "Fuzz模版为空")
+            yakitNotify("warning", t("StringFuzzer.fuzz_template_empty"))
             return
         }
         setLoading(true)
@@ -87,12 +90,12 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
         if (!random) return
         ipcRenderer.on(token, (e, data: {error: any; data: {Results: string[]}}) => {
             if (data.error) {
-                yakitNotify("error", data.error?.details || data.error?.detail || "未知错误")
+                yakitNotify("error", data.error?.details || data.error?.detail || t("YakitNotification.unknown_error"))
                 return
             }
             const {Results} = data.data
             showYakitDrawer({
-                title: "Payload 测试结果",
+                title: t("StringFuzzer.payload_test_result"),
                 content: (
                     <div style={{height: "100%", overflow: "auto"}}>
                         <div style={{height: "80%"}}>
@@ -103,7 +106,7 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                                 pagination={{
                                     pageSize: 15,
                                     showTotal: (r) => {
-                                        return <YakitTag>总量:{r}</YakitTag>
+                                        return <YakitTag>{t("StringFuzzer.total")}{r}</YakitTag>
                                     },
                                     size: "small"
                                 }}
@@ -111,7 +114,12 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                                 renderItem={(e) => {
                                     return (
                                         <List.Item>
-                                            <span className='content-ellipsis' style={{color:'var(--Colors-Use-Neutral-Text-1-Title)'}}>{e}</span>
+                                            <span
+                                                className='content-ellipsis'
+                                                style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}
+                                            >
+                                                {e}
+                                            </span>
                                             <CopyComponents copyText={e} />
                                         </List.Item>
                                     )
@@ -132,7 +140,7 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
 
     const addToCommonTag = useMemoizedFn(() => {
         if (!template) {
-            yakitNotify("warning", "Fuzz模版为空")
+            yakitNotify("warning", t("StringFuzzer.fuzz_template_empty"))
             return
         }
         getRemoteValue(FUZZER_LABEL_LIST_NUMBER).then((data) => {
@@ -145,7 +153,7 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                     Data: [
                         {
                             Label: template,
-                            Description: `标签${count + 1}`,
+                            Description: `${t("StringFuzzer.tag")}${count + 1}`,
                             DefaultDescription: `${uuidv4()}`
                         }
                     ]
@@ -153,7 +161,7 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                 .then(() => {
                     setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: count + 1}))
                     close && close()
-                    yakitNotify("success", "标签添加成功")
+                    yakitNotify("success", t("StringFuzzer.tag_add_success"))
                 })
                 .catch((err) => {
                     yakitNotify("error", err + "")
@@ -271,22 +279,22 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                                                     {item.Name}
                                                 </div>
                                                 <div className={styles["stringFuzzer-popover-cont-desc"]}>
-                                                    描述：{item.Description}
+                                                    {t("StringFuzzer.description", {colon: true})}{item.Description}
                                                 </div>
                                                 <div className={styles["stringFuzzer-popover-cont-example"]}>
-                                                    示例：{item.Examples.join(", ")}
+                                                    {t("StringFuzzer.example")}{item.Examples.join(", ")}
                                                 </div>
                                                 {item.ArgumentTypes.length > 0 && (
                                                     <>
-                                                        <div>参数类型信息：</div>
+                                                        <div>{t("StringFuzzer.parameter_type_info")}</div>
                                                         <table border={1} width='100%' cellPadding={8}>
                                                             <tr>
-                                                                <th>参数名</th>
-                                                                <th>默认值</th>
-                                                                <th>描述</th>
-                                                                <th>可选参数</th>
-                                                                <th>数组参数</th>
-                                                                <th>分隔符</th>
+                                                                <th>{t("StringFuzzer.parameter_name")}</th>
+                                                                <th>{t("StringFuzzer.default_value")}</th>
+                                                                <th>{t("StringFuzzer.description", {colon: false})}</th>
+                                                                <th>{t("StringFuzzer.optional_parameter")}</th>
+                                                                <th>{t("StringFuzzer.array_parameter")}</th>
+                                                                <th>{t("StringFuzzer.delimiter")}</th>
                                                             </tr>
                                                             {item.ArgumentTypes.map((argItem) => (
                                                                 <tr key={argItem.Name}>
@@ -314,13 +322,13 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                                                     className={styles["list-opt-btn"]}
                                                     onClick={() => generateFuzztag("wrap", item)}
                                                 >
-                                                    嵌套
+                                                    {t("StringFuzzer.nesting")}
                                                 </span>
                                                 <span
                                                     className={styles["list-opt-btn"]}
                                                     onClick={() => generateFuzztag("insert", item)}
                                                 >
-                                                    插入
+                                                    {t("StringFuzzer.insert")}
                                                 </span>
                                             </div>
                                         </div>
@@ -346,7 +354,7 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                     </div>
                     <div className={styles["stringFuzzer-right-btns"]}>
                         <YakitButton type='outline2' onClick={onSubmit}>
-                            查看生成后的 Payload
+                            {t("StringFuzzer.viewGeneratedPayload")}
                         </YakitButton>
                         {insertCallback && (
                             <YakitButton
@@ -355,20 +363,20 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                                     insertCallback(template)
                                 }}
                             >
-                                插入标签所在位置
+                                {t("StringFuzzer.insertTagPosition")}
                             </YakitButton>
                         )}
                         <YakitPopconfirm
-                            title={"确认要重置你的 Payload 吗？"}
+                            title={t("StringFuzzer.confirmResetDictionary")}
                             onConfirm={() => {
                                 setTemplate("")
                             }}
                             placement='top'
                         >
-                            <YakitButton type='outline2'>重置</YakitButton>
+                            <YakitButton type='outline2'>{t("YakitButton.reset")}</YakitButton>
                         </YakitPopconfirm>
                         <YakitButton type='outline2' onClick={addToCommonTag}>
-                            添加到常用标签
+                            {t("StringFuzzer.addToFavoriteTags")}
                         </YakitButton>
                     </div>
                 </div>

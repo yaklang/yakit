@@ -1,0 +1,63 @@
+{
+  "PluginDebugBody": {
+    "plugin_info_missing_close_debug_try_again": "Plugin information not retrieved. Please close the debug window and try again.",
+    "extra_parameters_optional": "Extra Parameters (Optional)",
+    "debug_task_started_with_id": "Debug task started successfully, runtime ID:",
+    "parameter_list": "Parameter List",
+    "auto_detection": "Auto Detection",
+    "get_parameters": "Get Parameters",
+    "source_code": "Source Code",
+    "execution_result": "Execution Result",
+    "click_execute_to_start": "Click Execute to start"
+  },
+  "FormContentItemByType": {
+    "parameter_config_data_error": "Error getting parameter configuration data, please reopen this page",
+    "enter_content_comma_separated": "Please enter content, separate multiple items with an 'English comma'"
+  },
+  "PluginFixFormParams": {
+    "data_packet": "Data Packet",
+    "original_request": "Original Request",
+    "request_configuration": "Request Configuration",
+    "request_id": "Request ID",
+    "request_type": "Request Type",
+    "scan_target": "Scan Target",
+    "please_enter_scan_target": "Please enter scan targets, separate multiple targets with an 'English comma' or a new line",
+    "enter_request_id_comma_separated": "Please enter Request IDs, separate multiple Request Ids with an 'English comma'"
+  },
+  "FixExtraParamsNode": {
+    "http_method": "HTTP Method",
+    "request_path": "Request Path",
+    "get_parameters": "GET Parameters",
+    "post_parameters": "POST Parameters"
+  },
+  "CodeScoreModal": {
+    "plugin_basic_detection": "Plugin basic detection"
+  },
+  "CodeScoreModule": {
+    "plugin_basic_test_failed": "Plugin basic test failed:",
+    "detection_items_include": "Detection items include:",
+    "basic_compile_test_description": "Basic compilation test to check if the syntax is standard and if there are incorrect syntax errors;",
+    "use_basic_false_positive_server": "Using the basic false-positive prevention server as a test baseline to prevent false positives caused by overly lenient conditions;",
+    "check_plugin_crash": "Checking if the plugin execution will crash.",
+    "detecting_please_wait": "Detecting, please wait...",
+    "check_error_try_again": "Check for errors, please close and try again!",
+    "score": "Score",
+    "uploading_plugin_good_performance": "(Good performance, starting plugin upload...)",
+    "unable_to_judge_manual_review": "(Unable to judge, manual review required?)",
+    "upload_failed_fix_and_retry": "(Upload failed, please fix and retry)",
+    "manual_review": "Manual Review",
+    "detection_expected_duration": "Generally, the detection will complete within <duration>10-20s</duration>"
+  },
+  "PluginExecuteLog": {
+    "plugin_log": "Plugin Log",
+    "statistical_chart": "Statistical Chart",
+    "output_text": "Output Text",
+    "log_query_result": "Log Query Result"
+  },
+  "LocalPluginLog": {
+    "no_log_information": "No log information available"
+  },
+  "VulnerabilitiesRisksTable": {
+    "risks_and_vulnerabilities": "Risks and Vulnerabilities"
+  }
+}

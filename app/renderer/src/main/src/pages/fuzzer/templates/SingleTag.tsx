@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react"
 import {RandStrWithLenProp} from "./Rand"
 import {Form, Typography} from "antd"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {Text} = Typography
 
@@ -16,6 +17,7 @@ export interface SingleTagProp extends RandStrWithLenProp {
 export interface EncodeTagProp extends SingleTagProp {}
 
 export const EncodeTag: React.FC<EncodeTagProp> = (props) => {
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const [origin, setOrigin] = useState(props.origin)
 
     useEffect(() => {
@@ -35,7 +37,7 @@ export const EncodeTag: React.FC<EncodeTagProp> = (props) => {
     return (
         <>
             {props.help && (
-                <Form.Item label={"编码标签介绍"}>
+                <Form.Item label={t("EncodeTag.encodeTagIntro")}>
                     <Text mark={true}>{props.help}</Text>
                 </Form.Item>
             )}

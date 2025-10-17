@@ -1,0 +1,63 @@
+{
+  "PluginDebugBody": {
+    "plugin_info_missing_close_debug_try_again": "未获取插件信息，请关闭调试窗后再次尝试",
+    "extra_parameters_optional": "额外参数 (非必填)",
+    "debug_task_started_with_id": "调试任务启动成功，运行时 ID：",
+    "parameter_list": "参数列表",
+    "auto_detection": "自动检测",
+    "get_parameters": "获取参数",
+    "source_code": "源码",
+    "execution_result": "执行结果",
+    "click_execute_to_start": "点击【执行】以开始"
+  },
+  "FormContentItemByType": {
+    "parameter_config_data_error": "获取参数配置数据错误，请重新打开该页面",
+    "enter_content_comma_separated": "请输入内容，多条内容用“英文逗号”分隔"
+  },
+  "PluginFixFormParams": {
+    "data_packet": "数据包",
+    "original_request": "原始请求",
+    "request_configuration": "请求配置",
+    "request_id": "请求ID",
+    "request_type": "请求类型",
+    "scan_target": "扫描目标",
+    "please_enter_scan_target": "请输入扫描目标，多个目标用“英文逗号”或换行分隔",
+    "enter_request_id_comma_separated": "请输入请求ID,多个请求Id用“英文逗号”分隔"
+  },
+  "FixExtraParamsNode": {
+    "http_method": "HTTP方法",
+    "request_path": "请求路径",
+    "get_parameters": "GET 参数",
+    "post_parameters": "POST 参数"
+  },
+  "CodeScoreModal": {
+    "plugin_basic_detection": "插件基础检测"
+  },
+  "CodeScoreModule": {
+    "plugin_basic_test_failed": "插件基础测试失败：",
+    "detection_items_include": "检测项包含：",
+    "basic_compile_test_description": "基础编译测试，判断语法是否符合规范，是否存在不正确语法；",
+    "use_basic_false_positive_server": "把基础防误报服务器作为测试基准，防止条件过于宽松导致的误报；",
+    "check_plugin_crash": "检查插件执行过程是否会发生崩溃。",
+    "detecting_please_wait": "检测中，请耐心等待...",
+    "check_error_try_again": "检查错误，请关闭后再次尝试!",
+    "score": "分",
+    "uploading_plugin_good_performance": "（表现良好，开始上传插件中...）",
+    "unable_to_judge_manual_review": "（无法判断，是否需要转人工审核）",
+    "upload_failed_fix_and_retry": "（上传失败，请修复后再上传）",
+    "manual_review": "转人工审核",
+    "detection_expected_duration": "一般来说，检测将会在 <duration>10-20s</duration> 内结束"
+  },
+  "PluginExecuteLog": {
+    "plugin_log": "插件日志",
+    "statistical_chart": "统计图表",
+    "output_text": "输出文本",
+    "log_query_result": "日志查询结果"
+  },
+  "LocalPluginLog": {
+    "no_log_information": "暂无日志信息"
+  },
+  "VulnerabilitiesRisksTable": {
+    "risks_and_vulnerabilities": "风险与漏洞"
+  }
+}

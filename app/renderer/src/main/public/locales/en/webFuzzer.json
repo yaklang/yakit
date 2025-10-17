@@ -13,6 +13,473 @@
       "thisFieldIsRequired": "This field is required"
     }
   },
+  "WebFuzzerPage": {
+    "config": "Config",
+    "rule": "Rule",
+    "sequence": "Sequence"
+  },
+  "PacketScanButton": {
+    "packetScan": "Packet Scan"
+  },
+  "WebFuzzerResponseExtractor": {
+    "cannotGenerateExtractionRule": "Cannot generate data extraction rule:",
+    "autoGenerateExtractionRule": "Auto-Generate Extraction Rule",
+    "regexExtractWithPrefixSuffix": "Prefix/Suffix Regex Extraction",
+    "singleRegexExtract": "Single Regex Extraction",
+    "responseCount": "Total {responses} responses",
+    "extractData": "Extract Data",
+    "prefixRegex": "Prefix (Regex):",
+    "suffixRegex": "Suffix (Regex):",
+    "noExtractionRuleSelected": "No extraction rule selected",
+    "autoExtractRegex": "Auto-Extract Regex:",
+    "extractedTotal": "Extracted/Total:",
+    "confirmClearExtractedData": "Are you sure you want to clear the extracted data?",
+    "downloadFile": "Download File",
+    "displayInTable": "Display in Table",
+    "dataSentSuccessfully": "Data sent successfully",
+    "dataSendFailed": "Data send failed:"
+  },
+  "GeneralExporterForm": {
+    "generateExportFile": "Generate Export File",
+    "exportFields": "Export Fields",
+    "exportJson": "Export JSON",
+    "exportCsv": "Export CSV",
+    "outputToDirectory": "Output to Directory",
+    "optionalDefaultYakitTempDir": "Optional, defaults to {yakit} temp directory",
+    "fileName": "File Name",
+    "asteriskAsRandom": "'*' can be used as a random string placeholder. Do not include the file extension.",
+    "generateDataToLocalFile": "Generate Data to Local File",
+    "requestPacket": "Request Packet",
+    "responsePacket": "Response Packet"
+  },
+  "GeneralExporter": {
+    "exportFinished": "Export Finished",
+    "sendGeneratedFileConfigSuccess": "Successfully sent generated file configuration...",
+    "getGeneratedFileClickToOpen": "Get generated file (click to open file location)"
+  },
+  "HTTPFuzzerPage": {
+    "closeMenuPrompt": "Closing the primary menu will close all secondary menus under it. Are you sure?",
+    "clearOldDataFailed": "Failed to clear old data:",
+    "wfHistoryDataRestoreFailed": "Failed to restore WF history data:",
+    "fuzzTestRequestFailed": "Failed to submit fuzz test request:",
+    "hotReload": "Hot Reload",
+    "buildRequest": "Construct Request",
+    "syncConfig": "Sync Config",
+    "allTraffic": "All Traffic",
+    "response_overflow": "Response count exceeds {maxData}. To avoid excessive frontend rendering pressure, some packets will be discarded for display here. Please click",
+    "view_all_suffix": "to view all data",
+    "advanced_filter_suggestion": "For advanced filtering, multi-condition combined queries, or other complex operations, it is recommended to click and jump to ",
+    "performAction": " to perform the action",
+    "webFuzzerDemo": "WebFuzzer Brute-Force Animation Demo",
+    "bruteForceExample": "Brute-Force Example",
+    "followRedirects": "Follow Redirects",
+    "generatePathTemplate": "Generate as Path Template",
+    "generateRawTemplate": "Generate as Raw Template",
+    "generateYamlTemplate": "Generate Yaml Template",
+    "editAndSendRequest": "Please edit and send an HTTP request/fuzz test on the left",
+    "fuzzTestResultsInfo": "The results panel has been optimized for displaying multiple HTTP request results from fuzz testing and can automatically identify the display for single/multiple requests.",
+    "responseLimitExceeded": "The number of responses exceeds the frontend limit, please confirm to enable ",
+    "saveHttpTrafficSettings": "Save HTTP Traffic Settings ",
+    "matchingInProgress": "Matching in progress",
+    "run_function_start": "Run Function - Start:",
+    "run_function_end": "Run Function - End:",
+    "send_complete": "Send Complete",
+    "success_and_failure_length": "Success and Failure Length",
+    "success_failure_count": "Success: {success} -- Failed: ${failed}",
+    "send_request": "Send Request",
+    "parameter": "Parameter"
+  },
+  "FuzzerExtraShow": {
+    "responsesDiscarded": "Discarded [{droppedCount}] responses",
+    "proxy": "Proxy:",
+    "systemProxy": "System Proxy:",
+    "realHost": "Real Host:",
+    "matchSuccess": "Match successful",
+    "matchFailed": "Match failed",
+    "enableChunkedTransfer": "Enable Chunked Transfer"
+  },
+  "SecondNodeExtra": {
+    "enterTargetResponse": "Please enter the target response",
+    "viewExtractionResults": "View Extraction Results",
+    "viewHeader": "View Header",
+    "viewBody": "View Body",
+    "targetFileNotExist": "Target file no longer exists!",
+    "fullResponse": "Full Response",
+    "hideResponseInfo": "Hide Response Info",
+    "showResponseInfo": "Show Response Info",
+    "highlightColor": "Highlight Color",
+    "statusCode": "Status Code",
+    "responseSize": "Response Size",
+    "latency": "Latency",
+    "extractData": "Extract Data",
+    "matchOnly": "Match Only",
+    "matchOnlyConfirm": "The 'Match Only' operation will end the paused state. Are you sure you want to proceed?",
+    "noWebFuzzerResponse": "No Web Fuzzer Response available for extraction",
+    "extractResponseData": "Extract Response Data",
+    "exportData": "Export Data",
+    "exportAll": "Export All",
+    "exportPayloadOnly": "Export Payload Only",
+    "extractFromResponsePacket": "Extract content from the response packet"
+  },
+  "SecondNodeTitle": {
+    "oversizedResponse": "Oversized Response",
+    "contentTypeModified": "Content-Type was modified; the original content is displayed next to the corresponding field",
+    "success": "Success [{count}]",
+    "failure": "Failure [{count}]",
+    "concurrencyLoad": "Concurrency/Load"
+  },
+  "EditorOverlayWidget": {
+    "dnsTime": "DNS Time:",
+    "remoteAddress": "Remote Address:",
+    "proxy": "Proxy:",
+    "responseTime": "Response Time:",
+    "totalTime": "Total Time:"
+  },
+  "ResponseViewer": {
+    "hideResponseInfo": "Hide Response Info",
+    "showResponseInfo": "Show Response Info",
+    "matcher": "Matcher",
+    "extractor": "Extractor",
+    "copyUrlFailed": "Failed to copy URL: The URL may be incomplete if it contains Fuzz tags",
+    "requestFailedOrServerError": "Request failed or server (proxy) exception",
+    "networkTimeout": "Network timeout (Please check if the target host is online?)",
+    "dnsOrHostError": "DNS error or host error (Please check if the domain can be resolved correctly?)",
+    "cannotSetProxy": "Cannot set proxy (Please check if the proxy is available)",
+    "serverNoResponse": "Server did not return any data",
+    "detailedReason": "Detailed Reason:",
+    "xContentTypeOptionsNotice": "The X-Content-Type-Options field is set in the response packet. Please pay attention to this field to determine if the content-type should be fixed.",
+    "unknownReason": "Unknown Reason"
+  },
+  "ResponseViewerSecondNode": {
+    "extractContent": "Extract Content",
+    "none": "None"
+  },
+  "BlastingAnimationAemonstration": {
+    "bruteForceId": "Brute-Force ID",
+    "bruteForcePassword": "Brute-Force Password",
+    "bruteForceAccount": "Brute-Force Account"
+  },
+  "InsertFileFuzzTag": {
+    "selectedFilenameEmpty": "Selected filename is empty",
+    "fileContent": "File Content",
+    "readFileByLine": "Read file by line",
+    "allInFolder": "All in Folder",
+    "selectPath": "Select Path",
+    "confirmSelection": "Confirm Selection"
+  },
+  "InsertTextToFuzzTag": {
+    "generateTempDictionaryFile": "Generate temporary dictionary file:",
+    "generateTempDictionaryFailed": "Failed to generate temporary dictionary:",
+    "fileContent": "File Content",
+    "readFileByLine": "Read file by line",
+    "text": "Text",
+    "confirmInsertTag": "Confirm Insert Tag"
+  },
+  "HTTPFuzzerHotPatch": {
+    "enableModifiedHotReload": "Enable modified hot reload code and configuration?",
+    "updateTemplateSuccess": "Successfully updated template {tempName}",
+    "updateTemplateFailed": "Failed to update template {tempName}:",
+    "debugInsertHotReload": "Debug / Insert Hot Reload Code",
+    "resultDisplay": "Result Display",
+    "copyFuzzResult": "Copy Fuzz Result",
+    "copyFuzzTag": "Copy Fuzz Tag",
+    "templateContent": "Template Content",
+    "clickToCopy": "Click to Copy",
+    "insertAtEditorPosition": "Insert at Editor Position",
+    "hotReloadCode": "Hot Reload Code",
+    "resetHotReloadWarning": "Clicking this button will reset the hot reload code. Code may be lost. Please proceed with caution.",
+    "expandEditor": "Expand Editor",
+    "sharedHotReloadCode": "Shared Hot Reload Code",
+    "webFuzzerHotReloadNotice": "When enabled, all WebFuzzer tabs will share the current hot reload code, but this only applies to newly created tabs.",
+    "updateAndSaveTemplate": "Update current template and save",
+    "saveTemplate": "Save Template",
+    "enableSuccess": "Enabled successfully",
+    "debugNotice": "Debugging Notice: Debug execution will run for a maximum of 20 seconds OR render a maximum of 300 Payloads.",
+    "engineConsole": "Engine Console",
+    "bruteforce_aes_cbc": "Brute-Force AES-CBC",
+    "bruteforce_rsa_oaep": "Brute-Force RSA-OAEP",
+    "bruteforce_csrf_with_token": "Brute-Force CSRF (with token protection)",
+    "crack_signature": "Crack Signature",
+    "third_party_captcha_bypass": "Third-party CAPTCHA Bypass"
+  },
+  "HTTPFuzzerHistorySelector": {
+    "confirmDeletePackets": "This will delete the data packets and cached data. Are you sure you want to delete them?",
+    "quickSearch": "Quick Search:",
+    "totalFlows": "Total: {HTTPFlowTotal}",
+    "successCount": "Success: {HTTPFlowSuccessCount}"
+  },
+  "HTTPFuzzerClickEditorMenu": {
+    "insertTag": "Insert Tag",
+    "aiTool": "AI Tool",
+    "commonTags": "Common Tags",
+    "save_codec_flow": "Saved codec flow from codec module",
+    "reverse_regex_single": "Reverse Regex (Single)",
+    "reverse_regex_all": "Reverse Regex (All)",
+    "timestamp_seconds": "Timestamp (Seconds)",
+    "captcha": "Captcha",
+    "random_number": "Random Number",
+    "random_string": "Random String",
+    "integer_range": "Integer Range",
+    "insert_dictionary": "Insert Dictionary",
+    "insert_temp_dictionary": "Insert Temporary Dictionary",
+    "insert_file": "Insert File"
+  },
+  "AIPluginComponent": {
+    "getPlugin": "Get Plugin"
+  },
+  "EncodeComponent": {
+    "md5Encode": "MD5 Encode",
+    "base64Encode": "Base64 Encode",
+    "base64ThenUrlEncode": "Base64 then URL Encode",
+    "hexEncode": "HEX Encode (Hexadecimal Encode)",
+    "htmlEncode": "HTML Encode",
+    "urlEncode": "URL Encode",
+    "urlEncodeSpecial": "URL Encode (Special characters only)"
+  },
+  "DecodeLableComponent": {
+    "base64Decode": "Base64 Decode",
+    "doubleUrlDecode": "Double URL Decode",
+    "hexDecode": "Hex Decode",
+    "htmlDecode": "HTML Decode",
+    "urlForceDecode": "URL Force Decode",
+    "unicodeChineseDecode": "Unicode Chinese Decode"
+  },
+  "HTTPFuzzerRangeEditorMenu": {
+    "encode": "Encode",
+    "decode": "Decode",
+    "smartDecode": "Smart Decode"
+  },
+  "FuzzerResponseTableEx": {
+    "request": "Request",
+    "responseSize": "Response Size",
+    "responseSimilarity": "Response Similarity",
+    "httpHeaderSimilarity": "HTTP Header Similarity",
+    "latencyMs": "Latency (ms)",
+    "failureReason": "Failure Reason",
+    "failureContentNotice": "Content will only appear if the request failed~"
+  },
+  "WebFuzzerNewEditor": {
+    "insertTagOrDictionary": "Insert Tag/Dictionary",
+    "insertEmptyByteTag": "Insert Empty Byte Tag: {{hexd(00)}}",
+    "insertTempDictionary": "Insert Temporary Dictionary",
+    "insertFuzzDictionaryTag": "Insert Fuzz Dictionary Tag",
+    "insertHotReloadTag": "Insert Hot Reload Tag",
+    "insertFileTag": "Insert File Tag",
+    "copyUrlFailed": "Failed to copy URL: The URL may be incomplete if it contains Fuzz tags"
+  },
+  "EncodeTag": {
+    "encodeTagIntro": "Introduction to Encode Tags"
+  },
+  "FuzzerPageSetting": {
+    "getSequenceConfigKeyFailed": "Failed to get activation key for sequence config collapsible panel:"
+  },
+  "RpsAndCpsLineChart": {
+    "currentPacketCount": "Current Packet Count:",
+    "currentConnectionCount": "Current Connection Count:"
+  },
+  "RequestDelayStackedAreaChart": {
+    "tlsHandshake": "TLS Handshake",
+    "tcpConnection": "TCP Connection",
+    "totalDuration": "Total Duration",
+    "requestLatency": "Request Latency"
+  },
+  "FuzzerConcurrentLoad": {
+    "packetsPerSecond5min": "Packets per Second (5min)",
+    "connectionsPerSecond5min": "Connections per Second (5min)",
+    "responseLatency": "Response Latency"
+  },
+  "WebFuzzerSynSetting": {
+    "wfPageDataEmpty": "WF page data is empty",
+    "syncDataPageNotFound": "Sync data page not found",
+    "dataSourcePageTagName": "Data source page tag name:",
+    "syncContent": "Sync Content",
+    "pleaseSelectSyncContent": "Please select the content to sync",
+    "syncScope": "Sync Scope",
+    "pleaseSelectPageToSync": "Please select the page to sync to",
+    "sync": "Sync",
+    "config": "Config",
+    "rule": "Rule",
+    "allPages": "All Pages",
+    "customPage": "Custom Page"
+  },
+  "ShareImportExportData": {
+    "sharePacketId": "Share Packet ID",
+    "exportAsPathTemplate": "Export as Path Template",
+    "exportAsRawTemplate": "Export as Raw Template",
+    "exportYamlSuccess": "Export Yaml successful",
+    "importPacketId": "Import Packet ID",
+    "importYamlFile": "Import Yaml File",
+    "uploadOrPasteCode": "Upload, or paste code directly",
+    "pleaseSelectOrPasteFile": "Please select or paste the file to import",
+    "getPathFailed": "Failed to get path"
+  },
+  "MultimodeImportYaml": {
+    "uploadFileFormatError": "File format error, please re-upload"
+  },
+  "ShareModal": {
+    "pleaseLoginToShare": "Please log in to share",
+    "shareDataConversionFailed": "Share data conversion failed:",
+    "setExpiration": "Set expiration:",
+    "fiveMinutes": "5 minutes",
+    "fifteenMinutes": "15 minutes",
+    "oneHour": "1 hour",
+    "oneDay": "1 day",
+    "password": "Password:",
+    "limitShareCount": "Limit share count:",
+    "timesValue": "{value} times",
+    "shareId": "Share ID:",
+    "generateShareToken": "Generate Share Token",
+    "copiedToClipboard": "Copied to clipboard",
+    "copyShare": "Copy Share"
+  },
+  "PluginDebugDrawer": {
+    "noBaseInfoParsed": "No relevant base information parsed",
+    "pluginDebug": "Plugin Debug",
+    "saveAsPlugin": "Save as Plugin"
+  },
+  "HTTPFuzzerPageTable": {
+    "request": "Request",
+    "status": "Status",
+    "responseSize": "Response Size",
+    "latencyMs": "Latency (ms)",
+    "extractData": "Extract Data",
+    "responseSimilarity": "Response Similarity",
+    "httpHeaderSimilarity": "HTTP Header Similarity",
+    "debug": "Debug",
+    "failureReason": "Failure Reason",
+    "extractionResult": "Extraction Result",
+    "hideResponseInfo": "Hide Response Info",
+    "showResponseInfo": "Show Response Info",
+    "copyUrlFailed": "Failed to copy URL: The URL may be incomplete if it contains Fuzz tags",
+    "quickPreview": "Quick Preview",
+    "response": "Response",
+    "oversizedResponse": "Oversized Response",
+    "viewHeader": "View Header",
+    "viewBody": "View Body",
+    "targetFileNotExist": "Target file no longer exists!",
+    "fullResponse": "Full Response"
+  },
+  "HttpQueryAdvancedConfig": {
+    "force_https": "Force HTTPS",
+    "tls_config": "TLS Configuration",
+    "guomi_tls": "GM TLS",
+    "random_tls": "Random TLS",
+    "real_host": "Real Host",
+    "host_collision_tip": "For Host collision, please configure the real Host",
+    "set_proxy": "Set Proxy",
+    "multi_proxy_tip": "When multiple proxies are set, the system will intelligently choose an available proxy for sending packets",
+    "proxy_auth_config": "Configure Proxy Authentication",
+    "disable_system_proxy": "Disable System Proxy",
+    "frontend_render_count": "Frontend Render Count",
+    "frontend_render_tip": "Does not affect the number of packets sent, only affects the number displayed on the frontend. The remaining packets can be viewed by clicking 'View All' in the table",
+    "response_body_limit": "Response Body Length Limit",
+    "sni_config": "SNI Configuration",
+    "force_sni": "Force SNI",
+    "request_config": "Request Configuration",
+    "fuzztag_helper": "Fuzztag Helper",
+    "insert_yak_fuzz": "Insert yak.fuzz syntax",
+    "render_fuzz": "Render Fuzz",
+    "compat_mode_tip": "In compatibility mode, inner curly braces can be omitted when nested, e.g., {{base64(url(www.example.com))}}. In standard mode, they cannot be omitted. Fuzztag will be disabled if this is turned off.",
+    "render_mode": "Render Mode",
+    "disable_hot_reload": "Disable Hot Reload",
+    "no_fix_length": "Do not fix length",
+    "timeout_duration": "Timeout Duration",
+    "connection": "Connection",
+    "response": "Response",
+    "batch_target": "Batch Target",
+    "configured": "Configured",
+    "configure_batch_target": "Configure Batch Target",
+    "random_chunk_transfer": "Random Chunk Transfer",
+    "chunk_length": "Chunk Length",
+    "random_delay": "Random Delay",
+    "concurrency_config": "Concurrency Configuration",
+    "disable_connection_pool": "Disable Connection Pool",
+    "repeat_send": "Repeat Send",
+    "concurrency_test_tip": "Generally used to test race conditions or high concurrency scenarios",
+    "concurrent_threads": "Concurrent Threads",
+    "random_delay2": "Random Delay",
+    "retry_config": "Retry Configuration",
+    "retry_count": "Retry Count",
+    "retry_conditions": "Retry Conditions",
+    "status_code": "Status Code",
+    "no_retry_conditions": "No Retry Conditions",
+    "redirect_config": "Redirect Configuration",
+    "disable_redirect": "Disable Redirect",
+    "redirect_count": "Redirect Count",
+    "js_redirect": "JS Redirect",
+    "dns_config": "DNS Configuration",
+    "dns_server": "DNS Server",
+    "specify_dns_server": "Specify DNS Server",
+    "hosts_config": "Hosts Configuration",
+    "add_hosts_mapping": "Add Hosts Mapping",
+    "get_params": "GET Parameters",
+    "post_params": "POST Parameters",
+    "collapse_active_key_error": "Failed to get the active key for the collapse panel:",
+    "open_matcher_extraction_error": "Failed to parse data for openMatcherAndExtraction",
+    "auto": "Auto",
+    "force": "Force",
+    "clear": "Clear",
+    "cross_product": "Cross Product",
+    "fork_sync": "Fork/Sync",
+    "close": "Close",
+    "standard": "Standard",
+    "compatibility": "Compatibility"
+  },
+  "BatchTargetModal": {
+    "configure_batch_target": "Configure Batch Target",
+    "scan_target": "Scan Target",
+    "please_enter_scan_target": "Please enter scan targets, separated by 'commas' or new lines"
+  },
+  "StringFuzzer": {
+    "fuzz_template_empty": "Fuzz template is empty",
+    "payload_test_result": "Payload Test Result",
+    "total": "Total:",
+    "tag_add_success": "Tag added successfully",
+    "description": "Description:",
+    "example": "Example:",
+    "parameter_type_info": "Parameter Type Info:",
+    "parameter_name": "Parameter Name",
+    "default_value": "Default Value",
+    "optional_parameter": "Optional Parameter",
+    "array_parameter": "Array Parameter",
+    "delimiter": "Delimiter",
+    "nesting": "Nesting",
+    "insert": "Insert",
+    "viewGeneratedPayload": "View generated Payload",
+    "insertTagPosition": "Insert Tag Position",
+    "confirmResetDictionary": "Confirm you want to reset your Payload?",
+    "addToFavoriteTags": "Add to favorite tags",
+    "tag": "Tag "
+  },
+  "HTTPFuzzerHostInput": {
+    "domainRequired": "Domain cannot be empty",
+    "domain": "Domain",
+    "domainExample": "E.g.: oa.com",
+    "ipExample": "E.g.: 10.0.0.1"
+  },
+  "MatchersPanel": {
+    "matcher": "Matcher",
+    "add_debug": "Add/Debug"
+  },
+  "MatchersAndExtractorsListItemOperate": {
+    "debug": "Debug"
+  },
+  "SetVariableItem": {
+    "variableName": "Variable Name",
+    "variableValue": "Variable Value"
+  },
+  "ExtractorsPanel": {
+    "dataExtractor": "Data Extractor",
+    "add_debug": "Add/Debug"
+  },
+  "VariablePanel": {
+    "renderedVariableContent": "Rendered Variable Content",
+    "previewFailed": "Preview failed:",
+    "setVariable": "Set Variable"
+  },
+  "VariableList": {
+    "variable": "Variable"
+  },
   "DecodeComponent": {
     "smartDecode": "Smart Decode",
     "noDecodeInfo": "No decode information"
@@ -52,7 +519,9 @@
     "extractor": "Extractor",
     "addMatcher": "Add Matcher",
     "addCondition": "Add Condition",
-    "debugExecute": "Debug Execute"
+    "debugExecute": "Debug Execute",
+    "matching_extraction_tip": "Added <count>{{num}}</count> items",
+    "extractionResult": "Extraction Result"
   },
   "MatcherCollapse": {
     "emptyMatcherConditionExists": "This matcher already has an empty condition",
@@ -104,9 +573,51 @@
     "extraction_scope": "Extraction Scope",
     "response_header": "Response Header",
     "response_body": "Response Body",
-    "complete_conditions_before_adding": "Please complete the configuration of the existing conditions before adding new ones"
+    "complete_conditions_before_adding": "Please complete the configuration of the existing conditions before adding new ones",
+    "regex": "Regular Expression",
+    "keyValuePair": "Key-Value Pair",
+    "expression": "Expression"
   },
   "ColorSelect": {
     "hit_color": "Hit Color"
+  },
+  "FuzzerSequence": {
+    "fuzz_request_fail": "Failed to submit fuzz test request:",
+    "execute_after_sequence": "Please configure the sequence before executing",
+    "configure_before_adding": "There is an empty node. Please configure it before adding a new one",
+    "application_success": "Applied successfully",
+    "select_after_configuring_sequence": "Please configure the sequence before making a selection",
+    "please_select_page": "Please select a page",
+    "allTraffic": "All Traffic",
+    "webfuzzer_sequence_demo": "WebFuzzer Sequence Animation Demo",
+    "official_documentation": "Official Help Documentation",
+    "sequence_configuration": "Sequence Configuration",
+    "add_node": "Add Node",
+    "force_stop": "Force Stop",
+    "config": "Config",
+    "select_webfuzzer_with_sequence_tip": "Please select Web Fuzzer (if you need to use a sequence, please drag other tabs into this group)"
+  },
+  "SequenceItem": {
+    "variable": "Variable",
+    "edit_name": "Edit Name",
+    "name_cannot_be_empty": "Name cannot be empty",
+    "max_20_characters": "Maximum 20 characters",
+    "node_configuration": "Node Configuration",
+    "apply_to_other_nodes": "Apply to Other Nodes",
+    "inherit_variables": "Inherit Variables",
+    "inherit_cookie": "Inherit Cookie",
+    "go_to_fuzzer_configuration": "Go to Fuzzer Configuration",
+    "please_select_page": "Please select a page"
+  },
+  "SequenceResponseHeard": {
+    "generatePathTemplate": "Generate as Path Template",
+    "generateRawTemplate": "Generate as Raw Template",
+    "generateYamlTemplate": "Generate Yaml Template",
+    "show_all_responses": "Show All Responses"
+  },
+  "SequenceResponse": {
+    "matcher_extractor_validation_failed": "Matcher and extractor validation failed:",
+    "hotReload": "Hot Reload",
+    "view_after_executing_sequence": "Please execute the sequence before viewing"
   }
 }

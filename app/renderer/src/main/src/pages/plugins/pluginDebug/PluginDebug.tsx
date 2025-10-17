@@ -43,6 +43,7 @@ import cloneDeep from "lodash/cloneDeep"
 import classNames from "classnames"
 import styles from "./PluginDebug.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
     const {plugin, getContainer, visible, onClose, onMerge} = props
@@ -161,6 +162,7 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
 
 export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
     const {plugin, newCode, setNewCode} = props
+    const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
 
     /** 插件类型 */
     const pluginType = useMemo(() => {
@@ -192,7 +194,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
     const onFetchParams = useMemoizedFn(async () => {
         if (fetchParamsLoading) return
         if (!plugin) {
-            failed("未获取插件信息，请关闭调试窗后再次尝试")
+            failed(t("PluginDebugBody.plugin_info_missing_close_debug_try_again"))
             return
         }
 
@@ -214,7 +216,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
             else setParams([])
             setNewCode(newCode || plugin.Content || "")
         } else {
-            failed("未获取插件信息，请关闭调试窗后再次尝试")
+            failed(t("PluginDebugBody.plugin_info_missing_close_debug_try_again"))
         }
 
         return () => {
@@ -351,12 +353,12 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                 return groupParams.length > 0 ? (
                     <>
                         <div className={styles["additional-params-divider"]}>
-                            <div className={styles["text-style"]}>额外参数 (非必填)</div>
+                            <div className={styles["text-style"]}>{t("PluginDebugBody.extra_parameters_optional")}</div>
                             <div className={styles["divider-style"]}></div>
                         </div>
                         <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={pluginType} />
 
-                        <div className={styles["to-end"]}>已经到底啦～</div>
+                        <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>
                     </>
                 ) : null
 
@@ -364,7 +366,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                 return isHiddenDefaultParams && isHiddenCustomParams ? null : (
                     <>
                         <div className={styles["additional-params-divider"]}>
-                            <div className={styles["text-style"]}>额外参数 (非必填)</div>
+                            <div className={styles["text-style"]}>{t("PluginDebugBody.extra_parameters_optional")}</div>
                             <div className={styles["divider-style"]}></div>
                         </div>
                         {!isHiddenCustomParams ? (
@@ -379,7 +381,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                                 httpPathWrapper={styles["optional-params-wrapper"]}
                             />
                         )}
-                        <div className={styles["to-end"]}>已经到底啦～</div>
+                        <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>
                     </>
                 )
             case "port-scan":
@@ -387,7 +389,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                 return (
                     <>
                         <div className={styles["additional-params-divider"]}>
-                            <div className={styles["text-style"]}>额外参数 (非必填)</div>
+                            <div className={styles["text-style"]}>{t("PluginDebugBody.extra_parameters_optional")}</div>
                             <div className={styles["divider-style"]}></div>
                         </div>
                         <FixExtraParamsNode
@@ -422,7 +424,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
             setTimeout(() => setIsExecuting(false), 300)
         },
         setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            yakitNotify("info", `${t("PluginDebugBody.debug_task_started_with_id")}${rId}`)
             setRuntimeId(rId)
         }
     })
@@ -521,13 +523,13 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                 firstNode={
                     <div className={styles["left-wrapper"]}>
                         <YakitCard
-                            title='参数列表'
+                            title={t("PluginDebugBody.parameter_list")}
                             style={{border: 0}}
                             headClassName={styles["left-header-wrapper"]}
                             extra={
                                 <div className={styles["header-extra"]}>
                                     <YakitButton type='text' onClick={handleOpenScoreHint}>
-                                        自动检测
+                                        {t("PluginDebugBody.auto_detection")}
                                     </YakitButton>
                                     <div
                                         className={styles["divider-wrapper"]}
@@ -540,7 +542,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                                                 loading={fetchParamsLoading}
                                                 onClick={onFetchParams}
                                             >
-                                                获取参数
+                                                {t("PluginDebugBody.get_parameters")}
                                                 <OutlineRefreshIcon />
                                             </YakitButton>
                                             <div className={styles["divider-wrapper"]}></div>
@@ -548,11 +550,11 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                                     )}
                                     {isExecuting ? (
                                         <YakitButton danger onClick={onStopExecute}>
-                                            停止
+                                            {t("YakitButton.stop")}
                                         </YakitButton>
                                     ) : (
                                         <YakitButton icon={<SolidPlayIcon />} onClick={onStartExecute}>
-                                            执行
+                                            {t("YakitButton.execute")}
                                         </YakitButton>
                                     )}
                                 </div>
@@ -583,8 +585,8 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                         </YakitCard>
                     </div>
                 }
-                firstRatio='15%'
-                firstMinSize='340px'
+                firstRatio='25%'
+                firstMinSize='450px'
                 firstNodeStyle={{padding: 0}}
                 secondNode={
                     <div className={styles["right-wrapper"]}>
@@ -593,8 +595,8 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                                 buttonStyle='solid'
                                 value={activeTab}
                                 options={[
-                                    {value: "code", label: "源码"},
-                                    {value: "execResult", label: "执行结果"}
+                                    {value: "code", label: t("PluginDebugBody.source_code")},
+                                    {value: "execResult", label: t("PluginDebugBody.execution_result")}
                                 ]}
                                 onChange={(e) => setActiveTab(e.target.value)}
                             />
@@ -652,7 +654,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                                         </div>
                                     </>
                                 ) : (
-                                    <YakitEmpty style={{marginTop: 60}} description={"点击【执行】以开始"} />
+                                    <YakitEmpty style={{marginTop: 60}} description={t("PluginDebugBody.click_execute_to_start")} />
                                 )}
                             </div>
                         </div>

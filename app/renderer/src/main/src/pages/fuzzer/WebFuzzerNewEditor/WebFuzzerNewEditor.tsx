@@ -17,6 +17,7 @@ import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export interface WebFuzzerNewEditorProps {
@@ -52,6 +53,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
             oneResponseValue,
             hex
         } = props
+        const {t, i18n} = useI18nNamespaces(["webFuzzer"])
         const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
         const selectionByteCount = useSelectionByteCount(reqEditor, 500)
 
@@ -101,13 +103,13 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                         {type: "divider"},
                         {
                             key: "insert-label-tag",
-                            label: "插入标签/字典",
+                            label: t("WebFuzzerNewEditor.insertTagOrDictionary"),
                             children: [
-                                {key: "insert-nullbyte", label: "插入空字节标签: {{hexd(00)}}"},
-                                {key: "insert-temporary-file-tag", label: "插入临时字典"},
-                                {key: "insert-intruder-tag", label: "插入模糊测试字典标签"},
-                                {key: "insert-hotpatch-tag", label: "插入热加载标签"},
-                                {key: "insert-fuzzfile-tag", label: "插入文件标签"}
+                                {key: "insert-nullbyte", label: t("WebFuzzerNewEditor.insertEmptyByteTag")},
+                                {key: "insert-temporary-file-tag", label: t("WebFuzzerNewEditor.insertTempDictionary")},
+                                {key: "insert-intruder-tag", label: t("WebFuzzerNewEditor.insertFuzzDictionaryTag")},
+                                {key: "insert-hotpatch-tag", label: t("WebFuzzerNewEditor.insertHotReloadTag")},
+                                {key: "insert-fuzzfile-tag", label: t("WebFuzzerNewEditor.insertFileTag")}
                             ]
                         }
                     ],
@@ -137,7 +139,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                     }
                 }
             }
-        }, [])
+        }, [i18n.language])
 
         const copyUrl = useMemoizedFn(() => {
             copyAsUrl({Request: newRequest, IsHTTPS: isHttps})
@@ -149,7 +151,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                     openExternalWebsite(data.Url)
                 })
                 .catch((e) => {
-                    yakitNotify("error", "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整")
+                    yakitNotify("error", t("WebFuzzerNewEditor.copyUrlFailed"))
                 })
         })
 
@@ -176,7 +178,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 title={
                     <span style={{fontSize: 12}}>
                         Request&nbsp;&nbsp;
-                        <ByteCountTag selectionByteCount={selectionByteCount} key='httpfuzzerRes' />
+                        <ByteCountTag selectionByteCount={selectionByteCount} itemKey='httpfuzzerRes' />
                     </span>
                 }
                 extraEnd={firstNodeExtra && firstNodeExtra()}

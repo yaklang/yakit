@@ -19,11 +19,13 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {IMonacoEditor} from "@/utils/editors"
 import {getModelContext} from "@/utils/monacoSpec/yakEditor"
 import {monaco} from "react-monaco-editor"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
 
 export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | null = memo((props) => {
     const {type = "sideBar", panelKey, onlyKey = "", list, titleRender, renderItem, collapseProps, isShowBottom} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
 
     const wrapperClassName = useMemo(() => {
         if (type === "sideBar") return styles["collapse-list-side-bar"]
@@ -63,7 +65,7 @@ export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | nul
                         </Panel>
                     )
                 })}
-                {isShowBottom && <div className={styles["to-end"]}>已经到底啦～</div>}
+                {isShowBottom && <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>}
             </Collapse>
         </div>
     )

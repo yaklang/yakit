@@ -1,0 +1,22 @@
+{
+  "ReadOnlyNewPayload": {
+    "selected": "Selected:",
+    "totalCheckedItems": "{count} items",
+    "insert": "Insert",
+    "supportInsertFileForFuzz": "Supports inserting files for Fuzzing",
+    "pleaseSelectDictionaryOrFolder": "Please select the payload or folder to insert"
+  },
+  "NewPayloadLocalList": {
+    "selectDictionaryToInsert": "Select the payload you want to insert",
+    "goToDictionaryManagement": "Go to Payload Management"
+  },
+  "PayloadLocalContent": {
+    "fuzzModuleRenderHint": "Can be rendered via the fuzz module {{x(payload_name)}}"
+  },
+  "NewPayloadTable": {
+    "dictionaryContent": "Payload Content",
+    "addHitCountFieldNotice": "Added Hit Count field. The higher the hit count, the higher its priority during brute-forcing.",
+    "hitCount": "Hit Count",
+    "recordCount": "Total {i} records"
+  }
+}

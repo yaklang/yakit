@@ -84,13 +84,15 @@ export const matcherTypeList = (t: (text: string) => string) => {
     ]
 }
 
-export const extractorTypeList = [
-    {label: "正则表达式", value: "regex"},
-    {label: "XPath", value: "xpath"},
-    {label: "键值对", value: "kval"},
-    {label: "JQ(*)", value: "json"},
-    {label: "表达式", value: "nuclei-dsl"}
-]
+export const extractorTypeList = (t: (text: string) => string) => {
+    return [
+        {label: t("ExtractorItem.regex"), value: "regex"},
+        {label: "XPath", value: "xpath"},
+        {label: t("ExtractorItem.keyValuePair"), value: "kval"},
+        {label: "JQ(*)", value: "json"},
+        {label: t("ExtractorItem.expression"), value: "nuclei-dsl"}
+    ]
+}
 
 export const defMatcherAndExtractionCode =
     "HTTP/1.1 200 OK\r\n" +

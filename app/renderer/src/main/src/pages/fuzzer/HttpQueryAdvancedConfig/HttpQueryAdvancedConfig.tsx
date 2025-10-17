@@ -64,47 +64,53 @@ const {YakitPanel} = YakitCollapse
 
 const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 
-const fuzzTagModeOptions = [
-    {
-        value: "close",
-        label: "关闭"
-    },
-    {
-        value: "standard",
-        label: "标准"
-    },
-    {
-        value: "legacy",
-        label: "兼容"
-    }
-]
+const fuzzTagModeOptions = (t: (text: string) => string) => {
+    return [
+        {
+            value: "close",
+            label: t("HttpQueryAdvancedConfig.close")
+        },
+        {
+            value: "standard",
+            label: t("HttpQueryAdvancedConfig.standard")
+        },
+        {
+            value: "legacy",
+            label: t("HttpQueryAdvancedConfig.compatibility")
+        }
+    ]
+}
 
-const fuzzTagSyncOptions = [
-    {
-        value: false,
-        label: "交叉乘积"
-    },
-    {
-        value: true,
-        label: "草叉/同步"
-    }
-]
+const fuzzTagSyncOptions = (t: (text: string) => string) => {
+    return [
+        {
+            value: false,
+            label: t("HttpQueryAdvancedConfig.cross_product")
+        },
+        {
+            value: true,
+            label: t("HttpQueryAdvancedConfig.fork_sync")
+        }
+    ]
+}
 
 // 前端定义的字段值
-const overwriteSNIOptions = [
-    {
-        value: "auto",
-        label: "自动"
-    },
-    {
-        value: "mandatory",
-        label: "强制"
-    },
-    {
-        value: "clear",
-        label: "清空"
-    }
-]
+const overwriteSNIOptions = (t: (text: string) => string) => {
+    return [
+        {
+            value: "auto",
+            label: t("HttpQueryAdvancedConfig.auto")
+        },
+        {
+            value: "mandatory",
+            label: t("HttpQueryAdvancedConfig.force")
+        },
+        {
+            value: "clear",
+            label: t("HttpQueryAdvancedConfig.clear")
+        }
+    ]
+}
 
 type fields = keyof AdvancedConfigValueProps
 
@@ -124,6 +130,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         proxyListRef,
         isbuttonIsSendReqStatus
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
 
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
 
@@ -174,7 +181,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             try {
                 setActiveKey(data ? JSON.parse(data) : "请求包配置")
             } catch (error) {
-                yakitFailed("获取折叠面板的激活key失败:" + error)
+                yakitFailed(t("HttpQueryAdvancedConfig.collapse_active_key_error") + error)
             }
         })
         return () => {
@@ -190,7 +197,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             }
             setHttpResponse(res.httpResponseCode)
         } catch (error) {
-            yakitNotify("error", "openMatcherAndExtraction 解析数据失败")
+            yakitNotify("error", t("HttpQueryAdvancedConfig.open_matcher_extraction_error"))
         }
     })
 
@@ -391,7 +398,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 ])
             }
         } else {
-            yakitFailed(`请将已添加【变量${index}】设置完成后再进行添加`)
+            yakitFailed(t("HttpQueryAdvancedConfig.open_matcher_extraction_error", {index: index}))
         }
         if (activeKey?.findIndex((ele) => ele === actKey) === -1) {
             setActiveKey([...activeKey, actKey])
@@ -434,10 +441,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 return (
                     <>
                         <div className={styles["advanced-config-extra-formItem"]}>
-                            <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
+                            <Form.Item
+                                label={t("HttpQueryAdvancedConfig.force_https")}
+                                name='isHttps'
+                                valuePropName='checked'
+                            >
                                 <YakitSwitch />
                             </Form.Item>
-                            <Form.Item label='TLS配置'>
+                            <Form.Item label={t("HttpQueryAdvancedConfig.tls_config")}>
                                 <div style={{display: "flex"}}>
                                     <Form.Item name='isGmTLS' style={{marginBottom: 0}}>
                                         <YakitCheckableTag
@@ -450,7 +461,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 })
                                             }}
                                         >
-                                            国密TLS
+                                            {t("HttpQueryAdvancedConfig.guomi_tls")}
                                         </YakitCheckableTag>
                                     </Form.Item>
                                     <Form.Item name='randomJA3' style={{marginBottom: 0}}>
@@ -464,7 +475,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 })
                                             }}
                                         >
-                                            随机TLS
+                                            {t("HttpQueryAdvancedConfig.random_tls")}
                                         </YakitCheckableTag>
                                     </Form.Item>
                                 </div>
@@ -472,22 +483,25 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <Form.Item
                                 label={
                                     <span className={styles["advanced-config-form-label"]}>
-                                        真实Host
-                                        <Tooltip title='如需Host碰撞，请配置真实Host' overlayStyle={{width: 150}}>
+                                        {t("HttpQueryAdvancedConfig.real_host")}
+                                        <Tooltip
+                                            title={t("HttpQueryAdvancedConfig.host_collision_tip")}
+                                            overlayStyle={{width: 150}}
+                                        >
                                             <InformationCircleIcon className={styles["info-icon"]} />
                                         </Tooltip>
                                     </span>
                                 }
                                 name='actualHost'
                             >
-                                <YakitInput placeholder='请输入...' size='small' allowClear />
+                                <YakitInput placeholder={t("YakitInput.please_enter")} size='small' allowClear />
                             </Form.Item>
                             <Form.Item
                                 label={
                                     <span className={styles["advanced-config-form-label"]}>
-                                        设置代理
+                                        {t("HttpQueryAdvancedConfig.set_proxy")}
                                         <Tooltip
-                                            title='设置多个代理时，会智能选择能用的代理进行发包'
+                                            title={t("HttpQueryAdvancedConfig.multi_proxy_tip")}
                                             overlayStyle={{width: 150}}
                                         >
                                             <InformationCircleIcon className={styles["info-icon"]} />
@@ -516,31 +530,36 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         }
                                     ]}
                                     allowClear
-                                    placeholder='请输入...'
+                                    placeholder={t("YakitInput.please_enter")}
                                     mode='tags'
                                     size='small'
                                     maxTagCount={1}
                                     dropdownMatchSelectWidth={245}
                                 />
                             </Form.Item>
-                            <YakitButton
-                                size='small'
-                                type='text'
-                                onClick={() => setAgentConfigModalVisible(true)}
-                                icon={<PlusSmIcon />}
-                                style={{marginLeft: 100, marginBottom: 12}}
+                            <Form.Item label={<> </>}>
+                                <YakitButton
+                                    size='small'
+                                    type='text'
+                                    onClick={() => setAgentConfigModalVisible(true)}
+                                    icon={<PlusSmIcon />}
+                                >
+                                    {t("HttpQueryAdvancedConfig.proxy_auth_config")}
+                                </YakitButton>
+                            </Form.Item>
+                            <Form.Item
+                                label={t("HttpQueryAdvancedConfig.disable_system_proxy")}
+                                name={"noSystemProxy"}
+                                valuePropName='checked'
                             >
-                                配置代理认证
-                            </YakitButton>
-                            <Form.Item label={"禁用系统代理"} name={"noSystemProxy"} valuePropName='checked'>
                                 <YakitSwitch />
                             </Form.Item>
                             <Form.Item
                                 label={
                                     <span className={styles["advanced-config-form-label"]}>
-                                        前端渲染数量
+                                        {t("HttpQueryAdvancedConfig.frontend_render_count")}
                                         <Tooltip
-                                            title='不影响发包数量，只影响前端渲染展示数量，超出的数量可通过点击表格的查看全部进行查看'
+                                            title={t("HttpQueryAdvancedConfig.frontend_render_tip")}
                                             overlayStyle={{width: 150}}
                                         >
                                             <InformationCircleIcon className={styles["info-icon"]} />
@@ -559,7 +578,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 />
                             </Form.Item>
                             <Form.Item
-                                label='响应体长度限制'
+                                label={t("HttpQueryAdvancedConfig.response_body_limit")}
                                 name='maxBodySize'
                                 style={{marginBottom: 12}}
                                 normalize={(value) => {
@@ -569,12 +588,16 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <YakitInput suffix='M' size='small' className={styles["fuzzer-maxBodySize-input"]} />
                             </Form.Item>
                             <Form.Item
-                                label={<span className={styles["advanced-config-form-label"]}>SNI 配置</span>}
+                                label={
+                                    <span className={styles["advanced-config-form-label"]}>
+                                        {t("HttpQueryAdvancedConfig.sni_config")}
+                                    </span>
+                                }
                                 name='overwriteSNI'
                             >
                                 <YakitRadioButtons
                                     buttonStyle='solid'
-                                    options={overwriteSNIOptions}
+                                    options={overwriteSNIOptions(t)}
                                     size={"small"}
                                     onChange={(e) => {
                                         if (e.target.value !== "mandatory") {
@@ -587,7 +610,11 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             </Form.Item>
                             {overwriteSNI === "mandatory" && (
                                 <Form.Item
-                                    label={<span className={styles["advanced-config-form-label"]}>强制SNI</span>}
+                                    label={
+                                        <span className={styles["advanced-config-form-label"]}>
+                                            {t("HttpQueryAdvancedConfig.force_sni")}
+                                        </span>
+                                    }
                                     name='sNI'
                                 >
                                     <YakitInput size='small' />
@@ -600,7 +627,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             destroyInactivePanel={true}
                         >
                             <YakitPanel
-                                header='请求包配置'
+                                header={t("HttpQueryAdvancedConfig.request_config")}
                                 key='请求包配置'
                                 extra={
                                     <YakitButton
@@ -631,26 +658,26 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         }}
                                         size='small'
                                     >
-                                        重置
+                                        {t("YakitButton.reset")}
                                     </YakitButton>
                                 }
                             >
-                                <Form.Item label='Fuzztag 辅助'>
+                                <Form.Item label={t("HttpQueryAdvancedConfig.fuzztag_helper")}>
                                     <YakitButton
                                         size='small'
                                         type='outline1'
                                         onClick={() => onInsertYakFuzzer()}
                                         icon={<PlusSmIcon />}
                                     >
-                                        插入 yak.fuzz 语法
+                                        {t("HttpQueryAdvancedConfig.insert_yak_fuzz")}
                                     </YakitButton>
                                 </Form.Item>
                                 <Form.Item
                                     label={
                                         <span className={styles["advanced-config-form-label"]}>
-                                            渲染 Fuzz
+                                            {t("HttpQueryAdvancedConfig.render_fuzz")}
                                             <Tooltip
-                                                title='兼容模式支持嵌套使用时内层大括号省略 {{base64(url(www.example.com))}}，但标准模式不可省略，关闭后Fuzztag将失效。'
+                                                title={t("HttpQueryAdvancedConfig.compat_mode_tip")}
                                                 overlayStyle={{width: 150}}
                                             >
                                                 <InformationCircleIcon className={styles["info-icon"]} />
@@ -661,28 +688,36 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 >
                                     <YakitRadioButtons
                                         buttonStyle='solid'
-                                        options={fuzzTagModeOptions}
+                                        options={fuzzTagModeOptions(t)}
                                         size={"small"}
                                     />
                                 </Form.Item>
 
-                                <Form.Item label='渲染模式' name='fuzzTagSyncIndex'>
+                                <Form.Item label={t("HttpQueryAdvancedConfig.render_mode")} name='fuzzTagSyncIndex'>
                                     <YakitRadioButtons
                                         buttonStyle='solid'
-                                        options={fuzzTagSyncOptions}
+                                        options={fuzzTagSyncOptions(t)}
                                         size={"small"}
                                     />
                                 </Form.Item>
 
-                                <Form.Item label={"禁用热加载"} name={"disableHotPatch"} valuePropName='checked'>
+                                <Form.Item
+                                    label={t("HttpQueryAdvancedConfig.disable_hot_reload")}
+                                    name={"disableHotPatch"}
+                                    valuePropName='checked'
+                                >
                                     <YakitSwitch />
                                 </Form.Item>
 
-                                <Form.Item label='不修复长度' name='noFixContentLength' valuePropName='checked'>
+                                <Form.Item
+                                    label={t("HttpQueryAdvancedConfig.no_fix_length")}
+                                    name='noFixContentLength'
+                                    valuePropName='checked'
+                                >
                                     <YakitSwitch />
                                 </Form.Item>
 
-                                <Form.Item label='超时时长'>
+                                <Form.Item label={t("HttpQueryAdvancedConfig.timeout_duration")}>
                                     <div className={styles["advanced-config-timeout"]}>
                                         <Form.Item
                                             name='dialTimeoutSeconds'
@@ -693,7 +728,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         >
                                             <YakitInput
                                                 allowClear={false}
-                                                prefix='连接'
+                                                prefix={t("HttpQueryAdvancedConfig.connection")}
                                                 suffix='s'
                                                 size='small'
                                                 className={styles["input-left"]}
@@ -708,7 +743,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         >
                                             <YakitInput
                                                 allowClear={false}
-                                                prefix='响应'
+                                                prefix={t("HttpQueryAdvancedConfig.response")}
                                                 suffix='s'
                                                 size='small'
                                                 className={styles["input-right"]}
@@ -716,7 +751,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         </Form.Item>
                                     </div>
                                 </Form.Item>
-                                <Form.Item label='批量目标' name='batchTarget'>
+                                <Form.Item label={t("HttpQueryAdvancedConfig.batch_target")} name='batchTarget'>
                                     <YakitButton
                                         style={{marginTop: 3}}
                                         size='small'
@@ -738,17 +773,19 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     >
                                         {JSON.stringify(advancedConfigValue.batchTarget) !== "{}" ? (
                                             Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
-                                                <div style={{color: "#56C991"}}>已配置</div>
+                                                <div style={{color: "#56C991"}}>
+                                                    {t("HttpQueryAdvancedConfig.configured")}
+                                                </div>
                                             ) : (
-                                                "配置批量目标"
+                                                t("HttpQueryAdvancedConfig.configure_batch_target")
                                             )
                                         ) : (
-                                            "配置批量目标"
+                                            t("HttpQueryAdvancedConfig.configure_batch_target")
                                         )}
                                     </YakitButton>
                                 </Form.Item>
                                 <Form.Item
-                                    label='随机分块传输'
+                                    label={t("HttpQueryAdvancedConfig.random_chunk_transfer")}
                                     name='enableRandomChunked'
                                     valuePropName='checked'
                                     style={{marginBottom: enableRandomChunked ? 12 : 0}}
@@ -757,7 +794,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 </Form.Item>
                                 {enableRandomChunked && (
                                     <>
-                                        <Form.Item label='分块长度'>
+                                        <Form.Item label={t("HttpQueryAdvancedConfig.chunk_length")}>
                                             <div className={styles["advanced-config-random-chunked-length"]}>
                                                 <Form.Item
                                                     name='randomChunkedMinLength'
@@ -791,7 +828,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 </Form.Item>
                                             </div>
                                         </Form.Item>
-                                        <Form.Item label='随机延迟' style={{marginBottom: 0}}>
+                                        <Form.Item
+                                            label={t("HttpQueryAdvancedConfig.random_delay")}
+                                            style={{marginBottom: 0}}
+                                        >
                                             <div className={styles["advanced-config-random-chunked-delay"]}>
                                                 <Form.Item
                                                     name='randomChunkedMinDelay'
@@ -829,7 +869,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 )}
                             </YakitPanel>
                             <YakitPanel
-                                header='并发配置'
+                                header={t("HttpQueryAdvancedConfig.concurrency_config")}
                                 key='发包配置'
                                 extra={
                                     <YakitButton
@@ -849,25 +889,29 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         }}
                                         size='small'
                                     >
-                                        重置
+                                        {t("YakitButton.reset")}
                                     </YakitButton>
                                 }
                             >
-                                <Form.Item label={"禁用连接池"} name={"disableUseConnPool"} valuePropName='checked'>
+                                <Form.Item
+                                    label={t("HttpQueryAdvancedConfig.disable_connection_pool")}
+                                    name={"disableUseConnPool"}
+                                    valuePropName='checked'
+                                >
                                     <YakitSwitch />
                                 </Form.Item>
                                 <Form.Item
-                                    label='重复发包'
+                                    label={t("HttpQueryAdvancedConfig.repeat_send")}
                                     name='repeatTimes'
-                                    help={`一般用来测试条件竞争或者大并发的情况`}
+                                    help={t("HttpQueryAdvancedConfig.concurrency_test_tip")}
                                 >
                                     <YakitInputNumber type='horizontal' size='small' />
                                 </Form.Item>
-                                <Form.Item label='并发线程' name='concurrent'>
+                                <Form.Item label={t("HttpQueryAdvancedConfig.concurrent_threads")} name='concurrent'>
                                     <YakitInputNumber type='horizontal' size='small' />
                                 </Form.Item>
 
-                                <Form.Item label='随机延迟' style={{marginBottom: 0}}>
+                                <Form.Item label={t("HttpQueryAdvancedConfig.random_delay2")} style={{marginBottom: 0}}>
                                     <div className={styles["advanced-config-delay"]}>
                                         <Form.Item
                                             name='minDelaySeconds'
@@ -903,7 +947,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 </Form.Item>
                             </YakitPanel>
                             <YakitPanel
-                                header='重试配置'
+                                header={t("HttpQueryAdvancedConfig.retry_config")}
                                 key='重试配置'
                                 extra={
                                     <YakitButton
@@ -929,11 +973,11 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         }}
                                         size='small'
                                     >
-                                        重置
+                                        {t("YakitButton.reset")}
                                     </YakitButton>
                                 }
                             >
-                                <Form.Item label='重试次数' name='maxRetryTimes'>
+                                <Form.Item label={t("HttpQueryAdvancedConfig.retry_count")} name='maxRetryTimes'>
                                     <YakitInputNumber type='horizontal' size='small' min={0} />
                                 </Form.Item>
                                 <YakitCollapse activeKey={retryActive} destroyInactivePanel={true}>
@@ -941,14 +985,19 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         header={
                                             <Form.Item name='retry' noStyle valuePropName='checked'>
                                                 <YakitCheckbox>
-                                                    <span style={{marginLeft: 6, cursor: "pointer"}}>重试条件</span>
+                                                    <span style={{marginLeft: 6, cursor: "pointer"}}>
+                                                        {t("HttpQueryAdvancedConfig.retry_conditions")}
+                                                    </span>
                                                 </YakitCheckbox>
                                             </Form.Item>
                                         }
                                         key='重试条件'
                                         className={styles["advanced-config-collapse-secondary-item"]}
                                     >
-                                        <Form.Item label='状态码' name={["retryConfiguration", "statusCode"]}>
+                                        <Form.Item
+                                            label={t("HttpQueryAdvancedConfig.status_code")}
+                                            name={["retryConfiguration", "statusCode"]}
+                                        >
                                             <YakitInput placeholder='200,300-399' size='small' disabled={!retry} />
                                         </Form.Item>
                                     </YakitPanel>
@@ -956,7 +1005,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         header={
                                             <Form.Item name='noRetry' noStyle valuePropName='checked'>
                                                 <YakitCheckbox>
-                                                    <span style={{marginLeft: 6, cursor: "pointer"}}>不重试条件</span>
+                                                    <span style={{marginLeft: 6, cursor: "pointer"}}>
+                                                        {t("HttpQueryAdvancedConfig.no_retry_conditions")}
+                                                    </span>
                                                 </YakitCheckbox>
                                             </Form.Item>
                                         }
@@ -964,7 +1015,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         className={styles["advanced-config-collapse-secondary-item"]}
                                     >
                                         <Form.Item
-                                            label='状态码'
+                                            label={t("HttpQueryAdvancedConfig.status_code")}
                                             name={["noRetryConfiguration", "statusCode"]}
                                             style={{marginBottom: 0}}
                                         >
@@ -974,7 +1025,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 </YakitCollapse>
                             </YakitPanel>
                             <YakitPanel
-                                header='重定向配置'
+                                header={t("HttpQueryAdvancedConfig.redirect_config")}
                                 key='重定向配置'
                                 extra={
                                     <YakitButton
@@ -992,18 +1043,22 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         }}
                                         size='small'
                                     >
-                                        重置
+                                        {t("YakitButton.reset")}
                                     </YakitButton>
                                 }
                             >
-                                <Form.Item label='禁用重定向' name='noFollowRedirect' valuePropName={"checked"}>
+                                <Form.Item
+                                    label={t("HttpQueryAdvancedConfig.disable_redirect")}
+                                    name='noFollowRedirect'
+                                    valuePropName={"checked"}
+                                >
                                     <YakitSwitch />
                                 </Form.Item>
-                                <Form.Item label='重定向次数' name='redirectCount'>
+                                <Form.Item label={t("HttpQueryAdvancedConfig.redirect_count")} name='redirectCount'>
                                     <YakitInputNumber type='horizontal' size='small' />
                                 </Form.Item>
                                 <Form.Item
-                                    label='JS 重定向'
+                                    label={t("HttpQueryAdvancedConfig.js_redirect")}
                                     name='followJSRedirect'
                                     valuePropName={"checked"}
                                     style={{marginBottom: 0}}
@@ -1012,7 +1067,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 </Form.Item>
                             </YakitPanel>
                             <YakitPanel
-                                header={"DNS配置"}
+                                header={t("HttpQueryAdvancedConfig.dns_config")}
                                 key={"DNS配置"}
                                 extra={
                                     <YakitButton
@@ -1029,11 +1084,11 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         }}
                                         size='small'
                                     >
-                                        重置
+                                        {t("YakitButton.reset")}
                                     </YakitButton>
                                 }
                             >
-                                <Form.Item label='DNS服务器' name='dnsServers'>
+                                <Form.Item label={t("HttpQueryAdvancedConfig.dns_server")} name='dnsServers'>
                                     <YakitSelect
                                         allowClear
                                         options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
@@ -1041,10 +1096,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         })}
                                         mode='tags'
                                         size={"small"}
-                                        placeholder={"指定DNS服务器"}
+                                        placeholder={t("HttpQueryAdvancedConfig.specify_dns_server")}
                                     />
                                 </Form.Item>
-                                <Form.Item label={"Hosts配置"} name='etcHosts' style={{marginBottom: 0}}>
+                                <Form.Item
+                                    label={t("HttpQueryAdvancedConfig.hosts_config")}
+                                    name='etcHosts'
+                                    style={{marginBottom: 0}}
+                                >
                                     <Space direction={"vertical"}>
                                         {(etcHosts || []).map((i, n) => (
                                             <Tooltip
@@ -1088,7 +1147,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 })
                                             }}
                                         >
-                                            添加 Hosts 映射
+                                            {t("HttpQueryAdvancedConfig.add_hosts_mapping")}
                                         </YakitButton>
                                     </Space>
                                 </Form.Item>
@@ -1125,7 +1184,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 onSetValue={onSetValue}
                             />
                             <YakitPanel
-                                header='GET 参数'
+                                header={t("HttpQueryAdvancedConfig.get_params")}
                                 key='GET 参数'
                                 extra={
                                     <>
@@ -1137,7 +1196,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             }
                                             size='small'
                                         >
-                                            重置
+                                            {t("YakitButton.reset")}
                                         </YakitButton>
                                         <Divider type='vertical' style={{margin: 0}} />
                                         <Divider type='vertical' style={{margin: 0}} />
@@ -1155,7 +1214,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             className={styles["btn-padding-right-0"]}
                                             size='small'
                                         >
-                                            添加
+                                            {t("YakitButton.add")}
                                             <PlusIcon />
                                         </YakitButton>
                                     </>
@@ -1168,7 +1227,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 ></VariableList>
                             </YakitPanel>
                             <YakitPanel
-                                header='POST 参数'
+                                header={t("HttpQueryAdvancedConfig.post_params")}
                                 key='POST 参数'
                                 extra={
                                     <>
@@ -1185,7 +1244,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             }
                                             size='small'
                                         >
-                                            重置
+                                            {t("YakitButton.reset")}
                                         </YakitButton>
                                         <Divider type='vertical' style={{margin: 0}} />
                                         <Divider type='vertical' style={{margin: 0}} />
@@ -1203,7 +1262,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             className={styles["btn-padding-right-0"]}
                                             size='small'
                                         >
-                                            添加
+                                            {t("YakitButton.add")}
                                             <PlusIcon />
                                         </YakitButton>
                                     </>
@@ -1228,7 +1287,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             }
                                             size='small'
                                         >
-                                            重置
+                                            {t("YakitButton.reset")}
                                         </YakitButton>
                                         <Divider type='vertical' style={{margin: 0}} />
                                         <Divider type='vertical' style={{margin: 0}} />
@@ -1246,7 +1305,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             className={styles["btn-padding-right-0"]}
                                             size='small'
                                         >
-                                            添加
+                                            {t("YakitButton.add")}
                                             <PlusIcon />
                                         </YakitButton>
                                     </>
@@ -1271,7 +1330,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             }
                                             size='small'
                                         >
-                                            重置
+                                            {t("YakitButton.reset")}
                                         </YakitButton>
                                         <Divider type='vertical' style={{margin: 0}} />
                                         <Divider type='vertical' style={{margin: 0}} />
@@ -1289,7 +1348,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             className={styles["btn-padding-right-0"]}
                                             size='small'
                                         >
-                                            添加
+                                            {t("YakitButton.add")}
                                             <PlusIcon />
                                         </YakitButton>
                                     </>
@@ -1311,7 +1370,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     return (
         <div
             className={classNames(styles["http-query-advanced-config"])}
-            style={{display: visible ? "" : "none"}}
+            style={{
+                display: visible ? "" : "none",
+                width: i18n.language === "zh" ? 300 : 460,
+                minWidth: i18n.language === "zh" ? 300 : 460,
+                maxWidth: i18n.language === "zh" ? 300 : 460
+            }}
             ref={queryRef}
         >
             <Form
@@ -1329,7 +1393,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 }}
             >
                 {renderContent()}
-                <div className={styles["to-end"]}>已经到底啦～</div>
+                <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>
             </Form>
             <MatcherAndExtractionDrawer
                 visibleDrawer={visibleDrawer}
@@ -1382,6 +1446,7 @@ interface BatchTargetModalProp {
 // 批量目标
 const BatchTargetModal: React.FC<BatchTargetModalProp> = React.memo((props) => {
     const {batchTargetModalVisible, onCloseModal, batchTarget, getBatchTarget} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const [form] = Form.useForm()
 
     const onOKFun = useMemoizedFn(async () => {
@@ -1399,13 +1464,13 @@ const BatchTargetModal: React.FC<BatchTargetModalProp> = React.memo((props) => {
     return (
         <YakitModal
             visible={batchTargetModalVisible}
-            title='配置批量目标'
+            title={t("BatchTargetModal.configure_batch_target")}
             width={600}
             maskClosable={false}
             destroyOnClose={true}
             closable
             centered
-            okText='确认'
+            okText={t("YakitButton.confirm")}
             onCancel={onClose}
             onOk={onOKFun}
             bodyStyle={{padding: 0}}
@@ -1426,15 +1491,15 @@ const BatchTargetModal: React.FC<BatchTargetModalProp> = React.memo((props) => {
                         style={{width: "100%"}}
                         formItemProps={{
                             name: "BatchTarget",
-                            label: "扫描目标",
+                            label: t("BatchTargetModal.scan_target"),
                             rules: [{required: false}]
                         }}
                         accept='.txt,.xlsx,.xls,.csv'
                         textareaProps={{
-                            placeholder: "请输入扫描目标，多个目标用“英文逗号”或换行分隔",
+                            placeholder: t("BatchTargetModal.please_enter_scan_target"),
                             rows: 3
                         }}
-                        help='可将TXT、Excel文件拖入框内或'
+                        help={t("YakitDraggerContent.drag_files_tip")}
                         valueSeparator={"\r\n"}
                     />
                 </Form>
@@ -1449,16 +1514,20 @@ interface SetVariableItemProps {
 
 export const SetVariableItem: React.FC<SetVariableItemProps> = React.memo((props) => {
     const {name} = props
+    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
 
     return (
         <div className={styles["variable-item"]}>
             <Form.Item name={[name, "Key"]} noStyle wrapperCol={{span: 24}}>
-                <input placeholder='变量名' className={styles["variable-item-input"]} />
+                <input placeholder={t("SetVariableItem.variableName")} className={styles["variable-item-input"]} />
             </Form.Item>
 
             <div className={styles["variable-item-textarea-body"]}>
                 <Form.Item name={[name, "Value"]} noStyle wrapperCol={{span: 24}}>
-                    <AutoTextarea className={styles["variable-item-textarea"]} placeholder='变量值' />
+                    <AutoTextarea
+                        className={styles["variable-item-textarea"]}
+                        placeholder={t("SetVariableItem.variableValue")}
+                    />
                 </Form.Item>
                 <ResizerIcon className={styles["resizer-icon"]} />
             </div>
@@ -1476,7 +1545,7 @@ interface MatchersListProps {
 /**匹配器 */
 export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
     const {matcherValue, onAdd, onRemove, onEdit, onChangeMatcher} = props
-    const {t, i18n} = useI18nNamespaces(["webFuzzer"])
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const {matchersList} = matcherValue
     return (
         <>
@@ -1577,7 +1646,7 @@ export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                         className={styles["plus-button-bolck"]}
                         block
                     >
-                        添加
+                        {t("YakitButton.add")}
                     </YakitButton>
                 </>
             )}
@@ -1594,6 +1663,7 @@ interface ExtractorsListProps {
 /**数据提取器 */
 export const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
     const {extractorValue, onAdd, onRemove, onEdit} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const {extractorList} = extractorValue
     return (
         <>
@@ -1608,7 +1678,7 @@ export const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) 
                                             {extractorItem.Name || `data_${index}`}
                                         </span>
                                         <span className={styles["item-label"]}>
-                                            [{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]
+                                            [{extractorTypeList(t).find((e) => e.value === extractorItem.Type)?.label}]
                                         </span>
                                         <span className={styles["item-number"]}>{extractorItem.Groups?.length}</span>
                                     </div>
@@ -1639,7 +1709,7 @@ export const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) 
                         className={styles["plus-button-bolck"]}
                         block
                     >
-                        添加
+                        {t("YakitButton.add")}
                     </YakitButton>
                 </>
             )}
@@ -1656,6 +1726,7 @@ interface MatchersAndExtractorsListItemOperateProps {
 const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListItemOperateProps> = React.memo(
     (props) => {
         const {onRemove, onEdit, popoverContent} = props
+        const {t, i18n} = useI18nNamespaces(["webFuzzer"])
         const [visiblePopover, setVisiblePopover] = useState<boolean>(false)
         return (
             <div
@@ -1665,7 +1736,7 @@ const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListIt
             >
                 <TrashIcon className={styles["trash-icon"]} onClick={() => onRemove()} />
 
-                <Tooltip title='调试'>
+                <Tooltip title={t("MatchersAndExtractorsListItemOperate.debug")}>
                     <HollowLightningBoltIcon
                         className={styles["hollow-lightningBolt-icon"]}
                         onClick={() => {
