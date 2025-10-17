@@ -6,6 +6,15 @@
     display: flex;
     flex-direction: column;
 }
+.tool-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--Colors-Use-Neutral-Disable);
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
 .ai-mcp-list-wrapper {
     @extend %display-column;
     gap: 12px;
@@ -39,6 +48,7 @@
             padding: 12px;
             height: 84px;
             border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+            cursor: pointer;
             &:hover {
                 background-color: var(--Colors-Use-Neutral-Bg);
                 .ai-mcp-heard-extra-btns {
@@ -120,6 +130,125 @@
                 margin-right: 0;
                 display: flex;
                 gap: 4px;
+            }
+        }
+    }
+    .ai-mcp-tool-empty-btns {
+        @extend %display-flex-center;
+        justify-content: center;
+        gap: 12px;
+    }
+}
+.ai-tool-list-container {
+    height: 100%;
+}
+.ai-tool-list {
+    .star-icon {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+    .star-icon-active {
+        svg {
+            color: var(--Colors-Use-Main-Primary);
+        }
+    }
+    .ai-tool-list-item {
+        @extend %display-column;
+        gap: 4px;
+        padding: 12px;
+        cursor: pointer;
+        height: 81px;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        overflow: hidden;
+        &:hover {
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+        }
+        &:nth-last-child(2) {
+            border-bottom-color: transparent;
+        }
+        .ai-tool-list-item-content {
+            @extend %display-column;
+            gap: 4px;
+        }
+    }
+    .ai-tool-list-item-heard {
+        @extend %display-flex-center;
+        gap: 4px;
+        flex-shrink: 0;
+        overflow: hidden;
+        &-name-text {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+        }
+    }
+    .ai-tool-list-item-description {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+        letter-spacing: 0.5px;
+        height: 36px;
+        flex-shrink: 0;
+
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+}
+
+.ai-mcp-tool-popover-content {
+    @extend %display-column;
+    gap: 8px;
+    max-height: 50vh;
+    width: 400px;
+    overflow-y: auto;
+    .ai-mcp-tool-popover-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+    .ai-mcp-tool-popover-description {
+        font-size: 14px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+    .ai-mcp-tool-param-list-wrapper {
+        @extend %display-column;
+        gap: 8px;
+        .list-heard {
+            font-size: 14px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .ai-mcp-tool-param-list {
+            @extend %display-column;
+            gap: 8px;
+        }
+        .ai-mcp-tool-param-item {
+            @extend %display-column;
+            gap: 4px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 14px;
+            .ai-mcp-tool-param-item-heard {
+                @extend %display-flex-center;
+                gap: 4px;
+            }
+            .ai-mcp-tool-param-item-heard-required {
+                &::before {
+                    @extend %display-flex-center;
+                    content: "*";
+                    color: var(--Colors-Use-Error-Primary);
+                    font-size: 14px;
+                }
+            }
+            .params-description {
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                font-size: 12px;
             }
         }
     }

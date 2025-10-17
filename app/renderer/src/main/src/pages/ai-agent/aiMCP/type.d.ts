@@ -1,4 +1,4 @@
-import {MCPServer} from "../type/aiMCP"
+import {MCPServer, MCPServerTool} from "../type/aiMCP"
 
 export interface AIMCPProps {}
 export interface AIMCPListProps {
@@ -7,6 +7,12 @@ export interface AIMCPListProps {
 export interface AIMCPToolListProps {
     item: MCPServer
     onBack: () => void
+}
+export interface AIMCPToolItemProps {
+    toolItem: MCPServerTool
+}
+export interface AIMCPToolItemPopoverContentProps {
+    toolItem: MCPServerTool
 }
 export interface AIMCPListItemProps {
     item: MCPServer

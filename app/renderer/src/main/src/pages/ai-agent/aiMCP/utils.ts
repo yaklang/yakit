@@ -5,6 +5,7 @@ import {
     DeleteMCPServerRequest,
     GetAllMCPServersRequest,
     GetAllMCPServersResponse,
+    MCPServer,
     UpdateMCPServerRequest
 } from "../type/aiMCP"
 import {GeneralResponse} from "../type/aiChat"
@@ -26,9 +27,32 @@ export const grpcGetAllMCPServers: APIFunc<GetAllMCPServersRequest, GetAllMCPSer
     })
 }
 
+export const getMCPServersById: APIFunc<number, MCPServer> = (id, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        const newQuery: GetAllMCPServersRequest = {
+            Keyword: "",
+            Pagination: {
+                OrderBy: "created_at",
+                Order: "desc",
+                Page: 1,
+                Limit: 1
+            },
+            IsShowToolList: true,
+            ID: id
+        }
+        grpcGetAllMCPServers(newQuery, hiddenError)
+            .then((res) => {
+                if (res.MCPServers && res.MCPServers.length > 0) {
+                    resolve(res.MCPServers[0])
+                } else {
+                    reject("not found")
+                }
+            })
+            .catch(reject)
+    })
+}
 export const grpcAddMCPServer: APIFunc<AddMCPServerRequest, GeneralResponse> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
-        console.log("AddMCPServer", params)
         ipcRenderer
             .invoke("AddMCPServer", params)
             .then(resolve)
@@ -53,7 +77,6 @@ export const grpcDeleteMCPServer: APIFunc<DeleteMCPServerRequest, GeneralRespons
 
 export const grpcUpdateMCPServer: APIFunc<UpdateMCPServerRequest, GeneralResponse> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
-        console.log("UpdateMCPServer", params)
         ipcRenderer
             .invoke("UpdateMCPServer", params)
             .then(resolve)
