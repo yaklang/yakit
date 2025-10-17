@@ -42,7 +42,7 @@ import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import emiter from "@/utils/eventBus/eventBus"
-import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
+import {AgentConfigModal, maskProxyPassword} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
@@ -535,6 +535,15 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     size='small'
                                     maxTagCount={1}
                                     dropdownMatchSelectWidth={245}
+                                    tagRender={(props) => {
+                                        return (
+                                            <YakitTag size={"middle"} {...props}>
+                                                <span className='content-ellipsis' style={{width: "100%"}}>
+                                                    {maskProxyPassword(props.value)}
+                                                </span>
+                                            </YakitTag>
+                                        )
+                                    }}
                                 />
                             </Form.Item>
                             <Form.Item label={<> </>}>
