@@ -1,7 +1,7 @@
 import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
-import {AIForge, AIForgeFilter, GetAIForgeRequest, QueryAIForgeRequest, QueryAIForgeResponse} from "./AIForge/type"
 import {AIEventQueryRequest, AIEventQueryResponse} from "../ai-re-act/hooks/grpcApi"
+import {AIForge, AIForgeFilter, GetAIForgeRequest, QueryAIForgeRequest, QueryAIForgeResponse} from "./type/forge"
 
 const {ipcRenderer} = window.require("electron")
 

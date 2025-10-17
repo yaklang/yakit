@@ -1762,6 +1762,9 @@ message AIStartParams {
 
   // 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题
   int64 UserInteractLimit = 30;
+
+  // timeline sessionID  用于多轮对话保持上下文
+  string TimelineSessionID = 31;
 }
 
 message AITaskFilter {

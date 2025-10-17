@@ -1,5 +1,5 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatQSData, AITokenConsumption} from "./aiRender"
+import {AIChatQSData, AITokenConsumption, AIYakExecFileRecord} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {Dispatch, SetStateAction} from "react"
 
@@ -30,6 +30,7 @@ export interface UseYakExecResultParams extends UseHookBaseParams {}
 
 export interface UseYakExecResultState {
     card: AIAgentGrpcApi.AIInfoCard[]
+    execFileRecord: Map<string, AIYakExecFileRecord[]>
     yakExecResultLogs: StreamResult.Log[]
 }
 export interface UseYakExecResultEvents extends UseHookBaseEvents {}
