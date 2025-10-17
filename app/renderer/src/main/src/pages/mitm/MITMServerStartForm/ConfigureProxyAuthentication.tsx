@@ -4,16 +4,19 @@ import {useMemoizedFn} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {OutlinePlusIcon} from "@/assets/newIcon"
-import {Divider, Table} from "antd"
+import {Divider, Modal, Table} from "antd"
 import classNames from "classnames"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {OutlinePencilaltIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {OutlinePencilaltIcon, OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {EditingObjProps} from "@/pages/payloadManager/PayloadLocalTable"
 import {yakitNotify} from "@/utils/notification"
 import {AgentConfigModal, GenerateURLResponse, initAgentConfigModalParams} from "./MITMServerStartForm"
 import {v4 as uuidv4} from "uuid"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemoteMitmGV} from "@/enums/mitm"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
 import styles from "./ConfigureProxyAuthentication.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -44,12 +47,82 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
         setPageSize(pagination.pageSize)
     }
 
-    const onClose = useMemoizedFn(() => {
-        onSetVisible(false)
+    useEffect(() => {
+        if (visible) {
+            getRemoteValue(RemoteMitmGV.MitmConfigureProxyAuthentication).then((res) => {
+                if (res) {
+                    try {
+                        const arr = JSON.parse(res)
+                        setData(arr)
+                    } catch (error) {
+                        yakitNotify("error", error + "")
+                    }
+                }
+            })
+        }
+    }, [visible])
+
+    const handleJudgeModify = useMemoizedFn(async () => {
+        try {
+            // 是否有修改
+            let isModify: boolean = false
+            const res = await getRemoteValue(RemoteMitmGV.MitmConfigureProxyAuthentication)
+            if (res) {
+                if (res !== JSON.stringify(data)) {
+                    isModify = true
+                }
+            } else if (data.length) {
+                isModify = true
+            }
+            return isModify
+        } catch (error) {
+            yakitNotify("error", `${error}`)
+            return null
+        }
+    })
+
+    const onClose = useMemoizedFn(async () => {
+        const result = await handleJudgeModify()
+        if (result == null) return
+
+        if (result) {
+            Modal.confirm({
+                title: t("YakitModal.friendlyReminder"),
+                icon: <ExclamationCircleOutlined />,
+                content: "123",
+                okText: t("YakitButton.save"),
+                cancelText: t("YakitButton.doNotSave"),
+                closable: true,
+                closeIcon: (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            Modal.destroyAll()
+                        }}
+                        className='modal-remove-icon'
+                    >
+                        <OutlineXIcon />
+                    </div>
+                ),
+                onOk: onSave,
+                onCancel: () => onSetVisible(false),
+                cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                okButtonProps: {size: "small", className: "modal-ok-button"}
+            })
+        } else {
+            onSetVisible(false)
+        }
     })
 
     const onSave = useMemoizedFn(() => {
+        setRemoteValue(
+            RemoteMitmGV.MitmConfigureProxyAuthentication,
+            JSON.stringify({
+                data
+            })
+        )
         onSetVisible(false)
+        yakitNotify("success", "保存成功")
     })
 
     const defaultColumns: (ColumnTypes[number] & {
