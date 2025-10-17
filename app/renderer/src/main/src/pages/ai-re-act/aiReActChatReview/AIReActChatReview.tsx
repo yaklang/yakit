@@ -12,7 +12,6 @@ import AIPlanReviewTree from "@/pages/ai-agent/aiPlanReviewTree/AIPlanReviewTree
 import {handleFlatAITree} from "../hooks/utils"
 import {reviewListToTrees} from "@/pages/ai-agent/utils"
 import {grpcGetAIForge} from "@/pages/ai-agent/grpc"
-import {AIForge} from "@/pages/ai-agent/AIForge/type"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
@@ -26,6 +25,7 @@ import {AIChatIPCSendParams} from "@/pages/ai-agent/useContext/ChatIPCContent/Ch
 import {OutlineHandleColorsIcon, OutlineWarpColorsIcon} from "@/assets/icon/colors"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {AIReviewType} from "../hooks/aiRender"
+import {AIForge} from "@/pages/ai-agent/type/forge"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
     const {

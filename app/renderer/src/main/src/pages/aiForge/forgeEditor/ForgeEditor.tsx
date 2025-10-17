@@ -61,7 +61,7 @@ import {grpcGetAIToolList} from "@/pages/ai-agent/aiToolList/utils"
 import {QSInputTextarea} from "@/pages/ai-agent/template/template"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {AIForge} from "@/pages/ai-agent/AIForge/type"
+import {AIForge} from "@/pages/ai-agent/type/forge"
 
 import classNames from "classnames"
 import styles from "./ForgeEditor.module.scss"
@@ -119,7 +119,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
             }
             console.log("handleModifyInit-fetchCacheID", id)
 
-            grpcGetAIForge({ID:id})
+            grpcGetAIForge({ID: id})
                 .then((res) => {
                     if (!res) {
                         yakitNotify("error", `未获取到待编辑模板的详情, 请关闭页面重试`)

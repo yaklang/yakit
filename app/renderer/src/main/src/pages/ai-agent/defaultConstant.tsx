@@ -68,7 +68,8 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     ReActMaxIteration: 100,
     TimelineItemLimit: 100,
     TimelineContentSizeLimit: 20 * 1024,
-    UserInteractLimit: 0
+    UserInteractLimit: 0,
+    TimelineSessionID: "default"
 }
 
 /** mcp 自定义服务器配置类型选项 */
@@ -197,6 +198,7 @@ export const defaultChatIPCData: UseChatIPCState = {
     },
     yakExecResult: {
         card: [],
+        execFileRecord: new Map(),
         yakExecResultLogs: []
     },
     taskChat: {

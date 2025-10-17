@@ -133,6 +133,9 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
         if (!isNil(setting?.UserInteractLimit)) {
             data.UserInteractLimit = setting.UserInteractLimit || AIAgentSettingDefault.UserInteractLimit
         }
+        if (!isNil(setting?.TimelineSessionID)) {
+            data.TimelineSessionID = setting.TimelineSessionID || AIAgentSettingDefault.TimelineSessionID
+        }
     } catch (error) {}
 
     return {...data}

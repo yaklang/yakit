@@ -1,3 +1,4 @@
+import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 
 // #region 基础通用数据字段
@@ -81,6 +82,12 @@ export interface AIFileSystemPin {
     isDir: boolean
     name: string
     suffix: string
+}
+
+/** 插件执行中的文件操作记录 */
+export interface AIYakExecFileRecord extends StreamResult.Log {
+    /** 前端主动对接口流输出的文件记录进行先后操作的记录 */
+    order: number
 }
 
 // #region chat 问答内容组件的类型集合(包括了类型推导)

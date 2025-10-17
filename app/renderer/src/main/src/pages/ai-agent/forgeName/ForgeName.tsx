@@ -25,7 +25,7 @@ import {Tooltip} from "antd"
 import {yakitNotify} from "@/utils/notification"
 import {AIForgeListDefaultPagination} from "../defaultConstant"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../AIForge/type"
+import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../type/forge"
 
 import classNames from "classnames"
 import styles from "./ForgeName.module.scss"
@@ -213,7 +213,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
         const findIndex = forgesArr.findIndex((item) => Number(item.Id) === Number(id))
         if (findIndex !== -1) {
             // 存在数据则局部更新
-            grpcGetAIForge({ID:Number(id)})
+            grpcGetAIForge({ID: Number(id)})
                 .then((res) => {
                     console.log("ForgeName-grpcGetAIForge-res", res)
                     setData((old) => {
@@ -281,7 +281,7 @@ const ForgeName: React.FC<ForgeNameProps> = memo((props) => {
                 <div ref={wrapperRef} className={styles["list-wrapper"]} onScroll={onScrollCapture}>
                     <div ref={containerRef}>
                         {list.map(({data, index}) => {
-                            const {Id, ForgeName, Description, ToolNames,ForgeVerboseName} = data
+                            const {Id, ForgeName, Description, ToolNames, ForgeVerboseName} = data
                             const key = Number(Id) || index
                             const tools = ToolNames ? ToolNames.filter(Boolean) : []
                             const delLoading = delStatus.includes(Number(Id))

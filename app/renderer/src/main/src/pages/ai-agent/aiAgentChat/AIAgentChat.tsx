@@ -28,16 +28,16 @@ import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIChatQSData, AIReviewType} from "@/pages/ai-re-act/hooks/aiRender"
-
-import classNames from "classnames"
-import styles from "./AIAgentChat.module.scss"
-import {AIForge} from "../AIForge/type"
 import {yakitNotify} from "@/utils/notification"
 import {AIForgeForm} from "../aiTriageChatTemplate/AITriageChatTemplate"
 import {grpcGetAIForge} from "../grpc"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {AIForge} from "../type/forge"
+
+import classNames from "classnames"
+import styles from "./AIAgentChat.module.scss"
 
 const AIReActTaskChat = React.lazy(() => import("../../ai-re-act/aiReActTaskChat/AIReActTaskChat"))
 
