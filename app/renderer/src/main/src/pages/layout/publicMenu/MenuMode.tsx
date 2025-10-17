@@ -44,6 +44,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import classNames from "classnames"
 import styles from "./MenuMode.module.scss"
+import { useHttpFlowStore } from "@/store/httpFlow"
 
 interface MenuModeProps {
     mode: string
@@ -54,7 +55,7 @@ interface MenuModeProps {
 export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
     const {mode, pluginToId, onMenuSelect} = props
     const {t, i18n} = useI18nNamespaces(["yakitRoute", "layout"])
-
+    const { resetCompareData }  = useHttpFlowStore()
     /** 转换成菜单组件统一处理的数据格式，插件是否下载的验证由菜单组件处理，这里不处理 */
     const onMenu = useMemoizedFn((page: YakitRoute, pluginId?: number, pluginName?: string) => {
         if (!page) return
@@ -66,6 +67,8 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                 pluginName: pluginName || ""
             })
         } else {
+            //点击数据对比tab新增一个对比页 所以需要清除store数据
+            page === YakitRoute.DataCompare && resetCompareData();
             onMenuSelect({route: page})
         }
     })

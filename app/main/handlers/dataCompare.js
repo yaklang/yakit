@@ -58,10 +58,28 @@ module.exports = (win, getClient) => {
     if(token){
       return { token, info: dataMap.get(token) }
     }
+    if(dataMap.size === 0){
+      return { token: `compare-${new Date().getTime()}-${Math.floor(
+        Math.random() * 50
+      )}`,}
+    }
     const data = Array.from(dataMap.entries()).pop()
     return  {
       token: data[0],
       info: data[1],
     }
   });
+
+  //渲染层之间不能直接发送消息，所以通过主进程进行转发
+  ipcMain.handle("forward-data-compare", (_, params)=> {
+      win.webContents.send(`${params.token}-data`, params);
+  })
+
+  ipcMain.handle("forward-switch-compare-page",(_,params)=>{
+    win.webContents.send('switch-compare-page',params)
+  })
+
+  ipcMain.handle("forward-main-container-add-compare",(_,params)=>{
+    win.webContents.send("main-container-add-compare", params);
+  })
 };
