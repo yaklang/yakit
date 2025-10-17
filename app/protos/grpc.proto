@@ -973,6 +973,9 @@ service Yak {
   rpc DeleteMCPServer(DeleteMCPServerRequest) returns (GeneralResponse);
   rpc UpdateMCPServer(UpdateMCPServerRequest) returns (GeneralResponse);
   rpc GetAllMCPServers(GetAllMCPServersRequest) returns (GetAllMCPServersResponse);
+
+  // RAG Collection Search
+  rpc RAGCollectionSearch(RAGCollectionSearchRequest) returns (stream RAGCollectionSearchResponse);
 }
 
 message ExportKnowledgeBaseRequest {
@@ -989,6 +992,26 @@ message GeneralProgress {
   double Percent = 1;
   string Message = 2;
   string MessageType = 3;
+}
+
+message RAGCollectionSearchRequest {
+  string CollectionName = 1;
+  string Query = 2;
+  uint64 Limit = 3;
+  repeated string EnhancePlan = 4;
+  repeated string DocumentType = 5;
+  float SimilarityThreshold = 6; // 0.0 - 1.0
+  int64 Concurrency = 7;
+}
+
+message RAGCollectionSearchResponse {
+  string Type = 1; // knowledge / entity / relationship / khop
+  KnowledgeBaseEntry Knowledge = 2;
+  Entity Entity = 3;
+  Relationship Relationship = 4;
+  string KhopPath = 5;
+  float Similarity = 6;
+  string EnhancePlan = 7;
 }
 
 message AddMCPServerRequest {
@@ -1043,6 +1066,7 @@ message MCPServer {
   string Command = 5;
   bool Enable = 7;
   repeated MCPServerTool Tools = 6;
+  string ErrorMsg = 8;
 }
 
 message GetAllMCPServersResponse {
