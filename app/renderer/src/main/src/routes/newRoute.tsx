@@ -308,7 +308,7 @@ export const YakitRouteToPageInfo: Record<
         describeUi: "YakitRoute.yaklangProgramming"
     },
     "payload-manager": {
-        label: "Payload",
+        label: "字典管理",
         labelUi: "YakitRoute.Payload",
         describeUi: "YakitRoute.customPayload"
     },

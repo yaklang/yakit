@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useImperativeHandle } from "react"
+import React, { useEffect, useState, useRef, useImperativeHandle, useLayoutEffect } from "react"
 import { Button, Space } from "antd"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import { AutoCard } from "../../components/AutoCard"
@@ -7,6 +7,10 @@ import styles from "./DataCompare.module.scss";
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
 import { RemoveIcon } from "@/assets/newIcon"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { useHttpFlowStore } from "@/store/httpFlow"
+import { useTheme } from "@/hook/useTheme"
+import { applyYakitMonacoTheme } from "@/utils/monacoSpec/theme"
+import { randomString } from "@/utils/randomUtil"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -115,12 +119,21 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
     const monaco = monacoEditor.editor
     const diffEditorRef = useRef<monacoEditor.editor.IStandaloneDiffEditor>()
     const [language, setLanguage] = useState<string>("")
+    // 从store获取对比数据
+    const { token, dataMap } = useHttpFlowStore()
+    const { theme } = useTheme()
     useImperativeHandle(ref, () => ({
         // 减少父组件获取的DOM元素属性,只暴露给父组件需要用到的方法
         onChangeLineConversion: (newVal) => {
             changeLineConversion()
         }
     }), [leftCode, rightCode, noWrap]);
+
+    //监听theme设置monaco主题
+    useLayoutEffect(() => {
+        applyYakitMonacoTheme(theme)
+    }, [theme])
+
     const changeLineConversion = () => {
         if (!diffDivRef || !diffDivRef.current) return
         if (!diffEditorRef.current) return
@@ -157,9 +170,22 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
     useEffect(() => {
         //如果存在先销毁以前的组件
         if (diffEditorRef.current) diffEditorRef.current.dispose()
-        ipcRenderer
-            .invoke("create-compare-token")
-            .then((res) => {
+                //替换 invoke("create-compare-token")  
+                const getCreateCompareTokenRes = () => {
+                    if(token){
+                        return { token, info: dataMap.get(token) }
+                    }
+                    const data = Array.from(dataMap.entries()).pop()
+                    if(data?.length){
+                        return  {
+                            token: data[0],
+                            info: data?.[1],
+                        }
+                    } else {
+                        return { token: `compare-${randomString(50)}`,}
+                    }
+                }
+                const res = getCreateCompareTokenRes()
                 // 获取生成diff组件的ref
                 if (!diffDivRef || !diffDivRef.current) return
 
@@ -214,9 +240,6 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                     if (tokenDataRes.info.type === 1) if (setLeftCode) setLeftCode(left.content)
                     if (tokenDataRes.info.type === 2) if (setRightCode) setRightCode(right.content)
                 })
-            })
-            .catch((err) => { })
-            .finally(() => { })
     }, [])
 
 
