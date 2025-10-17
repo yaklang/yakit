@@ -11,13 +11,12 @@ const GraphDemo = ({data}) => {
     const containerRef = useRef<HTMLDivElement>(null)
     const [dimensions, setDimensions] = useState({width: 800, height: 600})
 
-    // 更新容器尺寸
+    // 自动更新容器尺寸
     useEffect(() => {
         if (!containerRef.current) return
 
         const updateSize = () => {
-            if (!containerRef.current) return // 如果为空，直接返回
-            const {offsetWidth, offsetHeight} = containerRef.current
+            const {offsetWidth, offsetHeight} = containerRef.current!
             setDimensions({width: offsetWidth, height: offsetHeight})
         }
 
@@ -25,56 +24,65 @@ const GraphDemo = ({data}) => {
         const resizeObserver = new ResizeObserver(updateSize)
         resizeObserver.observe(containerRef.current)
 
-        return () => {
-            resizeObserver.disconnect()
-        }
+        return () => resizeObserver.disconnect()
     }, [])
 
-    // 不再需要悬浮高亮逻辑
+    // 每次容器变化重新 resize 图表
+    useEffect(() => {
+        if (chartRef.current) {
+            const chart = chartRef.current.getEchartsInstance?.()
+            chart && chart.resize()
+        }
+    }, [dimensions])
 
-    // 力导向参数
-    const repulsion = Math.min(dimensions.width, dimensions.height)
-    const edgeLength = Math.min(dimensions.width, dimensions.height) / 8
+    // 计算力导向参数
+    const repulsion = Math.max(800, data?.nodes?.length * 10)
+    const edgeLength = 180 // ✅ 固定边长
+
+    // 计算初始居中随机坐标
+    const centerX = dimensions.width / 2
+    const centerY = dimensions.height / 2
+    const radius = Math.min(centerX, centerY) * 0.8
+
+    const positionedNodes = data?.nodes?.map((node, index) => {
+        const angle = (index / data.nodes.length) * 2 * Math.PI
+        return {
+            ...node,
+            // ✅ 均匀分布在圆周上
+            x: centerX + radius * Math.cos(angle),
+            y: centerY + radius * Math.sin(angle),
+            itemStyle: {
+                color: backgroundColor,
+                borderWidth: 0
+            },
+            label: {
+                show: true,
+                formatter: `{name|${node.level}}`,
+                fontSize: 12,
+                fontWeight: "bold",
+                color: textColor,
+                rich: {
+                    name: {fontSize: 12, color: textColor, align: "center"}
+                }
+            }
+        }
+    })
 
     const option = {
+        animation: false, // ✅ 关闭所有动画
         tooltip: {
             show: true,
-            formatter: function (params) {
-                // 只在节点上显示 name 字段
-                if (params.data && params.data.name) {
-                    return params.data.name
-                }
-                return ""
-            }
+            formatter: (params) => (params.data?.name ? params.data.name : "")
         },
         series: [
             {
                 type: "graph",
                 layout: "force",
                 roam: true,
-                focusNodeAdjacency: true, // 关闭邻接高亮
-                hoverAnimation: true, // 关闭节点缩放动画
-                data: data?.nodes?.map((node) => ({
-                    ...node,
-                    itemStyle: {
-                        color: backgroundColor,
-                        borderWidth: 0
-                    },
-                    label: {
-                        show: true,
-                        formatter: `{name|${node.level}}`,
-                        fontSize: 12,
-                        fontWeight: "bold",
-                        color: textColor,
-                        rich: {
-                            name: {
-                                fontSize: 12,
-                                color: textColor,
-                                align: "center"
-                            }
-                        }
-                    }
-                })),
+                focusNodeAdjacency: true,
+                hoverAnimation: true,
+                animation: false,
+                data: positionedNodes,
                 links: data?.links?.map((link) => ({...link})),
                 edgeSymbol: ["circle", "arrow"],
                 edgeSymbolSize: [4, 10],
@@ -88,20 +96,19 @@ const GraphDemo = ({data}) => {
                 },
                 force: {
                     repulsion,
-                    edgeLength,
+                    edgeLength, // ✅ 固定 180px
                     gravity: 0.05,
-                    layoutAnimation: true
+                    layoutAnimation: false,
+                    initLayout: "none" // ✅ 使用我们自定义的初始坐标
+                },
+                lineStyle: {
+                    color: lineTextColor,
+                    width: 1,
+                    opacity: 0.8
                 }
             }
         ]
     }
-
-    useEffect(() => {
-        if (chartRef.current) {
-            const chart = chartRef.current.getEchartsInstance?.()
-            chart && chart.resize()
-        }
-    }, [dimensions])
 
     return (
         <div ref={containerRef} style={{width: "100%", height: "100%"}}>
