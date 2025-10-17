@@ -164,6 +164,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {formatTimeYMD} from "@/utils/timeUtil"
 import {type LoggerData, useLogger} from "@/hook/useLogger/useLogger"
 import i18n from "@/i18n/i18n"
+import {maskProxyPassword} from "../mitm/MITMServerStartForm/MITMServerStartForm"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -2576,7 +2577,7 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
                 <YakitTag color='danger'>{t("FuzzerExtraShow.responsesDiscarded", {droppedCount})}</YakitTag>
             )}
             {advancedConfigValue.proxy.length > 0 && (
-                <Tooltip title={advancedConfigValue.proxy}>
+                <Tooltip title={advancedConfigValue.proxy.map((item) => maskProxyPassword(item))}>
                     <YakitTag
                         className={classNames(styles["proxy-text"], "content-ellipsis")}
                         closable={true}
@@ -2591,7 +2592,10 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
                         {(() => {
                             const maxDisplay = 3 // 最多显示3条
                             const {proxy} = advancedConfigValue
-                            const displayData = proxy.slice(0, maxDisplay).join(", ") // 取前3个
+                            const displayData = proxy
+                                .map((item) => maskProxyPassword(item))
+                                .slice(0, maxDisplay)
+                                .join(", ") // 取前3个
                             const remainingCount = proxy.length - maxDisplay // 剩余数量
 
                             return remainingCount > 0 ? `${displayData} +${remainingCount}...` : displayData

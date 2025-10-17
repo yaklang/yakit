@@ -38,7 +38,7 @@ import {
     YakFilterRemoteObj,
     YakModuleListHeard
 } from "./MITMServerHijacking/MITMPluginLocalList"
-import {ClientCertificate, MITMServerStartForm} from "./MITMServerStartForm/MITMServerStartForm"
+import {ClientCertificate, maskProxyPassword, MITMServerStartForm} from "./MITMServerStartForm/MITMServerStartForm"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -319,7 +319,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             startMITMServer(host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, certs, extra)
             let tip = ""
             if (downstreamProxy) {
-                tip += `下游代理：${downstreamProxy}`
+                tip += `下游代理：${maskProxyPassword(downstreamProxy)}`
             }
             setDownstreamProxyStr(downstreamProxy || "")
             if (extra) {
