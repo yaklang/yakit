@@ -116,5 +116,21 @@
     "please_enter_username": "请输入用户名",
     "password": "密码",
     "please_enter_password": "请输入密码"
+  },
+  "ConfigureProxyAuthentication": {
+    "saveProxyAuthAndCloseModal": "请问是否要保存配置代理认证并关闭弹框？",
+    "targetAddress": "目标地址",
+    "targetAddressExample": "例如：baidu.com/*.baidu.com/X.X.X.X",
+    "proxyAddress": "代理地址",
+    "example_address": "例如：127.0.0.1:7890",
+    "protocol": "协议",
+    "username": "用户名",
+    "password": "密码",
+    "proxyAddressRequired": "代理地址不能为空",
+    "proxyAddressInvalid": "代理地址格式不正确",
+    "downstreamProxyExists": "下游代理已存在",
+    "proxy_auth_config": "配置代理认证",
+    "downstreamProxy": "下游代理",
+    "multipleProxyConfigTip": "配置多个代理时，按顺序依次尝试建立连接，直到连接成功或全部代理尝试完毕"
   }
 }

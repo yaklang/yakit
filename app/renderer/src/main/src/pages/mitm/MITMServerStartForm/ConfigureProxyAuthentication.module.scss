@@ -19,6 +19,7 @@
 
   &-table {
     height: 100%;
+
     &-header {
       display: flex;
       flex-direction: column;
@@ -31,6 +32,18 @@
         justify-content: space-between;
         align-items: center;
         height: 24px;
+
+        .header-title {
+          .question-icon {
+            margin-left: 2px;
+
+            svg {
+              width: 16px;
+              height: 16px;
+              color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            }
+          }
+        }
 
         .header-extra {
           display: flex;

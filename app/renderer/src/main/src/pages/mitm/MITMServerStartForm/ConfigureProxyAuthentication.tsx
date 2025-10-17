@@ -4,11 +4,16 @@ import {useMemoizedFn} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {OutlinePlusIcon} from "@/assets/newIcon"
-import {Divider, Modal, Table} from "antd"
+import {Divider, Modal, Table, Tooltip} from "antd"
 import classNames from "classnames"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {OutlinePencilaltIcon, OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {
+    OutlinePencilaltIcon,
+    OutlineQuestionmarkcircleIcon,
+    OutlineTrashIcon,
+    OutlineXIcon
+} from "@/assets/icon/outline"
 import {EditingObjProps} from "@/pages/payloadManager/PayloadLocalTable"
 import {yakitNotify} from "@/utils/notification"
 import {AgentConfigModal, GenerateURLResponse, initAgentConfigModalParams} from "./MITMServerStartForm"
@@ -29,7 +34,6 @@ interface DownstreamAgent {
     Scheme: string
     Username: string
     Password: string
-    UrlLable: string
     Url: string
 }
 
@@ -93,7 +97,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
             Modal.confirm({
                 title: t("YakitModal.friendlyReminder"),
                 icon: <ExclamationCircleOutlined />,
-                content: "请问是否要保存配置代理认证并关闭弹框？",
+                content: t("ConfigureProxyAuthentication.saveProxyAuthAndCloseModal"),
                 okText: t("YakitButton.save"),
                 cancelText: t("YakitButton.doNotSave"),
                 closable: true,
@@ -121,7 +125,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
     const onSave = useMemoizedFn(() => {
         setRemoteValue(RemoteMitmGV.MitmConfigureProxyAuthentication, JSON.stringify(data))
         onSetVisible(false)
-        yakitNotify("success", "保存成功")
+        yakitNotify("success", t("YakitNotification.saved"))
     })
 
     const defaultColumns: (ColumnTypes[number] & {
@@ -131,12 +135,28 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
         options?: {label: string; value: string}[]
         dataIndex: string
     })[] = [
+        // {
+        //     title: t("ConfigureProxyAuthentication.targetAddress"),
+        //     dataIndex: "TargetAddress",
+        //     editable: true,
+        //     editType: "input",
+        //     placeholder: t("ConfigureProxyAuthentication.targetAddressExample"),
+        //     ellipsis: true,
+        //     render: (text) => (
+        //         <div
+        //             className={classNames(styles["basic"], "yakit-content-single-ellipsis")}
+        //             style={{overflow: "hidden"}}
+        //         >
+        //             {text}
+        //         </div>
+        //     )
+        // },
         {
-            title: "代理地址",
+            title: t("ConfigureProxyAuthentication.proxyAddress"),
             dataIndex: "Address",
             editable: true,
             editType: "input",
-            placeholder: "例如：127.0.0.1:7890",
+            placeholder: t("ConfigureProxyAuthentication.example_address"),
             ellipsis: true,
             render: (text) => (
                 <div
@@ -148,7 +168,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
             )
         },
         {
-            title: "协议",
+            title: t("ConfigureProxyAuthentication.protocol"),
             dataIndex: "Scheme",
             editable: true,
             editType: "select",
@@ -168,7 +188,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
             )
         },
         {
-            title: "用户名",
+            title: t("ConfigureProxyAuthentication.username"),
             dataIndex: "Username",
             editable: true,
             editType: "input",
@@ -184,7 +204,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
             )
         },
         {
-            title: "密码",
+            title: t("ConfigureProxyAuthentication.password"),
             dataIndex: "Password",
             editable: true,
             editType: "input.Password",
@@ -200,7 +220,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
             )
         },
         {
-            title: "操作",
+            title: t("YakitTable.action"),
             dataIndex: "operation",
             width: 88,
             // @ts-ignore
@@ -244,7 +264,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
     const handleSave = (row: DownstreamAgent, newRow: DownstreamAgent) => {
         setEditingObj(undefined)
         if (!newRow.Address.length) {
-            yakitNotify("warning", "代理地址不能为空")
+            yakitNotify("warning", t("ConfigureProxyAuthentication.proxyAddressRequired"))
             return
         }
 
@@ -253,7 +273,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
                 newRow.Address.trim()
             )
         ) {
-            yakitNotify("warning", "代理地址格式不正确")
+            yakitNotify("warning", t("ConfigureProxyAuthentication.proxyAddressInvalid"))
             return
         }
 
@@ -365,10 +385,9 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
 
     const generateURL = useMemoizedFn((url, params) => {
         setData((prev) => {
-            const urlLable = url.replace(/(\/\/[^\/:@]+):[^@]+@/g, "$1:***@")
             const index = prev.findIndex((item) => item.Url === url)
             if (index !== -1) {
-                yakitNotify("info", "下游代理已存在")
+                yakitNotify("info", t("ConfigureProxyAuthentication.downstreamProxyExists"))
             } else {
                 if (params?.Address) {
                     const Id = getEditInfo()?.Id
@@ -379,15 +398,14 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
                                 ...params,
                                 Id,
                                 Address: params.Address!,
-                                Url: url,
-                                UrlLable: urlLable
+                                Url: url
                             }
                             return prev.slice()
                         }
                     } else {
                         return [
                             ...prev,
-                            {...params, Id: uuidv4(), Address: params.Address!, Url: url, UrlLable: urlLable}
+                            {...params, Id: uuidv4(), Address: params.Address!, Url: url}
                         ]
                     }
                 }
@@ -403,7 +421,9 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
             width='40%'
             title={
                 <div className={styles["ConfigureProxyAuthentication-title"]}>
-                    <div className={styles["ConfigureProxyAuthentication-title-text"]}>配置代理认证</div>
+                    <div className={styles["ConfigureProxyAuthentication-title-text"]}>
+                        {t("ConfigureProxyAuthentication.proxy_auth_config")}
+                    </div>
                     <div className={styles["ConfigureProxyAuthentication-title-btns"]}>
                         <YakitButton type='outline2' onClick={onClose}>
                             {t("YakitButton.cancel")}
@@ -420,7 +440,12 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
             <div className={styles["ConfigureProxyAuthentication-table"]}>
                 <div className={styles["ConfigureProxyAuthentication-table-header"]}>
                     <div className={styles["header-body"]}>
-                        <div className={styles["header-title"]}>下游代理</div>
+                        <div className={styles["header-title"]}>
+                            {t("ConfigureProxyAuthentication.downstreamProxy")}
+                            <Tooltip title={t("ConfigureProxyAuthentication.multipleProxyConfigTip")}>
+                                <OutlineQuestionmarkcircleIcon className={styles["question-icon"]} />
+                            </Tooltip>
+                        </div>
                         <div className={styles["header-extra"]}>
                             <YakitButton
                                 type='outline2'
@@ -428,7 +453,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
                                     setData([])
                                 }}
                             >
-                                清空
+                                {t("YakitButton.clear")}
                             </YakitButton>
                             <YakitButton
                                 type='primary'
@@ -438,7 +463,7 @@ const ConfigureProxyAuthentication: React.FC<ConfigureProxyAuthenticationProps> 
                                     setAgentConfigModalVisible(true)
                                 }}
                             >
-                                新增
+                                {t("YakitButton.add_new")}
                             </YakitButton>
                             <AgentConfigModal
                                 agentConfigModalVisible={agentConfigModalVisible}

@@ -34,6 +34,7 @@ import {
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {onGetRemoteValuesBase} from "@/components/yakitUI/utils"
+const ConfigureProxyAuthentication = React.lazy(() => import("../MITMServerStartForm/ConfigureProxyAuthentication"))
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -411,7 +412,8 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         onCloseModal()
     })
 
-    const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
+    // const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
+    const [configureProxyAuthenticationVisible, setConfigureProxyAuthenticationVisible] = useState<boolean>(false)
     const downstreamProxyRef: React.MutableRefObject<YakitBaseSelectRef> = useRef<YakitBaseSelectRef>({
         onGetRemoteValues: () => {},
         onSetRemoteValues: (s: string[]) => {}
@@ -447,7 +449,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                             help={
                                 <div
                                     className={style["agent-down-stream-proxy"]}
-                                    onClick={() => setAgentConfigModalVisible(true)}
+                                    onClick={() => setConfigureProxyAuthenticationVisible(true)}
                                 >
                                     配置代理认证
                                 </div>
@@ -466,7 +468,13 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                     </Form>
                 </div>
             </YakitModal>
-            <AgentConfigModal
+            <React.Suspense fallback={<div>loading...</div>}>
+                <ConfigureProxyAuthentication
+                    visible={configureProxyAuthenticationVisible}
+                    onSetVisible={setConfigureProxyAuthenticationVisible}
+                />
+            </React.Suspense>
+            {/* <AgentConfigModal
                 agentConfigModalVisible={agentConfigModalVisible}
                 onCloseModal={() => setAgentConfigModalVisible(false)}
                 generateURL={(url) => {
@@ -475,7 +483,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                     arr.push(url)
                     form.setFieldsValue({downstreamProxy: [...new Set(arr)]})
                 }}
-            ></AgentConfigModal>
+            ></AgentConfigModal> */}
         </>
     )
 })

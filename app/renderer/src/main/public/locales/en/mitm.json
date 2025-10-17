@@ -116,5 +116,21 @@
     "please_enter_username": "Please enter the username",
     "password": "Password",
     "please_enter_password": "Please enter the password"
+  },
+  "ConfigureProxyAuthentication": {
+    "saveProxyAuthAndCloseModal": "Do you want to save the configured proxy authentication and close the pop-up?",
+    "targetAddress": "Target Address",
+    "targetAddressExample": "E.g.: baidu.com/*.baidu.com/X.X.X.X",
+    "proxyAddress": "Proxy Address",
+    "example_address": "E.g.: 127.0.0.1:7890",
+    "protocol": "Protocol",
+    "username": "Username",
+    "password": "Password",
+    "proxyAddressRequired": "Proxy address cannot be empty",
+    "proxyAddressInvalid": "Proxy address format is incorrect",
+    "downstreamProxyExists": "Downstream proxy already exists",
+    "proxy_auth_config": "Configure Proxy Authentication",
+    "downstreamProxy": "Downstream Proxy",
+    "multipleProxyConfigTip": "When configuring multiple proxies, attempts to establish a connection will be made in order until a connection is successful or all proxies have been tried"
   }
 }

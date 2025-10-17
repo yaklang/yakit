@@ -278,7 +278,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
 
     const [width, setWidth] = useState<number>(0)
 
-    const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
+    // const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
     const [configureProxyAuthenticationVisible, setConfigureProxyAuthenticationVisible] = useState<boolean>(false)
 
     const [alertVisible, setAlertVisible] = useState<boolean>(true)
@@ -483,7 +483,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     </Item>
                 </Form>
                 {/* 代理劫持弹窗 */}
-                <AgentConfigModal
+                {/* <AgentConfigModal
                     agentConfigModalVisible={agentConfigModalVisible}
                     onCloseModal={() => setAgentConfigModalVisible(false)}
                     generateURL={(url) => {
@@ -492,7 +492,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         arr.push(url)
                         form.setFieldsValue({downstreamProxy: [...new Set(arr)]})
                     }}
-                ></AgentConfigModal>
+                ></AgentConfigModal> */}
                 <React.Suspense fallback={<div>loading...</div>}>
                     <MITMFormAdvancedConfiguration
                         visible={advancedFormVisible}
