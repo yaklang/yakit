@@ -1,9 +1,9 @@
 import {SolidAnnotationIcon, SolidHashtagIcon} from "@/assets/icon/solid"
 import type {FC, ReactNode} from "react"
-import ChatCard from "../ChatCard"
-import FileList, {FileListItem} from "../FileList"
-import styles from "./index.module.scss"
-import ModalInfo, {type ModalInfoProps} from "../ModelInfo"
+import ChatCard from "./ChatCard"
+import FileList, {FileListItem} from "./FileList"
+import styles from "./StreamCard.module.scss"
+import ModalInfo, {type ModalInfoProps} from "./ModelInfo"
 
 interface StreamCardProps {
     content?: string
