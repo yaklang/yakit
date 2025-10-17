@@ -32,6 +32,7 @@ import {toMITMHacker} from "@/pages/hacker/httpHacker"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -66,6 +67,31 @@ export interface ClientCertificate {
 
 const defHost = "127.0.0.1"
 const defPort = "8083"
+// 隐藏代理URL中的密码部分
+export const maskProxyPassword = (proxyUrl: string) => {
+    // console.log("maskProxyPassword input:", proxyUrl, "type:", typeof proxyUrl)
+
+    if (typeof proxyUrl !== "string" || !proxyUrl) {
+        return proxyUrl
+    }
+
+    try {
+        const url = new URL(proxyUrl)
+        if (url.password) {
+            // 保留用户名，将密码替换为星号
+            const maskedUrl = proxyUrl.replace(`${url.username}:${url.password}@`, `${url.username}:${"*".repeat(5)}@`)
+            // console.log("masked URL:", maskedUrl)
+            return maskedUrl
+        }
+        return proxyUrl
+    } catch {
+        // 如果不是标准URL格式，尝试使用正则匹配
+        const maskedUrl = proxyUrl.replace(/(\/\/[^:]+:)[^@]+([@])/g, "$1*****$2")
+        // console.log("regex masked URL:", maskedUrl)
+        return maskedUrl
+    }
+}
+
 export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo((props) => {
     const {t, i18n} = useI18nNamespaces(["mitm"])
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
@@ -103,40 +129,11 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
 
     const ruleButtonRef = useRef<any>()
     const advancedFormRef = useRef<any>()
-    const     downstreamProxyRef: React.MutableRefObject<YakitBaseSelectRef> = useRef<YakitBaseSelectRef>({
+    const downstreamProxyRef: React.MutableRefObject<YakitBaseSelectRef> = useRef<YakitBaseSelectRef>({
         onGetRemoteValues: () => {},
         onSetRemoteValues: (s: string[]) => {}
     })
 
-    // 隐藏代理URL中的密码部分
-    const maskProxyPassword = useMemoizedFn((proxyUrl: string) => {
-        console.log('maskProxyPassword input:', proxyUrl, 'type:', typeof proxyUrl)
-        
-        if (typeof proxyUrl !== 'string' || !proxyUrl) {
-            console.log('returning original value:', proxyUrl)
-            return proxyUrl
-        }
-        
-        try {
-            const url = new URL(proxyUrl)
-            if (url.password) {
-                // 保留用户名，将密码替换为星号
-                const maskedUrl = proxyUrl.replace(
-                    `${url.username}:${url.password}@`,
-                    `${url.username}:${'*'.repeat(5)}@`
-                )
-                console.log('masked URL:', maskedUrl)
-                return maskedUrl
-            }
-            console.log('no password found, returning original:', proxyUrl)
-            return proxyUrl
-        } catch {
-            // 如果不是标准URL格式，尝试使用正则匹配
-            const maskedUrl = proxyUrl.replace(/(\/\/[^:]+:)[^@]+([@])/g, '$1*****$2')
-            console.log('regex masked URL:', maskedUrl)
-            return maskedUrl
-        }
-    })
     const hostRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
         ...defYakitAutoCompleteRef
     })
@@ -199,7 +196,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const onSwitchPlugin = useMemoizedFn((checked) => {
         props.setEnableInitialPlugin(checked)
     })
-    const onStartMITM = useMemoizedFn((values) => { 
+    const onStartMITM = useMemoizedFn((values) => {
         // 开启替换规则
         if (openRepRuleFlag) {
             Modal.confirm({
@@ -386,19 +383,11 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                             maxTagCount={4}
                             tagRender={(props) => {
                                 return (
-                                    <span className="ant-select-selection-item">
-                                        <span className="ant-select-selection-item-content">
+                                    <YakitTag size={"middle"} {...props}>
+                                        <span className='content-ellipsis' style={{width: "100%"}}>
                                             {maskProxyPassword(props.value)}
                                         </span>
-                                        {props.closable && (
-                                            <span 
-                                                className="ant-select-selection-item-remove"
-                                                onClick={props.onClose}
-                                            >
-                                                X
-                                            </span>
-                                        )}
-                                    </span>
+                                    </YakitTag>
                                 )
                             }}
                             placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890'
