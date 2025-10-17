@@ -90,6 +90,8 @@ export interface AIStartParams {
     TimelineContentSizeLimit?: number
     /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
     UserInteractLimit?: number
+    /** timeline sessionID  用于多轮对话保持上下文 */
+    TimelineSessionID?: string
 }
 
 export interface AIInputEvent {

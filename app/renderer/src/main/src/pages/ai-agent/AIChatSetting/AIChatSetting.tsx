@@ -9,12 +9,13 @@ import cloneDeep from "lodash/cloneDeep"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {AIAgentSettingDefault, AIReviewRuleOptions} from "../defaultConstant"
-
-// import classNames from "classnames"
-import styles from "./AIChatSetting.module.scss"
 import {YakitRadioButtonsProps} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType"
 import useAIAgentStore from "../useContext/useStore"
 import useAIAgentDispatcher from "../useContext/useDispatcher"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+
+// import classNames from "classnames"
+import styles from "./AIChatSetting.module.scss"
 
 const ReviewPolicyOptions: YakitRadioButtonsProps["options"] = AIReviewRuleOptions.map((item) => ({
     value: item.value,
@@ -168,7 +169,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <Form.Item label={<>时间线上下文限制</>} name='TimelineItemLimit'>
                     <YakitInputNumber type='horizontal' size='small' min={0} max={200} />
                 </Form.Item>
-                <Form.Item label={<> 时间线上下文大小</>} name='TimelineContentSizeLimit'>
+                <Form.Item label={<>时间线上下文大小</>} name='TimelineContentSizeLimit'>
                     <YakitInputNumber type='horizontal' size='small' min={0} max={200} />
                 </Form.Item>
                 <Form.Item
@@ -205,6 +206,9 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                         <YakitInputNumber type='horizontal' size='small' min={0} max={20} />
                     </Form.Item>
                 )}
+                <Form.Item label={<>会话ID</>} name='TimelineSessionID'>
+                    <YakitInput size='small' />
+                </Form.Item>
             </Form>
         </div>
     )

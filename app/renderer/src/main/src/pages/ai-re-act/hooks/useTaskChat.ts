@@ -43,8 +43,6 @@ function useTaskChat(params?: UseTaskChatParams) {
     const review = useRef<AIChatQSData>()
     const currentPlansId = useRef<string>("")
 
-    if(review.current&&review.current.type==="file_system_pin"&&review.current?.data){}
-
     // 存放流式输出的EventUUID的集合
     const eventUUIDs = useRef<Set<string>>(new Set())
     const handleSetEventUUID = useMemoizedFn((id: string) => {
