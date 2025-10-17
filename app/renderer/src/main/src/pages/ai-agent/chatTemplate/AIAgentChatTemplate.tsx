@@ -15,7 +15,7 @@ import {
     OutlineEngineIcon,
     OutlineRocketLaunchIcon
 } from "@/assets/icon/outline"
-import {formatNumberUnits, isShowToolColorCard} from "../utils"
+import {formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     SolidCursorclickIcon,
@@ -45,6 +45,7 @@ import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
+import {isToolExecStream} from "@/pages/ai-re-act/hooks/utils"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -273,7 +274,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                             switch (type) {
                                 case "stream":
                                     const {NodeId, EventUUID, content, NodeLabel} = data
-                                    if (isShowToolColorCard(NodeId)) {
+                                    if (isToolExecStream(NodeId)) {
                                         return <AIChatToolColorCard key={id} toolCall={data} />
                                     }
                                     if (NodeId === "re-act-loop-answer-payload") {

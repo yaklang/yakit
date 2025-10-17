@@ -1,0 +1,22 @@
+.ai-agent-side-list {
+    height: 100%;
+    display: flex;
+    z-index: 9;
+    flex-shrink: 0;
+    .tab-wrap {
+        width: 100%;
+        overflow: hidden;
+    }
+    .tab-content {
+        width: 300px;
+        flex: 1;
+        overflow: hidden;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+        border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        transition: width 0.15s;
+    }
+    .tab-content-hidden {
+        width: 0;
+        border-left: 0;
+    }
+}

@@ -1,7 +1,13 @@
 import {ReactNode} from "react"
 import {AIAgentSetting, AIAgentTab} from "./aiAgentType"
-import {MCPTransportType} from "./type/mcpClient"
-import {OutlineCogIcon, OutlineSparklesIcon, OutlineTemplateIcon, OutlineWrenchIcon} from "@/assets/icon/outline"
+import {
+    OutlineChipIcon,
+    OutlineCogIcon,
+    OutlineMCPIcon,
+    OutlineSparklesIcon,
+    OutlineTemplateIcon,
+    OutlineWrenchIcon
+} from "@/assets/icon/outline"
 import {YakitSideTabProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {genDefaultPagination, PaginationSchema} from "../invoker/schema"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
@@ -20,17 +26,26 @@ import {
 } from "./aiModelList/icon"
 import {UseAIPerfDataState, UseChatIPCState} from "../ai-re-act/hooks/type"
 import {AIAgentGrpcApi} from "../ai-re-act/hooks/grpcApi"
+import {MCPServerType} from "./type/aiMCP"
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
 
-export const AIAgentTabList: {key: AIAgentTab; title: string; icon: ReactNode}[] = [
-    // {key: "mcp", title: "MCP"},
-    {key: "history", title: "历史会话", icon: <OutlineSparklesIcon />},
-    {key: "setting", title: "配置", icon: <OutlineCogIcon />},
-    {key: "forgeName", title: "模板", icon: <OutlineTemplateIcon />},
-    {key: "tool", title: "工具", icon: <OutlineWrenchIcon />},
-    {key: "AIModel", title: "AI模型", icon: <OutlineWrenchIcon />}
+export enum AIAgentTabListEnum {
+    History = "history",
+    Setting = "setting",
+    Forge_Name = "forgeName",
+    Tool = "tool",
+    AI_Model = "AIModel",
+    MCP = "mcp"
+}
+export const AIAgentTabList: YakitSideTabProps["yakitTabs"] = [
+    {value: AIAgentTabListEnum.History, label: "历史会话", icon: <OutlineSparklesIcon />},
+    {value: AIAgentTabListEnum.Setting, label: "配置", icon: <OutlineCogIcon />},
+    {value: AIAgentTabListEnum.Forge_Name, label: "模板", icon: <OutlineTemplateIcon />},
+    {value: AIAgentTabListEnum.Tool, label: "工具", icon: <OutlineWrenchIcon />},
+    {value: AIAgentTabListEnum.AI_Model, label: "AI模型", icon: <OutlineChipIcon />},
+    {value: AIAgentTabListEnum.MCP, label: "MCP", icon: <OutlineMCPIcon />}
 ]
 
 /** ai-agent 聊天全局配置参数默认值 */
@@ -57,7 +72,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
 }
 
 /** mcp 自定义服务器配置类型选项 */
-export const MCPTransportTypeList: {value: MCPTransportType; label: string}[] = [
+export const MCPTransportTypeList: {value: MCPServerType; label: string}[] = [
     {label: "SSE", value: "sse"},
     {label: "STDIO", value: "stdio"}
 ]
@@ -162,7 +177,10 @@ export const AIReviewRuleOptions = [
         describe: "由AI判断审阅风险，低风险默认执行，高风险由用户操作"
     }
 ]
-
+export enum AIMCPServerTypeEnum {
+    SSE = "sse",
+    Stdio = "stdio",
+}
 //#region ai hooks 默认值
 export const defaultChatIPCData: UseChatIPCState = {
     execute: false,

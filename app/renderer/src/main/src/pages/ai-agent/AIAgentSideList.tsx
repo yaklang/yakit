@@ -1,36 +1,28 @@
-import React, {useRef, useState} from "react"
+import React, {ReactNode, useState} from "react"
 import {useMemoizedFn} from "ahooks"
-import {AIAgentTabList} from "./defaultConstant"
-import {AIAgentSideListProps, AIAgentTab, AIAgentTriggerEventInfo} from "./aiAgentType"
-import useGetSetState from "../pluginHub/hooks/useGetSetState"
+import {AIAgentTabList, AIAgentTabListEnum} from "./defaultConstant"
+import {AIAgentSideListProps, AIAgentTriggerEventInfo} from "./aiAgentType"
 import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
-import styles from "./AIAgent.module.scss"
+import styles from "./AIAgentSideList.module.scss"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 
 const AIChatSetting = React.lazy(() => import("./AIChatSetting/AIChatSetting"))
 const ForgeName = React.lazy(() => import("./forgeName/ForgeName"))
 const AIToolList = React.lazy(() => import("./aiToolList/AIToolList"))
 const AIModelList = React.lazy(() => import("./aiModelList/AIModelList"))
 const HistoryChat = React.lazy(() => import("./historyChat/HistoryChat"))
+const AIMCP = React.lazy(() => import("./aiMCP/AIMCP"))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     // const {} = props
 
-    // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
-    const rendered = useRef<Set<AIAgentTab>>(new Set(["history"]))
-    const [active, setActive, getActive] = useGetSetState<AIAgentTab>("history")
-    const [hiddenActive, setHiddenActive] = useState(false)
-    const handleSetActive = useMemoizedFn((value: AIAgentTab) => {
-        if (!rendered.current.has(value)) {
-            rendered.current.add(value)
-        }
-        if (getActive() === value) {
-            setHiddenActive((old) => !old)
-        } else {
-            setHiddenActive(false)
-            setActive(value)
-        }
+    const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.History)
+    const [show, setShow] = useState<boolean>(true)
+
+    const handleSetActive = useMemoizedFn((value: AIAgentTabListEnum) => {
+        setActive(value)
     })
 
     /** 向对话框组件进行事件触发的通信 */
@@ -46,97 +38,79 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
         }
         if (info.type) emiter.emit("onServerChatEvent", JSON.stringify(info))
     })
-
+    const renderTabContent = useMemoizedFn((key: AIAgentTabListEnum) => {
+        let content: ReactNode = <></>
+        switch (key) {
+            case AIAgentTabListEnum.History:
+                content = (
+                    <React.Suspense>
+                        <HistoryChat
+                            onNewChat={() => {
+                                onEmiter("new-chat")
+                            }}
+                        />
+                    </React.Suspense>
+                )
+                break
+            case AIAgentTabListEnum.Setting:
+                content = (
+                    <React.Suspense>
+                        <AIChatSetting />
+                    </React.Suspense>
+                )
+                break
+            case AIAgentTabListEnum.Forge_Name:
+                content = (
+                    <React.Suspense>
+                        <ForgeName />
+                    </React.Suspense>
+                )
+                break
+            case AIAgentTabListEnum.Tool:
+                content = (
+                    <React.Suspense>
+                        <AIToolList />
+                    </React.Suspense>
+                )
+                break
+            case AIAgentTabListEnum.AI_Model:
+                content = (
+                    <React.Suspense>
+                        <AIModelList />
+                    </React.Suspense>
+                )
+                break
+            case AIAgentTabListEnum.MCP:
+                content = (
+                    <React.Suspense>
+                        <AIMCP />
+                    </React.Suspense>
+                )
+                break
+            default:
+                break
+        }
+        return content
+    })
     return (
         <div className={styles["ai-agent-side-list"]}>
-            <div className={classNames(styles["side-list-bar"], {[styles["side-list-bar-hidden"]]: hiddenActive})}>
-                {AIAgentTabList.map((item) => {
-                    const isActive = item.key === active
-                    return (
-                        <div
-                            key={item.key}
-                            className={classNames(styles["list-item"], {
-                                [styles["list-item-active"]]: isActive,
-                                [styles["list-item-hidden"]]: isActive && hiddenActive
-                            })}
-                            onClick={() => handleSetActive(item.key)}
-                        >
-                            <span className={styles["item-title"]}>{item.title}</span>
-                            {item.icon}
-                        </div>
-                    )
-                })}
-            </div>
-
-            <div className={classNames(styles["side-list-body"], {[styles["side-list-body-hidden"]]: hiddenActive})}>
-                {rendered.current.has("history") && (
-                    <div
-                        className={classNames(styles["active-content"], {
-                            [styles["hidden-content"]]: active !== "history"
-                        })}
-                        tabIndex={active !== "history" ? -1 : 1}
-                    >
-                        <React.Suspense>
-                            <HistoryChat
-                                onNewChat={() => {
-                                    onEmiter("new-chat")
-                                }}
-                            />
-                        </React.Suspense>
-                    </div>
-                )}
-
-                {rendered.current.has("setting") && (
-                    <div
-                        className={classNames(styles["active-content"], {
-                            [styles["hidden-content"]]: active !== "setting"
-                        })}
-                        tabIndex={active !== "setting" ? -1 : 1}
-                    >
-                        <React.Suspense>
-                            <AIChatSetting />
-                        </React.Suspense>
-                    </div>
-                )}
-
-                {rendered.current.has("forgeName") && (
-                    <div
-                        className={classNames(styles["active-content"], {
-                            [styles["hidden-content"]]: active !== "forgeName"
-                        })}
-                        tabIndex={active !== "forgeName" ? -1 : 1}
-                    >
-                        <React.Suspense>
-                            <ForgeName />
-                        </React.Suspense>
-                    </div>
-                )}
-
-                {rendered.current.has("tool") && (
-                    <div
-                        className={classNames(styles["active-content"], {
-                            [styles["hidden-content"]]: active !== "tool"
-                        })}
-                        tabIndex={active !== "tool" ? -1 : 1}
-                    >
-                        <React.Suspense>
-                            <AIToolList />
-                        </React.Suspense>
-                    </div>
-                )}
-                {rendered.current.has("AIModel") && (
-                    <div
-                        className={classNames(styles["active-content"], {
-                            [styles["hidden-content"]]: active !== "AIModel"
-                        })}
-                        tabIndex={active !== "AIModel" ? -1 : 1}
-                    >
-                        <React.Suspense>
-                            <AIModelList />
-                        </React.Suspense>
-                    </div>
-                )}
-            </div>
+            <YakitSideTab
+                type='vertical'
+                yakitTabs={AIAgentTabList}
+                activeKey={active}
+                onActiveKey={(v) => handleSetActive(v as AIAgentTabListEnum)}
+                className={styles["tab-wrap"]}
+                show={show}
+                setShow={setShow}
+            >
+                <div
+                    className={classNames(styles["tab-content"], {
+                        [styles["tab-content-hidden"]]: !show
+                    })}
+                >
+                    {renderTabContent(active)}
+                </div>
+            </YakitSideTab>
         </div>
     )
 }
