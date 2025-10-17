@@ -960,9 +960,30 @@ service Yak {
   rpc ListEntityRepository(Empty) returns(ListEntityRepositoryResponse);
 
   rpc QueryEntity(QueryEntityRequest) returns (QueryEntityResponse);
+  rpc DeleteEntity(DeleteEntityRequest) returns (DbOperateMessage);
   rpc QueryRelationship(QueryRelationshipRequest) returns (QueryRelationshipResponse);
   rpc QuerySubERM(QuerySubERMRequest) returns (QuerySubERMResponse);
   rpc GenerateERMDot(GenerateERMDotRequest) returns (GenerateERMDotResponse);
+
+  // Export and Import Knowledge Base
+  rpc ExportKnowledgeBase(ExportKnowledgeBaseRequest) returns (stream GeneralProgress);
+  rpc ImportKnowledgeBase(ImportKnowledgeBaseRequest) returns (stream GeneralProgress);
+}
+
+message ExportKnowledgeBaseRequest {
+  int64 KnowledgeBaseId = 1;
+  string TargetPath = 2;
+}
+
+message ImportKnowledgeBaseRequest {
+  string NewKnowledgeBaseName = 1;
+  string InputPath = 2;
+}
+
+message GeneralProgress {
+  double Percent = 1;
+  string Message = 2;
+  string MessageType = 3;
 }
 
 message EntityRepository {
@@ -997,6 +1018,7 @@ message EntityFilter {
   repeated string Names = 4;
   repeated string HiddenIndex = 5;
   repeated string RuntimeID = 7;
+  repeated string Keywords = 9;
 }
 
 message QueryEntityRequest {
@@ -1008,6 +1030,10 @@ message QueryEntityResponse {
   repeated Entity Entities = 1;
   Paging Pagination = 2;
   uint64 Total = 3;
+}
+
+message DeleteEntityRequest {
+  EntityFilter Filter = 1;
 }
 
 message Relationship {
@@ -1167,7 +1193,7 @@ message BuildVectorIndexForKnowledgeBaseEntryRequest {
   int64 KnowledgeBaseEntryId = 1;
   string KnowledgeBaseEntryHiddenIndex = 13;
   int64 KnowledgeBaseId = 12;
-  
+
   string BaseUrl = 2;
   string ApiKey = 3;
   string Proxy = 4;
@@ -1208,6 +1234,7 @@ message KnowledgeBaseType{
   string Description = 2;
   string Value = 3;
 }
+
 
 message GetKnowledgeBaseTypeListResponse{
   repeated KnowledgeBaseType KnowledgeBaseTypes = 1;
@@ -1517,6 +1544,13 @@ message AIOutputEvent {
   bool IsSync = 12; // 是否是同步消息
   string SyncID = 14; // 用于同步消息的 ID
   string EventUUID = 16; // 事件的唯一ID, used via stream stream-finished
+  I18n NodeIdVerbose = 17; // 用于展示的节点ID，可能是节点名称
+  string ContentType = 18; // markdown / yaklang_code / plain_code
+}
+
+message I18n {
+  string Zh = 1;
+  string En = 2;
 }
 
 message AIInputEvent {
@@ -1633,7 +1667,7 @@ message AIStartParams {
   int64 ReActMaxIteration = 27;
 
   // 限制 Timeline 的最大条目和最大内容大小（bytes）
-  int64 TimelineItemLimit = 28;
+  int64 TimelineItemLimit = 28; // 已经废弃，功能不可用了，只需要关注 TimelineContentSizeLimit 就好
   int64 TimelineContentSizeLimit = 29;
 
   // 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题
@@ -2313,7 +2347,7 @@ message SmokingEvaluatePluginRequest {
 
   string Code = 3;
   // "syntaxflow" | "nuclei" | "mitm" | "port-scan" | "codec" | "yak"
-  string PluginType = 4; 
+  string PluginType = 4;
 }
 
 
@@ -5979,8 +6013,8 @@ message HTTPFlowsToOnlineBatchRequest {
 }
 
 message HTTPFlowsToOnlineBatchResponse {
-    int64 SuccessCount = 1;
-    int64 FailedCount = 2;
+  int64 SuccessCount = 1;
+  int64 FailedCount = 2;
 }
 
 message AnalyzeHTTPFlowRequest{
@@ -6028,10 +6062,10 @@ message HTTPFlowRuleData{
   int64 HTTPFlowId = 2;
   string RuleVerboseName = 3;
   string Rule = 4;
-  int64 StatusCode =5;
+  int64 StatusCode = 5;
   string Url = 6;
   string Method = 7;
-  string IPAddress= 8;
+  string IPAddress = 8;
 }
 
 message ExportHTTPFlowsRequest {
@@ -6650,8 +6684,8 @@ message RenderHTTPFuzzerPacketResponse {
 
 message SmokingEvaluatePluginBatchRequest {
   repeated string ScriptNames = 1;
-    // "syntaxflow" | "nuclei" | "mitm" | "port-scan" | "codec" | "yak"
-  string PluginType = 2; 
+  // "syntaxflow" | "nuclei" | "mitm" | "port-scan" | "codec" | "yak"
+  string PluginType = 2;
 }
 
 message SmokingEvaluatePluginBatchResponse {
@@ -7187,7 +7221,7 @@ message SyntaxFlowScanRequest{
   // for new rule scan task
   SyntaxFlowRuleInput RuleInput = 6; // 用于新建规则时的调试功能
   // 并发，默认5
-  uint32  Concurrency =7;
+  uint32  Concurrency = 7;
 
   // compile data only in memory 
   bool Memory = 8;
@@ -7510,11 +7544,11 @@ message SSARiskFeedbackToOnlineRequest {
 }
 
 message SSARiskDisposalData{
-  int64 Id =1 ;
+  int64 Id = 1 ;
   int64 CreatedAt = 2;
   int64 UpdatedAt = 3;
 
-  string Status =4;
+  string Status = 4;
   string Comment = 5;
 
   int64 RiskId = 6;
@@ -7541,14 +7575,14 @@ message CreateSSARiskDisposalsResponse {
 }
 
 message QuerySSARiskDisposalsRequest {
-    Paging  Pagination=1;
-    SSARiskDisposalsFilter Filter = 2;
+  Paging  Pagination = 1;
+  SSARiskDisposalsFilter Filter = 2;
 }
 
 message QuerySSARiskDisposalsResponse {
   Paging Pagination = 1;
   repeated SSARiskDisposalData Data = 2;
-  int64 Total =3;
+  int64 Total = 3;
 }
 
 message UpdateSSARiskDisposalsRequest {
@@ -7576,7 +7610,7 @@ message GetSSARiskDisposalRequest{
 }
 
 message GetSSARiskDisposalResponse{
- repeated SSARiskDisposalData Data = 1;
+  repeated SSARiskDisposalData Data = 1;
 }
 
 
@@ -8006,7 +8040,7 @@ message SingleManualHijackInfoMessage{
 }
 
 message QueryMITMReplacerRulesRequest{
-  string KeyWord =1;
+  string KeyWord = 1;
 }
 
 message QueryMITMReplacerRulesResponse{
@@ -8083,9 +8117,9 @@ message SSAProject {
   // 编译配置选项
   SSAProjectCompileConfig CompileConfig = 9;
   // 扫描配置选项
-  SSAProjectScanConfig ScanConfig=10;
+  SSAProjectScanConfig ScanConfig = 10;
   // 规则策略配置
-  SSAProjectScanRuleConfig RuleConfig =11;
+  SSAProjectScanRuleConfig RuleConfig = 11;
 }
 
 message SSAProjectCompileConfig{
@@ -8104,7 +8138,7 @@ message SSAProjectScanConfig{
 }
 
 message SSAProjectScanRuleConfig{
-    SyntaxFlowRuleFilter RuleFilter =1;
+  SyntaxFlowRuleFilter RuleFilter = 1;
 }
 
 message SSAProjectFilter {
