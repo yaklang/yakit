@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useImperativeHandle } from "react"
+import React, { useEffect, useState, useRef, useImperativeHandle, useLayoutEffect } from "react"
 import { Button, Space } from "antd"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import { AutoCard } from "../../components/AutoCard"
@@ -9,7 +9,8 @@ import { RemoveIcon } from "@/assets/newIcon"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { useHttpFlowStore } from "@/store/httpFlow"
 import { useTheme } from "@/hook/useTheme"
-import { useMemoizedFn } from "ahooks"
+import { applyYakitMonacoTheme } from "@/utils/monacoSpec/theme"
+import { randomString } from "@/utils/randomUtil"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -128,13 +129,9 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
         }
     }), [leftCode, rightCode, noWrap]);
 
-    const setCompareTheme = useMemoizedFn((theme) => {
-        monaco.setTheme(`vs${theme === 'dark' ? '-dark' : ''}`)
-    })
-
     //监听theme设置monaco主题
-    useEffect(() => {
-        setCompareTheme(theme)
+    useLayoutEffect(() => {
+        applyYakitMonacoTheme(theme)
     }, [theme])
 
     const changeLineConversion = () => {
@@ -144,7 +141,6 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
         diffEditorRef.current.dispose()
 
         const isWrap = !noWrap
-        setCompareTheme(theme)
         diffEditorRef.current = monaco.createDiffEditor(diff, {
             enableSplitViewResizing: false,
             originalEditable,
@@ -183,12 +179,10 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                     if(data?.length){
                         return  {
                             token: data[0],
-                            info: data[1],
+                            info: data?.[1],
                         }
                     } else {
-                        return { token: `compare-${new Date().getTime()}-${Math.floor(
-                            Math.random() * 50
-                        )}`,}
+                        return { token: `compare-${randomString(50)}`,}
                     }
                 }
                 const res = getCreateCompareTokenRes()
@@ -196,7 +190,6 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                 if (!diffDivRef || !diffDivRef.current) return
 
                 const diff = diffDivRef.current as unknown as HTMLDivElement
-                setCompareTheme(theme)
                 diffEditorRef.current = monaco.createDiffEditor(diff, {
                     enableSplitViewResizing: false,
                     originalEditable,

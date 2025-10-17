@@ -1,4 +1,5 @@
 import {CompateData} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import { randomString } from "@/utils/randomUtil"
 import {create} from "zustand"
 const {ipcRenderer} = window.require("electron")
 
@@ -91,9 +92,7 @@ export const useHttpFlowStore = create<HttpFlowStoreProps>((set, get) => ({
                 })
             }
         } else {
-            const newToken = `compare-${new Date().getTime()}-${Math.floor(
-                Math.random() * 50
-            )}`;
+            const newToken = `compare-${randomString(50)}`;
             const newInfo = {
                 type: +type,
                 [infoType]: info
