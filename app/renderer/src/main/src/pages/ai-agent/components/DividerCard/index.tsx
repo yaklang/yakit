@@ -6,28 +6,36 @@ import {OutlineXcircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {SolidXcircleIcon} from "@/assets/icon/solid"
 import classNames from "classnames"
 
+export enum StreamsStatus {
+    success = "success",
+    inProgress = "in-progress",
+    error = "error"
+}
+
 interface SuccessStatus {
-    status: "success"
-    desc: string
+    status: StreamsStatus.success
+    desc?: string
     success: number
     error: number
+    name?: string
 }
 interface WarningStatus {
-    status: "warning" | "error"
-    desc: string
+    status: StreamsStatus.inProgress | StreamsStatus.error
+    desc?: string
+    name?: string
 }
 
 type DividerCardProps = SuccessStatus | WarningStatus
 const DividerCard: FC<DividerCardProps> = (props) => {
     const [icon, dom] = useMemo(() => {
-        const {status, desc} = props
+        const {status, desc, name} = props
         switch (status) {
-            case "success": {
+            case StreamsStatus.success: {
                 const {error, success} = props
                 return [
                     <SolidCheckCircleIcon />,
                     <div className={classNames(styles["divider-content-success"], styles["divider-content-text"])}>
-                        <span>输入分支</span>
+                        <span>{name}</span>
                         {[error, success].map((item, index) => {
                             return (
                                 <YakitTag
@@ -44,38 +52,32 @@ const DividerCard: FC<DividerCardProps> = (props) => {
                     </div>
                 ]
             }
-            case "warning":
+            case StreamsStatus.inProgress:
                 return [
                     <OutlineXcircleIcon className={styles["icon-danger"]} />,
                     <div className={styles["divider-content-text"]}>
-                        <span>输出分析</span>
-                        <YakitTag
-                            fullRadius
-                            className={styles["divider-content-error"]}
-                            size='small'
-                            color='warning'
-                            icon={<OutlineXIcon />}
-                        >
+                        <span>{name}</span>
+                        <YakitTag fullRadius className={styles["divider-content-error"]} size='small' color='warning'>
+                           <OutlineXIcon />
+                           <p className={styles["divider-content-error-text"]}>
+                             {desc}
+                           </p>
+                        </YakitTag>
+                    </div>
+                ]
+            case StreamsStatus.error:
+                return [
+                    <OutlineXcircleIcon className={styles["icon-danger"]} />,
+                    <div className={styles["divider-content-text"]}>
+                        <span>{name}</span>
+                        <YakitTag fullRadius className={styles["divider-content-error"]} size='small' color='danger'>
+                            <OutlineXIcon />
                             {desc}
                         </YakitTag>
                     </div>
                 ]
-            case "error":
-                return [
-                    <OutlineXcircleIcon className={styles["icon-danger"]} />,
-                    <div className={styles["divider-content-text"]}>
-                        <span>目标探测</span>
-                        <YakitTag
-                            fullRadius
-                            className={styles["divider-content-error"]}
-                            size='small'
-                            color='danger'
-                            icon={<OutlineXIcon />}
-                        >
-                            {desc}
-                        </YakitTag>
-                    </div>
-                ]
+            default:
+                return [null, null]
         }
     }, [props])
     return (

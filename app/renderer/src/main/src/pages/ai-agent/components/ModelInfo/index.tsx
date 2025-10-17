@@ -9,7 +9,7 @@ import {RocketSvgIcon} from "@/components/layout/icons"
 import {Tooltip} from "antd"
 import { SolidAnnotationIcon } from "@/assets/icon/solid"
 
-interface ModalInfoProps {
+export interface ModalInfoProps {
     icon?: string
     title?: string
     time?: string
@@ -22,8 +22,8 @@ const ModalInfo: FC<ModalInfoProps> = ({icon, title, time, copyStr}) => {
         <div className={styles["modal-info"]}>
             <div className={styles["modal-info-title"]}>
                 {iconSvg}
-                {title ?? "OpenAI"}
-                <span className={styles["modal-info-title-time"]}>{time ?? "2025-11-11"}</span>
+                {title}
+                <span className={styles["modal-info-title-time"]}>{time}</span>
             </div>
             <div className={styles["modal-info-icons"]}>
                 <Tooltip placement='top' title=''>

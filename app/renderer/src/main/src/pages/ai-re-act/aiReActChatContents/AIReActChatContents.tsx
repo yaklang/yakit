@@ -76,7 +76,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                         />
                     )
                 } else {
-                    contentNode = <AIStreamChatContent stream={content} nodeLabel={NodeIdVerbose.Zh} />
+                    contentNode = <AIStreamChatContent stream={content} nodeLabel={NodeIdVerbose?.Zh} />
                 }
 
                 break

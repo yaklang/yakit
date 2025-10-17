@@ -77,7 +77,7 @@ export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
 
 export interface AIAgentChatStreamProps {
     tasks: AIAgentGrpcApi.PlanTask[]
-    streams: Record<string, AIChatQSData[]>
+    streams: AIChatQSData[]
     defaultExpand?: boolean
 }
 export interface ChatStreamCollapseItemProps {

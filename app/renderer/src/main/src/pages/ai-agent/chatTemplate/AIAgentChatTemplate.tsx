@@ -45,12 +45,10 @@ import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
-import {isToolExecStream} from "@/pages/ai-re-act/hooks/utils"
-import ChatCard from "../components/ChatCard"
-import FileList from "../components/FileList"
-import FileSystemCard from "../components/FileSystemCard"
-import SummaryCard from "../components/SummaryCard"
+import DividerCard, {StreamsStatus} from "../components/DividerCard"
+import StreamCard from "../components/SummaryCard"
 import ToolInvokerCard from "../components/ToolInvokerCard"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -247,10 +245,12 @@ const taskAnswerToIconMap: Record<string, ReactNode> = {
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
     const {tasks, streams, defaultExpand} = props
 
+    const {i18n} = useI18nNamespaces([])
+
     // 任务集合
-    const lists = useMemo(() => {
-        return Object.keys(streams)
-    }, [streams])
+    // const lists = useMemo(() => {
+    //     return Object.keys(streams)
+    // }, [streams])
 
     // 生成任务展示名称
     const handleGenerateTaskName = useMemoizedFn((order: string) => {
@@ -259,22 +259,68 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         if (!task) return order
         return task.name
     })
+    console.log("streams:", streams, tasks)
+
+    const getTask = (id) => {
+        return tasks.find((item) => item.index === id)
+    }
+
+    const renderItem = (stream: AIChatQSData) => {
+        switch (stream.type) {
+            case "task_index_node":
+                const task = getTask(stream.data.taskIndex)
+                const props = {
+                    status: task?.progress as StreamsStatus,
+                    desc: task?.goal,
+                    name: task?.name,
+                    success: 0,
+                    error: 0
+                }
+                return <DividerCard {...props} />
+            case "stream": {
+                // 首字母大写
+                const language = i18n.language.charAt(0).toUpperCase() + i18n.language.slice(1)
+                return (
+                    <StreamCard
+                        titleText={stream.data.NodeIdVerbose[language]}
+                        titleIcon={taskAnswerToIconMap[stream.data.NodeId]}
+                        content={stream.data.content}
+                    />
+                )
+            }
+            case "tool_result": {
+                const task = getTask(stream.data.TaskIndex)
+                return (
+                    <ToolInvokerCard
+                        titleText={task?.name}
+                        name={stream.data.toolName}
+                        status={stream.data.status}
+                        desc={stream.data.summary}
+                        content={stream.data.toolStdoutContent.content}
+                    />
+                )
+            }
+            default:
+                return <div>{stream.type}</div>
+        }
+    }
 
     return (
         <div className={styles["ai-agent-chat-stream"]}>
-            {lists.map((taskName) => {
-                const headerTitle = handleGenerateTaskName(taskName)
+            {streams.map(renderItem)}
+            {/* {streams.map(({type}) => {
+                const headerTitle = handleGenerateTaskName(type)
                 return (
                     <ChatStreamCollapse
-                        key={taskName}
-                        id={taskName}
+                        key={type}
+                        id={type}
                         title={headerTitle}
                         defaultExpand={defaultExpand ?? true}
                         className={classNames({
                             [styles["chat-stream-collapse-expand-first"]]: true // firstExpand
                         })}
                     >
-                        {(streams[taskName] || []).map((info) => {
+                        {(streams[type] || []).map((info) => {
                             const {id, Timestamp, type, data} = info
                             switch (type) {
                                 case "stream":
@@ -306,7 +352,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                         })}
                     </ChatStreamCollapse>
                 )
-            })}
+            })} */}
         </div>
     )
 })
@@ -345,28 +391,25 @@ export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props
         defaultValuePropName: "defaultExpand",
         valuePropName: "expand"
     })
-    return <ToolInvokerCard/>
-    // <SummaryCard />
-    // <FileSystemCard name="gen-code.yak" path="C:\bo\software\nexus\nexus" suffix="yak" />
 
-    // return (
-    //     <div id={id} className={classNames(className, styles["chat-stream-collapse"])} style={style}>
-    //         <div className={styles["collapse-header"]}>
-    //             <div className={styles["header-body"]} onClick={() => setExpand(!expand)}>
-    //                 <div className={classNames(styles["expand-icon"], {[styles["no-expand-icon"]]: !expand})}>
-    //                     <OutlineChevrondownIcon />
-    //                 </div>
-    //                 <div className={styles["header-title"]}>{title}</div>
-    //             </div>
+    return (
+        <div id={id} className={classNames(className, styles["chat-stream-collapse"])} style={style}>
+            <div className={styles["collapse-header"]}>
+                <div className={styles["header-body"]} onClick={() => setExpand(!expand)}>
+                    <div className={classNames(styles["expand-icon"], {[styles["no-expand-icon"]]: !expand})}>
+                        <OutlineChevrondownIcon />
+                    </div>
+                    <div className={styles["header-title"]}>{title}</div>
+                </div>
 
-    //             {<div className={styles["header-extra"]}>{headerExtra || null}</div>}
-    //         </div>
+                {<div className={styles["header-extra"]}>{headerExtra || null}</div>}
+            </div>
 
-    //         <div className={classNames(styles["collapse-body"], {[styles["collapse-body-hidden"]]: !expand})}>
-    //             <div className={styles["collapse-panel"]}>{children}</div>
-    //         </div>
-    //     </div>
-    // )
+            <div className={classNames(styles["collapse-body"], {[styles["collapse-body-hidden"]]: !expand})}>
+                <div className={styles["collapse-panel"]}>{children}</div>
+            </div>
+        </div>
+    )
 })
 
 export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = memo((props) => {
