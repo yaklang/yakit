@@ -22,7 +22,7 @@
             flex: 1;
             width: 0;
             height: 32px;
-            >span:first-child{
+            > span:first-child {
                 width: fit-content;
                 white-space: nowrap;
             }
@@ -52,9 +52,22 @@
             }
         }
 
-        &-error svg {
-            width: 12px;
-            height: 12px;
+        &-error {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+            min-width: 0;
+       
+            &-text { 
+                width: 100%;
+                margin: 0;
+                @include mixin.text-ellipsis();
+            }
+            svg {
+                width: 12px;
+                height: 12px;
+            }
         }
     }
 }

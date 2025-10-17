@@ -133,7 +133,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             case AITabsEnum.Task_Content:
                 return (
                     <>
-                        <AIAgentChatStream tasks={plan} streams={{}} />
+                        <AIAgentChatStream tasks={plan} streams={streams} />
                     </>
                 )
             case AITabsEnum.File_System:

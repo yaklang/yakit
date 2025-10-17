@@ -1,16 +1,21 @@
 import {SolidAnnotationIcon, SolidHashtagIcon} from "@/assets/icon/solid"
-import type {FC} from "react"
+import type {FC, ReactNode} from "react"
 import ChatCard from "../ChatCard"
 import FileList, {FileListItem} from "../FileList"
 import styles from "./index.module.scss"
+import ModalInfo, {type ModalInfoProps} from "../ModelInfo"
 
-interface SummaryCardProps {
+interface StreamCardProps {
     content?: string
     fileList?: FileListItem[]
     prompt?: string
+    titleText?: string
+    titleIcon?: ReactNode
+
+    modalInfo?: ModalInfoProps
 }
 
-const PromptCard: FC<{prompt?: string}> = ({prompt = "模型在京东云上的私有化部署方案"}) => {
+const PromptCard: FC<{prompt?: string}> = ({prompt}) => {
     return (
         <div className={styles["summary-prompt"]}>
             <div className={styles["summary-prompt-title"]}>
@@ -22,12 +27,17 @@ const PromptCard: FC<{prompt?: string}> = ({prompt = "模型在京东云上的�
     )
 }
 
-const SummaryCard: FC<SummaryCardProps> = ({content, fileList, prompt}) => {
+const StreamCard: FC<StreamCardProps> = ({titleText, titleIcon, content, fileList, prompt, modalInfo}) => {
     return (
         <ChatCard
-            titleText='Summary'
-            titleIcon={<SolidHashtagIcon className={styles["summary-icon"]} />}
-            footer={<PromptCard prompt={prompt} />}
+            titleText={titleText}
+            titleIcon={<div className={styles["summary-icon"]}>{titleIcon ?? <SolidHashtagIcon />}</div>}
+            footer={
+                <>
+                    {modalInfo?.title && <ModalInfo {...modalInfo} />}
+                    {prompt && <PromptCard prompt={prompt} />}
+                </>
+            }
         >
             <div className={styles["summary-content"]}>{content}</div>
             {!!fileList?.length && <FileList fileList={fileList} />}
@@ -35,4 +45,4 @@ const SummaryCard: FC<SummaryCardProps> = ({content, fileList, prompt}) => {
     )
 }
 
-export default SummaryCard
+export default StreamCard
