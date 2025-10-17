@@ -46,7 +46,7 @@ import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
 import DividerCard, {StreamsStatus} from "../components/DividerCard"
-import StreamCard from "../components/SummaryCard"
+import StreamCard from "../components/StreamCard"
 import ToolInvokerCard from "../components/ToolInvokerCard"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 

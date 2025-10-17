@@ -19,9 +19,9 @@ const ChatCard: FC<ChatCardProps> = ({titleIcon, titleText, titleExtra, children
                 <div className={styles["chat-card-title-more"]}>{titleExtra}</div>
             </div>
             <div className={styles["chat-card-content"]}>{children}</div>
-            <div className={styles["chat-card-footer"]}>
+            {footer && <div className={styles["chat-card-footer"]}>
                 {footer}
-            </div>
+            </div>}
         </div>
     )
 }

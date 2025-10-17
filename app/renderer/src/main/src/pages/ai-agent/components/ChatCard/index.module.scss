@@ -5,6 +5,9 @@
     padding: 8px 12px;
     background-color: var(--Colors-Use-Neutral-Bg-Hover);
     border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 
     &-title {
         width: 100%;
