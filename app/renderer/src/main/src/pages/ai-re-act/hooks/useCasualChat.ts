@@ -10,10 +10,10 @@ import {
     noSkipReviewTypes
 } from "./utils"
 import {v4 as uuidv4} from "uuid"
-import {UseCasualChatEvents, UseCasualChatParams, UseCasualChatState} from "./type"
+import {handleSendFunc, UseCasualChatEvents, UseCasualChatParams, UseCasualChatState} from "./type"
 import {AIReviewJudgeLevelMap, convertNodeIdToVerbose, DefaultAIToolResult} from "./defaultConstant"
 import {yakitNotify} from "@/utils/notification"
-import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent} from "./grpcApi"
+import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 import {AIChatQSData, AIReviewType, AIStreamOutput, AIToolResult, ToolStreamSelectors} from "./aiRender"
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
 
@@ -346,7 +346,11 @@ function useCasualChat(params?: UseCasualChatParams) {
             const isTrigger = !isAutoContinueReview(getRequest) || noSkipReviewTypes("tool_use_review_require")
             review.current = cloneDeep({
                 type: "tool_use_review_require",
-                data: {...cloneDeep(data), selected: isTrigger ? undefined : JSON.stringify({suggestion: "continue"})},
+                data: {
+                    ...cloneDeep(data),
+                    selected: isTrigger ? undefined : JSON.stringify({suggestion: "continue"}),
+                    optionValue: isTrigger ? undefined : "continue"
+                },
                 id: uuidv4(),
                 Timestamp: res.Timestamp
             })
@@ -411,7 +415,11 @@ function useCasualChat(params?: UseCasualChatParams) {
             const isTrigger = !isAutoContinueReview(getRequest) || noSkipReviewTypes("exec_aiforge_review_require")
             review.current = cloneDeep({
                 type: "exec_aiforge_review_require",
-                data: {...cloneDeep(data), selected: isTrigger ? undefined : JSON.stringify({suggestion: "continue"})},
+                data: {
+                    ...cloneDeep(data),
+                    selected: isTrigger ? undefined : JSON.stringify({suggestion: "continue"}),
+                    optionValue: isTrigger ? undefined : "continue"
+                },
                 id: uuidv4(),
                 Timestamp: res.Timestamp
             })
@@ -448,6 +456,7 @@ function useCasualChat(params?: UseCasualChatParams) {
             }
 
             info.selected = JSON.stringify({suggestion: "continue"})
+            info.optionValue = "continue"
             review.current = undefined
             setContents((old) => {
                 return old.map((item) => {
@@ -617,7 +626,7 @@ function useCasualChat(params?: UseCasualChatParams) {
     })
 
     // 用户问题或review的主动操作
-    const handleSend = useMemoizedFn((request: AIInputEvent, cb?: () => void) => {
+    const handleSend: handleSendFunc = useMemoizedFn(({request, optionValue, cb}) => {
         try {
             const {IsInteractiveMessage, InteractiveId, IsFreeInput, FreeInput} = request
             if (IsInteractiveMessage && InteractiveId) {
@@ -627,6 +636,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 }
 
                 ;(review.current.data as AIReviewType).selected = request.InteractiveJSONInput
+                ;(review.current.data as AIReviewType).optionValue = optionValue
 
                 const type = review.current.type
                 const info = cloneDeep(review.current.data) as AIReviewType

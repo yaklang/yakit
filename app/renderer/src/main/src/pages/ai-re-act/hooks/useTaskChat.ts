@@ -3,7 +3,7 @@ import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import {AIReviewJudgeLevelMap, convertNodeIdToVerbose, DefaultAIToolResult} from "./defaultConstant"
-import {UseTaskChatEvents, UseTaskChatParams, UseTaskChatState} from "./type"
+import {handleSendFunc, UseTaskChatEvents, UseTaskChatParams, UseTaskChatState} from "./type"
 import {
     handleFlatAITree,
     handleGrpcDataPushLog,
@@ -13,7 +13,7 @@ import {
     noSkipReviewTypes
 } from "./utils"
 import {yakitNotify} from "@/utils/notification"
-import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent} from "./grpcApi"
+import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 import {AIChatQSData, AIReviewType, AIStreamOutput, AIToolResult, ToolStreamSelectors} from "./aiRender"
 import {v4 as uuidv4} from "uuid"
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
@@ -419,6 +419,7 @@ function useTaskChat(params?: UseTaskChatParams) {
             }
 
             info.selected = JSON.stringify({suggestion: "continue"})
+            info.optionValue = "continue"
             const reviewInfo = cloneDeep(review.current)
             handleAutoRviewData(reviewInfo)
             review.current = undefined
@@ -707,7 +708,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
 
     /** review 界面选项触发事件 */
-    const handleSend = useMemoizedFn((request: AIInputEvent, cb?: () => void) => {
+    const handleSend: handleSendFunc = useMemoizedFn(({request, optionValue, cb}) => {
         try {
             if (!review.current) {
                 yakitNotify("error", " 未获取到审阅信息，请停止对话并重试")
@@ -722,6 +723,7 @@ function useTaskChat(params?: UseTaskChatParams) {
 
             const reviewInfo = cloneDeep(review.current)
             ;(reviewInfo.data as AIReviewType).selected = request.InteractiveJSONInput || ""
+            ;(reviewInfo.data as AIReviewType).optionValue = optionValue
 
             review.current = undefined
             currentPlansId.current = ""
