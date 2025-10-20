@@ -157,7 +157,7 @@ const DefaultMenuBottom: (t: (text: string) => string) => EditorMenuItemType[] =
 }
 
 function openFind(editor: YakitIMonacoEditor, keyword: string) {
-    editor.focus()
+    // editor.focus()
     const findController = editor.getContribution<IFindController>("editor.contrib.findController")
     const state = findController?.getState()
     if (!state?.isRevealed) {
