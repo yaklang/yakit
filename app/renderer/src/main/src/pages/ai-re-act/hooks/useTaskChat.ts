@@ -2,7 +2,12 @@ import {useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
-import {AIReviewJudgeLevelMap, convertNodeIdToVerbose, DefaultAIToolResult} from "./defaultConstant"
+import {
+    AIReviewJudgeLevelMap,
+    convertNodeIdToVerbose,
+    DefaultAIToolResult,
+    TaskDefaultReToolResultSummary
+} from "./defaultConstant"
 import {handleSendFunc, UseTaskChatEvents, UseTaskChatParams, UseTaskChatState} from "./type"
 import {
     handleFlatAITree,
@@ -214,6 +219,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                     throw new Error("tool_call_result data is invalid")
                 }
                 toolResult.status = status
+                toolResult.summary = TaskDefaultReToolResultSummary[status]?.label || ""
 
                 setStreams((old) => {
                     let newArr = [...old]

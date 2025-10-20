@@ -30,7 +30,6 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "./AIEcharts"
 import {formatTime, formatTimestamp} from "@/utils/timeUtil"
-import {AIChatToolColorCard, AIChatToolItem} from "./AIChatTool"
 import {
     HorizontalScrollCardItemInfoMultiple,
     HorizontalScrollCardItemInfoSingle
@@ -40,7 +39,6 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {convertNodeIdToVerbose} from "@/pages/ai-re-act/hooks/defaultConstant"
 import {v4 as uuidv4} from "uuid"
 import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
-import {AIMarkdown} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
 import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks/grpcApi"
 
 import classNames from "classnames"
@@ -289,10 +287,10 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 )
             }
             case "tool_result": {
-                const task = getTask(stream.data.TaskIndex)
+                // const task = getTask(stream.data.TaskIndex)
                 return (
                     <ToolInvokerCard
-                        titleText={task?.name}
+                        titleText='工具调用'
                         name={stream.data.toolName}
                         status={stream.data.status}
                         desc={stream.data.summary}

@@ -17,6 +17,8 @@ export interface AIChatIPCSendParams {
     /**InteractiveJSONInput */
     value: string
     id: string
+    /**用户审阅过程中选择得btn */
+    selectBtnValue?: string
 }
 export interface ChatIPCContextDispatcher {
     chatIPCEvents: UseChatIPCEvents

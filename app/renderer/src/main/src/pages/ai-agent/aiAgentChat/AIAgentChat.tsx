@@ -20,7 +20,7 @@ import ChatIPCContent, {
     ChatIPCContextDispatcher,
     ChatIPCContextStore
 } from "../useContext/ChatIPCContent/ChatIPCContent"
-import {AIReActChatReview} from "@/pages/ai-re-act/aiReActChatReview/AIReActChatReview"
+import {AIReActChatReview} from "@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon} from "@/assets/icon/outline"
 import {ChatIPCSendType} from "@/pages/ai-re-act/hooks/type"
@@ -269,18 +269,16 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         events.onStart(newChat.id, startParams)
     })
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
-        const {value, id} = params
-        handleSendAIRequire(value, id, "casual")
+        handleSendAIRequire(params, "casual")
     })
     const handleSendTask = useMemoizedFn((params: AIChatIPCSendParams) => {
-        const {value, id} = params
-        handleSendAIRequire(value, id, "task")
+        handleSendAIRequire(params, "task")
     })
     const handleSend = useMemoizedFn((params: AIChatIPCSendParams) => {
-        const {value, id} = params
-        handleSendAIRequire(value, id, "")
+        handleSendAIRequire(params, "")
     })
-    const handleSendAIRequire = useMemoizedFn((value: string, id: string, type: ChatIPCSendType) => {
+    const handleSendAIRequire = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
+        const {value, id, selectBtnValue} = params
         if (!activeID) return
         if (!id) return
 

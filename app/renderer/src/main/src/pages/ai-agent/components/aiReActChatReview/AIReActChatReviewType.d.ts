@@ -1,6 +1,6 @@
 import {AIChatIPCSendParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
-import {AIChatQSData} from "../hooks/aiRender"
-import {AIAgentGrpcApi} from "../hooks/grpcApi"
+import {AIChatQSData} from "../../../ai-re-act/hooks/aiRender"
+import {AIAgentGrpcApi} from "../../../ai-re-act/hooks/grpcApi"
 
 export interface AIReActChatReviewProps {
     info: AIChatQSData
