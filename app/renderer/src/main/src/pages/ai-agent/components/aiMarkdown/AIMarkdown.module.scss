@@ -1,0 +1,35 @@
+.ai-milkdown-wrapper {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    gap: 8px;
+
+    .milkdown-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        .header-name {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 14px;
+            font-weight: 500;
+        }
+    }
+    .header-extra {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .ai-milkdown {
+        font-size: 14px;
+        background-color: transparent;
+    }
+    .ai-milkdown-mini {
+        max-height: 200px;
+        overflow: auto;
+    }
+    .ai-milkdown-code {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+}

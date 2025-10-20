@@ -11,7 +11,12 @@ import {
 } from "./utils"
 import {v4 as uuidv4} from "uuid"
 import {handleSendFunc, UseCasualChatEvents, UseCasualChatParams, UseCasualChatState} from "./type"
-import {AIReviewJudgeLevelMap, convertNodeIdToVerbose, DefaultAIToolResult} from "./defaultConstant"
+import {
+    AIReviewJudgeLevelMap,
+    CasualDefaultToolResultSummary,
+    convertNodeIdToVerbose,
+    DefaultAIToolResult
+} from "./defaultConstant"
 import {yakitNotify} from "@/utils/notification"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 import {AIChatQSData, AIReviewType, AIStreamOutput, AIToolResult, ToolStreamSelectors} from "./aiRender"
@@ -242,6 +247,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     throw new Error("tool_result data is invalid")
                 }
                 toolResult.status = status
+                toolResult.summary = CasualDefaultToolResultSummary[status]?.label || ""
 
                 setContents((old) => {
                     let newArr = [...old]

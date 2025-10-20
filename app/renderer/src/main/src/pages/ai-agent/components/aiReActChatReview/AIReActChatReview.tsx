@@ -9,7 +9,7 @@ import {yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import AIPlanReviewTree from "@/pages/ai-agent/aiPlanReviewTree/AIPlanReviewTree"
-import {handleFlatAITree} from "../hooks/utils"
+import {handleFlatAITree} from "../../../ai-re-act/hooks/utils"
 import {reviewListToTrees} from "@/pages/ai-agent/utils"
 import {grpcGetAIForge} from "@/pages/ai-agent/grpc"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -17,14 +17,14 @@ import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {getValueByType} from "@/pages/plugins/editDetails/utils"
-import {AIAgentGrpcApi} from "../hooks/grpcApi"
+import {AIAgentGrpcApi} from "../../../ai-re-act/hooks/grpcApi"
 
 import classNames from "classnames"
 import styles from "./AIReActChatReview.module.scss"
 import {AIChatIPCSendParams} from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
 import {OutlineHandleColorsIcon, OutlineWarpColorsIcon} from "@/assets/icon/colors"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
-import {AIReviewType} from "../hooks/aiRender"
+import {AIReviewType} from "../../../ai-re-act/hooks/aiRender"
 import {AIForge} from "@/pages/ai-agent/type/forge"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
@@ -211,7 +211,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             const {value, allow_extra_prompt} = editInfo.current
             const jsonInput: Record<string, string> = {suggestion: value}
             if (allow_extra_prompt && reviewQS) jsonInput.extra_prompt = reviewQS
-            onSendAIByValue(JSON.stringify(jsonInput))
+            onSendAIByValue(JSON.stringify(jsonInput), value)
         }
         editInfo.current = undefined
         setReviewQS("")
@@ -227,7 +227,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         if (!find) return
         const {value} = find
         const jsonInput: Record<string, string> = {suggestion: value}
-        onSendAIByValue(JSON.stringify(jsonInput))
+        onSendAIByValue(JSON.stringify(jsonInput), value)
     })
 
     const noAIOptionsList = useCreation(() => {
@@ -284,7 +284,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 if (editShow) return
                 if (!info.allow_extra_prompt) {
                     const jsonInput: Record<string, string> = {suggestion: info.value}
-                    onSendAIByValue(JSON.stringify(jsonInput))
+                    onSendAIByValue(JSON.stringify(jsonInput), info.value)
                     return
                 }
                 editInfo.current = cloneDeep(info)
@@ -327,7 +327,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 suggestion: reviewTreeOption.value,
                 "reviewed-task-tree": tree[0]
             }
-            onSendAIByValue(JSON.stringify(jsonInput))
+            onSendAIByValue(JSON.stringify(jsonInput), reviewTreeOption.value)
         }
     })
     const aiOptionsLength = useCreation(() => {
@@ -394,10 +394,11 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         )
         return findIndex !== -1
     }, [review])
-    const onSendAIByValue = useMemoizedFn((value: string) => {
+    const onSendAIByValue = useMemoizedFn((value: string, selectBtnValue?: string) => {
         const params: AIChatIPCSendParams = {
             value,
-            id: (review as AIReviewType).id
+            id: (review as AIReviewType).id,
+            selectBtnValue
         }
         onSendAI(params)
     })

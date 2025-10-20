@@ -3,7 +3,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import styles from "./AIReActChat.module.scss"
 import {AIReActChatProps, AIReActLogProps, AIReActTimelineMessageProps} from "./AIReActChatType"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
-import {AIReActChatContents, AIStreamChatContent} from "../aiReActChatContents/AIReActChatContents"
+import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaProps} from "@/pages/ai-agent/template/type"
 import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
@@ -20,6 +20,7 @@ import {AIInputEvent} from "../hooks/grpcApi"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {AIStreamChatContent} from "@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 

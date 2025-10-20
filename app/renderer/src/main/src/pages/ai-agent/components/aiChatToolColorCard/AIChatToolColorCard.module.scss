@@ -1,0 +1,78 @@
+.ai-chat-tool-card {
+    width: 100%;
+    display: flex;
+    padding: 8px;
+    flex-direction: column;
+    gap: 8px;
+    align-self: stretch;
+
+    border-radius: 8px;
+    background: var(--Colors-Use-Purple-Bg-Hover);
+    height: fit-content;
+    margin: 12px 0;
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 4px;
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            letter-spacing: 0.1px;
+            line-height: 20px;
+            font-weight: 400;
+            background: linear-gradient(
+                108deg,
+                var(--Colors-Use-Magenta-Primary) 0%,
+                var(--Colors-Use-Purple-Primary) 63.94%,
+                var(--Colors-Use-Blue-Primary) 100%
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    }
+    .card-extra {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .extra-btn {
+            display: flex;
+            padding: 3px 6px;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            background: var(--Colors-Use-Error-Bg);
+            user-select: none;
+            color: var(--Colors-Use-Error-Primary);
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 14px;
+            letter-spacing: 0.5px;
+
+            svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
+    }
+
+    .card-content {
+        max-height: 100px;
+        overflow: hidden auto;
+        border-left: 1px solid var(--Colors-Use-Magenta-Primary);
+        padding-left: 10px;
+        margin-left: 8px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        letter-spacing: 0.1px;
+    }
+}

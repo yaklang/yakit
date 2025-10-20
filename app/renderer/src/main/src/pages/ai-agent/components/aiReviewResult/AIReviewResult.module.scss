@@ -1,0 +1,60 @@
+.ai-review-result {
+    display: flex;
+    padding: 8px 12px;
+    flex-direction: column;
+    gap: 4px;
+
+    border-radius: 8px;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    .ai-review-result-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow: hidden;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Neutral-Text-2-Primary);
+        }
+        span {
+            flex-shrink: 0;
+        }
+        .btn-text {
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+            background: linear-gradient(
+                108deg,
+                var(--Colors-Use-Magenta-Primary) 0%,
+                var(--Colors-Use-Purple-Primary) 63.94%,
+                var(--Colors-Use-Blue-Primary) 100%
+            );
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .user-input {
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+
+            font-size: 11px;
+            font-weight: 400;
+            line-height: 14px;
+
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+        }
+    }
+    .ai-review-result-footer {
+        display: flex;
+        align-items: center;
+        .time {
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+
+            font-size: 11px;
+            font-weight: 400;
+            line-height: 14px;
+        }
+    }
+}

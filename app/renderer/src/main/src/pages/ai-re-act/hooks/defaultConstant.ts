@@ -53,3 +53,15 @@ export const AIReviewJudgeLevelMap: Record<string, {label: string}> = {
     middle: {label: "等待用户否决"},
     high: {label: "需人工确认"}
 }
+
+export const CasualDefaultToolResultSummary: Record<string, {label: string}> = {
+    failed: {label: "执行失败"},
+    success: {label: "执行成功"},
+    user_cancelled: {label: "用户取消"}
+}
+
+export const TaskDefaultReToolResultSummary: Record<string, {label: string}> = {
+    failed: {label: "获取失败原因中..."},
+    success: {label: "执行结果正在总结中..."},
+    user_cancelled: {label: "工具调用取消中..."}
+}
