@@ -11,6 +11,7 @@ import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {KnowledgeBaseQA} from "./compoments/KnowledgeBaseQA"
 import {ManageBoxMenu} from "./compoments/ManageBoxMenu"
 import {KnowledgeBaseFormModal} from "./compoments/KnowledgeBaseModal"
+import {ImportModal} from "./compoments/KnowledgBaseImportModal"
 
 import {type GetKnowledgeBaseResponse, type KnowledgeBase} from "@/components/playground/knowlegeBase"
 import styles from "./knowledgeBase.module.scss"
@@ -24,10 +25,10 @@ interface TRepositoryManageProps {
 }
 
 const createMenuList = [
-    // {
-    //     key: "import",
-    //     label: "导入"
-    // },
+    {
+        key: "import",
+        label: "导入"
+    },
     {
         key: "create",
         label: "新建"
@@ -42,6 +43,7 @@ const KnowledgeBaseManage: FC<{
     }
 }> = ({setKnowledgeBaseItems, knowledgeBaseitems}) => {
     const [visible, setVisible] = useSafeState(false)
+    const [importVisible, setImportVisible] = useSafeState(false)
     const [menuOpenKey, setMenuOpenKey] = useSafeState(-1)
     const [createMenuOpen, setCreateMenuOpen] = useSafeState(false)
     const [qaDrawerVisible, setQaDrawerVisible] = useSafeState(false)
@@ -87,9 +89,9 @@ const KnowledgeBaseManage: FC<{
                         onClick: ({key}) => {
                             setCreateMenuOpen(false)
                             switch (key) {
-                                // case "import":
-                                //     setVisible((prevalue) => !prevalue)
-                                //     break
+                                case "import":
+                                    setImportVisible(true)
+                                    break
                                 case "create":
                                     handOpenKnowledgeBasesModal()
                                     break
@@ -152,6 +154,12 @@ const KnowledgeBaseManage: FC<{
                 handOpenKnowledgeBasesModal={handOpenKnowledgeBasesModal}
                 refreshAsync={refreshAsync}
                 title='新增知识库'
+            />
+
+            <ImportModal
+                visible={importVisible}
+                onVisible={setImportVisible}
+                refreshAsync={refreshAsync}
             />
 
             <YakitDrawer

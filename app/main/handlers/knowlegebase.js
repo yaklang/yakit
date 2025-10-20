@@ -293,4 +293,20 @@ module.exports = (win, getClient) => {
         let stream = getClient().QueryKnowledgeBaseByAI(params)
         handlerHelper.registerHandler(win, stream, streamQueryKnowledgeBaseByAIMap, token)
     })
+
+    // 流式接口：ExportKnowledgeBase
+    const streamExportKnowledgeBaseMap = new Map()
+    ipcMain.handle("cancel-ExportKnowledgeBase", handlerHelper.cancelHandler(streamExportKnowledgeBaseMap))
+    ipcMain.handle("ExportKnowledgeBase", (e, params, token) => {
+        let stream = getClient().ExportKnowledgeBase(params)
+        handlerHelper.registerHandler(win, stream, streamExportKnowledgeBaseMap, token)
+    })
+
+    // 流式接口：ImportKnowledgeBase
+    const streamImportKnowledgeBaseMap = new Map()
+    ipcMain.handle("cancel-ImportKnowledgeBase", handlerHelper.cancelHandler(streamImportKnowledgeBaseMap))
+    ipcMain.handle("ImportKnowledgeBase", (e, params, token) => {
+        let stream = getClient().ImportKnowledgeBase(params)
+        handlerHelper.registerHandler(win, stream, streamImportKnowledgeBaseMap, token)
+    })
 }

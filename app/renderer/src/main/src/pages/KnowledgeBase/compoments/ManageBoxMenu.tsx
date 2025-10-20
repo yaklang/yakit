@@ -11,16 +11,17 @@ import {OutlineChatalt2Icon} from "@/assets/icon/outline"
 import {DeleteConfirm} from "./KnowledgBaseDeleteModal"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {KnowledgeBaseQA} from "./KnowledgeBaseQA"
+import {ExportModal} from "./KnowledgBaseExportModal"
 
 const manageMenuList = [
     {
         key: "edit",
         label: "编辑"
     },
-    // {
-    //     key: "export",
-    //     label: "导出"
-    // },
+    {
+        key: "export",
+        label: "导出"
+    },
     {
         key: "delete",
         label: "删除"
@@ -31,6 +32,7 @@ const ManageBoxMenu: FC<TKnowledgeBaseProps> = ({refreshAsync, itemsData, setMen
     const [visible, setVisible] = useSafeState(false)
     const [menuOpen, setMenuOpen] = useSafeState(false)
     const [deletConfirm, setDeletConfirm] = useSafeState(false)
+    const [exportVisible, setExportVisible] = useSafeState(false)
     const [qaDrawerVisible, setQaDrawerVisible] = useSafeState(false)
 
     const handOpenKnowledgeBasesModal = () => {
@@ -48,23 +50,25 @@ const ManageBoxMenu: FC<TKnowledgeBaseProps> = ({refreshAsync, itemsData, setMen
                 setQaDrawerVisible(true)
             }} />
             <YakitDropdownMenu
-                menu={{
-                    data: manageMenuList,
-                    onClick: ({key}) => {
-                        setMenuOpen?.(false)
-                        switch (key) {
-                            case "edit":
-                                setVisible((prevalue) => !prevalue)
-                                break
-                            case "delete":
-                                setDeletConfirm((preValue) => !preValue)
-                                break
-
-                            default:
-                                break
+                    menu={{
+                        data: manageMenuList,
+                        onClick: ({key}) => {
+                            setMenuOpen?.(false)
+                            switch (key) {
+                                case "edit":
+                                    setVisible((prevalue) => !prevalue)
+                                    break
+                                case "delete":
+                                    setDeletConfirm((preValue) => !preValue)
+                                    break
+                                case "export":
+                                    setExportVisible((preValue) => !preValue)
+                                    break
+                                default:
+                                    break
+                            }
                         }
-                    }
-                }}
+                    }}
                 dropdown={{
                     trigger: ["click"],
                     placement: "bottomRight",
@@ -92,6 +96,13 @@ const ManageBoxMenu: FC<TKnowledgeBaseProps> = ({refreshAsync, itemsData, setMen
             <DeleteConfirm
                 visible={deletConfirm}
                 onVisible={setDeletConfirm}
+                refreshAsync={refreshAsync}
+                KnowledgeBaseId={itemsData!.ID}
+            />
+            
+            <ExportModal
+                visible={exportVisible}
+                onVisible={setExportVisible}
                 refreshAsync={refreshAsync}
                 KnowledgeBaseId={itemsData!.ID}
             />
