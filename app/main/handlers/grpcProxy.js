@@ -9,9 +9,10 @@ const activeStreams = new Map()
  * @param {Object} client - The original GRPC client
  * @param {Function} grpcReqHandle - Function to handle requests before they're sent
  * @param {Function} grpcRspHandle - Function to handle responses after they're received
+ * @param {Function} grpcStreamWriteHandle - Function to handle stream write operations
  * @returns {Object} - A proxy wrapper around the original client
  */
-function createGRPCClientProxy(client, grpcReqHandle, grpcRspHandle) {
+function createGRPCClientProxy(client, grpcReqHandle, grpcRspHandle, grpcStreamWriteHandle) {
     if (!client) {
         return null
     }
@@ -90,7 +91,7 @@ function createGRPCClientProxy(client, grpcReqHandle, grpcRspHandle) {
                                 activeStreams.delete(callId)
                                 
                                 // Call the original listener
-                                listener()
+                                if (listener) listener()
                             })
                         } else if (event === 'error') {
                             // Wrap error listener
@@ -102,7 +103,7 @@ function createGRPCClientProxy(client, grpcReqHandle, grpcRspHandle) {
                                 activeStreams.delete(callId)
                                 
                                 // Call the original listener
-                                listener(err)
+                                if (listener) listener(err)
                             })
                         } else {
                             // For other events, just pass through
@@ -113,8 +114,13 @@ function createGRPCClientProxy(client, grpcReqHandle, grpcRspHandle) {
                     // If the stream has a write method (bidirectional stream)
                     if (typeof stream.write === 'function') {
                         stream.write = function(data) {
-                            // Log the write operation
+                            // Log the write operation to console
                             console.log(`GRPC Stream Write - Method: ${methodName}, CallId: ${callId}`)
+                            
+                            // Call the stream write handler to send log to renderer
+                            if (grpcStreamWriteHandle) {
+                                grpcStreamWriteHandle(methodName, params, data, callId)
+                            }
                             
                             // Call the original write method
                             return originalWrite.call(this, data)

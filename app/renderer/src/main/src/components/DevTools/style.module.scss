@@ -1,12 +1,139 @@
+// DevTools 样式文件
+
+// 浮动按钮容器
 .devToolsButton {
     position: fixed;
     right: 20px;
-    bottom: 20px;
-    z-index: 1000;
+    bottom: 80px;
+    z-index: 999;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    // 激活状态
+    &.active {
+        transform: scale(1.1);
+        
+        .devButton {
+            box-shadow: 0 8px 16px rgba(24, 144, 255, 0.3);
+        }
+    }
+
+    // 悬停效果
+    &:hover {
+        transform: translateY(-2px);
+    }
+
+    // 按钮样式
+    .devButton {
+        height: 50px;
+        width: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+
+        &:hover {
+            box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+        }
+
+        &:active {
+            transform: scale(0.95);
+        }
+    }
 }
 
+// 内容容器
 .devToolsContainer {
     display: flex;
+    flex-direction: column;
     height: 100%;
     width: 100%;
+    background-color: #fafafa;
+    overflow: hidden;
+    position: relative;
+
+    // 确保隐藏状态下的内容不占用渲染资源
+    > div[style*="display: none"] {
+        visibility: hidden;
+        pointer-events: none;
+    }
+}
+
+// 加载状态容器
+.loadingContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    min-height: 400px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+// 抽屉样式
+.devToolsDrawer {
+    :global {
+        .ant-drawer-body {
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .ant-drawer-header {
+            padding: 16px 24px;
+        }
+    }
+}
+
+// 抽屉标题
+.drawerTitle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1890ff;
+
+    .titleIcon {
+        font-size: 20px;
+        animation: pulse 2s ease-in-out infinite;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+// 响应式设计
+@media screen and (max-width: 768px) {
+    .devToolsButton {
+        right: 15px;
+        bottom: 60px;
+
+        .devButton {
+            height: 45px;
+            width: 45px;
+            font-size: 20px;
+        }
+    }
 } 

@@ -36,7 +36,7 @@ function newClientWithProxy() {
     // 检查是否开启了开发模式
     if (judgeDevMode() === "true") {
         console.log("[DEV MODE] Using GRPC client proxy for development")
-        return createGRPCClientProxy(client, grpcReqHandle, grpcRspHandle)
+        return createGRPCClientProxy(client, grpcReqHandle, grpcRspHandle, grpcStreamWriteHandle)
     } else {
         // 在非开发模式下直接返回原始客户端
         return client
@@ -114,6 +114,25 @@ function grpcRspHandle(methodName, params, err, response, isStream = false, call
                 callId
             })
         }
+    }
+}
+
+// Handle stream write operations
+function grpcStreamWriteHandle(methodName, params, data, callId) {
+    // Create a structured log object for the stream write
+    const logEntry = {
+        type: "stream-write",
+        isStream: true,
+        methodName,
+        params,
+        data: data,
+        timestamp: Date.now(),
+        callId
+    }
+    
+    // Send log to renderer process
+    if (mainWindow) {
+        mainWindow.webContents.send("grpc-invoke-log", logEntry)
     }
 }
 

@@ -12,6 +12,7 @@ interface GRPCLogEntry {
     methodName: string
     params?: any
     response?: any
+    data?: any // 用于流写入的数据
     error?: string | null
     timestamp: number
     callId?: string

@@ -3,8 +3,8 @@
     flex-direction: column;
     height: 100%;
     width: 100%;
-    background-color: #fff;
-    border: 1px solid #e8e8e8;
+    background-color: var(--Colors-Use-Neutral-Bg);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px;
     overflow: hidden;
 }
@@ -14,17 +14,26 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid #e8e8e8;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Neutral-Bg);
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    flex: 1;
 }
 
 .title {
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 
 .actions {
     display: flex;
     gap: 8px;
+    align-items: center;
 }
 
 .content {
@@ -41,28 +50,155 @@
 }
 
 .detailPanel {
-    height: 300px;
-    border-top: 1px solid #e8e8e8;
-    padding: 16px;
-    overflow: auto;
+    height: 350px;
+    border-top: 1px solid var(--Colors-Use-Neutral-Border);
+    display: flex;
+    flex-direction: column;
+    background: var(--Colors-Use-Neutral-Bg);
+    position: relative;
+}
+
+.dragHandle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    cursor: ns-resize;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     
-    /* 重置详情面板中标签的flex样式，使其按内容宽度自适应 */
-    :global(.yakit-tabs-tab), :global(.ant-tabs-tab) {
-        flex: unset !important;
-        margin-right: 16px !important;
+    &:hover {
+        .dragLine {
+            background: var(--Colors-Use-Main-Primary);
+            height: 3px;
+        }
+    }
+}
+
+.dragLine {
+    width: 40px;
+    height: 2px;
+    background: var(--Colors-Use-Neutral-Border);
+    border-radius: 2px;
+    transition: all 0.2s ease;
+}
+
+.detailHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    padding-top: 16px;
+    background: var(--Colors-Use-Neutral-Bg);
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.detailTabs {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0; // 重要：允许 flex 子元素正确收缩
+
+    :global {
+        .yakit-tabs-nav, .ant-tabs-nav {
+            padding: 0 16px;
+            margin: 0;
+            background: var(--Colors-Use-Neutral-Bg);
+            flex-shrink: 0;
+        }
+
+        .yakit-tabs-content, .ant-tabs-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; // 重要：允许内容正确滚动
+        }
+
+        .yakit-tabs-tabpane, .ant-tabs-tabpane {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; // 重要：确保滚动容器正确工作
+        }
+    }
+}
+
+.detailHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.jsonContent {
+    flex: 1;
+    overflow: auto;
+    padding: 0;
+    background: #1e1e1e;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    position: relative;
+    min-height: 0; // 重要：确保可以滚动
+
+    // 添加滚动条样式
+    &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: #252526;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #424242;
+        border-radius: 4px;
+
+        &:hover {
+            background: #4e4e4e;
+        }
+    }
+}
+
+.jsonPre {
+    margin: 0;
+    padding: 20px;
+    color: #d4d4d4;
+    font-size: 13px;
+    line-height: 1.8;
+    white-space: pre;
+    word-wrap: normal;
+    user-select: text;
+    cursor: text;
+    
+    // 选择样式
+    &::selection {
+        background: rgba(38, 79, 120, 0.8);
+        color: #ffffff;
+    }
+
+    // 优化代码可读性
+    & * {
+        user-select: text;
     }
 }
 
 .selectedRow {
-    background-color: #e6f7ff;
+    background-color: var(--Colors-Use-Main-Opacity);
 }
 
 .errorBox {
     padding: 12px;
-    background-color: #fff2f0;
-    border: 1px solid #ffccc7;
+    background-color: var(--Colors-Use-Danger-Bg);
+    border: 1px solid var(--Colors-Use-Danger-Border);
     border-radius: 4px;
-    color: #ff4d4f;
+    color: var(--Colors-Use-Danger-Text);
     font-family: monospace;
     white-space: pre-wrap;
     overflow: auto;

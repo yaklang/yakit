@@ -98,9 +98,6 @@ import {debugToPrintLog} from "@/utils/logCollection"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 
-import classNames from "classnames"
-import styles from "./uiLayout.module.scss"
-
 const {ipcRenderer} = window.require("electron")
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
