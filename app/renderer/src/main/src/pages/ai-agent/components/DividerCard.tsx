@@ -1,10 +1,9 @@
-import {SolidCheckCircleIcon} from "@/assets/icon/colors"
 import styles from "./DividerCard.module.scss"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {useMemo, type FC} from "react"
 import {OutlineLoadingIcon, OutlineXcircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
-import { TaskInProgressIcon } from "../aiTree/icon"
+import {TaskInProgressIcon, TaskSuccessIcon} from "../aiTree/icon"
 
 export enum StreamsStatus {
     success = "success",
@@ -33,12 +32,13 @@ const DividerCard: FC<DividerCardProps> = (props) => {
             case StreamsStatus.success: {
                 const {error, success} = props
                 return [
-                    <SolidCheckCircleIcon />,
+                    <TaskSuccessIcon />,
                     <div className={classNames(styles["divider-content-success"], styles["divider-content-text"])}>
                         <span>{name}</span>
                         {[error, success].map((item, index) => {
                             return (
                                 <YakitTag
+                                    key={index}
                                     size='small'
                                     fullRadius
                                     color={index === 0 ? "danger" : "success"}
@@ -54,16 +54,14 @@ const DividerCard: FC<DividerCardProps> = (props) => {
             }
             case StreamsStatus.inProgress:
                 return [
-                    <div className={styles["icon-danger"]} >
-                        <TaskInProgressIcon/>
+                    <div className={styles["icon-danger"]}>
+                        <TaskInProgressIcon />
                     </div>,
                     <div className={styles["divider-content-text"]}>
                         <span>{name}</span>
                         <YakitTag fullRadius className={styles["divider-content-error"]} size='small' color='warning'>
-                           <OutlineLoadingIcon />
-                           <p className={styles["divider-content-error-text"]}>
-                             {desc}
-                           </p>
+                            <OutlineLoadingIcon />
+                            <p className={styles["divider-content-error-text"]}>{desc}</p>
                         </YakitTag>
                     </div>
                 ]
@@ -72,9 +70,14 @@ const DividerCard: FC<DividerCardProps> = (props) => {
                     <OutlineXcircleIcon className={styles["icon-danger"]} />,
                     <div className={styles["divider-content-text"]}>
                         <span>{name}</span>
-                        <YakitTag fullRadius className={styles["divider-content-error"]} size='small' color='danger'>
+                        <YakitTag
+                            fullRadius
+                            className={styles["divider-content-error"]}
+                            size='small'
+                            color='danger'
+                        >
                             <OutlineXIcon />
-                            {desc}
+                            <p className={styles["divider-content-error-text"]}>{desc}</p>
                         </YakitTag>
                     </div>
                 ]
@@ -86,7 +89,7 @@ const DividerCard: FC<DividerCardProps> = (props) => {
         <div className={styles.divider}>
             <div />
             <div className={styles["divider-content"]}>
-                {icon}
+                <div className={styles["divider-content-icon"]}>{icon}</div>
                 {dom}
             </div>
         </div>

@@ -14,6 +14,16 @@
         display: flex;
         align-items: center;
 
+        &-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
         &-text {
             display: flex;
             align-items: center;

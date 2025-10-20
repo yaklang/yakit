@@ -5,6 +5,7 @@ import styles from "./FileSystemCard.module.scss"
 import {renderFileTypeIcon} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
+import {IconNotepadFileTypeDir} from "@/components/MilkdownEditor/icon/icon"
 
 export interface FileSystemCardProps {
     isDir?: boolean
@@ -13,7 +14,14 @@ export interface FileSystemCardProps {
     suffix: string
 }
 
-const FileSystemCard: FC<FileSystemCardProps> = ({suffix, name, path}) => {
+const getFileIcon = (type, isDir) => {
+    if (isDir) {
+        return <IconNotepadFileTypeDir />
+    }
+    return renderFileTypeIcon({type})
+}
+
+const FileSystemCard: FC<FileSystemCardProps> = ({suffix, name, path, isDir}) => {
     const type = suffix ?? name.split(".").pop()
 
     const onDetail = () => onOpenLocalFileByPath(path)
@@ -22,8 +30,8 @@ const FileSystemCard: FC<FileSystemCardProps> = ({suffix, name, path}) => {
             <div className={styles["file-system"]}>
                 <div className={styles["file-system-title"]}>
                     <div>
-                        {renderFileTypeIcon({type})}
-                        {name}
+                        {getFileIcon(type, isDir)}
+                        {name}{suffix}
                     </div>
                     <YakitButton type='text' onClick={onDetail}>
                         查看详情
@@ -31,9 +39,7 @@ const FileSystemCard: FC<FileSystemCardProps> = ({suffix, name, path}) => {
                 </div>
                 <pre className={styles["file-system-content"]}>
                     <code>
-                        /Users/nonight/yakit-projects/aispace/cce4e823-4527-4a45-950a-468bacc4bf72/gen_code_20251013_14_58_23.yak
-                        /Users/nonight/yakit-projects/aispace/cce4e823-4527-4a45-950a-468bacc4bf72/gen_code_20251013_14_58_23.yak
-                        /Users/nonight/yakit-projects/aispace/cce4e823-4527-4a45-950a-468bacc4bf72/gen_code_20251013_14_58_23.yak
+                        {path}
                     </code>
                 </pre>
             </div>

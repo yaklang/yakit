@@ -12,6 +12,7 @@ import {AIStreamChatContent} from "@/pages/ai-agent/components/aiStreamChatConte
 import ToolInvokerCard from "@/pages/ai-agent/components/ToolInvokerCard"
 import {AIReviewResult} from "@/pages/ai-agent/components/aiReviewResult/AIReviewResult"
 import {isToolExecStream} from "../hooks/utils"
+import FileSystemCard from "@/pages/ai-agent/components/FileSystemCard"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
@@ -87,6 +88,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                         status={data.status}
                         desc={data.summary}
                         content={data.toolStdoutContent.content}
+                        params={data.callToolId}
                     />
                 )
                 break
@@ -107,6 +109,10 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                     )
                 }
                 break
+            case "file_system_pin": {
+                contentNode = <FileSystemCard {...data} />
+                break
+            }
             default:
                 break
         }
