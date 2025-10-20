@@ -60,6 +60,7 @@ export interface AITaskStartInfo {
 interface ReviewSelectedOption {
     /** 已操作 review 的选项内容(json 模式) */
     selected?: string
+    optionValue?: string
 }
 /** 对 review 数据进行操作后的记录, 专用于 UI 上的历史展示 */
 export type UIPlanReview = AIAgentGrpcApi.PlanReviewRequire &

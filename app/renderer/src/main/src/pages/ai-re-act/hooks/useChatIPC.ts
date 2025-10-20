@@ -104,7 +104,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     // #region review事件相关方法
     /** review 界面选项触发事件 */
-    const onSend = useMemoizedFn(({token, type, params}: AIChatSendParams) => {
+    const onSend = useMemoizedFn(({token, type, params, optionValue}: AIChatSendParams) => {
         try {
             if (!execute) {
                 yakitNotify("warning", "AI 未执行任务，无法发送选项")
@@ -120,9 +120,13 @@ function useChatIPC(params?: UseChatIPCParams) {
                 case "task":
                     const events: UseCasualChatEvents | UseChatIPCEvents =
                         type === "casual" ? casualChatEvent : taskChatEvent
-                    events.handleSend(params, () => {
-                        console.log("send-ai-re-act---\n", token, params)
-                        ipcRenderer.invoke("send-ai-re-act", token, params)
+                    events.handleSend({
+                        request: params,
+                        optionValue,
+                        cb: () => {
+                            console.log("send-ai-re-act---\n", token, params)
+                            ipcRenderer.invoke("send-ai-re-act", token, params)
+                        }
                     })
                     break
 
@@ -284,7 +288,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         console.log("start-ai-re-act", token, params)
 
         // 初次用户对话的问题，属于自由对话中的问题
-        casualChatEvent.handleSend({IsFreeInput: true, FreeInput: params?.Params?.UserQuery || ""})
+        casualChatEvent.handleSend({request: {IsFreeInput: true, FreeInput: params?.Params?.UserQuery || ""}})
 
         ipcRenderer.invoke("start-ai-re-act", token, params)
     })

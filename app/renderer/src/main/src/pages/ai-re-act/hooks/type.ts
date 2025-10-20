@@ -12,6 +12,7 @@ interface UseHookBaseEvents {
     handleSetData: (res: AIOutputEvent) => void
     handleResetData: () => void
 }
+export type handleSendFunc = (params: {request: AIInputEvent; optionValue?: string; cb?: () => void}) => void
 
 // #region useAIPerfData相关定义
 export interface UseAIPerfDataParams extends UseHookBaseParams {}
@@ -53,7 +54,7 @@ export interface UseCasualChatState {
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents {
     handleSetCoordinatorId: (id: string) => void
-    handleSend: (request: AIInputEvent, cb?: () => void) => void
+    handleSend: handleSendFunc
 }
 // #endregion
 
@@ -81,7 +82,7 @@ export interface UseTaskChatState {
 }
 export interface UseTaskChatEvents extends UseHookBaseEvents {
     handleSetCoordinatorId: (id: string) => void
-    handleSend: (request: AIInputEvent, cb?: () => void) => void
+    handleSend: handleSendFunc
     /** 获取原始任务列表树 */
     fetchPlanTree: () => AIAgentGrpcApi.PlanTask | undefined
     /** 接口关闭后的后续执行逻辑 */
@@ -126,6 +127,7 @@ export interface AIChatSendParams {
     token: string
     type: ChatIPCSendType
     params: AIInputEvent
+    optionValue?: string
 }
 
 export interface UseChatIPCEvents {
