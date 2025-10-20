@@ -84,11 +84,15 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 export default AIReActTaskChat
 
 const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
+    const {activeChat} = useAIAgentStore()
     const {chatIPCData, reviewInfo, planReviewTreeKeywordsMap} = useChatIPCStore()
 
     const taskChat: UseTaskChatState = useCreation(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.taskChat) {
+            return activeChat.answer.taskChat
+        }
         return chatIPCData.taskChat || defaultChatIPCData.taskChat
-    }, [chatIPCData.taskChat])
+    }, [activeChat, chatIPCData.taskChat])
 
     const yakExecResult: UseYakExecResultState = useCreation(() => {
         return chatIPCData.yakExecResult || defaultChatIPCData.yakExecResult

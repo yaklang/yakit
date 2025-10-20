@@ -15,7 +15,7 @@ import {
     OutlineEngineIcon,
     OutlineRocketLaunchIcon
 } from "@/assets/icon/outline"
-import {formatNumberUnits} from "../utils"
+import {formatNumberUnits, isShowToolColorCard} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     SolidCursorclickIcon,
@@ -48,6 +48,8 @@ import StreamCard from "../components/StreamCard"
 import ToolInvokerCard from "../components/ToolInvokerCard"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {AIReviewResult} from "../components/aiReviewResult/AIReviewResult"
+import { AIChatToolColorCard } from "../components/aiChatToolColorCard/AIChatToolColorCard"
+import { AIMarkdown } from "../components/aiMarkdown/AIMarkdown"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -279,23 +281,32 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
             case "stream": {
                 // 首字母大写
                 const language = i18n.language.charAt(0).toUpperCase() + i18n.language.slice(1)
+                const {NodeId, content, NodeIdVerbose} = stream.data
+                if (isShowToolColorCard(NodeId)) {
+                    return <AIChatToolColorCard key={NodeId} toolCall={stream.data} />
+                }
+                if (NodeId === "re-act-loop-answer-payload") {
+                    return <AIMarkdown stream={content} nodeLabel={NodeIdVerbose[language]} />
+                }
                 return (
                     <StreamCard
-                        titleText={stream.data.NodeIdVerbose[language]}
-                        titleIcon={taskAnswerToIconMap[stream.data.NodeId]}
-                        content={stream.data.content}
+                        key={NodeId}
+                        titleText={NodeIdVerbose[language]}
+                        titleIcon={taskAnswerToIconMap[NodeId]}
+                        content={content}
                     />
                 )
             }
             case "tool_result": {
-                // const task = getTask(stream.data.TaskIndex)
+                const {callToolId, toolName, status, summary, toolStdoutContent} = stream.data
                 return (
                     <ToolInvokerCard
+                        params={callToolId}
                         titleText='工具调用'
-                        name={stream.data.toolName}
-                        status={stream.data.status}
-                        desc={stream.data.summary}
-                        content={stream.data.toolStdoutContent.content}
+                        name={toolName}
+                        status={status}
+                        desc={summary}
+                        content={toolStdoutContent.content}
                     />
                 )
             }
