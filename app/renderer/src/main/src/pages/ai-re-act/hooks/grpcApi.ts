@@ -247,6 +247,14 @@ export declare namespace AIAgentGrpcApi {
         description: string
         /**是否为用户添加的节点 */
         isUserAdd?: boolean
+        /** 执行工具的总数 */
+        total_tool_call_count: number
+        /** 执行工具成功的总数 */
+        success_tool_call_count: number
+        /** 执行工具失败的总数 */
+        fail_tool_call_count: number
+        /** 任务执行后的总结 */
+        summary: string
     }
     /** 改变任务状态 */
     export interface ChangeTask {

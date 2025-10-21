@@ -29,7 +29,7 @@ export const UseTaskChatTypes = ["plan_review_require", "plan_task_analysis", "t
 function useTaskChat(params?: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
 function useTaskChat(params?: UseTaskChatParams) {
-    const {pushLog, updateLog, getRequest, onReview, onReviewExtra, onReviewRelease} = params || {}
+    const {pushLog, updateLog, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest} = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatQSData) => {
         pushLog && pushLog(logInfo)
@@ -562,6 +562,8 @@ function useTaskChat(params?: UseTaskChatParams) {
                     // 结束任务
                     const data = obj as AIAgentGrpcApi.ChangeTask
                     handleUpdateTaskState(data.task.index, "success")
+                    // 更新任务树数据
+                    sendRequest && sendRequest({IsSyncMessage: true, SyncType: "plan"})
                     return
                 }
 
