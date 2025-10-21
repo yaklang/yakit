@@ -810,6 +810,8 @@ service Yak {
   rpc UpdateSSARiskTags(UpdateSSARiskTagsRequest)returns(DbOperateMessage);
   rpc GetSSARiskFieldGroup(Empty) returns (SSARiskFieldGroupResponse);
   rpc NewSSARiskRead(NewSSARiskReadRequest) returns (NewSSARiskReadResponse);
+  rpc ExportSSARisk(ExportSSARiskRequest) returns(stream ExportSSARiskResponse);
+  rpc ImportSSARisk(ImportSSARiskRequest) returns(stream ImportSSARiskResponse);
   // SSA risk diff
   rpc SSARiskDiff(SSARiskDiffRequest) returns (stream SSARiskDiffResponse);
   // SSA Risk Disposal CURD
@@ -1365,10 +1367,14 @@ message DeleteKnowledgeBaseEntryRequest {
   string KnowledgeBaseEntryHiddenIndex = 3;
   int64 KnowledgeBaseId = 2;
 }
-
+message SearchKnowledgeBaseEntryFilter {
+  int64 KnowledgeBaseId = 1;
+  string Keyword = 2;
+}
 message SearchKnowledgeBaseEntryRequest {
   int64 KnowledgeBaseId = 1;
   string Keyword = 2;
+  SearchKnowledgeBaseEntryFilter Filter = 4;
   Paging Pagination = 3;
 }
 
@@ -1455,11 +1461,18 @@ message VectorStoreCollection{
   string DistanceFuncType = 10;
 }
 
+message ListVectorStoreEntriesFilter {
+  int64 CollectionID = 1;
+  string Keyword = 2;
+  string CollectionName = 3;
+}
+
 message ListVectorStoreEntriesRequest {
   int64 CollectionID = 1;
   string Keyword = 2;
   Paging Pagination = 3;
   string CollectionName = 4;
+  ListVectorStoreEntriesFilter Filter = 5;
 }
 
 message CreateVectorStoreEntryRequest {
@@ -1762,6 +1775,9 @@ message AIStartParams {
 
   // 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题
   int64 UserInteractLimit = 30;
+
+  // timeline sessionID  用于多轮对话保持上下文
+  string TimelineSessionID = 31;
 }
 
 message AITaskFilter {
@@ -7626,6 +7642,27 @@ message NewSSARiskReadRequest {
   SSARisksFilter Filter = 1;
 }
 message NewSSARiskReadResponse {
+}
+
+message ExportSSARiskRequest {
+  SSARisksFilter Filter = 1;
+  string TargetPath =2 ;
+  bool WithDataFlowPath =3 ;
+  bool WithFileContent = 4;
+}
+
+message ExportSSARiskResponse{
+  double  Process =1 ;
+  string  Verbose =2 ;
+}
+
+message ImportSSARiskRequest{
+  string InputPath = 1;
+}
+
+message ImportSSARiskResponse{
+  double  Process =1 ;
+  string  Verbose =2 ;
 }
 
 message SSARiskFeedbackToOnlineRequest {
