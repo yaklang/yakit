@@ -315,7 +315,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         const onEvents = (res: string) => {
             try {
                 const data = JSON.parse(res) as AIAgentTriggerEventInfo
-                console.log("onReActChatEvent-data", data)
                 if (!data.type) return
                 switch (data.type) {
                     // 新开聊天对话窗
@@ -323,7 +322,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                         onStop()
                         handleSaveChatInfo()
                         events.onReset()
-                        handleStart("")
 
                         break
                     // 替换当前使用的 forge 模板
