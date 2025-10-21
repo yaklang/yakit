@@ -48,8 +48,10 @@ import StreamCard from "../components/StreamCard"
 import ToolInvokerCard from "../components/ToolInvokerCard"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {AIReviewResult} from "../components/aiReviewResult/AIReviewResult"
-import { AIChatToolColorCard } from "../components/aiChatToolColorCard/AIChatToolColorCard"
-import { AIMarkdown } from "../components/aiMarkdown/AIMarkdown"
+import {AIChatToolColorCard} from "../components/aiChatToolColorCard/AIChatToolColorCard"
+import {AIMarkdown} from "../components/aiMarkdown/AIMarkdown"
+import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
+import FileSystemCard from "../components/FileSystemCard"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -244,7 +246,7 @@ const taskAnswerToIconMap: Record<string, ReactNode> = {
 }
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {tasks, streams, defaultExpand} = props
+    const {tasks, streams} = props
 
     const {i18n} = useI18nNamespaces([])
 
@@ -254,12 +256,15 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     // }, [streams])
 
     // 生成任务展示名称
-    const handleGenerateTaskName = useMemoizedFn((order: string) => {
-        if (order === "system") return "系统输出"
-        const task = tasks.find((item) => item.index === order)
-        if (!task) return order
-        return task.name
-    })
+    // const handleGenerateTaskName = useMemoizedFn((order: string) => {
+    //     if (order === "system") return "系统输出"
+    //     const task = tasks.find((item) => item.index === order)
+    //     if (!task) return order
+    //     return task.name
+    // })
+
+    const {chatIPCData} = useChatIPCStore()
+
     console.log("streams:", streams, tasks)
 
     const getTask = (id) => {
@@ -281,19 +286,25 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
             case "stream": {
                 // 首字母大写
                 const language = i18n.language.charAt(0).toUpperCase() + i18n.language.slice(1)
-                const {NodeId, content, NodeIdVerbose} = stream.data
+                const {NodeId, content, NodeIdVerbose, CallToolID} = stream.data
                 if (isShowToolColorCard(NodeId)) {
                     return <AIChatToolColorCard key={NodeId} toolCall={stream.data} />
                 }
                 if (NodeId === "re-act-loop-answer-payload") {
                     return <AIMarkdown stream={content} nodeLabel={NodeIdVerbose[language]} />
                 }
+                const {execFileRecord} = chatIPCData.yakExecResult
+                const fileList = execFileRecord.get(CallToolID)
                 return (
                     <StreamCard
                         key={NodeId}
                         titleText={NodeIdVerbose[language]}
                         titleIcon={taskAnswerToIconMap[NodeId]}
                         content={content}
+                        modalInfo={{
+                            time: stream.Timestamp
+                        }}
+                        fileList={fileList}
                     />
                 )
             }
@@ -310,6 +321,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                     />
                 )
             }
+            case 'file_system_pin':
+                return <FileSystemCard {...stream.data} />
             case "tool_use_review_require":
             case "exec_aiforge_review_require":
             case "require_user_interactive":

@@ -7,25 +7,26 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setClipboardText} from "@/utils/clipboard"
 import {RocketSvgIcon} from "@/components/layout/icons"
 import {Tooltip} from "antd"
-import { SolidAnnotationIcon } from "@/assets/icon/solid"
+import {SolidAnnotationIcon} from "@/assets/icon/solid"
+import {formatTimestamp} from "@/utils/timeUtil"
 
 export interface ModalInfoProps {
     icon?: string
     title?: string
-    time?: string
+    time?: number
     copyStr?: string
 }
 
 const ModalInfo: FC<ModalInfoProps> = ({icon, title, time, copyStr}) => {
-    const iconSvg = AIOnlineModelIconMap[icon ?? "openai"]
+    const iconSvg = icon ? AIOnlineModelIconMap[icon] : null
     return (
         <div className={styles["modal-info"]}>
             <div className={styles["modal-info-title"]}>
                 {iconSvg}
                 {title}
-                <span className={styles["modal-info-title-time"]}>{time}</span>
+                {time && <span className={styles["modal-info-title-time"]}>{formatTimestamp(time)}</span>}
             </div>
-            <div className={styles["modal-info-icons"]}>
+            {copyStr && <div className={styles["modal-info-icons"]}>
                 <Tooltip placement='top' title=''>
                     <YakitButton
                         type='text2'
@@ -43,7 +44,7 @@ const ModalInfo: FC<ModalInfoProps> = ({icon, title, time, copyStr}) => {
                 <Tooltip placement='top' title=''>
                     <YakitButton type='text2' color='default' icon={<RocketSvgIcon />} />
                 </Tooltip>
-            </div>
+            </div>}
         </div>
     )
 }

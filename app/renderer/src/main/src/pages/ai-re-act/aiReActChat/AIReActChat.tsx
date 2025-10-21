@@ -9,7 +9,7 @@ import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn} from "a
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ColorsChatIcon} from "@/assets/icon/colors"
-import {OutlineNewspaperIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlineListTodoIcon, OutlineNewspaperIcon, OutlineXIcon} from "@/assets/icon/outline"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import {AIModelSelect} from "@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect"
 import classNames from "classnames"
@@ -21,6 +21,7 @@ import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {AIStreamChatContent} from "@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent"
+import {AITaskQuery} from "@/pages/ai-agent/components/aiTaskQuery/AITaskQuery"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
@@ -159,6 +160,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                     <div className={styles["chat-footer"]}>
                         <div className={styles["footer-body"]}>
                             <div className={styles["footer-inputs"]}>
+                                {/*  TODO 队列切换任务 */}
+                                {/* <AITaskQuery /> */}
                                 <AIChatTextarea
                                     loading={false}
                                     question={question}

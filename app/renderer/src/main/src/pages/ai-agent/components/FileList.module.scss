@@ -8,6 +8,9 @@
         color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         line-height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
     &-item {
         width: 100%;

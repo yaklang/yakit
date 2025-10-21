@@ -35,7 +35,7 @@ const DividerCard: FC<DividerCardProps> = (props) => {
                     <TaskSuccessIcon />,
                     <div className={classNames(styles["divider-content-success"], styles["divider-content-text"])}>
                         <span>{name}</span>
-                        {[error, success].map((item, index) => {
+                        {/* {[error, success].map((item, index) => {
                             return (
                                 <YakitTag
                                     key={index}
@@ -43,11 +43,12 @@ const DividerCard: FC<DividerCardProps> = (props) => {
                                     fullRadius
                                     color={index === 0 ? "danger" : "success"}
                                     className={styles["divider-content-success-tag"]}
+                                    
                                 >
                                     {item}
                                 </YakitTag>
                             )
-                        })}
+                        })} */}
                         <span className={styles["divider-content-text-desc"]}>{desc}</span>
                     </div>
                 ]

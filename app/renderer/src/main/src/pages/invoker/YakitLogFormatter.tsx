@@ -27,10 +27,9 @@ import {YakEditor} from "@/utils/editors"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {SolidCalendarIcon} from "@/assets/icon/solid"
 import {setClipboardText} from "@/utils/clipboard"
-import {FileActionEnum, PluginExecuteLogFile} from "../plugins/operator/pluginExecuteResult/PluginExecuteResultType.d"
+import {PluginExecuteLogFile} from "../plugins/operator/pluginExecuteResult/PluginExecuteResultType.d"
 import {onOpenLocalFileByPath} from "../notepadManage/notepadManage/utils"
-import {isPluginExecuteLogFileItem, modeToPermissions} from "./utils"
-import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
+import {getFileActionStatus, isPluginExecuteLogFileItem, modeToPermissions} from "./utils"
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
 
 const LogCharts = React.lazy(() => import("./LogCharts/LogCharts"))
@@ -202,83 +201,7 @@ const ExecuteLogFile: React.FC<ExecuteLogFileProps> = React.memo((props) => {
         setExpand(!expand)
     })
     const actionsStatus = useCreation(() => {
-        let content: ReactNode = "" //预览内容
-        let message: string = "" //操作描述
-        let actionText: string = "未知操作" //操作权限
-        let color: YakitTagColor = "white"
-        try {
-            switch (action) {
-                case FileActionEnum.Read_Action:
-                    const read = {...action_message} as PluginExecuteLogFile.ReadFileActionMessage
-                    const readContent = read.content || ""
-                    actionText = "读取"
-                    message = `${read.offset}-${read.offset + read.length} ${read.unit}`
-                    content = readContent.length > 200 ? readContent.substring(0, 200) + "..." : readContent
-                    break
-                case FileActionEnum.Write_Action:
-                    const write = {...action_message} as PluginExecuteLogFile.WriteFileActionMessage
-                    const writeContent = write.content || ""
-                    actionText = "修改内容"
-                    message = `修改方式:${write.mode}`
-                    content = writeContent.length > 200 ? writeContent.substring(0, 200) + "..." : writeContent
-                    break
-                case FileActionEnum.Create_Action:
-                    const create = {...action_message} as PluginExecuteLogFile.CreateFileActionMessage
-                    actionText = "创建"
-                    color = "success"
-                    message = `创建${create.isDir ? "文件夹" : "文件"}`
-                    content = "暂无可预览内容"
-                    break
-                case FileActionEnum.Delete_Action:
-                    const remove = {...action_message} as PluginExecuteLogFile.DELETEFileActionMessage
-                    actionText = "删除"
-                    color = "danger"
-                    message = `删除${remove.isDir ? "文件夹" : "文件"}`
-                    content = `${remove.isDir ? "文件夹" : "文件"}已被删除,无法展示预览内容`
-                    break
-                case FileActionEnum.Status_Action:
-                    const status = {...action_message} as PluginExecuteLogFile.STATUSFileActionMessage
-                    actionText = "查看元信息"
-                    content = (
-                        <div style={{height: 300}}>
-                            {/**NOTE - 个数过多后，可能会有性能影响 */}
-                            <YakitEditor readOnly={true} type='yak' value={JSON.stringify(status.status, null, 2)} />
-                        </div>
-                    )
-                    break
-                case FileActionEnum.Chmod_Action:
-                    const chmod = {...action_message} as PluginExecuteLogFile.CHMODFileActionMessage
-                    actionText = "修改权限"
-                    const mode = modeToPermissions(chmod.chmodMode)
-                    content = (
-                        <>
-                            所属者权限: {mode ? mode[0] : "未知"}
-                            <br />
-                            所属组权限: {mode ? mode[1] : "未知"}
-                            <br />
-                            其他用户权限: {mode ? mode[2] : "未知"}
-                        </>
-                    )
-                    break
-                case FileActionEnum.Find_Action:
-                    const find = {...action_message} as PluginExecuteLogFile.FINDFileActionMessage
-                    actionText = "查找"
-                    message = `通过${find.mode}查找到${find.content.length}个满足条件${find.condition}的文件`
-                    content = "暂无可预览内容"
-                    break
-                default:
-                    break
-            }
-        } catch (error) {
-            actionText = action
-            message = action_message.message
-        }
-        return {
-            color,
-            action: actionText,
-            message,
-            content
-        }
+      return getFileActionStatus(action, action_message)
     }, [action, action_message])
     return (
         <div className={styles["log-file"]}>

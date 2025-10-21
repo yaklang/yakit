@@ -1,0 +1,91 @@
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    flex-direction: column;
+}
+.ai-task-query {
+    .list-todo-icon {
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Neutral-Text-2-Primary);
+        }
+    }
+    .question-mark-circle {
+        cursor: pointer;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        }
+    }
+    .ai-task-query-list-wrapper {
+        @extend %display-column-center;
+        gap: 8px;
+        padding: 4px 4px 8px 4px;
+        border-radius: 8px;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        background: var(--Colors-Use-Basic-Background);
+        .ai-task-query-list-header {
+            @extend %display-flex-center;
+            justify-content: space-between;
+            gap: 4px;
+            padding: 2px 8px;
+            .task-query-title {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 16px;
+                letter-spacing: 0.5px;
+            }
+            .header-left {
+                @extend %display-flex-center;
+                gap: 4px;
+                span {
+                    margin-right: 0;
+                }
+            }
+            .header-right {
+                @extend %display-flex-center;
+                gap: 4px;
+            }
+        }
+        .task-query-list {
+            @extend %display-column-center;
+            gap: 8px;
+            .task-query-list-item {
+                @extend %display-flex-center;
+                justify-content: space-between;
+                height: 24px;
+                padding: 2px 8px;
+                gap: 8px;
+                border-radius: 4px;
+                &:hover {
+                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+                }
+                .chat-icon {
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                        color: var(--Colors-Use-Neutral-Text-2-Primary);
+                    }
+                }
+                .item-left {
+                    @extend %display-flex-center;
+                    gap: 4px;
+                }
+
+                .item-right {
+                    @extend %display-flex-center;
+                    gap: 4px;
+                }
+            }
+        }
+        .clear-btn {
+            padding: 3px 0;
+        }
+    }
+}
