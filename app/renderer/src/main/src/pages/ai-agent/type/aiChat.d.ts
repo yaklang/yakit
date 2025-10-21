@@ -6,6 +6,10 @@ import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetw
 import {UseCasualChatState, UseChatIPCState, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
 import {AIAgentGrpcApi, AIOutputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 // #region AI-(Task|Triage)
+
+interface AIChatYakExecResult extends Omit<UseChatIPCState["yakExecResult"], "execFileRecord"> {
+    execFileRecord: [string, AIYakExecFileRecord[]][]
+}
 /** UI-chat 信息 */
 export interface AIChatInfo {
     /** 唯一标识 */
@@ -24,6 +28,7 @@ export interface AIChatInfo {
         logs: UseChatIPCState["logs"]
         casualChat: UseChatIPCState["casualChat"]
         taskChat: UseChatIPCState["taskChat"]
+        yakExecResult: AIChatYakExecResult
     }
 }
 // #endregion
