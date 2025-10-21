@@ -90,7 +90,11 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
         progress: "wait",
         isRemove: false,
         tools: [],
-        description: ""
+        description: "",
+        total_tool_call_count: 0,
+        success_tool_call_count: 0,
+        fail_tool_call_count: 0,
+        summary: ""
     }
     if (!!info) {
         data.index = info.index || ""
@@ -100,6 +104,10 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
         data.isRemove = info.isRemove || false
         data.tools = info.tools || []
         data.description = info.description || ""
+        data.total_tool_call_count = info.total_tool_call_count || 0
+        data.success_tool_call_count = info.success_tool_call_count || 0
+        data.fail_tool_call_count = info.fail_tool_call_count || 0
+        data.summary = info.summary || ""
     }
 
     return data

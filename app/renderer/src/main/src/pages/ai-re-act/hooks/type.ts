@@ -70,6 +70,8 @@ export interface UseTaskChatParams extends UseHookBaseParams {
     onReviewExtra?: (data: AIAgentGrpcApi.PlanReviewRequireExtra) => void
     /** 触发 review-release 后的回调事件 */
     onReviewRelease?: (id: string) => void
+    /** 向接口发送消息 */
+    sendRequest?: (request: AIInputEvent) => void
 }
 
 export interface UseTaskChatState {

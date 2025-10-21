@@ -52,6 +52,12 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReviewRelease && onReviewRelease("task", id)
     })
 
+    // 向接口发送消息
+    const sendRequest = useMemoizedFn((request: AIInputEvent) => {
+        if (!chatID.current) return
+        ipcRenderer.invoke("send-ai-re-act", chatID.current, request)
+    })
+
     // #region 启动流接口后的相关全局数据
     // 通信的唯一标识符
     const chatID = useRef<string>("")
@@ -98,7 +104,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         updateLog: setLogs,
         onReview: onTaskReview,
         onReviewExtra: onTaskReviewExtra,
-        onReviewRelease: handleTaskReviewRelease
+        onReviewRelease: handleTaskReviewRelease,
+        sendRequest: sendRequest
     })
     // #endregion
 
