@@ -18,10 +18,10 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
                 case "tool_use_review_require":
                 case "exec_aiforge_review_require":
                     const userSelected = JSON.parse(data.selected || "")
-                    if (userSelected.suggestion === "continue") {
+                    if (data.optionValue === "continue") {
                         btnText = "立即执行"
                     } else {
-                        const selectBtn = data.selectors.find((item) => item.value === userSelected.suggestion)
+                        const selectBtn = data.selectors.find((item) => item.value === data.optionValue)
                         btnText = selectBtn ? selectBtn.prompt : "未知操作"
                     }
                     userInput = userSelected.extra_prompt || ""

@@ -394,11 +394,11 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         )
         return findIndex !== -1
     }, [review])
-    const onSendAIByValue = useMemoizedFn((value: string, selectBtnValue?: string) => {
+    const onSendAIByValue = useMemoizedFn((value: string, optionValue?: string) => {
         const params: AIChatIPCSendParams = {
             value,
             id: (review as AIReviewType).id,
-            selectBtnValue
+            optionValue
         }
         onSendAI(params)
     })

@@ -18,7 +18,7 @@ export interface AIChatIPCSendParams {
     value: string
     id: string
     /**用户审阅过程中选择得btn */
-    selectBtnValue?: string
+    optionValue?: string
 }
 export interface ChatIPCContextDispatcher {
     chatIPCEvents: UseChatIPCEvents
