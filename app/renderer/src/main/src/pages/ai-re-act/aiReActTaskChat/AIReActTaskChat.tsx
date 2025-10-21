@@ -22,7 +22,9 @@ import {UseAIPerfDataState, UseTaskChatState, UseYakExecResultState} from "../ho
 import {AIReActTaskChatReview} from "@/pages/ai-agent/aiAgentChat/AIAgentChat"
 import {OutlineArrowdownIcon, OutlineArrowupIcon} from "@/assets/icon/outline"
 import {formatNumberUnits} from "@/pages/ai-agent/utils"
-import {LocalPluginLog} from "@/pages/plugins/operator/pluginExecuteResult/LocalPluginLog"
+import {AIYakExecFileRecord} from "../hooks/aiRender"
+import {AIFileSystemList} from "@/pages/ai-agent/components/aiFileSystemList/AIFileSystemList"
+import {isEmpty} from "lodash"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {execute, onStop} = props
@@ -82,7 +84,6 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 })
 
 export default AIReActTaskChat
-
 const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
     const {activeChat} = useAIAgentStore()
     const {chatIPCData, reviewInfo, planReviewTreeKeywordsMap} = useChatIPCStore()
@@ -95,8 +96,18 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     }, [activeChat, chatIPCData.taskChat])
 
     const yakExecResult: UseYakExecResultState = useCreation(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.yakExecResult) {
+            let result: Map<string, AIYakExecFileRecord[]> = new Map()
+            if (!isEmpty(activeChat.answer.yakExecResult.execFileRecord)) {
+                result = new Map(activeChat.answer.yakExecResult.execFileRecord)
+            }
+            return {
+                ...activeChat.answer.yakExecResult,
+                execFileRecord: result
+            }
+        }
         return chatIPCData.yakExecResult || defaultChatIPCData.yakExecResult
-    }, [chatIPCData.yakExecResult])
+    }, [activeChat, chatIPCData.yakExecResult])
 
     const {coordinatorId, plan, streams} = taskChat
 
@@ -141,7 +152,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
                     </>
                 )
             case AITabsEnum.File_System:
-                return <LocalPluginLog loading={false} list={yakExecResult.yakExecResultLogs} />
+                return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} />
             case AITabsEnum.Risk:
                 return !!coordinatorId ? (
                     <VulnerabilitiesRisksTable
