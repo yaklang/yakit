@@ -55,7 +55,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                     contentNode = (
                         <AIMarkdown
                             stream={content}
-                            nodeLabel={NodeIdVerbose.Zh}
+                            nodeLabel={NodeIdVerbose?.Zh}
                             className={styles["ai-mark-down-wrapper"]}
                         />
                     )
