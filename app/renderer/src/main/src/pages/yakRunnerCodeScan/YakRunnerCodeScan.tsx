@@ -1392,7 +1392,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
         const getTabsState = useMemo(() => {
             const tabsState = [
-                {tabName: "漏洞与风险", type: "ssa-risk"},
                 {tabName: "日志", type: "log"},
                 {tabName: "Console", type: "console"}
             ]
@@ -1403,6 +1402,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         type: "result",
                         customProps: {onDetail: handleShowDetail, updateDataCallback: handleUpdateAuditData}
                     },
+                    {tabName: "漏洞与风险", type: "ssa-risk"},
                     ...tabsState
                 ]
             }
