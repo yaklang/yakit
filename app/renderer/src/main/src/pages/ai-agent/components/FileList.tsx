@@ -3,7 +3,12 @@ import styles from "./FileList.module.scss"
 import {renderFileTypeIcon} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 import {IconNotepadFileTypeDir} from "@/components/MilkdownEditor/icon/icon"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
-import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {AIYakExecFileRecord} from "@/pages/ai-re-act/hooks/aiRender"
+import {getFileActionStatus} from "@/pages/invoker/utils"
+import {PluginExecuteLogFile} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType.d"
+import {formatTimestamp} from "@/utils/timeUtil"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 export interface FileListItem {
     name: string
@@ -16,7 +21,7 @@ export interface FileListItem {
 
 interface FileListProps {
     title?: string
-    fileList?: FileListItem[]
+    fileList?: AIYakExecFileRecord[]
 }
 
 const getFileIcon = (name, isDir) => {
@@ -28,26 +33,52 @@ const getFileIcon = (name, isDir) => {
     return renderFileTypeIcon({type})
 }
 
+const getFileName = (path: string, isDir: boolean): string => {
+    if (!path) return ""
+    const normalized = path.replace(/[\\/]+$/, "")
+    const parts = normalized.split(/[\\/]/)
+    const lastPart = parts[parts.length - 1]
+    if (isDir) return lastPart
+    return lastPart
+}
+
 const FileList: FC<FileListProps> = ({title, fileList}) => {
     return (
         <div className={styles["file-list"]}>
-            <div className={styles["file-list-title"]}>{title ?? `相关文件 (${fileList?.length})`}</div>
+            <div className={styles["file-list-title"]}>
+                <span>{title ?? `相关文件 (${fileList?.length})`}</span>
+                <YakitButton hidden={fileList!.length < 6} type='text' onClick={() => {}}>
+                    查看全部
+                </YakitButton>
+            </div>
             <div className={styles["file-list-content"]}>
-                {fileList?.map((item) => {
-                    const Icon = getFileIcon(item.name, item.isDir)
-                    const dangerFile = (item.status === 'danger' && !item.isDir) ? <del>{item.name}</del> : item.name
+                {fileList?.slice(0, 5).map((item) => {
+                    const data = JSON.parse(item.data ?? "{}") as PluginExecuteLogFile.FileItem
+                    const {color, action, message} = getFileActionStatus(data.action, data.action_message)
+                    const name = getFileName(data.path, data.is_dir)
+                    const Icon = getFileIcon(data.path, data.is_dir)
+                    const dangerFile = color === "danger" && !data.is_dir ? <del>{name}</del> : name
                     return (
-                        <div key={item.name} className={styles["file-list-item"]}>
+                        <div key={item.id} className={styles["file-list-item"]}>
                             <div className={styles["file-list-item-main"]}>
-                               <YakitTag className={styles['file-list-item-tag']} border={false} color={item.status}>{item.label}</YakitTag>
+                                <YakitTag
+                                    style={
+                                        color === "white" ? {backgroundColor: "var(--Colors-Use-Neutral-Border)"} : {}
+                                    }
+                                    className={styles["file-list-item-tag"]}
+                                    border={false}
+                                    color={color}
+                                >
+                                    {action}
+                                </YakitTag>
                                 <div className={styles["file-list-item-icon"]}>{Icon}</div>
-                                <div className={styles["file-list-item-name"]}>
-                                    {dangerFile}
-                                </div>
-                                <div className={styles["file-list-item-desc"]}>{item.desc}</div>
+                                <div className={styles["file-list-item-name"]}>{dangerFile}</div>
+                                <div className={styles["file-list-item-desc"]}>{message}</div>
                             </div>
                             <div className={styles["file-list-item-actions"]}>
-                                <div className={styles["file-list-item-actions-time"]}>{item.time}</div>
+                                <div className={styles["file-list-item-actions-time"]}>
+                                    {formatTimestamp(item.timestamp)}
+                                </div>
                                 <OutlineChevronrightIcon />
                             </div>
                         </div>

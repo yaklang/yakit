@@ -60,16 +60,18 @@ export enum FileActionEnum {
     Find_Action = "FIND" // 查找
 }
 export declare namespace PluginExecuteLogFile {
+    export type FileActionMessage =
+        | ReadFileActionMessage
+        | WriteFileActionMessage
+        | CreateFileActionMessage
+        | DELETEFileActionMessage
+        | STATUSFileActionMessage
+        | CHMODFileActionMessage
+        | FINDFileActionMessage
+
     export interface FileItem {
         action: FileActionType
-        action_message:
-            | ReadFileActionMessage
-            | WriteFileActionMessage
-            | CreateFileActionMessage
-            | DELETEFileActionMessage
-            | STATUSFileActionMessage
-            | CHMODFileActionMessage
-            | FINDFileActionMessage
+        action_message: FileActionMessage
 
         dir: string
         is_dir: boolean

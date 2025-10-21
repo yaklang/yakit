@@ -110,9 +110,11 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 }
                 break
             case "file_system_pin": {
-                contentNode = <FileSystemCard {...data} />
+                contentNode = <FileSystemCard {...data} showDetail={false} />
                 break
             }
+            // TODO 更新任务队列
+            // <AITaskUpdateNotice/>
             default:
                 break
         }
