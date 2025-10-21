@@ -55,6 +55,16 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     })
     const [isShowTask, setIsShowTask] = useState<boolean>(false)
 
+    useEffect(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.taskChat) {
+            setMode("task")
+            setIsShowTask(true)
+        } else {
+            setMode("re-act")
+            setIsShowTask(false)
+        }
+    }, [activeChat])
+
     /**欢迎页中 Forge 启动ai */
     const handleStartTaskChatByForge = useMemoizedFn((request: AIStartParams) => {
         setMode("re-act")
