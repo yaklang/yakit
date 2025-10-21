@@ -6,7 +6,9 @@
     flex-direction: column;
     gap: 4px;
     > div:first-child {
-        border-top: 1px dashed var(--Colors-Use-Neutral-Border);
+        border-top: 1px solid transparent;
+        border-image: repeating-linear-gradient(to right, var(--Colors-Use-Neutral-Border) 0 6px, transparent 5px 10px)
+            1;
         margin: 8px 0;
     }
     &-content {
@@ -68,8 +70,8 @@
             gap: 4px;
             width: fit-content;
             min-width: 0;
-       
-            &-text { 
+
+            &-text {
                 width: 100%;
                 margin: 0;
                 @include mixin.text-ellipsis();
