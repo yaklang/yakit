@@ -278,7 +278,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         handleSendAIRequire(params, "")
     })
     const handleSendAIRequire = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
-        const {value, id, selectBtnValue} = params
+        const {value, id, optionValue} = params
         if (!activeID) return
         if (!id) return
 
@@ -287,7 +287,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             InteractiveId: id,
             InteractiveJSONInput: value
         }
-        events.onSend({token: activeID, type, params: info})
+        events.onSend({token: activeID, type, params: info, optionValue})
         handleStopAfterChangeState()
     })
     const onStop = useMemoizedFn(() => {

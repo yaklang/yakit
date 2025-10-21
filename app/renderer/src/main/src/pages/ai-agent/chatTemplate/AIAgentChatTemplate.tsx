@@ -47,6 +47,7 @@ import DividerCard, {StreamsStatus} from "../components/DividerCard"
 import StreamCard from "../components/StreamCard"
 import ToolInvokerCard from "../components/ToolInvokerCard"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {AIReviewResult} from "../components/aiReviewResult/AIReviewResult"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -298,6 +299,12 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                     />
                 )
             }
+            case "tool_use_review_require":
+            case "exec_aiforge_review_require":
+            case "require_user_interactive":
+            case "plan_review_require":
+            case "task_review_require":
+                return !!stream.data.selected ? <AIReviewResult info={stream} timestamp={stream.Timestamp} /> : <></>
             default:
                 return <div>{stream.type}</div>
         }
