@@ -1,3 +1,4 @@
+@use "../../../../styles/mixin.scss" as mixin;
 .ai-stream-chat-content-wrapper {
     display: flex;
     align-items: center;
@@ -14,18 +15,7 @@
         align-items: center;
         flex-shrink: 0;
         gap: 4px;
-        font-size: 14px;
-        letter-spacing: 0.1px;
-        line-height: 20px;
-        font-weight: 400;
-        background: linear-gradient(
-            108deg,
-            var(--Colors-Use-Magenta-Primary) 0%,
-            var(--Colors-Use-Purple-Primary) 63.94%,
-            var(--Colors-Use-Blue-Primary) 100%
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        @include mixin.mpb-color-text();
     }
     .ai-stream-content {
         padding: 8px 12px 8px 0;

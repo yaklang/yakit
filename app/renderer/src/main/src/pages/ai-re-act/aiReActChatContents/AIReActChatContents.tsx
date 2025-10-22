@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useRef} from "react"
-import {AIReActChatContentsPProps} from "./AIReActChatContentsType.d"
+import {AIReActChatContentsPProps, AIStreamNodeProps} from "./AIReActChatContentsType.d"
 import styles from "./AIReActChatContents.module.scss"
 import {AITriageChatContent} from "@/pages/ai-agent/components/aiTriageChat/AITriageChat"
 import {useMemoizedFn} from "ahooks"
@@ -13,11 +13,51 @@ import ToolInvokerCard from "@/pages/ai-agent/components/ToolInvokerCard"
 import {AIReviewResult} from "@/pages/ai-agent/components/aiReviewResult/AIReviewResult"
 import {isToolExecStream} from "../hooks/utils"
 import FileSystemCard from "@/pages/ai-agent/components/FileSystemCard"
+import {AIToolDecision} from "@/pages/ai-agent/components/aiToolDecision/AIToolDecision"
+import StreamCard from "@/pages/ai-agent/components/StreamCard"
+import {taskAnswerToIconMap} from "@/pages/ai-agent/defaultConstant"
+import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
+import useAINodeLabel from "../hooks/useAINodeLabel"
 
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
     chatClassName: styles["question-wrapper"]
 }
+export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
+    const {stream, aiMarkdownProps} = props
+    const {NodeId, content, NodeIdVerbose, CallToolID} = stream.data
+    const {chatIPCData} = useChatIPCStore()
+    const {nodeLabel} = useAINodeLabel({nodeIdVerbose: NodeIdVerbose})
+
+    if (isToolExecStream(NodeId)) {
+        return <AIChatToolColorCard key={NodeId} toolCall={stream.data} />
+    }
+
+    switch (NodeId) {
+        case "re-act-loop-answer-payload":
+            return <AIMarkdown key={stream.id} data={stream.data} {...aiMarkdownProps} />
+        case "decision":
+            return <AIToolDecision key={stream.id} item={stream} nodeLabel={nodeLabel} />
+        case "re-act-loop":
+        case "re-act-loop-thought":
+            return <AIStreamChatContent key={stream.id} data={stream.data} />
+        default:
+            const {execFileRecord} = chatIPCData.yakExecResult
+            const fileList = execFileRecord.get(CallToolID)
+            return (
+                <StreamCard
+                    key={stream.id}
+                    titleText={nodeLabel}
+                    titleIcon={taskAnswerToIconMap[NodeId]}
+                    content={content}
+                    modalInfo={{
+                        time: stream.Timestamp
+                    }}
+                    fileList={fileList}
+                />
+            )
+    }
+})
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {
     const {chats} = props
     const {handleSendCasual} = useChatIPCDispatcher()
@@ -48,21 +88,14 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
                 )
                 break
             case "stream":
-                const {NodeId, NodeIdVerbose, content} = data
-                if (isToolExecStream(NodeId)) {
-                    contentNode = <AIChatToolColorCard toolCall={data} />
-                } else if (NodeId === "re-act-loop-answer-payload") {
-                    contentNode = (
-                        <AIMarkdown
-                            stream={content}
-                            nodeLabel={NodeIdVerbose?.Zh}
-                            className={styles["ai-mark-down-wrapper"]}
-                        />
-                    )
-                } else {
-                    contentNode = <AIStreamChatContent stream={content} nodeLabel={NodeIdVerbose?.Zh} />
-                }
-
+                contentNode = (
+                    <AIStreamNode
+                        stream={item}
+                        aiMarkdownProps={{
+                            className: styles["ai-mark-down-wrapper"]
+                        }}
+                    />
+                )
                 break
             case "result":
                 contentNode = (

@@ -1,9 +1,11 @@
 import {memo} from "react"
-import {AIReviewResultProps} from "./type"
+import {AIReviewResultProps, AISingHaveColorTextProps} from "./type"
 import {SolidHandIcon} from "@/assets/icon/solid"
 import {useCreation} from "ahooks"
 import styles from "./AIReviewResult.module.scss"
 import {formatTimestamp} from "@/utils/timeUtil"
+import React from "react"
+import ChatCard from "../ChatCard"
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     const {info, timestamp} = props
@@ -32,9 +34,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
                 default:
                     break
             }
-        } catch (error) {
-            btnText = "解析错误"
-        }
+        } catch (error) {}
 
         return {
             btnText,
@@ -42,16 +42,30 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
         }
     }, [type, data])
     return (
-        <div className={styles["ai-review-result"]}>
-            <div className={styles["ai-review-result-content"]}>
-                <SolidHandIcon />
-                <span>Review 决策</span>
-                {userAction.btnText && <div className={styles["btn-text"]}>{userAction.btnText}</div>}
-                {userAction.userInput && <div className={styles["user-input"]}>{userAction.userInput}</div>}
-            </div>
-            <div className={styles["ai-review-result-footer"]}>
-                <span className={styles["time"]}>{formatTimestamp(timestamp)}</span>
-            </div>
-        </div>
+        <AISingHaveColorText
+            titleIcon={<SolidHandIcon />}
+            title='Review 决策'
+            subTitle={userAction.btnText}
+            tip={userAction.userInput}
+            timestamp={timestamp}
+        />
+    )
+})
+
+export const AISingHaveColorText: React.FC<AISingHaveColorTextProps> = React.memo((props) => {
+    const {title, subTitle, tip, timestamp, titleIcon, ...reset} = props
+    return (
+        <ChatCard
+            footer={<span className={styles["time"]}>{formatTimestamp(timestamp)}</span>}
+            titleText={
+                <div className={styles["title-wrapper"]}>
+                    {titleIcon}
+                    <span className={styles["title"]}>{title}</span>
+                    {subTitle && <div className={styles["mpb-color-text"]}>{subTitle}</div>}
+                </div>
+            }
+            titleExtra={tip && <div className={styles["title-extra"]}>{tip}</div>}
+            {...reset}
+        />
     )
 })

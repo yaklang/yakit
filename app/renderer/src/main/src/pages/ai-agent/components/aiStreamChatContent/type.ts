@@ -1,4 +1,5 @@
+import {AIStreamOutput} from "@/pages/ai-re-act/hooks/aiRender"
+
 export interface AIStreamChatContentProps {
-    stream: string
-    nodeLabel: string
+    data: AIStreamOutput
 }

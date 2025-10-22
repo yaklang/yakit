@@ -26,6 +26,13 @@ import {
 } from "./aiModelList/icon"
 import {UseAIPerfDataState, UseChatIPCState} from "../ai-re-act/hooks/type"
 import {AIAgentGrpcApi} from "../ai-re-act/hooks/grpcApi"
+import {
+    SolidCursorclickIcon,
+    SolidHashtagIcon,
+    SolidLightbulbIcon,
+    SolidLightningboltIcon,
+    SolidToolIcon
+} from "@/assets/icon/solid"
 import {MCPServerType} from "./type/aiMCP"
 
 /** AI-Agent 页面的唯一 id */
@@ -188,7 +195,7 @@ export const AIReviewRuleOptions = [
 ]
 export enum AIMCPServerTypeEnum {
     SSE = "sse",
-    Stdio = "stdio",
+    Stdio = "stdio"
 }
 //#region ai hooks 默认值
 export const defaultChatIPCData: UseChatIPCState = {
@@ -222,3 +229,12 @@ export const defaultAIPerfData: UseAIPerfDataState = {
     totalCost: []
 }
 //#endregion
+
+/** @name 任务回答类型对应图标 */
+export const taskAnswerToIconMap: Record<string, ReactNode> = {
+    plan: <SolidLightbulbIcon />,
+    execute: <SolidLightningboltIcon />,
+    summary: <SolidHashtagIcon />,
+    "call-tools": <SolidToolIcon />,
+    decision: <SolidCursorclickIcon />
+}

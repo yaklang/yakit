@@ -1,5 +1,6 @@
-import {AIStreamChatContentProps} from "../aiStreamChatContent/type"
+import {AIStreamOutput} from "@/pages/ai-re-act/hooks/aiRender"
 
-export interface AIMarkdownProps extends AIStreamChatContentProps {
+export interface AIMarkdownProps {
+    data: AIStreamOutput
     className?: string
 }
