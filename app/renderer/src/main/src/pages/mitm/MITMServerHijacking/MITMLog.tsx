@@ -49,7 +49,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
         tableSelectNum,
         hasNewData
     } = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi", "history", "yakitRoute"])
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "history", "yakitRoute", "mitm"])
     const mitmContent = useContext(MITMContext)
     const mitmVersion = useCreation(() => {
         return mitmContent.mitmStore.version
@@ -288,11 +288,11 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                         }}
                         style={{padding: 0}}
                     >
-                        高级筛选
+                        {t("MITMLogHeardExtra.advancedFilter")}
                     </YakitButton>
                     {isFilter && (
                         <YakitTag color={"success"} style={{margin: 0}}>
-                            已配置
+                            {t("MITMLogHeardExtra.configured")}
                             <OutlineCheckIcon className={styles["check-icon"]} />
                         </YakitTag>
                     )}
@@ -398,7 +398,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                                                 ))}
                                             </>
                                         ) : (
-                                            <div style={{textAlign: "center"}}>暂无数据</div>
+                                            <div style={{textAlign: "center"}}>{t("YakitEmpty.noData")}</div>
                                         )}
                                     </>
                                 )}
@@ -410,9 +410,11 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                     visible={processVisible}
                 >
                     {curProcess.length >= 1 ? (
-                        <YakitButton type='primary'>进程筛选（{curProcess.length}）</YakitButton>
+                        <YakitButton type='primary'>
+                            {t("MITMLogHeardExtra.processFilter")}（{curProcess.length}）
+                        </YakitButton>
                     ) : (
-                        <YakitButton type='outline1'>进程筛选</YakitButton>
+                        <YakitButton type='outline1'>{t("MITMLogHeardExtra.processFilter")}</YakitButton>
                     )}
                 </YakitPopover>
                 <HistorySearch
@@ -445,18 +447,18 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                         emiter.emit("cleanMitmLogEvent", mitmVersion)
                     }}
                 >
-                    重置
+                    {t("YakitButton.reset")}
                 </YakitButton>
                 <YakitDropdownMenu
                     menu={{
                         data: [
                             {
                                 key: "noResetRefresh",
-                                label: "仅刷新"
+                                label: t("YakitButton.refreshOnly")
                             },
                             {
                                 key: "resetRefresh",
-                                label: "重置查询条件刷新"
+                                label: t("YakitButton.resetQueryAndRefresh")
                             }
                         ],
                         onClick: ({key}) => {

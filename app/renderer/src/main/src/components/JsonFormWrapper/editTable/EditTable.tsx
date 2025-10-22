@@ -13,6 +13,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {DefaultOptionType} from "antd/lib/select"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface Item {
     _id: string
@@ -51,6 +52,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
     setFoucusFun,
     ...restProps
 }) => {
+    const {t, i18n} = useI18nNamespaces(["components"])
     const onFocus = useMemoizedFn(() => {
         setFoucusFun(true)
     })
@@ -63,7 +65,9 @@ const EditableCell: React.FC<EditableCellProps> = ({
                         <YakitInput.TextArea
                             className={styles["input-textarea"]}
                             rows={3}
-                            placeholder={`请输入 ${typeof title === "object" ? "该字段" : title}`}
+                            placeholder={`${t("JsonFormWrapper.EditableCell.pleaseEnter")} ${
+                                typeof title === "object" ? t("JsonFormWrapper.EditableCell.thisField") : title
+                            }`}
                             onFocus={onFocus}
                         />
                     )
@@ -95,7 +99,9 @@ const EditableCell: React.FC<EditableCellProps> = ({
                     rules={[
                         {
                             required,
-                            message: `请填写${typeof title === "object" ? "该字段" : title}`
+                            message: `${t("JsonFormWrapper.EditableCell.pleaseEnter")} ${
+                                typeof title === "object" ? t("JsonFormWrapper.EditableCell.thisField") : title
+                            }`
                         }
                     ]}
                     valuePropName={type === "boolean" ? "checked" : undefined}
@@ -159,6 +165,7 @@ export interface EditTableProps {
 }
 export const EditTable: React.FC<EditTableProps> = (props) => {
     const {columnSchema, uiSchema, onChange, value} = props
+    const {t, i18n} = useI18nNamespaces(["components", "yakitUi"])
     const [form] = Form.useForm()
     const [data, setData] = useState<Item[]>([])
     const [cacheData, setCacheData] = useState<Item[]>([])
@@ -265,7 +272,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 form.setFieldsValue({...newItem})
             }
         } catch (error) {
-            failed(`解析表格失败:${error}`)
+            failed(`${t("JsonFormWrapper.EditTable.parseTableFailed")}${error}`)
         }
     }, [columnSchema, uiSchema])
 
@@ -349,7 +356,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 }
                 setData([...data, newRecord])
             } catch (error) {
-                warn("当前行校验未通过")
+                warn(t("JsonFormWrapper.EditTable.currentRowValidationFailed"))
             }
         } else {
             const newRecord = {
@@ -378,7 +385,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
 
     const addCell = useMemoizedFn(async () => {
         if (typeof maxItems === "number" && data.length >= maxItems) {
-            warn(`已达最大数量${maxItems}`)
+            warn(t("JsonFormWrapper.EditTable.maxLimitReached", {maxItems}))
             return
         }
         if (cacheData.length !== 0) {
@@ -401,7 +408,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         return [
             ...columns,
             {
-                title: <div style={{fontSize: 12}}>操作</div>,
+                title: <div style={{fontSize: 12}}>{t("YakitTable.action")}</div>,
                 dataIndex: "operation",
                 width: 45,
                 fixed: "right",
@@ -410,27 +417,27 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                     const editData = [
                         {
                             key: "save",
-                            label: "保存"
+                            label: t("YakitButton.save")
                         },
                         {
                             key: "cancel",
-                            label: "取消"
+                            label: t("YakitButton.cancel")
                         }
                     ]
                     const showData = [
                         {
                             key: "edit",
-                            label: "编辑"
+                            label: t("YakitButton.edit")
                         },
                         {
                             key: "copy",
-                            label: "复制"
+                            label: t("YakitEditor.copy")
                         }
                     ]
                     const delData = [
                         {
                             key: "delete",
-                            label: "删除"
+                            label: t("YakitButton.delete")
                         }
                     ]
                     return (
@@ -471,7 +478,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 }
             }
         ]
-    }, [columns, editingId])
+    }, [columns, editingId, i18n.language])
 
     const isFoucus = useRef<boolean>(false)
     const setFoucusFun = useMemoizedFn((is: boolean) => {
@@ -542,10 +549,10 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                             e.preventDefault()
                             showByRightContext({
                                 data: [
-                                    {label: "编辑", key: "edit"},
-                                    {label: "复制", key: "copy"},
-                                    {label: "保存", key: "save"},
-                                    {label: "删除", key: "delete"}
+                                    {label: t("YakitButton.edit"), key: "edit"},
+                                    {label: t("YakitEditor.copy"), key: "copy"},
+                                    {label: t("YakitButton.save"), key: "save"},
+                                    {label: t("YakitButton.delete"), key: "delete"}
                                 ],
                                 width: 80,
                                 onClick: async (e) => {
@@ -576,7 +583,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                                             try {
                                                 await onSave(record)
                                             } catch (error) {
-                                                warn("当前行校验未通过")
+                                                warn(t("JsonFormWrapper.EditTable.currentRowValidationFailed"))
                                             }
 
                                             return
@@ -599,7 +606,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 icon={<PlusOutlined />}
                 type='outline1'
             >
-                添加一行数据
+                {t("JsonFormWrapper.EditTable.addRow")}
             </YakitButton>
         </Form>
     )
