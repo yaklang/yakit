@@ -9,6 +9,8 @@ import {getFileActionStatus} from "@/pages/invoker/utils"
 import {PluginExecuteLogFile} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType.d"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import emiter from "@/utils/eventBus/eventBus"
+import {AITabsEnum} from "../defaultConstant"
 
 export interface FileListItem {
     name: string
@@ -43,11 +45,14 @@ const getFileName = (path: string, isDir: boolean): string => {
 }
 
 const FileList: FC<FileListProps> = ({title, fileList}) => {
+    const switchAIActTab = () => {
+        emiter.emit("switchAIActTab", AITabsEnum.File_System)
+    }
     return (
         <div className={styles["file-list"]}>
             <div className={styles["file-list-title"]}>
                 <span>{title ?? `相关文件 (${fileList?.length})`}</span>
-                <YakitButton hidden={fileList!.length < 6} type='text' onClick={() => {}}>
+                <YakitButton hidden={fileList!.length < 6} type='text' onClick={switchAIActTab}>
                     查看全部
                 </YakitButton>
             </div>

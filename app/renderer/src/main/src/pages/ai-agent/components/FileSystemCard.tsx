@@ -7,6 +7,8 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {IconNotepadFileTypeDir} from "@/components/MilkdownEditor/icon/icon"
 import {AIFileSystemPin} from "@/pages/ai-re-act/hooks/aiRender"
+import emiter from "@/utils/eventBus/eventBus"
+import { AITabsEnum } from "../defaultConstant"
 
 const getFileIcon = (type, isDir) => {
     if (isDir) {
@@ -23,6 +25,10 @@ const FileSystemCard: FC<FileSystemCardProps> = ({suffix, name, path, isDir, sho
     const type = suffix ?? name.split(".").pop()
 
     const onDetail = () => onOpenLocalFileByPath(path)
+
+    const switchAIActTab = () => {
+        emiter.emit("switchAIActTab", AITabsEnum.File_System)
+    }
     return (
         <ChatCard titleIcon={<RefreshIcon className={styles["file-system-icon"]} />} titleText='更新文件系统'>
             <div className={styles["file-system"]}>
@@ -32,7 +38,7 @@ const FileSystemCard: FC<FileSystemCardProps> = ({suffix, name, path, isDir, sho
                         {name}
                         {suffix}
                     </div>
-                    <YakitButton hidden={!showDetail} type='text' onClick={() => {}}>
+                    <YakitButton hidden={!showDetail} type='text' onClick={switchAIActTab}>
                         查看详情
                     </YakitButton>
                 </div>

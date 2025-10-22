@@ -23,6 +23,7 @@ import {OutlineArrowdownIcon, OutlineArrowupIcon} from "@/assets/icon/outline"
 import {formatNumberUnits} from "@/pages/ai-agent/utils"
 import {AIFileSystemList} from "@/pages/ai-agent/components/aiFileSystemList/AIFileSystemList"
 import useAIChatUIData from "../hooks/useAIChatUIData"
+import emiter from "@/utils/eventBus/eventBus"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {execute, onStop} = props
@@ -166,6 +167,15 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         }
         return tab
     }, [tempTotal])
+
+
+    useEffect(() => {
+        emiter.on("switchAIActTab", setActiveKey)
+        return () => {
+            emiter.off("switchAIActTab", setActiveKey)
+        }
+    }, [])
+
     //#endregion
     return (
         <>
