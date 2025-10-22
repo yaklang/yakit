@@ -25,10 +25,10 @@ const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props)
 
     const [visible, setVisible] = useState<boolean>(false)
 
+    // 执行中也允许修改配置：始终以全局 setting 为准
     const modelValue = useCreation(() => {
-        if (chatIPCData.execute) return chatIPCEvents.fetchRequest()?.ReviewPolicy
         return setting?.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
-    }, [setting?.ReviewPolicy, chatIPCData.execute, chatIPCEvents.fetchRequest])
+    }, [setting?.ReviewPolicy])
 
     const aiReviewRiskControlScore = useCreation(() => {
         return setting?.AIReviewRiskControlScore || AIAgentSettingDefault.AIReviewRiskControlScore

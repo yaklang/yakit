@@ -40,6 +40,31 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     const {activeChat, setting} = useAIAgentStore()
 
+    // 执行期间更新配置：监听模型与评审规则变更
+    const prevSettingRef = useRef<{AIService?: string; ReviewPolicy?: "manual" | "yolo" | "ai" | undefined}>({
+        AIService: setting?.AIService,
+        ReviewPolicy: setting?.ReviewPolicy
+    })
+    useEffect(() => {
+        const prev = prevSettingRef.current
+        const changed = prev.AIService !== setting?.AIService || prev.ReviewPolicy !== setting?.ReviewPolicy
+        if (changed) {
+            prevSettingRef.current = {AIService: setting?.AIService, ReviewPolicy: setting?.ReviewPolicy}
+            if (execute && activeChat?.id) {
+                const info: AIInputEvent = {
+                    IsSyncMessage: true,
+                    SyncType: "update_config",
+                    Params: {
+                        UserQuery: "",
+                        AIService: setting?.AIService,
+                        ReviewPolicy: setting?.ReviewPolicy
+                    }
+                }
+                chatIPCEvents.onSend({token: activeChat.id, type: "", params: info})
+            }
+        }
+    }, [setting?.AIService, setting?.ReviewPolicy, execute, activeChat?.id])
+
     // #region 问题相关逻辑
     const [question, setQuestion] = useState<string>("")
     const textareaProps: AIChatTextareaProps["textareaProps"] = useMemo(() => {
@@ -167,9 +192,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                     extraFooterRight={execute && <RoundedStopButton onClick={handleStop} />}
                                     extraFooterLeft={
                                         <>
-                                            <AIModelSelect disabled={execute} />
+                                            <AIModelSelect />
                                             <React.Suspense fallback={<div>loading...</div>}>
-                                                <AIReviewRuleSelect disabled={execute} />
+                                                <AIReviewRuleSelect />
                                             </React.Suspense>
                                             <YakitButton type='text' onClick={onViewContext}>
                                                 查看上下文
