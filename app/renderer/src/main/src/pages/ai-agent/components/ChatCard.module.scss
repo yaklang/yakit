@@ -21,12 +21,14 @@
             align-items: center;
             gap: 4px;
             padding: 4px 8px 4px 0;
-            flex: 1;
+            flex: 1 1 auto; 
+            min-width: 0; 
         }
 
         &-icon {
             width: 16px;
             height: 16px;
+            flex-shrink: 0;
 
             svg {
                 width: 100%;
@@ -38,11 +40,12 @@
             font-size: 16px;
             line-height: 24px;
             flex: 1;
-            @include mixin.text-ellipsis(1, false, false, true); 
+            min-width: 0; 
+            @include mixin.text-ellipsis(1, false, false, true);
         }
 
         &-more {
-            margin-top: 4px; // ✅ 换行后与上方留点距离
+            margin-top: 4px; 
             display: flex;
             justify-content: flex-end;
         }
