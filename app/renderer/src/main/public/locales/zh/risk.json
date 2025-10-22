@@ -81,7 +81,7 @@
   "YakitCodeScanRiskDetails": {
     "project": "所属项目：",
     "discovery_time_colon": "发现时间：",
-    "open_in_code_audit": "在代码审计中打开",
+    "open_in_code_audit": "在{CodeAudit}中打开",
     "related_data_deleted": "相关数据已被删除"
   },
   "AuditResultDescribe": {
@@ -103,6 +103,6 @@
     "solution": "解决方案"
   },
   "AuditResultCollapse": {
-    "open_in_code_audit": "在代码审计中打开"
+    "open_in_code_audit": "在{CodeAudit}中打开"
   }
 }

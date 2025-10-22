@@ -70,7 +70,7 @@ const HotPatchParamsGetterDefault = `__getParams__ = func() {
 const {ipcRenderer} = window.require("electron")
 
 export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
-    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi", "yakitRoute"])
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById
@@ -364,7 +364,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                         </YakitPopover>
                         <div className={styles["hotPatchCodeOpen"]}>
                             <span style={{fontSize: 12}}>{t("HTTPFuzzerHotPatch.sharedHotReloadCode")}</span>
-                            <Tooltip title={t("HTTPFuzzerHotPatch.webFuzzerHotReloadNotice")}>
+                            <Tooltip title={t("HTTPFuzzerHotPatch.webFuzzerHotReloadNotice", {WebFuzzer: t("YakitRoute.WebFuzzer")})}>
                                 <InformationCircleIcon className={styles["info-icon"]} />
                             </Tooltip>
                             ：<YakitSwitch checked={hotPatchCodeOpen} onChange={setHotPatchCodeOpen}></YakitSwitch>

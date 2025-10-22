@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useMemoizedFn } from "ahooks"
 import { randomString } from "@/utils/randomUtil"
 import { GlobalProxyRulesConfig, grpcGetGlobalProxyRulesConfig, grpcSetGlobalProxyRulesConfig } from "@/apiUtils/grpc"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 // 全局配置缓存
 let globalProxyConfig: GlobalProxyRulesConfig = { Endpoints: [], Routes: [] }
@@ -20,6 +21,7 @@ const updateGlobalConfig = (config: GlobalProxyRulesConfig) => {
  */
 export const useProxy = () => {
   const [proxyConfig, setProxyConfig] = useState<GlobalProxyRulesConfig>(globalProxyConfig)
+  const { t, i18n } = useI18nNamespaces(["mitm"])
 
   // 订阅全局配置变化
   useEffect(() => {
@@ -80,15 +82,15 @@ export const useProxy = () => {
     const { Routes = [], Endpoints = [] } = proxyConfig
     return [
       ...Routes.map(({ Name, Id }) => ({
-        label: `规则组: ${Name}`,
+        label: `${t("ProxyConfig.rule_group")}: ${Name}`,
         value: Id
       })),
       ...Endpoints.map(({ Url, Id, }) => ({
-        label: `代理节点: ${Url}`,
+        label: `${t("ProxyConfig.Points")}: ${Url}`,
         value: Id
       }))
     ]
-  }, [proxyConfig])
+  }, [proxyConfig, i18n.language])
 
   /**
    * 获取代理配置
