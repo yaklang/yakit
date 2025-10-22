@@ -173,7 +173,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         )
 
     const {setType, groupId: propsGroupId} = props
-    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi", "yakitRoute"])
 
     const [loading, setLoading] = useState<boolean>(false)
 
@@ -1480,7 +1480,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                     type: "white",
                                     title: (
                                         <div className={styles["sequence-animation-pop-title"]}>
-                                            {t("FuzzerSequence.webfuzzer_sequence_demo")}
+                                            {t("FuzzerSequence.webfuzzer_sequence_demo", {WebFuzzer: t("YakitRoute.WebFuzzer")})}
                                             <div
                                                 className={styles["subtitle-help-wrapper"]}
                                                 onClick={() =>
@@ -1693,7 +1693,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                             />
                         </>
                     ) : (
-                        <YakitEmpty title={t(isConcurrency ? "FuzzerConcurrency.select_webfuzzer_with_concurrency_tip":"FuzzerSequence.select_webfuzzer_with_sequence_tip")} />
+                        <YakitEmpty title={t(isConcurrency ? "FuzzerConcurrency.select_webfuzzer_with_concurrency_tip":"FuzzerSequence.select_webfuzzer_with_sequence_tip", {WebFuzzer: t("YakitRoute.WebFuzzer")})} />
                     )}
                 </div>
             </div>

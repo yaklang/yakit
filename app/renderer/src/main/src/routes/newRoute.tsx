@@ -426,7 +426,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.ModifyAIForge,
     YakitRoute.AddAITool,
     YakitRoute.ModifyAITool,
-   
+
     YakitRoute.AI_REPOSITORY
 ]
 /** 不需要软件安全边距的页面路由 */
@@ -479,7 +479,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.ModifyAIForge,
     YakitRoute.AddAITool,
     YakitRoute.ModifyAITool,
-  
+
     YakitRoute.AI_REPOSITORY
 ]
 /** 无滚动条的页面路由 */
@@ -618,7 +618,13 @@ function withRouteToPage(WrappedComponent) {
                             <p>逻辑性崩溃，请关闭重试！</p>
                             <div style={{marginTop: "16px"}}>
                                 <h4>错误信息:</h4>
-                                <pre style={{                background: "var(--Colors-Use-Neutral-Bg)", padding: "8px", borderRadius: "4px"}}>
+                                <pre
+                                    style={{
+                                        background: "var(--Colors-Use-Neutral-Bg)",
+                                        padding: "8px",
+                                        borderRadius: "4px"
+                                    }}
+                                >
                                     {error?.message}
                                 </pre>
                             </div>
@@ -626,7 +632,7 @@ function withRouteToPage(WrappedComponent) {
                                 <h4>错误堆栈:</h4>
                                 <pre
                                     style={{
-                                         background: "var(--Colors-Use-Neutral-Bg)",
+                                        background: "var(--Colors-Use-Neutral-Bg)",
                                         padding: "8px",
                                         borderRadius: "4px",
                                         maxHeight: "300px",
@@ -639,7 +645,13 @@ function withRouteToPage(WrappedComponent) {
                             </div>
                             <div style={{marginTop: "16px"}}>
                                 <h4>组件信息:</h4>
-                                <pre style={{background: "var(--Colors-Use-Neutral-Bg)", padding: "8px", borderRadius: "4px"}}>
+                                <pre
+                                    style={{
+                                        background: "var(--Colors-Use-Neutral-Bg)",
+                                        padding: "8px",
+                                        borderRadius: "4px"
+                                    }}
+                                >
                                     组件名称: {WrappedComponent?.name || WrappedComponent?.displayName || "未知组件"}
                                 </pre>
                             </div>
@@ -664,7 +676,7 @@ function withRouteToPage(WrappedComponent) {
                                     marginTop: "16px",
                                     padding: "8px 16px",
                                     background: "var(--Colors-Use-Blue-Primary)",
-                                    color:"var(--Colors-Use-Blue-On-Primary)",
+                                    color: "var(--Colors-Use-Blue-On-Primary)",
                                     border: "none",
                                     borderRadius: "4px",
                                     cursor: "pointer"
@@ -708,11 +720,23 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 </Suspense>
             )
         case YakitRoute.WebsocketFuzzer:
-            return <WebsocketFuzzer pageId={params?.id || ""} />
+            return (
+                <Suspense fallback={<PageLoading />}>
+                    <WebsocketFuzzer pageId={params?.id || ""} />
+                </Suspense>
+            )
         case YakitRoute.Codec:
-            return <NewCodec id={params?.id || ""} />
+            return (
+                <Suspense fallback={<PageLoading />}>
+                    <NewCodec id={params?.id || ""} />
+                </Suspense>
+            )
         case YakitRoute.DataCompare:
-            return <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
+            return (
+                <Suspense fallback={<PageLoading />}>
+                    <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
+                </Suspense>
+            )
         case YakitRoute.Mod_ScanPort:
             return <NewPortScan id={params?.id || ""} />
         case YakitRoute.PoC:

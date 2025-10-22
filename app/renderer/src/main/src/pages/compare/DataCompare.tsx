@@ -25,6 +25,7 @@ interface DataCompareProps {
 }
 export const DataCompare: React.FC<DataCompareProps> = (props) => {
     const {leftData,rightData} = props
+    const {t, i18n} = useI18nNamespaces(["yakitRoute"])
     const [noWrap, setNoWrap] = useState<boolean>(false)
 
     const [left, setLeft] = useState<string>(leftData||"")
@@ -33,14 +34,14 @@ export const DataCompare: React.FC<DataCompareProps> = (props) => {
     const codeComparisonRef = useRef<any>(null)
     return (
         <AutoCard
-            title={"数据对比"}
+            title={t("YakitRoute.dataCompare")}
             bodyStyle={{ padding: 0 }}
             bordered={false}
             extra={
                 <Space>
-                    <Button
+                    <YakitButton
                         size={"small"}
-                        type={!noWrap ? "primary" : "link"}
+                        type={!noWrap ? "primary" : "text"}
                         icon={<LineConversionIcon />}
                         onClick={() => {
                             codeComparisonRef.current?.onChangeLineConversion()
@@ -66,7 +67,7 @@ interface DataCompareModalProps {
 
 export const DataCompareModal : React.FC<DataCompareModalProps> = (props) => {
     const {onClose,leftCode,rightCode,leftTitle,rightTitle,loadCallBack,readOnly = false} = props
-    const {t, i18n} = useI18nNamespaces(["history"])
+    const {t, i18n} = useI18nNamespaces(["dataCompare"])
 
     useEffect(()=>{
         loadCallBack&&loadCallBack()

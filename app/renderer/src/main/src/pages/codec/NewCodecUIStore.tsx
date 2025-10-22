@@ -16,6 +16,7 @@ import {DefaultOptionType} from "antd/lib/select"
 import {queryYakScriptList} from "../yakitStore/network"
 import {YakScript} from "../invoker/schema"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 export interface NewCodecInputUIProps extends YakitInputProps {
     // 标题
@@ -28,6 +29,7 @@ export interface NewCodecInputUIProps extends YakitInputProps {
 }
 export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
     const {title, extra, require, direction, ...restProps} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [isFocus, setFocus] = useState<boolean>(false)
     const inputRef = useRef<any>(null)
 
@@ -74,7 +76,7 @@ export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
                         onBlur={onBlur}
                         ref={inputRef}
                         allowClear={false}
-                        placeholder='请输入...'
+                        placeholder={t("YakitInput.please_enter")}
                         {...restProps}
                     />
                 </div>
@@ -96,6 +98,7 @@ export interface NewCodecTextAreaUIProps extends InternalTextAreaProps {
 
 export const NewCodecTextAreaUI: React.FC<NewCodecTextAreaUIProps> = (props) => {
     const {title, extra, require, direction, ...restProps} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [isFocus, setFocus] = useState<boolean>(false)
     const inputRef = useRef<any>(null)
 
@@ -140,7 +143,7 @@ export const NewCodecTextAreaUI: React.FC<NewCodecTextAreaUIProps> = (props) => 
                         onFocus={onFocus}
                         onBlur={onBlur}
                         ref={inputRef}
-                        placeholder='请输入...'
+                        placeholder={t("YakitInput.please_enter")}
                         {...restProps}
                     />
                 </div>
@@ -197,6 +200,7 @@ export interface NewCodecSelectUIProps extends YakitSelectProps {
 // 当前控件样式仅适配此尺寸 - 如需更多尺寸请自行扩展
 export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
     const {require, title, showSearch, directionBox, options = [], isPlugin, onSearch, ...restProps} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [optionsList, setOptionsList] = useState<DefaultOptionType[]>(options)
 
     const [codecPlugin, setCodecPlugin] = useState<CodecType[]>([])
@@ -252,7 +256,7 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
             {showSearch ? (
                 <YakitSelect
                     showSearch={true}
-                    placeholder='请选择...'
+                    placeholder={t("YakitSelect.pleaseSelect")}
                     suffixIcon={
                         <div className={styles["search-icon"]}>
                             <OutlineSearchIcon />
@@ -275,7 +279,7 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
                 </YakitSelect>
             ) : (
                 <YakitSelect
-                    placeholder='请选择...'
+                    placeholder={t("YakitSelect.pleaseSelect")}
                     onSearch={(v) => {
                         if (isPlugin) {
                             search(v)
@@ -322,6 +326,7 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
         setEditorValue,
         onChange
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
 
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
@@ -394,7 +399,7 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
                             onChange && onChange(editorValue)
                         }}
                     >
-                        保存
+                        {t("YakitButton.save")}
                     </div>
                     <Divider
                         type={"vertical"}

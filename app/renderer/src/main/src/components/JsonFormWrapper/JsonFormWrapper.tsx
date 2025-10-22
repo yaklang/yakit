@@ -16,6 +16,7 @@ import classNames from "classnames"
 import ArrayFieldTemplate from "./templates/ArrayFieldTemplate"
 import ObjectFieldTemplate from "./templates/ObjectFieldTemplate"
 import {ColumnSchemaProps, EditTable, UiSchemaTableProps} from "./editTable/EditTable"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const getJsonSchemaListResult = (obj: {[key: string]: any}) => {
     // 此处的key用于筛选重复的表单数据
@@ -78,6 +79,7 @@ export interface JsonFormWrapperProps {
 /** 创建一个包装组件来处理 JsonForm */
 export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props) => {
     const {jsonSchemaListRef, field, value, schema, uiSchema, disabled} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
 
     const [formData, setFormData, getFormData] = useGetState<any>(value || {})
     const jsonSchemaRef = useRef<any>()
@@ -454,7 +456,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 isShowPathNumber={false}
                 selectType='folder'
                 multiple={false}
-                help='可将文件夹拖入框内或点击此处'
+                help={t("YakitFormDragger.drag_folder_or_click_here")}
                 disabled={disabled}
                 onChange={(value) => {
                     onChange(value === "" ? options.emptyValue : value)
