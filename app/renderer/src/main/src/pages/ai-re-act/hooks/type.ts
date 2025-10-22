@@ -152,3 +152,7 @@ export interface UseChatIPCEvents {
     onReset: () => void
 }
 // #endregion
+
+export interface AINodeLabelParams {
+    nodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+}

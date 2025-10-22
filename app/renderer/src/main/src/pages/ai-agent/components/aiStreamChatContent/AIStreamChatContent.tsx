@@ -5,18 +5,20 @@ import {useCreation} from "ahooks"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import styles from "./AIStreamChatContent.module.scss"
 import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
+import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 
 export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.memo((props) => {
-    const {stream, nodeLabel} = props
+    const {data} = props
+    const {nodeLabel} = useAINodeLabel({nodeIdVerbose: data.NodeIdVerbose})
     const content = useCreation(() => {
-        return stream.slice(-150)
-    }, [stream])
+        return data.content.slice(-150)
+    }, [data.content])
     return (
         <Tooltip
             title={
                 <div className={styles["tooltip-stream-content"]}>
-                    {stream}
-                    <CopyComponents copyText={stream} />
+                    {data.content}
+                    <CopyComponents copyText={data.content} />
                 </div>
             }
         >
@@ -26,7 +28,7 @@ export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.mem
                     {nodeLabel}
                 </div>
                 <div className={styles["ai-stream-content"]}>
-                    {stream.length > 100 && <div className={styles["ai-mask"]} />}
+                    {data.content.length > 100 && <div className={styles["ai-mask"]} />}
                     {content}
                 </div>
             </div>

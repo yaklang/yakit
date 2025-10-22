@@ -1,4 +1,4 @@
-import React, {memo, ReactNode, useEffect, useMemo, useState} from "react"
+import React, {memo, useEffect, useMemo, useState} from "react"
 import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
 import {
     AIAgentChatStreamProps,
@@ -15,15 +15,9 @@ import {
     OutlineEngineIcon,
     OutlineRocketLaunchIcon
 } from "@/assets/icon/outline"
-import {formatNumberUnits, isShowToolColorCard} from "../utils"
+import {formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {
-    SolidCursorclickIcon,
-    SolidHashtagIcon,
-    SolidLightbulbIcon,
-    SolidLightningboltIcon,
-    SolidToolIcon
-} from "@/assets/icon/solid"
+
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {AITree} from "../aiTree/AITree"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -44,14 +38,15 @@ import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
 import DividerCard, {StreamsStatus} from "../components/DividerCard"
-import StreamCard from "../components/StreamCard"
 import ToolInvokerCard from "../components/ToolInvokerCard"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {AIReviewResult} from "../components/aiReviewResult/AIReviewResult"
-import {AIChatToolColorCard} from "../components/aiChatToolColorCard/AIChatToolColorCard"
-import {AIMarkdown} from "../components/aiMarkdown/AIMarkdown"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import FileSystemCard from "../components/FileSystemCard"
+import {AIStreamNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
+import {taskAnswerToIconMap} from "../defaultConstant"
+import {SolidLightningboltIcon} from "@/assets/icon/solid"
+import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -236,14 +231,6 @@ const AICardList: React.FC<AICardListProps> = React.memo((props) => {
     )
 })
 
-/** @name 任务回答类型对应图标 */
-const taskAnswerToIconMap: Record<string, ReactNode> = {
-    plan: <SolidLightbulbIcon />,
-    execute: <SolidLightningboltIcon />,
-    summary: <SolidHashtagIcon />,
-    "call-tools": <SolidToolIcon />,
-    decision: <SolidCursorclickIcon />
-}
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
     const {tasks, streams} = props
@@ -283,31 +270,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                     error: 0
                 }
                 return <DividerCard {...props} />
-            case "stream": {
-                // 首字母大写
-                const language = i18n.language.charAt(0).toUpperCase() + i18n.language.slice(1)
-                const {NodeId, content, NodeIdVerbose, CallToolID} = stream.data
-                if (isShowToolColorCard(NodeId)) {
-                    return <AIChatToolColorCard key={NodeId} toolCall={stream.data} />
-                }
-                if (NodeId === "re-act-loop-answer-payload") {
-                    return <AIMarkdown stream={content} nodeLabel={NodeIdVerbose[language]} />
-                }
-                const {execFileRecord} = chatIPCData.yakExecResult
-                const fileList = execFileRecord.get(CallToolID)
-                return (
-                    <StreamCard
-                        key={NodeId}
-                        titleText={NodeIdVerbose[language]}
-                        titleIcon={taskAnswerToIconMap[NodeId]}
-                        content={content}
-                        modalInfo={{
-                            time: stream.Timestamp
-                        }}
-                        fileList={fileList}
-                    />
-                )
-            }
+            case "stream":
+                return <AIStreamNode stream={stream} />
             case "tool_result": {
                 const {callToolId, toolName, status, summary, toolStdoutContent} = stream.data
                 return (
@@ -321,7 +285,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                     />
                 )
             }
-            case 'file_system_pin':
+            case "file_system_pin":
                 return <FileSystemCard {...stream.data} />
             case "tool_use_review_require":
             case "exec_aiforge_review_require":
@@ -388,6 +352,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo((props) => {
     const {expandKey, info, className, defaultExpand, timestamp} = props
     const {NodeId, NodeIdVerbose, content} = info
+    const {nodeLabel} = useAINodeLabel({nodeIdVerbose: NodeIdVerbose})
     return (
         <ChatStreamCollapse
             key={expandKey}
@@ -396,7 +361,7 @@ const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo
             title={
                 <div className={styles["task-type-header"]}>
                     {taskAnswerToIconMap[NodeId] || <SolidLightningboltIcon />}
-                    <div className={styles["task-type-header-title"]}>{NodeIdVerbose.Zh}</div>
+                    <div className={styles["task-type-header-title"]}>{nodeLabel}</div>
                     <div className={styles["task-type-header-time"]}>{formatTimestamp(timestamp)}</div>
                 </div>
             }

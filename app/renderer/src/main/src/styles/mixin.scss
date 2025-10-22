@@ -38,3 +38,20 @@
         word-break: normal;
     }
 }
+
+@mixin mpb-color-text() {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    background: linear-gradient(
+        108deg,
+        var(--Colors-Use-Magenta-Primary) 0%,
+        var(--Colors-Use-Purple-Primary) 63.94%,
+        var(--Colors-Use-Blue-Primary) 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    @content;
+}

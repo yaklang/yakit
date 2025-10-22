@@ -106,7 +106,7 @@ interface AIChatQSDataBase<T extends string, U> {
 
 type ChatQuestion = AIChatQSDataBase<"question", string>
 type ChatLog = AIChatQSDataBase<"log", UIAIOutputLog>
-type ChatStream = AIChatQSDataBase<"stream", AIStreamOutput>
+export type ChatStream = AIChatQSDataBase<"stream", AIStreamOutput>
 type ChatThought = AIChatQSDataBase<"thought", string>
 type ChatResult = AIChatQSDataBase<"result", string>
 type ChatToolResult = AIChatQSDataBase<"tool_result", AIToolResult>
