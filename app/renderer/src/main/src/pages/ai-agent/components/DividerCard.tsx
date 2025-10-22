@@ -35,7 +35,7 @@ const DividerCard: FC<DividerCardProps> = (props) => {
                     <TaskSuccessIcon />,
                     <div className={classNames(styles["divider-content-success"], styles["divider-content-text"])}>
                         <span>{name}</span>
-                        {/* {[error, success].map((item, index) => {
+                        {[error, success].map((item, index) => {
                             return (
                                 <YakitTag
                                     key={index}
@@ -48,7 +48,7 @@ const DividerCard: FC<DividerCardProps> = (props) => {
                                     {item}
                                 </YakitTag>
                             )
-                        })} */}
+                        })}
                         <span className={styles["divider-content-text-desc"]}>{desc}</span>
                     </div>
                 ]
@@ -60,10 +60,10 @@ const DividerCard: FC<DividerCardProps> = (props) => {
                     </div>,
                     <div className={styles["divider-content-text"]}>
                         <span>{name}</span>
-                        <YakitTag fullRadius className={styles["divider-content-error"]} size='small' color='warning'>
+                        {desc&&<YakitTag fullRadius className={styles["divider-content-error"]} size='small' color='warning'>
                             <OutlineLoadingIcon />
                             <p className={styles["divider-content-error-text"]}>{desc}</p>
-                        </YakitTag>
+                        </YakitTag>}
                     </div>
                 ]
             case StreamsStatus.error:
