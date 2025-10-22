@@ -119,7 +119,7 @@
   },
   "HTTPFlowTableFormConfiguration": {
     "saveAdvancedConfigAndClose": "Do you want to save the advanced configuration and close the pop-up window?",
-    "advancedFilter": "Advanced Filter",
+    "advancedFilter": "Filter",
     "filterMode": "Filter Mode",
     "blockedContent": "Blocked Content",
     "displayOnly": "Display Only",

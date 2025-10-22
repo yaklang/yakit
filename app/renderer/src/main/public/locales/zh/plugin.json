@@ -59,5 +59,17 @@
   },
   "VulnerabilitiesRisksTable": {
     "risks_and_vulnerabilities": "风险与漏洞"
+  },
+  "UpdateGroupList": {
+    "groupCheckboxTip": "勾选表示加入组，取消勾选则表示移出组，创建新分组直接在输入框输入名称回车即可。",
+    "addToGroup": "添加到组...",
+    "newGroup": "新增分组"
+  },
+  "DelGroupConfirmPop": {
+    "deleteGroup": "删除组",
+    "confirmDeletePluginGroup": "是否确认删除插件组 “{groupName}”"
+  },
+  "ExtraParamsNodeByType": {
+    "parameterGroup": "参数组："
   }
 }
