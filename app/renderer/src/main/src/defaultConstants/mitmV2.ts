@@ -33,11 +33,13 @@ export enum PackageType {
     WS = "ws"
 }
 
-export const ManualHijackListStatusMap: Record<string, string> = {
-    "hijacking request": "劫持请求",
-    "hijacking response": "劫持响应",
-    "wait hijack": "等待劫持",
-    "hijacking ws": "WS 劫持"
+export const ManualHijackListStatusMap: (t: (text: string) => string) => Record<string, string> = (t) => {
+    return {
+        "hijacking request": t("MITMV2ManualEditor.hijackRequest"),
+        "hijacking response": t("MITMV2ManualEditor.hijackResponseAction"),
+        "wait hijack": t("MITMV2ManualEditor.waitingForHijack"),
+        "hijacking ws": t("MITMV2ManualEditor.wsHijack")
+    }
 }
 
 export const defaultSingleManualHijack: SingleManualHijackControlMessage = {

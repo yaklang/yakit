@@ -27,6 +27,7 @@ import classNames from "classnames"
 import {useHotkeys} from "react-hotkeys-hook"
 import styles from "./WebsocketFuzzer.module.scss"
 import i18n from "@/i18n/i18n"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 interface WebsocketFuzzerProp {
@@ -106,6 +107,7 @@ interface WebsocketClientOperatorProp {
 }
 const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((props) => {
     const {tls = false, request = new Uint8Array(), toServer = new Uint8Array(), onSetWsFlowList, onSetLoading} = props
+    const {t, i18n} = useI18nNamespaces(["websocketFuzzer", "yakitUi"])
     const [mode, setMode] = useState<"request" | "response">("request")
     const [executing, setExecuting] = useState<boolean>(false)
     const [wsTls, setWsTls] = useState(tls)
@@ -224,27 +226,29 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                                 buttonStyle='solid'
                                 value={mode}
                                 options={[
-                                    {value: "request", label: "请求"},
-                                    {value: "response", label: "响应"}
+                                    {value: "request", label: t("WebsocketClientOperator.request")},
+                                    {value: "response", label: t("WebsocketClientOperator.response")}
                                 ]}
                                 onChange={(e) => setMode(e.target.value)}
                             />
                             {executing && !!ursp ? (
-                                <YakitTag color='green'>已建立连接</YakitTag>
+                                <YakitTag color='green'>{t("WebsocketClientOperator.connectionEstablished")}</YakitTag>
                             ) : (
-                                <YakitTag color='yellow'>连接未建立</YakitTag>
+                                <YakitTag color='yellow'>
+                                    {t("WebsocketClientOperator.connectionNotEstablished")}
+                                </YakitTag>
                             )}
                         </div>
                     }
                     extra={
                         <div className={styles["websocketClientOperator-card-extra"]}>
                             <YakitPopover
-                                title='设置额外参数'
+                                title={t("WebsocketClientOperator.setExtraParams")}
                                 trigger={["click"]}
                                 content={
                                     <>
                                         <Form form={form} layout='vertical' initialValues={{proxy, timeoutSeconds}}>
-                                            <Form.Item label='设置代理' name='proxy'>
+                                            <Form.Item label={t("WebsocketClientOperator.setProxy")} name='proxy'>
                                                 <YakitAutoComplete
                                                     options={[
                                                         {
@@ -278,7 +282,10 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                                                     ]}
                                                 ></YakitAutoComplete>
                                             </Form.Item>
-                                            <Form.Item label='设置超时(s)' name='timeoutSeconds'>
+                                            <Form.Item
+                                                label={t("WebsocketClientOperator.setTimeoutSeconds")}
+                                                name='timeoutSeconds'
+                                            >
                                                 <YakitInputNumber type='horizontal' size='small' min={10} />
                                             </Form.Item>
                                         </Form>
@@ -304,14 +311,17 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                                 TLS
                             </YakitCheckbox>
                             {executing ? (
-                                <YakitPopconfirm title='确定要关闭 Websocket 连接吗？' onConfirm={handleDisConnect}>
+                                <YakitPopconfirm
+                                    title={t("WebsocketClientOperator.confirmCloseWebSocket")}
+                                    onConfirm={handleDisConnect}
+                                >
                                     <YakitButton type='primary' size='small' colors='danger'>
-                                        断开
+                                        {t("YakitButton.disconnect")}
                                     </YakitButton>
                                 </YakitPopconfirm>
                             ) : (
                                 <YakitButton type='primary' size='small' onClick={handleConnect}>
-                                    连接
+                                    {t("YakitButton.connect")}
                                 </YakitButton>
                             )}
                         </div>
@@ -330,7 +340,7 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                             />
                         </div>
                         <div style={{display: mode === "response" ? "block" : "none", height: "100%"}}>
-                            <YakitSpin spinning={!ursp} tip='正在构建 Websocket 连接'>
+                            <YakitSpin spinning={!ursp} tip={t("WebsocketClientOperator.buildingWebSocketConnection")}>
                                 <YakitEditor
                                     type='http'
                                     value={ursp}
@@ -357,7 +367,9 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                     bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 32px)"}}
                     title={
                         <div className={styles["websocketClientOperator-card-title"]}>
-                            <span className={styles["websocketClientOperator-card-title-text"]}>发送数据</span>
+                            <span className={styles["websocketClientOperator-card-title-text"]}>
+                                {t("WebsocketClientOperator.sendData")}
+                            </span>
                         </div>
                     }
                     extra={
@@ -368,7 +380,7 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                                 size='small'
                                 onClick={handleSendToServer}
                             >
-                                发送到服务器
+                                {t("WebsocketClientOperator.sendToServer")}
                             </YakitButton>
                         </div>
                     }
@@ -390,6 +402,7 @@ interface WebsocketFlowViewerProp {
 }
 const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
     const {wsFlowList, loading} = props
+    const {t, i18n} = useI18nNamespaces(["websocketFuzzer"])
     const [currSelected, setCurrSelected] = useState<WebsocketFlowFromFuzzer>()
     const containerRef = useRef<HTMLDivElement>(null)
     const wrapperRef = useRef<HTMLDivElement>(null)
@@ -506,7 +519,7 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
                     title={
                         <div className={styles["websocketClientOperator-card-title"]}>
                             <span className={styles["websocketClientOperator-card-title-text"]}>
-                                Websocket 数据帧实时预览
+                                {t("WebsocketFlowViewer.websocketFramePreview")}
                             </span>
                         </div>
                     }
@@ -529,9 +542,13 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
                                                 {item.data.DataFrameIndex}
                                                 <YakitTag color='blue'>{item.data.DataSizeVerbose}</YakitTag>
                                                 {item.data.FromServer ? (
-                                                    <YakitTag color='purple'>服务器响应</YakitTag>
+                                                    <YakitTag color='purple'>
+                                                        {t("WebsocketFlowViewer.serverResponse")}
+                                                    </YakitTag>
                                                 ) : (
-                                                    <YakitTag color='green'>客户端请求</YakitTag>
+                                                    <YakitTag color='green'>
+                                                        {t("WebsocketFlowViewer.clientRequest")}
+                                                    </YakitTag>
                                                 )}
                                                 {item.data.IsJson && <YakitTag color='bluePurple'>JSON</YakitTag>}
                                                 {item.data.IsProtobuf && <YakitTag color='danger'>Protobuf</YakitTag>}
@@ -562,14 +579,18 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
                         bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 32px)"}}
                         title={
                             <div className={styles["websocketClientOperator-card-title"]}>
-                                <span className={styles["websocketClientOperator-card-title-text"]}>数据帧详情</span>
+                                <span className={styles["websocketClientOperator-card-title-text"]}>
+                                    {t("WebsocketFlowViewer.frameDetails")}
+                                </span>
                                 {currSelected.FromServer ? (
-                                    <YakitTag color='yellow'>服务器响应</YakitTag>
+                                    <YakitTag color='yellow'>{t("WebsocketFlowViewer.serverResponse")}</YakitTag>
                                 ) : (
-                                    <YakitTag color='green'>客户端请求</YakitTag>
+                                    <YakitTag color='green'>{t("WebsocketFlowViewer.clientRequest")}</YakitTag>
                                 )}
                                 <YakitTag color='info'>index: {currSelected.DataFrameIndex}</YakitTag>
-                                <YakitTag color='info'>数据大小: {currSelected.DataSizeVerbose}</YakitTag>
+                                <YakitTag color='info'>
+                                    {t("WebsocketFlowViewer.dataSize")}: {currSelected.DataSizeVerbose}
+                                </YakitTag>
                             </div>
                         }
                         extra={
@@ -589,7 +610,7 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
                     </YakitCard>
                 ) : (
                     <YakitEmpty
-                        title='选择 Websocket Data Frame 以查看详情'
+                        title={t("WebsocketFlowViewer.selectWebSocketDataFrame")}
                         className={styles["webSocket-fuzzer-empty"]}
                     />
                 )

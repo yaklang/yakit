@@ -41,7 +41,7 @@ export function onImportShare(i18n) {
 
 export const ShareImport: React.FC<ShareImportProps> = (props) => {
     const {onClose} = props
-    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi", "yakitRoute"])
     const [loading, setLoading] = useState<boolean>(false)
     const [isShowPassword, setIsShowPassword] = useState<boolean>(false)
     // 全局监听登录状态
@@ -70,7 +70,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             .then((pwd) => {
                 if (pwd) {
                     setIsShowPassword(true)
-                    warn(t("WebFuzzer.ShareImport.shareNeedPassword"))
+                    warn(t("ShareImport.shareNeedPassword"))
                     setTimeout(() => {
                         setLoading(false)
                     }, 200)
@@ -82,7 +82,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 setTimeout(() => {
                     setLoading(false)
                 }, 200)
-                yakitNotify("error", t("WebFuzzer.ShareImport.passwordVerifyFailed") + err)
+                yakitNotify("error", t("ShareImport.passwordVerifyFailed") + err)
             })
     })
     /**
@@ -113,7 +113,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 }
             })
             .catch((err) => {
-                yakitNotify("error", t("WebFuzzer.ShareImport.getShareDataFailed") + err)
+                yakitNotify("error", t("ShareImport.getShareDataFailed") + err)
                 setTimeout(() => {
                     setLoading(false)
                 }, 200)
@@ -131,7 +131,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 onClose()
             })
             .catch((err) => {
-                yakitNotify("error", t("WebFuzzer.ShareImport.openWebFuzzerFailed") + err)
+                yakitNotify("error", t("ShareImport.openWebFuzzerFailed", {WebFuzzer: t("YakitRoute.WebFuzzer")}) + err)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -159,7 +159,7 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
                 onClose()
             })
             .catch((err) => {
-                yakitNotify("error", t("WebFuzzer.ShareImport.saveHttpHistoryShareFailed") + err)
+                yakitNotify("error", t("ShareImport.saveHttpHistoryShareFailed") + err)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -172,18 +172,18 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             <Form {...layout} name='control-hooks' onFinish={onFinish} style={{padding: 24}}>
                 <Form.Item
                     name='share_id'
-                    label={t("WebFuzzer.ShareImport.shareId")}
-                    rules={[{required: true, message: t("WebFuzzer.ShareImport.thisFieldIsRequired")}]}
+                    label={t("ShareImport.shareId")}
+                    rules={[{required: true, message: t("ShareImport.thisFieldIsRequired")}]}
                 >
-                    <YakitInput placeholder={t("WebFuzzer.ShareImport.pleaseEnterShareId")} />
+                    <YakitInput placeholder={t("ShareImport.pleaseEnterShareId")} />
                 </Form.Item>
                 {isShowPassword && (
                     <Form.Item
                         name='extract_code'
-                        label={t("WebFuzzer.ShareImport.password")}
-                        rules={[{required: true, message: t("WebFuzzer.ShareImport.thisFieldIsRequired")}]}
+                        label={t("ShareImport.password")}
+                        rules={[{required: true, message: t("ShareImport.thisFieldIsRequired")}]}
                     >
-                        <YakitInput placeholder={t("WebFuzzer.ShareImport.pleaseEnterPassword")} allowClear />
+                        <YakitInput placeholder={t("ShareImport.pleaseEnterPassword")} allowClear />
                     </Form.Item>
                 )}
                 <Form.Item {...tailLayout}>

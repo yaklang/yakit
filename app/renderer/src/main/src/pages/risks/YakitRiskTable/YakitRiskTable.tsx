@@ -1992,7 +1992,7 @@ export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = Rea
 
 export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> = React.memo((props) => {
     const {info, className, border, isShowExtra} = props
-    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi", "yakitRoute"])
     const [isShowCollapse, setIsShowCollapse] = useState<boolean>(false)
 
     const onClickIP = useMemoizedFn(() => {
@@ -2087,13 +2087,13 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                                     jumpCodeScanPage()
                                 }}
                             >
-                                {t("YakitCodeScanRiskDetails.open_in_code_audit")}
+                                {t("YakitCodeScanRiskDetails.open_in_code_audit", {CodeAudit: t("YakitRoute.codeAudit")})}
                             </YakitButton>
                         ) : (
                             <Tooltip title={t("YakitCodeScanRiskDetails.related_data_deleted")} placement='topLeft'>
                                 <div className={styles["disabled-open"]}>
                                     <OutlineTerminalIcon />
-                                    {t("YakitCodeScanRiskDetails.open_in_code_audit")}
+                                    {t("YakitCodeScanRiskDetails.open_in_code_audit", {CodeAudit: t("YakitRoute.codeAudit")})}
                                 </div>
                             </Tooltip>
                         )}
@@ -2307,7 +2307,7 @@ interface AuditResultCollapseProps {
 
 export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.memo((props) => {
     const {data, jumpCodeScanPage, isShowExtra, collapseProps} = props
-    const {t, i18n} = useI18nNamespaces(["risk"])
+    const {t, i18n} = useI18nNamespaces(["risk", "yakitRoute"])
 
     const titleRender = (info: YakURLDataItemProps) => {
         const {index, code_range, source, ResourceName} = info
@@ -2324,7 +2324,7 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
                     </Tooltip>
                 </div>
                 {isShowExtra && (
-                    <Tooltip title={t("AuditResultCollapse.open_in_code_audit")}>
+                    <Tooltip title={t("AuditResultCollapse.open_in_code_audit", {CodeAudit: t("YakitRoute.codeAudit")})}>
                         <YakitButton
                             type='text2'
                             icon={<OutlineTerminalIcon />}

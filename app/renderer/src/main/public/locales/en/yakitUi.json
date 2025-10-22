@@ -66,7 +66,9 @@
         "debugExecution": "Debug Execution",
         "restore": "Restore",
         "share": "Share",
-        "ImportTutorial": "Import Tutorial"
+        "ImportTutorial": "Import Tutorial",
+        "disconnect": "Disconnect",
+        "connect": "Connect"
     },
     "YakitNotification": {
         "unknown_error": "Unknown Error",
@@ -96,12 +98,14 @@
         "generationFailed": "Generation failed{colon}",
         "dataFetchFailed": "Data fetch failed{colon}",
         "copySuccess": "Copied successfully",
+        "loadSuccess": "Loaded successfully",
         "loadFailed": "Load failed{colon}",
         "sendSuccess": "Sent successfully",
         "executeFailed": "Execution failed{colon}",
         "search_failed": "Search failed{colon}",
         "complete_variable_before_add": "Please complete the settings for Variable {index} before adding another one",
-        "shareFailed": "Share failed{colon}"
+        "shareFailed": "Share failed{colon}",
+        "clearFailed": "Clear failed{colon}"
     },
     "YakitFormDragger": {
         "filePath": "File Path",
@@ -156,7 +160,8 @@
     "YakitEmpty": {
         "noData": "No data available",
         "noMoreData": "No More Data",
-        "end_of_list": "You've reached the end~"
+        "end_of_list": "You've reached the end~",
+        "searchResultEmpty": "Search result is empty"
     },
     "YakitDatePicker": {
         "oneMinute": "1 Minute",
@@ -180,22 +185,38 @@
     },
     "YakitModal": {
         "friendlyReminder": "Friendly Reminder",
-        "closePrompt": "Close Prompt"
+        "closePrompt": "Close Prompt",
+        "closeMenuPrompt": "Closing the primary menu will close all secondary menus under it. Are you sure?"
+    },
+    "YakitHint": {
+        "dontRemindNextTime": "Don't remind me next time"
     },
     "YakitTag": {
         "critical": "critical",
         "high": "high",
         "warning": "warning",
         "low": "low",
-        "info": "info"
+        "info": "info",
+        "waiting": "waiting",
+        "running": "running",
+        "completed": "completed",
+        "failed": "failed",
+        "cancelled": "cancelled"
     },
     "YakitSpin": {
         "loading": "loading"
     },
     "YakitSelect": {
+        "pleaseSelect": "Please select...",
         "YakitSelectCustom": {
             "cache_field_save_error": " Error saving data in cache field:"
         }
+    },
+    "YakitCheckbox": {
+        "selectAll": "Select All"
+    },
+    "YakitProgress": {
+        "downloadedPercent": "Downloaded {percent}%"
     },
     "YakitEditor": {
         "getPlugin": "Get Plugin",

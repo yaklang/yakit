@@ -1381,6 +1381,9 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                 setSelectGroup={(group) =>
                                     onDetailFilter(convertGroupParam({...getFilters()}, {group}))
                                 }
+                                onRefreshList={() => {
+                                    fetchList(true)
+                                }}
                             />
                         }
                         checked={allChecked}

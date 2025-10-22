@@ -3,5 +3,17 @@
     "dataExport": "Data Export",
     "pageNumber": "Page {page}",
     "totalItems": "Total {total} items"
+  },
+  "JsonFormWrapper": {
+    "EditableCell": {
+      "pleaseEnter": "Please enter",
+      "thisField": "this field"
+    },
+    "EditTable": {
+      "parseTableFailed": "Failed to parse table:",
+      "currentRowValidationFailed": "Current row validation failed",
+      "maxLimitReached": "Maximum limit reached {maxItems}",
+      "addRow": "Add a row of data"
+    }
   }
 }

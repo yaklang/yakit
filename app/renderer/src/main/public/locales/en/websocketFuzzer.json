@@ -1,0 +1,23 @@
+{
+  "WebsocketClientOperator": {
+    "connectionEstablished": "Connection Established",
+    "connectionNotEstablished": "Connection Not Established",
+    "setExtraParams": "Set Extra Params",
+    "setProxy": "Set Proxy",
+    "setTimeoutSeconds": "Set Timeout (s)",
+    "confirmCloseWebSocket": "Are you sure you want to close the WebSocket connection?",
+    "buildingWebSocketConnection": "Building WebSocket Connection",
+    "sendData": "Send Data",
+    "sendToServer": "Send to Server",
+    "request": "Request",
+    "response": "Response"
+  },
+  "WebsocketFlowViewer": {
+    "websocketFramePreview": "Websocket Data Frame Live Preview",
+    "serverResponse": "Server Response",
+    "clientRequest": "Client Request",
+    "frameDetails": "Frame Details",
+    "dataSize": "Data Size:",
+    "selectWebSocketDataFrame": "Select Websocket Data Frame to view details"
+  }
+}

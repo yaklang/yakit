@@ -6,6 +6,7 @@ import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {Tooltip} from "antd"
 import styles from "./UpdateGroupList.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface UpdateGroupListItem {
     groupName: string
@@ -21,6 +22,7 @@ interface UpdateGroupListProps {
 
 export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef((props, ref) => {
     const {originGroupList, onOk, onCanle} = props
+    const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
     const [groupList, setGroupList] = useState<UpdateGroupListItem[]>([])
     const [searchFlag, setSearchFlag] = useState<boolean>(false)
     const [searchVal, setSearchVal] = useState<string>("")
@@ -39,20 +41,6 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
         }),
         [groupList]
     )
-
-    const getTextWidth = (text: string) => {
-        const tempElement = document.createElement("span")
-        tempElement.style.cssText = `
-          display: inline-block;
-          font-size: 14px;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-      `
-        tempElement.textContent = text
-        document.body.appendChild(tempElement)
-        const width = tempElement.clientWidth
-        document.body.removeChild(tempElement)
-        return width
-    }
 
     const onSearch = useMemoizedFn((groupName: string) => {
         if (groupName) {
@@ -117,12 +105,10 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
 
     return (
         <div className={styles["add-group-list-wrap"]}>
-            <div className={styles["search-heard-text"]}>
-                勾选表示加入组，取消勾选则表示移出组，创建新分组直接在输入框输入名称回车即可。
-            </div>
+            <div className={styles["search-heard-text"]}>{t("UpdateGroupList.groupCheckboxTip")}</div>
             <div className={styles["search-heard"]}>
                 <YakitInput
-                    placeholder='添加到组...'
+                    placeholder={t("UpdateGroupList.addToGroup")}
                     value={searchVal}
                     size='middle'
                     prefix={<OutlineSearchIcon className='search-icon' />}
@@ -143,22 +129,20 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
                     ? addGroupList.length
                         ? addGroupList.map((item) => (
                               <div className={styles["group-list-item"]} key={item.groupName}>
-                                  <Tooltip
-                                      title={getTextWidth(`新增分组 “${item.groupName}"`) > 204 ? item.groupName : ""}
-                                  >
+                                  <Tooltip title={`${t("UpdateGroupList.newGroup")} “${item.groupName}"`}>
                                       <YakitCheckbox
                                           wrapperClassName={styles["group-name-wrap"]}
                                           checked={item.checked}
                                           onChange={(e) => onCheckedChange(e.target.checked, item.groupName, true)}
                                       >
-                                          新增分组 “{item.groupName}"
+                                          {t("UpdateGroupList.newGroup")} “{item.groupName}"
                                       </YakitCheckbox>
                                   </Tooltip>
                               </div>
                           ))
                         : searchGroupList.map((item) => (
                               <div className={styles["group-list-item"]} key={item.groupName}>
-                                  <Tooltip title={getTextWidth(item.groupName) > 204 ? item.groupName : ""}>
+                                  <Tooltip title={item.groupName}>
                                       <YakitCheckbox
                                           wrapperClassName={styles["group-name-wrap"]}
                                           checked={item.checked}
@@ -171,7 +155,7 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
                           ))
                     : groupList.map((item) => (
                           <div className={styles["group-list-item"]} key={item.groupName}>
-                              <Tooltip title={getTextWidth(item.groupName) > 204 ? item.groupName : ""}>
+                              <Tooltip title={item.groupName}>
                                   <YakitCheckbox
                                       wrapperClassName={styles["group-name-wrap"]}
                                       checked={item.checked}
@@ -186,10 +170,10 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
             <div className={styles["add-group-footer"]}>
                 <div className={styles["add-group-footer-btns"]}>
                     <YakitButton type='outline2' onClick={onCanle}>
-                        取消
+                        {t("YakitButton.cancel")}
                     </YakitButton>
                     <YakitButton type='primary' onClick={onOk}>
-                        确认
+                        {t("YakitButton.confirm")}
                     </YakitButton>
                 </div>
             </div>

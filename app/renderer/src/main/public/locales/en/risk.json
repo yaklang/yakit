@@ -80,7 +80,7 @@
   "YakitCodeScanRiskDetails": {
     "project": "Project:",
     "discovery_time_colon": "Discovery Time:",
-    "open_in_code_audit": "Open in Code Audit",
+    "open_in_code_audit": "Open in {CodeAudit}",
     "related_data_deleted": "Related data has been deleted"
   },
   "AuditResultDescribe": {
@@ -102,6 +102,6 @@
     "solution": "Solution"
   },
   "AuditResultCollapse": {
-    "open_in_code_audit": "Open in Code Audit"
+    "open_in_code_audit": "Open in {CodeAudit}"
   }
 }

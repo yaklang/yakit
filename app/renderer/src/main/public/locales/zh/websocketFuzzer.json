@@ -1,0 +1,23 @@
+{
+  "WebsocketClientOperator": {
+    "connectionEstablished": "已建立连接",
+    "connectionNotEstablished": "连接未建立",
+    "setExtraParams": "设置额外参数",
+    "setProxy": "设置代理",
+    "setTimeoutSeconds": "设置超时（s）",
+    "confirmCloseWebSocket": "确定要关闭 WebSocket 连接吗？",
+    "buildingWebSocketConnection": "正在构建 WebSocket 连接",
+    "sendData": "发送数据",
+    "sendToServer": "发送到服务器",
+    "request": "请求",
+    "response": "响应"
+  },
+  "WebsocketFlowViewer": {
+    "websocketFramePreview": "Websocket 数据帧实时预览",
+    "serverResponse": "服务器响应",
+    "clientRequest": "客户端请求",
+    "frameDetails": "数据帧详情",
+    "dataSize": "数据大小：",
+    "selectWebSocketDataFrame": "选择 Websocket Data Frame 以查看详情"
+  }
+}

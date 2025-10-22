@@ -57,7 +57,7 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
         onSetBeautifyTrigger,
         traceInfo
     } = props
-    const {t, i18n} = useI18nNamespaces(["history"])
+    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
     return (
         <div className={styles["autoForward-manual"]}>
             {width > 900 && (
@@ -77,7 +77,7 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
             >
                 <div className={styles["manual-select"]}>
                     <div className={styles["manual-select-label"]} style={{minWidth: 60}}>
-                        标注颜色:
+                        {t("MITMManualHeardExtra.labelColor")}
                     </div>
                     <YakitSelect
                         size='small'
@@ -88,7 +88,7 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                         }}
                     >
                         <YakitSelect.Option value={""}>
-                            <div style={{paddingLeft: 20}}>无</div>
+                            <div style={{paddingLeft: 20}}>{t("MITMManualHeardExtra.none")}</div>
                         </YakitSelect.Option>
                         {availableColors.map((item) => (
                             <YakitSelect.Option value={item.searchWord} key={item.searchWord}>
@@ -103,11 +103,11 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                         size='small'
                         onClick={() => onSetBeautifyTrigger(!beautifyTriggerRefresh)}
                     >
-                        美化
+                        {t("YakitButton.beautify")}
                     </YakitButton>
                 </div>
                 <div className={styles["manual-select"]}>
-                    <span className={styles["manual-select-label"]}>劫持响应:</span>
+                    <span className={styles["manual-select-label"]}>{t("MITMManualHeardExtra.hijackResponse")}</span>
                     <YakitSwitch
                         checked={hijackResponseType === "all"}
                         onChange={(val: boolean) => {
@@ -122,10 +122,10 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                     disabled={status === "hijacking"}
                     onClick={() => onDiscardRequest()}
                 >
-                    丢弃数据
+                    {t("MITMManualHeardExtra.discardData")}
                 </YakitButton>
                 <YakitButton disabled={status === "hijacking"} onClick={() => onSubmitData(true)}>
-                    提交数据
+                    {t("MITMManualHeardExtra.submitData")}
                 </YakitButton>
             </div>
         </div>
@@ -143,10 +143,12 @@ interface ManualUrlInfoProps {
 }
 export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) => {
     const {urlInfo, ipInfo, status, currentIsWebsocket, currentIsForResponse, className, traceInfo} = props
+    const {t, i18n} = useI18nNamespaces(["mitm"])
+
     return (
         <div className={classNames(styles["autoForward-manual-urlInfo"], className)}>
             <div className={classNames(styles["manual-url-info"], "content-ellipsis")}>
-                {status === "hijacking" ? "目标：监听中..." : `目标：${urlInfo}`}
+                {status === "hijacking" ? t("ManualUrlInfo.targetListening") : `${t("ManualUrlInfo.target")}${urlInfo}`}
             </div>
             {ipInfo && status !== "hijacking" && (
                 <>
@@ -168,7 +170,7 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
                     }}
                     size='small'
                 >
-                    Websocket {currentIsForResponse ? "响应" : "请求"}
+                    Websocket {currentIsForResponse ? t("ManualUrlInfo.response") : t("ManualUrlInfo.request")}
                 </YakitTag>
             ) : currentIsForResponse && status !== "hijacking" ? (
                 <YakitTag
@@ -181,7 +183,7 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
                     }}
                     size='small'
                 >
-                    HTTP 响应
+                    {t("ManualUrlInfo.httpResponse")}
                 </YakitTag>
             ) : (
                 <>
@@ -195,7 +197,7 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
                         }}
                         size='small'
                     >
-                        HTTP 请求
+                        {t("ManualUrlInfo.httpRequest")}
                     </YakitTag>
                 </>
             )}
@@ -257,6 +259,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         requestPacket,
         beautifyTriggerRefresh
     } = props
+    const {t, i18n} = useI18nNamespaces(["mitm"])
     // 操作系统类型
     const [system, setSystem] = useState<string>()
 
@@ -270,16 +273,16 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 {type: "divider"},
                 {
                     key: "trigger-auto-hijacked",
-                    label: "切换为自动劫持模式",
+                    label: t("MITMManualEditor.switchToAutoHijackMode"),
                     keybindings: YakEditorOptionShortcutKey.TriggerAutoHijacked
                 },
                 {
                     key: "forward-response",
-                    label: "放行该 HTTP Response"
+                    label: t("MITMManualEditor.allowThisHttpResponse")
                 },
                 {
                     key: "drop-response",
-                    label: "丢弃该 HTTP Response"
+                    label: t("MITMManualEditor.discardThisHttpResponse")
                 }
             ]
             return {
@@ -308,21 +311,21 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 {type: "divider"},
                 {
                     key: "trigger-auto-hijacked",
-                    label: "切换为自动劫持模式",
+                    label: t("MITMManualEditor.switchToAutoHijackMode"),
                     keybindings: YakEditorOptionShortcutKey.TriggerAutoHijacked
                 },
                 {
                     key: "forward-response",
-                    label: "放行该 HTTP Response",
+                    label: t("MITMManualEditor.allowThisHttpResponse"),
                     keybindings: YakEditorOptionShortcutKey.ForwardResponse
                 },
                 {
                     key: "drop-response",
-                    label: "丢弃该 HTTP Response"
+                    label: t("MITMManualEditor.discardThisHttpResponse")
                 },
                 {
                     key: "hijack-current-response",
-                    label: "劫持该 Request 对应的响应"
+                    label: t("MITMManualEditor.hijackResponseOfRequest")
                 }
             ]
 
@@ -354,12 +357,12 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 }
             }
         }
-    }, [forResponse, autoForward, currentPacketId])
+    }, [forResponse, autoForward, currentPacketId, i18n.language])
 
     return (
         <NewHTTPPacketEditor
             defaultHttps={isHttp}
-            url={urlInfo === "监听中..." ? "" : urlInfo}
+            url={urlInfo === t("MITMManualEditor.listening") ? "" : urlInfo}
             originValue={currentPacket}
             noHeader={true}
             isResponse={currentPacket.substring(0, 5).startsWith("HTTP/")}

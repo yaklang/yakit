@@ -59,5 +59,17 @@
   },
   "VulnerabilitiesRisksTable": {
     "risks_and_vulnerabilities": "Risks and Vulnerabilities"
+  },
+  "UpdateGroupList": {
+    "groupCheckboxTip": "Check to add to a group, uncheck to remove from a group. To create a new group, type the name in the input box and press Enter.",
+    "addToGroup": "Add to Group...",
+    "newGroup": "New Group"
+  },
+  "DelGroupConfirmPop": {
+    "deleteGroup": "Delete Group",
+    "confirmDeletePluginGroup": "Are you sure you want to delete plugin group \"{groupName}\"?"
+  },
+  "ExtraParamsNodeByType": {
+    "parameterGroup": "Parameter Group:"
   }
 }

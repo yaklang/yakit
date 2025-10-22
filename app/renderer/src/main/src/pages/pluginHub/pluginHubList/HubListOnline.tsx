@@ -731,6 +731,9 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                         onDetailFilter(convertGroupParam({...getFilters()}, {group}))
                                     }
                                     isShowGroupMagBtn={false}
+                                    onRefreshList={() => {
+                                        fetchList(true)
+                                    }}
                                 />
                             }
                             checked={allChecked}

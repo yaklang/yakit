@@ -97,7 +97,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             hijackFilterFlag,
             setAutoForward
         } = props
-        const {t, i18n} = useI18nNamespaces(["history"])
+        const {t, i18n} = useI18nNamespaces(["history", "mitm", "yakitUi"])
         const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
         const [currentSelectItem, setCurrentSelectItem, getCurrentSelectItem] =
@@ -163,7 +163,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             if (autoForward !== "manual" && value.ManualHijackListAction) {
                 if (hijackFilterFlag) {
                     setAutoForward("manual")
-                    yakitNotify("info", "已触发 条件 劫持")
+                    yakitNotify("info", t("MITMManual.triggeredConditionalHijack"))
                 }
             }
             const hijackData = value.ManualHijackList[0]
@@ -316,9 +316,9 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                 switch (rowData.Status) {
                     case ManualHijackListStatus.Hijacking_Request:
                     case ManualHijackListStatus.WaitHijack:
-                        return "请求"
+                        return t("MITMManual.request")
                     case ManualHijackListStatus.Hijacking_Response:
-                        return "响应"
+                        return t("MITMManual.response")
                     default:
                         return ""
                 }
@@ -327,30 +327,32 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             let menu = [
                 {
                     key: "submit-data",
-                    label: `放行${getStatusStr()}`
+                    label: t("MITMManual.releaseWithStatus", {getStatusStr: getStatusStr()})
                 },
                 {
                     key: "hijacking-response",
-                    label: "劫持响应"
+                    label: t("MITMManual.hijackResponseAction")
                 },
                 {
                     key: "copy-url",
-                    label: "复制 URL"
+                    label: t("HTTPFlowTable.RowContextMenu.copyURL")
                 },
                 {
                     key: "discard-data",
-                    label: `丢弃${getStatusStr()}`
+                    label: t("MITMManual.discardWithStatus", {getStatusStr: getStatusStr()})
                 },
                 {
                     key: "send-webFuzzer",
-                    label: "发送到 Web Fuzzer",
+                    label: t("HTTPFlowTable.RowContextMenu.sendToWebFuzzer"),
                     children: [
                         // SystemInfo
                         {
                             key: "send-and-jump-to-webFuzzer",
                             label: (
                                 <div className={styles["context-menu-keybind-wrapper"]}>
-                                    <div className={styles["content-style"]}>发送并跳转</div>
+                                    <div className={styles["content-style"]}>
+                                        {t("HTTPFlowTable.RowContextMenu.sendAndRedirect")}
+                                    </div>
                                     <div className={classNames(styles["keybind-style"], "keys-style")}>
                                         {convertKeyboardToUIKey(
                                             getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer]
@@ -364,7 +366,9 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                             key: "send-to-webFuzzer",
                             label: (
                                 <div className={styles["context-menu-keybind-wrapper"]}>
-                                    <div className={styles["content-style"]}>仅发送</div>
+                                    <div className={styles["content-style"]}>
+                                        {t("HTTPFlowTable.RowContextMenu.sendOnly")}
+                                    </div>
                                     <div className={classNames(styles["keybind-style"], "keys-style")}>
                                         {convertKeyboardToUIKey(
                                             getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys
@@ -377,7 +381,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                 },
                 {
                     key: "mark-color",
-                    label: "标注颜色",
+                    label: t("HTTPFlowTable.RowContextMenu.tagColor"),
                     children: availableColors.map((i) => {
                         return {
                             key: i.title,
@@ -387,7 +391,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                 },
                 {
                     key: "remove-color",
-                    label: "移除颜色"
+                    label: t("HTTPFlowTable.RowContextMenu.removeColor")
                 }
             ]
             if (rowData.Status !== ManualHijackListStatus.Hijacking_Request) {
@@ -515,12 +519,12 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         const columns: ColumnsTypeProps[] = useCreation(() => {
             return [
                 {
-                    title: "到达顺序",
+                    title: t("MITMManual.arrivalOrder"),
                     dataKey: "arrivalOrder",
                     width: 120
                 },
                 {
-                    title: "状态",
+                    title: t("MITMManual.status"),
                     dataKey: "Status",
                     render: (value: ManualHijackListStatus) => {
                         let icon = <></>
@@ -537,7 +541,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                         }
                         return (
                             <div className={styles["mitm-v2-manual-table-status"]}>
-                                {ManualHijackListStatusMap[value]}
+                                {ManualHijackListStatusMap(t)[value]}
                                 {icon}
                             </div>
                         )
@@ -545,7 +549,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                     width: 120
                 },
                 {
-                    title: "方法",
+                    title: t("MITMManual.method"),
                     dataKey: "Method",
                     width: 80
                 },
@@ -554,7 +558,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                     dataKey: "URL"
                 },
                 {
-                    title: "标记颜色",
+                    title: t("MITMManual.markColor"),
                     dataKey: "Tags",
                     width: 200,
                     render: (text) => {
@@ -567,7 +571,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                     }
                 }
             ]
-        }, [])
+        }, [i18n.language])
         const onlyShowFirstNode = useCreation(() => {
             return !(data.length && currentSelectItem && currentSelectItem.TaskID)
         }, [currentSelectItem, data.length])
@@ -1158,6 +1162,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         isResponse,
         isOnlyLookResponse
     } = props
+    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
     const {currentPacket, requestPacket} = currentPacketInfo
     const [modifiedPacket, setModifiedPacket] = useControllableValue<string>(props, {
         valuePropName: "modifiedPacket",
@@ -1182,22 +1187,22 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
             {type: "divider"},
             {
                 key: "trigger-auto-hijacked",
-                label: "切换为自动劫持模式",
+                label: t("MITMV2ManualEditor.switchToAutoHijackMode"),
                 keybindings: YakEditorOptionShortcutKey.TriggerAutoHijacked
             },
             {
                 key: "submit-data",
-                label: "放行数据"
+                label: t("MITMV2ManualEditor.allowData")
             },
             {
                 key: "drop-data",
-                label: "丢弃数据"
+                label: t("MITMV2ManualEditor.discardData")
             }
         ]
         if (!forResponse) {
             menu.push({
                 key: "hijack-current-response",
-                label: "劫持该响应"
+                label: t("MITMV2ManualEditor.hijackThisResponse")
             })
         }
         return {
@@ -1223,7 +1228,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                 }
             }
         }
-    }, [forResponse, info, modifiedPacket])
+    }, [forResponse, info, modifiedPacket, i18n.language])
 
     const onHijackCurrentResponse = useMemoizedFn(() => {
         if (info.Status === ManualHijackListStatus.WaitHijack) {
@@ -1260,7 +1265,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                             },
                             {
                                 value: "render",
-                                label: "渲染"
+                                label: t("MITMV2ManualEditor.render")
                             }
                         ])
                     }
@@ -1329,11 +1334,11 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                                 value={type}
                                 options={[
                                     {
-                                        label: "请求",
+                                        label: t("MITMV2ManualEditor.request"),
                                         value: "request"
                                     },
                                     {
-                                        label: "响应",
+                                        label: t("MITMV2ManualEditor.response"),
                                         value: "response"
                                     }
                                 ]}
@@ -1353,7 +1358,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                         </YakitTag>
                         <div className={styles["mitm-v2-manual-editor-title"]}>
                             <YakitTag color='green' size='small'>
-                                {ManualHijackListStatusMap[info.Status]}
+                                {ManualHijackListStatusMap(t)[info.Status]}
                             </YakitTag>
                         </div>
                         {isResponse && (
@@ -1392,7 +1397,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                                     index:{info.arrivalOrder}
                                 </YakitTag>
                                 <YakitTag color='green' size='small'>
-                                    {ManualHijackListStatusMap[info.Status]}
+                                    {ManualHijackListStatusMap(t)[info.Status]}
                                 </YakitTag>
                             </div>
                         )}
@@ -1411,7 +1416,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                                         size='small'
                                         onClick={onHijackCurrentResponse}
                                     >
-                                        劫持响应
+                                        {t("MITMV2ManualEditor.hijackResponseAction")}
                                     </YakitButton>
                                 )}
                                 <YakitButton
@@ -1420,7 +1425,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                                     size='small'
                                     onClick={() => onDiscardData && onDiscardData(info)}
                                 >
-                                    丢弃
+                                    {t("MITMV2ManualEditor.discard")}
                                 </YakitButton>
                                 <YakitButton
                                     disabled={btnDisable}
@@ -1428,13 +1433,13 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                                     size='small'
                                     onClick={() => onSubmitData && onSubmitData(info)}
                                 >
-                                    放行
+                                    {t("MITMV2ManualEditor.allow")}
                                 </YakitButton>
                             </>
                         )}
                         <>
                             <YakitButton type='primary' size='small' onClick={onSetBeautify}>
-                                美化
+                                {t("YakitButton.beautify")}
                             </YakitButton>
                             <div>
                                 {renderAndHexTypeOptions.map((item) => (

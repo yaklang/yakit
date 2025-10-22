@@ -54,6 +54,7 @@ import {DelGroupConfirmPop} from "@/pages/pluginHub/group/PluginOperationGroupLi
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -132,6 +133,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         hasParamsCheckList,
         curTabKey = ""
     } = props
+    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
 
     const [vlistHeigth, setVListHeight] = useState(0)
     const [initialTotal, setInitialTotal] = useState<number>(0) //初始插件总数
@@ -193,24 +195,24 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         if (Number(total) === 0 && (tags.length > 0 || searchKeyword || fieldKeywords || groupNames.length > 0)) {
             return (
                 <div className={style["mitm-plugin-empty"]}>
-                    <YakitEmpty title={null} description='搜索结果“空”' />
+                    <YakitEmpty title={null} description={t("YakitEmpty.searchResultEmpty")} />
                 </div>
             )
         }
         if (Number(initialTotal) === 0) {
             return (
                 <div className={style["mitm-plugin-empty"]}>
-                    <YakitEmpty description='可一键获取官方云端插件，或导入外部插件源' />
+                    <YakitEmpty description={t("MITMPluginLocalList.getOrImportPluginsTip")} />
                     <div className={style["mitm-plugin-buttons"]}>
                         <YakitButton
                             type='outline1'
                             icon={<CloudDownloadIcon />}
                             onClick={() => setVisibleOnline(true)}
                         >
-                            获取云端插件
+                            {t("MITMPluginLocalList.getCloudPlugins")}
                         </YakitButton>
                         <YakitButton type='outline1' icon={<ImportIcon />} onClick={() => setVisibleImport(true)}>
-                            导入插件源
+                            {t("MITMPluginLocalList.importPluginSource")}
                         </YakitButton>
                     </div>
                 </div>
@@ -345,6 +347,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
         isRereshLocalPluginList = true,
         getContainer
     } = props
+    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
     const taskToken = useMemo(() => randomString(40), [])
     const [percent, setPercent] = useState<number>(0)
     useEffect(() => {
@@ -367,7 +370,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
         })
         ipcRenderer.on(`${taskToken}-error`, (_, e) => {
             onRefLocalPluginList()
-            yakitNotify("error", "下载失败:" + e)
+            yakitNotify("error", t("YakitNotification.downloadFailed", {colon: true}) + e)
         })
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
@@ -385,13 +388,13 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
                 .invoke("DownloadOnlinePlugins", addParams, taskToken)
                 .then(() => {})
                 .catch((e) => {
-                    failed(`下载失败:${e}`)
+                    failed(`${t("YakitNotification.downloadFailed", {colon: true})}${e}`)
                 })
         }
     }, [visible])
     const StopAllPlugin = () => {
         ipcRenderer.invoke("cancel-DownloadOnlinePlugins", taskToken).catch((e) => {
-            failed(`停止下载:${e}`)
+            failed(`${t("YakitGetOnlinePlugin.stopDownload")}${e}`)
             onRefLocalPluginList()
         })
     }
@@ -402,7 +405,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
     return (
         <YakitHint
             visible={visible}
-            title={`${getReleaseEditionName()} 云端插件下载中...`}
+            title={`${getReleaseEditionName()} ${t("YakitGetOnlinePlugin.cloudPluginDownloading")}`}
             heardIcon={<SolidCloudDownloadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
             onCancel={() => {
                 StopAllPlugin()
@@ -418,7 +421,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
                 strokeColor='var(--Colors-Use-Main-Primary)'
                 trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={percent}
-                format={(percent) => `已下载 ${percent}%`}
+                format={(percent) => t("YakitProgress.downloadedPercent", {percent: percent || 0})}
             />
         </YakitHint>
     )
@@ -520,12 +523,20 @@ interface YakModuleListHeardProps {
     length: number
     loading?: boolean
     isHasParams: boolean
+    status: MitmStatus
 }
 export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo((props) => {
-    const {isSelectAll, onSelectAll, setIsSelectAll, total, length, loading, isHasParams} = props
+    const {isSelectAll, onSelectAll, setIsSelectAll, total, length, loading, isHasParams, status} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     useEffect(() => {
-        if (length > 0 && !isHasParams) setIsSelectAll(length == total)
-    }, [total, length, isHasParams])
+        if (status === "idle") {
+            setIsSelectAll(length == total)
+        } else {
+            if (!isHasParams) {
+                setIsSelectAll(length == total)
+            }
+        }
+    }, [total, length, isHasParams, status])
     return (
         <div className={style["mitm-plugin-list-heard"]}>
             {!isHasParams && (
@@ -536,7 +547,7 @@ export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo(
                         onChange={(e) => onSelectAll(e.target.checked)}
                         disabled={loading}
                     />
-                    <span className={style["mitm-plugin-list-check-text"]}>全选</span>
+                    <span className={style["mitm-plugin-list-check-text"]}>{t("YakitCheckbox.selectAll")}</span>
                 </div>
             )}
             <div className={style["mitm-plugin-list-tip"]}>
@@ -629,6 +640,7 @@ interface PluginGroupProps {
     total?: number
     checkedPlugin?: string[]
     onClickMagFun?: () => void
+    onRefreshList?: () => void
 }
 export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
     const {
@@ -642,8 +654,10 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
         pluginListQuery,
         allChecked = false,
         total = 0,
-        checkedPlugin = []
+        checkedPlugin = [],
+        onRefreshList
     } = props
+    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
 
     const [visible, setVisible] = useState<boolean>(false)
     /**
@@ -660,17 +674,21 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
     const updateGroupListRef = useRef<any>()
     const [groupList, setGroupList] = useState<UpdateGroupListItem[]>([]) // 组数据
 
+    const delGroupConfirmPopRef = useRef<any>()
+    const [delGroupConfirmPopVisible, setDelGroupConfirmPopVisible] = useState<boolean>(false)
+    const [delGroup, setDelGroup] = useState<YakFilterRemoteObj>() // 删除插件组
+
     useDebounceEffect(
         () => {
             if (inViewport) {
-                getGroupList()
+                getGroupList(false)
             }
         },
         [inViewport, compareExcludeType, isMITMParamPlugins],
         {wait: 500}
     )
 
-    const getGroupList = () => {
+    const getGroupList = (refresh: boolean) => {
         if (isOnline) {
             apiFetchQueryYakScriptGroupOnlineNotLoggedIn().then((res: API.GroupResponse) => {
                 const copyGroup = structuredClone(res.data || [])
@@ -681,7 +699,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                         total: item.total
                     }))
                 setPlugGroup(data)
-                filterSelectGroup(data)
+                filterSelectGroup(data, refresh)
             })
         } else {
             apiFetchQueryYakScriptGroupLocal(false, excludeType, isMITMParamPlugins).then((group: GroupCount[]) => {
@@ -691,18 +709,20 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                     total: item.Total
                 }))
                 setPlugGroup(data)
-                filterSelectGroup(data)
+                filterSelectGroup(data, refresh)
             })
         }
     }
 
-    const filterSelectGroup = (data: YakFilterRemoteObj[]) => {
+    const filterSelectGroup = (data: YakFilterRemoteObj[], refresh: boolean) => {
         const groupNameSet = new Set(data.map((obj) => obj.name))
         // 当选中的组在所有插件组中不存在 更新选中组
         const index = selectGroup.findIndex((item) => !groupNameSet.has(item.name))
         if (index != -1) {
             const newSelectGroup = selectGroup.filter((item) => groupNameSet.has(item.name))
             setSelectGroup(newSelectGroup)
+        } else if (refresh) {
+            onRefreshList?.()
         }
     }
 
@@ -782,22 +802,24 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                 if (removeGroup.length) {
                     yakitNotify(
                         "success",
-                        `${allChecked ? total : query.IncludedScriptNames?.length}个插件已从“${removeGroup.join(
-                            ","
-                        )}”组移除`
+                        t("PluginGroup.pluginsRemovedFromGroup", {
+                            value1: allChecked ? total : query.IncludedScriptNames?.length,
+                            value2: removeGroup.join(",")
+                        })
                     )
                 }
                 const addGroup: string[] = checkedGroup.filter((item) => !originCheckedGroup.includes(item))
                 if (addGroup.length) {
                     yakitNotify(
                         "success",
-                        `${allChecked ? total : query.IncludedScriptNames?.length}个插件已添加至“${addGroup.join(
-                            ","
-                        )}”组`
+                        t("PluginGroup.pluginsAddedToGroup", {
+                            value1: allChecked ? total : query.IncludedScriptNames?.length,
+                            value2: addGroup.join(",")
+                        })
                     )
                 }
                 if (removeGroup.length || addGroup.length) {
-                    getGroupList()
+                    getGroupList(true)
                 }
             })
         } else {
@@ -808,19 +830,40 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                 if (removeGroup.length) {
                     yakitNotify(
                         "success",
-                        `${allChecked ? total : query.uuid.length}个插件已从“${removeGroup.join(",")}”组移除`
+                        t("PluginGroup.pluginsRemovedFromGroup", {
+                            value1: allChecked ? total : query.uuid.length,
+                            value2: removeGroup.join(",")
+                        })
                     )
                 }
                 const addGroup: string[] = checkedGroup.filter((item) => !originCheckedGroup.includes(item))
                 if (addGroup.length) {
                     yakitNotify(
                         "success",
-                        `${allChecked ? total : query.uuid.length}个插件已添加至“${addGroup.join(",")}”组`
+                        t("PluginGroup.pluginsAddedToGroup", {
+                            value1: allChecked ? total : query.uuid.length,
+                            value2: addGroup.join(",")
+                        })
                     )
                 }
                 if (removeGroup.length || addGroup.length) {
-                    getGroupList()
+                    getGroupList(true)
                 }
+            })
+        }
+    })
+
+    const onDelGroup = useMemoizedFn((item, delOk) => {
+        if (!isOnline) {
+            apiFetchDeleteYakScriptGroupLocal(item.name).then(() => {
+                delOk()
+                getGroupList(false)
+            })
+        } else {
+            const params: PluginGroupDel = {group: item.name}
+            apiFetchDeleteYakScriptGroupOnline(params).then(() => {
+                delOk()
+                getGroupList(false)
             })
         }
     })
@@ -839,29 +882,18 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                             if (!newName || newName === item.name) return
                             if (!isOnline) {
                                 apiFetchRenameYakScriptGroupLocal(item.name, newName).then(() => {
-                                    getGroupList()
+                                    getGroupList(false)
                                 })
                             } else {
                                 const params: PluginGroupRename = {group: item.name, newGroup: newName}
                                 apiFetchRenameYakScriptGroupOnline(params).then(() => {
-                                    getGroupList()
+                                    getGroupList(false)
                                 })
                             }
                         }}
-                        onDelGroup={(item, delOk) => {
-                            if (!isOnline) {
-                                apiFetchDeleteYakScriptGroupLocal(item.name).then(() => {
-                                    delOk()
-                                    getGroupList()
-                                })
-                            } else {
-                                const params: PluginGroupDel = {group: item.name}
-                                apiFetchDeleteYakScriptGroupOnline(params).then(() => {
-                                    delOk()
-                                    getGroupList()
-                                })
-                            }
-                        }}
+                        onDelGroup={onDelGroup}
+                        setDelGroupConfirmPopVisible={setDelGroupConfirmPopVisible}
+                        setDelGroup={setDelGroup}
                         closePluginGroupList={() => setVisible(false)}
                     />
                 }
@@ -875,7 +907,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                     })}
                 >
                     <FolderOpenIcon />
-                    <span>插件组</span>
+                    <span>{t("PluginGroup.pluginGroup")}</span>
                     <div className={style["mitm-plugin-group-number"]}>{pugGroup.length}</div>
                     {(visible && <ChevronUpIcon className={style["chevron-down"]} />) || (
                         <ChevronDownIcon className={style["chevron-down"]} />
@@ -904,10 +936,30 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                     }}
                 >
                     <YakitButton type='text' disabled={!checkedPlugin.length && !allChecked}>
-                        添加分组
+                        {t("PluginGroup.addGroup")}
                     </YakitButton>
                 </YakitPopover>
             )}
+            <DelGroupConfirmPop
+                ref={delGroupConfirmPopRef}
+                visible={delGroupConfirmPopVisible}
+                onCancel={() => {
+                    setDelGroup(undefined)
+                    setDelGroupConfirmPopVisible(false)
+                }}
+                delGroupName={delGroup?.name || ""}
+                onOk={() => {
+                    if (!delGroup) return
+                    onDelGroup(delGroup, () => {
+                        setDelGroup(undefined)
+                        setRemoteValue(
+                            RemoteGV.PluginGroupDelNoPrompt,
+                            delGroupConfirmPopRef.current.delGroupConfirmNoPrompt + ""
+                        )
+                        setDelGroupConfirmPopVisible(false)
+                    })
+                }}
+            ></DelGroupConfirmPop>
         </div>
     )
 })
@@ -943,6 +995,7 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
         inputSize,
         selectModuleTypeSize
     } = props
+    const {t, i18n} = useI18nNamespaces(["mitm"])
     const [searchType, setSearchType] = useState<PluginSearchType>("FieldKeywords")
     const [afterModuleType, setAfterModuleType] = useState<"input" | "select">("input")
     const [allTag, setAllTag] = useState<TagValue[]>([])
@@ -957,7 +1010,7 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
                 .then((res) => {
                     setAllTag(res.Tag.map((item) => ({Name: item.Value, Total: item.Total})))
                 })
-                .catch((e) => failed("获取插件组失败:" + e))
+                .catch((e) => failed(t("PluginSearch.getPluginGroupFailed") + e))
                 .finally(() => {})
         }
     }, [searchType])
@@ -1011,11 +1064,11 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
             beforeOptionWidth={92}
             addonBeforeOption={[
                 {
-                    label: "关键字",
+                    label: t("PluginSearch.keyword"),
                     value: "FieldKeywords"
                 },
                 {
-                    label: "全文搜索",
+                    label: t("PluginSearch.fullTextSearch"),
                     value: "Keyword"
                 },
                 {
@@ -1078,6 +1131,8 @@ interface PluginGroupListProps {
     setSelectGroup: (p: YakFilterRemoteObj[]) => void
     onEditInputBlur: (p: YakFilterRemoteObj, newName: string) => void
     onDelGroup: (p: YakFilterRemoteObj, delOk: () => void) => void
+    setDelGroupConfirmPopVisible: (v: boolean) => void
+    setDelGroup: (p: YakFilterRemoteObj) => void
     closePluginGroupList: () => void
 }
 const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
@@ -1089,13 +1144,12 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
         setSelectGroup,
         onEditInputBlur,
         onDelGroup,
+        setDelGroupConfirmPopVisible,
+        setDelGroup,
         closePluginGroupList
     } = props
     const [newName, setNewName] = useState<string>("") // 插件组新名字
     const [editGroup, setEditGroup] = useState<string>("")
-    const delGroupConfirmPopRef = useRef<any>()
-    const [delGroupConfirmPopVisible, setDelGroupConfirmPopVisible] = useState<boolean>(false)
-    const [delGroup, setDelGroup] = useState<YakFilterRemoteObj>() // 删除插件组
 
     useEffect(() => {
         setNewName(editGroup)
@@ -1118,7 +1172,7 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
 
     return (
         <div className={style["plugin-group-list"]}>
-            {pugGroup.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无数据' />}
+            {pugGroup.length === 0 && <YakitEmpty imageStyle={{margin: "24px auto"}} />}
             {pugGroup.map((item) => (
                 <div
                     className={classNames(style["plugin-group-item"], {
@@ -1198,26 +1252,6 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                     )}
                 </div>
             ))}
-            <DelGroupConfirmPop
-                ref={delGroupConfirmPopRef}
-                visible={delGroupConfirmPopVisible}
-                onCancel={() => {
-                    setDelGroup(undefined)
-                    setDelGroupConfirmPopVisible(false)
-                }}
-                delGroupName={delGroup?.name || ""}
-                onOk={() => {
-                    if (!delGroup) return
-                    onDelGroup(delGroup, () => {
-                        setDelGroup(undefined)
-                        setRemoteValue(
-                            RemoteGV.PluginGroupDelNoPrompt,
-                            delGroupConfirmPopRef.current.delGroupConfirmNoPrompt + ""
-                        )
-                        setDelGroupConfirmPopVisible(false)
-                    })
-                }}
-            ></DelGroupConfirmPop>
         </div>
     )
 })

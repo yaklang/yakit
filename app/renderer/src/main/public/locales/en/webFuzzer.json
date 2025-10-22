@@ -1,17 +1,15 @@
 {
-  "WebFuzzer": {
-    "ShareImport": {
-      "shareNeedPassword": "This share requires a password!",
-      "passwordVerifyFailed": "Password verification failed:",
-      "getShareDataFailed": "Failed to get share data:",
-      "openWebFuzzerFailed": "Failed to open Web Fuzzer:",
-      "saveHttpHistoryShareFailed": "Failed to save HttpHistory share data:",
-      "shareId": "Share ID",
-      "pleaseEnterShareId": "Please enter the share ID",
-      "password": "Password",
-      "pleaseEnterPassword": "Please enter the password",
-      "thisFieldIsRequired": "This field is required"
-    }
+  "ShareImport": {
+    "shareNeedPassword": "This share requires a password!",
+    "passwordVerifyFailed": "Password verification failed:",
+    "getShareDataFailed": "Failed to get share data:",
+    "openWebFuzzerFailed": "Failed to open {WebFuzzer}:",
+    "saveHttpHistoryShareFailed": "Failed to save HttpHistory share data:",
+    "shareId": "Share ID",
+    "pleaseEnterShareId": "Please enter the share ID",
+    "password": "Password",
+    "pleaseEnterPassword": "Please enter the password",
+    "thisFieldIsRequired": "This field is required"
   },
   "WebFuzzerPage": {
     "config": "Config",
@@ -59,7 +57,6 @@
     "getGeneratedFileClickToOpen": "Get generated file (click to open file location)"
   },
   "HTTPFuzzerPage": {
-    "closeMenuPrompt": "Closing the primary menu will close all secondary menus under it. Are you sure?",
     "clearOldDataFailed": "Failed to clear old data:",
     "wfHistoryDataRestoreFailed": "Failed to restore WF history data:",
     "fuzzTestRequestFailed": "Failed to submit fuzz test request:",
@@ -71,7 +68,7 @@
     "view_all_suffix": "to view all data",
     "advanced_filter_suggestion": "For advanced filtering, multi-condition combined queries, or other complex operations, it is recommended to click and jump to ",
     "performAction": " to perform the action",
-    "webFuzzerDemo": "WebFuzzer Brute-Force Animation Demo",
+    "webFuzzerDemo": "{WebFuzzer} Brute-Force Animation Demo",
     "bruteForceExample": "Brute-Force Example",
     "followRedirects": "Follow Redirects",
     "generatePathTemplate": "Generate as Path Template",
@@ -119,7 +116,7 @@
     "extractData": "Extract Data",
     "matchOnly": "Match Only",
     "matchOnlyConfirm": "The 'Match Only' operation will end the paused state. Are you sure you want to proceed?",
-    "noWebFuzzerResponse": "No Web Fuzzer Response available for extraction",
+    "noWebFuzzerResponse": "No {WebFuzzer} Response available for extraction",
     "extractResponseData": "Extract Response Data",
     "exportData": "Export Data",
     "exportAll": "Export All",
@@ -198,7 +195,7 @@
     "resetHotReloadWarning": "Clicking this button will reset the hot reload code. Code may be lost. Please proceed with caution.",
     "expandEditor": "Expand Editor",
     "sharedHotReloadCode": "Shared Hot Reload Code",
-    "webFuzzerHotReloadNotice": "When enabled, all WebFuzzer tabs will share the current hot reload code, but this only applies to newly created tabs.",
+    "webFuzzerHotReloadNotice": "When enabled, all {WebFuzzer} tabs will share the current hot reload code, but this only applies to newly created tabs.",
     "updateAndSaveTemplate": "Update current template and save",
     "saveTemplate": "Save Template",
     "enableSuccess": "Enabled successfully",
@@ -615,19 +612,19 @@
     "select_after_configuring_sequence": "Please configure the sequence before making a selection",
     "please_select_page": "Please select a page",
     "allTraffic": "All Traffic",
-    "webfuzzer_sequence_demo": "WebFuzzer Sequence Animation Demo",
+    "webfuzzer_sequence_demo": "{WebFuzzer} Sequence Animation Demo",
     "official_documentation": "Official Help Documentation",
     "sequence_configuration": "Sequence Configuration",
     "add_node": "Add Node",
     "force_stop": "Force Stop",
     "config": "Config",
-    "select_webfuzzer_with_sequence_tip": "Please select Web Fuzzer (if you need to use a sequence, please drag other tabs into this group)"
+    "select_webfuzzer_with_sequence_tip": "Please select {WebFuzzer} (if you need to use a sequence, please drag other tabs into this group)"
   },
   "FuzzerConcurrency": {
     "add_node": "Add",
     "select_after_configuring_concurrency": "Please configure the concurrency before making a selection",
     "execute_after_concurrency": "Please configure the concurrency before executing",
-    "select_webfuzzer_with_concurrency_tip": "Please select Web Fuzzer (if you need to use a concurrency, please drag other tabs into this group)" 
+    "select_webfuzzer_with_concurrency_tip": "Please select {WebFuzzer} (if you need to use a concurrency, please drag other tabs into this group)" 
   },
   "SequenceItem": {
     "variable": "Variable",

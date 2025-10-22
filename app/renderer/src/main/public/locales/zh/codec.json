@@ -1,0 +1,45 @@
+{
+  "NewCodec": {
+    "confirmSaveTemplateUpdate": "是否保存更新当前模板",
+    "unrecognizedData": "未识别数据"
+  },
+  "NewCodecLeftDragList": {
+    "codecCategory": "{Codec} 分类",
+    "collapseCodecCategory": "收起 {Codec} 分类",
+    "myFavoriteTools": "我收藏的工具"
+  },
+  "NewCodecMiddleRunList": {
+    "dragCodecFromList": "请从左侧列表拖入要使用的 {Codec} 工具",
+    "pleaseEnterName": "请输入名字",
+    "duplicateHistoryName": "已存在同名历史记录，请修改名称",
+    "saveSuccess": "存储成功",
+    "expandCodecCategory": "展开 {Codec} 分类",
+    "codecOrder": "编解码顺序",
+    "saveUpdate": "保存更新",
+    "historyStorage": "历史存储",
+    "autoExecute": "自动执行",
+    "executeNow": "立即执行",
+    "saveCodecOrder": "保存编解码顺序",
+    "enterCodecOrderName": "请为编解码顺序取个名字...",
+    "requiredField": "：为必填项",
+    "validationFailed": "：校验不通过"
+  },
+  "CodecRunListHistoryStore": {
+    "historyStorage": "历史存储"
+  },
+  "NewCodecMiddleTypeItem": {
+    "enableBreakpoint": "开启断点",
+    "disableBreakpoint": "关闭断点"
+  },
+  "NewCodecRightEditorBox": {
+    "noSavedContent": "暂无保存内容",
+    "selectFolder": "请选择文件夹",
+    "wordWrap": "自动换行",
+    "noWordWrap": "不自动换行",
+    "replaceOutputToInput": "将Output替换至Input",
+    "oversizedInput": "超大输入",
+    "hexOriginal": "hex原文",
+    "oversizedOutputTip": "超大输出，请点击保存下载文件查看",
+    "dataDistortion": "数据失真"
+  }
+}

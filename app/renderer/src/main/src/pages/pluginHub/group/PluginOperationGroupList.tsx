@@ -24,6 +24,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {API} from "@/services/swagger/resposeType"
 import {isEnpriTraceAgent} from "@/utils/envfile"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface PluginOperationGroupListRefProps {
     groupList: GroupListItem[]
@@ -272,6 +273,7 @@ interface DelGroupConfirmPopProps {
 }
 export const DelGroupConfirmPop: React.FC<DelGroupConfirmPopProps> = React.forwardRef((props, ref) => {
     const {visible, onCancel, onOk, delGroupName} = props
+    const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
     const [delGroupConfirmNoPrompt, setDelGroupConfirmNoPrompt] = useState<boolean>(false)
 
     useEffect(() => {
@@ -291,15 +293,15 @@ export const DelGroupConfirmPop: React.FC<DelGroupConfirmPopProps> = React.forwa
     return (
         <YakitHint
             visible={visible}
-            title='删除组'
-            content={`是否确认删除插件组 “${delGroupName}”`}
+            title={t("DelGroupConfirmPop.deleteGroup")}
+            content={t("DelGroupConfirmPop.confirmDeletePluginGroup", {groupName: delGroupName})}
             footerExtra={
                 <YakitCheckbox
                     value={delGroupConfirmNoPrompt}
                     checked={delGroupConfirmNoPrompt}
                     onChange={(e) => setDelGroupConfirmNoPrompt(e.target.checked)}
                 >
-                    下次不再提醒
+                    {t("YakitHint.dontRemindNextTime")}
                 </YakitCheckbox>
             }
             onOk={onOk}

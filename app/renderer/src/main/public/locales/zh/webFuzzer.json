@@ -1,17 +1,15 @@
 {
-  "WebFuzzer": {
-    "ShareImport": {
-      "shareNeedPassword": "该分享需要输入密码!",
-      "passwordVerifyFailed": "密码验证失败：",
-      "getShareDataFailed": "获取分享数据失败：",
-      "openWebFuzzerFailed": "打开 Web Fuzzer 失败：",
-      "saveHttpHistoryShareFailed": "储存 HttpHistory 分享数据失败：",
-      "shareId": "分享id",
-      "pleaseEnterShareId": "请输入分享id",
-      "password": "密码",
-      "pleaseEnterPassword": "请输入密码",
-      "thisFieldIsRequired": "该项为必填"
-    }
+  "ShareImport": {
+    "shareNeedPassword": "该分享需要输入密码!",
+    "passwordVerifyFailed": "密码验证失败：",
+    "getShareDataFailed": "获取分享数据失败：",
+    "openWebFuzzerFailed": "打开 {WebFuzzer} 失败：",
+    "saveHttpHistoryShareFailed": "储存 HttpHistory 分享数据失败：",
+    "shareId": "分享id",
+    "pleaseEnterShareId": "请输入分享id",
+    "password": "密码",
+    "pleaseEnterPassword": "请输入密码",
+    "thisFieldIsRequired": "该项为必填"
   },
   "WebFuzzerPage": {
     "config": "配置",
@@ -59,7 +57,6 @@
     "getGeneratedFileClickToOpen": "获取生成的文件（点击打开文件位置）"
   },
   "HTTPFuzzerPage": {
-    "closeMenuPrompt": "关闭一级菜单会关闭一级菜单下的所有二级菜单？",
     "clearOldDataFailed": "清空老数据失败：",
     "wfHistoryDataRestoreFailed": "WF历史数据恢复失败：",
     "fuzzTestRequestFailed": "提交模糊测试请求失败：",
@@ -71,7 +68,7 @@
     "view_all_suffix": "查看所有数据",
     "advanced_filter_suggestion": "需要进行高级筛选，多条件组合查询或其他复杂操作时，建议点击跳转到",
     "performAction": "进行操作",
-    "webFuzzerDemo": "WebFuzzer 爆破动画演示",
+    "webFuzzerDemo": "{WebFuzzer} 爆破动画演示",
     "bruteForceExample": "爆破示例",
     "followRedirects": "跟随重定向",
     "generatePathTemplate": "生成为 Path 模板",
@@ -119,7 +116,7 @@
     "extractData": "提取数据",
     "matchOnly": "仅匹配",
     "matchOnlyConfirm": "操作仅匹配会结束暂停状态，是否确定操作？",
-    "noWebFuzzerResponse": "无 Web Fuzzer Response 以供提取信息",
+    "noWebFuzzerResponse": "无 {WebFuzzer} Response 以供提取信息",
     "extractResponseData": "提取响应数据",
     "exportData": "导出数据",
     "exportAll": "导出所有",
@@ -198,7 +195,7 @@
     "resetHotReloadWarning": "点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作",
     "expandEditor": "扩大编辑器",
     "sharedHotReloadCode": "共用热加载代码",
-    "webFuzzerHotReloadNotice": "打开以后webfuzzer标签将共用当前热加载代码，但只对新建标签页生效",
+    "webFuzzerHotReloadNotice": "打开以后{WebFuzzer}标签将共用当前热加载代码，但只对新建标签页生效",
     "updateAndSaveTemplate": "更新当前模板并保存",
     "saveTemplate": "保存模板",
     "enableSuccess": "启用成功",
@@ -615,19 +612,19 @@
     "select_after_configuring_sequence": "请配置序列后再选中",
     "please_select_page": "请选择页面",
     "allTraffic": "全部流量",
-    "webfuzzer_sequence_demo": "WebFuzzer 序列动画演示",
+    "webfuzzer_sequence_demo": "{WebFuzzer} 序列动画演示",
     "official_documentation": "官方帮助文档",
     "sequence_configuration": "序列配置",
     "add_node": "添加节点",
     "force_stop": "强制停止",
     "config": "配置",
-    "select_webfuzzer_with_sequence_tip": "请选择 Web Fuzzer（如需使用序列，请将其他标签页拖入该分组）"
+    "select_webfuzzer_with_sequence_tip": "请选择 {WebFuzzer}（如需使用序列，请将其他标签页拖入该分组）"
   },
   "FuzzerConcurrency": {
     "add_node": "添加",
     "select_after_configuring_concurrency": "请配置并发后再选中",
     "execute_after_concurrency": "请配置并发后再执行",
-    "select_webfuzzer_with_concurrency_tip": "请选择 Web Fuzzer（如需使用并发，请将其他标签页拖入该分组）"
+    "select_webfuzzer_with_concurrency_tip": "请选择 {WebFuzzer}（如需使用并发，请将其他标签页拖入该分组）"
   },
   "SequenceItem": {
     "variable": "变量",

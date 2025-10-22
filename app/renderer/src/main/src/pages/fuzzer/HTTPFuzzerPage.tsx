@@ -928,8 +928,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             close: {
                 title: t("YakitModal.closePrompt"),
                 content: (
-                    <div style={{ color: "var(--Colors-Use-Neutral-Text-3-Secondary)" }}>
-                        {t("HTTPFuzzerPage.closeMenuPrompt")}
+                    <div style={{color: "var(--Colors-Use-Neutral-Text-3-Secondary)"}}>
+                        {t("YakitModal.closeMenuPrompt")}
                     </div>
                 ),
                 onOkText: t("YakitButton.ok"),
@@ -2279,7 +2279,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 onClick={() => {
                                     const m = showYakitModal({
                                         type: "white",
-                                        title: t("HTTPFuzzerPage.webFuzzerDemo"),
+                                        title: t("HTTPFuzzerPage.webFuzzerDemo", {WebFuzzer: t("YakitRoute.WebFuzzer")}),
                                         width: 480,
                                         content: <BlastingAnimationAemonstration></BlastingAnimationAemonstration>,
                                         footer: null,
@@ -2786,7 +2786,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         cancelCurrentHTTPFuzzer,
         onShowAll
     } = props
-    const { t, i18n } = useI18nNamespaces(["webFuzzer", "history", "yakitUi"])
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "history", "yakitUi", "yakitRoute"])
     const [color, setColor] = useState<string[]>()
     const [keyWord, setKeyWord] = useState<string>()
     const [statusCode, setStatusCode] = useState<string>()
@@ -3223,7 +3223,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         onClick={() => {
                             if (successFuzzer.length === 0) {
                                 showYakitModal({
-                                    title: t("SecondNodeExtra.noWebFuzzerResponse"),
+                                    title: t("SecondNodeExtra.noWebFuzzerResponse", {WebFuzzer: t("YakitRoute.WebFuzzer")}),
                                     content: <></>,
                                     footer: null
                                 })
@@ -3243,7 +3243,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             onClick={() => {
                                 if (successFuzzer.length === 0) {
                                     showYakitModal({
-                                        title: t("SecondNodeExtra.noWebFuzzerResponse"),
+                                        title: t("SecondNodeExtra.noWebFuzzerResponse", {WebFuzzer: t("YakitRoute.WebFuzzer")}),
                                         content: <></>,
                                         footer: null
                                     })

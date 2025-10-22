@@ -72,6 +72,7 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {YakitRoute} from "@/enums/yakitRoute"
 import {useTheme} from "@/hook/useTheme"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1392,8 +1393,8 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
     })
     const {theme} = useTheme()
 
-    const YakitEditor = useMemo(() => {
-        return <YakEditor type={plugin.Type} value={plugin.Content} readOnly={true} />
+    const YakitEditorMemo = useMemo(() => {
+        return <YakitEditor type={plugin.Type} value={plugin.Content} readOnly={true} />
     }, [plugin.Content, plugin.Type, theme])
 
     return (
@@ -1414,7 +1415,7 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
             <YakitPopover
                 placement='topRight'
                 overlayClassName={style["terminal-popover"]}
-                content={YakitEditor}
+                content={YakitEditorMemo}
                 onVisibleChange={(v) => {
                     if (v && !plugin.Content) {
                         if (getScriptInfo) getScriptInfo(plugin)

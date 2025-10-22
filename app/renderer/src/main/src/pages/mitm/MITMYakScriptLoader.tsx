@@ -31,7 +31,6 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {SolidDotsverticalIcon, SolidLightningboltIcon} from "@/assets/icon/solid"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {YakEditor} from "@/utils/editors"
 import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -43,6 +42,9 @@ import UnLogin from "@/assets/unLogin.png"
 import {pluginTypeToName} from "../plugins/builtInData"
 import MITMContext from "./Context/MITMContext"
 import {grpcMITMClearPluginCache, grpcMITMRemoveHook, MITMRemoveHookRequest} from "./MITMHacker/utils"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -65,6 +67,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         hasParamsCheckList,
         curTabKey
     } = p
+    const {t, i18n} = useI18nNamespaces(["mitm"])
     const mitmContent = useContext(MITMContext)
 
     const mitmVersion = useCreation(() => {
@@ -222,7 +225,13 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     }, [showPluginHistoryList])
     const historyIcon = useMemo(() => {
         return (
-            <Tooltip title={showPluginHistoryList.includes(i.ScriptName) ? "取消查看该插件流量" : "查看该插件流量"}>
+            <Tooltip
+                title={
+                    showPluginHistoryList.includes(i.ScriptName)
+                        ? t("MITMYakScriptLoader.cancelViewPluginTraffic")
+                        : t("MITMYakScriptLoader.viewPluginTraffic")
+                }
+            >
                 <OutlileHistoryIcon
                     style={{marginLeft: curTabKey === "loaded" ? 4 : 12, marginRight: curTabKey === "loaded" ? 12 : 0}}
                     className={classNames(style["history-icon"], {
@@ -253,7 +262,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                 />
             </Tooltip>
         )
-    }, [i, showPluginHistoryList])
+    }, [i, showPluginHistoryList, i18n.language, curTabKey])
 
     const onHistoryTagToMitm = (data: string) => {
         try {
@@ -277,7 +286,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         return (
             <YakitPopconfirm
                 disabled={!p.onSendToPatch}
-                title='发送到【热加载】中调试代码？'
+                title={t("MITMYakScriptLoader.sendToHotReloadForDebug")}
                 onConfirm={() => {
                     if (!i.Content) {
                         getScriptInfo(i, true)
@@ -292,7 +301,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                 />
             </YakitPopconfirm>
         )
-    }, [i, p])
+    }, [i, p, i18n.language, curTabKey])
 
     const authorImgNode = useMemo(() => {
         const {IsCorePlugin, Type, HeadImg, OnlineOfficial} = i
@@ -372,7 +381,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                                     <YakitPopover
                                         placement='right'
                                         overlayClassName={style["terminal-popover"]}
-                                        content={<YakEditor type={i.Type} value={i.Content} readOnly={true} />}
+                                        content={<YakitEditor type={i.Type} value={i.Content} readOnly={true} />}
                                         onVisibleChange={(v) => {
                                             if (v && !i.Content) {
                                                 getScriptInfo(i)
@@ -382,7 +391,9 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                                     >
                                         <div className={style["extra-menu"]}>
                                             <OutlineTerminalIcon className={style["plugin-local-icon"]} />
-                                            <div className={style["menu-name"]}>源码</div>
+                                            <div className={style["menu-name"]}>
+                                                {t("MITMYakScriptLoader.sourceCode")}
+                                            </div>
                                         </div>
                                     </YakitPopover>
                                 )
@@ -402,7 +413,9 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                                     >
                                         <div className={style["extra-menu"]}>
                                             <OutlineQuestionmarkcircleIcon className={style["plugin-local-icon"]} />
-                                            <div className={style["menu-name"]}>帮助信息</div>
+                                            <div className={style["menu-name"]}>
+                                                {t("MITMYakScriptLoader.helpInfo")}
+                                            </div>
                                         </div>
                                     </Tooltip>
                                 )
@@ -489,7 +502,7 @@ export interface MITMYakScriptLoaderProps {
 
 export function clearMITMPluginCache(version: string) {
     grpcMITMClearPluginCache(version).catch((e) => {
-        failed(`清除插件缓存失败: ${e}`)
+        failed(`${i18n.language === "zh" ? "清除插件缓存失败：" : "Failed to clear plugin cache:"}${e}`)
     })
 }
 
@@ -518,6 +531,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
         onSetDrawerWidth,
         onSetMitmParamsDrawer
     } = props
+    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
     const mitmContent = useContext(MITMContext)
 
     const mitmVersion = useCreation(() => {
@@ -558,7 +572,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
                         className='content-ellipsis'
                         style={{maxWidth: `calc(${vwToPx(Math.max(minWidth, drawerWidth))}px - 150px)`}}
                     >
-                        参数设置：
+                        {t("MitmHasParamsDrawer.parameterSettings")}
                         <Tooltip title={i.ScriptName}>{`${i.ScriptName}`}</Tooltip>
                     </div>
                     <Space>
@@ -568,7 +582,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
                                 onSetMitmParamsDrawer(false)
                             }}
                         >
-                            取消
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton
                             onClick={() => {
@@ -599,7 +613,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
                                 }
                             }}
                         >
-                            确定
+                            {t("YakitButton.ok")}
                         </YakitButton>
                     </Space>
                 </div>
@@ -655,6 +669,7 @@ interface MitmHasParamsFormProps {
 }
 const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) => {
     const {initFormValue, requiredParams, groupParams} = props
+    const {t, i18n} = useI18nNamespaces(["mitm"])
     const [form] = Form.useForm()
     const jsonSchemaListRef = useRef<{
         [key: string]: any
@@ -677,7 +692,7 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
                     setTimeout(() => {
                         const result = getJsonSchemaListResult(jsonSchemaListRef.current)
                         if (result.jsonSchemaError.length > 0) {
-                            failed(`jsonSchema校验失败`)
+                            failed(t("MitmHasParamsForm.jsonSchemaValidationFailed"))
                             return
                         }
                         result.jsonSchemaSuccess.forEach((item) => {

@@ -102,7 +102,7 @@
     "keyword": "关键字",
     "request": "请求",
     "response": "响应",
-    "fuzzSearchExplanation": "Yakit的搜索功能只要是调用了后端FuzzSearch其实都是用的LIKE搜索，这导致用户如果想搜索`email_`这样的文本需要手动转义"
+    "fuzzSearchExplanation": "{Yakit}的搜索功能只要是调用了后端FuzzSearch其实都是用的LIKE搜索，这导致用户如果想搜索`email_`这样的文本需要手动转义"
   },
   "EditTagsModal": {
     "editTag": "编辑tag",
@@ -206,9 +206,6 @@
     "fontSize": "字号",
     "fullScreen": "全屏",
     "showLineBreaks": "是否显示换行符"
-  },
-  "DataCompareModal": {
-    "codeCompare": "代码对比"
   },
   "WebsocketFrameHistory": {
     "websocket_data_frame": "Websocket 数据帧",

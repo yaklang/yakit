@@ -66,7 +66,9 @@
         "debugExecution": "调试执行",
         "restore": "复原",
         "share": "分享",
-        "ImportTutorial": "导入教程"
+        "ImportTutorial": "导入教程",
+        "disconnect": "断开",
+        "connect": "连接"
     },
     "YakitNotification": {
         "unknown_error": "未知错误",
@@ -96,12 +98,14 @@
         "generationFailed": "生成失败{colon}",
         "dataFetchFailed": "数据获取失败{colon}",
         "copySuccess": "复制成功",
+        "loadSuccess": "加载成功",
         "loadFailed": "加载失败{colon}",
         "sendSuccess": "发送成功",
         "executeFailed": "执行失败{colon}",
         "search_failed": "搜索失败{colon}",
         "complete_variable_before_add": "请将已添加【变量{index}】设置完成后再进行添加",
-        "shareFailed": "分享失败{colon}"
+        "shareFailed": "分享失败{colon}",
+        "clearFailed": "清空失败{colon}"
     },
     "YakitFormDragger": {
         "filePath": "文件路径",
@@ -156,7 +160,8 @@
     "YakitEmpty": {
         "noData": "暂无数据",
         "noMoreData": "暂无更多数据",
-        "end_of_list": "已经到底啦～"
+        "end_of_list": "已经到底啦～",
+        "searchResultEmpty": "搜索结果“空”"
     },
     "YakitDatePicker": {
         "oneMinute": "1分钟",
@@ -180,22 +185,38 @@
     },
     "YakitModal": {
         "friendlyReminder": "温馨提示",
-        "closePrompt": "关闭提示"
+        "closePrompt": "关闭提示",
+        "closeMenuPrompt": "关闭一级菜单会关闭一级菜单下的所有二级菜单？"
+    },
+    "YakitHint": {
+        "dontRemindNextTime": "下次不再提醒"
     },
     "YakitTag": {
         "critical": "严重",
         "high": "高危",
         "warning": "中危",
         "low": "低危",
-        "info": "信息"
+        "info": "信息",
+        "waiting": "等待中",
+        "running": "执行中",
+        "completed": "完成",
+        "failed": "失败",
+        "cancelled": "取消"
     },
     "YakitSpin": {
         "loading": "加载中"
     },
     "YakitSelect": {
+        "pleaseSelect": "请选择...",
         "YakitSelectCustom": {
             "cache_field_save_error": "缓存字段保存失败："
         }
+    },
+    "YakitCheckbox": {
+        "selectAll": "全选"
+    },
+    "YakitProgress": {
+        "downloadedPercent": "已下载 {percent}%"
     },
     "YakitEditor": {
         "getPlugin": "获取插件",

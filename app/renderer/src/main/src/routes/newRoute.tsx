@@ -732,11 +732,23 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 </Suspense>
             )
         case YakitRoute.WebsocketFuzzer:
-            return <WebsocketFuzzer pageId={params?.id || ""} />
+            return (
+                <Suspense fallback={<PageLoading />}>
+                    <WebsocketFuzzer pageId={params?.id || ""} />
+                </Suspense>
+            )
         case YakitRoute.Codec:
-            return <NewCodec id={params?.id || ""} />
+            return (
+                <Suspense fallback={<PageLoading />}>
+                    <NewCodec id={params?.id || ""} />
+                </Suspense>
+            )
         case YakitRoute.DataCompare:
-            return <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
+            return (
+                <Suspense fallback={<PageLoading />}>
+                    <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
+                </Suspense>
+            )
         case YakitRoute.Mod_ScanPort:
             return <NewPortScan id={params?.id || ""} />
         case YakitRoute.PoC:

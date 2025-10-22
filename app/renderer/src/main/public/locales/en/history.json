@@ -102,7 +102,7 @@
     "keyword": "Keyword",
     "request": "Request",
     "response": "Response",
-    "fuzzSearchExplanation": "In Yakit, the search feature uses a LIKE search whenever calling the backend FuzzSearch. This means users need to manually escape text like `email_`."
+    "fuzzSearchExplanation": "In {Yakit}, the search feature uses a LIKE search whenever calling the backend FuzzSearch. This means users need to manually escape text like `email_`."
   },
   "EditTagsModal": {
     "editTag": "Edit Tag",
@@ -120,7 +120,7 @@
   },
   "HTTPFlowTableFormConfiguration": {
     "saveAdvancedConfigAndClose": "Do you want to save the advanced configuration and close the pop-up window?",
-    "advancedFilter": "Advanced Filter",
+    "advancedFilter": "Filter",
     "filterMode": "Filter Mode",
     "blockedContent": "Blocked Content",
     "displayOnly": "Display Only",
@@ -206,9 +206,6 @@
     "fontSize": "Font Size",
     "fullScreen": "Full Screen",
     "showLineBreaks": "Show line breaks"
-  },
-  "DataCompareModal": {
-    "codeCompare": "Code Compare"
   },
   "WebsocketFrameHistory": {
     "websocket_data_frame": "Websocket Data Frame",

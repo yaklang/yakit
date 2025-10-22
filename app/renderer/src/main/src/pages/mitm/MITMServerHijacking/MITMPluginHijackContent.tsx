@@ -55,6 +55,7 @@ import {useStore} from "@/store/mitmState"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const PluginTrace = React.lazy(() => import("./PluginTrace/PluginTrace"))
 
 const {ipcRenderer} = window.require("electron")
@@ -62,7 +63,7 @@ const {ipcRenderer} = window.require("electron")
 type tabKeys = "all" | "loaded" | "hot-patch" | "trace" | "tun-hijack"
 interface TabsItem {
     key: tabKeys
-    label: ReactElement | string
+    label: (t: (keys: string) => string) => ReactElement | string
     contShow: boolean
 }
 
@@ -147,6 +148,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         tempShowPluginHistory = "",
         setTempShowPluginHistory
     } = props
+    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
 
     const mitmContent = useContext(MITMContext)
 
@@ -158,27 +160,47 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     const [mitmTabs, setMitmTabs] = useState<Array<TabsItem>>([
         {
             key: "all",
-            label: "全部",
+            label: (t) => (
+                <>
+                    <span className={styles["tab-item-text"]}>{t("MITMPluginHijackContent.all")}</span>
+                </>
+            ),
             contShow: true // 初始为true
         },
         {
             key: "loaded",
-            label: "已启用",
+            label: (t) => (
+                <>
+                    <span className={styles["tab-item-text"]}>{t("MITMPluginHijackContent.enabled")}</span>
+                </>
+            ),
             contShow: false // 初始为false
         },
         {
             key: "hot-patch",
-            label: "热加载",
+            label: (t) => (
+                <>
+                    <span className={styles["tab-item-text"]}>{t("MITMPluginHijackContent.hotReload")}</span>
+                </>
+            ),
             contShow: false // 初始为false
         },
         {
             key: "trace",
-            label: "插件追踪",
+            label: (t) => (
+                <>
+                    <span className={styles["tab-item-text"]}>{t("MITMPluginHijackContent.pluginTracking")}</span>
+                </>
+            ),
             contShow: false // 初始为false
         },
         {
             key: "tun-hijack",
-            label: "Tun劫持",
+            label: (t) => (
+                <>
+                    <span className={styles["tab-item-text"]}>Tun劫持</span>
+                </>
+            ),
             contShow: false // 初始为false
         }
     ])
@@ -337,12 +359,12 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
             initPluginNames: checkList,
             version: mitmVersion
         }).then(() => {
-            info("启动 MITM 插件成功")
+            info(t("MITMPluginHijackContent.startMitmPluginSuccess"))
         })
     }
     const updateHooks = useMemoizedFn(() => {
         grpcMITMGetCurrentHook(mitmVersion).catch((e) => {
-            yakitFailed(`更新 MITM 插件状态失败: ${e}`)
+            yakitFailed(`${t("MITMPluginHijackContent.updateMitmPluginStatusFailed")}${e}`)
         })
     })
 
@@ -356,7 +378,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         setScript(s)
         handleTabClick({
             key: "hot-patch",
-            label: "热加载",
+            label: (t) => (
+                <>
+                    <span className={styles["tab-item-text"]}>{t("MITMPluginHijackContent.hotReload")}</span>
+                </>
+            ),
             contShow: false
         })
     })
@@ -365,10 +391,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         ipcRenderer
             .invoke("SaveYakScript", script)
             .then((data: YakScript) => {
-                yakitNotify("success", `保存本地插件成功`)
+                yakitNotify("success", t("MITMPluginHijackContent.saveLocalPluginSuccess"))
             })
             .catch((e: any) => {
-                yakitNotify("error", `保存插件失败:` + e)
+                yakitNotify("error", t("MITMPluginHijackContent.savePluginFailed") + e)
             })
     })
 
@@ -404,10 +430,16 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                 }
             })
             .then((res) => {
-                yakitNotify("success", "更新模板 " + tempNameRef.current + " 成功")
+                yakitNotify(
+                    "success",
+                    t("MITMPluginHijackContent.updateTemplateSuccess", {tempName: tempNameRef.current})
+                )
             })
             .catch((error) => {
-                yakitNotify("error", "更新模板 " + tempNameRef.current + " 失败：" + error)
+                yakitNotify(
+                    "error",
+                    t("MITMPluginHijackContent.updateTemplateFailed", {tempName: tempNameRef.current}) + error
+                )
             })
     })
 
@@ -429,7 +461,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                             }}
                         ></HotCodeTemplate>
                         <div className={styles["hot-patch-heard-extra"]}>
-                            <Tooltip placement='bottom' title='引擎Console'>
+                            <Tooltip placement='bottom' title={t("MITMPluginHijackContent.engineConsole")}>
                                 <YakitButton
                                     type='text'
                                     onClick={openConsoleNewWindow}
@@ -438,7 +470,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                 ></YakitButton>
                             </Tooltip>
                             <YakitPopconfirm
-                                title={"确认重置热加载代码？"}
+                                title={t("MITMPluginHijackContent.confirmResetHotReloadCode")}
                                 onConfirm={() => {
                                     tempNameRef.current = ""
                                     setScript(HotLoadDefaultData)
@@ -449,7 +481,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                     <OutlineRefreshIcon />
                                 </YakitButton>
                             </YakitPopconfirm>
-                            <Tooltip title='更新当前模板并保存' placement='top'>
+                            <Tooltip title={t("MITMPluginHijackContent.updateAndSaveCurrentTemplate")} placement='top'>
                                 <YakitButton
                                     disabled={!script.Content || !tempNameRef.current}
                                     type='text'
@@ -457,7 +489,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                     icon={<OutlineFileUpIcon />}
                                 ></YakitButton>
                             </Tooltip>
-                            <Tooltip placement='top' title='另存为新模板'>
+                            <Tooltip placement='top' title={t("MITMPluginHijackContent.saveAsNewTemplate")}>
                                 <YakitButton
                                     type='text'
                                     icon={<OutlineStoreIcon />}
@@ -466,7 +498,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                             </Tooltip>
                             <AddHotCodeTemplate
                                 type='mitm'
-                                title='另存为'
+                                title={t("YakitButton.save_as")}
                                 hotPatchTempLocal={hotPatchTempLocal}
                                 hotPatchCode={script.Content}
                                 visible={addHotCodeTemplateVisible}
@@ -488,11 +520,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                         }
                                         grpcMITMRemoveHook(value).then(() => {
                                             setHotStatus("end")
-                                            info("停止成功")
+                                            info(t("MITMPluginHijackContent.stopSuccess"))
                                         })
                                     }}
                                 >
-                                    停止
+                                    {t("YakitButton.stop")}
                                 </YakitButton>
                             ) : (
                                 <YakitButton
@@ -506,18 +538,18 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                         grpcMITMExecScriptContent(value)
                                             .then(() => {
                                                 setHotStatus("success")
-                                                info("加载成功")
+                                                info(t("YakitNotification.loadSuccess"))
                                                 if (!script.Id) {
                                                     setRemoteValue(RemoteGV.MITMHotPatchCodeSave, script.Content)
                                                 }
                                             })
                                             .catch((e) => {
                                                 setHotStatus("failed")
-                                                yakitFailed("加载失败：" + e)
+                                                yakitFailed(t("YakitNotification.loadFailed", {colon: true}) + e)
                                             })
                                     }}
                                 >
-                                    热加载
+                                    {t("MITMPluginHijackContent.hotReload")}
                                 </YakitButton>
                             )}
                             {isFullScreen ? (
@@ -540,7 +572,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                 return (
                     <>
                         <YakitInput.Search
-                            placeholder='请输入插件名称搜索'
+                            placeholder={t("MITMPluginHijackContent.enterPluginNameToSearch")}
                             value={hookScriptNameSearch}
                             onChange={(e) => setHookScriptNameSearch(e.target.value)}
                             onSearch={() => setIsHooksSearch(!isHooksSearch)}
@@ -590,7 +622,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     })
     const startPluginTrace = useMemoizedFn(() => {
         if (mitmVersion === MITMVersion.V1) {
-            yakitNotify("info", "MITM 交互式劫持v1 暂不支持")
+            yakitNotify("info", t("MITMPluginHijackContent.mitmInteractiveHijackV1NotSupported"))
             return
         }
         pluginTraceActions.startPluginTrace()
@@ -708,9 +740,12 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                         {/* 用户热加载代码 */}
                         {script.Id ? (
                             <div className={styles["hot-patch-heard"]}>
-                                <span>插件名称：{script.ScriptName}</span>
+                                <span>
+                                    {t("MITMPluginHijackContent.pluginName")}
+                                    {script.ScriptName}
+                                </span>
                                 <YakitButton type='primary' onClick={() => onSaveHotCode()}>
-                                    保存源码
+                                    {t("MITMPluginHijackContent.saveSourceCode")}
                                 </YakitButton>
                             </div>
                         ) : (
@@ -739,7 +774,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                 className={styles["plugin-loaded-list-heard-empty"]}
                                 onClick={() => onSelectAll(false)}
                             >
-                                清&nbsp;空
+                                {t("YakitButton.clear")}
                             </div>
                         </div>
                         <div className={styles["plugin-loaded-hooks-list"]}>
@@ -785,7 +820,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                     <div className={styles["plugin-hijack-content-list"]}>
                         <PluginGroup
                             selectGroup={selectGroup}
-                            setSelectGroup={setSelectGroup}
+                            setSelectGroup={(group) => {
+                                onSelectAll(false)
+                                setSelectGroup(group)
+                            }}
                             excludeType={["yak", "codec", "lua", "nuclei"]}
                             wrapperClassName={styles["plugin-group"]}
                             pluginListQuery={() => {
@@ -813,6 +851,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                             total={total}
                             allChecked={isHasParams ? false : isSelectAll}
                             checkedPlugin={isHasParams ? hasParamsCheckList : isSelectAll ? [] : noParamsCheckList}
+                            onRefreshList={() => {
+                                onSelectAll(false)
+                                setTriggerSearch(!triggerSearch)
+                            }}
                         />
                         <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
                             <YakitRadioButtons
@@ -820,17 +862,18 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                 options={[
                                     {
                                         value: true,
-                                        label: "交互插件"
+                                        label: t("MITMPluginHijackContent.interactivePlugin")
                                     },
                                     {
                                         value: false,
-                                        label: "被动插件"
+                                        label: t("MITMPluginHijackContent.passivePlugin")
                                     }
                                 ]}
                                 value={isHasParams}
                                 onChange={(e) => {
                                     onIsHasParams(e.target.value)
                                 }}
+                                style={{width: i18n.language === "zh" ? undefined : 240}}
                             />
                             <YakModuleListHeard
                                 onSelectAll={onSelectAll}
@@ -840,6 +883,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                 length={isHasParams ? hasParamsCheckList.length : noParamsCheckList.length}
                                 loading={loading}
                                 isHasParams={isHasParams}
+                                status={status}
                             />
                         </div>
                         <YakitSpin spinning={loading}>
@@ -974,7 +1018,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                 handleTabClick(item)
                             }}
                         >
-                            {item.label}
+                            {item.label(t)}
                         </div>
                     ))}
                 </div>

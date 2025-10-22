@@ -6,7 +6,7 @@ import {failed, info, yakitNotify} from "@/utils/notification"
 import {useCreation, useDebounceEffect, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
-import {MITMServer} from "@/pages/mitm/MITMPage"
+import {MITMServer, TipPart} from "@/pages/mitm/MITMPage"
 import style from "./MITMServerHijacking.module.scss"
 import {QuitIcon} from "@/assets/newIcon"
 import classNames from "classnames"
@@ -56,8 +56,8 @@ export interface MITMServerHijackingProp {
     setVisible: (b: boolean) => void
     logs: ExecResultLog[]
     statusCards: StatusCardProps[]
-    tip: string
-    onSetTip: (tip: string) => void
+    tipParts?: TipPart[]
+    setTipParts?: (parts: TipPart[]) => void
     downstreamProxyStr: string
     setDownstreamProxyStr: (proxy: string) => void
     isHasParams: boolean
@@ -89,8 +89,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         setVisible,
         logs,
         statusCards,
-        tip,
-        onSetTip,
+        tipParts,
+        setTipParts,
         downstreamProxyStr,
         setDownstreamProxyStr,
         isHasParams,
@@ -100,6 +100,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         tempShowPluginHistory,
         setTempShowPluginHistory
     } = props
+    const {t, i18n} = useI18nNamespaces(["mitm"])
 
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
         (s) => ({
@@ -144,7 +145,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 initPluginNames: props.defaultPlugins || [],
                 version: mitmVersion
             }).then(() => {
-                info("启动初始 MITM 插件成功")
+                info(t("MITMServerHijacking.startInitialMitmPluginSuccess"))
             })
         }
     }, [props.enableInitialMITMPlugin, props.defaultPlugins])
@@ -201,7 +202,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 })
                 .catch((e: any) => {
                     reject(e)
-                    notification["error"]({message: `停止中间人劫持失败：${e}`})
+                    notification["error"]({message: `${t("MITMServerHijacking.stopMitmFailed")}${e}`})
                 })
                 .finally(() => {
                     // setLoading(false)
@@ -240,13 +241,9 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     const [downStreamAgentModalVisible, setDownStreamAgentModalVisible] = useState<boolean>(false)
 
     const downStreamTagClose = useMemoizedFn(() => {
-        const tipStr = tip
-            .split("|")
-            .filter((item) => !item.startsWith("下游代理"))
-            .join("|")
-        onSetTip(tipStr)
+        const newParts = (tipParts || []).filter((p) => p.key !== "downstreamProxy")
+        setTipParts && setTipParts(newParts)
         setDownstreamProxyStr("")
-        // 更新下拉缓存数据
         onGetRemoteValuesBase(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
             const cacheData = {
                 options: res.options || [],
@@ -254,7 +251,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             }
             setRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory, JSON.stringify(cacheData))
         })
-
         const proxyValue: MITMSetDownstreamProxyRequest = {
             downstreamProxy: "",
             downstreamProxyRuleId: '',
@@ -263,34 +259,56 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         grpcMITMSetDownstreamProxy(proxyValue)
     })
 
+    const mapProxyValue = (value: string) => {
+        if (value.includes("规则组")) {
+            return value.replace("规则组", t("ProxyConfig.rule_group"))
+        }
+        if (value.includes("代理节点")) {
+            return value.replace("代理节点", t("ProxyConfig.Points"))
+        }
+        return value
+    }
+
     return (
         <div className={style["mitm-server"]}>
             <div className={style["mitm-server-heard"]}>
                 <div className={style["mitm-server-title"]}>
-                    <div className={style["mitm-server-heard-name"]}>劫持 HTTP Request</div>
+                    <div className={style["mitm-server-heard-name"]}>{t("MITMServerHijacking.hijackHttpRequest")}</div>
                     <div className={classNames(style["mitm-server-heard-addr"], "content-ellipsis")}>
                         <span style={{marginRight: 8}}>{addr}</span>
-                        {tip
-                            .split("|")
-                            .filter((item) => item)
-                            .map((item) =>
-                                !item.startsWith("下游代理") ? (
-                                    <YakitTag color='success' key={item}>
-                                        {item}
-                                    </YakitTag>
-                                ) : (
-                                    <YakitTag closable={true} onClose={downStreamTagClose} key={item}>
-                                        {item}
-                                    </YakitTag>
-                                )
-                            )}
+                        {(tipParts || [])
+                            .map((p, idx) => {
+                                if (p.key === "downstreamProxy") {
+                                    return (
+                                        <YakitTag closable={true} onClose={downStreamTagClose} key={`tip-${idx}`}>
+                                            {`${t("DownStreamAgentModal.downstreamProxy")}: ${mapProxyValue(p.value as string)}`}
+                                        </YakitTag>
+                                    )
+                                }
+                                if (p.key === "onlyEnableGMTLS") {
+                                    return (
+                                        <YakitTag color='success' key={`tip-${idx}`}>
+                                            {t("MITMServerHijacking.gmTLSOnly")}
+                                        </YakitTag>
+                                    )
+                                }
+                                if (p.key === "enableProxyAuth") {
+                                    return (
+                                        <YakitTag color='success' key={`tip-${idx}`}>
+                                            {t("MITMServerHijacking.enableProxyAuth")}
+                                        </YakitTag>
+                                    )
+                                }
+                                return null
+                            })
+                            .filter(Boolean)}
                     </div>
                 </div>
                 <div className={style["mitm-server-extra"]}>
                     <div className={style["mitm-server-links"]}>
                         <div style={{display: "flex", alignItems: "center"}}>
                             <label>
-                                过滤WebSocket：
+                                {t("MITMServerHijacking.filterWebSocket")}
                                 <YakitSwitch
                                     size='middle'
                                     checked={filterWebsocket}
@@ -308,19 +326,19 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                         </div>
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
                         <div className={style["link-item"]} onClick={() => setDownStreamAgentModalVisible(true)}>
-                            下游代理
+                            {t("MITMServerHijacking.downstreamProxy")}
                         </div>
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
                         <div className={style["link-item"]} onClick={() => setVisible(true)}>
-                            规则配置
+                            {t("MITMServerHijacking.ruleConfig")}
                         </div>
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
                         <div className={style["link-item"]} onClick={() => setFiltersVisible(true)}>
-                            过滤器
+                            {t("MITMServerHijacking.filter")}
                         </div>
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
                         <div className={style["link-item"]} onClick={() => setDownloadVisible(true)}>
-                            证书下载
+                            {t("MITMServerHijacking.certificateDownload")}
                         </div>
                     </div>
                     {/*<YakitButton*/}
@@ -359,8 +377,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 }}
                 downstreamProxyStr={downstreamProxyStr}
                 setDownstreamProxyStr={setDownstreamProxyStr}
-                tip={tip}
-                onSetTip={onSetTip}
+                tipParts={tipParts}
+                setTipParts={setTipParts}
             ></DownStreamAgentModal>
             <Divider style={{margin: "8px 0"}} />
             <div className={style["mitm-server-body"]}>
@@ -396,71 +414,65 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 interface DownStreamAgentModalProp {
     downStreamAgentModalVisible: boolean
     onCloseModal: () => void
-    tip: string
-    onSetTip: (tip: string) => void
+    tipParts?: TipPart[]
+    setTipParts?: (parts: TipPart[]) => void
     setDownstreamProxyStr: (proxy: string) => void
     downstreamProxyStr: string
 }
 
 const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((props) => {
-    const {
-        downStreamAgentModalVisible,
-        downstreamProxyStr = "",
-        onCloseModal,
-        tip,
-        onSetTip,
-        setDownstreamProxyStr
-    } = props
+    const {downStreamAgentModalVisible, downstreamProxyStr = "", onCloseModal, tipParts, setTipParts, setDownstreamProxyStr} = props
+    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
     const [form] = Form.useForm()
     const mitmContent = useContext(MITMContext)
-    const {t, i18n} = useI18nNamespaces(["mitm"])
-    const {proxyRouteOptions, getProxyValue, checkProxyEndpoints, proxyConfig, comparePointUrl} = useProxy()
+    const {proxyRouteOptions, getProxyValue, checkProxyEndpoints, proxyConfig, comparePointUrl} = useProxy()    
 
     const mitmVersion = useCreation(() => {
         return mitmContent.mitmStore.version
     }, [mitmContent.mitmStore.version])
     const onOKFun = useMemoizedFn(async () => {
-        const tipArr = tip.split("|")
-
-        const downstreamProxy = form.getFieldsValue().downstreamProxy || []
-        //如果有新增的代理配置 则存配置项
-        checkProxyEndpoints(downstreamProxy)
-        const {proxyEndpoints, ProxyRuleIds} = getProxyValue(downstreamProxy)
-
-        const proxyValue: MITMSetDownstreamProxyRequest = {
-            downstreamProxy: proxyEndpoints,
-            downstreamProxyRuleId: ProxyRuleIds,
-            version: mitmVersion
-        }
-        grpcMITMSetDownstreamProxy(proxyValue)
-        if (downstreamProxy.length) {
-            const downstreamProxyName = downstreamProxy.map(
-                (item) => proxyRouteOptions.find(({value}) => value === item)?.label || item
-            )
-            if (tip.indexOf("下游代理") === -1) {
-                onSetTip(
-                    `下游代理：${downstreamProxyName.map((item) => maskProxyPassword(item))}` +
-                        (tip.indexOf("|") === 0 ? tip : `|${tip}`)
-                )
-            } else {
-                const tipStr = tipArr
-                    .map((item) => {
-                        if (item.startsWith("下游代理")) {
-                            return `下游代理：${downstreamProxyName.map((item) => maskProxyPassword(item))}`
-                        } else {
-                            return item
-                        }
-                    })
-                    .join("|")
-                onSetTip(tipStr)
+        try {
+            const existingParts = Array.isArray(tipParts) ? [...tipParts] : []
+            let downstreamProxy = form.getFieldsValue().downstreamProxy || []
+            // 保证 downstreamProxy 为数组
+            if (!Array.isArray(downstreamProxy)) {
+                downstreamProxy = downstreamProxy
+                    ? String(downstreamProxy)
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean)
+                    : []
             }
-            setDownstreamProxyStr(downstreamProxy.join(","))
-        } else {
-            const tipStr = tipArr.filter((item) => !item.startsWith("下游代理")).join("|")
-            onSetTip(tipStr)
-            setDownstreamProxyStr("")
+
+            // 如果有新增的代理配置 则存配置项
+            checkProxyEndpoints(downstreamProxy)
+            const { proxyEndpoints, ProxyRuleIds } = getProxyValue(downstreamProxy)
+
+            const proxyValue: MITMSetDownstreamProxyRequest = {
+                downstreamProxy: proxyEndpoints,
+                downstreamProxyRuleId: ProxyRuleIds,
+                version: mitmVersion
+            }
+            grpcMITMSetDownstreamProxy(proxyValue)
+
+            if (downstreamProxy.length) {
+                // 更新或新增 downstreamProxy 条目
+                const others = existingParts.filter((p) => p.key !== "downstreamProxy")
+                others.push({key: "downstreamProxy", value: downstreamProxy.map((i) => maskProxyPassword(i)).join(",")})
+                setTipParts && setTipParts(others)
+                setDownstreamProxyStr(downstreamProxy.join(","))
+            } else {
+                // 删除 downstreamProxy 条目
+                const others = existingParts.filter((p) => p.key !== "downstreamProxy")
+                setTipParts && setTipParts(others)
+                setDownstreamProxyStr("")
+            }
+
+            onClose()
+        } catch (e) {
+            // 避免异常冒泡导致视觉/重载问题
+            console.error("DownStreamAgentModal onOKFun error:", e)
         }
-        onClose()
     })
 
     const onClose = useMemoizedFn(() => {
@@ -513,13 +525,13 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         <>
             <YakitModal
                 visible={downStreamAgentModalVisible}
-                title='下游代理'
+                title={t("DownStreamAgentModal.downstreamProxy")}
                 width={506}
                 maskClosable={false}
                 destroyOnClose={true}
                 closable
                 centered
-                okText='确认'
+                okText={t("YakitButton.confirm")}
                 onCancel={onClose}
                 onOk={onOKFun}
                 bodyStyle={{padding: 0}}
@@ -535,7 +547,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                         style={{height: "100%"}}
                     >
                         <Form.Item
-                            label='下游代理'
+                            label={t("DownStreamAgentModal.downstreamProxy")}
                             name='downstreamProxy'
                             getValueFromEvent={(value) => {
                                 // 只保留最后一个选中的值
@@ -583,7 +595,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                                 options={proxyRouteOptions}
                                 mode='tags'
                                 maxTagCount={2}
-                                placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890'
+                                placeholder={t("DownStreamAgentModal.proxyAddressExample")}
                             />
                         </Form.Item>
                     </Form>
