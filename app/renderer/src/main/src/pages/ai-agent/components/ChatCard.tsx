@@ -14,7 +14,7 @@ const ChatCard: FC<ChatCardProps> = ({titleIcon, titleText, titleExtra, children
             <div className={styles["chat-card-title"]}>
                 <div className={styles["chat-card-title-left"]}>
                     <div className={styles["chat-card-title-icon"]}>{titleIcon}</div>
-                    <div className={styles["chat-card-title-text"]}>一万暴击一万暴击一万暴击一万暴击一万暴击一万暴击一万暴击一万暴击一万暴击一万暴击</div>
+                    <div className={styles["chat-card-title-text"]}>{titleText}</div>
                 </div>
                 <div className={styles["chat-card-title-more"]}>{titleExtra}</div>
             </div>
