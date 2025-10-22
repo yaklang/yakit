@@ -76,7 +76,7 @@ a=1&b=2 Content-Length: a
                             {value: "knowledge-base", label: "知识库管理"},
                             {value: "rag-manager", label: "RAG 向量存储管理"},
                             {value: "third-party-binary", label: "第三方应用管理"},
-                            {value: "entity-repository", label: "实体仓库"}
+                            {value: "entity-repository", label: "实体仓库"},
                         ]}
                         formItemStyle={{margin: 0}}
                         value={mode}

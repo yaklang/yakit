@@ -20,6 +20,7 @@
 
 // typography
 body {
+    --antd-wave-shadow-color: var(--Colors-Use-Main-Primary);
     color: var(--Colors-Use-Neutral-Text-1-Title);
     background-color: var(--Colors-Use-Neutral-Bg);
     overflow: hidden;
@@ -75,7 +76,6 @@ a {
     height: 16px;
     background-color: #eaecf3;
 }
-
 // ========================== color ==========================
 $colors: global.$colors;
 $keyColor: map-keys($colors);

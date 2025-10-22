@@ -1,5 +1,4 @@
 import {CSSProperties, Dispatch, ReactNode, SetStateAction} from "react"
-import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
 import {AIChatInfo} from "./type/aiChat"
 import {AITreeNodeProps} from "./aiTree/type"
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
@@ -18,45 +17,6 @@ export interface AIAgentSetting
 export interface AIAgentTriggerEventInfo {
     type: string
     params?: Record<string, any>
-}
-// #endregion
-
-// #region mcp 服务器组件相关定义
-// resourcesTemplates
-export interface RenderResourcesTemplates {
-    name: string
-    uriTemplate: string
-}
-// tool-param
-export interface RenderToolsParam {
-    key: string
-    type: string
-    description: string
-    default: string
-    required: boolean
-    extra?: string[]
-    children?: RenderToolsParam[]
-    substructure?: string
-}
-// tools
-export interface RenderTools {
-    name: string
-    description: string
-    params: RenderToolsParam[]
-}
-// 客户端配置信息
-export interface RenderMCPClientInfo extends MCPClientInfo {
-    /** 是否是默认服务器 */
-    isDefault: boolean
-    /** 连接状态 */
-    status: boolean
-
-    /** 服务器返回的资源数据 */
-    originalData?: MCPClientResource
-    /** 前端展示数据 */
-    tools?: RenderTools[]
-    /** 前端展示数据 */
-    resourceTemplates?: RenderResourcesTemplates[]
 }
 // #endregion
 
