@@ -59,12 +59,14 @@ export const AISingHaveColorText: React.FC<AISingHaveColorTextProps> = React.mem
             footer={<span className={styles["time"]}>{formatTimestamp(timestamp)}</span>}
             titleText={
                 <div className={styles["title-wrapper"]}>
-                    {titleIcon}
-                    <span className={styles["title"]}>{title}</span>
-                    {subTitle && <div className={styles["mpb-color-text"]}>{subTitle}</div>}
+                    <div className={styles["title-main"]}>
+                        {titleIcon}
+                        <span className={styles["title"]}>{title}</span>
+                        {subTitle && <div className={styles["mpb-color-text"]}>{subTitle}</div>}
+                    </div>
+                    {tip && <div className={styles["title-extra"]}>{tip}</div>}
                 </div>
             }
-            titleExtra={tip && <div className={styles["title-extra"]}>{tip}</div>}
             {...reset}
         />
     )

@@ -15,7 +15,7 @@ function useAINodeLabel(params: AINodeLabelParams) {
     const nodeLabel = useCreation(() => {
         return nodeIdVerbose[language]
     }, [language, nodeIdVerbose])
-    return nodeLabel
+    return {nodeLabel}
 }
 
 export default useAINodeLabel
