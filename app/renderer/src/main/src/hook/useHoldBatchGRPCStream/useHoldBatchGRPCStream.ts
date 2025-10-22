@@ -18,7 +18,7 @@ const {ipcRenderer} = window.require("electron")
 
 export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams) {
     const {
-        tabs: defaultTabs = DefaultTabs(),
+        tabs: defaultTabs,
         taskName,
         apiKey,
         token,
@@ -236,7 +236,7 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
         // card
         const cacheCard: HoldGRPCStreamProps.InfoCards[] = convertCardInfo(cardKVPair.current)
         // tabs
-        const tabs: HoldGRPCStreamProps.InfoTab[] = DefaultTabs()
+        const tabs: HoldGRPCStreamProps.InfoTab[] = defaultTabs || DefaultTabs()
         // tabsInfo
         const tabsInfo: HoldGRPCStreamInfo["tabsInfoState"] = {}
 
