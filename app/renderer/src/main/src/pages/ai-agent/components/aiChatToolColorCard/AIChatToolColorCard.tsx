@@ -2,7 +2,6 @@ import {useCreation, useMemoizedFn} from "ahooks"
 import {AIChatToolColorCardProps} from "./type"
 import React, {ReactNode} from "react"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
-import {isToolStdout} from "../../utils"
 import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIChatIPCSendParams} from "../../useContext/ChatIPCContent/ChatIPCContent"
 import styles from "./AIChatToolColorCard.module.scss"
@@ -10,6 +9,7 @@ import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {OutlineArrownarrowrightIcon} from "@/assets/icon/outline"
 import {ChatStreamContent} from "../../chatTemplate/AIAgentChatTemplate"
+import {isToolStdoutStream} from "@/pages/ai-re-act/hooks/utils"
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -22,7 +22,7 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
     const {NodeId, content, selectors} = toolCall
     const title = useCreation(() => {
         if (NodeId === "call-tools") return "Call-tools：参数生成中..."
-        if (isToolStdout(NodeId)) return `${NodeId}：调用工具中...`
+        if (isToolStdoutStream(NodeId)) return `${NodeId}：调用工具中...`
     }, [NodeId])
     const onToolExtra = useMemoizedFn((item: AIAgentGrpcApi.ReviewSelector) => {
         switch (item.value) {
@@ -51,7 +51,7 @@ export const AIChatToolColorCard: React.FC<AIChatToolColorCardProps> = React.mem
                     <OutlineSparklesColorsIcon />
                     <div>{title}</div>
                 </div>
-                {isToolStdout(NodeId) && selectors?.selectors && (
+                {isToolStdoutStream(NodeId) && selectors?.selectors && (
                     <div className={styles["card-extra"]}>
                         {selectors.selectors.map((item) => {
                             return (

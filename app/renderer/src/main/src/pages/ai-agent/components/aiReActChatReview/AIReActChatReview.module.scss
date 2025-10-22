@@ -134,16 +134,19 @@
         gap: 4px;
         border-radius: 4px;
         height: 24px;
+        background: linear-gradient(
+            108deg,
+            var(--Colors-Use-Magenta-Primary) 0%,
+            var(--Colors-Use-Purple-Primary) 63.94%,
+            var(--Colors-Use-Blue-Primary) 100%
+        );
         color: var(--Colors-Use-Main-On-Primary);
-
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        letter-spacing: 0.5px;
         cursor: pointer;
         border: none;
-        @include mixin.mpb-color-text() {
-            font-size: 12px;
-            font-weight: 500;
-            line-height: 16px;
-            letter-spacing: 0.5px;
-        }
         svg {
             width: 16px;
             height: 16px;
