@@ -423,7 +423,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     useEffect(() => {
         // if (!width) return
         getTableWidthAndColWidth(0)
-    }, [width, isRefresh])
+    }, [width])
 
     useEffect(() => {
         getTableRef(containerRef.current)

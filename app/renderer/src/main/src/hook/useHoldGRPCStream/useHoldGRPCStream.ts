@@ -74,7 +74,7 @@ export const checkStreamValidity = (stream: StreamResult.Log) => {
 
 export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     const {
-        tabs: defaultTabs = DefaultTabs(),
+        tabs: defaultTabs,
         taskName,
         apiKey,
         token,
@@ -356,7 +356,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         // card
         const cacheCard: HoldGRPCStreamProps.InfoCards[] = convertCardInfo(cardKVPair.current)
         // tabs
-        const tabs: HoldGRPCStreamProps.InfoTab[] = topTabs.current.concat(DefaultTabs()).concat(endTabs.current)
+        const tabs: HoldGRPCStreamProps.InfoTab[] = topTabs.current.concat(defaultTabs || DefaultTabs()).concat(endTabs.current)
         // tabsInfo
         const tabsInfo: HoldGRPCStreamInfo["tabsInfoState"] = {}
         if (tabWebsite.current) {
