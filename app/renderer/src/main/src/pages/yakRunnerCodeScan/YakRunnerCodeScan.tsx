@@ -97,7 +97,7 @@ import {RuleDebugAuditDetail} from "../ruleManagement/template"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateReport"
 import CodeScanExtraParamsDrawer, {CodeScanExtraParam} from "./CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer"
-import { YakParamProps } from "../plugins/pluginsType"
+import {YakParamProps} from "../plugins/pluginsType"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -1392,7 +1392,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
         const getTabsState = useMemo(() => {
             const tabsState = [
-                {tabName: "漏洞与风险", type: "ssa-risk"},
                 {tabName: "日志", type: "log"},
                 {tabName: "Console", type: "console"}
             ]
@@ -1403,6 +1402,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         type: "result",
                         customProps: {onDetail: handleShowDetail, updateDataCallback: handleUpdateAuditData}
                     },
+                    {tabName: "漏洞与风险", type: "ssa-risk"},
                     ...tabsState
                 ]
             }
@@ -1664,10 +1664,10 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         const isRealStartRef = useRef<boolean>(false)
 
         /** 填充表单默认值 */
-        const handleInitFormValue = useMemoizedFn((arr:YakParamProps[]) => {
+        const handleInitFormValue = useMemoizedFn((arr: YakParamProps[]) => {
             // 表单内数据
             let formData = {}
-            if (form) formData = (form.getFieldsValue() || {})
+            if (form) formData = form.getFieldsValue() || {}
             let defaultValue = {...formData}
             let newFormValue = {}
             arr.forEach((ele) => {
@@ -1685,18 +1685,24 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         const groupParams = useMemo(() => {
             const arr =
                 plugin?.Params.filter(
-                    (item) => !item.Required && (item.Group || "").length > 0
+                    (item) => !item.Required && (item.Group || "").length > 0 && item.Group !== "significant"
+                ) || []
+            return ParamsToGroupByGroupName(arr)
+        }, [plugin?.Params])
+
+        /** 选填参数（无需折叠） */
+        const groupParamsShow = useMemo(() => {
+            const arr =
+                plugin?.Params.filter(
+                    (item) => !item.Required && (item.Group || "").length > 0 && item.Group === "significant"
                 ) || []
             return ParamsToGroupByGroupName(arr)
         }, [plugin?.Params])
 
         /** 必填参数（头部展示） */
         const groupParamsHeader = useMemo(() => {
-            const arr =
-                plugin?.Params.filter(
-                    (item) => item.Required && (item.Group || "").length > 0
-                ) || []
-            handleInitFormValue(arr)     
+            const arr = plugin?.Params.filter((item) => item.Required && (item.Group || "").length > 0) || []
+            handleInitFormValue(arr)
             return ParamsToGroupByGroupName(arr)
         }, [plugin?.Params])
 
@@ -1999,6 +2005,23 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                     <div className={styles["text-style"]}>额外参数 (非必填)</div>
                                     <div className={styles["divider-style"]} />
                                 </div>
+                            </Col>
+                            <Col span={24}>
+                                {groupParamsShow.length > 0 && (
+                                    <>
+                                        {groupParamsShow.map((item) => (
+                                            <>
+                                                {item.data?.map((formItem) => (
+                                                    <React.Fragment key={formItem.Field + formItem.FieldVerbose}>
+                                                        <FormContentItemByType item={formItem} pluginType={"yak"} />
+                                                    </React.Fragment>
+                                                ))}
+                                            </>
+                                        ))}
+                                    </>
+                                )}
+                            </Col>
+                            <Col span={18}>
                                 <YakitCollapse
                                     className={styles["extra-params-collapse"]}
                                     activeKey={activeKey}
