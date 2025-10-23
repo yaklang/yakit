@@ -117,7 +117,7 @@ type ChatRequireUserInteractive = AIChatQSDataBase<"require_user_interactive", U
 type ChatExecAIForgeReview = AIChatQSDataBase<"exec_aiforge_review_require", UIExecAIForgeReview>
 type ChatFileSystemPin = AIChatQSDataBase<"file_system_pin", AIFileSystemPin>
 type ChatTaskIndexNode = AIChatQSDataBase<"task_index_node", AITaskStartInfo>
-type ChatToolCallDecision = AIChatQSDataBase<"tool_call_decision", AIToolCallDecision>
+export type ChatToolCallDecision = AIChatQSDataBase<"tool_call_decision", AIToolCallDecision>
 
 export type AIChatQSData =
     | ChatQuestion

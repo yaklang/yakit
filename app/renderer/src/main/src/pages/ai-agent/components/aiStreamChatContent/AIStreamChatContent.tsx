@@ -9,7 +9,7 @@ import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 
 export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.memo((props) => {
     const {data} = props
-    const {nodeLabel} = useAINodeLabel({nodeIdVerbose: data.NodeIdVerbose})
+    const {nodeLabel} = useAINodeLabel(data.NodeIdVerbose)
     const content = useCreation(() => {
         return data.content.slice(-150)
     }, [data.content])
