@@ -53,36 +53,42 @@ const FileList: FC<FileListProps> = ({title, fileList}) => {
             </div>
             <div className={styles["file-list-content"]}>
                 {fileList?.slice(0, 5).map((item) => {
-                    const data = JSON.parse(item.data ?? "{}") as PluginExecuteLogFile.FileItem
-                    const {color, action, message} = getFileActionStatus(data.action, data.action_message)
-                    const name = getFileName(data.path, data.is_dir)
-                    const Icon = getFileIcon(data.path, data.is_dir)
-                    const dangerFile = color === "danger" && !data.is_dir ? <del>{name}</del> : name
-                    return (
-                        <div key={item.id} className={styles["file-list-item"]}>
-                            <div className={styles["file-list-item-main"]}>
-                                <YakitTag
-                                    style={
-                                        color === "white" ? {backgroundColor: "var(--Colors-Use-Neutral-Border)"} : {}
-                                    }
-                                    className={styles["file-list-item-tag"]}
-                                    border={false}
-                                    color={color}
-                                >
-                                    {action}
-                                </YakitTag>
-                                <div className={styles["file-list-item-icon"]}>{Icon}</div>
-                                <div className={styles["file-list-item-name"]}>{dangerFile}</div>
-                                <div className={styles["file-list-item-desc"]}>{message}</div>
-                            </div>
-                            <div className={styles["file-list-item-actions"]}>
-                                <div className={styles["file-list-item-actions-time"]}>
-                                    {formatTimestamp(item.timestamp)}
+                    try {
+                        const data = JSON.parse(item.data ?? "{}") as PluginExecuteLogFile.FileItem
+                        const {color, action, message} = getFileActionStatus(data.action, data.action_message)
+                        const name = getFileName(data.path, data.is_dir)
+                        const Icon = getFileIcon(data.path, data.is_dir)
+                        const dangerFile = color === "danger" && !data.is_dir ? <del>{name}</del> : name
+                        return (
+                            <div key={item.id} className={styles["file-list-item"]}>
+                                <div className={styles["file-list-item-main"]}>
+                                    <YakitTag
+                                        style={
+                                            color === "white"
+                                                ? {backgroundColor: "var(--Colors-Use-Neutral-Border)"}
+                                                : {}
+                                        }
+                                        className={styles["file-list-item-tag"]}
+                                        border={false}
+                                        color={color}
+                                    >
+                                        {action}
+                                    </YakitTag>
+                                    <div className={styles["file-list-item-icon"]}>{Icon}</div>
+                                    <div className={styles["file-list-item-name"]}>{dangerFile}</div>
+                                    <div className={styles["file-list-item-desc"]}>{message}</div>
                                 </div>
-                                <OutlineChevronrightIcon />
+                                <div className={styles["file-list-item-actions"]}>
+                                    <div className={styles["file-list-item-actions-time"]}>
+                                        {formatTimestamp(item.timestamp)}
+                                    </div>
+                                    <OutlineChevronrightIcon />
+                                </div>
                             </div>
-                        </div>
-                    )
+                        )
+                    } catch (error) {
+                        return <div>PluginExecuteLogFile.FileItem解析错误:{JSON.stringify(error)}</div>
+                    }
                 })}
             </div>
         </div>
