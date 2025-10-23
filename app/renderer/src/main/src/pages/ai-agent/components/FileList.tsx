@@ -65,7 +65,7 @@ const FileList: FC<FileListProps> = ({title, fileList}) => {
                         const Icon = getFileIcon(data.path, data.is_dir)
                         const dangerFile = color === "danger" && !data.is_dir ? <del>{name}</del> : name
                         return (
-                            <div key={item.id} className={styles["file-list-item"]}>
+                            <div key={item.id} className={styles["file-list-item"]} onClick={switchAIActTab}>
                                 <div className={styles["file-list-item-main"]}>
                                     <YakitTag
                                         style={
