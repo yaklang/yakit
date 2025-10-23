@@ -8,14 +8,14 @@ import {AIStreamChatContent} from "@/pages/ai-agent/components/aiStreamChatConte
 import {isToolExecStream} from "../hooks/utils"
 import StreamCard from "@/pages/ai-agent/components/StreamCard"
 import {taskAnswerToIconMap} from "@/pages/ai-agent/defaultConstant"
-import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import useAINodeLabel from "../hooks/useAINodeLabel"
 import {AIChatListItem} from "@/pages/ai-agent/components/aiChatListItem/AIChatListItem"
+import useAIChatUIData from "../hooks/useAIChatUIData"
 
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     const {stream, aiMarkdownProps} = props
     const {NodeId, content, NodeIdVerbose, CallToolID} = stream.data
-    const {chatIPCData} = useChatIPCStore()
+    const {yakExecResult} = useAIChatUIData()
     const {nodeLabel} = useAINodeLabel(NodeIdVerbose)
 
     if (isToolExecStream(NodeId)) {
@@ -29,7 +29,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
         case "re-act-loop-thought":
             return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} />
         default:
-            const {execFileRecord} = chatIPCData.yakExecResult
+            const {execFileRecord} = yakExecResult
             const fileList = execFileRecord.get(CallToolID)
             return (
                 <StreamCard

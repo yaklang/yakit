@@ -11,17 +11,17 @@ import styles from "./AIChatListItem.module.scss"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import DividerCard, {StreamsStatus} from "../DividerCard"
 import {AIToolDecision} from "../aiToolDecision/AIToolDecision"
+import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
     chatClassName: styles["question-wrapper"]
 }
 export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) => {
-    const {item, type, tasksProps} = props
+    const {item, type} = props
 
     const {handleSendCasual} = useChatIPCDispatcher()
-    const tasks = useCreation(() => {
-        return tasksProps?.tasks || []
-    }, [tasksProps])
+    const {taskChat, yakExecResult} = useAIChatUIData()
+
     const aiStreamNodeProps = useCreation(() => {
         switch (type) {
             case "re-act":
@@ -47,7 +47,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         }
     }, [type])
     const getTask = (id) => {
-        return tasks.find((item) => item.index === id)
+        return taskChat.plan.find((item) => item.index === id)
     }
     const renderContent = useMemoizedFn(() => {
         const {id, type, Timestamp, data} = item
@@ -77,6 +77,8 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                 )
                 break
             case "tool_result":
+                const {execFileRecord} = yakExecResult
+                const fileList = execFileRecord.get(data.callToolId)
                 contentNode = (
                     <ToolInvokerCard
                         titleText={"工具调用"}
@@ -85,6 +87,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         desc={data.summary}
                         content={data.toolStdoutContent.content}
                         params={data.callToolId}
+                        fileList={fileList}
                     />
                 )
                 break

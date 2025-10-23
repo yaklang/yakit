@@ -5,6 +5,7 @@ import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHol
 import {AITabsEnum} from "./defaultConstant"
 import {AIAgentGrpcApi, AIStartParams} from "../ai-re-act/hooks/grpcApi"
 import {AIChatQSData, AIStreamOutput} from "../ai-re-act/hooks/aiRender"
+import {UseYakExecResultState} from "../ai-re-act/hooks/type"
 
 export interface AIAgentProps {}
 
@@ -76,7 +77,6 @@ export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
 }
 
 export interface AIAgentChatStreamProps {
-    tasks: AIAgentGrpcApi.PlanTask[]
     streams: AIChatQSData[]
     defaultExpand?: boolean
 }
