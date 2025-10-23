@@ -22,7 +22,7 @@ const aiMilkdownOptions: YakitRadioButtonsProps["options"] = [
 ]
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
     const {data, className} = props
-    const {nodeLabel} = useAINodeLabel({nodeIdVerbose: data.NodeIdVerbose})
+    const {nodeLabel} = useAINodeLabel(data.NodeIdVerbose)
     const [type, setType] = useState<"preview" | "code">("preview")
     const [expand, setExpand] = useState<boolean>(true)
     const item: ReportItem = useCreation(() => {

@@ -1,9 +1,8 @@
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useCreation} from "ahooks"
-import {AINodeLabelParams} from "./type"
+import {AIOutputI18n} from "./grpcApi"
 
-function useAINodeLabel(params: AINodeLabelParams) {
-    const {nodeIdVerbose} = params
+function useAINodeLabel(params: AIOutputI18n) {
     const {i18n} = useI18nNamespaces([])
     const language = useCreation(() => {
         try {
@@ -13,8 +12,8 @@ function useAINodeLabel(params: AINodeLabelParams) {
         }
     }, [i18n.language])
     const nodeLabel = useCreation(() => {
-        return nodeIdVerbose[language]
-    }, [language, nodeIdVerbose])
+        return params[language]
+    }, [language, params])
     return {nodeLabel}
 }
 

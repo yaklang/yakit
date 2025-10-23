@@ -1,6 +1,6 @@
-import {ChatStream} from "@/pages/ai-re-act/hooks/aiRender"
+import {ChatToolCallDecision} from "@/pages/ai-re-act/hooks/aiRender"
 
 export interface AIToolDecisionProps {
-    item: ChatStream
+    item: ChatToolCallDecision
     nodeLabel:string
 }

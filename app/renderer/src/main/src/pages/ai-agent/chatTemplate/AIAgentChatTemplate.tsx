@@ -37,16 +37,10 @@ import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
-import DividerCard, {StreamsStatus} from "../components/DividerCard"
-import ToolInvokerCard from "../components/ToolInvokerCard"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {AIReviewResult} from "../components/aiReviewResult/AIReviewResult"
-import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
-import FileSystemCard from "../components/FileSystemCard"
-import {AIStreamNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
 import {taskAnswerToIconMap} from "../defaultConstant"
 import {SolidLightningboltIcon} from "@/assets/icon/solid"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
+import {AIChatListItem} from "../components/aiChatListItem/AIChatListItem"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -234,125 +228,24 @@ const AICardList: React.FC<AICardListProps> = React.memo((props) => {
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
     const {tasks, streams} = props
-
-    const {i18n} = useI18nNamespaces([])
-
-    // 任务集合
-    // const lists = useMemo(() => {
-    //     return Object.keys(streams)
-    // }, [streams])
-
-    // 生成任务展示名称
-    // const handleGenerateTaskName = useMemoizedFn((order: string) => {
-    //     if (order === "system") return "系统输出"
-    //     const task = tasks.find((item) => item.index === order)
-    //     if (!task) return order
-    //     return task.name
-    // })
-
-    const {chatIPCData} = useChatIPCStore()
-
-    console.log("streams:", streams, tasks)
-
-    const getTask = (id) => {
-        return tasks.find((item) => item.index === id)
-    }
-
     const renderItem = (stream: AIChatQSData) => {
-        switch (stream.type) {
-            case "task_index_node":
-                const task = getTask(stream.data.taskIndex)
-                const props = {
-                    status: task?.progress as StreamsStatus,
-                    desc: task?.goal,
-                    name: task?.name,
-                    success: 0,
-                    error: 0
-                }
-                return <DividerCard {...props} />
-            case "stream":
-                return <AIStreamNode stream={stream} />
-            case "tool_result": {
-                const {callToolId, toolName, status, summary, toolStdoutContent} = stream.data
-                return (
-                    <ToolInvokerCard
-                        params={callToolId}
-                        titleText='工具调用'
-                        name={toolName}
-                        status={status}
-                        desc={summary}
-                        content={toolStdoutContent.content}
-                    />
-                )
-            }
-            case "file_system_pin":
-                return <FileSystemCard {...stream.data} />
-            case "tool_use_review_require":
-            case "exec_aiforge_review_require":
-            case "require_user_interactive":
-            case "plan_review_require":
-            case "task_review_require":
-                return !!stream.data.selected ? <AIReviewResult info={stream} timestamp={stream.Timestamp} /> : <></>
-            default:
-                return <div>{stream.type}</div>
-        }
+        return (
+            <AIChatListItem
+                item={stream}
+                type='task-agent'
+                tasksProps={{
+                    tasks
+                }}
+            />
+        )
     }
 
-    return (
-        <div className={styles["ai-agent-chat-stream"]}>
-            {streams.map(renderItem)}
-            {/* {streams.map(({type}) => {
-                const headerTitle = handleGenerateTaskName(type)
-                return (
-                    <ChatStreamCollapse
-                        key={type}
-                        id={type}
-                        title={headerTitle}
-                        defaultExpand={defaultExpand ?? true}
-                        className={classNames({
-                            [styles["chat-stream-collapse-expand-first"]]: true // firstExpand
-                        })}
-                    >
-                        {(streams[type] || []).map((info) => {
-                            const {id, Timestamp, type, data} = info
-                            switch (type) {
-                                case "stream":
-                                    const {NodeId, EventUUID, content, NodeIdVerbose} = data
-                                    if (isToolExecStream(NodeId)) {
-                                        return <AIChatToolColorCard key={id} toolCall={data} />
-                                    }
-                                    if (NodeId === "re-act-loop-answer-payload") {
-                                        return <AIMarkdown stream={content} nodeLabel={NodeIdVerbose.Zh} />
-                                    }
-                                    return (
-                                        <ChatStreamCollapseItem
-                                            key={id}
-                                            info={data}
-                                            expandKey={EventUUID}
-                                            secondExpand={false}
-                                            handleChangeSecondPanel={() => {}}
-                                            defaultExpand={defaultExpand}
-                                            timestamp={Timestamp}
-                                        />
-                                    )
-
-                                case "tool_result":
-                                    return <AIChatToolItem key={id} time={Timestamp} item={data} />
-
-                                default:
-                                    break
-                            }
-                        })}
-                    </ChatStreamCollapse>
-                )
-            })} */}
-        </div>
-    )
+    return <div className={styles["ai-agent-chat-stream"]}>{streams.map(renderItem)}</div>
 })
 const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo((props) => {
     const {expandKey, info, className, defaultExpand, timestamp} = props
     const {NodeId, NodeIdVerbose, content} = info
-    const {nodeLabel} = useAINodeLabel({nodeIdVerbose: NodeIdVerbose})
+    const {nodeLabel} = useAINodeLabel(NodeIdVerbose)
     return (
         <ChatStreamCollapse
             key={expandKey}
