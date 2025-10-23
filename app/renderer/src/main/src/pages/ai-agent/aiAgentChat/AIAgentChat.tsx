@@ -23,7 +23,7 @@ import ChatIPCContent, {
 import {AIReActChatReview} from "@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon} from "@/assets/icon/outline"
-import {ChatIPCSendType} from "@/pages/ai-re-act/hooks/type"
+import {ChatIPCSendType, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
@@ -41,6 +41,13 @@ import styles from "./AIAgentChat.module.scss"
 
 const AIReActTaskChat = React.lazy(() => import("../../ai-re-act/aiReActTaskChat/AIReActTaskChat"))
 
+const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
+    if (!taskChat) return false
+    const isHaveId = !!taskChat.coordinatorId
+    const isHavePlan = !!taskChat.plan.length
+    const isHaveStreams = !!taskChat.streams.length
+    return isHaveId || isHavePlan || isHaveStreams
+}
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {} = props
 
@@ -56,7 +63,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const [isShowTask, setIsShowTask] = useState<boolean>(false)
 
     useEffect(() => {
-        if (activeChat && activeChat.answer && activeChat.answer.taskChat) {
+        if (taskChatIsEmpty(activeChat?.answer?.taskChat)) {
             setMode("task")
             setIsShowTask(true)
         } else {

@@ -1,5 +1,6 @@
-import {AIStreamOutput} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIOutputEvent} from "@/pages/ai-re-act/hooks/grpcApi"
 
 export interface AIStreamChatContentProps {
-    data: AIStreamOutput
+    content: string
+    nodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
 }
