@@ -160,9 +160,15 @@
     width: 100%;
     height: 100%;
     overflow: hidden auto;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    .item-wrapper {
+        margin-bottom: 4px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .item-wrapper:last-child {
+        margin-bottom: 0; // 最后一条不加间距
+    }
 }
 
 .task-type-header {

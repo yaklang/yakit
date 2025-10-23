@@ -44,6 +44,7 @@ import {AIChatListItem} from "../components/aiChatListItem/AIChatListItem"
 import StreamCard from "../components/StreamCard"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import i18n from "@/i18n/i18n"
+import {Virtuoso} from "react-virtuoso"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -235,7 +236,25 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         return <AIChatListItem item={stream} type='task-agent' />
     }
 
-    return <div className={styles["ai-agent-chat-stream"]}>{streams.map(renderItem)}</div>
+    return (
+        <div className={styles["ai-agent-chat-stream"]}>
+            <Virtuoso
+                style={{height: "100%", width: "100%"}}
+                data={streams}
+                totalCount={streams.length}
+                itemContent={(_, item) => renderItem(item)}
+                overscan={300}
+                components={{
+                    Item: ({children, style, "data-index": dataIndex}) => (
+                        <div style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
+                            {children}
+                        </div>
+                    )
+                }}
+            />
+            {/* {streams.map(renderItem)} */}
+        </div>
+    )
 })
 const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo((props) => {
     const {expandKey, info, className, defaultExpand, timestamp} = props
