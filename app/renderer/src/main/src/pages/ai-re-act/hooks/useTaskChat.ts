@@ -528,6 +528,38 @@ function useTaskChat(params?: UseTaskChatParams) {
         }
     })
 
+    /** 工具决策数据处理 */
+    const handleToolCallDecision = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ToolCallDecision
+            const i18n = data?.i18n || {zh: data.action, en: data.action}
+
+            setStreams((old) => {
+                const newArr = [...old]
+                newArr.push({
+                    id: uuidv4(),
+                    type: "tool_call_decision",
+                    Timestamp: res.Timestamp,
+                    data: {
+                        ...data,
+                        i18n: {
+                            Zh: i18n.zh,
+                            En: i18n.en
+                        }
+                    }
+                })
+                return newArr
+            })
+        } catch (error) {
+            handleGrpcDataPushLog({
+                type: "error",
+                info: res,
+                pushLog: handlePushLog
+            })
+        }
+    })
+
     // 处理数据方法
     const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
         try {
@@ -692,6 +724,12 @@ function useTaskChat(params?: UseTaskChatParams) {
             if (["filesystem_pin_directory", "filesystem_pin_filename"].includes(res.Type)) {
                 // 文件系统操作
                 handleFileSystemPin(res)
+                return
+            }
+
+            if (res.Type === "tool_call_decision") {
+                // 工具决策
+                handleToolCallDecision(res)
                 return
             }
         } catch (error) {

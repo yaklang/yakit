@@ -409,6 +409,14 @@ export declare namespace AIAgentGrpcApi {
         path: string
         timestamp: number
     }
+
+    /** 工具决策总结相关 */
+    export interface ToolCallDecision {
+        action: string
+        call_tool_id: string
+        summary: string
+        i18n: {zh: string; en: string}
+    }
 }
 
 // #region AI相关普通接口的请求和定义结构
