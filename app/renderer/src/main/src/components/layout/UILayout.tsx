@@ -163,6 +163,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** yakit使用状态 */
     const [yakitStatus, setYakitStatus, getYakitStatus] = useGetSetState<YakitStatusType>("")
 
+    /** 是否允许随机密码模式 */
+    const [allowSecretLocal, setAllowSecretLocal] = useState<boolean>(false)
+
     /** 当前引擎连接状态 */
     const [engineLink, setEngineLink, getEngineLink] = useGetSetState<boolean>(false)
 
@@ -359,13 +362,19 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     setTimeout(() => {
                         handleChangeLinkMode(true)
                     }, 1000)
-
                     return
                 case "local":
                     setCheckLog((arr) => arr.concat(["获取连接模式成功——本地模式"]))
                     debugToPrintLog(`------ 连接引擎的模式: local ------`)
                     setTimeout(() => {
                         handleChangeLinkMode()
+                    }, 1000)
+                    return
+                case "secret-local":
+                    setCheckLog((arr) => arr.concat(["获取连接模式成功——随机密码模式"]))
+                    debugToPrintLog(`------ 连接引擎的模式: secret-local ------`)
+                    setTimeout(() => {
+                        handleLinkLocalMode(true)
                     }, 1000)
                     return
                 default:
@@ -386,25 +395,25 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         onSetEngineMode("remote")
     })
     // 本地连接的状态设置
-    const setLinkLocalEngine = useMemoizedFn(() => {
+    const setLinkLocalEngine = useMemoizedFn((isSecretLocal?: boolean) => {
         onDisconnect()
         setYakitStatus("")
-        onSetEngineMode("local")
-        debugToPrintLog(`------ 启动本地引擎连接逻辑 ------`)
+        onSetEngineMode(isSecretLocal ? "secret-local" : "local")
+        debugToPrintLog(`------ 启动本地引擎连接逻辑 (随机密码模式: ${isSecretLocal}) ------`)
         handleStartLocalLink(isInitLocalLink.current)
         isInitLocalLink.current = false
     })
     // 切换本地模式
-    const handleLinkLocalMode = useMemoizedFn(() => {
+    const handleLinkLocalMode = useMemoizedFn((isSecretLocal?: boolean) => {
         if (isEngineInstalled.current) {
             if (!isInitLocalLink.current) {
-                setLinkLocalEngine()
+                setLinkLocalEngine(isSecretLocal)
                 return
             }
             setCheckLog(["检查本地是否已安装引擎..."])
             setCheckLog((arr) => arr.concat(["本地已安装引擎，准备连接中..."]))
             setTimeout(() => {
-                setLinkLocalEngine()
+                setLinkLocalEngine(isSecretLocal)
             }, 1000)
         } else {
             debugToPrintLog(`------ 启动无本地引擎逻辑 ------`)
@@ -551,6 +560,26 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 开始本地连接引擎
     const handleLinkLocalEngine = useMemoizedFn((port: number) => {
+        const currentMode = getEngineMode()
+        
+        // secret-local 模式：使用随机密码连接，固定端口 9011
+        if (currentMode === "secret-local") {
+            debugToPrintLog(`------ 开始启动随机密码引擎 (固定端口: 9011) ------`)
+            setCheckLog([`本地随机密码引擎模式，开始启动本地引擎 (端口: 9011)`])
+            setCredential({
+                Host: "127.0.0.1",
+                IsTLS: false,
+                Password: "admin123",
+                PemBytes: undefined,
+                Port: 9011, // secret-local 模式使用固定端口 9011
+                Mode: "secret-local"
+            })
+            setYakitStatus("ready")
+            onStartLinkEngine()
+            return
+        }
+        
+        // 普通本地模式
         debugToPrintLog(`------ 开始启动引擎, 指定端口: ${port} ------`)
         setCheckLog([`本地普通权限引擎模式，开始启动本地引擎-端口: ${port}`])
         setCredential({
@@ -610,7 +639,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             case "checkError":
                 // 引擎权限错误-手动重启引擎
                 setTimeoutLoading(setRestartLoading)
-                setLinkLocalEngine()
+                // 保持当前模式（可能是 local 或 secret-local）
+                setLinkLocalEngine(getEngineMode() === "secret-local")
                 return
             case "error":
                 // 引擎连接超时
@@ -644,6 +674,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             case "local":
                 handleLinkLocalMode()
                 return
+            case "secret-local":
+                debugToPrintLog(`------ User clicked secret-local button ------`)
+                handleLinkLocalMode(true)
+                return
 
             case "engine-error":
                 setTimeoutLoading(setRestartLoading)
@@ -651,6 +685,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 return
 
             default:
+                yakitNotify("error", "未知操作: " + type)
                 return
         }
     })
@@ -1621,6 +1656,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             <div className={styles["ui-layout-container"]}>
                 <div className={styles["container-wrapper"]}>
                     <YaklangEngineWatchDog
+                        onAllowSecretLocal={setAllowSecretLocal}
                         credential={credential}
                         /* keepalive 开启之后才会触发 Ready 和 Failed */
                         keepalive={keepalive}
@@ -1851,6 +1887,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         {!engineLink && !isRemoteEngine && (
                             <YakitLoading
                                 checkLog={checkLog}
+                                allowSecretLocal={allowSecretLocal}
                                 yakitStatus={yakitStatus}
                                 engineMode={engineMode || "local"}
                                 restartLoading={restartLoading}
