@@ -1,5 +1,5 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
+import {AIAgentGrpcApi, AIOutputEvent, AIOutputI18n} from "./grpcApi"
 
 // #region 基础通用数据字段
 interface AIOutputBaseInfo {
@@ -91,6 +91,11 @@ export interface AIYakExecFileRecord extends StreamResult.Log {
     order: number
 }
 
+/** 工具执行结果的决策展示数据 */
+export interface AIToolCallDecision extends Omit<AIAgentGrpcApi.ToolCallDecision, "i18n"> {
+    i18n: AIOutputI18n
+}
+
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
     type: T
@@ -112,6 +117,7 @@ type ChatRequireUserInteractive = AIChatQSDataBase<"require_user_interactive", U
 type ChatExecAIForgeReview = AIChatQSDataBase<"exec_aiforge_review_require", UIExecAIForgeReview>
 type ChatFileSystemPin = AIChatQSDataBase<"file_system_pin", AIFileSystemPin>
 type ChatTaskIndexNode = AIChatQSDataBase<"task_index_node", AITaskStartInfo>
+type ChatToolCallDecision = AIChatQSDataBase<"tool_call_decision", AIToolCallDecision>
 
 export type AIChatQSData =
     | ChatQuestion
@@ -127,4 +133,5 @@ export type AIChatQSData =
     | ChatExecAIForgeReview
     | ChatFileSystemPin
     | ChatTaskIndexNode
+    | ChatToolCallDecision
 // #endregion
