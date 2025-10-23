@@ -7,7 +7,8 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import type {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {grpcQueryHTTPFlows} from "../grpc"
 import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
-
+import {AIYakExecFileRecord} from "@/pages/ai-re-act/hooks/aiRender"
+import FileList from "./FileList"
 interface ToolInvokerCardProps {
     titleText?: string
     status: "default" | "success" | "failed" | "user_cancelled"
@@ -15,9 +16,10 @@ interface ToolInvokerCardProps {
     content?: string
     desc?: string
     params: string
+    fileList?: AIYakExecFileRecord[]
 }
 
-const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, name, params, content, desc, status = "fail"}) => {
+const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, name, params, content, desc, status = "fail",fileList}) => {
     const [statusColor, statusText] = useMemo(() => {
         if (status === "success") return ["success", "成功"]
         if (status === "fail") return ["danger", "失败"]
@@ -72,6 +74,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, name, params, con
                     )}
                 </div>
             </div>
+            {!!fileList?.length && <FileList fileList={fileList} />}
         </ChatCard>
     )
 }

@@ -227,17 +227,9 @@ const AICardList: React.FC<AICardListProps> = React.memo((props) => {
 
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {tasks, streams} = props
+    const {streams} = props
     const renderItem = (stream: AIChatQSData) => {
-        return (
-            <AIChatListItem
-                item={stream}
-                type='task-agent'
-                tasksProps={{
-                    tasks
-                }}
-            />
-        )
+        return <AIChatListItem item={stream} type='task-agent' />
     }
 
     return <div className={styles["ai-agent-chat-stream"]}>{streams.map(renderItem)}</div>
