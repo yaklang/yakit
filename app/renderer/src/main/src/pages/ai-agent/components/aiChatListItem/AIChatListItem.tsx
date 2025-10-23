@@ -2,7 +2,6 @@ import React, {ReactNode} from "react"
 import {AIChatListItemProps} from "./type"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {AIStreamNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
-import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
 import {AIReActChatReview} from "../aiReActChatReview/AIReActChatReview"
 import {AIReviewResult} from "../aiReviewResult/AIReviewResult"
 import {AITriageChatContent} from "../aiTriageChat/AITriageChat"
@@ -11,6 +10,7 @@ import ToolInvokerCard from "../ToolInvokerCard"
 import styles from "./AIChatListItem.module.scss"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import DividerCard, {StreamsStatus} from "../DividerCard"
+import {AIToolDecision} from "../aiToolDecision/AIToolDecision"
 const chatContentExtraProps = {
     contentClassName: styles["content-wrapper"],
     chatClassName: styles["question-wrapper"]
@@ -45,10 +45,10 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
             default:
                 return {}
         }
-    }, [])
-    const getTask = useMemoizedFn((id) => {
+    }, [type])
+    const getTask = (id) => {
         return tasks.find((item) => item.index === id)
-    })
+    }
     const renderContent = useMemoizedFn(() => {
         const {id, type, Timestamp, data} = item
         let contentNode: ReactNode = <></>
@@ -107,10 +107,10 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                     )
                 }
                 break
-            case "file_system_pin": {
+            case "file_system_pin":
                 contentNode = <FileSystemCard {...data} {...aiFileSystemCard} />
                 break
-            }
+
             case "task_index_node":
                 const task = getTask(data.taskIndex)
                 const props = {
@@ -121,6 +121,9 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                     error: 0
                 }
                 contentNode = <DividerCard {...props} />
+                break
+            case "tool_call_decision":
+                contentNode = <AIToolDecision item={item} />
                 break
             // TODO 更新任务队列
             // <AITaskUpdateNotice/>

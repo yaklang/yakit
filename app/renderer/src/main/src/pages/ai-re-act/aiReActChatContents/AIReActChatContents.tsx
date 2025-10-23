@@ -19,21 +19,20 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     const {nodeLabel} = useAINodeLabel(NodeIdVerbose)
 
     if (isToolExecStream(NodeId)) {
-        return <AIChatToolColorCard key={NodeId} toolCall={stream.data} />
+        return <AIChatToolColorCard toolCall={stream.data} />
     }
 
     switch (NodeId) {
         case "re-act-loop-answer-payload":
-            return <AIMarkdown key={stream.id} data={stream.data} {...aiMarkdownProps} />
+            return <AIMarkdown data={stream.data} {...aiMarkdownProps} />
         case "re-act-loop":
         case "re-act-loop-thought":
-            return <AIStreamChatContent key={stream.id} data={stream.data} />
+            return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} />
         default:
             const {execFileRecord} = chatIPCData.yakExecResult
             const fileList = execFileRecord.get(CallToolID)
             return (
                 <StreamCard
-                    key={stream.id}
                     titleText={nodeLabel}
                     titleIcon={taskAnswerToIconMap[NodeId]}
                     content={content}

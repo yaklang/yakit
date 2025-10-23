@@ -8,17 +8,17 @@ import {OutlineSparklesColorsIcon} from "@/assets/icon/colors"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 
 export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.memo((props) => {
-    const {data} = props
-    const {nodeLabel} = useAINodeLabel(data.NodeIdVerbose)
-    const content = useCreation(() => {
-        return data.content.slice(-150)
-    }, [data.content])
+    const {content, nodeIdVerbose} = props
+    const {nodeLabel} = useAINodeLabel(nodeIdVerbose)
+    const showContent = useCreation(() => {
+        return content.slice(-150)
+    }, [content])
     return (
         <Tooltip
             title={
                 <div className={styles["tooltip-stream-content"]}>
-                    {data.content}
-                    <CopyComponents copyText={data.content} />
+                    {content}
+                    <CopyComponents copyText={content} />
                 </div>
             }
         >
@@ -28,8 +28,8 @@ export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.mem
                     {nodeLabel}
                 </div>
                 <div className={styles["ai-stream-content"]}>
-                    {data.content.length > 100 && <div className={styles["ai-mask"]} />}
-                    {content}
+                    {content.length > 100 && <div className={styles["ai-mask"]} />}
+                    {showContent}
                 </div>
             </div>
         </Tooltip>
