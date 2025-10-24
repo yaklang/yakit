@@ -64,6 +64,12 @@
                 }
             }
 
+            &-setting {
+                svg {
+                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                }
+            }
+
             &-extra {
                 @extend .display-flex-center;
 
@@ -498,6 +504,71 @@
         video {
             width: 100%;
             height: 410px;
+        }
+    }
+}
+
+
+.history-advanced-set-wrapper {
+    .advanced-configuration-drawer-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        &-text {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            display: flex;
+            align-items: center;
+            svg {
+                height: 16px;
+                color: var(--Colors-Use-Neutral-Disable);
+            }
+        }
+
+        &-btns {
+            display: flex;
+            gap: 8px;
+        }
+    }
+
+    .advanced-configuration-drawer-delay {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+
+        :global {
+            .ant-input {
+                text-align: right;
+                line-height: 16px;
+                height: 16px;
+            }
+        }
+
+        .input-left {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .input-right {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+    }
+
+    .form-item-with-reset-button {
+        :global {
+            .ant-form-item {
+                flex: 1;
+            }
+            .ant-form-item-control-input-content{
+                display: flex;
+            }
+            .ant-form-item{
+                margin-bottom: 0;
+            }
         }
     }
 }

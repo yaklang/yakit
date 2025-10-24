@@ -113,6 +113,8 @@ import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 import {updateConcurrentLoad} from "@/utils/duplex/duplex"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { isEmpty } from "lodash"
+import { AdvancedSet, ConcurrencyItem, initSetValue } from "./FuzzerPageConcurrency"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 const FuzzerPageSetting = React.lazy(() => import("./FuzzerPageSetting"))
@@ -229,17 +231,47 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const droppedSequenceIndexMapRef = useRef<Map<string, Map<string, number>>>(new Map()) //序列丢弃:中间缓存的数据用于计算最后的丢弃数
 
     const [extractedMap, {reset, set}] = useMap<string, Map<string, string>>()
+    
+    // 并发模式的数据
+    const [originConcurrencyList, setOriginConcurrencyList] = useState<SequenceProps[]>([])
+    const [concurrencyList, setConcurrencyList] = useState<SequenceProps[]>([])
+    //高级设置抽屉显示
+    const [advancedSetVisible, setAdvancedSetVisible] = useState<boolean>(false)
+
+    // 页面显示模式
+    const isConcurrency = useMemo(() => props.type === "concurrency", [props.type])
+    // 记录是否已经在并发模式下初始化过
+    const hasInitializedConcurrencyRef = useRef<boolean>(false)
+
+    // 根据模式动态选择使用的列表
+    const currentList = useMemo(() => isConcurrency ? concurrencyList : sequenceList, [isConcurrency, concurrencyList, sequenceList])
+    const currentOriginList = useMemo(() => isConcurrency ? originConcurrencyList : originSequenceList, [isConcurrency, originConcurrencyList, originSequenceList])
+
+    const setCurrentList = useMemoizedFn((list: SequenceProps[]) => {
+        isConcurrency ? setConcurrencyList(list) :  setSequenceList(list)
+    })
+    const setCurrentOriginList = useMemoizedFn((list: SequenceProps[]) => {
+        isConcurrency ? setOriginConcurrencyList(list) : setOriginSequenceList(list)
+    })
+
+    const pageGroupData = queryPagesDataById(YakitRoute.HTTPFuzzer, selectGroupId)
+    const pageName = pageGroupData?.pageName
+    //并发advancedConfigValue配置
+    const ConcurrencyAdvancedConfigValue = pageGroupData?.pageParamsInfo?.ConcurrencyAdvancedConfigValue
 
     useDebounceEffect(
         () => {
-            const effectiveSequenceList = sequenceList.filter((ele) => ele.pageId)
-            if (effectiveSequenceList.length > 0) {
-                updateFuzzerSequenceCacheData(propsGroupId, effectiveSequenceList)
-            } else {
-                addFuzzerSequenceCacheData(propsGroupId, [])
+            // 只有 Sequence 模式才缓存到 redux
+            if (!isConcurrency) {
+                const effectiveSequenceList = sequenceList.filter((ele) => ele.pageId)
+                if (effectiveSequenceList.length > 0) {
+                    updateFuzzerSequenceCacheData(propsGroupId, effectiveSequenceList)
+                } else {
+                    addFuzzerSequenceCacheData(propsGroupId, [])
+                }
             }
         },
-        [sequenceList],
+        [sequenceList, isConcurrency],
         {wait: 200}
     )
     useEffect(() => {
@@ -277,11 +309,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     useUpdateEffect(() => {
         if (!loading) {
             onUpdateSequence()
-            const newSequenceList = sequenceList.map((item) => ({
+            const newList = currentList.map((item) => ({
                 ...item,
                 disabled: false
             }))
-            setSequenceList([...newSequenceList])
+            setCurrentList([...newList])
             setTimeout(() => {
                 onClearRef()
             }, 1000)
@@ -538,7 +570,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const handleSetDroppedCount = useMemoizedFn((content: string) => {
         try {
             const data: WebFuzzerDroppedProps = JSON.parse(content)
-            const isExist = !!sequenceList.find((ele) => ele.id === data.fuzzer_index)
+            const isExist = !!currentList.find((ele) => ele.id === data.fuzzer_index)
             if (isExist) {
                 const current: Map<string, number> =
                     droppedSequenceIndexMapRef.current.get(data.fuzzer_index) || new Map()
@@ -568,7 +600,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     /**点击开始执行后，如果没有选中项，则设置返回的第一个为选中item */
     const onSetFirstAsSelected = useMemoizedFn((fuzzerIndex: string) => {
         if (!currentSequenceItem) {
-            const current: SequenceProps | undefined = sequenceList.find((ele) => ele.id === fuzzerIndex)
+            const current: SequenceProps | undefined = currentList.find((ele) => ele.id === fuzzerIndex)
             if (current) {
                 setCurrentSequenceItem(current)
             }
@@ -603,7 +635,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             if (failedBuffer.length + successBuffer.length === 0) {
                 return
             }
-            const newSequenceList = sequenceList.map((item) => {
+            const newList = currentList.map((item) => {
                 if (item.disabled) {
                     return {
                         ...item,
@@ -614,8 +646,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 }
             })
 
-            if (!isEqual(newSequenceList, sequenceList)) {
-                setSequenceList(newSequenceList)
+            if (!isEqual(newList, currentList)) {
+                setCurrentList(newList)
             }
 
             let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
@@ -684,24 +716,24 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             }
 
             onSetOriginSequence(pageChildrenList)
-            const newSequenceList: SequenceProps[] = []
-            sequenceList.forEach((item) => {
+            const newList: SequenceProps[] = []
+            currentList.forEach((item) => {
                 const current = pageChildrenList.find((ele) => ele.pageId === item.pageId)
                 if (!item.pageId) {
-                    newSequenceList.push({
+                    newList.push({
                         ...item
                     })
                 }
                 if (current) {
-                    newSequenceList.push({
+                    newList.push({
                         ...item
                     })
                 }
             })
-            if (newSequenceList.findIndex((ele) => ele.pageId === currentSequenceItem?.pageId) === -1) {
+            if (newList.findIndex((ele) => ele.pageId === currentSequenceItem?.pageId) === -1) {
                 setCurrentSequenceItem(undefined)
             }
-            if (newSequenceList.length === 0) {
+            if (newList.length === 0) {
                 const newItem: SequenceProps = {
                     id: "1",
                     name: `Step [0]`,
@@ -711,29 +743,65 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     inheritCookies: true,
                     inheritVariables: true
                 }
-                newSequenceList.push(newItem)
+                newList.push(newItem)
             }
-            setSequenceList([...newSequenceList])
+            setCurrentList([...newList])
         }),
         {wait: 200}
     ).run
 
+    // 首次进入或切换模式时的初始化逻辑
+    useEffect(() => {
+        const pageChildrenList = getCurrentGroupSequence()
+        onSetOriginSequence(pageChildrenList)
+
+        if (isConcurrency) {
+            // 并发模式：首次初始化时使用全部列表
+            if (!hasInitializedConcurrencyRef.current) {
+                hasInitializedConcurrencyRef.current = true
+                const list = pageChildrenList.map(({ pageGroupId, pageId, pageName }, index) => ({
+                    id: `${randomString(8)}-${index}`,
+                    name: `Step [${index}]`,
+                    pageId,
+                    pageGroupId: pageGroupId || props.groupId,
+                    pageName,
+                    inheritCookies: true,
+                    inheritVariables: true
+                }))
+                if (list.length > 0) {
+                    setCurrentSequenceItem(list[0])
+                    setCurrentList(list)
+                }
+            } else {
+                // 切换回并发模式：选中第一项
+                if (concurrencyList.length > 0) {
+                    setCurrentSequenceItem(concurrencyList[0])
+                }
+            }
+        } else {
+            // 序列模式：首次初始化时创建空节点
+            if (sequenceList.length === 0) {
+                const item: SequenceProps = {
+                    id: `${randomString(8)}-1`,
+                    name: "Step [0]",
+                    pageId: "",
+                    pageGroupId: pageChildrenList[0]?.pageGroupId || props.groupId,
+                    pageName: "",
+                    inheritCookies: true,
+                    inheritVariables: true
+                }
+                setCurrentSequenceItem({...item})
+                setSequenceList([item])
+            } else {
+                // 切换回序列模式：选中第一项
+                setCurrentSequenceItem(sequenceList[0])
+            }
+        }
+    }, [isConcurrency])
+
     const getPageNodeInfoByPageIdByRoute = useMemoizedFn(() => {
         const pageChildrenList = getCurrentGroupSequence()
         onSetOriginSequence(pageChildrenList)
-        if (sequenceList.length === 0) {
-            const item: SequenceProps = {
-                id: `${randomString(8)}-1`,
-                name: "Step [0]",
-                pageId: "",
-                pageGroupId: pageChildrenList[0]?.pageGroupId || props.groupId,
-                pageName: "",
-                inheritCookies: true,
-                inheritVariables: true
-            }
-            setCurrentSequenceItem({...item})
-            setSequenceList([item])
-        }
     })
 
     /**设置原始序列 */
@@ -748,7 +816,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             inheritCookies: true,
             inheritVariables: true
         }))
-        setOriginSequenceList([...newSequence])
+        setCurrentOriginList([...newSequence])
     })
 
     const onDragEnd = useMemoizedFn((result: DropResult, provided: ResponderProvided) => {
@@ -756,16 +824,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             return
         }
         if (result.source.droppableId === "droppable1" && result.destination.droppableId === "droppable1") {
-            const current: SequenceProps | undefined = sequenceList[result.source.index]
+            const current: SequenceProps | undefined = currentList[result.source.index]
             if (current) {
                 setCurrentSequenceItem(current)
             }
-            const newSequenceList: SequenceProps[] = reorder(
-                sequenceList,
+            const newList: SequenceProps[] = reorder(
+                currentList,
                 result.source.index,
                 result.destination.index
             )
-            setSequenceList(newSequenceList)
+            setCurrentList(newList)
         }
     })
     const onUpdateItemPage = useMemoizedFn((item: SequenceProps, index: number) => {
@@ -775,20 +843,22 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         if (!currentSequenceItem || !currentSequenceItem.pageId) {
             setIsShowSetting(true)
         }
-        const originItem = originSequenceList.find((ele) => ele.pageId === item.pageId)
+        const originItem = currentOriginList.find((ele) => ele.pageId === item.pageId)
         if (!originItem) return
-        sequenceList[index] = {
+        const newList = [...currentList]
+        newList[index] = {
             ...item
         }
         setCurrentSequenceItem({...item})
-        setSequenceList([...sequenceList])
+        setCurrentList(newList)
     })
     const onUpdateItem = useMemoizedFn((item: SequenceProps, index: number) => {
         if (item.id === currentSequenceItem?.id) {
             setCurrentSequenceItem({...item})
         }
-        sequenceList[index] = {...item}
-        setSequenceList([...sequenceList])
+        const newList = [...currentList]
+        newList[index] = {...item}
+        setCurrentList(newList)
     })
     /**
      * @description HotPatchCode和HotPatchCodeWithParamGetter一直使用缓存在数据库中的值
@@ -797,7 +867,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const getHttpParams = useMemoizedFn(() => {
         const httpParams: FuzzerRequestProps[] = []
         const pageChildrenList = getCurrentGroupSequence()
-        sequenceList.forEach((item) => {
+        currentList.forEach((item) => {
             const requestItem = pageChildrenList.find((ele) => ele.pageId === item.pageId)
             const webFuzzerPageInfo = requestItem?.pageParamsInfo.webFuzzerPageInfo
             if (webFuzzerPageInfo) {
@@ -808,12 +878,24 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     RequestRaw: Buffer.from(webFuzzerPageInfo.request, "utf8"), // StringToUint8Array(request, "utf8"),
                     HotPatchCode: webFuzzerPageInfo.hotPatchCode,
                     HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
-                    InheritCookies: item.inheritCookies,
-                    InheritVariables: item.inheritVariables,
+                    // 并发模式下禁用继承，避免并发请求之间互相干扰
+                    InheritCookies: isConcurrency ? false : item.inheritCookies,
+                    InheritVariables: isConcurrency ? false : item.inheritVariables,
                     FuzzerIndex: item.id,
                     FuzzerTabIndex: item.pageId,
                     EngineDropPacket: true
                 }
+
+                // 并发模式下优先使用并发全局配置，如果没有则使用各自配置
+                if(!isEmpty(ConcurrencyAdvancedConfigValue) && isConcurrency){
+                    const {repeatTimes, disableUseConnPool, concurrent, minDelaySeconds, maxDelaySeconds} = ConcurrencyAdvancedConfigValue
+                    if (minDelaySeconds !== undefined) httpParamsItem.RandomChunkedMinDelay = +minDelaySeconds
+                    if (maxDelaySeconds !== undefined) httpParamsItem.RandomChunkedMaxDelay = +maxDelaySeconds
+                    if (repeatTimes !== undefined) httpParamsItem.RepeatTimes = repeatTimes
+                    if (disableUseConnPool !== undefined) httpParamsItem.DisableUseConnPool = disableUseConnPool
+                    if (concurrent !== undefined) httpParamsItem.Concurrent = concurrent
+                }
+
                 setRequest(item.id, webFuzzerPageInfo.advancedConfigValue)
                 httpParams.push(httpParamsItem)
             }
@@ -834,10 +916,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     })
 
     const onStartExecution = useMemoizedFn(() => {
-        const i = sequenceList.findIndex((ele) => !ele.pageId)
+        const i = currentList.findIndex((ele) => !ele.pageId)
         if (i !== -1) {
             setErrorIndex(i)
-            yakitNotify("error", t("FuzzerSequence.execute_after_sequence"))
+            yakitNotify("error", t(isConcurrency ?  'FuzzerConcurrency.execute_after_concurrency' : "FuzzerSequence.execute_after_sequence"))
             return
         }
         setLoading(true)
@@ -852,22 +934,30 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         droppedSequenceIndexMapRef.current.clear()
 
         setCurrentSelectResponse(undefined)
-        const newSequenceList = sequenceList.map((item) => ({...item, disabled: true}))
-        setSequenceList([...newSequenceList])
-        ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: getHttpParams()}, fuzzTokenRef.current)
+        const newList = currentList.map((item) => ({...item, disabled: true}))
+        setCurrentList([...newList])
+        
+        // 并发模式：调用 HTTPFuzzerConcurrency，传递数组
+        // 顺序模式：调用 HTTPFuzzerSequence，传递 {Requests: [...]} 对象
+        const httpParams = getHttpParams()
+        if (isConcurrency) {
+            ipcRenderer.invoke("HTTPFuzzerConcurrency", httpParams, fuzzTokenRef.current)
+        } else {
+            ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: httpParams}, fuzzTokenRef.current)
+        }
     })
     const onForcedStop = useMemoizedFn(() => {
         setLoading(false)
-        ipcRenderer.invoke("cancel-HTTPFuzzerSequence", fuzzTokenRef.current)
+        ipcRenderer.invoke(isConcurrency ? "cancel-HTTPFuzzerConcurrency" : "cancel-HTTPFuzzerSequence", fuzzTokenRef.current)
     })
     const onAddSequenceNode = useMemoizedFn(() => {
-        if (isEmptySequence(sequenceList)) {
+        if (isEmptySequence(currentList)) {
             yakitNotify("error", t("FuzzerSequence.configure_before_adding"))
             return
         }
         const addItem: SequenceProps = {
-            id: `${randomString(8)}-${sequenceList.length + 1}`,
-            name: `Step [${sequenceList.length}]`,
+            id: `${randomString(8)}-${currentList.length + 1}`,
+            name: `Step [${currentList.length}]`,
             pageId: "",
             pageName: "",
             pageGroupId: "",
@@ -875,21 +965,21 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             inheritVariables: true
         }
         setCurrentSequenceItem({...addItem})
-        setSequenceList([...sequenceList, addItem])
+        setCurrentList([...currentList, addItem])
     })
     const onApplyOtherNodes = useMemoizedFn((extraSetting: ExtraSettingProps) => {
-        const newSequenceList = sequenceList.map((item) => ({
+        const newList = currentList.map((item) => ({
             ...item,
             ...extraSetting
         }))
-        setSequenceList([...newSequenceList])
+        setCurrentList([...newList])
         yakitNotify("success", t("FuzzerSequence.application_success"))
     })
     const onRemoveNode = useMemoizedFn((index: number) => {
         if (index === errorIndex) {
             setErrorIndex(-1)
         }
-        if (sequenceList.length <= 1) {
+        if (currentList.length <= 1) {
             const newItem: SequenceProps = {
                 id: "1",
                 name: `Step [0]`,
@@ -899,15 +989,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 inheritCookies: true,
                 inheritVariables: true
             }
-            setSequenceList([newItem])
+            setCurrentList([newItem])
             setCurrentSequenceItem({...newItem})
             setIsShowSetting(false)
         } else {
-            if (currentSequenceItem?.id === sequenceList[index].id) {
-                setCurrentSequenceItem(sequenceList[index - 1])
+            if (currentSequenceItem?.id === currentList[index].id) {
+                setCurrentSequenceItem(currentList[index - 1])
             }
-            sequenceList.splice(index, 1)
-            setSequenceList([...sequenceList])
+            const newList = [...currentList]
+            newList.splice(index, 1)
+            setCurrentList(newList)
         }
     })
     /**单个返回Response 打开匹配器和提取器编辑，切换选中项或者点击开始执行时，需要先验证用户是否要应用最新得数据 */
@@ -927,7 +1018,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     })
     const onSelect = useMemoizedFn(async (val: SequenceProps) => {
         if (!val.pageId) {
-            yakitNotify("error", t("FuzzerSequence.select_after_configuring_sequence"))
+            yakitNotify("error", t(isConcurrency ? "FuzzerConcurrency.select_after_configuring_concurrency": "FuzzerSequence.select_after_configuring_sequence"))
             return
         }
         validateME()
@@ -1221,6 +1312,20 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         onDebug({httpResponse: response, type: "matchers", activeKey: "ID:0", order: 0})
     })
 
+    const handleAdvancedSetSave = useMemoizedFn((values) => {
+        const pageData = queryPagesDataById(YakitRoute.HTTPFuzzer, selectGroupId)
+        if (!pageData?.pageParamsInfo?.webFuzzerPageInfo) return
+        
+        const newCurrentItem: PageNodeItemProps = {
+            ...pageData,
+            pageParamsInfo: {
+                ...pageData.pageParamsInfo,
+                ConcurrencyAdvancedConfigValue: values
+            }
+        }
+        updatePagesDataCacheById(YakitRoute.HTTPFuzzer, newCurrentItem)
+    })
+
     const emptyMap = useMemo(() => new Map(), [])
 
     return (
@@ -1235,6 +1340,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                         <span
                             className={styles["fuzzer-sequence-left-heard-text"]}
                             onClick={() => {
+                                if(isConcurrency) return;
                                 const m = showYakitModal({
                                     type: "white",
                                     title: (
@@ -1261,12 +1367,28 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 })
                             }}
                         >
-                            {t("FuzzerSequence.sequence_configuration")}
-                            <QuestionMarkCircleIcon />
+                            {isConcurrency ? <>
+                                {pageName}
+                                <OutlineCogIcon 
+                                    onClick={() => setAdvancedSetVisible(true)} 
+                                    className={styles["fuzzer-sequence-left-heard-setting"]}
+                                />
+                                <AdvancedSet
+                                    advancedConfigValue={ConcurrencyAdvancedConfigValue || initSetValue}
+                                    visible={advancedSetVisible}
+                                    onSave={handleAdvancedSetSave}
+                                    onCancel={()=> setAdvancedSetVisible(false)}
+                                />
+                            </> : 
+                            <>
+                                {t("FuzzerSequence.sequence_configuration")} 
+                                <QuestionMarkCircleIcon />
+                            </>
+                            }
                         </span>
                         <div className={styles["fuzzer-sequence-left-heard-extra"]}>
                             <YakitButton type='text' disabled={loading} onClick={() => onAddSequenceNode()}>
-                                {t("FuzzerSequence.add_node")}
+                                {t(`${isConcurrency ? 'FuzzerConcurrency': 'FuzzerSequence'}.add_node`)}
                                 <SolidPlusIcon className={styles["plus-icon"]} />
                             </YakitButton>
                             {loading ? (
@@ -1299,13 +1421,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                             ref={provided.innerRef}
                                             className={styles["fuzzer-sequence-list"]}
                                         >
-                                            {sequenceList.map((sequenceItem, index) => {
+                                            {currentList.map((sequenceItem, index) => {
                                                 return (
                                                     <Draggable
                                                         key={sequenceItem.id}
                                                         draggableId={sequenceItem.id}
                                                         index={index}
-                                                        isDragDisabled={loading}
+                                                        isDragDisabled={loading || isConcurrency}
                                                     >
                                                         {(providedItem, snapshotItem) => (
                                                             <div
@@ -1317,31 +1439,29 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                                                     providedItem.draggableProps.style
                                                                 )}
                                                             >
-                                                                <SequenceItem
-                                                                    pageNodeList={originSequenceList}
-                                                                    item={sequenceItem}
-                                                                    isSelect={
-                                                                        currentSequenceItem?.id === sequenceItem.id
+                                                                {(() => {
+                                                                    const commonProps = {
+                                                                        pageNodeList: currentOriginList,
+                                                                        item: sequenceItem,
+                                                                        isSelect: currentSequenceItem?.id === sequenceItem.id,
+                                                                        index,
+                                                                        errorIndex,
+                                                                        isDragging: snapshotItem.isDragging,
+                                                                        disabled: sequenceItem.disabled,
+                                                                        isShowLine: loading && index === currentList.length - 1,
+                                                                        onApplyOtherNodes,
+                                                                        onUpdateItemPage: (item) => onUpdateItemPage(item, index),
+                                                                        onUpdateItem: (item) => onUpdateItem(item, index),
+                                                                        onRemove: () => onRemoveNode(index),
+                                                                        onSelect,
+                                                                        onShowSetting,
+                                                                        isShowSetting,
+                                                                        selectedList: currentList.map(({pageId})=>pageId)
                                                                     }
-                                                                    index={index}
-                                                                    errorIndex={errorIndex}
-                                                                    isDragging={snapshotItem.isDragging}
-                                                                    disabled={sequenceItem.disabled}
-                                                                    isShowLine={
-                                                                        loading && index === sequenceList.length - 1
-                                                                    }
-                                                                    onApplyOtherNodes={onApplyOtherNodes}
-                                                                    onUpdateItemPage={(item) =>
-                                                                        onUpdateItemPage(item, index)
-                                                                    }
-                                                                    onUpdateItem={(item) => onUpdateItem(item, index)}
-                                                                    onRemove={() => {
-                                                                        onRemoveNode(index)
-                                                                    }}
-                                                                    onSelect={onSelect}
-                                                                    onShowSetting={onShowSetting}
-                                                                    isShowSetting={isShowSetting}
-                                                                />
+                                                                    const ItemComponent = isConcurrency ? ConcurrencyItem : SequenceItem
+                                                                    return <ItemComponent {...commonProps} />
+                                                                })()}
+                                                                
                                                             </div>
                                                         )}
                                                     </Draggable>
@@ -1354,9 +1474,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                             </Droppable>
                         </DragDropContext>
 
-                        {!loading && (
+                        {!loading && !isConcurrency &&  (
                             <div className={styles["plus-sm-icon-body"]}>
-                                {sequenceList.length > 0 && (
+                                {currentList.length > 0 && (
                                     <div className={classNames(styles["inherit-line-icon"])}>
                                         <InheritLineIcon />
                                     </div>
@@ -1377,7 +1497,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 >
                     <div className={styles["setting-heard"]}>
                         <span>
-                            {currentSequenceItem?.name}&nbsp;{t("FuzzerSequence.config")}
+                            {isConcurrency ? currentSequenceItem?.pageName : 
+                                currentSequenceItem?.name}&nbsp;{t("FuzzerSequence.config")
+                            }
                         </span>
                         <YakitButton type='text2' icon={<OutlineXIcon />} onClick={() => setIsShowSetting(false)} />
                     </div>
@@ -1408,6 +1530,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 onShowAll={onShowAllHeader}
                                 getHttpParams={getHttpParams}
                                 onPluginDebugger={onPluginDebugger}
+                                isConcurrency={isConcurrency}
                             />
                             <SequenceResponse
                                 ref={sequenceResponseRef}
@@ -1431,10 +1554,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 defActiveKeyAndOrder={defActiveKeyAndOrder}
                                 webFuzzerNewEditorRef={webFuzzerNewEditorRef}
                                 inViewport={inViewport === true}
+                                isConcurrency={isConcurrency}
                             />
                         </>
                     ) : (
-                        <YakitEmpty title={t("FuzzerSequence.select_webfuzzer_with_sequence_tip")} />
+                        <YakitEmpty title={t(isConcurrency ? "FuzzerConcurrency.select_webfuzzer_with_concurrency_tip":"FuzzerSequence.select_webfuzzer_with_sequence_tip")} />
                     )}
                 </div>
             </div>
@@ -1774,7 +1898,8 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
         currentSequenceItemPageName,
         setAdvancedConfigValue,
         getHttpParams,
-        onPluginDebugger
+        onPluginDebugger,
+        isConcurrency,
     } = props
     const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const {
@@ -1818,6 +1943,11 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
     return (
         <div className={styles["sequence-response-heard"]}>
             <div className={styles["sequence-response-heard-left"]}>
+                {isConcurrency ? 
+                    <span className={styles["sequence-response-heard-left-title"]}>
+                        {currentSequenceItemPageName}
+                    </span>
+                : 
                 <span>
                     <span className={styles["sequence-response-heard-left-title"]}>
                         {currentSequenceItemName || ""}
@@ -1826,7 +1956,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                         {currentSequenceItemPageName || ""}
                     </span>
                 </span>
-
+                }
                 <FuzzerExtraShow
                     droppedCount={droppedCount}
                     advancedConfigValue={advancedConfigValue || defaultAdvancedConfigValue}
@@ -1836,6 +1966,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                 />
             </div>
             <div style={{display: "flex"}}>
+                {isConcurrency ? <Divider type='vertical' style={{ margin: 8, visibility: "hidden"}} /> : <>
                 <ShareImportExportData
                     module='fuzzer'
                     supportShare={false}
@@ -1871,6 +2002,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                         {t("SequenceResponseHeard.generateYamlTemplate")}
                     </YakitButton>
                 </YakitDropdownMenu>
+                </>}
                 <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()} style={{marginLeft: 8}}>
                     {t("SequenceResponseHeard.show_all_responses")}
                 </YakitButton>
@@ -1899,7 +2031,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             activeType,
             defActiveKeyAndOrder,
             webFuzzerNewEditorRef,
-            inViewport
+            inViewport,
+            isConcurrency
         } = props
         const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi", "yakitRoute"])
         const {
@@ -2330,7 +2463,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                         ) : (
                                             <Result
                                                 status={"warning"}
-                                                title={t("SequenceResponse.view_after_executing_sequence")}
+                                                title={t(isConcurrency ? "ConcurrencyResponse.view_after_executing_concurrency" : "SequenceResponse.view_after_executing_sequence" )}
                                             />
                                         )}
                                     </div>

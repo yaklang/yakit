@@ -16,7 +16,8 @@
   "WebFuzzerPage": {
     "config": "Config",
     "rule": "Rule",
-    "sequence": "Sequence"
+    "sequence": "Sequence",
+    "concurrency": "Concurrency"
   },
   "PacketScanButton": {
     "packetScan": "Packet Scan"
@@ -597,6 +598,12 @@
     "config": "Config",
     "select_webfuzzer_with_sequence_tip": "Please select Web Fuzzer (if you need to use a sequence, please drag other tabs into this group)"
   },
+  "FuzzerConcurrency": {
+    "add_node": "Add",
+    "select_after_configuring_concurrency": "Please configure the concurrency before making a selection",
+    "execute_after_concurrency": "Please configure the concurrency before executing",
+    "select_webfuzzer_with_concurrency_tip": "Please select Web Fuzzer (if you need to use a concurrency, please drag other tabs into this group)" 
+  },
   "SequenceItem": {
     "variable": "Variable",
     "edit_name": "Edit Name",
@@ -619,5 +626,8 @@
     "matcher_extractor_validation_failed": "Matcher and extractor validation failed:",
     "hotReload": "Hot Reload",
     "view_after_executing_sequence": "Please execute the sequence before viewing"
+  },
+  "ConcurrencyResponse": {
+    "view_after_executing_concurrency": "Please execute the concurrency before viewing"
   }
 }

@@ -3268,13 +3268,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             ref.focus()
         }, 100)
     })
-    const onAddGroup = useMemoizedFn((e, res: {pageId: string}) => {
+    const onAddGroup = useMemoizedFn((e, {pageId, type: addType }: { pageId: string, type: WebFuzzerType }) => {
         if (!inViewport) return
-        const {index} = getPageItemById(subPage, res.pageId)
+        const {index} = getPageItemById(subPage, pageId)
         if (index === -1) return
         subTabsRef.current?.onNewGroup(subPage[index])
         setTimeout(() => {
-            setType("sequence")
+            setType(addType)
         }, 200)
     })
     /**快捷关闭或者新增 */

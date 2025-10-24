@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {WebFuzzerPageProps, WebFuzzerType} from "./WebFuzzerPageType"
 import styles from "./WebFuzzerPage.module.scss"
-import {OutlineAdjustmentsIcon, OutlineClipboardlistIcon, OutlineCollectionIcon} from "@/assets/icon/outline"
+import {OutlineAdjustmentsIcon, OutlineClipboardlistIcon, OutlineCollectionIcon, OutlineViewboardsIcon } from "@/assets/icon/outline"
 import classNames from "classnames"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -17,6 +17,7 @@ import {defaultWebFuzzerPageInfo} from "@/defaultConstants/HTTPFuzzerPage"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { useFuzzerSequence } from "@/store/fuzzerSequence"
 const {ipcRenderer} = window.require("electron")
 
 export const webFuzzerTabs = (t: (text: string) => string) => {
@@ -35,6 +36,11 @@ export const webFuzzerTabs = (t: (text: string) => string) => {
             key: "sequence",
             label: t("WebFuzzerPage.sequence"),
             icon: <OutlineCollectionIcon />
+        },
+        {
+            key: "concurrency",
+            label: t("WebFuzzerPage.concurrency"),
+            icon: <OutlineViewboardsIcon />
         }
     ]
 }
@@ -71,6 +77,11 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         rule: true
     })
 
+    const {fuzzerSequenceList, addFuzzerSequenceList } = useFuzzerSequence((s) => ({ 
+        fuzzerSequenceList: s.fuzzerSequenceList,
+        addFuzzerSequenceList: s.addFuzzerSequenceList,
+    }), shallow)
+
     useEffect(() => {
         emiter.on("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
         emiter.on("sequenceSendSwitchTypeToFuzzer", onSwitchType)
@@ -97,24 +108,28 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         })
     }, [])
 
-    const onSetSequence = useMemoizedFn(() => {
+    const onSetSequence = useMemoizedFn((type) => {
         const pageChildrenList: PageNodeItemProps[] = getPagesDataByGroupId(YakitRoute.HTTPFuzzer, selectGroupId) || []
         if (props.id && pageChildrenList.length === 0) {
             // 新建组
-            onAddGroup(props.id)
+            onAddGroup({pageId: props.id, type })
         } else {
-            // 设置MainOperatorContent层type变化用来控制是否展示【序列】
-            emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type: "sequence"}))
+            //这里判断SequenceList有没有当前选中组 没有就添加(解决偶发性点击序列或者并发没有反应的问题， 原因在于fuzzerSequenceList没有当前组)
+            const needAddSequence = fuzzerSequenceList.every(({ groupId })=> groupId !== selectGroupId)
+            needAddSequence && addFuzzerSequenceList({ groupId: selectGroupId })
+            // 设置MainOperatorContent层type变化用来控制是否展示【序列】/【并发】
+            emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type}))
         }
     })
-    const onAddGroup = useMemoizedFn((id: string) => {
-        ipcRenderer.invoke("send-add-group", {pageId: id})
+    const onAddGroup = useMemoizedFn((params: Record<string,string>) => {
+        ipcRenderer.invoke("send-add-group", params)
     })
     /**本组件中切换tab展示的事件 */
     const onSetType = useMemoizedFn((key: WebFuzzerType) => {
         switch (key) {
             case "sequence":
-                onSetSequence()
+            case "concurrency":
+                onSetSequence(key)
                 // 当前页面不在fuzzer页面
                 emiter.emit("onCurrentFuzzerPage", false)
                 break
@@ -140,7 +155,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
             try {
                 const value = JSON.parse(data)
                 const key = value.type as WebFuzzerType
-                if (key === "sequence") return
+                if (["sequence", 'concurrency'].includes(key)) return
                 const c = value.checked
                 const newValue = {
                     ...advancedConfigShow,
@@ -156,7 +171,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         try {
             const value = JSON.parse(data)
             const type = value.type as WebFuzzerType
-            if (type === "sequence") return
+            if (["sequence", 'concurrency'].includes(type)) return
             setType(type)
             // 发送到HTTPFuzzerPage组件中 切换【配置】/【规则】tab 得选中type
             emiter.emit("onSwitchTypeWebFuzzerPage", JSON.stringify({type}))

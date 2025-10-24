@@ -189,7 +189,7 @@ const logger = (log: LoggerData) => {
     ipcRenderer.invoke("add-log", log)
 }
 
-export type AdvancedConfigShowProps = Record<Exclude<WebFuzzerType, "sequence">, boolean>
+export type AdvancedConfigShowProps = Record<Exclude<WebFuzzerType, "sequence" | "concurrency">, boolean>
 export interface ShareValueProps {
     /**高级配置显示/隐藏 */
     advancedConfigShow: AdvancedConfigShowProps

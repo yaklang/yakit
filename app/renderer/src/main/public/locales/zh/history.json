@@ -115,7 +115,8 @@
     "backgroundRefresh": "后台刷新",
     "keepRefreshingTrafficData": "勾选后不在当前页面也会刷新流量数据",
     "listDisplayFieldsAndOrder": "列表展示字段和顺序",
-    "listDisplayConfigTips": "点击禁用则不在列表展示，列表字段展示顺序为从上到下的顺序，可拖拽调整，该配置对插件执行流量表、流量分析表全部生效"
+    "listDisplayConfigTips": "点击禁用则不在列表展示，列表字段展示顺序为从上到下的顺序，可拖拽调整，该配置对插件执行流量表、流量分析表全部生效",
+    "advancedConfigToolTips": "高级配置优先级高于单个标签页配置项"
   },
   "HTTPFlowTableFormConfiguration": {
     "saveAdvancedConfigAndClose": "请问是否要保存高级配置并关闭弹框？",

@@ -18,6 +18,7 @@ export interface FuzzerSequenceProps {
     groupId: string
     pageId?: string
     setType?: (s: WebFuzzerType) => void
+    type: WebFuzzerType
 }
 
 /**
@@ -82,6 +83,7 @@ export interface SequenceItemProps {
     onSelect: (s: SequenceProps) => void
     /**显示页面的高级配置部分参数 */
     onShowSetting: (s: SequenceProps) => void
+    selectedList: string[]
 }
 /**
  * @description 返回参数
@@ -152,6 +154,7 @@ export interface SequenceResponseProps {
     defActiveKeyAndOrder: MatcherActiveKey,
     webFuzzerNewEditorRef: any
     inViewport: boolean
+    isConcurrency: boolean
 }
 
 export interface SequenceResponseRefProps {
@@ -179,6 +182,7 @@ export interface SequenceResponseHeardProps {
     onShowAll: () => void
     getHttpParams: () => FuzzerRequestProps[]
     onPluginDebugger: (code: string) => void
+    isConcurrency: boolean
 }
 
 /**

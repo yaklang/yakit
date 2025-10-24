@@ -62,6 +62,7 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
 
 export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.memo((props) => {
     const {route, type, setType} = props
+    const isSequenceOrConcurrencyType = ["sequence", 'concurrency'].includes(type)
 
     const [pageSequenceRenderList, {set: setPageSequenceRenderList, get: getPageSequenceRenderList}] = useMap<
         string,
@@ -75,15 +76,15 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
     const updateRender = useMemoizedFn((id: string) => {
         // 控制渲染
         if (getPageSequenceRenderList(id)) return
-        if (type === "sequence" && id !== "0") {
+        if (isSequenceOrConcurrencyType && id !== "0") {
             setPageSequenceRenderList(id, true)
         }
     })
     return (
         <div
             className={styles["fuzzer-sequence-list"]}
-            tabIndex={type === "sequence" ? 1 : -1}
-            style={{display: type === "sequence" ? "" : "none"}}
+            tabIndex={isSequenceOrConcurrencyType ? 1 : -1}
+            style={{display: isSequenceOrConcurrencyType ? "" : "none"}}
         >
             {route === YakitRoute.HTTPFuzzer && (
                 <>
@@ -96,8 +97,8 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
                                     style={{display: selectGroupId === ele.groupId ? "" : "none"}}
                                 >
                                     <React.Suspense fallback={<PageLoading />}>
-                                        <FuzzerSequenceWrapper>
-                                            <FuzzerSequence groupId={ele.groupId} setType={setType} />
+                                        <FuzzerSequenceWrapper type={type}>
+                                            <FuzzerSequence groupId={ele.groupId} setType={setType} type={type} />
                                         </FuzzerSequenceWrapper>
                                     </React.Suspense>
                                 </div>
