@@ -9,6 +9,7 @@ import {grpcQueryHTTPFlows} from "../grpc"
 import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
 import {AIYakExecFileRecord} from "@/pages/ai-re-act/hooks/aiRender"
 import FileList from "./FileList"
+import ModalInfo, {ModalInfoProps} from "./ModelInfo"
 interface ToolInvokerCardProps {
     titleText?: string
     status: "default" | "success" | "failed" | "user_cancelled"
@@ -17,9 +18,19 @@ interface ToolInvokerCardProps {
     desc?: string
     params: string
     fileList?: AIYakExecFileRecord[]
+    modalInfo?: ModalInfoProps
 }
 
-const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, name, params, content, desc, status = "fail",fileList}) => {
+const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
+    titleText,
+    name,
+    params,
+    content,
+    desc,
+    status = "fail",
+    fileList,
+    modalInfo
+}) => {
     const [statusColor, statusText] = useMemo(() => {
         if (status === "success") return ["success", "成功"]
         if (status === "fail") return ["danger", "失败"]
@@ -55,6 +66,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({titleText, name, params, con
                     相关漏洞 <span>{risksLen}</span> <span>|</span> HTTP 流量 <span>{trafficLen}</span>
                 </div>
             }
+            footer={modalInfo?.time && <ModalInfo {...modalInfo} />}
         >
             <div className={classNames(styles["file-system"], styles[`file-system-${status}`])}>
                 <div className={styles["file-system-title"]}>
