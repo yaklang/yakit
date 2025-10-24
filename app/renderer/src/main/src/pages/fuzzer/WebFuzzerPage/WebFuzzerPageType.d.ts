@@ -1,6 +1,6 @@
 import {ReactNode} from "react"
 
-export type WebFuzzerType = "config" | "sequence" | "rule"
+export type WebFuzzerType = "config" | "sequence" | "rule" | "concurrency"
 
 export interface WebFuzzerPageProps {
     selectType?: WebFuzzerType
@@ -13,4 +13,5 @@ export interface WebFuzzerPageProps {
 
 export interface FuzzerSequenceWrapperProps {
     children?: ReactNode
+    type: WebFuzzerType
 }

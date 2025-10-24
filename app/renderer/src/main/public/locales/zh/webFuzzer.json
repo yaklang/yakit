@@ -16,7 +16,8 @@
   "WebFuzzerPage": {
     "config": "配置",
     "rule": "规则",
-    "sequence": "序列"
+    "sequence": "序列",
+    "concurrency": "并发"
   },
   "PacketScanButton": {
     "packetScan": "数据包扫描"
@@ -597,6 +598,12 @@
     "config": "配置",
     "select_webfuzzer_with_sequence_tip": "请选择 Web Fuzzer（如需使用序列，请将其他标签页拖入该分组）"
   },
+  "FuzzerConcurrency": {
+    "add_node": "添加",
+    "select_after_configuring_concurrency": "请配置并发后再选中",
+    "execute_after_concurrency": "请配置并发后再执行",
+    "select_webfuzzer_with_concurrency_tip": "请选择 Web Fuzzer（如需使用并发，请将其他标签页拖入该分组）"
+  },
   "SequenceItem": {
     "variable": "变量",
     "edit_name": "修改名称",
@@ -619,5 +626,8 @@
     "matcher_extractor_validation_failed": "匹配器和提取器验证失败：",
     "hotReload": "热加载",
     "view_after_executing_sequence": "请执行序列后进行查看"
+  },
+  "ConcurrencyResponse": {
+    "view_after_executing_concurrency": "请执行并发后进行查看"
   }
 }

@@ -12,6 +12,7 @@ import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstant
 import {PluginSourceType} from "@/pages/pluginHub/type"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {SyntaxFlowScanModeType} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
+import { ConcurrencyAdvancedConfigValue } from "@/pages/fuzzer/FuzzerSequence/FuzzerPageConcurrency"
 
 /**
  * @description 页面暂存数据
@@ -79,6 +80,8 @@ interface PageParamsInfoProps {
     modifyAIToolPageInfo?: AIToolEditorPageInfoProps
     /** 扫描历史页面 */
     yakRunnerScanHistory?: YakRunnerScanHistoryPageInfoProps
+    /** 并发页面高级配置 */
+    ConcurrencyAdvancedConfigValue?: ConcurrencyAdvancedConfigValue
 }
 
 export interface AIForgeEditorPageInfoProps {

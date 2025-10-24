@@ -146,6 +146,7 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamHTTPFuzzerSequenceMap, token)
     })
 
+
     // asyncExtractUrl wrapper
     const asyncExtractUrl = (params) => {
         return new Promise((resolve, reject) => {
