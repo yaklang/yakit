@@ -41,6 +41,9 @@ import {taskAnswerToIconMap} from "../defaultConstant"
 import {SolidLightningboltIcon} from "@/assets/icon/solid"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {AIChatListItem} from "../components/aiChatListItem/AIChatListItem"
+import StreamCard from "../components/StreamCard"
+import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
+import i18n from "@/i18n/i18n"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -293,12 +296,14 @@ export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props
 
 export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = memo((props) => {
     const {callToolId} = props
-    const [secondExpand, setSecondExpand] = useState<string[]>([])
+    // const [secondExpand, setSecondExpand] = useState<string[]>([])
     const [toolList, setToolList] = useState<AIChatQSData[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     useEffect(() => {
         getList()
     }, [])
+
+    const {yakExecResult} = useAIChatUIData()
 
     const getList = useMemoizedFn(() => {
         if (!callToolId) return
@@ -335,12 +340,12 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                     list.push(current)
                 })
                 setToolList(list)
-                setSecondExpand(
-                    list.map((ele) => {
-                        if (ele.type === "stream" && ele.data) return ele.data.EventUUID
-                        return ""
-                    })
-                )
+                // setSecondExpand(
+                //     list.map((ele) => {
+                //         if (ele.type === "stream" && ele.data) return ele.data.EventUUID
+                //         return ""
+                //     })
+                // )
             })
             .finally(() => {
                 setTimeout(() => {
@@ -349,15 +354,15 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
             })
     })
 
-    const handleChangeSecondPanel = useMemoizedFn((expand: boolean, expandKey: string) => {
-        setSecondExpand((preV) => {
-            if (expand) {
-                return [...preV, expandKey]
-            } else {
-                return preV.filter((item) => item !== expandKey)
-            }
-        })
-    })
+    // const handleChangeSecondPanel = useMemoizedFn((expand: boolean, expandKey: string) => {
+    //     setSecondExpand((preV) => {
+    //         if (expand) {
+    //             return [...preV, expandKey]
+    //         } else {
+    //             return preV.filter((item) => item !== expandKey)
+    //         }
+    //     })
+    // })
     return (
         <div className={styles["ai-chat-tool-drawer-content"]}>
             {loading ? (
@@ -365,22 +370,36 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
             ) : (
                 <>
                     {toolList.map((info) => {
+                        console.log("info:", info)
                         const {id, Timestamp, type, data} = info
                         switch (type) {
                             case "stream":
-                                const {EventUUID} = data
-                                const expand = secondExpand.includes(EventUUID)
+                                const {NodeIdVerbose, CallToolID, content, NodeId} = data
+                                // const expand = secondExpand.includes(EventUUID)
+                                const {execFileRecord} = yakExecResult
+                                const fileList = execFileRecord.get(CallToolID)
+                                const language = i18n.language.charAt(0).toUpperCase() + i18n.language.slice(1)
+                                const nodeLabel = NodeIdVerbose[language]
                                 return (
-                                    <ChatStreamCollapseItem
-                                        key={id}
-                                        expandKey={EventUUID}
-                                        info={data}
-                                        secondExpand={expand}
-                                        handleChangeSecondPanel={handleChangeSecondPanel}
-                                        className={classNames({
-                                            [styles["ai-tool-collapse-expand"]]: expand
-                                        })}
-                                        timestamp={Timestamp}
+                                    // <ChatStreamCollapseItem
+                                    //     key={id}
+                                    //     expandKey={EventUUID}
+                                    //     info={data}
+                                    //     secondExpand={expand}
+                                    //     handleChangeSecondPanel={handleChangeSecondPanel}
+                                    //     className={classNames({
+                                    //         [styles["ai-tool-collapse-expand"]]: expand
+                                    //     })}
+                                    //     timestamp={Timestamp}
+                                    // />
+                                    <StreamCard
+                                        titleText={nodeLabel}
+                                        titleIcon={taskAnswerToIconMap[NodeId]}
+                                        content={content}
+                                        modalInfo={{
+                                            time: Timestamp
+                                        }}
+                                        fileList={fileList}
                                     />
                                 )
                             default:

@@ -88,6 +88,10 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         content={data.toolStdoutContent.content}
                         params={data.callToolId}
                         fileList={fileList}
+                        modalInfo={{
+                            time:Timestamp,
+                            callToolId: data.callToolId,
+                        }}
                     />
                 )
                 break
