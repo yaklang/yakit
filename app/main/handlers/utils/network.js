@@ -118,6 +118,7 @@ async function getAvailableOSSDomain() {
 
 // 判断是否为开发模式
 const judgeDevMode = () => {
+    return "true"
     let devMode = process.env.YAKIT_DEV_MODE
     if(devMode === "true") return devMode
     try {

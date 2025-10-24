@@ -71,7 +71,7 @@ DevToolsButton.displayName = "DevToolsButton"
  */
 export const DevTools: React.FC = memo(() => {
     const [visible, setVisible] = useState<boolean>(false)
-    const [isDevMode, setIsDevMode] = useState<boolean>(false)
+    const [isDevMode, setIsDevMode] = useState<boolean>(true)
     const [loaded, setLoaded] = useState<boolean>(false)
 
     // 检查开发模式
