@@ -370,7 +370,6 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
             ) : (
                 <>
                     {toolList.map((info) => {
-                        console.log("info:", info)
                         const {id, Timestamp, type, data} = info
                         switch (type) {
                             case "stream":
