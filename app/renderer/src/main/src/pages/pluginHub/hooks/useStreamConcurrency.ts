@@ -49,7 +49,6 @@ export const useStreamConcurrency = <TData = any, TParams = any>({
             }
 
             const handleError = () => {
-                completedRef.current++
                 checkAllCompleted()
             }
 
