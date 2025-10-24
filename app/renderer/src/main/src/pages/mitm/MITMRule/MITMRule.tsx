@@ -930,7 +930,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                             ruleButtonRef.current?.onSetImportVisible(true)
                         }}
                     >
-                        默认配置
+                        {t("MITMRule.default_Configuration")}
                     </YakitButton>
                     <Divider type='vertical' className={styles["heard-right-operation_divider"]} />
                     <RuleExportAndImportButton 
