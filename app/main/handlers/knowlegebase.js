@@ -63,12 +63,12 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    
+
     ipcMain.handle("CreateKnowledgeBase", async (e, params) => {
         return await asyncCreateKnowledgeBase(params)
     })
 
-        const asyncGetKnowledgeBaseTypeList = (params) => {
+    const asyncGetKnowledgeBaseTypeList = (params) => {
         return new Promise((resolve, reject) => {
             getClient().GetKnowledgeBaseTypeList(params, (err, data) => {
                 if (err) {
@@ -79,7 +79,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    
+
     ipcMain.handle("GetKnowledgeBaseTypeList", async (e, params) => {
         return await asyncGetKnowledgeBaseTypeList(params)
     })
@@ -116,7 +116,7 @@ module.exports = (win, getClient) => {
 
     ipcMain.handle("DeleteKnowledgeBase", async (e, params) => {
         return await asyncDeleteKnowledgeBase(params)
-    })  
+    })
     // rpc DeleteKnowledgeBaseEntry(DeleteKnowledgeBaseEntryRequest) returns(GeneralResponse);
     // rpc CreateKnowledgeBaseEntry(CreateKnowledgeBaseEntryRequest) returns(GeneralResponse);
     // rpc UpdateKnowledgeBaseEntry(UpdateKnowledgeBaseEntryRequest) returns(GeneralResponse);
@@ -179,7 +179,7 @@ module.exports = (win, getClient) => {
             getClient().SearchKnowledgeBaseEntry(params, (err, data) => {
                 if (err) {
                     reject(err)
-                    return  
+                    return
                 }
                 resolve(data)
             })
@@ -292,5 +292,21 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryKnowledgeBaseByAI", (e, params, token) => {
         let stream = getClient().QueryKnowledgeBaseByAI(params)
         handlerHelper.registerHandler(win, stream, streamQueryKnowledgeBaseByAIMap, token)
+    })
+
+    // 流式接口：ExportKnowledgeBase
+    const streamExportKnowledgeBaseMap = new Map()
+    ipcMain.handle("cancel-ExportKnowledgeBase", handlerHelper.cancelHandler(streamExportKnowledgeBaseMap))
+    ipcMain.handle("ExportKnowledgeBase", (e, params, token) => {
+        let stream = getClient().ExportKnowledgeBase(params)
+        handlerHelper.registerHandler(win, stream, streamExportKnowledgeBaseMap, token)
+    })
+
+    // 流式接口：ImportKnowledgeBase
+    const streamImportKnowledgeBaseMap = new Map()
+    ipcMain.handle("cancel-ImportKnowledgeBase", handlerHelper.cancelHandler(streamImportKnowledgeBaseMap))
+    ipcMain.handle("ImportKnowledgeBase", (e, params, token) => {
+        let stream = getClient().ImportKnowledgeBase(params)
+        handlerHelper.registerHandler(win, stream, streamImportKnowledgeBaseMap, token)
     })
 }
