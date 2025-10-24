@@ -253,7 +253,7 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                                     </div>
                                     <Progress
                                         strokeColor='var(--Colors-Use-Main-Primary)'
-                                        trailColor='var(--Colors-Use-Neutral-Bg)'
+                                        trailColor='var(--Colors-Use-Neutral-Bg-Hover)'
                                         percent={Math.floor((downloadProgress?.percent || 0) * 100)}
                                     />
                                     <div className={styles["download-info-wrapper"]}>
