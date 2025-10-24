@@ -308,6 +308,7 @@ const KnowledgeBaseTable: FC<{
             />
             <TableVirtualResize
                 columns={targetColumns as any}
+                key={knowledgeBaseitems?.id + type}
                 data={tableData}
                 renderKey='ID'
                 isRefresh={isRefresh}

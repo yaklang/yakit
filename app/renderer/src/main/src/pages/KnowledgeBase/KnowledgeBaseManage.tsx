@@ -15,6 +15,7 @@ import {KnowledgeBaseFormModal} from "./compoments/KnowledgeBaseModal"
 import {type GetKnowledgeBaseResponse, type KnowledgeBase} from "@/components/playground/knowlegeBase"
 import styles from "./knowledgeBase.module.scss"
 import classNames from "classnames"
+import {ImportModal} from "./compoments/ImportModal"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -24,10 +25,10 @@ interface TRepositoryManageProps {
 }
 
 const createMenuList = [
-    // {
-    //     key: "import",
-    //     label: "导入"
-    // },
+    {
+        key: "import",
+        label: "导入"
+    },
     {
         key: "create",
         label: "新建"
@@ -45,6 +46,7 @@ const KnowledgeBaseManage: FC<{
     const [menuOpenKey, setMenuOpenKey] = useSafeState(-1)
     const [createMenuOpen, setCreateMenuOpen] = useSafeState(false)
     const [qaDrawerVisible, setQaDrawerVisible] = useSafeState(false)
+    const [importVisible, setImportVisible] = useSafeState(false)
 
     // 获取数据库侧边栏数据
     const {
@@ -52,7 +54,7 @@ const KnowledgeBaseManage: FC<{
         runAsync: knowledgeBasesRunAsync,
         refreshAsync
     } = useRequest(
-        async (Keyword: string) => {
+        async (Keyword?: string) => {
             const result: GetKnowledgeBaseResponse = await ipcRenderer.invoke("GetKnowledgeBase", {Keyword})
             const {KnowledgeBases} = result
             return KnowledgeBases
@@ -87,9 +89,9 @@ const KnowledgeBaseManage: FC<{
                         onClick: ({key}) => {
                             setCreateMenuOpen(false)
                             switch (key) {
-                                // case "import":
-                                //     setVisible((prevalue) => !prevalue)
-                                //     break
+                                case "import":
+                                    setImportVisible((prevalue) => !prevalue)
+                                    break
                                 case "create":
                                     handOpenKnowledgeBasesModal()
                                     break
@@ -152,6 +154,12 @@ const KnowledgeBaseManage: FC<{
                 handOpenKnowledgeBasesModal={handOpenKnowledgeBasesModal}
                 refreshAsync={refreshAsync}
                 title='新增知识库'
+            />
+
+            <ImportModal
+                visible={importVisible}
+                onVisible={setImportVisible}
+                existsKnowledgeBaseAsync={knowledgeBasesRunAsync}
             />
 
             <YakitDrawer

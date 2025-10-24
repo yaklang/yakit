@@ -11,16 +11,17 @@ import {OutlineChatalt2Icon} from "@/assets/icon/outline"
 import {DeleteConfirm} from "./KnowledgBaseDeleteModal"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {KnowledgeBaseQA} from "./KnowledgeBaseQA"
+import {ExportModal} from "./ExportModal"
 
 const manageMenuList = [
     {
         key: "edit",
         label: "编辑"
     },
-    // {
-    //     key: "export",
-    //     label: "导出"
-    // },
+    {
+        key: "export",
+        label: "导出"
+    },
     {
         key: "delete",
         label: "删除"
@@ -31,6 +32,8 @@ const ManageBoxMenu: FC<TKnowledgeBaseProps> = ({refreshAsync, itemsData, setMen
     const [visible, setVisible] = useSafeState(false)
     const [menuOpen, setMenuOpen] = useSafeState(false)
     const [deletConfirm, setDeletConfirm] = useSafeState(false)
+    const [exportVisible, setExportVisible] = useSafeState(false)
+
     const [qaDrawerVisible, setQaDrawerVisible] = useSafeState(false)
 
     const handOpenKnowledgeBasesModal = () => {
@@ -41,12 +44,14 @@ const ManageBoxMenu: FC<TKnowledgeBaseProps> = ({refreshAsync, itemsData, setMen
             className={classNames(styles["repository-manage-box-icon"], {
                 [styles["repository-manage-box-icon-selected"]]: menuOpenKey === itemsData?.ID && menuOpen
             })}
-              onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
         >
-            <OutlineChatalt2Icon onClick={e => {
-                e.stopPropagation()
-                setQaDrawerVisible(true)
-            }} />
+            <OutlineChatalt2Icon
+                onClick={(e) => {
+                    e.stopPropagation()
+                    setQaDrawerVisible(true)
+                }}
+            />
             <YakitDropdownMenu
                 menu={{
                     data: manageMenuList,
@@ -55,6 +60,9 @@ const ManageBoxMenu: FC<TKnowledgeBaseProps> = ({refreshAsync, itemsData, setMen
                         switch (key) {
                             case "edit":
                                 setVisible((prevalue) => !prevalue)
+                                break
+                            case "export":
+                                setExportVisible((preValue) => !preValue)
                                 break
                             case "delete":
                                 setDeletConfirm((preValue) => !preValue)
@@ -96,6 +104,8 @@ const ManageBoxMenu: FC<TKnowledgeBaseProps> = ({refreshAsync, itemsData, setMen
                 KnowledgeBaseId={itemsData!.ID}
             />
 
+            <ExportModal visible={exportVisible} setVisible={setExportVisible} KnowledgeBaseId={itemsData!.ID} />
+
             {/* AI问答抽屉 */}
             <YakitDrawer
                 title={`AI问答 - ${itemsData?.KnowledgeBaseName || "知识库"}`}
@@ -105,10 +115,7 @@ const ManageBoxMenu: FC<TKnowledgeBaseProps> = ({refreshAsync, itemsData, setMen
                 onClose={() => setQaDrawerVisible(false)}
                 bodyStyle={{padding: 0, height: "100%", display: "flex", flexDirection: "column"}}
             >
-                <KnowledgeBaseQA
-                    knowledgeBase={itemsData}
-                    queryAllCollectionsDefault={false}
-                />
+                <KnowledgeBaseQA knowledgeBase={itemsData} queryAllCollectionsDefault={false} />
             </YakitDrawer>
         </div>
     )
