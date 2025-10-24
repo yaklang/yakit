@@ -651,6 +651,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         // @ts-ignore
         if (param.Type === "all") delete param.Type
         if (param.ProjectName) param.Type = getEnvTypeByProjects()
+        // 查当前文件夹下的所有内容，应该用当前的父节点（也就是文件夹id）来获取所有的
+        if (param.FolderId !== undefined) {
+             param.Type = ''
+        }
         if (isIRify()) param.FrontendType = "ssa_project"
         setLoading(true)
         ipcRenderer
