@@ -212,7 +212,7 @@ const ConcurrencyItem: React.FC<SequenceItemProps> = memo((props) => {
     })
 
 
-    const isActive = !!isShowSetting && !!isSelect
+    const isActive = useMemo(() => !!isShowSetting && !!isSelect, [isShowSetting, isSelect])
     
     const selectValue = useMemo(
         () => ({

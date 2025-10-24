@@ -12,6 +12,7 @@ import {
     WebFuzzerDroppedProps
 } from "./FuzzerSequenceType"
 import styles from "./FuzzerSequence.module.scss"
+import { useStreamConcurrency } from "@/pages/pluginHub/hooks/useStreamConcurrency"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     SolidDragsortIcon,
@@ -254,10 +255,138 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         isConcurrency ? setOriginConcurrencyList(list) : setOriginSequenceList(list)
     })
 
-    const pageGroupData = queryPagesDataById(YakitRoute.HTTPFuzzer, selectGroupId)
-    const pageName = pageGroupData?.pageName
-    //并发advancedConfigValue配置
-    const ConcurrencyAdvancedConfigValue = pageGroupData?.pageParamsInfo?.ConcurrencyAdvancedConfigValue
+    // pageGroupData通过订阅自动更新
+    const [pageGroupData, setPageGroupData] = useState<PageNodeItemProps | undefined>(
+        () => queryPagesDataById(YakitRoute.HTTPFuzzer, selectGroupId)
+    )
+
+    useEffect(() => {
+        setPageGroupData(queryPagesDataById(YakitRoute.HTTPFuzzer, selectGroupId))
+
+        const unsubscribe = usePageInfo.subscribe(
+            (state) => state.queryPagesDataById(YakitRoute.HTTPFuzzer, selectGroupId),
+            (newData) => {
+                // 当数据变化时自动更新 state
+                setPageGroupData(newData)
+            }
+        )
+
+        return () => {
+            unsubscribe()
+        }
+    }, [selectGroupId, queryPagesDataById])
+
+    const { startConcurrency, cancelConcurrency } = useStreamConcurrency<FuzzerResponse, FuzzerRequestProps>({
+        baseToken: fuzzTokenRef.current,
+        onData: (data, params) => {
+            const { Response, Request: { FuzzerIndex = "" } }: FuzzerSequenceResponse = {
+                Request: {
+                    FuzzerIndex: params.FuzzerIndex || "",
+                    FuzzerTabIndex: params.FuzzerTabIndex || ""
+                } as any,
+                Response: data
+            }
+
+            // 成功/失败计数
+            if (Response.Ok) {
+                let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
+                successCountRef.current.set(FuzzerIndex, (currentSuccessCount || 0) + 1)
+            } else {
+                let currentFailedCount = failedCountRef.current.get(FuzzerIndex)
+                failedCountRef.current.set(FuzzerIndex, (currentFailedCount || 0) + 1)
+            }
+            onSetFirstAsSelected(FuzzerIndex)
+
+            // 数据项计数
+            let count = countRef.current.get(FuzzerIndex)
+            if (count !== undefined) {
+                count++
+                countRef.current.set(FuzzerIndex, count)
+            } else {
+                countRef.current.set(FuzzerIndex, 0)
+            }
+
+            // RuntimeID 收集
+            if (Response.RuntimeID) {
+                let runtimeId = runtimeIdBufferRef.current.get(FuzzerIndex)
+                if (runtimeId) {
+                    runtimeId.push(Response.RuntimeID)
+                    runtimeIdBufferRef.current.set(FuzzerIndex, [...new Set(runtimeId)])
+                } else {
+                    runtimeIdBufferRef.current.set(FuzzerIndex, [Response.RuntimeID])
+                }
+            }
+
+            // 构建响应对象
+            let r = {
+                ...Response,
+                Headers: Response.Headers || [],
+                UUID: Response.UUID,
+                Count: countRef.current.get(FuzzerIndex),
+                cellClassName: ""
+            } as FuzzerResponse
+
+            if (Response.MatchedByMatcher) {
+                let colors = filterColorTag(Response.HitColor) || undefined
+                r.cellClassName = colors
+            }
+
+            // 分类存储成功/失败响应
+            if (Response.Ok) {
+                let successList = successBufferRef.current.get(FuzzerIndex)
+                let fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
+                if (successList) {
+                    successList.push(r)
+                    if (successList.length > fuzzerTableMaxData) {
+                        successList.shift()
+                    }
+                    successBufferRef.current.set(FuzzerIndex, successList)
+                } else {
+                    successBufferRef.current.set(FuzzerIndex, [r])
+                }
+            } else {
+                let failedList = failedBufferRef.current.get(FuzzerIndex)
+                if (failedList) {
+                    failedList.push(r)
+                    failedBufferRef.current.set(FuzzerIndex, failedList)
+                } else {
+                    failedBufferRef.current.set(FuzzerIndex, [r])
+                }
+            }
+
+            if (!fuzzerIndexArr.current.includes(FuzzerIndex)) {
+                fuzzerIndexArr.current.push(FuzzerIndex)
+            }
+
+            // 图表数据
+            let fuzzerResChartData = fuzzerResChartDataBufferRef.current.get(FuzzerIndex)
+            if (fuzzerResChartData) {
+                fuzzerResChartData.push({
+                    Count: (r.Count as number) + 1,
+                    TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
+                    TCPDurationMs: +r.TCPDurationMs,
+                    ConnectDurationMs: +r.ConnectDurationMs,
+                    DurationMs: +r.DurationMs
+                })
+                if (fuzzerResChartData.length > 5000) {
+                    fuzzerResChartData.shift()
+                }
+                fuzzerResChartDataBufferRef.current.set(FuzzerIndex, fuzzerResChartData)
+            } else {
+                fuzzerResChartDataBufferRef.current.set(FuzzerIndex, [{
+                    Count: (r.Count as number) + 1,
+                    TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
+                    TCPDurationMs: +r.TCPDurationMs,
+                    ConnectDurationMs: +r.ConnectDurationMs,
+                    DurationMs: +r.DurationMs
+                }])
+            }
+        },
+        onAllCompleted: () => {
+            // 并发模式全部完成的业务逻辑
+            setLoading(false)
+        }
+    })
 
     useDebounceEffect(
         () => {
@@ -885,15 +1014,18 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     FuzzerTabIndex: item.pageId,
                     EngineDropPacket: true
                 }
+                const ConcurrencyAdvancedConfigValue = pageGroupData?.pageParamsInfo?.ConcurrencyAdvancedConfigValue
 
                 // 并发模式下优先使用并发全局配置，如果没有则使用各自配置
                 if(!isEmpty(ConcurrencyAdvancedConfigValue) && isConcurrency){
                     const {repeatTimes, disableUseConnPool, concurrent, minDelaySeconds, maxDelaySeconds} = ConcurrencyAdvancedConfigValue
-                    if (minDelaySeconds !== undefined) httpParamsItem.RandomChunkedMinDelay = +minDelaySeconds
-                    if (maxDelaySeconds !== undefined) httpParamsItem.RandomChunkedMaxDelay = +maxDelaySeconds
-                    if (repeatTimes !== undefined) httpParamsItem.RepeatTimes = repeatTimes
-                    if (disableUseConnPool !== undefined) httpParamsItem.DisableUseConnPool = disableUseConnPool
-                    if (concurrent !== undefined) httpParamsItem.Concurrent = concurrent
+                    Object.assign(httpParamsItem,{
+                        RandomChunkedMinDelay: +minDelaySeconds,
+                        RandomChunkedMaxDelay: +maxDelaySeconds,
+                        RepeatTimes: repeatTimes,
+                        DisableUseConnPool: disableUseConnPool,
+                        Concurrent: concurrent
+                    })
                 }
 
                 setRequest(item.id, webFuzzerPageInfo.advancedConfigValue)
@@ -937,18 +1069,21 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const newList = currentList.map((item) => ({...item, disabled: true}))
         setCurrentList([...newList])
         
-        // 并发模式：调用 HTTPFuzzerConcurrency，传递数组
-        // 顺序模式：调用 HTTPFuzzerSequence，传递 {Requests: [...]} 对象
         const httpParams = getHttpParams()
         if (isConcurrency) {
-            ipcRenderer.invoke("HTTPFuzzerConcurrency", httpParams, fuzzTokenRef.current)
+            // 并发模式：使用 hook 管理多个独立的 HTTPFuzzer 流
+            startConcurrency(httpParams)
         } else {
             ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: httpParams}, fuzzTokenRef.current)
         }
     })
     const onForcedStop = useMemoizedFn(() => {
         setLoading(false)
-        ipcRenderer.invoke(isConcurrency ? "cancel-HTTPFuzzerConcurrency" : "cancel-HTTPFuzzerSequence", fuzzTokenRef.current)
+        if (isConcurrency) {
+            cancelConcurrency()
+        } else {
+            ipcRenderer.invoke("cancel-HTTPFuzzerSequence", fuzzTokenRef.current)
+        }
     })
     const onAddSequenceNode = useMemoizedFn(() => {
         if (isEmptySequence(currentList)) {
@@ -1368,13 +1503,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                             }}
                         >
                             {isConcurrency ? <>
-                                {pageName}
+                                {pageGroupData?.pageName}
                                 <OutlineCogIcon 
                                     onClick={() => setAdvancedSetVisible(true)} 
                                     className={styles["fuzzer-sequence-left-heard-setting"]}
                                 />
                                 <AdvancedSet
-                                    advancedConfigValue={ConcurrencyAdvancedConfigValue || initSetValue}
+                                    advancedConfigValue={pageGroupData?.pageParamsInfo.ConcurrencyAdvancedConfigValue || initSetValue}
                                     visible={advancedSetVisible}
                                     onSave={handleAdvancedSetSave}
                                     onCancel={()=> setAdvancedSetVisible(false)}

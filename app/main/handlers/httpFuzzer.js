@@ -146,65 +146,6 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamHTTPFuzzerSequenceMap, token)
     })
 
-    // HTTPFuzzerConcurrency - 并发执行多个请求
-    const streamHTTPFuzzerConcurrencyMap = new Map();
-    ipcMain.handle("cancel-HTTPFuzzerConcurrency", handlerHelper.cancelHandler(streamHTTPFuzzerConcurrencyMap));
-    ipcMain.handle("HTTPFuzzerConcurrency", (e, paramsArray, token) => {
-        if (paramsArray?.length === 0) {
-            if (win) win.webContents.send(`${token}-error`, "Empty requests array")
-            return
-        }
-
-        // 并发执行计数器
-        let completedCount = 0;
-        let errorCount = 0;
-        const totalRequests = paramsArray.length;
-        
-        // 为每个请求创建独立的 HTTPFuzzer 流
-        paramsArray.forEach((requestParams, index) => {
-            const currentToken = `${token}-${index}`;
-            let stream = getClient().HTTPFuzzer(requestParams);
-            
-            stream.on("data", data => {
-                if (win && data) {
-                    // 包装数据格式，使其与 HTTPFuzzerSequence 返回格式一致
-                    // HTTPFuzzer 返回单个 Response，需要包装成 {Request, Response} 格式
-                    const wrappedData = {
-                        Request: {
-                            FuzzerIndex: requestParams.FuzzerIndex || "",
-                            FuzzerTabIndex: requestParams.FuzzerTabIndex || ""
-                        },
-                        Response: data
-                    };
-                    // 发送到 ${token}-data 频道，与前端监听器格式一致
-                    win.webContents.send(`${token}-data`, wrappedData)
-                }
-            });
-            
-            stream.on("error", err => {
-                if (win && err) {
-                    win.webContents.send(`${token}-error`, err.details)
-                }
-                errorCount++;
-                completedCount++;
-                checkAllCompleted();
-            })
-            
-            stream.on("end", data => {
-                completedCount++;
-                checkAllCompleted();
-            })
-            
-            // 注册每个子流到 Map 中，支持独立取消
-            handlerHelper.registerHandler(win, stream, streamHTTPFuzzerConcurrencyMap, currentToken)
-        });
-
-        // 检查是否所有请求都已完成
-        function checkAllCompleted() {
-            completedCount >= totalRequests && win?.webContents.send(`${token}-end`)
-        }
-    })
-
 
     // asyncExtractUrl wrapper
     const asyncExtractUrl = (params) => {
