@@ -1,17 +1,15 @@
 {
-  "WebFuzzer": {
-    "ShareImport": {
-      "shareNeedPassword": "This share requires a password!",
-      "passwordVerifyFailed": "Password verification failed:",
-      "getShareDataFailed": "Failed to get share data:",
-      "openWebFuzzerFailed": "Failed to open Web Fuzzer:",
-      "saveHttpHistoryShareFailed": "Failed to save HttpHistory share data:",
-      "shareId": "Share ID",
-      "pleaseEnterShareId": "Please enter the share ID",
-      "password": "Password",
-      "pleaseEnterPassword": "Please enter the password",
-      "thisFieldIsRequired": "This field is required"
-    }
+  "ShareImport": {
+    "shareNeedPassword": "This share requires a password!",
+    "passwordVerifyFailed": "Password verification failed:",
+    "getShareDataFailed": "Failed to get share data:",
+    "openWebFuzzerFailed": "Failed to open Web Fuzzer:",
+    "saveHttpHistoryShareFailed": "Failed to save HttpHistory share data:",
+    "shareId": "Share ID",
+    "pleaseEnterShareId": "Please enter the share ID",
+    "password": "Password",
+    "pleaseEnterPassword": "Please enter the password",
+    "thisFieldIsRequired": "This field is required"
   },
   "WebFuzzerPage": {
     "config": "Config",
