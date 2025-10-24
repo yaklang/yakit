@@ -1,5 +1,5 @@
 import React, {useRef, useEffect, useState, useMemo} from "react"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn, useCreation, useRequest} from "ahooks"
 import {Form, Tooltip, Space, Typography, Divider} from "antd"
 import {
     QuestionOutlined,
@@ -10,7 +10,7 @@ import {
     FullscreenOutlined,
     FullscreenExitOutlined
 } from "@ant-design/icons"
-import {failed, info, success, warn} from "../../utils/notification"
+import {failed, info, success, warn, yakitNotify} from "../../utils/notification"
 import {
     BRIDGE_ADDR,
     BRIDGE_SECRET,
@@ -39,7 +39,16 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {setClipboardText} from "@/utils/clipboard"
+import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
+import {apiDebugPlugin, apiCancelDebugPlugin} from "@/pages/plugins/utils"
+import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
+import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
+import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
+import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {v4 as uuidv4} from "uuid"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -99,6 +108,10 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
     const [params, setParams] = useState<ParamsRefProps>({useGadget: true, ...DefaultParams})
     const [codeRefresh, setCodeRefresh] = useState<boolean>(false)
 
+    // AI助手相关状态
+    const [aiAssistantVisible, setAiAssistantVisible] = useState<boolean>(false)
+    const [hasAiPlugin, setHasAiPlugin] = useState<boolean>(false)
+
     const [showAddr, setShowAddr] = useState<boolean>(false)
     /**
      * @name 反连服务器参数初始值
@@ -135,6 +148,17 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
             : `${addrSetting.ReverseHost}:${addrSetting.ReversePort}`
         return host
     }, [showAddr, addrParams, remoteIp])
+
+    // 检查 AI 助手插件是否存在
+    useEffect(() => {
+        grpcFetchLocalPluginDetail({Name: "Yso-Java Hack 智能助手"}, true)
+            .then(() => {
+                setHasAiPlugin(true)
+            })
+            .catch(() => {
+                setHasAiPlugin(false)
+            })
+    }, [])
 
     // 获取系统全局配置的反连参数和本地反连IP
     useEffect(() => {
@@ -371,8 +395,34 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
         setCodeExtra(!codeExtra)
     })
 
+    const openAiAssistant = useMemoizedFn(() => {
+        setAiAssistantVisible(true)
+    })
+
+    // AI 助手填充表单数据的回调
+    const handleAiDataFill = useMemoizedFn((data: {
+        gadget: string
+        class: string
+        params: {[key: string]: string | number | boolean}
+    }) => {
+        const newParams: ParamsRefProps = {
+            useGadget: true,
+            Gadget: data.gadget,
+            Class: data.class,
+            ...data.params
+        }
+        
+        setParams(newParams)
+        success("AI 助手已自动填充配置")
+    })
+
     return (
         <div className='java-payload-wrapper'>
+            <AIAssistantModal
+                visible={aiAssistantVisible}
+                onClose={() => setAiAssistantVisible(false)}
+                onDataFill={handleAiDataFill}
+            />
             <div className={`payload-${tableExtra ? "hidden" : "info"}-wrapper`}>
                 <div className='wrapper-body'>
                     <div className={`body-${codeExtra ? "hidden-" : ""}left`}>
@@ -384,6 +434,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                             setLoading={setLoading}
                             onStart={onStart}
                             onApply={onApply}
+                            onOpenAiAssistant={hasAiPlugin ? openAiAssistant : undefined}
                             extraNode={
                                 isStart ? (
                                     <></>
@@ -606,6 +657,7 @@ interface PayloadFormProp {
     setLoading: (value: boolean) => any
     onStart?: (value: ParamsRefProps) => any
     onApply: (value: ParamsRefProps) => any
+    onOpenAiAssistant?: () => any
     extraNode?: React.ReactNode
 }
 
@@ -646,10 +698,12 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
         setLoading,
         onStart,
         onApply,
+        onOpenAiAssistant,
         extraNode
     } = props
 
     const isInit = useRef<boolean>(true)
+    const aiIconId = useRef<string>(uuidv4())
 
     const [formInstance] = Form.useForm()
     const [useGadget, setUseGadget, getUseGadget] = useGetState<boolean>(!isReverse ? paramsData.useGadget : false)
@@ -704,6 +758,101 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
             isInit.current = false
         } else cleatParams()
     }, [useGadget])
+
+    // 监听 paramsData 的变化，用于 AI 助手填充数据
+    useEffect(() => {
+        // 如果是从外部（AI 助手）填充的数据
+        if (paramsData.Gadget && paramsData.Class && !isInit.current) {
+            // 更新内部状态 - 确保所有字段都被复制
+            const newParams = {...paramsData}
+            paramsRef.current = newParams
+            setParams(newParams)
+            
+            // 如果使用利用链模式，需要加载对应的选项
+            if (paramsData.useGadget && paramsData.Gadget && paramsData.Class) {
+                
+                // 步骤1: 加载 Gadget 选项列表
+                ipcRenderer
+                    .invoke("GetAllYsoGadgetOptions", undefined)
+                    .then((d: {Options: YsoOptionInfo[]}) => {
+                        const {Options} = d
+                        
+                        let optionArr: OptionInfo[] = Options.map((item) => {
+                            const info: OptionInfo = {
+                                ...item,
+                                NameVerbose: (
+                                    <div className='form-item-options-title'>
+                                        {item.NameVerbose}
+                                        {!!item.Help && (
+                                            <Tooltip placement='bottom' title={item.Help}>
+                                                <QuestionOutlined className='question-icon' />
+                                            </Tooltip>
+                                        )}
+                                    </div>
+                                ),
+                                Label: item.NameVerbose,
+                                isLeaf: false,
+                                children: []
+                            }
+                            return info
+                        })
+                        
+                        // 步骤2: 加载对应 Gadget 下的 Class 选项
+                        return ipcRenderer
+                            .invoke("GetAllYsoClassOptions", {Gadget: paramsData.Gadget})
+                            .then((classData: {Options: YsoOptionInfo[]}) => {
+                                
+                                const classOptions = classData.Options.map((item) => ({
+                                    ...item,
+                                    NameVerbose: (
+                                        <div className='form-item-options-title'>
+                                            {item.NameVerbose}
+                                            {!!item.Help && (
+                                                <Tooltip placement='bottom' title={item.Help}>
+                                                    <QuestionOutlined className='question-icon' />
+                                                </Tooltip>
+                                            )}
+                                        </div>
+                                    ),
+                                    Label: item.NameVerbose,
+                                    isLeaf: true
+                                }))
+                                
+                                // 找到对应的 Gadget 并设置其 children
+                                const targetGadget = optionArr.find(opt => opt.Name === paramsData.Gadget)
+                                if (targetGadget) {
+                                    targetGadget.children = classOptions
+                                }
+                                
+                                setOptions([...optionArr])
+                                
+                                // 步骤3: 加载表单字段
+                                return loadGeneraterFormList([paramsData.Gadget, paramsData.Class])
+                            })
+                    })
+                    .then(() => {
+                        // 步骤4: 再次确认 params 状态已更新（因为 setState 是异步的）
+                        const finalParams = {...paramsData}
+                        paramsRef.current = finalParams
+                        setParams(finalParams)
+                        
+                        // 特别设置级联选择器的值
+                        const formValues = {
+                            ...finalParams,
+                            '[Gadget,Class]': [finalParams.Gadget, finalParams.Class]
+                        }
+                        
+                        formInstance.setFieldsValue(formValues)
+                    })
+                    .catch((e: any) => {
+                        failed(`加载选项失败: ${e}`)
+                    })
+            } else {
+                // 非利用链模式，直接更新表单值
+                formInstance.setFieldsValue({...paramsData})
+            }
+        }
+    }, [paramsData.Gadget, paramsData.Class])
     const loadOptions = (isGadget: boolean) => {
         ipcRenderer
             .invoke(
@@ -847,11 +996,45 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
             className='setting-payload-wrapper'
             bodyStyle={{padding: "20px 15px", overflow: "auto"}}
             title={
-                <div>
-                    JavaPayload 配置
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <span>JavaPayload 配置</span>
                     <Tooltip placement='bottom' title='配置序列化Payload或恶意类'>
                         <ExclamationCircleOutlined className='setting-payload-icon' />
                     </Tooltip>
+                    {onOpenAiAssistant && hasAiPlugin && (
+                        <Tooltip placement='bottom' title='AI智能助手'>
+                            <svg 
+                                xmlns='http://www.w3.org/2000/svg' 
+                                width='17' 
+                                height='16' 
+                                viewBox='0 0 17 16' 
+                                fill='none'
+                                style={{cursor: 'pointer', marginLeft: '4px'}}
+                                onClick={onOpenAiAssistant}
+                            >
+                                <path
+                                    d='M3.83333 2V4.66667M2.5 3.33333H5.16667M4.5 11.3333V14M3.16667 12.6667H5.83333M9.16667 2L10.6905 6.57143L14.5 8L10.6905 9.42857L9.16667 14L7.64286 9.42857L3.83333 8L7.64286 6.57143L9.16667 2Z'
+                                    stroke={`url(#${aiIconId.current})`}
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                />
+                                <defs>
+                                    <linearGradient
+                                        id={aiIconId.current}
+                                        x1='2.5'
+                                        y1='2'
+                                        x2='16.8935'
+                                        y2='6.75561'
+                                        gradientUnits='userSpaceOnUse'
+                                    >
+                                        <stop stopColor='#DC5CDF' />
+                                        <stop offset='0.639423' stopColor='#8862F8' />
+                                        <stop offset='1' stopColor='#4493FF' />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </Tooltip>
+                    )}
                 </div>
             }
             extra={
@@ -1367,5 +1550,310 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                 )}
             </YakitSpin>
         </YakitCard>
+    )
+})
+
+interface AIAssistantModalProps {
+    visible: boolean
+    onClose: () => void
+    onDataFill: (data: {
+        gadget: string
+        class: string
+        params: {[key: string]: string | number | boolean}
+    }) => void
+}
+
+interface AIResponseData {
+    class: string
+    gadget: string
+    params: Array<{
+        key: string
+        value: string
+    }>
+}
+
+const AIAssistantModal: React.FC<AIAssistantModalProps> = React.memo((props) => {
+    const {visible, onClose, onDataFill} = props
+
+    const [requirement, setRequirement] = useState<string>("")
+    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
+    const [runtimeId, setRuntimeId] = useState<string>("")
+    const [aiToken, setAiToken] = useState<string>(randomString(40))
+    const [_, setSreamStatus, getSreamStatus] = useGetSetState({
+        error: false,
+        success: false
+    })
+
+    // 解析 AI 返回的数据并填充表单
+    const parseAndFillData = useMemoizedFn((jsonStr: string) => {
+        try {
+            const data: AIResponseData = JSON.parse(jsonStr)
+            
+            // 转换参数格式
+            const params: {[key: string]: string | number | boolean} = {}
+            if (data.params && Array.isArray(data.params)) {
+                for (const item of data.params) {
+                    let value: string | number | boolean = item.value
+                    
+                    // 尝试解析字符串中的特殊值
+                    if (typeof value === 'string') {
+                        // 去除字符串两端的引号
+                        if (value.startsWith('"') && value.endsWith('"')) {
+                            value = value.slice(1, -1)
+                        }
+                        
+                        // 尝试转换为数字
+                        if (/^\d+$/.test(value)) {
+                            value = parseInt(value, 10)
+                        }
+                        // 尝试转换为布尔值
+                        else if (value === 'true' || value === 'false') {
+                            value = value === 'true'
+                        }
+                    }
+                    
+                    params[item.key] = value
+                }
+            }
+            
+            const fillData = {
+                gadget: data.gadget,
+                class: data.class,
+                params: params
+            }
+            
+            // 调用填充回调
+            onDataFill(fillData)
+            
+            // 关闭模态框
+            handleClose()
+        } catch (e) {
+            yakitNotify("error", `解析数据失败: ${e}`)
+        }
+    })
+
+    // 使用 useMemoizedFn 稳定回调函数
+    const handleError = useMemoizedFn(() => {
+        setSreamStatus({
+            error: true,
+            success: false
+        })
+    })
+
+    const handleEnd = useMemoizedFn(async () => {
+        const {error, success} = getSreamStatus()
+        aiPluginStreamEvent.stop()
+        setTimeout(() => {
+            setExecuteStatus("finished")
+        }, 300)
+        apiCancelDebugPlugin(aiToken).then(() => {
+            setRuntimeId("")
+            aiPluginStreamEvent.reset()
+            setSreamStatus({
+                success: false,
+                error: false
+            })
+        })
+    })
+
+    const handleSetRuntimeId = useMemoizedFn((rId: string) => {
+        yakitNotify("info", `AI助手任务启动成功，运行时 ID: ${rId}`)
+        setRuntimeId(rId)
+    })
+
+    // 数据过滤器，用于捕获和解析 AI 返回的配置数据
+    const handleDataFilter = useMemoizedFn((obj: any, content: any) => {
+        try {
+            // 检查是否是 JSON 数据的日志
+            if (content && content.data) {
+                let dataStr = content.data
+                
+                // 如果 data 是对象，尝试转换为字符串
+                if (typeof dataStr === 'object') {
+                    try {
+                        dataStr = JSON.stringify(dataStr)
+                    } catch (e) {
+                        // 忽略
+                    }
+                }
+                
+                if (typeof dataStr === 'string') {
+                    dataStr = dataStr.trim()
+                    
+                    // 尝试解析为 JSON
+                    if (dataStr.startsWith('{') && dataStr.endsWith('}')) {
+                        try {
+                            const jsonData = JSON.parse(dataStr)
+                            
+                            // 检查是否包含必要的字段
+                            if (jsonData.class && jsonData.gadget && jsonData.params) {
+                                info('检测到 AI 返回的配置数据，正在自动填充...')
+                                parseAndFillData(dataStr)
+                            }
+                        } catch (e) {
+                            // 忽略 JSON 解析失败
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            // 忽略错误
+        }
+        // 返回 true 以继续显示日志
+        return true
+    })
+
+    const [streamInfo, aiPluginStreamEvent] = useHoldGRPCStream({
+        taskName: "ai-java-hack-assistant",
+        apiKey: "DebugPlugin",
+        token: aiToken,
+        onError: handleError,
+        onEnd: handleEnd,
+        dataFilter: handleDataFilter,
+        setRuntimeId: handleSetRuntimeId
+    })
+
+    const {run: runPlugin} = useRequest(async (params) => await apiDebugPlugin(params), {
+        manual: true,
+        onSuccess: () => {
+            setExecuteStatus("process")
+            aiPluginStreamEvent.start()
+        }
+    })
+
+    const isExecuting = useCreation(() => {
+        if (executeStatus === "process") return true
+        return false
+    }, [executeStatus])
+
+    const isShowResult = useCreation(() => {
+        return isExecuting || runtimeId
+    }, [isExecuting, runtimeId])
+
+    const handleExecute = async () => {
+        if (!requirement.trim()) {
+            failed("请输入需求描述")
+            return
+        }
+
+        try {
+            // 生成新的 token
+            const newToken = randomString(40)
+            setAiToken(newToken)
+            
+            const plugin = await grpcFetchLocalPluginDetail({Name: "Yso-Java Hack 智能助手"}, true)
+
+            const executeParams = {
+                Code: "",
+                PluginType: plugin.Type,
+                Input: "",
+                HTTPRequestTemplate: {
+                    ...defPluginExecuteFormValue,
+                    IsHttpFlowId: false,
+                    HTTPFlowId: []
+                },
+                ExecParams: [
+                    {
+                        Key: "query",
+                        Value: requirement
+                    }
+                ],
+                PluginName: plugin.ScriptName
+            }
+
+            // 延迟执行，等待 token 更新生效
+            setTimeout(() => {
+                runPlugin({
+                    params: executeParams,
+                    token: newToken,
+                    pluginCustomParams: plugin.Params
+                })
+            }, 100)
+        } catch (e) {
+            failed(`加载插件失败: ${e}`)
+        }
+    }
+
+    const handleCancel = () => {
+        if (isShowResult) {
+            setSreamStatus({
+                error: true,
+                success: false
+            })
+            apiCancelDebugPlugin(aiToken).then(() => {
+                aiPluginStreamEvent.stop()
+                handleClose()
+            })
+        } else {
+            handleClose()
+        }
+    }
+
+    const handleClose = () => {
+        setRequirement("")
+        setExecuteStatus("default")
+        setRuntimeId("")
+        setAiToken(randomString(40)) // 重置 token
+        onClose()
+    }
+
+    const handleStop = () => {
+        setSreamStatus({
+            error: true,
+            success: false
+        })
+        apiCancelDebugPlugin(aiToken).then(() => {
+            aiPluginStreamEvent.stop()
+        })
+    }
+
+    return (
+        <YakitModal
+            title="Yso-Java Hack 智能助手"
+            visible={visible}
+            onCancel={handleCancel}
+            maskClosable={false}
+            width={isShowResult ? "70%" : 600}
+            destroyOnClose
+            footer={
+                !isShowResult ? (
+                    <div style={{display: 'flex', justifyContent: 'flex-end', gap: '8px'}}>
+                        <YakitButton type='outline1' onClick={handleCancel}>
+                            取消
+                        </YakitButton>
+                        <YakitButton type='primary' onClick={handleExecute}>
+                            执行
+                        </YakitButton>
+                    </div>
+                ) : (
+                    <div style={{display: 'flex', justifyContent: 'flex-end', gap: '8px'}}>
+                        <YakitButton danger type='primary' onClick={handleStop}>
+                            停止
+                        </YakitButton>
+                    </div>
+                )
+            }
+        >
+            <div style={{minHeight: isShowResult ? '500px' : '200px'}}>
+                {!isShowResult ? (
+                    <div>
+                        <YakitInput.TextArea
+                            placeholder="例如: 生成一个CommonsCollections4的URLDNS链，执行命令whoami"
+                            value={requirement}
+                            onChange={(e) => setRequirement(e.target.value)}
+                            rows={6}
+                            style={{resize: 'none'}}
+                        />
+                    </div>
+                ) : (
+                    <PluginExecuteResult
+                        streamInfo={streamInfo}
+                        runtimeId={runtimeId}
+                        loading={isExecuting}
+                        defaultActiveKey='日志'
+                    />
+                )}
+            </div>
+        </YakitModal>
     )
 })
