@@ -1040,7 +1040,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             } catch (error) {}
         },
         {
-            wait: 200
+            wait: 800
         }
     ).run
 
@@ -1113,6 +1113,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         // console.log("更新光标位置", editorInfo)
         if (reqEditor && editorInfo) {
             // 如若没有记录 默认1行1列
+            // 性能优化设想: (核心抽离: position与selections的读取与更改)
+            // 此处position与selections读取与更改不在editorInfo中进行
+            // 选择使用map进行缓存以便于切换文件时恢复其焦点
+            // 且使用单独state进行右下角更新而不影响editorInfo的更新从而不引起全局渲染
             const {position = {lineNumber: 1, column: 1}, selections} = editorInfo
             const {lineNumber, column} = position
             if (lineNumber && column) {
