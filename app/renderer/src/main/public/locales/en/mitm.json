@@ -48,7 +48,8 @@
     "existing_mitm_content_rules": "Rules",
     "total_rules_count": "Total {count}",
     "no_replace_all": "No Replacement for All",
-    "add_rule": "Add Rule"
+    "add_rule": "Add Rule",
+    "default_Configuration": "Default Configuration"
   },
   "RuleExportAndImportButton": {
     "import_configuration": "Import",

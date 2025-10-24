@@ -48,7 +48,8 @@
     "existing_mitm_content_rules": "现有 MITM 内容规则",
     "total_rules_count": "共 {count} 条规则",
     "no_replace_all": "全部不替换",
-    "add_rule": "新增规则"
+    "add_rule": "新增规则",
+    "default_Configuration": "默认配置"
   },
   "RuleExportAndImportButton": {
     "import_configuration": "导入配置",
