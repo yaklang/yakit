@@ -10,6 +10,22 @@ import ChatCard from "../ChatCard"
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     const {info, timestamp} = props
     const {type, data} = info
+    const title = useCreation(() => {
+        switch (type) {
+            case "plan_review_require":
+                return "计划审阅"
+            case "task_review_require":
+                return "任务审阅"
+            case "tool_use_review_require":
+                return "工具审阅"
+            case "exec_aiforge_review_require":
+                return "智能应用审阅"
+            case "require_user_interactive":
+                return "主动询问"
+            default:
+                return "Review 决策"
+        }
+    }, [type])
     const userAction = useCreation(() => {
         let btnText: string = ""
         let userInput: string = ""
@@ -44,7 +60,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     return (
         <AISingHaveColorText
             titleIcon={<SolidHandIcon />}
-            title='Review 决策'
+            title={title}
             subTitle={userAction.btnText}
             tip={userAction.userInput}
             timestamp={timestamp}
