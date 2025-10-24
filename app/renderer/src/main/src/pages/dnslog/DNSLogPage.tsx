@@ -637,12 +637,25 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                             />
                                         </Form.Item>
                                     </Form>
-                                    <YakitButton
-                                        size={"small"}
-                                        type={"text"}
-                                        onClick={manuallyRefresh}
-                                        icon={<ReloadOutlined style={{position: "relative", top: 2}} />}
-                                    />
+                                    <Space>
+                                        <YakitButton
+                                            size={"small"}
+                                            type='outline1'
+                                            danger
+                                            onClick={() => {
+                                                setSelectCurDns(undefined)
+                                                setRecords([])
+                                            }}
+                                        >
+                                            重置
+                                        </YakitButton>
+                                        <YakitButton
+                                            size={"small"}
+                                            type={"text"}
+                                            onClick={manuallyRefresh}
+                                            icon={<ReloadOutlined style={{position: "relative", top: 2}} />}
+                                        />
+                                    </Space>
                                 </div>
                             }
                             renderKey='Index'
