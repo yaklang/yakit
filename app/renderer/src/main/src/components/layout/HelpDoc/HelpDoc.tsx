@@ -37,6 +37,10 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
                         {label: "功能建议", key: "feature_request"},
                         {label: "BUG", key: "report_bug"}
                     ]
+                },
+                {
+                    key: "aboutUs",
+                    label: "关于我们"
                 }
             ]}
             onClick={({key}) => menuSelect(key)}
@@ -46,10 +50,7 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
         if (show) setShow(false)
         switch (type) {
             case "report_bug":
-                ipcRenderer.invoke(
-                    "open-url",
-                    `https://github.com/yaklang/yakit/issues/new?template=bug_report.yml`
-                )
+                ipcRenderer.invoke("open-url", `https://github.com/yaklang/yakit/issues/new?template=bug_report.yml`)
                 return
             case "feature_request":
                 ipcRenderer.invoke(
@@ -59,6 +60,9 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
                 return
             case "official_website":
                 ipcRenderer.invoke("open-url", WebsiteGV.YakHelpDocAddress)
+                return
+            case "aboutUs":
+                ipcRenderer.invoke("open-url", WebsiteGV.AboutUsWebsite)
                 return
             default:
                 return
