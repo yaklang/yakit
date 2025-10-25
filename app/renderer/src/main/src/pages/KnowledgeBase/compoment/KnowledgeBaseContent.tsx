@@ -8,10 +8,17 @@ import {useSafeState} from "ahooks"
 import {useKnowledgeBase} from "../hooks/useKnowledgeBase"
 import {TExistsKnowledgeBaseAsync} from "../TKnowledgeBase"
 
-const KnowledgeBaseContent: FC<TExistsKnowledgeBaseAsync> = ({existsKnowledgeBaseAsync}) => {
-    const {knowledgeBases} = useKnowledgeBase()
+interface KnowledgeBaseContentProps extends TExistsKnowledgeBaseAsync {
+    knowledgeBaseID: string
+    setKnowledgeBaseID: (knowledgeBaseID: string) => void
+}
 
-    const [knowledgeBaseID, setKnowledgeBaseID] = useSafeState("")
+const KnowledgeBaseContent: FC<KnowledgeBaseContentProps> = ({
+    existsKnowledgeBaseAsync,
+    knowledgeBaseID,
+    setKnowledgeBaseID
+}) => {
+    const {knowledgeBases} = useKnowledgeBase()
 
     return (
         <div className={styles["knowledge-base-body"]}>

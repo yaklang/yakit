@@ -31,7 +31,6 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({knowledgeBase
         const Icon = targetIcon(targetIndex)
         return {...result, icon: Icon}
     }, [knowledgeBaseID, knowledgeBases])
-
     const onStop = () => {
         editKnowledgeBase(knowledgeBaseID, {
             ...knowledgeBaseItems,
@@ -41,7 +40,7 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({knowledgeBase
     }
 
     useAsyncEffect(async () => {
-        if (previousKnowledgeBases && previousKnowledgeBases?.length > 0) {
+        if (knowledgeBases && knowledgeBases?.length > 0) {
             const diff = compareKnowledgeBaseChange(previousKnowledgeBases, knowledgeBases)
             if (typeof diff === "object" && diff.increase) {
                 const kb = diff.increase
@@ -69,7 +68,7 @@ const KnowledgeBaseContainer: FC<TKnowledgeBaseContainerProps> = ({knowledgeBase
                 }
             }
         }
-    }, [knowledgeBases])
+    }, [knowledgeBases, previousKnowledgeBases])
 
     useUpdateEffect(() => {
         const removedList = knowledgeBases.filter((item) => item.streamToken && !api.tokens.includes(item.streamToken))

@@ -1,7 +1,7 @@
 import {useEffect, useMemo, useRef, type FC} from "react"
 
 import {Form} from "antd"
-import {useRequest, useSafeState, useUpdateEffect} from "ahooks"
+import {useAsyncEffect, useRequest, useSafeState, useUpdateEffect} from "ahooks"
 
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import AllInstallPlugins from "./compoment/AllInstallPlugins"
@@ -13,7 +13,7 @@ import {SolidPlayIcon} from "@/assets/icon/solid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {CreateKnowledgeBase} from "./compoment/CreateKnowledgeBase"
 
-import {getFileInfoList, targetInstallList} from "./utils"
+import {compareKnowledgeBaseChange, getFileInfoList, targetInstallList} from "./utils"
 
 import {useKnowledgeBase} from "./hooks/useKnowledgeBase"
 
@@ -25,9 +25,11 @@ const {ipcRenderer} = window.require("electron")
 
 const KnowledgeBase: FC = () => {
     const [form] = Form.useForm()
-    const {initialize} = useKnowledgeBase()
+    const {initialize, knowledgeBases, previousKnowledgeBases, addKnowledgeBase, clearAll} = useKnowledgeBase()
 
     const [installPlug, setInstallPlug] = useSafeState(false)
+    const [knowledgeBaseID, setKnowledgeBaseID] = useSafeState("")
+
     const createKnwledgeDataRef = useRef<CreateKnowledgeBaseData>()
 
     // 拉取还没安装的 binaries
@@ -63,12 +65,23 @@ const KnowledgeBase: FC = () => {
     // 创建知识库
     const {runAsync: createKnowledgRunAsync, loading: createKnowledgLoading} = useRequest(
         async (params) => {
-            await ipcRenderer.invoke("CreateKnowledgeBase", params)
+            const result = await ipcRenderer.invoke("CreateKnowledgeBaseV2", {
+                Name: params.KnowledgeBaseName,
+                Description: params.KnowledgeBaseDescription,
+                Type: params.KnowledgeBaseType
+            })
+            return result
         },
         {
             manual: true,
-            onSuccess: () => {
-                refreshAsync()
+            onSuccess: async (value) => {
+                await refreshAsync()
+                const KnowledgeBaseID = value?.KnowledgeBase?.ID
+                setKnowledgeBaseID(KnowledgeBaseID)
+                const addKnowledgeData = {...createKnwledgeDataRef.current, ID: KnowledgeBaseID}
+                addKnowledgeBase(addKnowledgeData as CreateKnowledgeBaseData & {ID: string})
+                form.resetFields()
+                createKnwledgeDataRef.current = undefined
                 success("创建知识库成功")
             },
             onError: (error) => {
@@ -98,18 +111,35 @@ const KnowledgeBase: FC = () => {
             manual: true,
             onSuccess: (value) => {
                 if (value) {
-                    initialize(value)
+                    const KnowledgeBaseID = value?.[0]?.ID || ""
+                    setKnowledgeBaseID(KnowledgeBaseID)
                 }
             }
         }
     )
 
-    useEffect(() => {
+    useAsyncEffect(async () => {
         if (!installPlug) {
-            existsKnowledgeBaseAsync()
+            existsKnowledgeBaseAsync().then((res: any) => {
+                initialize(res)
+            })
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [installPlug])
+
+    useEffect(() => {
+        setKnowledgeBaseID(knowledgeBases?.[0]?.ID || "")
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    useUpdateEffect(() => {
+        if (previousKnowledgeBases && previousKnowledgeBases?.length > 0) {
+            const diff = compareKnowledgeBaseChange(previousKnowledgeBases, knowledgeBases)
+            if (typeof diff === "object" && diff.delete) {
+                refreshAsync()
+            }
+        }
+    }, [previousKnowledgeBases])
 
     // 创建知识库回调事件
     const handCreateKnowledgBase = async () => {
@@ -128,7 +158,7 @@ const KnowledgeBase: FC = () => {
     useUpdateEffect(() => {
         // TODO 此处需要去卸载流 apiCancelDebugPlugin
         return () => {
-            console.log(222)
+            clearAll()
         }
     }, [])
 
@@ -159,10 +189,16 @@ const KnowledgeBase: FC = () => {
 
             // 正常进入知识库页面
             default:
-                return <KnowledgeBaseContent existsKnowledgeBaseAsync={existsKnowledgeBaseAsync} />
+                return (
+                    <KnowledgeBaseContent
+                        existsKnowledgeBaseAsync={existsKnowledgeBaseAsync}
+                        knowledgeBaseID={knowledgeBaseID}
+                        setKnowledgeBaseID={setKnowledgeBaseID}
+                    />
+                )
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [existsKnowledgeBase, installPlug, loading])
+    }, [existsKnowledgeBase, installPlug, loading, knowledgeBaseID])
 
     return (
         <div className={styles["repository-manage"]} id='repository-manage'>

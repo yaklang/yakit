@@ -66,8 +66,8 @@ export const useKnowledgeBase = create<KnowledgeBaseStoreProps>((set, get) => ({
     getKnowledgeBase: (id) => get().knowledgeBases.find((kb) => kb.ID === id),
 
     clearAll: () =>
-        set((state) => ({
-            previousKnowledgeBases: state.knowledgeBases,
+        set(() => ({
+            previousKnowledgeBases: [],
             knowledgeBases: []
         })),
 

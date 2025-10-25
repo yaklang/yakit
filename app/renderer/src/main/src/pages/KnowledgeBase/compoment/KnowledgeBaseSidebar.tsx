@@ -1,5 +1,5 @@
 import {useEffect, type FC} from "react"
-import {useMemoizedFn, useRequest, useSafeState} from "ahooks"
+import {useMemoizedFn, useSafeState} from "ahooks"
 
 import {
     OutlineAiChatIcon,
@@ -11,20 +11,14 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import styles from "../knowledgeBase.module.scss"
 import classNames from "classnames"
-import {manageMenuList, targetIcon} from "../utils"
+import {targetIcon} from "../utils"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {type KnowledgeBaseItem} from "../hooks/useKnowledgeBase"
-import {SolidDotsverticalIcon, SolidLightningBoltIcon, SolidOutlineSearchIcon} from "@/assets/icon/solid"
+import {SolidLightningBoltIcon, SolidOutlineSearchIcon} from "@/assets/icon/solid"
 import {AddKnowledgenBaseDropdownMenu} from "./AddKnowledgenBaseDropdownMenu"
 import {TExistsKnowledgeBaseAsync} from "../TKnowledgeBase"
-import {
-    DeleteConfirm,
-    EditKnowledgenBaseModal,
-    ExportModal,
-    OperateKnowledgenBaseItem
-} from "./OperateKnowledgenBaseItem"
+import {OperateKnowledgenBaseItem} from "./OperateKnowledgenBaseItem"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 
 export interface TKnowledgeBaseSidebarProps extends Omit<TExistsKnowledgeBaseAsync, "streams"> {
     knowledgeBases: KnowledgeBaseItem[]
@@ -49,11 +43,8 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     })
 
     useEffect(() => {
-        setKnowledgeBaseID(knowledgeBases?.[0]?.ID || "")
-    }, [])
-
-    useEffect(() => {
         setKnowledgeBase(knowledgeBases)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [knowledgeBases])
 
     return (

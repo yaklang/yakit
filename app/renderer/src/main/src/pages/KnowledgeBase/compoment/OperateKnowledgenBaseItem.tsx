@@ -1,22 +1,18 @@
 import {FC, useEffect} from "react"
 
-import {SolidDotsverticalIcon, SolidLightningBoltIcon} from "@/assets/icon/solid"
+import {SolidDotsverticalIcon} from "@/assets/icon/solid"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {manageMenuList} from "../utils"
 import {useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
 
 import styles from "../knowledgeBase.module.scss"
-import classNames from "classnames"
-import {OutlineLoadingIcon} from "@/assets/icon/outline"
 import {KnowledgeBaseItem, useKnowledgeBase} from "../hooks/useKnowledgeBase"
-import {IconProps} from "@/assets/newIcon"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {failed, success} from "@/utils/notification"
 
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {Form, Progress} from "antd"
-import loading from "@/alibaba/ali-react-table-dist/dist/base-table/loading"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
