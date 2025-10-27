@@ -36,8 +36,6 @@ export interface FileDetailInfo {
     isActive?: boolean
     /** 当前光标位置 */
     position?: CursorPosition
-    /** 当前选择区域 */
-    selections?: Selection
     /** 高亮显示区域 */
     highLightRange?: Selection
     /** 是否未保存（用于临时文件创建） */

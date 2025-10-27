@@ -972,7 +972,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
     // 光标位置信息
     const positionRef = useRef<CursorPosition>()
-    const selectionRef = useRef<Selection>()
 
     // 自动保存
     const autoSaveCurrentFile = useDebounceFn(
@@ -1029,10 +1028,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     // 此处还需要将位置信息记录至areaInfo用于下次打开时直接定位光标
                     newActiveFile = {...newActiveFile, position: positionRef.current}
                 }
-                if (selectionRef.current) {
-                    // 此处还需要将位置信息记录至areaInfo用于下次打开时直接定位光标
-                    newActiveFile = {...newActiveFile, selections: selectionRef.current}
-                }
                 setActiveFile && setActiveFile(newActiveFile)
                 const newAreaInfo = updateAreaFileInfo(areaInfo, newActiveFile, newActiveFile.path)
                 // console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
@@ -1064,16 +1059,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             positionRef.current = position
             updateBottomEditorDetails()
         })
-        // 监听光标选中位置
-        const cursorSelection = reqEditor.onDidChangeCursorSelection((e) => {
-            if (!isFocus) return
-            const selection = e.selection
-            const {startLineNumber, startColumn, endLineNumber, endColumn} = selection
-            // console.log("当前光标选中位置", startLineNumber, startColumn, endLineNumber, endColumn)
-            selectionRef.current = {startLineNumber, startColumn, endLineNumber, endColumn}
-            // 选中时也调用了onDidChangeCursorPosition考虑优化掉重复调用
-            // updateBottomEditorDetails()
-        })
         // 监听编辑器是否聚焦
         const focusEditor = reqEditor.onDidFocusEditorWidget(() => {
             isFocus = true
@@ -1101,7 +1086,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         return () => {
             // 在组件销毁时移除事件监听器
             cursorPosition.dispose()
-            cursorSelection.dispose()
             focusEditor.dispose()
             blurEditor.dispose()
             isDestroy.current = true
@@ -1117,7 +1101,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             // 此处position与selections读取与更改不在editorInfo中进行
             // 选择使用map进行缓存以便于切换文件时恢复其焦点
             // 且使用单独state进行右下角更新而不影响editorInfo的更新从而不引起全局渲染
-            const {position = {lineNumber: 1, column: 1}, selections} = editorInfo
+            const {position = {lineNumber: 1, column: 1}} = editorInfo
             const {lineNumber, column} = position
             if (lineNumber && column) {
                 reqEditor.setPosition({lineNumber, column})
@@ -1126,9 +1110,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             // 记录以前缓存的值用于刷新
             if (position) {
                 positionRef.current = position
-            }
-            if (selections) {
-                selectionRef.current = selections
             }
         }
         updateBottomEditorDetails()

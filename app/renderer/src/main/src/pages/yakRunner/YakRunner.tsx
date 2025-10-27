@@ -50,7 +50,7 @@ import styles from "./YakRunner.module.scss"
 import {SplitView} from "./SplitView/SplitView"
 import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
 import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
-import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
+import {CursorPosition, FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import cloneDeep from "lodash/cloneDeep"
 import {v4 as uuidv4} from "uuid"
 import moment from "moment"
@@ -91,6 +91,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
+    const [cursorPosition, setCursorPosition] = useState<CursorPosition>()
     const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
 
     const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
@@ -567,20 +568,22 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     const store: YakRunnerContextStore = useMemo(() => {
         return {
-            fileTree: fileTree,
-            areaInfo: areaInfo,
-            activeFile: activeFile,
-            runnerTabsId: runnerTabsId
+            fileTree,
+            areaInfo,
+            activeFile,
+            runnerTabsId,
+            cursorPosition
         }
-    }, [fileTree, areaInfo, activeFile, runnerTabsId])
+    }, [fileTree, areaInfo, activeFile, runnerTabsId,cursorPosition])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
-            setFileTree: setFileTree,
-            handleFileLoadData: handleFileLoadData,
-            setAreaInfo: setAreaInfo,
-            setActiveFile: setActiveFile,
-            setRunnerTabsId: setRunnerTabsId
+            setFileTree,
+            handleFileLoadData,
+            setAreaInfo,
+            setActiveFile,
+            setRunnerTabsId,
+            setCursorPosition
         }
     }, [])
 

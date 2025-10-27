@@ -1,13 +1,14 @@
 import {Dispatch, SetStateAction, createContext} from "react"
-import {FileNodeProps, FileTreeListProps} from "../FileTree/FileTreeType"
+import {FileTreeListProps} from "../FileTree/FileTreeType"
 import {AreaInfoProps} from "../YakRunnerType"
-import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
+import {CursorPosition, FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
 
 export interface YakRunnerContextStore {
     fileTree: FileTreeListProps[]
     areaInfo: AreaInfoProps[]
     activeFile: FileDetailInfo | undefined
     runnerTabsId: string | undefined
+    cursorPosition: CursorPosition | undefined
 }
 
 export interface YakRunnerContextDispatcher {
@@ -16,6 +17,7 @@ export interface YakRunnerContextDispatcher {
     setAreaInfo?: Dispatch<SetStateAction<AreaInfoProps[]>>
     setActiveFile?: Dispatch<SetStateAction<FileDetailInfo | undefined>>
     setRunnerTabsId?: Dispatch<SetStateAction<string | undefined>>
+    setCursorPosition?: Dispatch<SetStateAction<CursorPosition | undefined>>
 }
 
 export interface YakRunnerContextValue {
@@ -28,13 +30,15 @@ export default createContext<YakRunnerContextValue>({
         fileTree: [],
         areaInfo: [],
         activeFile: undefined,
-        runnerTabsId: undefined
+        runnerTabsId: undefined,
+        cursorPosition: undefined
     },
     dispatcher: {
         setFileTree: undefined,
         handleFileLoadData: undefined,
         setAreaInfo: undefined,
         setActiveFile: undefined,
-        setRunnerTabsId: undefined
+        setRunnerTabsId: undefined,
+        setCursorPosition: undefined
     }
 })
