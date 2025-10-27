@@ -40,7 +40,7 @@ import {
     DefaultForgeTypeList,
     DefaultForgeYakToCode
 } from "../defaultConstant"
-import {GetAIToolListRequest} from "@/pages/ai-agent/type/aiChat"
+import {GetAIToolListRequest} from "@/pages/ai-agent/type/aiTool"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"

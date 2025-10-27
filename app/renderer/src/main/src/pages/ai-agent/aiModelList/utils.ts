@@ -17,7 +17,7 @@ import {
     LocalModelConfig,
     GetAIModelListResponse,
     StopLocalModelRequest
-} from "../type/aiChat"
+} from "../type/aiModel"
 import omit from "lodash/omit"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"

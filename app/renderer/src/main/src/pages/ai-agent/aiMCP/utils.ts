@@ -8,7 +8,7 @@ import {
     MCPServer,
     UpdateMCPServerRequest
 } from "../type/aiMCP"
-import {GeneralResponse} from "../type/aiChat"
+import {GeneralResponse} from "../type/aiModel"
 
 const {ipcRenderer} = window.require("electron")
 

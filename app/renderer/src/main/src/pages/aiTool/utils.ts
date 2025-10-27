@@ -8,7 +8,7 @@ import {
     SaveAIToolRequest,
     SaveAIToolV2Response,
     UpdateAIToolRequest
-} from "../ai-agent/type/aiChat"
+} from "../ai-agent/type/aiTool"
 const {ipcRenderer} = window.require("electron")
 
 export const isAITool = (value: AITool | DbOperateMessage): value is AITool => {

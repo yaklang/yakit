@@ -1,4 +1,4 @@
-import {UpdateLocalModelRequest} from "../../type/aiChat"
+import {UpdateLocalModelRequest} from "../../type/aiModel"
 
 export interface AddAIModelProps {
     defaultValues?: UpdateLocalModelRequest

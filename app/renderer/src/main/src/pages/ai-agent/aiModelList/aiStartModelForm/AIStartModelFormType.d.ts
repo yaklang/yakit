@@ -1,7 +1,7 @@
-import {LocalModelConfig} from "../../type/aiChat"
+import {LocalModelConfig} from "../../type/aiModel"
 
 export interface AIStartModelFormProps {
     item: LocalModelConfig
-    token:string
+    token: string
     onSuccess: () => void
 }
