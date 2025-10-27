@@ -1,5 +1,5 @@
-import React, {memo, useEffect, useMemo, useState} from "react"
-import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
+import React, {memo, MutableRefObject, useCallback, useEffect, useMemo, useRef, useState} from "react"
+import {useControllableValue, useCreation, useMemoizedFn, useMount, useThrottleEffect} from "ahooks"
 import {
     AIAgentChatStreamProps,
     AICardListProps,
@@ -45,6 +45,7 @@ import StreamCard from "../components/StreamCard"
 import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import i18n from "@/i18n/i18n"
 import {Virtuoso} from "react-virtuoso"
+import useVirtuosoAutoScroll from "@/pages/ai-re-act/hooks/useVirtuosoAutoScroll"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -236,9 +237,13 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         return <AIChatListItem item={stream} type='task-agent' />
     }
 
+    const {scrollerRef, virtuosoRef} =  useVirtuosoAutoScroll(streams)
+
     return (
         <div className={styles["ai-agent-chat-stream"]}>
             <Virtuoso
+                scrollerRef={ref => (scrollerRef as MutableRefObject<HTMLDivElement>).current = ref as HTMLDivElement}
+                ref={virtuosoRef}
                 style={{height: "100%", width: "100%"}}
                 data={streams}
                 totalCount={streams.length}
@@ -249,7 +254,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                         <div style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
                             {children}
                         </div>
-                    )
+                    ),
+                    Footer: () => <div style={{height: "20px"}} />
                 }}
             />
             {/* {streams.map(renderItem)} */}
