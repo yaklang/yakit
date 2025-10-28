@@ -96,6 +96,12 @@ export interface AIToolCallDecision extends Omit<AIAgentGrpcApi.ToolCallDecision
     i18n: AIOutputI18n
 }
 
+/** 任务规划-可执行任务的数据结构 */
+export interface AITaskInfoProps extends AIAgentGrpcApi.PlanTask {
+    /** 层级(代表在树里的第几层) */
+    level: number
+}
+
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
     type: T
