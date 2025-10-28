@@ -1,3 +1,5 @@
+@use '../../../styles/mixin.scss' as mixin;
+
 .file-list {
     width: 100%;
     padding: 8px 0;
@@ -41,6 +43,8 @@
             display: flex;
             gap: 4px;
             align-items: center;
+            flex: 1;
+            width: 0;
             &-dot {
                 border-radius: 10px;
                 padding: 2px 6px;
@@ -71,15 +75,19 @@
             }
         }
         &-name {
+            max-width: 20%;            
             color: var(--Colors-Use-Neutral-Text-2-Primary);
+            @include mixin.text-ellipsis();
         }
         &-desc {
+            max-width: 20%;  
             border-radius: var(--Radius-System-Extra-small-2, 2px);
             border: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
             color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-weight: 400;
             font-size: 11px;
             padding: 2px 6px;
+            @include mixin.text-ellipsis();
         }
         &-actions {
             display: flex;
@@ -89,6 +97,7 @@
                 display: flex;
                 align-items: center;
                 opacity: 0;
+                white-space: nowrap;
                 color: var(--Colors-Use-Neutral-Text-4-Help-text);
                 font-size: 12px;
                 font-weight: 400;
