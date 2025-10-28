@@ -20,7 +20,7 @@ import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {randomString} from "@/utils/randomUtil"
 import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
-import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
+import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -733,25 +733,28 @@ export const addAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo,
 /**
  * @name 注入语法检查结果
  */
-export const getDefaultActiveFile = async (info: FileDetailInfo) => {
-    let newActiveFile = info
-    try {
-        // 注入语法检查结果
-        if (
-            newActiveFile.code &&
-            (newActiveFile.language === YaklangMonacoSpec || newActiveFile.language === SyntaxFlowMonacoSpec)
-        ) {
-            const syntaxCheck = (await onSyntaxCheck(
-                newActiveFile.code,
-                newActiveFile.language
-            )) as IMonacoEditorMarker[]
-            if (syntaxCheck) {
-                newActiveFile = {...newActiveFile, syntaxCheck}
+export const getDefaultActiveFile = (info: FileDetailInfo): Promise<FileDetailInfo> => {
+    return new Promise(async (resolve, reject) => {
+        let newActiveFile = info
+        try {
+            // 注入语法检查结果
+            if (
+                newActiveFile.code &&
+                (newActiveFile.language === YaklangMonacoSpec || newActiveFile.language === SyntaxFlowMonacoSpec)
+            ) {
+                const syntaxCheck = (await onSyntaxCheck(
+                    newActiveFile.code,
+                    newActiveFile.language
+                )) as IMonacoEditorMarker[]
+                if (syntaxCheck) {
+                    newActiveFile = {...newActiveFile, syntaxCheck}
+                }
             }
+            resolve(newActiveFile)
+        } catch (error) {
+            resolve(newActiveFile)
         }
-    } catch (error) {}
-
-    return newActiveFile
+    })
 }
 
 /**

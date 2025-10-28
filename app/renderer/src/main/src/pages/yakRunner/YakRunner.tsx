@@ -50,7 +50,7 @@ import styles from "./YakRunner.module.scss"
 import {SplitView} from "./SplitView/SplitView"
 import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
 import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
-import {CursorPosition, FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
+import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import cloneDeep from "lodash/cloneDeep"
 import {v4 as uuidv4} from "uuid"
 import moment from "moment"
@@ -67,6 +67,7 @@ import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
 import {registerShortcutKeyHandle, unregisterShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"
 import {getStorageYakRunnerShortcutKeyEvents} from "@/utils/globalShortcutKey/events/page/yakRunner"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import { clearMapCursorPosition } from "./RunnerTabs/CursorPositionMap"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -91,7 +92,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
-    const [cursorPosition, setCursorPosition] = useState<CursorPosition>()
     const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
 
     const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
@@ -439,6 +439,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             emiter.off("onOpenFileByPath", onOpenFileByPathFun)
             emiter.off("onGetCodeByPathCache", onGetCodeByPathCacheFun)
             emiter.off("onCloseYakRunner", onCloseYakRunnerFun)
+            clearMapCursorPosition()
         }
     }, [])
 
@@ -571,10 +572,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             fileTree,
             areaInfo,
             activeFile,
-            runnerTabsId,
-            cursorPosition
+            runnerTabsId
         }
-    }, [fileTree, areaInfo, activeFile, runnerTabsId,cursorPosition])
+    }, [fileTree, areaInfo, activeFile, runnerTabsId])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
@@ -582,8 +582,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             handleFileLoadData,
             setAreaInfo,
             setActiveFile,
-            setRunnerTabsId,
-            setCursorPosition
+            setRunnerTabsId
         }
     }, [])
 
@@ -1003,6 +1002,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     }, [])
 
+    const codeContainerRender = useMemo(()=>{
+        return onFixedEditorDetails(onChangeArea())
+    },[showItem,isShowEditorDetails,areaInfo])
+
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
             <div className={styles["yak-runner"]} ref={shortcutRef} tabIndex={0} id='yakit-runnner-main-box-id'>
@@ -1033,7 +1036,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                     [styles["yak-runner-code-offset"]]: !isUnShow
                                 })}
                             >
-                                <div className={styles["code-container"]}>{onFixedEditorDetails(onChangeArea())}</div>
+                                <div className={styles["code-container"]}>{codeContainerRender}</div>
                             </div>
                         }
                     />

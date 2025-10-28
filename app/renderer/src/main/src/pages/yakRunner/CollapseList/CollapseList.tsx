@@ -1,4 +1,4 @@
-import React, {ReactElement, memo, useEffect, useMemo, useState} from "react"
+import React, {ReactElement, memo, useEffect, useMemo, useRef, useState} from "react"
 import {CollapseListProp, DefinitionListProps, HelpInfoListProps} from "./CollapseListType"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {Collapse, Tooltip} from "antd"
@@ -7,7 +7,7 @@ import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import classNames from "classnames"
 import styles from "./CollapseList.module.scss"
 import useStore from "../hooks/useStore"
-import {useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {
     Range,
     YaklangLanguageFindResponse,
@@ -20,6 +20,8 @@ import {IMonacoEditor} from "@/utils/editors"
 import {getModelContext} from "@/utils/monacoSpec/yakEditor"
 import {monaco} from "react-monaco-editor"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {getMapCursorPosition} from "../RunnerTabs/CursorPositionMap"
+import {CursorPosition} from "../RunnerTabs/RunnerTabsType"
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
 
@@ -191,11 +193,9 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
         return <></>
     }
 
-    const onReferences = useMemoizedFn(async () => {
+    const onReferences = useMemoizedFn(async (position: monaco.Position) => {
         if (helpEditor) {
             const model = helpEditor.getModel()
-            const position = activeFile?.position as monaco.Position
-
             if (model && position) {
                 const iWord = getWordWithPointAtPosition(model, position)
                 const type = getModelContext(model, "plugin") || "yak"
@@ -235,10 +235,9 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
         }
     })
 
-    const onDefinition = useMemoizedFn(async () => {
+    const onDefinition = useMemoizedFn(async (position: monaco.Position) => {
         if (helpEditor) {
             const model = helpEditor.getModel()
-            const position = activeFile?.position as monaco.Position
             if (model && position) {
                 const iWord = getWordWithPointAtPosition(model, position)
                 if (iWord.word.length === 0) return
@@ -279,10 +278,22 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
     })
 
     // 帮助信息
+    const positionCacheRef = useRef<CursorPosition>()
     useEffect(() => {
-        onReferences()
-        onDefinition()
-    }, [activeFile?.position])
+        let id = setInterval(() => {
+            if (!activeFile?.path) return
+            let position = getMapCursorPosition(activeFile.path)
+            if (
+                position.column !== positionCacheRef.current?.column ||
+                position.lineNumber !== positionCacheRef.current?.lineNumber
+            ) {
+                positionCacheRef.current = position
+                onReferences(position as monaco.Position)
+                onDefinition(position as monaco.Position)
+            }
+        }, 500)
+        return () => clearInterval(id)
+    }, [activeFile?.path])
 
     const getList = useMemo(() => {
         let list: {key: string; value: ReactElement}[] = []

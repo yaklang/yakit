@@ -34,8 +34,6 @@ export interface FileDetailInfo {
     isDirty?: boolean
     /** 文件是否是当前活动的文件 */
     isActive?: boolean
-    /** 当前光标位置 */
-    position?: CursorPosition
     /** 高亮显示区域 */
     highLightRange?: Selection
     /** 是否未保存（用于临时文件创建） */

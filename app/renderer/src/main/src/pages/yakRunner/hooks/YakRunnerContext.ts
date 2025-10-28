@@ -3,12 +3,15 @@ import {FileTreeListProps} from "../FileTree/FileTreeType"
 import {AreaInfoProps} from "../YakRunnerType"
 import {CursorPosition, FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
 
+export interface CursorPositionProps {
+    [key: string]: CursorPosition | undefined
+}
+
 export interface YakRunnerContextStore {
     fileTree: FileTreeListProps[]
     areaInfo: AreaInfoProps[]
     activeFile: FileDetailInfo | undefined
     runnerTabsId: string | undefined
-    cursorPosition: CursorPosition | undefined
 }
 
 export interface YakRunnerContextDispatcher {
@@ -17,7 +20,6 @@ export interface YakRunnerContextDispatcher {
     setAreaInfo?: Dispatch<SetStateAction<AreaInfoProps[]>>
     setActiveFile?: Dispatch<SetStateAction<FileDetailInfo | undefined>>
     setRunnerTabsId?: Dispatch<SetStateAction<string | undefined>>
-    setCursorPosition?: Dispatch<SetStateAction<CursorPosition | undefined>>
 }
 
 export interface YakRunnerContextValue {
@@ -31,7 +33,6 @@ export default createContext<YakRunnerContextValue>({
         areaInfo: [],
         activeFile: undefined,
         runnerTabsId: undefined,
-        cursorPosition: undefined
     },
     dispatcher: {
         setFileTree: undefined,
@@ -39,6 +40,5 @@ export default createContext<YakRunnerContextValue>({
         setAreaInfo: undefined,
         setActiveFile: undefined,
         setRunnerTabsId: undefined,
-        setCursorPosition: undefined
     }
 })

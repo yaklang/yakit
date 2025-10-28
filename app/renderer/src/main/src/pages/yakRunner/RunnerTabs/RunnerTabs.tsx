@@ -70,13 +70,13 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {FileNodeMapProps} from "../FileTree/FileTreeType"
 import {openFolder} from "../RunnerFileTree/RunnerFileTree"
 import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
-import {YakitRoute} from "@/enums/yakitRoute"
+import {getMapCursorPosition, setMapCursorPosition} from "./CursorPositionMap"
 
 const {ipcRenderer} = window.require("electron")
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     const {tabsId, wrapperClassName} = props
-    const {areaInfo, activeFile, runnerTabsId, fileTree} = useStore()
+    const {areaInfo, activeFile, runnerTabsId} = useStore()
     const {setActiveFile, setAreaInfo, setRunnerTabsId} = useDispatcher()
     const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
     const [splitDirection, setSplitDirection] = useState<SplitDirectionProps[]>([])
@@ -982,7 +982,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         {
             wait: 500
         }
-    )
+    ).run
 
     // 优化性能 减少卡顿
     const updateAreaFun = useDebounceFn(
@@ -990,11 +990,12 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             if (editorInfo?.path) {
                 const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo.path)
                 // console.log("更新编辑器文件内容", newAreaInfo)
+                // 渲染源2
                 setAreaInfo && setAreaInfo(newAreaInfo)
             }
         },
         {
-            wait: 200
+            wait: 500
         }
     ).run
 
@@ -1004,45 +1005,52 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             const newEditorInfo = {...editorInfo, code: content}
             // 未保存文件不用自动保存 审计树文件不用自动保存
             if (!editorInfo?.isUnSave) {
-                autoSaveCurrentFile.run(newEditorInfo)
+                autoSaveCurrentFile(newEditorInfo)
             }
             setEditorInfo(newEditorInfo)
         }
-        if(content !== editorInfo?.code){
+        if (content !== editorInfo?.code) {
             updateAreaFun(content)
         }
     })
 
-    // 更新当前底部展示信息
-    const updateBottomEditorDetails = useDebounceFn(
-        async () => {
+    // 更新光标位置信息
+    const updateCursorPosition = useDebounceFn(
+        () => {
             if (!editorInfo) return
             try {
-                let newActiveFile = editorInfo
-                // 注入语法检查结果
-                newActiveFile = await getDefaultActiveFile(newActiveFile)
-                // 如若文件检查结果出来时 文件已被切走 则不再更新
-                if (newActiveFile.path !== nowPathRef.current || isDestroy.current) return
+                if (editorInfo.path !== nowPathRef.current || isDestroy.current) return
                 // 更新位置信息
                 if (positionRef.current) {
                     // 此处还需要将位置信息记录至areaInfo用于下次打开时直接定位光标
-                    newActiveFile = {...newActiveFile, position: positionRef.current}
+                    setMapCursorPosition(editorInfo.path, positionRef.current)
                 }
-                setActiveFile && setActiveFile(newActiveFile)
-                const newAreaInfo = updateAreaFileInfo(areaInfo, newActiveFile, newActiveFile.path)
-                // console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
-                setAreaInfo && setAreaInfo(newAreaInfo)
             } catch (error) {}
         },
         {
-            wait: 800
+            wait: 500
+        }
+    ).run
+
+    // 更新语法检查
+    const updateSyntaxCheck = useDebounceFn(
+        () => {
+            if (!editorInfo) return
+            // 注入语法检查结果
+            getDefaultActiveFile(editorInfo).then((newActiveFile) => {
+                // 渲染源1
+                setActiveFile && setActiveFile(newActiveFile)
+            })
+        },
+        {
+            wait: 500
         }
     ).run
 
     // 聚焦时校验是否更新活跃文件
     const onSetActiveFileByFocus = useMemoizedFn(() => {
         if (activeFile?.path !== editorInfo?.path) {
-            updateBottomEditorDetails()
+            updateCursorPosition()
         }
     })
 
@@ -1057,7 +1065,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             const {position} = e
             // console.log("当前光标位置：", position)
             positionRef.current = position
-            updateBottomEditorDetails()
+            updateCursorPosition()
         })
         // 监听编辑器是否聚焦
         const focusEditor = reqEditor.onDidFocusEditorWidget(() => {
@@ -1092,16 +1100,11 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
     }, [reqEditor])
 
-    // 更新光标位置
+    // 更新之前光标位置
     const updatePosition = useMemoizedFn(() => {
         // console.log("更新光标位置", editorInfo)
         if (reqEditor && editorInfo) {
-            // 如若没有记录 默认1行1列
-            // 性能优化设想: (核心抽离: position与selections的读取与更改)
-            // 此处position与selections读取与更改不在editorInfo中进行
-            // 选择使用map进行缓存以便于切换文件时恢复其焦点
-            // 且使用单独state进行右下角更新而不影响editorInfo的更新从而不引起全局渲染
-            const {position = {lineNumber: 1, column: 1}} = editorInfo
+            let position = getMapCursorPosition(editorInfo.path)
             const {lineNumber, column} = position
             if (lineNumber && column) {
                 reqEditor.setPosition({lineNumber, column})
@@ -1112,7 +1115,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 positionRef.current = position
             }
         }
-        updateBottomEditorDetails()
     })
 
     // 此处ref存在意义为清除ctrl + z缓存 同时更新光标位置
@@ -1171,14 +1173,22 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         setReqEditor(editor)
     })
 
-    const setYakitEditorValue = useCallback((content: string) => {
+    const setYakitEditorValue = useMemoizedFn((content: string) => {
         if (typeof editorInfo?.code !== "string") return
+        updateSyntaxCheck()
         updateAreaInputInfo(content)
-    }, [editorInfo?.code])
+    })
 
+    const highLightText = useMemo(() => {
+        return editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined
+    }, [editorInfo?.highLightRange])
+
+    const isShowBinary = useMemo(() => {
+        return editorInfo && !editorInfo.isPlainText && allowBinary
+    }, [editorInfo?.isPlainText, allowBinary])
     return (
         <div className={styles["runner-tab-pane"]}>
-            {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
+            {isShowBinary ? (
                 <div className={styles["warning-editor"]}>
                     <Result
                         status={"warning"}
@@ -1193,13 +1203,13 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 </div>
             ) : (
                 <YakitEditor
-                    editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
+                    editorOperationRecord='YAK_RUNNNER_EDITOR_RECORD'
                     editorDidMount={setReqEditorFun}
                     // 因monaco版本兼容问题 如若type传入“javascript”等，则可能会抛出错误 进而影响dnd拖拽
                     type={editorInfo?.language}
                     value={editorInfo?.code || ""}
                     setValue={setYakitEditorValue}
-                    highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
+                    highLightText={highLightText}
                     highLightClass='hight-light-yak-runner-color'
                 />
             )}

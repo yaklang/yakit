@@ -911,7 +911,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             ) : (
                 <YakitEditor
                     readOnly={true}
-                    editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
+                    editorOperationRecord='YAK_RUNNNER_EDITOR_RECORD'
                     editorDidMount={setReqEditorFun}
                     type={editorInfo?.language}
                     value={editorInfo?.code || ""}

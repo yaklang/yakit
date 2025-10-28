@@ -13,8 +13,9 @@ import {
     OutlineXcircleIcon
 } from "@/assets/icon/outline"
 import useStore from "../hooks/useStore"
-
-const {ipcRenderer} = window.require("electron")
+import {getMapCursorPosition} from "../RunnerTabs/CursorPositionMap"
+import { CursorPosition } from "../RunnerTabs/RunnerTabsType"
+import { useDeepCompareEffect } from "ahooks"
 
 export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
     const {onOpenEditorDetails} = props
@@ -45,19 +46,30 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
             })
         }
         return data
-    }, [activeFile])
+    }, [activeFile?.syntaxCheck])
 
-    const showLocationInfo = useMemo(() => {
-        let data = {
-            lineNumber: 1,
-            column: 1
-        }
-        if (activeFile?.position) {
-            data.lineNumber = activeFile.position.lineNumber
-            data.column = activeFile.position.column
-        }
-        return data
-    }, [activeFile?.position])
+    const [showLocationInfo, setShowLocationInfo] = useState<CursorPosition>({
+        lineNumber: 1,
+        column: 1
+    })
+
+    useEffect(() => {
+        let id = setInterval(() => {
+            if (!activeFile?.path) {
+                setShowLocationInfo({
+                    lineNumber: 1,
+                    column: 1
+                })
+                return
+            }
+            let position = getMapCursorPosition(activeFile.path)
+            if (position.column !== showLocationInfo.column || position.lineNumber !== showLocationInfo.lineNumber) {
+                setShowLocationInfo(position)
+            }
+        }, 500)
+        return () => clearInterval(id)
+    }, [activeFile?.path])
+
     return (
         <div className={styles["bottom-side-bar"]}>
             {/* 语法检查|终端|帮助信息 */}
@@ -132,7 +144,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
             {/* 光标位置 */}
             <div
                 className={styles["bottom-side-bar-right"]}
-            >{`行 ${showLocationInfo.lineNumber}，  列 ${showLocationInfo.column}`}</div>
+            >{`行 ${showLocationInfo?.lineNumber}，  列 ${showLocationInfo?.column}`}</div>
         </div>
     )
 }
