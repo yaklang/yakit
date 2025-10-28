@@ -45,7 +45,12 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
                     userInput = userSelected.extra_prompt || ""
                     break
                 case "require_user_interactive":
-                    userInput = userSelected.extra_prompt || ""
+                    const aiSelected = JSON.parse(data.selected || "")
+                    const aiSelectType = data.options.find(
+                        (item) => (item.prompt || item.prompt_title) === data.optionValue
+                    )
+                    btnText = aiSelectType?.prompt || aiSelectType?.prompt_title || "未知操作"
+                    userInput = aiSelected.suggestion || ""
                     break
                 default:
                     break

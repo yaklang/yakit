@@ -317,7 +317,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     })
     const handleAIRequireOpSend = useMemoizedFn((qs: string) => {
         const jsonInput: Record<string, string> = {suggestion: qs}
-        onSendAIByValue(JSON.stringify(jsonInput))
+        onSendAIByValue(JSON.stringify(jsonInput), aiOptionsSelect)
     })
     /**审阅模式提交树,type: plan_review_require */
     const handleSubmitReviewTree = useMemoizedFn(() => {
