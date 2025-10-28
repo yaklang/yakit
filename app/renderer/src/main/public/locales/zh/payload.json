@@ -1,4 +1,68 @@
 {
+  "UploadStatusInfo": {
+    "elapsedTime": "耗时"
+  },
+  "CreateDictionaries": {
+    "dictionaryNameDuplicate": "字典名重复",
+    "largeFileStorageTxtOnly": "大文件存储仅支持 txt 文件类型",
+    "invalidFileFormat": "{name} 非 txt、csv 文件，请上传正确格式文件！",
+    "pathSelected": "{path} 已选择",
+    "chooseStorageMethodTip": "可根据需求选择以下存储方式，存储方式不影响使用：",
+    "fileStorageTip": "文件存储：将字典以文件形式保存在本地，不支持命中次数，",
+    "file_storage_tip": "文件存储：将字典以文件形式保存在本地，不支持命中次数，<highlight>上传速度更快</highlight>",
+    "db_storage_tip": "数据库存储：将字典数据读取后保存在数据库中，支持命中次数，<highlight>搜索更方便</highlight>",
+    "large_file_storage_tip": "大文件存储：上传文件大于 <size>20M</size> 时，支持采取大文件存储方式，仅支持txt，<highlight>存储更便捷</highlight>",
+    "dictionaryName": "字典名",
+    "uploadFile": "上传文件",
+    "manualInput": "手动输入",
+    "uploadLargeFile": "上传大文件",
+    "file_drag_tip": "可将文件拖入框内，或 <highlight>点击此处导入</highlight>",
+    "batchFolderUploadTip": "支持文件夹批量上传（支持文件类型 txt/csv）",
+    "largeFileUploadTip": "支持大文件上传（支持文件类型 txt）",
+    "databaseStorage": "数据库存储",
+    "fileStorage": "文件存储",
+    "largeFileStorage": "大文件存储",
+    "importing": "导入中...",
+    "autoDedupCheck": "自动去重检测，请耐心等待..."
+  },
+  "FolderComponent": {
+    "createFolderSuccess": "新建文件夹成功",
+    "createFolderFailed": "新建文件夹失败：",
+    "invalidNameCharacters": "名称不允许出现 /*,",
+    "folderNameDuplicate": "文件夹名重复，不可创建",
+    "folderNameDuplicateEdit": "文件夹名重复，不可编辑",
+    "copyFuzztag": "复制 Fuzztag",
+    "addSubsetDictionary": "新增子集字典",
+    "createSubsetDictionary": "新建子集字典"
+  },
+  "DeleteConfirm": {
+    "confirmDelete": "是否要删除",
+    "confirmDeleteTip": "确认删除后将会彻底删除"
+  },
+  "FileComponent": {
+    "editFailedNameDuplicate": "名称重复，编辑失败",
+    "invalidNameCharacters": "名称不允许出现 /*,",
+    "copyFuzztag": "复制 Fuzztag",
+    "expandDictionary": "扩充字典",
+    "exportDictionary": "导出字典",
+    "convertToDatabaseStorage": "转为数据库存储",
+    "expandTo": "扩充到",
+    "convertingToDatabaseStorage": "转为数据库存储中，请耐心等待..."
+  },
+  "MoveOrCopyPayload": {
+    "getDataFailed": "获取数据失败："
+  },
+  "NewPayload": {
+    "getDictionaryListFailed": "获取字典列表失败：",
+    "noPayloadDictionary": "暂无字典",
+    "createNewDictionary": "新建字典",
+    "selectDictionaryFromList": "请点击左侧列表，选择想要查看的字典",
+    "migrateData": "迁移数据",
+    "payloadMigrationTip": "由于 {Payload} 功能进行重构，为不影响使用，需要点击确定将旧数据进行迁移，迁移数据不会造成任何数据丢失。",
+    "engineVersionTooLow": "引擎版本过低",
+    "engineVersionTooLowTip": "当前引擎版本过低无法使用新版 {Payload}，请将引擎更新到 v1.2.9-sp3 及以上版本",
+    "migratingData": "迁移数据中，请耐心等待..."
+  },
   "ReadOnlyNewPayload": {
     "selected": "已选中：",
     "totalCheckedItems": "{count}个",
@@ -7,11 +71,36 @@
     "pleaseSelectDictionaryOrFolder": "请选择要插入的字典或文件夹"
   },
   "NewPayloadLocalList": {
+    "dataUpdateFailed": "数据更新失败：",
     "selectDictionaryToInsert": "选择想要插入的字典",
-    "goToDictionaryManagement": "前往 字典管理"
+    "goToDictionaryManagement": "前往 {Payload}",
+    "selectExportContent": "请选择导出内容",
+    "createNewDictionary": "新建字典",
+    "createNewFolder": "新建文件夹"
   },
   "PayloadLocalContent": {
-    "fuzzModuleRenderHint": "可以通过 fuzz 模块 {{x(字典名)}} 来渲染"
+    "fuzzModuleRenderHint": "可以通过 fuzz 模块 {{x(字典名)}} 来渲染",
+    "editorDataFetchFailed": "编辑器数据获取失败",
+    "pleaseSelectDictionary": "请选择字典",
+    "dictionaryOperationFailed": "操作字典失败：",
+    "backupToOtherDictionary": "备份到其他字典",
+    "moveToOtherDictionary": "移动到其他字典",
+    "extraLargeDictionary": "超大字典",
+    "expandTo": "扩充到",
+    "expand": "扩充",
+    "autoDeduplicate": "自动去重",
+    "autoDeduplicating": "自动去重中，请耐心等待..."
+  },
+  "PayloadOnlineContent": {
+    "editorDataFetchFailed": "编辑器数据获取失败：",
+    "extraLargeDictionary": "超大字典",
+    "fuzzModuleRenderTip": "可以通过 fuzz 模块 {{x(字典名)}} 来渲染"
+  },
+  "ExportByPayloadGrpc": {
+    "exporting": "导出中，请耐心等待..."
+  },
+  "UploadOrDownloadByPayloadGrpc": {
+    "updating": "{value}中，请耐心等待..."
   },
   "NewPayloadTable": {
     "dictionaryContent": "字典内容",

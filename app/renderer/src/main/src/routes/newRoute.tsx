@@ -768,7 +768,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.YakScript:
             return <YakRunner />
         case YakitRoute.PayloadManager:
-            return <NewPayload />
+            return <Suspense fallback={<PageLoading />}><NewPayload /></Suspense>
         case YakitRoute.AccountAdminPage:
             return <AccountAdminPage />
         case YakitRoute.RoleAdminPage:

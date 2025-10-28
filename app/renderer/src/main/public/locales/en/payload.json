@@ -1,4 +1,65 @@
 {
+  "UploadStatusInfo": {
+    "elapsedTime": "Elapsed Time"
+  },
+  "CreateDictionaries": {
+    "dictionaryNameDuplicate": "Dictionary name duplicated",
+    "largeFileStorageTxtOnly": "Large file storage only supports txt file type",
+    "invalidFileFormat": "{name} is not a txt or csv file. Please upload a file in the correct format!",
+    "pathSelected": "{path} selected",
+    "chooseStorageMethodTip": "You can choose one of the following storage methods based on your needs. The storage method does not affect usage:",
+    "fileStorageTip": "File Storage: Stores the dictionary as a file locally, does not support hit count,",
+    "file_storage_tip": "File Storage: Stores the dictionary as a file locally, does not support hit count, <highlight>faster upload speed</highlight>",
+    "db_storage_tip": "Database Storage: Reads dictionary data and stores it in the database, supports hit count, <highlight>easier search</highlight>",
+    "large_file_storage_tip": "Large File Storage: When the uploaded file is larger than <size>20M</size>, it supports large file storage method, only supports txt, <highlight>more convenient storage</highlight>",
+    "dictionaryName": "Dictionary Name",
+    "uploadFile": "Upload File",
+    "manualInput": "Manual Input",
+    "uploadLargeFile": "Upload Large File",
+    "file_drag_tip": "You can drag files into the box, or <highlight>click here to import</highlight>",
+    "batchFolderUploadTip": "Supports batch folder upload (supported file types: txt/csv)",
+    "largeFileUploadTip": "Supports large file upload (supported file type: txt)",
+    "databaseStorage": "Database Storage",
+    "fileStorage": "File Storage",
+    "largeFileStorage": "Large File Storage",
+    "importing": "Importing...",
+    "autoDedupCheck": "Automatic deduplication check, please wait patiently..."
+  },
+  "FolderComponent": {
+    "createFolderSuccess": "New folder created successfully",
+    "createFolderFailed": "Failed to create new folder:",
+    "invalidNameCharacters": "Name does not allow characters /*,",
+    "folderNameDuplicate": "Folder name is duplicated, cannot create",
+    "folderNameDuplicateEdit": "Folder name is duplicated, cannot edit",
+    "copyFuzztag": "Copy Fuzztag",
+    "addSubsetDictionary": "Add Subset Dictionary",
+    "createSubsetDictionary": "Create Subset Dictionary"
+  },
+  "DeleteConfirm": {
+    "confirmDelete": "Are you sure you want to delete",
+    "confirmDeleteTip": "Confirming deletion will permanently delete it"
+  },
+  "FileComponent": {
+    "editFailedNameDuplicate": "Name duplicated, edit failed",
+    "invalidNameCharacters": "Name does not allow characters /*,",
+    "copyFuzztag": "Copy Fuzztag",
+    "expandDictionary": "Expand Dictionary",
+    "exportDictionary": "Export Dictionary",
+    "convertToDatabaseStorage": "Convert to Database Storage",
+    "expandTo": "Expand to",
+    "convertingToDatabaseStorage": "Converting to Database Storage, please wait patiently..."
+  },
+  "NewPayload": {
+    "getDictionaryListFailed": "Failed to get dictionary list:",
+    "noPayloadDictionary": "No dictionary available yet",
+    "createNewDictionary": "Create New Dictionary",
+    "selectDictionaryFromList": "Please click the list on the left to select the dictionary you want to view",
+    "migrateData": "Migrate Data",
+    "payloadMigrationTip": "Due to the refactoring of the {Payload} feature, to ensure continued use, you need to click OK to migrate the old data. Migrating data will not cause any data loss.",
+    "engineVersionTooLow": "Engine Version Too Low",
+    "engineVersionTooLowTip": "The current engine version is too low to use the new {Payload} feature. Please update the engine to v1.2.9-sp3 or above.",
+    "migratingData": "Migrating data, please wait patiently..."
+  },
   "ReadOnlyNewPayload": {
     "selected": "Selected:",
     "totalCheckedItems": "{count} items",
@@ -7,11 +68,36 @@
     "pleaseSelectDictionaryOrFolder": "Please select the payload or folder to insert"
   },
   "NewPayloadLocalList": {
-    "selectDictionaryToInsert": "Select the payload you want to insert",
-    "goToDictionaryManagement": "Go to Payload Management"
+    "dataUpdateFailed": "Data update failed:",
+    "selectDictionaryToInsert": "Select the dictionary you want to insert",
+    "goToDictionaryManagement": "Go to {Payload}",
+    "selectExportContent": "Please select the content to export",
+    "createNewDictionary": "Create New Dictionary",
+    "createNewFolder": "Create New Folder"
   },
   "PayloadLocalContent": {
-    "fuzzModuleRenderHint": "Can be rendered via the fuzz module {{x(payload_name)}}"
+    "fuzzModuleRenderHint": "Can be rendered via fuzz module {{x(dictionaryName)}}",
+    "editorDataFetchFailed": "Failed to fetch editor data",
+    "pleaseSelectDictionary": "Please select a dictionary",
+    "dictionaryOperationFailed": "Failed to operate on dictionary:",
+    "backupToOtherDictionary": "Backup to other dictionary",
+    "moveToOtherDictionary": "Move to other dictionary",
+    "extraLargeDictionary": "Extra Large Dictionary",
+    "expandTo": "Expand to",
+    "expand": "Expand",
+    "autoDeduplicate": "Auto Deduplicate",
+    "autoDeduplicating": "Auto deduplicating, please wait patiently..."
+  },
+  "PayloadOnlineContent": {
+    "editorDataFetchFailed": "Failed to fetch editor data:",
+    "extraLargeDictionary": "Extra Large Dictionary",
+    "fuzzModuleRenderTip": "Can be rendered via fuzz module {{x(dictionaryName)}}"
+  },
+  "ExportByPayloadGrpc": {
+    "exporting": "Exporting, please wait patiently..."
+  },
+  "UploadOrDownloadByPayloadGrpc": {
+    "updating": "{value}ing, please wait patiently..."
   },
   "NewPayloadTable": {
     "dictionaryContent": "Payload Content",
