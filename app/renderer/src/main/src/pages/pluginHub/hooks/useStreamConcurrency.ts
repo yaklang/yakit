@@ -1,5 +1,6 @@
 import {useRef} from "react"
 import {useMemoizedFn} from "ahooks"
+import { randomString } from "@/utils/randomUtil"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -32,7 +33,7 @@ export const useStreamConcurrency = <TData = any, TParams = any>({
     const startConcurrency = useMemoizedFn((httpParams: TParams[]) => {
         if (!httpParams?.length) return
 
-        const token = baseToken || `stream-${Date.now()}`
+        const token = baseToken || `stream-${randomString(40)}`
         
         totalRef.current = httpParams.length
         completedRef.current = 0
