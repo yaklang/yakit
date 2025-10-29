@@ -184,7 +184,7 @@ export interface SSAProgramResponse {
 }
 
 export interface AuditHistoryTableProps {
-    pageType: "aucitCode" | "projectManager"
+    pageType: "auditCode" | "projectManager"
     onClose?: () => void
     onExecuteAudit?: () => void
     refresh?: boolean
@@ -216,4 +216,10 @@ export interface AuditHistoryListProps {
     onOpenEditorDetails: (v: ShowItemType) => void
     query: QuerySyntaxFlowResultRequest
     setQuery: (v: QuerySyntaxFlowResultRequest) => void
+}
+
+export interface CompileHistoryProps {
+    info: SSAProgramResponse
+    pageType: "auditCode" | "projectManager"
+    onClose?: () => void
 }

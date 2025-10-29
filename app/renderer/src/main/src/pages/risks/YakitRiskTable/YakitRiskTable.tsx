@@ -2123,7 +2123,11 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                     {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
                 </Descriptions.Item>
                 <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                <Descriptions.Item label={t("AuditResultDescribe.scan_rules")}>{getRule()}</Descriptions.Item>
+                <Descriptions.Item label={t("AuditResultDescribe.scan_rules")}>
+                    <div className={styles['scan-rule-box']}>
+                        {getRule()} 
+                    </div>
+                </Descriptions.Item>
                 <>
                     <Descriptions.Item label={t("AuditResultDescribe.vulnerability_description")} span={column}>
                         {info.Description ? (
@@ -2272,16 +2276,6 @@ export const RightBugAuditResultHeader: React.FC<RightBugAuditResultHeaderProps>
 
 export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.memo((props) => {
     const {info, columnSize} = props
-    const {t, i18n} = useI18nNamespaces(["risk", "yakitUi"])
-    const column = useCreation(() => {
-        if (columnSize) return columnSize
-        return 1
-    }, [])
-
-    const getRule = useMemoizedFn(() => {
-        const newInfo = info as any
-        return newInfo?.FromYakScript || newInfo?.FromRule || t("RightBugAuditResult.vulnerability_detection")
-    })
 
     return (
         <div
@@ -2290,46 +2284,7 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
             })}
         >
             <RightBugAuditResultHeader info={info} />
-            <div className={styles["content-resize-second"]}>
-                <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
-                    <Descriptions.Item label={t("RightBugAuditResult.type")}>
-                        {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
-                    </Descriptions.Item>
-                    <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                    <Descriptions.Item label={t("RightBugAuditResult.scan_rules")}>{getRule()}</Descriptions.Item>
-                    <>
-                        <Descriptions.Item
-                            label={t("RightBugAuditResult.vulnerability_description")}
-                            span={column}
-                            contentStyle={{whiteSpace: "pre-wrap"}}
-                        >
-                            {info.Description ? (
-                                <MDEditor.Markdown
-                                    className={classNames(styles["md-content"])}
-                                    source={info.Description}
-                                />
-                            ) : (
-                                "-"
-                            )}
-                        </Descriptions.Item>
-                        <Descriptions.Item
-                            label={t("RightBugAuditResult.solution")}
-                            span={column}
-                            contentStyle={{whiteSpace: "pre-wrap"}}
-                        >
-                            {info.Solution ? (
-                                <MDEditor.Markdown
-                                    className={classNames(styles["md-content"])}
-                                    source={info.Solution}
-                                />
-                            ) : (
-                                "-"
-                            )}
-                        </Descriptions.Item>
-                    </>
-                </Descriptions>
-                <div className={styles["no-more"]}>{t("YakitEmpty.noMoreData")}</div>
-            </div>
+            <AuditResultDescribe info={info} columnSize={columnSize}/>
         </div>
     )
 })

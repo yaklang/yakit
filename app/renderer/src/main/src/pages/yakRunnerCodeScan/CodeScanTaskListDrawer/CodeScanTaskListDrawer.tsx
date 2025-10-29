@@ -150,11 +150,11 @@ interface CodeScanTaskListProps {
     ref?: ForwardedRef<CodeScanTaskListForwardedRefProps>
     visible: boolean
     setVisible: (v: boolean) => void
-    selectedRowKeys: string[]
-    setSelectedRowKeys: (v: string[]) => void
+    selectedRowKeys?: string[]
+    setSelectedRowKeys?: (v: string[]) => void
 }
 
-const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
+export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
     forwardRef((props, ref) => {
         const {getPageInfoByRuntimeId} = usePageInfo(
             (s) => ({
@@ -374,7 +374,7 @@ const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                     title: "操作",
                     dataKey: "action",
                     fixed: "right",
-                    width: 120,
+                    width: 200,
                     render: (_, record: SyntaxFlowScanTask) => (
                         <>
                             {getAction(record)}
@@ -400,6 +400,20 @@ const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                                     查看
                                 </YakitButton>
                             )}
+                            {
+                                record.Status === "done" && (
+                                    <>
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <YakitButton
+                                    type='text'
+                                    onClick={(e) => {
+                                        
+                                    }}
+                                >
+                                    生成报告
+                                </YakitButton>
+                                    </>)
+                            }
                         </>
                     )
                 }
@@ -422,6 +436,8 @@ const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                 .then((res: QuerySyntaxFlowScanTaskResponse) => {
                     const newPage = +res.Pagination.Page
                     const d = newPage === 1 ? res.Data : (response?.Data || []).concat(res.Data)
+                    console.log("res.Data", res.Data, d);
+                    
                     setResponse({
                         ...res,
                         Data: d

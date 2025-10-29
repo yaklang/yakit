@@ -375,9 +375,15 @@ div.md-content {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     color: var(--Colors-Use-Neutral-Text-1-Title);
-    border: 1px solid var(--Colors-Use-Neutral-Border);
-    background: var(--Colors-Use-Basic-Background);
+    // border: 1px solid var(--Colors-Use-Neutral-Border);
+    background: transparent;
     pre {
         background: var(--Colors-Use-Neutral-Bg);
+    }
+}
+.scan-rule-box {
+    cursor: pointer;
+    &:hover {
+        text-decoration: underline;
     }
 }
