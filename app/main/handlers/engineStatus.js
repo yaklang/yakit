@@ -9,9 +9,6 @@ const {engineLogOutputFileAndUI, engineLogOutputUI} = require("../logFile")
 
 let dbFile = undefined
 
-/** 本地引擎随机端口启动重试次数(防止无限制的随机重试，最大重试次数: 5) */
-let engineCount = 0
-
 function isPortAvailable(port) {
     return new Promise((resolve, reject) => {
         const server = net.createServer({})
@@ -125,7 +122,6 @@ module.exports = (win, callback, getClient, newClient) => {
      */
     const asyncStartLocalYakEngineServer = (win, params) => {
         const {version} = params
-        engineCount += 1
 
         const {port, isEnpriTraceAgent, isIRify} = params
         return new Promise((resolve, reject) => {

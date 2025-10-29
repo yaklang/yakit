@@ -68,5 +68,6 @@ module.exports = {
             }
             return fileInfo
         })
-    }
+    },
+    registerNewIPC: (win, getClient, ipcEventPre) => {}
 }

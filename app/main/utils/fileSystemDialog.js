@@ -51,5 +51,6 @@ module.exports = {
         ipcMain.handle("save-file-system-dialog", async (event, params) => {
             return await handleSaveFileSystem(params)
         })
-    }
+    },
+    registerNewIPC: (win, getClient, ipcEventPre) => {}
 }

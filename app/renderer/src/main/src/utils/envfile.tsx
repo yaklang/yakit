@@ -197,3 +197,18 @@ export const getRemoteI18nGV = () => {
             return RemoteI18nGV.basI18n
     }
 }
+
+export const GetConnectPort = () => {
+    switch (fetchEnv()) {
+        case "enterprise":
+            return 9012
+        case "simple-enterprise":
+            return 9013
+        case "irify":
+            return 9014
+        case "irify-enterprise":
+            return 9015
+        default:
+            return 9011
+    }
+}

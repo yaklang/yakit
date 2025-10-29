@@ -23,5 +23,16 @@ module.exports = {
         ipcMain.handle("get-clipboard-text", (e) => {
             return clipboard.readText()
         })
+    },
+    registerNewIPC: (win, getClient, ipcEventPre) => {
+        // 设置剪切板文本信息
+        ipcMain.handle(ipcEventPre + "set-clipboard-text", (e, text) => {
+            clipboard.writeText(text)
+            return
+        })
+        // 获取剪切板文本信息
+        ipcMain.handle(ipcEventPre + "get-clipboard-text", (e) => {
+            return clipboard.readText()
+        })
     }
 }

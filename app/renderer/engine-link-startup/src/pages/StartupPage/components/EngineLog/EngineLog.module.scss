@@ -1,0 +1,11 @@
+.engine-log-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: var(--Colors-Use-Basic-Background);
+  .engine-copy {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+  }
+}

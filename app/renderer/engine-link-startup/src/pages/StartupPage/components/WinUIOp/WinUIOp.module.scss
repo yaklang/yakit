@@ -1,0 +1,33 @@
+.win-ui-op-wrapper {
+  height: 100%;
+
+  .win-ui-op-body {
+    height: 100%;
+    display: flex;
+
+    .short-divider-wrapper {
+      width: 1px;
+      height: 100%;
+      padding: 10px 0;
+
+      .divider-style {
+        height: 100%;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+      }
+    }
+
+    .op-btn {
+      padding: 8px 12px;
+
+      .icon-style {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+    }
+
+    .op-btn:hover {
+      .icon-style {
+        color: var(--Colors-Use-Main-Primary);
+      }
+    }
+  }
+}

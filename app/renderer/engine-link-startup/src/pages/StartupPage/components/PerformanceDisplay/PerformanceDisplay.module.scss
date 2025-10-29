@@ -1,0 +1,29 @@
+.system-func-wrapper {
+    height: 100%;
+    display: flex;
+}
+
+.cpu-wrapper {
+    height: 100%;
+    padding: 8px 0 8px 12px;
+    display: flex;
+
+    .cpu-title {
+        white-space: nowrap;
+        height: 20px;
+        line-height: 20px;
+        margin-right: 4px;
+        font-size: 12px;
+        .title-headline {
+            color: var(--Colors-Use-Neutral-Disable);
+        }
+        .title-content {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+    }
+    .cpu-spark {
+        width: 50px;
+        height: 20px;
+        display: inline-block;
+    }
+}

@@ -1,7 +1,7 @@
 import {useRef, useEffect, useState, Suspense, lazy} from "react"
 // by types
 import {failed, warn, yakitFailed} from "./utils/notification"
-import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "./utils/kv"
+import {getRemoteValue, setRemoteValue} from "./utils/kv"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
@@ -10,18 +10,20 @@ import {refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
 import {getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isEnpriTrace, isIRify} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
-import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
 import {coordinate, setChartsColorList} from "./pages/globalVariable"
 import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
 import {useTemporaryProjectStore} from "./store/temporaryProject"
 import {useRunNodeStore} from "./store/runNode"
-import {LocalGVS} from "./enums/localGlobal"
 import {handleFetchSystemInfo} from "./constants/hardware"
 import {closeWebSocket, startWebSocket} from "./utils/webSocket/webSocket"
 import {startShortcutKeyMonitor, stopShortcutKeyMonitor} from "./utils/globalShortcutKey/utils"
 import {getStorageGlobalShortcutKeyEvents} from "./utils/globalShortcutKey/events/global"
-import { useUploadInfoByEnpriTrace } from "./components/layout/utils"
+import {useUploadInfoByEnpriTrace} from "./components/layout/utils"
+import emiter from "./utils/eventBus/eventBus"
+import message from "antd/lib/message"
+import notification from "antd/lib/notification"
+import {Modal} from "antd"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
@@ -34,8 +36,6 @@ interface OnlineProfileProps {
 }
 
 function NewApp() {
-    /** 是否展示用户协议 */
-    const [agreed, setAgreed] = useState(false)
     const {userInfo} = useStore()
     const {setGoogleChromePluginPath} = useGoogleChromePluginPath()
 
@@ -55,9 +55,12 @@ function NewApp() {
         // 解压命令执行引擎脚本压缩包
         ipcRenderer.invoke("generate-start-engine")
         // 解压Google 插件压缩包
-        ipcRenderer.invoke("generate-chrome-plugin").then((res) => {
-            setGoogleChromePluginPath(res)
-        }).catch((e) => {})
+        ipcRenderer
+            .invoke("generate-chrome-plugin")
+            .then((res) => {
+                setGoogleChromePluginPath(res)
+            })
+            .catch((e) => {})
         // 获取系统信息
         handleFetchSystemInfo()
         // 告诉主进程软件的版本(CE|EE)
@@ -101,15 +104,6 @@ function NewApp() {
         return () => {
             document.removeEventListener("change", handleInputEvent)
         }
-    }, [])
-
-    /** 是否展示用户协议 */
-    useEffect(() => {
-        getLocalValue(LocalGVS.UserProtocolAgreed)
-            .then((value: any) => {
-                setAgreed(!!value)
-            })
-            .catch(() => {})
     }, [])
 
     // 全局监听登录状态
@@ -257,7 +251,6 @@ function NewApp() {
         }
     }, [dynamicStatus.isDynamicStatus, userInfo])
 
-
     useEffect(() => {
         // 登录账号时 连接 WebSocket 服务器
         if (userInfo.isLogin) {
@@ -285,61 +278,18 @@ function NewApp() {
         }
     }, [])
 
-    if (!agreed) {
-        return (
-            <>
-                <div className={styles["yakit-mask-drag-wrapper"]}></div>
-                <YakitModal
-                    title='用户协议'
-                    centered={true}
-                    visible={true}
-                    closable={false}
-                    width='75%'
-                    cancelText={"关闭 / Closed"}
-                    onCancel={() => ipcRenderer.invoke("UIOperate", "close")}
-                    onOk={() => {
-                        setLocalValue(LocalGVS.UserProtocolAgreed, true)
-                        setAgreed(true)
-                    }}
-                    okText='我已认真阅读本协议，认同协议内容'
-                    bodyStyle={{padding: "16px 24px 24px 24px"}}
-                >
-                    <div className={styles["yakit-agr-modal-body"]}>
-                        <div className={styles["body-title"]}>免责声明</div>
-                        <div className={styles["body-content"]}>
-                            1. 本工具仅面向 <span className={styles["sign-content"]}>合法授权</span>{" "}
-                            的企业安全建设行为与个人学习行为，如您需要测试本工具的可用性，请自行搭建靶机环境。
-                            <br />
-                            2. 在使用本工具进行检测时，您应确保该行为符合当地的法律法规，并且已经取得了足够的授权。
-                            <span className={styles["underline-content"]}>请勿对非授权目标进行扫描。</span>
-                            <br />
-                            3. 禁止对本软件实施逆向工程、反编译、试图破译源代码，植入后门传播恶意软件等行为。
-                            <br />
-                            4. 如果您需要使用Yakit<span className={styles["sign-bold-content"]}>用于商业化目的</span>
-                            ，请确保你们已经<span className={styles["sign-bold-content"]}>获得官方授权</span>
-                            ，否则我们将追究您的相关责任。
-                            <br />
-                            <span className={styles["sign-bold-content"]}>
-                                如果发现上述禁止行为，我们将保留追究您法律责任的权利。
-                            </span>
-                            <br />
-                            如您在使用本工具的过程中存在任何非法行为，您需自行承担相应后果，我们将不承担任何法律及连带责任。
-                            <br />
-                            在安装并使用本工具前，请您{" "}
-                            <span className={styles["sign-bold-content"]}>务必审慎阅读、充分理解各条款内容。</span>
-                            <br />
-                            限制、免责条款或者其他涉及您重大权益的条款可能会以{" "}
-                            <span className={styles["sign-bold-content"]}>加粗</span>、
-                            <span className={styles["underline-content"]}>加下划线</span>
-                            等形式提示您重点注意。
-                            <br />
-                            除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。
-                        </div>
-                    </div>
-                </YakitModal>
-            </>
-        )
-    }
+    const destroyMainWinAntdUi = useMemoizedFn(() => {
+        const selectors = [".ant-message", ".ant-notification", ".ant-modal-root", ".ant-drawer", ".ant-drawer-mask"]
+        selectors.forEach((sel) => {
+            document.querySelectorAll(sel).forEach((el) => el.remove())
+        })
+    })
+    useEffect(() => {
+        emiter.on("destroyMainWinAntdUiEvent", destroyMainWinAntdUi)
+        return () => {
+            emiter.off("destroyMainWinAntdUiEvent", destroyMainWinAntdUi)
+        }
+    }, [])
 
     return (
         <UILayout linkSuccess={linkSuccess}>

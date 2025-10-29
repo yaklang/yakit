@@ -58,5 +58,6 @@ module.exports = {
             const {path, token} = params
             return cancelRequestProgress(path)
         })
-    }
+    },
+    registerNewIPC: (win, getClient, ipcEventPre) => {}
 }
