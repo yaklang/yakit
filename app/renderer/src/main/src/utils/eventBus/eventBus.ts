@@ -24,6 +24,7 @@ import {AIAgentEventProps} from "./events/aiAgent"
 import {YakRunnerScanHistoryEventProps} from "./events/yakRunnerScanHistory"
 import {AIReActEventProps} from "./events/aiReAct"
 import {ReportPageEventProps} from "./events/reportPage";
+import {RuleManagementEventProps} from "./events/ruleManagement"
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
 type OneToArr<T extends object, E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
@@ -75,6 +76,7 @@ type Events = [
     YakRunnerScanHistoryEventProps,
     AIReActEventProps,
     ReportPageEventProps,
+    RuleManagementEventProps
 ]
 
 type CheckVal = Exchange<ArrContrast<Events>>

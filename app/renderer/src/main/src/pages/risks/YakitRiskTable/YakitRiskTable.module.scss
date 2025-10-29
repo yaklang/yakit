@@ -135,6 +135,7 @@ $keyColor: map-keys($tagColor);
                 cursor: pointer;
                 &:hover {
                     text-decoration: underline;
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
             .content-heard-body-description {
@@ -385,5 +386,6 @@ div.md-content {
     cursor: pointer;
     &:hover {
         text-decoration: underline;
+        color: var(--Colors-Use-Main-Primary);
     }
 }

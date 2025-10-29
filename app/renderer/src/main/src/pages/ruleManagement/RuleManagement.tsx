@@ -57,7 +57,7 @@ import {RefreshIcon} from "@/assets/newIcon"
 import {IRifyApplySyntaxFlowRuleUpdate} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import {useStore} from "@/store"
 import {randomString} from "@/utils/randomUtil"
-import {usePageInfo} from "@/store/pageInfo"
+import {RuleManagementPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {API} from "@/services/swagger/resposeType"
@@ -69,8 +69,9 @@ const DefaultOnlinePaging: API.Pagination = {page: 1, limit: 20, order_by: "upda
 
 /** @name 规则管理 */
 export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
-    const {} = props
-
+    const {ruleManagementPageInfo} = props
+    
+    const [pageInfo,setPageInfo] = useState<RuleManagementPageInfoProps | undefined>(ruleManagementPageInfo)
     const wrapperRef = useRef<HTMLDivElement>(null)
     const userInfo = useStore((s) => s.userInfo)
     const {currentPageTabRouteKey} = usePageInfo(
@@ -79,7 +80,6 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         }),
         shallow
     )
-
     const localRuleGroupListRef = useRef<LocalRuleGroupListPropsRefProps>()
     const onlineRuleGroupListRef = useRef<OnlineRuleGroupListPropsRefProps>()
 
@@ -95,6 +95,34 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         Total: 0
     })
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
+
+    const onRuleManagementPageInfoFun = useMemoizedFn((ruleManagementPageInfo) => {
+        try {
+            const newPageInfo: RuleManagementPageInfoProps = JSON.parse(ruleManagementPageInfo)
+            setPageInfo(newPageInfo)
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        emiter.on("onRuleManagementPageInfo", onRuleManagementPageInfoFun)
+        return () => {
+            emiter.off("onRuleManagementPageInfo", onRuleManagementPageInfoFun)
+        }
+    }, [])
+
+    useEffect(()=>{
+        // 参数打开编辑规则
+        if(pageInfo?.RuleNames){
+            setEditHint(false)
+            grpcFetchLocalRuleList({Pagination: DefaultPaging, Filter: {
+                RuleNames: pageInfo.RuleNames
+            }}).then((res)=>{
+                if(res.Rule.length>0){
+                    handleOpenEditHint(res.Rule[0])
+                }
+            })
+        }
+    },[pageInfo?.RuleNames])
 
     const handleCheckLib = useMemoizedFn((isChecked) => {
         setFilters((filters) => {
