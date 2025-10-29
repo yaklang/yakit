@@ -1,8 +1,11 @@
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {SyntaxFlowResult} from "../yakRunnerCodeScan/YakRunnerCodeScanType"
 import {UserInfoProps} from "@/store"
+import {RuleManagementPageInfoProps} from "@/store/pageInfo";
 
-export interface RuleManagementProps {}
+export interface RuleManagementProps{
+    ruleManagementPageInfo?: RuleManagementPageInfoProps
+}
 
 export interface LocalRuleGroupListPropsRefProps {
     handleReset: () => void

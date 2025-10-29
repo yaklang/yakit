@@ -135,7 +135,8 @@ import {
     WebsocketFuzzerPageInfoProps,
     AIForgeEditorPageInfoProps,
     AIToolEditorPageInfoProps,
-    YakRunnerScanHistoryPageInfoProps
+    YakRunnerScanHistoryPageInfoProps,
+    RuleManagementPageInfoProps
 } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
@@ -603,6 +604,8 @@ export interface ComponentParams {
     modifyAIToolPageInfo?: AIToolEditorPageInfoProps
     /** 扫描历史页面 */
     yakRunnerScanHistoryPageInfo?: YakRunnerScanHistoryPageInfoProps
+    /** 规则管理页面 */
+    ruleManagementPageInfo?: RuleManagementPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
     return function WithPage(props) {
@@ -817,7 +820,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.YakRunner_ScanHistory:
             return <YakRunnerScanHistory />
         case YakitRoute.Rule_Management:
-            return <RuleManagement />
+            return <RuleManagement ruleManagementPageInfo={params?.ruleManagementPageInfo} />
         case YakitRoute.Notepad_Manage:
             return <NotepadManage />
         case YakitRoute.Modify_Notepad:

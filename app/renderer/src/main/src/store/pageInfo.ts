@@ -84,6 +84,8 @@ interface PageParamsInfoProps {
     yakRunnerScanHistory?: YakRunnerScanHistoryPageInfoProps
     /** 并发页面高级配置 */
     ConcurrencyAdvancedConfigValue?: ConcurrencyAdvancedConfigValue
+    /** 规则管理页面 */
+    ruleManagementPageInfo?: RuleManagementPageInfoProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -266,6 +268,10 @@ export interface ModifyNotepadPageInfoProps {
 
 export interface YakRunnerScanHistoryPageInfoProps {
     Programs: string[]
+}
+
+export interface RuleManagementPageInfoProps {
+    RuleNames?: string[]
 }
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>
