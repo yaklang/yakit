@@ -75,7 +75,7 @@ export default AIReActTaskChat
 const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
     const {reviewInfo, planReviewTreeKeywordsMap} = useChatIPCStore()
     const {taskChat, yakExecResult} = useAIChatUIData()
-
+    const {chatIPCData} = useChatIPCStore()
     const {coordinatorId, streams} = taskChat
 
     //#region AI tab 相关逻辑
@@ -93,12 +93,12 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         }
     }, [coordinatorId])
     useInterval(() => {
-        getTotal()
+        if (chatIPCData.execute) getTotal()
     }, interval)
     const getTotal = useMemoizedFn(() => {
         if (!coordinatorId) return
         apiQueryRisksTotalByRuntimeId(coordinatorId).then((allRes) => {
-            console.log('allRes.Total in task chat', allRes.Total);
+            console.log("allRes.Total in task chat", allRes.Total)
             if (+allRes.Total > 0) {
                 setTempTotal(+allRes.Total)
             }
@@ -168,7 +168,6 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         }
         return tab
     }, [tempTotal])
-
 
     useEffect(() => {
         emiter.on("switchAIActTab", setActiveKey)
