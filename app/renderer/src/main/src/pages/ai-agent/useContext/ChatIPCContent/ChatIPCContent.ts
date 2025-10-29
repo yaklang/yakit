@@ -2,7 +2,7 @@ import {createContext} from "react"
 import {defaultChatIPCData} from "../../defaultConstant"
 import {cloneDeep} from "lodash"
 import {UseChatIPCEvents, UseChatIPCState} from "@/pages/ai-re-act/hooks/type"
-import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
+import {AIAgentGrpcApi, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
 
 export interface ChatIPCContextStore {
@@ -20,6 +20,11 @@ export interface AIChatIPCSendParams {
     /**用户审阅过程中选择得btn */
     optionValue?: string
 }
+type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+export interface AISendSyncMessageParams {
+    syncType: string
+    params: MakeOptional<AIStartParams, "UserQuery">
+}
 export interface ChatIPCContextDispatcher {
     chatIPCEvents: UseChatIPCEvents
     handleSendCasual: (params: AIChatIPCSendParams) => void
@@ -28,6 +33,7 @@ export interface ChatIPCContextDispatcher {
     handleStop: () => void
     handleSend: (params: AIChatIPCSendParams) => void
     setTimelineMessage: React.Dispatch<React.SetStateAction<string | undefined>>
+    handleSendSyncMessage: (params: AISendSyncMessageParams) => void
 }
 
 export interface ChatIPCContextValue {
@@ -57,6 +63,7 @@ export default createContext<ChatIPCContextValue>({
         handleSend: () => {},
         handleStart: () => {},
         handleStop: () => {},
-        setTimelineMessage: () => {}
+        setTimelineMessage: () => {},
+        handleSendSyncMessage: () => {}
     }
 })

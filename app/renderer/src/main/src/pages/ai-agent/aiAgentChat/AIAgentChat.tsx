@@ -17,6 +17,7 @@ import {randomString} from "@/utils/randomUtil"
 import {formatAIAgentSetting} from "../utils"
 import ChatIPCContent, {
     AIChatIPCSendParams,
+    AISendSyncMessageParams,
     ChatIPCContextDispatcher,
     ChatIPCContextStore
 } from "../useContext/ChatIPCContent/ChatIPCContent"
@@ -291,15 +292,16 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         events.onStart(newChat.id, startParams)
     })
     const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
-        handleSendAIRequire(params, "casual")
+        handleSendInteractiveMessage(params, "casual")
     })
     const handleSendTask = useMemoizedFn((params: AIChatIPCSendParams) => {
-        handleSendAIRequire(params, "task")
+        handleSendInteractiveMessage(params, "task")
     })
     const handleSend = useMemoizedFn((params: AIChatIPCSendParams) => {
-        handleSendAIRequire(params, "")
+        handleSendInteractiveMessage(params, "")
     })
-    const handleSendAIRequire = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
+    /**发送 IsInteractiveMessage 消息 */
+    const handleSendInteractiveMessage = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
         const {value, id, optionValue} = params
         if (!activeID) return
         if (!id) return
@@ -311,6 +313,20 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         }
         events.onSend({token: activeID, type, params: info, optionValue})
         handleStopAfterChangeState()
+    })
+    /**发送 IsSyncMessage 消息 */
+    const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
+        if (!activeID) return
+        const {syncType, params} = data
+        const info: AIInputEvent = {
+            IsSyncMessage: true,
+            SyncType: syncType,
+            Params: {
+                UserQuery: "",
+                ...params
+            }
+        }
+        events.onSend({token: activeID, type: "", params: info})
     })
     const onStop = useMemoizedFn(() => {
         if (execute && activeID) {
@@ -455,7 +471,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             handleStart,
             handleStop: onStop,
             handleSend,
-            setTimelineMessage
+            setTimelineMessage,
+            handleSendSyncMessage
         }
     }, [events])
     useEffect(() => {

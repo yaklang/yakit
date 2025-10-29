@@ -11,9 +11,9 @@ export const AIToolDecision: React.FC<AIToolDecisionProps> = React.memo((props) 
         <>
             <AISingHaveColorText
                 titleIcon={<SolidCursorclickIcon />}
-                title={nodeLabel}
-                subTitle='继续当前任务'
-                tip='已获取操作系统类型为 darwin，接下来将执行系统版本已获取操作系统类型为 darwin，接下来将执行系统版本已获取操作系统类型为 darwin，接下来将执行系统版本'
+                title='决策'
+                subTitle={nodeLabel}
+                tip={item.data?.summary}
                 timestamp={item.Timestamp}
             />
         </>

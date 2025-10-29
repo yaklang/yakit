@@ -11,16 +11,20 @@ import {AIOnlineModelIconMap} from "../../defaultConstant"
 import {OutlineAtomIconByStatus} from "../AIModelList"
 import useAIAgentStore from "../../useContext/useStore"
 import {AIChatSelect} from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
+import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
+import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
 
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
-    const {disabled} = props
     //#region AI model
     const {setting} = useAIAgentStore()
     const {setSetting} = useAIAgentDispatcher()
+    const {chatIPCData} = useChatIPCStore()
+    const {handleSendSyncMessage} = useChatIPCDispatcher()
     const [aiModelOptions, setAIModelOptions] = useState<GetAIModelListResponse>({
         onlineModels: [],
         localModels: []
     })
+    const [open, setOpen] = useState<boolean>(false)
     useEffect(() => {
         getAIModelListOption()
     }, [])
@@ -48,6 +52,18 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         setSetting && setSetting((old) => ({...old, AIService: value}))
     })
 
+    const onSetOpen = useMemoizedFn((v: boolean) => {
+        setOpen(v)
+        if (!v && chatIPCData.execute) {
+            handleSendSyncMessage({
+                syncType: "update_config",
+                params: {
+                    AIService: modelValue
+                }
+            })
+        }
+    })
+
     const modelValue = useCreation(() => {
         return setting?.AIService || ""
     }, [setting?.AIService])
@@ -59,7 +75,6 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     //#endregion
     return isHaveData ? (
         <AIChatSelect
-            disabled={disabled}
             value={modelValue}
             onSelect={onSelectModel}
             dropdownRender={(menu, setOpen) => {
@@ -71,6 +86,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 )
             }}
             getList={getAIModelListOption}
+            open={open}
+            setOpen={onSetOpen}
         >
             {aiModelOptions.onlineModels.length > 0 && (
                 <YakitSelect.OptGroup key='线上' label='线上'>

@@ -98,6 +98,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     const getTotal = useMemoizedFn(() => {
         if (!coordinatorId) return
         apiQueryRisksTotalByRuntimeId(coordinatorId).then((allRes) => {
+            console.log('allRes.Total in task chat', allRes.Total);
             if (+allRes.Total > 0) {
                 setTempTotal(+allRes.Total)
             }

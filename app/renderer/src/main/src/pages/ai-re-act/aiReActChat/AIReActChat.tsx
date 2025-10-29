@@ -160,9 +160,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                     extraFooterRight={execute && <RoundedStopButton onClick={handleStop} />}
                                     extraFooterLeft={
                                         <>
-                                            <AIModelSelect disabled={execute} />
+                                            <AIModelSelect />
                                             <React.Suspense fallback={<div>loading...</div>}>
-                                                <AIReviewRuleSelect disabled={execute} />
+                                                <AIReviewRuleSelect />
                                             </React.Suspense>
                                             <YakitButton type='text' onClick={onViewContext}>
                                                 查看上下文
