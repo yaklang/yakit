@@ -23,6 +23,8 @@ const UICloseFlag = "windows-close-flag"
 
 /** 主进程窗口对象 */
 let win
+/** yakitEngineLink 窗口对象 */
+let yakitEngineLinkWin
 // 是否展示关闭二次确认弹窗的标志位
 let closeFlag = true
 
@@ -32,14 +34,94 @@ process.on("uncaughtException", (error) => {
 
 // 性能优化：https://juejin.cn/post/6844904029231775758
 
-const createWindow = () => {
-    /** 获取缓存数据并储存于软件内 */
-    initLocalCache()
-    /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
-    initExtraLocalCache(() => {
-        const cacheFlag = getExtraLocalCacheValue(UICloseFlag)
-        closeFlag = cacheFlag === undefined ? true : cacheFlag
+// ---------------- 创建yakitEngineLink窗口 ----------------
+const createYakitEngineLinkWindow = () => {
+    const yakitEngineLinkWindowState = windowStateKeeper({
+        defaultWidth: 900,
+        defaultHeight: 500,
+        path: windowStatePatch,
+        file: "yakit-window-state.json"
     })
+
+    yakitEngineLinkWin = new BrowserWindow({
+        parent: win || undefined, // 如果有父窗口，则附着
+        modal: !!win, // 父窗口存在时设置模态
+        alwaysOnTop: true, // 确保在父窗口之上
+        x: yakitEngineLinkWindowState.x,
+        y: yakitEngineLinkWindowState.y,
+        width: yakitEngineLinkWindowState.width,
+        height: yakitEngineLinkWindowState.height,
+        minWidth: 900,
+        minHeight: 500,
+        frame: false,
+        autoHideMenuBar: true,
+        webPreferences: {
+            preload: path.join(__dirname, "preload.js"),
+            nodeIntegration: true,
+            contextIsolation: false,
+            sandbox: true
+        },
+        titleBarStyle: "hidden"
+    })
+
+    yakitEngineLinkWindowState.manage(yakitEngineLinkWin)
+
+    // 页面加载
+    if (isDev) {
+        yakitEngineLinkWin.loadURL("http://127.0.0.1:5173")
+    } else {
+        // yakitEngineLinkWin.loadFile(path.join(__dirname, "../renderer/pages/temp/index.html"))
+    }
+
+    // 阻止新窗口
+    yakitEngineLinkWin.webContents.setWindowOpenHandler((details) => {
+        console.log("捕获 window.open:", details.url)
+        return {action: "deny"}
+    })
+
+    // 尺寸
+    yakitEngineLinkWin.setSize(yakitEngineLinkWindowState.width, yakitEngineLinkWindowState.height)
+
+    // DevTools
+    if (isDev) yakitEngineLinkWin.webContents.openDevTools({mode: "detach"})
+
+    // 菜单和 macOS 按钮
+    yakitEngineLinkWin.setMenu(null)
+    yakitEngineLinkWin.setMenuBarVisibility(false)
+    if (process.platform === "darwin") tempWin.setWindowButtonVisibility(false)
+
+    // 渲染进程崩溃监听
+    yakitEngineLinkWin.webContents.on("render-process-gone", (event, details) => {
+        // 发送渲染端崩溃事件
+        renderLogOutputFile(`----- YakitEngineLinkWin Render process is gone ------`)
+        renderLogOutputFile(`YakitEngineLinkWin Render process: ${details.reason}, exitcode: ${details.exitCode}`)
+        if (details.reason === "crashed") {
+            // 如果渲染端崩溃了，设置渲染端崩溃标记位
+            setLocalCache("render-crash-screen", true)
+        }
+        // 记录logger日志
+        require("./handlers/logger").saveLogs()
+    })
+
+    // 阻止内部react页面的链接点击跳转
+    yakitEngineLinkWin.webContents.on("will-navigate", (e, url) => {
+        e.preventDefault()
+    })
+
+    // 窗口事件
+    yakitEngineLinkWin.on("close", (e) => {
+        // e.preventDefault()
+        yakitEngineLinkWindowState.saveState(win)
+        // 关闭app时通知渲染进程 渲染进程操作后再进行关闭
+        // yakitEngineLinkWin.webContents.send("close-yakitEngineLinkWin-renderer")
+    })
+    yakitEngineLinkWin.on("minimize", () => {})
+    yakitEngineLinkWin.on("maximize", () => {})
+    yakitEngineLinkWin.on("closed", () => {
+        yakitEngineLinkWin = null
+    })
+}
+const createWindow = () => {
     let mainWindowState = windowStateKeeper({
         defaultWidth: 900,
         defaultHeight: 500,
@@ -172,12 +254,74 @@ app.whenReady().then(() => {
      */
     initAllLogFolders()
 
+    /** 获取缓存数据并储存于软件内 */
+    initLocalCache()
+    /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
+    initExtraLocalCache(() => {
+        const cacheFlag = getExtraLocalCacheValue(UICloseFlag)
+        closeFlag = cacheFlag === undefined ? true : cacheFlag
+    })
+
+    // 协议
+    protocol.registerFileProtocol("atom", (request, callback) => {
+        const filePath = url.fileURLToPath("file://" + request.url.slice("atom://".length))
+        callback(filePath)
+    })
+
+    // 创建yakitEngineLink窗口
+    createYakitEngineLinkWindow()
+    app.on("activate", function () {
+        if (BrowserWindow.getAllWindows().length === 0) createYakitEngineLinkWindow()
+    })
+    ipcMain.handle("open-yakitEngineLinkWin-window", (event, data) => {
+        win?.minimize()
+        createYakitEngineLinkWindow()
+    })
+
+    // IPC：yakitEngineLinkWin 完成操作
+    ipcMain.on("yakitEngineLinkWin-done", async (event, data) => {
+        console.log("YakitEngineLinkWin 页面完成操作，接收到数据:", data)
+        if (yakitEngineLinkWin) {
+            yakitEngineLinkWin.close() // 关闭 yakitEngineLinkWin 窗口
+            yakitEngineLinkWin = null
+        }
+
+        // 创建或显示主窗口
+        if (!win) {
+            createWindow()
+        } else {
+            win.show()
+            win.focus()
+        }
+
+        try {
+            registerIPC(win)
+        } catch (e) {}
+    })
+
+    try {
+        getAllLogHandles()
+    } catch (e) {}
+
     // 软件退出的逻辑
     ipcMain.handle("app-exit", async (e, params) => {
-        const {showCloseMessageBox, isIRify} = params
-        if (closeFlag && showCloseMessageBox) {
+        const {isYakitEngineLinkWin, showCloseMessageBox, isIRify} = params
+        const parentWindow = isYakitEngineLinkWin ? yakitEngineLinkWin : win
+        const exitCleanupOperation = () => {
+            if (yakitEngineLinkWin) {
+                yakitEngineLinkWin.close()
+                yakitEngineLinkWin = null
+            }
+            if (win) {
+                win.close()
+                win = null
+            }
+            closeAllLogHandles()
+            app.exit()
+        }
+        if (closeFlag && showCloseMessageBox && parentWindow) {
             dialog
-                .showMessageBox(win, {
+                .showMessageBox(parentWindow, {
                     icon: nativeImage.createFromPath(
                         path.join(
                             __dirname,
@@ -199,12 +343,10 @@ app.whenReady().then(() => {
                     await asyncKillDynamicControl()
                     if (res.response === 0) {
                         e.preventDefault()
-                        win.minimize()
+                        yakitEngineLinkWin?.minimize()
+                        win?.minimize()
                     } else if (res.response === 1) {
-                        win = null
-                        clearing()
-                        closeAllLogHandles()
-                        app.exit()
+                        exitCleanupOperation()
                     } else {
                         e.preventDefault()
                         return
@@ -213,34 +355,13 @@ app.whenReady().then(() => {
         } else {
             // close时关掉远程控制
             await asyncKillDynamicControl()
-            win = null
-            clearing()
-            closeAllLogHandles()
-            app.exit()
+            exitCleanupOperation()
         }
-    })
-
-    // 协议
-    protocol.registerFileProtocol("atom", (request, callback) => {
-        const filePath = url.fileURLToPath("file://" + request.url.slice("atom://".length))
-        callback(filePath)
-    })
-
-    createWindow()
-
-    try {
-        registerIPC(win)
-        getAllLogHandles()
-    } catch (e) {}
-
-    app.on("activate", function () {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
 })
 
 // 这个退出压根执行不到 win.on("close") 阻止了默认行为
 app.on("window-all-closed", function () {
-    clearing()
     app.quit()
     // macos quit;
     // if (process.platform !== 'darwin') app.quit()

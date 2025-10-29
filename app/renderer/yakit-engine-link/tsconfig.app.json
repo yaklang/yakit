@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    /* 前端代码运行在浏览器 */
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+
+    /* 支持 React JSX */
+    "jsx": "react-jsx",
+
+    /* 不生成实际的 js 文件（由 Vite 负责） */
+    "noEmit": true,
+
+    /* 支持 TS 扩展导入 */
+    "allowImportingTsExtensions": true
+  },
+  /* 只包含前端源码 */
+  "include": ["src"]
+}

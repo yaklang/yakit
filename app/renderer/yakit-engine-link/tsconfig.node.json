@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    /* Node 不需要 DOM 类型 */
+    "lib": ["ESNext"],
+    "module": "ESNext",
+    "target": "ES2020",
+    "moduleResolution": "node",
+    "types": ["node"]
+  },
+  "include": [
+    "vite.config.ts",
+    "scripts",
+    "build"
+  ]
+}
