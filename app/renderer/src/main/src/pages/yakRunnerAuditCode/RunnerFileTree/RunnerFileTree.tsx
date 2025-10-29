@@ -594,7 +594,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 onClose={onCloseDrawer}
             >
                 <AuditHistoryTable
-                    pageType='aucitCode'
+                    pageType='auditCode'
                     onClose={() => setVisible(false)}
                     warrpId={document.getElementById("audit-code")}
                 />
