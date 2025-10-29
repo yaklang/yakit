@@ -88,7 +88,7 @@ import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {AuditCodePageInfoProps, PluginHubPageInfoProps, usePageInfo} from "@/store/pageInfo"
+import {AuditCodePageInfoProps, PluginHubPageInfoProps, RuleManagementPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import ReactResizeDetector from "react-resize-detector"
 import {serverPushStatus} from "@/utils/duplex/duplex"
@@ -2112,6 +2112,21 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
         const newInfo = info as any
         return newInfo?.FromYakScript || newInfo?.FromRule || t("AuditResultDescribe.vulnerability_detection")
     })
+
+    const jumpRuleManagementPage = useMemoizedFn(() => {
+        let value = getRule()
+        // 跳转到审计页面的参数
+        const params: RuleManagementPageInfoProps = {
+            RuleNames: value ? [value] : []
+        }
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.Rule_Management,
+                params
+            })
+        )
+    })
     return (
         <div
             className={classNames(styles["content-resize-second"], {
@@ -2124,9 +2139,9 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                 </Descriptions.Item>
                 <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
                 <Descriptions.Item label={t("AuditResultDescribe.scan_rules")}>
-                    <div className={styles['scan-rule-box']}>
-                        {getRule()} 
-                    </div>
+                    <span className={styles["scan-rule-box"]} onClick={jumpRuleManagementPage}>
+                        {getRule()}
+                    </span>
                 </Descriptions.Item>
                 <>
                     <Descriptions.Item label={t("AuditResultDescribe.vulnerability_description")} span={column}>
@@ -2284,7 +2299,7 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
             })}
         >
             <RightBugAuditResultHeader info={info} />
-            <AuditResultDescribe info={info} columnSize={columnSize}/>
+            <AuditResultDescribe info={info} columnSize={columnSize} />
         </div>
     )
 })
