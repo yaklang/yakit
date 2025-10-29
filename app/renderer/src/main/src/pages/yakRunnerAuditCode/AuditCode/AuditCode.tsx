@@ -17,7 +17,8 @@ import {
     ProjectManagerEditFormProps,
     QuerySSAProgramsProps,
     SSAProgramResponse,
-    AuditDetailItemProps
+    AuditDetailItemProps,
+    CompileHistoryProps
 } from "./AuditCodeType"
 import classNames from "classnames"
 import styles from "./AuditCode.module.scss"
@@ -43,6 +44,7 @@ import {
     useInterval,
     useInViewport,
     useMemoizedFn,
+    useSafeState,
     useSize,
     useThrottleEffect,
     useUpdateEffect
@@ -136,6 +138,7 @@ import {RiskTree} from "../RunnerFileTree/RunnerFileTree"
 import {getNameByPath} from "@/pages/yakRunner/utils"
 import {FuncFilterPopover} from "@/pages/plugins/funcTemplate"
 import cloneDeep from "lodash/cloneDeep"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -1533,20 +1536,14 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
 
     /** 选填参数 */
     const groupParams = useMemo(() => {
-        const arr =
-            plugin?.Params.filter(
-                (item) => !item.Required && (item.Group || "").length > 0
-            ) || []
+        const arr = plugin?.Params.filter((item) => !item.Required && (item.Group || "").length > 0) || []
 
         return ParamsToGroupByGroupName(arr)
     }, [plugin?.Params])
 
     /** 必填参数（头部展示） */
     const groupParamsHeader = useMemo(() => {
-        const arr =
-            plugin?.Params.filter(
-                (item) => item.Required && (item.Group || "").length > 0
-            ) || []
+        const arr = plugin?.Params.filter((item) => item.Required && (item.Group || "").length > 0) || []
         handleInitFormValue(arr)
         return ParamsToGroupByGroupName(arr)
     }, [plugin?.Params])
@@ -2077,6 +2074,8 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
 export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = memo((props) => {
     const {onClose, record, setData} = props
     const {Name, Description} = record
+    const [formType, setFormType] = useSafeState<"baseInfo" | "compile">("baseInfo")
+    const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
     const [form] = Form.useForm()
 
     useEffect(() => {
@@ -2112,30 +2111,145 @@ export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = mem
             })
     })
 
+    const onSubmit = useMemoizedFn(() => {
+        form.validateFields().then((value) => {})
+    })
+
     return (
-        <div className={styles["project-manager-edit-form"]}>
-            <Form layout='vertical' form={form} onFinish={(v) => onFinish(v)}>
-                <Form.Item name='Name' label='项目名称' rules={[{required: true, message: "该项为必填"}]}>
-                    <YakitInput disabled size='small' placeholder='请输入项目名称...' />
-                </Form.Item>
-                <Form.Item name='Description' label='项目描述'>
-                    <YakitInput.TextArea rows={3} allowClear size='small' placeholder='请输入项目描述...' />
-                </Form.Item>
-                <div className={styles["opt-btn"]}>
-                    <YakitButton
-                        size='large'
-                        onClick={() => {
-                            onClose()
-                        }}
-                        type='outline2'
-                    >
-                        取消
-                    </YakitButton>
-                    <YakitButton size='large' type='primary' htmlType={"submit"}>
-                        保存
-                    </YakitButton>
-                </div>
-            </Form>
+        <div className={styles["project-manager-edit"]}>
+            <YakitRadioButtons
+                className={styles["form-type-radio"]}
+                value={formType}
+                onChange={(e) => {
+                    const value = e.target.value
+                    setFormType(value)
+                }}
+                buttonStyle='solid'
+                options={[
+                    {
+                        label: "基础信息",
+                        value: "baseInfo"
+                    },
+                    {
+                        label: "编译配置",
+                        value: "compile"
+                    }
+                ]}
+            />
+            <div className={styles["project-manager-edit-form"]}>
+                <Form layout='horizontal'  labelCol={{span: 5}} wrapperCol={{span: 17}} form={form}>
+                    {formType === "baseInfo" ? (
+                        <>
+                            <Form.Item name='Name' label='项目名称' rules={[{required: true, message: "该项为必填"}]}>
+                                <YakitInput disabled placeholder='请输入项目名称...' />
+                            </Form.Item>
+                            <Form.Item
+                                name='Address'
+                                label='项目地址'
+                                rules={[{required: true, message: "该项为必填"}]}
+                            >
+                                <YakitInput placeholder='请输入项目地址...' />
+                            </Form.Item>
+                            <Form.Item name='Language' label='语言' rules={[{required: true, message: "该项为必填"}]}>
+                                <YakitSelect placeholder='请选择语言...'>
+                                    <YakitSelect.Option value='javascript'>JavaScript</YakitSelect.Option>
+                                    <YakitSelect.Option value='typescript'>TypeScript</YakitSelect.Option>
+                                </YakitSelect>
+                            </Form.Item>
+                            <Form.Item name='Description' label='项目描述'>
+                                <YakitInput.TextArea rows={3} allowClear placeholder='请输入项目描述...' />
+                            </Form.Item>
+                            <Form.Item name='Tags' label='项目标签'>
+                                <YakitInput placeholder='请输入项目标签...' />
+                            </Form.Item>
+                            <Form.Item
+                                name='proxy'
+                                label='代理'
+                                help={
+                                    <div
+                                        className={styles["agent-down-stream-proxy"]}
+                                        onClick={() => setAgentConfigModalVisible(true)}
+                                    >
+                                        配置代理认证
+                                    </div>
+                                }
+                            >
+                                <YakitAutoComplete placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' />
+                            </Form.Item>
+                        </>
+                    ) : (
+                        <>
+                            <Form.Item name='Exclude' label='排除文件/文件夹'>
+                                <YakitInput placeholder='请输入...' />
+                            </Form.Item>
+                            <Form.Item name='StrictMode' label='严格模式' valuePropName='checked'>
+                                <YakitSwitch />
+                            </Form.Item>
+                            <Form.Item name='Recompile' label='是否重新编译' valuePropName='checked'>
+                                <YakitSwitch />
+                            </Form.Item>
+                            <Form.Item
+                                name='Concurrency'
+                                label='并发数'
+                                tooltip='编译时同时处理的文件数量，数值越大，编译速度越快，但会占用更多的系统资源，建议根据系统性能进行调整。'
+                                valuePropName='checked'
+                            >
+                                <YakitSwitch />
+                            </Form.Item>
+                            <Form.Item
+                                name='peephole'
+                                label='编译速度'
+                                help='小文件无需配置，大文件可根据需求选择，速度越快，精度越小'
+                            >
+                                <Slider
+                                    style={{width: 300}}
+                                    dots
+                                    min={0}
+                                    max={3}
+                                    tipFormatter={(value) => {
+                                        switch (value) {
+                                            case 0:
+                                                return "关闭，精度IV"
+                                            case 1:
+                                                return "慢速，精度III"
+                                            case 2:
+                                                return "中速，精度II"
+                                            case 3:
+                                                return "快速，精度I"
+                                            default:
+                                                return value
+                                        }
+                                    }}
+                                />
+                            </Form.Item>
+                            <Form.Item name='InMemoryCompile' label='内存编译' valuePropName='checked'>
+                                <YakitSwitch />
+                            </Form.Item>
+                        </>
+                    )}
+                </Form>
+            </div>
+            <div className={styles["opt-btn"]}>
+                <YakitButton
+                    size='large'
+                    onClick={() => {
+                        onClose()
+                    }}
+                    type='outline2'
+                >
+                    取消
+                </YakitButton>
+                <YakitButton size='large' type='primary' htmlType={"submit"} onSubmit={onSubmit}>
+                    保存
+                </YakitButton>
+            </div>
+            <AgentConfigModal
+                agentConfigModalVisible={agentConfigModalVisible}
+                onCloseModal={() => setAgentConfigModalVisible(false)}
+                generateURL={(url) => {
+                    form.setFieldsValue({proxy: url})
+                }}
+            />
         </div>
     )
 })
@@ -2265,6 +2379,12 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         }
     })
 
+    const [compileHistorySource, setCompileHistorySource] = useSafeState<SSAProgramResponse>()
+    // 打开编译历史
+    const openCompileHistory = useMemoizedFn((record: SSAProgramResponse) => {
+        setCompileHistorySource(record)
+    })
+
     const columns: VirtualListColumns<SSAProgramResponse>[] = [
         {
             title: "项目名称",
@@ -2296,7 +2416,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             }
         },
         {
-            title: "存储路径",
+            title: "项目路径",
             dataIndex: "Dbpath",
             render: (text, record) => {
                 return (
@@ -2329,6 +2449,24 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             width: 120
         },
         {
+            title: "编译次数",
+            dataIndex: "CompileNumber",
+            render: (text, record) => {
+                return (
+                    <>
+                        {text !== 0 ? (
+                            <YakitButton type='text' onClick={() => openCompileHistory(record)}>
+                                2
+                            </YakitButton>
+                        ) : (
+                            "-"
+                        )}
+                    </>
+                )
+            },
+            width: 80
+        },
+        {
             title: "编译时间",
             dataIndex: "CreateAt",
             render: (text, record) => {
@@ -2345,13 +2483,13 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                     <div className={styles["audit-opt"]}>
                         <Tooltip
                             title={
-                                record.Recompile ? "该项目是由旧引擎编译，现在编译规则已更新，建议重新编译" : "重新编译"
+                                record.Recompile ? "该项目是由旧引擎编译，现在编译规则已更新，建议编译" : "编译"
                             }
                         >
                             <YakitPopconfirm
                                 title={
                                     <>
-                                        重新编译将会删掉该项目所有数据后再编译,
+                                        编译将会重新拉取代码,并删除该项目所有数据后再编译
                                         <br />
                                         请问是否重新编译？
                                     </>
@@ -2379,7 +2517,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                             }
                                         })
                                     )
-                                    if (pageType === "aucitCode") {
+                                    if (pageType === "auditCode") {
                                         onClose && onClose()
                                     }
                                 }}
@@ -2413,23 +2551,29 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 }}
                             />
                         </Tooltip>
-                        <Tooltip title={"扫描历史"}>
+                        <Tooltip title={"编辑"}>
                             <YakitButton
                                 type='text'
-                                icon={<OutlineClockIcon />}
+                                icon={<OutlinePencilaltIcon />}
                                 onClick={() => {
-                                    emiter.emit(
-                                        "openPage",
-                                        JSON.stringify({
-                                            route: YakitRoute.YakRunner_ScanHistory,
-                                            params: {
-                                                Programs: [record.Name]
-                                            }
-                                        })
-                                    )
+                                    const m = showYakitModal({
+                                        title: "编辑项目",
+                                        width: 600,
+                                        type: "white",
+                                        footer: null,
+                                        centered: true,
+                                        content: (
+                                            <ProjectManagerEditForm
+                                                record={record}
+                                                setData={setData}
+                                                onClose={() => m.destroy()}
+                                            />
+                                        )
+                                    })
                                 }}
                             />
                         </Tooltip>
+
                         <Divider type={"vertical"} style={{margin: 0}} />
                         <FuncFilterPopover
                             icon={<OutlineDotshorizontalIcon />}
@@ -2438,9 +2582,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 type: "primary",
                                 data: [
                                     {
-                                        key: "edit",
-                                        label: "编辑",
-                                        itemIcon: <OutlinePencilaltIcon />,
+                                        key: "scanHistory",
+                                        label: "扫描历史",
+                                        itemIcon: <OutlineClockIcon />,
                                         type: undefined
                                     },
                                     {
@@ -2454,61 +2598,6 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             }}
                             placement='bottomRight'
                         />
-                        {/* <YakitDropdownMenu
-                            menu={{
-                                width: 40,
-                                data: [
-                                    {
-                                        key: "edit",
-                                        label: (
-                                            <YakitButton
-                                                type='text'
-                                                icon={<OutlinePencilaltIcon />}
-                                                onClick={() => {
-                                                    const m = showYakitModal({
-                                                        title: "编辑",
-                                                        width: 448,
-                                                        type: "white",
-                                                        footer: null,
-                                                        centered: true,
-                                                        content: (
-                                                            <ProjectManagerEditForm
-                                                                record={record}
-                                                                setData={setData}
-                                                                onClose={() => m.destroy()}
-                                                            />
-                                                        )
-                                                    })
-                                                }}
-                                            />
-                                        )
-                                    },
-                                    {
-                                        key: "del",
-                                        label: (
-                                            <YakitPopconfirm
-                                                title={`确定删除${record.Name}`}
-                                                onConfirm={() =>
-                                                    onDelete({
-                                                        Filter: {
-                                                            Ids: [parseInt(record.Id + "")]
-                                                        }
-                                                    })
-                                                }
-                                            >
-                                                <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
-                                            </YakitPopconfirm>
-                                        )
-                                    }
-                                ]
-                            }}
-                            dropdown={{
-                                trigger: ["click"],
-                                placement: "bottom"
-                            }}
-                        >
-                            <YakitButton type='text' icon={<OutlineDotshorizontalIcon />} />
-                        </YakitDropdownMenu> */}
                     </div>
                 )
             }
@@ -2522,15 +2611,16 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                     Ids: [parseInt(record.Id + "")]
                 }
             })
-        } else if (type === "edit") {
-            const m = showYakitModal({
-                title: "编辑",
-                width: 448,
-                type: "white",
-                footer: null,
-                centered: true,
-                content: <ProjectManagerEditForm record={record} setData={setData} onClose={() => m.destroy()} />
-            })
+        } else if (type === "scanHistory") {
+            emiter.emit(
+                "openPage",
+                JSON.stringify({
+                    route: YakitRoute.YakRunner_ScanHistory,
+                    params: {
+                        Programs: [record.Name]
+                    }
+                })
+            )
         }
     }
 
@@ -2640,6 +2730,130 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 onSuccee={() => update(true)}
                 warrpId={warrpId || document.getElementById("audit-history-table")}
             />
+
+            <YakitModal
+                centered
+                getContainer={warrpId || document.getElementById("audit-history-table") || document.body}
+                visible={!!compileHistorySource}
+                title={"编译历史"}
+                subTitle={
+                    <div className={styles["modal-sub-title"]}>
+                        <YakitPopconfirm title={"确定清空列表数据吗?"} onConfirm={() => {}} placement='bottomRight'>
+                            <YakitButton className={styles["clear-button"]} type='text' colors='danger'>
+                                清空
+                            </YakitButton>
+                        </YakitPopconfirm>
+                    </div>
+                }
+                footer={null}
+                width={520}
+                type='white'
+                onCancel={() => setCompileHistorySource(undefined)}
+                bodyStyle={{padding: 0}}
+            >
+                {compileHistorySource && (
+                    <CompileHistory info={compileHistorySource} pageType={pageType} onClose={onClose} />
+                )}
+            </YakitModal>
         </div>
     )
 })
+
+export const CompileHistory: React.FC<CompileHistoryProps> = (props) => {
+    const {info, pageType, onClose} = props
+
+    const [loading, setLoading] = useState<boolean>(false)
+    const [response, setResponse] = useState({
+        Results: [{time: "2025-10-15"}, {time: "2025-10-14"}],
+        Pagination: genDefaultPagination(20),
+        DbMessage: {
+            TableName: "",
+            Operation: "",
+            EffectRows: "",
+            ExtraMessage: ""
+        },
+        Total: 0
+    })
+
+    const onDelete = useMemoizedFn(() => {
+        try {
+            setLoading(true)
+            ipcRenderer.invoke("DeleteSSAPrograms", {}).then(() => {})
+        } catch (error) {
+            setLoading(false)
+            failed(`删除失败${error}`)
+        }
+    })
+
+    return (
+        <div className={styles["compile-history"]}>
+            <div className={styles["compile-history-list-container"]}>
+                {response.Results.map((rowData: any) => {
+                    return (
+                        <div className={styles["history-item-box"]} key={rowData.time}>
+                            <div className={styles["time"]}>{rowData.time}</div>
+                            <div className={styles["option"]}>
+                                <Tooltip title={"代码扫描"}>
+                                    <YakitButton
+                                        type='text'
+                                        icon={<OutlineScanIcon />}
+                                        onClick={() => {
+                                            emiter.emit(
+                                                "openPage",
+                                                JSON.stringify({
+                                                    route: YakitRoute.YakRunner_Code_Scan,
+                                                    params: {
+                                                        projectName: [rowData.Name],
+                                                        selectGroupListByKeyWord: [rowData.Language]
+                                                    }
+                                                })
+                                            )
+                                            if (pageType === "auditCode") {
+                                                onClose && onClose()
+                                            }
+                                        }}
+                                    />
+                                </Tooltip>
+                                {/* 此处的Tooltip会导致页面抖动(待处理) */}
+                                <Tooltip title={"打开项目"}>
+                                    <YakitButton
+                                        type='text'
+                                        icon={<OutlineArrowcirclerightIcon />}
+                                        onClick={() => {
+                                            if (pageType === "projectManager") {
+                                                // 跳转到审计页面的参数
+                                                const params: AuditCodePageInfoProps = {
+                                                    Schema: "syntaxflow",
+                                                    Location: rowData.Name,
+                                                    Path: `/`
+                                                }
+                                                emiter.emit(
+                                                    "openPage",
+                                                    JSON.stringify({
+                                                        route: YakitRoute.YakRunner_Audit_Code,
+                                                        params
+                                                    })
+                                                )
+                                            } else {
+                                                onClose && onClose()
+                                                emiter.emit("onCodeAuditOpenAuditTree", rowData.Name)
+                                            }
+                                        }}
+                                    />
+                                </Tooltip>
+                                <YakitButton
+                                    type='text'
+                                    danger
+                                    icon={<OutlineTrashIcon />}
+                                    onClick={() => {
+                                        onDelete()
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+        </div>
+    )
+}
