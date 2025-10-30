@@ -246,6 +246,14 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     let extraProps: {defaultValue?: string[]; options?: YakitDefaultOptionType[]} = {}
     if (!props.children) {
         const renderNewOptions = [...cacheHistoryData.options]
+        if (Array.isArray(props.options) && props.options.length > 0) {
+            ;(props.options as YakitDefaultOptionType[]).forEach((item) => {
+                const exists = renderNewOptions.some((ele) => ele.value === item.value)
+                if (!exists) {
+                    renderNewOptions.push(item as YakitDefaultOptionType)
+                }
+            })
+        }
         // 此处是由于属性menuItemSelectedIcon被设置为<></>, 勾是在label中处理的，当手动输入选项值后，点击选项，处理没有勾显示的问题
         if (supportDelCache && Array.isArray(props.value)) {
             props.value.forEach((value) => {
