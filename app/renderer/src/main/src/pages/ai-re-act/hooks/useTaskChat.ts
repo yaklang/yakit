@@ -10,6 +10,7 @@ import {
 } from "./defaultConstant"
 import {handleSendFunc, UseTaskChatEvents, UseTaskChatParams, UseTaskChatState} from "./type"
 import {
+    genBaseAIChatData,
     handleFlatAITree,
     handleGrpcDataPushLog,
     isAutoContinueReview,
@@ -20,7 +21,6 @@ import {
 import {yakitNotify} from "@/utils/notification"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 import {AIChatQSData, AIReviewType, AIStreamOutput, AIToolResult, ToolStreamSelectors} from "./aiRender"
-import {v4 as uuidv4} from "uuid"
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
 
 // 属于该 hook 处理数据的类型
@@ -108,7 +108,6 @@ function useTaskChat(params?: UseTaskChatParams) {
                 NodeId,
                 NodeIdVerbose,
                 TaskIndex,
-                Timestamp,
                 EventUUID,
                 Content,
                 StreamDelta,
@@ -144,7 +143,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                         itemInfo.data.content += content
                     } else {
                         const streamsInfo: AIChatQSData = {
-                            id: uuidv4(),
+                            ...genBaseAIChatData(res),
                             type: "stream",
                             data: {
                                 TaskIndex,
@@ -155,8 +154,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                                 status: "start",
                                 content: content,
                                 ContentType
-                            },
-                            Timestamp: Timestamp
+                            }
                         }
                         const sls = toolStdOutSelectors.current.get(CallToolID)
                         if (isToolStdoutStream(NodeId) && sls) {
@@ -243,9 +241,8 @@ function useTaskChat(params?: UseTaskChatParams) {
                     })
 
                     newArr.push({
-                        id: uuidv4(),
+                        ...genBaseAIChatData(res),
                         type: "tool_result",
-                        Timestamp: res.Timestamp,
                         data: {
                             ...toolResult,
                             toolStdoutContent: {
@@ -347,7 +344,6 @@ function useTaskChat(params?: UseTaskChatParams) {
 
     // 触发 review
     const handleTriggerReview = useMemoizedFn((data: AIChatQSData) => {
-        console.log(`${data.type}-----\n`, JSON.stringify(data.data))
         review.current = cloneDeep(data)
         const isTrigger = !isAutoContinueReview(getRequest) || noSkipReviewTypes(data.type)
         if (isTrigger) {
@@ -452,14 +448,13 @@ function useTaskChat(params?: UseTaskChatParams) {
 
     // #region 改变任务状态相关方法
     // 任务开始执行的节点数据生成
-    const handleTaskStartNode = useMemoizedFn((Timestamp: number, nodeInfo: AIAgentGrpcApi.ChangeTask) => {
+    const handleTaskStartNode = useMemoizedFn((res: AIOutputEvent, nodeInfo: AIAgentGrpcApi.ChangeTask) => {
         try {
             setStreams((old) => {
                 const newArr = [...old]
                 newArr.push({
-                    id: uuidv4(),
+                    ...genBaseAIChatData(res),
                     type: "task_index_node",
-                    Timestamp,
                     data: {
                         taskIndex: nodeInfo.task.index,
                         taskName: nodeInfo.task.name
@@ -507,9 +502,8 @@ function useTaskChat(params?: UseTaskChatParams) {
             setStreams((old) => {
                 const newArr = [...old]
                 newArr.push({
-                    id: uuidv4(),
+                    ...genBaseAIChatData(res),
                     type: "file_system_pin",
-                    Timestamp: res.Timestamp,
                     data: {
                         path: path,
                         isDir: res.Type === "filesystem_pin_directory",
@@ -538,9 +532,8 @@ function useTaskChat(params?: UseTaskChatParams) {
             setStreams((old) => {
                 const newArr = [...old]
                 newArr.push({
-                    id: uuidv4(),
+                    ...genBaseAIChatData(res),
                     type: "tool_call_decision",
-                    Timestamp: res.Timestamp,
                     data: {
                         ...data,
                         i18n: {
@@ -565,9 +558,8 @@ function useTaskChat(params?: UseTaskChatParams) {
         setStreams((old) => {
             const newArr = [...old]
             newArr.push({
-                id: uuidv4(),
+                ...genBaseAIChatData(res),
                 type: "end_plan_and_execution",
-                Timestamp: res.Timestamp,
                 data: ""
             })
             return newArr
@@ -600,7 +592,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 if (obj.type && obj.type === "push_task") {
                     // 开始任务
                     const data = obj as AIAgentGrpcApi.ChangeTask
-                    handleTaskStartNode(res.Timestamp, data)
+                    handleTaskStartNode(res, data)
                     handleUpdateTaskState(data.task.index, "in-progress")
                     return
                 }
@@ -638,7 +630,11 @@ function useTaskChat(params?: UseTaskChatParams) {
                     throw new Error("plan_review_require data is invalid")
                 }
 
-                handleTriggerReview({type: "plan_review_require", data: data, id: uuidv4(), Timestamp: res.Timestamp})
+                handleTriggerReview({
+                    type: "plan_review_require",
+                    data: data,
+                    ...genBaseAIChatData(res)
+                })
                 return
             }
             if (res.Type === "plan_task_analysis") {
@@ -654,8 +650,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 handleTriggerReview({
                     type: "tool_use_review_require",
                     data: data,
-                    id: uuidv4(),
-                    Timestamp: res.Timestamp
+                    ...genBaseAIChatData(res)
                 })
                 return
             }
@@ -665,7 +660,11 @@ function useTaskChat(params?: UseTaskChatParams) {
                     throw new Error("task_review_require data is invalid")
                 }
 
-                handleTriggerReview({type: "task_review_require", data: data, id: uuidv4(), Timestamp: res.Timestamp})
+                handleTriggerReview({
+                    type: "task_review_require",
+                    data: data,
+                    ...genBaseAIChatData(res)
+                })
                 return
             }
             if (res.Type === "require_user_interactive") {
@@ -677,8 +676,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 handleTriggerReview({
                     type: "require_user_interactive",
                     data: data,
-                    id: uuidv4(),
-                    Timestamp: res.Timestamp
+                    ...genBaseAIChatData(res)
                 })
                 return
             }

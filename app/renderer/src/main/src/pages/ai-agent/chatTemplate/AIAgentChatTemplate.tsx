@@ -1,5 +1,5 @@
-import React, {memo, MutableRefObject, useCallback, useEffect, useMemo, useRef, useState} from "react"
-import {useControllableValue, useCreation, useMemoizedFn, useMount, useThrottleEffect} from "ahooks"
+import React, {memo, MutableRefObject, useEffect, useMemo, useState} from "react"
+import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
 import {
     AIAgentChatStreamProps,
     AICardListProps,
@@ -31,12 +31,8 @@ import {
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
 import {convertNodeIdToVerbose} from "@/pages/ai-re-act/hooks/defaultConstant"
-import {v4 as uuidv4} from "uuid"
 import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
 import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks/grpcApi"
-
-import classNames from "classnames"
-import styles from "./AIAgentChatTemplate.module.scss"
 import {taskAnswerToIconMap} from "../defaultConstant"
 import {SolidLightningboltIcon} from "@/assets/icon/solid"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
@@ -46,6 +42,10 @@ import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
 import i18n from "@/i18n/i18n"
 import {Virtuoso} from "react-virtuoso"
 import useVirtuosoAutoScroll from "@/pages/ai-re-act/hooks/useVirtuosoAutoScroll"
+import {genBaseAIChatData} from "@/pages/ai-re-act/hooks/utils"
+
+import classNames from "classnames"
+import styles from "./AIAgentChatTemplate.module.scss"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -237,12 +237,14 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         return <AIChatListItem item={stream} type='task-agent' />
     }
 
-    const {scrollerRef, virtuosoRef} =  useVirtuosoAutoScroll(streams)
+    const {scrollerRef, virtuosoRef} = useVirtuosoAutoScroll(streams)
 
     return (
         <div className={styles["ai-agent-chat-stream"]}>
             <Virtuoso
-                scrollerRef={ref => (scrollerRef as MutableRefObject<HTMLDivElement>).current = ref as HTMLDivElement}
+                scrollerRef={(ref) =>
+                    ((scrollerRef as MutableRefObject<HTMLDivElement>).current = ref as HTMLDivElement)
+                }
                 ref={virtuosoRef}
                 style={{height: "100%", width: "100%"}}
                 data={streams}
@@ -341,7 +343,6 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                 const {Events} = res
                 const list: AIChatQSData[] = []
                 Events.filter((ele) => ele.Type === "stream").forEach((item) => {
-                    const Timestamp = item.Timestamp
                     let ipcContent = ""
                     let ipcStreamDelta = ""
                     try {
@@ -349,9 +350,8 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                         ipcStreamDelta = Uint8ArrayToString(item.StreamDelta) || ""
                     } catch (error) {}
                     const current: AIChatQSData = {
-                        id: uuidv4(),
+                        ...genBaseAIChatData(item),
                         type: "stream",
-                        Timestamp: Timestamp,
                         data: {
                             CallToolID: item.CallToolID,
                             NodeId: item.NodeId,

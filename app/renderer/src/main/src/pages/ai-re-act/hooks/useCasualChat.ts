@@ -3,6 +3,7 @@ import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
 import {
+    genBaseAIChatData,
     handleGrpcDataPushLog,
     isAutoContinueReview,
     isToolExecStream,
@@ -53,7 +54,6 @@ function useCasualChat(params?: UseCasualChatParams) {
                 CallToolID,
                 NodeId,
                 NodeIdVerbose,
-                Timestamp,
                 EventUUID,
                 Content,
                 StreamDelta,
@@ -85,7 +85,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                         itemInfo.data.content += content
                     } else {
                         const streamsInfo: AIChatQSData = {
-                            id: uuidv4(),
+                            ...genBaseAIChatData(res),
                             type: "stream",
                             data: {
                                 CallToolID,
@@ -95,8 +95,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                                 status: "start",
                                 content: content,
                                 ContentType
-                            },
-                            Timestamp: Timestamp
+                            }
                         }
                         const sls = toolStdOutSelectors.current.get(CallToolID)
                         if (isToolStdoutStream(NodeId) && sls) {
@@ -153,9 +152,8 @@ function useCasualChat(params?: UseCasualChatParams) {
             setContents((old) => {
                 const newArr = [...old]
                 newArr.push({
-                    id: uuidv4(),
+                    ...genBaseAIChatData(res),
                     type: "thought",
-                    Timestamp: res.Timestamp,
                     data: data.thought
                 })
                 return newArr
@@ -177,9 +175,8 @@ function useCasualChat(params?: UseCasualChatParams) {
             setContents((old) => {
                 const newArr = [...old]
                 newArr.push({
-                    id: uuidv4(),
+                    ...genBaseAIChatData(res),
                     type: "result",
-                    Timestamp: res.Timestamp,
                     data: result
                 })
                 return newArr
@@ -271,9 +268,8 @@ function useCasualChat(params?: UseCasualChatParams) {
                     })
 
                     newArr.push({
-                        id: uuidv4(),
+                        ...genBaseAIChatData(res),
                         type: "tool_result",
-                        Timestamp: res.Timestamp,
                         data: {
                             ...toolResult,
                             toolStdoutContent: {
@@ -357,8 +353,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     selected: isTrigger ? undefined : JSON.stringify({suggestion: "continue"}),
                     optionValue: isTrigger ? undefined : "continue"
                 },
-                id: uuidv4(),
-                Timestamp: res.Timestamp
+                ...genBaseAIChatData(res)
             })
 
             setContents((old) => {
@@ -389,8 +384,7 @@ function useCasualChat(params?: UseCasualChatParams) {
             review.current = cloneDeep({
                 type: "require_user_interactive",
                 data: cloneDeep(data),
-                id: uuidv4(),
-                Timestamp: res.Timestamp
+                ...genBaseAIChatData(res)
             })
 
             setContents((old) => {
@@ -426,8 +420,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     selected: isTrigger ? undefined : JSON.stringify({suggestion: "continue"}),
                     optionValue: isTrigger ? undefined : "continue"
                 },
-                id: uuidv4(),
-                Timestamp: res.Timestamp
+                ...genBaseAIChatData(res)
             })
 
             setContents((old) => {
@@ -497,9 +490,8 @@ function useCasualChat(params?: UseCasualChatParams) {
             setContents((old) => {
                 const newArr = [...old]
                 newArr.push({
-                    id: uuidv4(),
+                    ...genBaseAIChatData(res),
                     type: "file_system_pin",
-                    Timestamp: res.Timestamp,
                     data: {
                         path: path,
                         isDir: res.Type === "filesystem_pin_directory",
@@ -528,9 +520,8 @@ function useCasualChat(params?: UseCasualChatParams) {
             setContents((old) => {
                 const newArr = [...old]
                 newArr.push({
-                    id: uuidv4(),
+                    ...genBaseAIChatData(res),
                     type: "tool_call_decision",
-                    Timestamp: res.Timestamp,
                     data: {
                         ...data,
                         i18n: {
@@ -703,7 +694,8 @@ function useCasualChat(params?: UseCasualChatParams) {
                         id: uuidv4(),
                         type: "question",
                         Timestamp: Date.now(),
-                        data: FreeInput || ""
+                        data: FreeInput || "",
+                        AIService: ""
                     })
                     return newArr
                 })

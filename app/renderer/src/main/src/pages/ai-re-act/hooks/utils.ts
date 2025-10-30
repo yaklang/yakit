@@ -9,6 +9,15 @@ import {AIAgentGrpcApi, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {AIChatQSData, AITaskInfoProps} from "./aiRender"
 import {convertNodeIdToVerbose} from "./defaultConstant"
 
+/** 生成AI-UI展示的必须基础数据 */
+export const genBaseAIChatData = (info: AIOutputEvent) => {
+    return {
+        id: uuidv4(),
+        AIService: info.AIService,
+        Timestamp: info.Timestamp
+    }
+}
+
 /** 将接口数据(AIOutputEvent)转换为日志数据(AIAgentGrpcApi.Log), 并push到日志队列中 */
 export const handleGrpcDataPushLog = (params: {
     type: string
@@ -19,15 +28,14 @@ export const handleGrpcDataPushLog = (params: {
         const {type, info, pushLog} = params
         let ipcContent = Uint8ArrayToString(info.Content) || ""
         const logInfo: AIChatQSData = {
-            id: uuidv4(),
+            ...genBaseAIChatData(info),
             type: "log",
             data: {
                 NodeId: info.NodeId,
                 NodeIdVerbose: info.NodeIdVerbose || convertNodeIdToVerbose(info.NodeId),
                 level: type || "info",
                 message: `${JSON.stringify({...info, Content: ipcContent, StreamDelta: undefined})}`
-            },
-            Timestamp: info.Timestamp
+            }
         }
         pushLog(logInfo)
     } catch (error) {}

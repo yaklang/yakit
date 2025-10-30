@@ -7,9 +7,8 @@ import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
 import useCasualChat, {UseCasualChatTypes} from "./useCasualChat"
 import useYakExecResult, {UseYakExecResultTypes} from "./useYakExecResult"
-import {v4 as uuidv4} from "uuid"
 import useTaskChat, {UseTaskChatTypes} from "./useTaskChat"
-import {handleGrpcDataPushLog} from "./utils"
+import {genBaseAIChatData, handleGrpcDataPushLog} from "./utils"
 import {AIChatSendParams, UseCasualChatEvents, UseChatIPCEvents, UseChatIPCParams, UseChatIPCState} from "./type"
 import {AIChatQSData} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
@@ -214,14 +213,13 @@ function useChatIPC(params?: UseChatIPCParams) {
                         // 执行日志信息
                         const data = obj as AIAgentGrpcApi.Log
                         pushLog({
-                            id: uuidv4(),
+                            ...genBaseAIChatData(res),
                             type: "log",
                             data: {
                                 ...data,
                                 NodeId: res.NodeId,
                                 NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId)
-                            },
-                            Timestamp: res.Timestamp
+                            }
                         })
                     } else if (res.NodeId === "timeline") {
                         const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineDump

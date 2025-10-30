@@ -107,6 +107,7 @@ interface AIChatQSDataBase<T extends string, U> {
     type: T
     data: U
     id: string
+    AIService: AIOutputEvent["AIService"]
     Timestamp: AIOutputEvent["Timestamp"]
 }
 

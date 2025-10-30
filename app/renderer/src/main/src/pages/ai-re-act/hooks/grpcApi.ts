@@ -177,6 +177,8 @@ export interface AIOutputEvent {
     ContentType: string
     /** 如果是调用工具相关的事件，那么这里是调用的ID */
     CallToolID: string
+    /** 如果是 AI 服务相关的事件，那么这里是 AI 服务的名称 */
+    AIService: string
 }
 // #endregion
 
