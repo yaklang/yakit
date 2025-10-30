@@ -26,7 +26,7 @@ const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props)
     const [open, setOpen] = useState<boolean>(false)
 
     const modelValue = useCreation(() => {
-        if (chatIPCData.execute) return chatIPCEvents.fetchRequest()?.ReviewPolicy
+        // if (chatIPCData.execute) return chatIPCEvents.fetchRequest()?.ReviewPolicy
         return setting?.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
     }, [setting?.ReviewPolicy, chatIPCData.execute, chatIPCEvents.fetchRequest])
 
