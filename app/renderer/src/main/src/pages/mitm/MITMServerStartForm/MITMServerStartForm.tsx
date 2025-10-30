@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useRef, useState} from "react"
+import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
 import {Form, Space, Modal} from "antd"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -33,6 +33,7 @@ import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {ProxyRoute, grpcGetGlobalProxyRulesConfig} from "@/apiUtils/grpc"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -43,11 +44,13 @@ export interface MITMServerStartFormProp {
         host: string,
         port: number,
         downstreamProxy: string,
+        downstreamProxyRuleId: string,
         enableInitialPlugin: boolean,
         enableHttp2: boolean,
         ForceDisableKeepAlive: boolean,
         clientCertificates: ClientCertificate[],
-        extra?: ExtraMITMServerProps
+        extra?: ExtraMITMServerProps,
+        downstreamDisplay?: string
     ) => any
     visible: boolean
     setVisible: (b: boolean) => void
@@ -67,6 +70,7 @@ export interface ClientCertificate {
 
 const defHost = "127.0.0.1"
 const defPort = "8083"
+const RULE_PREFIX = "__proxy_rule__:"
 // 隐藏代理URL中的密码部分
 export const maskProxyPassword = (proxyUrl: string) => {
     // console.log("maskProxyPassword input:", proxyUrl, "type:", typeof proxyUrl)
@@ -120,6 +124,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         }
     })
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
+    const [proxyRoutes, setProxyRoutes] = useState<ProxyRoute[]>([])
+    const [downstreamProxyRuleLabel, setDownstreamProxyRuleLabel] = useState<string>("")
     const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false)
     const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
     const [advancedFormVisible, setAdvancedFormVisible] = useState<boolean>(false)
@@ -146,6 +152,51 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const mitmVersion = useCreation(() => {
         return mitmContent.mitmStore.version
     }, [mitmContent.mitmStore.version])
+
+    const proxyRouteMap = useMemo(() => {
+        const map = new Map<string, ProxyRoute>()
+        proxyRoutes.forEach((route) => {
+            if (route?.Id) {
+                map.set(route.Id, route)
+            }
+        })
+        return map
+    }, [proxyRoutes])
+
+    const proxyRouteOptions = useMemo(
+        () =>
+            proxyRoutes.map((route) => ({
+                label: `规则: ${route.Name || route.Id}`,
+                value: `${RULE_PREFIX}${route.Id}`
+            })),
+        [proxyRoutes]
+    )
+
+    const fetchProxyRoutes = useMemoizedFn(() => {
+        grpcGetGlobalProxyRulesConfig(false)
+            .then((config) => {
+                setProxyRoutes(config?.Routes || [])
+            })
+            .catch((err) => {
+                yakitFailed("获取代理规则失败:" + err)
+            })
+    })
+
+    useEffect(() => {
+        fetchProxyRoutes()
+    }, [])
+
+    useEffect(() => {
+        const currentRuleId = form.getFieldValue("downstreamProxyRuleId")
+        if (currentRuleId) {
+            const route = proxyRouteMap.get(currentRuleId)
+            setDownstreamProxyRuleLabel(route?.Name || "")
+        }
+    }, [proxyRouteMap])
+
+    useEffect(() => {
+        form.setFieldsValue({downstreamProxyRuleId: form.getFieldValue("downstreamProxyRuleId") || ""})
+    }, [])
 
     useEffect(() => {
         if (props.status !== "idle") return
@@ -192,6 +243,22 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 setRules(newRules)
             })
             .catch((e) => yakitFailed("获取规则列表失败:" + e))
+    })
+    const handleDownstreamProxyChange = useMemoizedFn((values: string[]) => {
+        const list = (values || []).map((item) => `${item}`.trim()).filter((item) => item.length > 0)
+        const ruleToken = list.find((item) => item.startsWith(RULE_PREFIX))
+        if (ruleToken) {
+            const ruleId = ruleToken.slice(RULE_PREFIX.length)
+            const route = proxyRouteMap.get(ruleId)
+            setDownstreamProxyRuleLabel(route?.Name || "")
+            form.setFieldsValue({downstreamProxyRuleId: ruleId})
+            if (list.length !== 1 || list[0] !== ruleToken) {
+                form.setFieldsValue({downstreamProxy: [ruleToken]})
+            }
+        } else {
+            setDownstreamProxyRuleLabel("")
+            form.setFieldsValue({downstreamProxyRuleId: ""})
+        }
     })
     const onSwitchPlugin = useMemoizedFn((checked) => {
         props.setEnableInitialPlugin(checked)
@@ -258,19 +325,41 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         } else if (params.stateSecretHijacking === "randomJA3") {
             extra.RandomJA3 = true
         }
+        const downstreamSelections = Array.isArray(params.downstreamProxy)
+            ? params.downstreamProxy
+            : params.downstreamProxy
+            ? [params.downstreamProxy]
+            : []
+        const normalizedSelection = downstreamSelections
+            .map((item) => `${item}`.trim())
+            .filter((item) => item.length > 0)
+        const ruleToken = normalizedSelection.find((item) => item.startsWith(RULE_PREFIX))
+        const downstreamProxyRuleId = ruleToken
+            ? ruleToken.slice(RULE_PREFIX.length)
+            : params.downstreamProxyRuleId || ""
+        const downstreamProxyValue = ruleToken ? "" : normalizedSelection.join(",")
+        const downstreamDisplay = ruleToken
+            ? `代理规则：${
+                  proxyRouteMap.get(downstreamProxyRuleId)?.Name || downstreamProxyRuleLabel || downstreamProxyRuleId
+              }`
+            : normalizedSelection.length > 0
+            ? normalizedSelection.map((item) => maskProxyPassword(item)).join(",")
+            : ""
         props.onStartMITMServer(
             params.host,
             params.port,
-            Array.isArray(params.downstreamProxy) ? params.downstreamProxy.join(",") : "",
+            downstreamProxyValue,
+            downstreamProxyRuleId,
             params.enableInitialPlugin,
             params.enableHttp2,
             params.ForceDisableKeepAlive,
             params.certs,
-            extra
+            extra,
+            downstreamDisplay
         )
         hostRef.current.onSetRemoteValues(params.host)
         if (downstreamProxyRef.current) {
-            downstreamProxyRef.current.onSetRemoteValues(params.downstreamProxy || [])
+            downstreamProxyRef.current.onSetRemoteValues(ruleToken ? [] : normalizedSelection)
         }
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableHTTP2, `${params.enableHttp2 ? "1" : ""}`)
@@ -358,6 +447,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                             style={{width: "100%", maxWidth: "none"}}
                         />
                     </Item>
+                    <Item name='downstreamProxyRuleId' hidden>
+                        <input type='hidden' />
+                    </Item>
                     <Item
                         label='下游代理'
                         name='downstreamProxy'
@@ -371,6 +463,12 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                 >
                                     配置代理认证&nbsp;
                                 </span>
+                                <span
+                                    className={styles["form-rule-help-setting"]}
+                                    onClick={() => fetchProxyRoutes()}
+                                >
+                                    刷新规则&nbsp;
+                                </span>
                             </span>
                         }
                     >
@@ -379,17 +477,24 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                             cacheHistoryDataKey={MITMConsts.MITMDefaultDownstreamProxyHistory}
                             isCacheDefaultValue={true}
                             allowClear
+                            options={proxyRouteOptions}
                             mode='tags'
                             maxTagCount={4}
                             tagRender={(props) => {
+                                const value = `${props.value}`
+                                const display = value.startsWith(RULE_PREFIX)
+                                    ? `${props.label || value.replace(RULE_PREFIX, "")}`
+                                    : maskProxyPassword(value)
                                 return (
                                     <YakitTag size={"middle"} {...props}>
                                         <span className='content-ellipsis' style={{width: "100%"}}>
-                                            {maskProxyPassword(props.value)}
+                                            {display}
                                         </span>
                                     </YakitTag>
                                 )
                             }}
+                            tokenSeparators={[",", " "]}
+                            onChange={(value) => handleDownstreamProxyChange((value as string[]) || [])}
                             placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890'
                         />
                     </Item>

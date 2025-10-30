@@ -10,6 +10,24 @@ interface GrpcToHTTPRequestProps {
     timeout?: number
 }
 
+export interface ProxyEndpoint {
+    Id: string
+    Name: string
+    Url: string
+}
+
+export interface ProxyRoute {
+    Id: string
+    Name: string
+    Patterns: string[]
+    EndpointIds: string[]
+}
+
+export interface GlobalProxyRulesConfig {
+    Endpoints: ProxyEndpoint[]
+    Routes: ProxyRoute[]
+}
+
 /** @name 获取Yakit最新版本号 */
 export const grpcFetchLatestYakitVersion: APIOptionalFunc<GrpcToHTTPRequestProps, string> = (config, hiddenError) => {
     return new Promise(async (resolve, reject) => {
@@ -218,6 +236,38 @@ export const grpcDetermineAdaptedVersionEngine: APIFunc<number, boolean> = (port
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "判断已运行引擎的适配版本失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 获取全局代理规则配置 */
+export const grpcGetGlobalProxyRulesConfig: APINoRequestFunc<GlobalProxyRulesConfig> = (hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("GetGlobalProxyRulesConfig", {})
+            .then((res: GlobalProxyRulesConfig) => {
+                if (!res) {
+                    resolve({Endpoints: [], Routes: []})
+                    return
+                }
+                resolve(res)
+            })
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "获取代理规则失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 设置全局代理规则配置 */
+export const grpcSetGlobalProxyRulesConfig: APIFunc<GlobalProxyRulesConfig, null> = (config, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("SetGlobalProxyRulesConfig", {Config: config})
+            .then(() => resolve(null))
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "保存代理规则失败:" + e)
                 reject(e)
             })
     })

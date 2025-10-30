@@ -276,6 +276,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             targetHost,
             targetPort,
             downstreamProxy,
+            downstreamProxyRuleId,
             enableHttp2,
             ForceDisableKeepAlive,
             certs: ClientCertificate[],
@@ -285,6 +286,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 host: targetHost,
                 port: targetPort,
                 downstreamProxy: downstreamProxy,
+                downstreamProxyRuleId,
                 enableHttp2: enableHttp2,
                 ForceDisableKeepAlive: ForceDisableKeepAlive,
                 certificates: certs,
@@ -303,12 +305,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             host,
             port,
             downstreamProxy,
+            downstreamProxyRuleId,
             enableInitialPlugin,
             plugins,
             enableHttp2,
             ForceDisableKeepAlive,
             certs: ClientCertificate[],
-            extra?: ExtraMITMServerProps
+            extra?: ExtraMITMServerProps,
+            downstreamDisplay?: string
         ) => {
             setAddr(`http://${host}:${port} 或 socks5://${host}:${port}`)
             setHost(host)
@@ -316,12 +320,23 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setDisableCACertPage(extra?.disableCACertPage || false)
             setDefaultPlugins(plugins)
             setEnableInitialMITMPlugin(enableInitialPlugin)
-            startMITMServer(host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, certs, extra)
+            startMITMServer(
+                host,
+                port,
+                downstreamProxy,
+                downstreamProxyRuleId,
+                enableHttp2,
+                ForceDisableKeepAlive,
+                certs,
+                extra
+            )
             let tip = ""
-            if (downstreamProxy) {
+            if (downstreamProxyRuleId) {
+                tip += downstreamDisplay || `代理规则：${downstreamProxyRuleId}`
+            } else if (downstreamProxy) {
                 tip += `下游代理：${maskProxyPassword(downstreamProxy)}`
             }
-            setDownstreamProxyStr(downstreamProxy || "")
+            setDownstreamProxyStr(downstreamDisplay || downstreamProxy || "")
             if (extra) {
                 if (extra.onlyEnableGMTLS) {
                     tip += "|仅国密 TLS"
@@ -458,12 +473,14 @@ interface MITMServerProps {
         host: string,
         port: number,
         downstreamProxy: string,
+        downstreamProxyRuleId: string,
         enableInitialPlugin: boolean,
         defaultPlugins: string[],
         enableHttp2: boolean,
         ForceDisableKeepAlive: boolean,
         clientCertificates: ClientCertificate[],
-        extra?: ExtraMITMServerProps
+        extra?: ExtraMITMServerProps,
+        downstreamDisplay?: string
     ) => any
     visible?: boolean
     setVisible: (b: boolean) => void
@@ -573,11 +590,13 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             host,
             port,
             downstreamProxy,
+            downstreamProxyRuleId,
             enableInitialPlugin,
             enableHttp2,
             ForceDisableKeepAlive,
             certs: ClientCertificate[],
-            extra?: ExtraMITMServerProps
+            extra?: ExtraMITMServerProps,
+            downstreamDisplay?: string
         ) => {
             if (props.onStartMITMServer) {
                 setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(enableInitialPlugin ? noParamsCheckList : []))
@@ -585,12 +604,14 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     host,
                     port,
                     downstreamProxy,
+                    downstreamProxyRuleId,
                     enableInitialPlugin,
                     enableInitialPlugin ? noParamsCheckList : [],
                     enableHttp2,
                     ForceDisableKeepAlive,
                     certs,
-                    extra
+                    extra,
+                    downstreamDisplay
                 )
             }
         }

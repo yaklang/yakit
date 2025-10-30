@@ -35,6 +35,8 @@ export interface AdvancedConfigValueProps {
     // 发包配置
     concurrent: number
     proxy: string[]
+    proxyRuleId?: string
+    proxyRuleLabel?: string
     minDelaySeconds: number
     maxDelaySeconds: number
     repeatTimes: number

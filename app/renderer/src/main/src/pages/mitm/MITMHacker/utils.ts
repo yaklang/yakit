@@ -66,6 +66,7 @@ export interface MITMHaveCurrentStreamResponse {
     host: string
     port: number
     downstreamProxy: string
+    downstreamProxyRuleId?: string
 }
 
 /**用于前端恢复状态 */
@@ -128,6 +129,7 @@ export interface MITMStartCallRequestV1 {
     host: string
     port: number
     downstreamProxy: string
+    downstreamProxyRuleId?: string
     enableHttp2: boolean
     ForceDisableKeepAlive: boolean
     certificates: ClientCertificate[]
@@ -138,6 +140,7 @@ export interface MITMStartCallRequestV2 {
     Host: string
     Port: number
     DownstreamProxy: string
+    DownstreamProxyRuleId?: string
     EnableHttp2: boolean
     ForceDisableKeepAlive: boolean
     Certificates: ClientCertificate[]
@@ -168,7 +171,7 @@ interface ExtraMITMServerV2 {
 }
 /**转 mitm v1版本grpc参数 */
 export const convertMITMStartCallV1 = (oldData: MITMStartCallRequest): MITMStartCallRequestV1 => {
-    const data: MITMStartCallRequestV1 = omit(oldData, "version")
+    const data: MITMStartCallRequestV1 = omit(oldData, ["version", "downstreamProxyRuleId"]) as MITMStartCallRequestV1
     return data
 }
 /**转 mitm v2版本grpc参数 */
@@ -177,6 +180,7 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
         Host: value.host,
         Port: value.port,
         DownstreamProxy: value.downstreamProxy,
+        DownstreamProxyRuleId: value.downstreamProxyRuleId,
         EnableHttp2: value.enableHttp2,
         ForceDisableKeepAlive: value.ForceDisableKeepAlive,
         Certificates: value.certificates,

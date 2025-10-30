@@ -54,6 +54,8 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     // 发包配置
     concurrent: DefFuzzerConcurrent,
     proxy: [],
+    proxyRuleId: "",
+    proxyRuleLabel: "",
     minDelaySeconds: 0,
     maxDelaySeconds: 0,
     repeatTimes: 0,

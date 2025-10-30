@@ -5,7 +5,8 @@ import {
     TrashIcon,
     ResizerIcon,
     HollowLightningBoltIcon,
-    EyeIcon
+    EyeIcon,
+    RefreshIcon
 } from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -13,6 +14,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {ProxyRoute, grpcGetGlobalProxyRulesConfig} from "@/apiUtils/grpc"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {useInViewport, useMemoizedFn} from "ahooks"
@@ -63,6 +65,7 @@ const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
 const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
+const PROXY_RULE_PREFIX = "__proxy_rule__:"
 
 const fuzzTagModeOptions = (t: (text: string) => string) => {
     return [
@@ -157,6 +160,36 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     // 是否通过仅匹配打开的弹窗
     const [isOpenByMacth, setOpenByMacth] = useState<boolean>(false)
 
+    const [proxyRoutes, setProxyRoutes] = useState<ProxyRoute[]>([])
+    const proxyRouteMap = useMemo(() => {
+        const map = new Map<string, ProxyRoute>()
+        proxyRoutes.forEach((route) => {
+            if (route?.Id) {
+                map.set(route.Id, route)
+            }
+        })
+        return map
+    }, [proxyRoutes])
+
+    const proxyRouteOptions = useMemo(
+        () =>
+            proxyRoutes.map((route) => ({
+                label: `规则: ${route.Name || route.Id}`,
+                value: `${PROXY_RULE_PREFIX}${route.Id}`
+            })),
+        [proxyRoutes]
+    )
+
+    const fetchProxyRoutes = useMemoizedFn(() => {
+        grpcGetGlobalProxyRulesConfig(false)
+            .then((config) => {
+                setProxyRoutes(config?.Routes || [])
+            })
+            .catch((err) => {
+                yakitFailed("获取代理规则失败:" + err)
+            })
+    })
+
     const retry = useMemo(() => advancedConfigValue.retry, [advancedConfigValue.retry])
     const noRetry = useMemo(() => advancedConfigValue.noRetry, [advancedConfigValue.noRetry])
     const etcHosts = useMemo(() => advancedConfigValue.etcHosts || [], [advancedConfigValue.etcHosts])
@@ -202,8 +235,22 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     })
 
     useEffect(() => {
+        fetchProxyRoutes()
+    }, [fetchProxyRoutes])
+
+    useEffect(() => {
         form.setFieldsValue(advancedConfigValue)
     }, [advancedConfigValue])
+
+    useEffect(() => {
+        const ruleId = form.getFieldValue("proxyRuleId")
+        if (ruleId) {
+            const route = proxyRouteMap.get(ruleId)
+            if (route) {
+                form.setFieldsValue({proxyRuleLabel: route.Name || ""})
+            }
+        }
+    }, [proxyRouteMap])
 
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         let newValue: AdvancedConfigValueProps = {...advancedConfigValue, ...allFields}
@@ -216,6 +263,27 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         onValuesChange({
             ...newValue
         })
+    })
+    const handleProxyChange = useMemoizedFn((values: string[]) => {
+        const list = (values || []).map((item) => `${item}`.trim()).filter((item) => item.length > 0)
+        const ruleToken = list.find((item) => item.startsWith(PROXY_RULE_PREFIX))
+        if (ruleToken) {
+            const ruleId = ruleToken.slice(PROXY_RULE_PREFIX.length)
+            const route = proxyRouteMap.get(ruleId)
+            form.setFieldsValue({
+                proxy: [ruleToken],
+                proxyRuleId: ruleId,
+                proxyRuleLabel: route?.Name || ""
+            })
+            ;(proxyListRef as any)?.current?.onSetRemoteValues([])
+        } else {
+            form.setFieldsValue({
+                proxy: list,
+                proxyRuleId: "",
+                proxyRuleLabel: ""
+            })
+            ;(proxyListRef as any)?.current?.onSetRemoteValues(list)
+        }
     })
     /**
      * @description 切换折叠面板，缓存activeKey
@@ -515,6 +583,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     ref={proxyListRef}
                                     cacheHistoryDataKey={CacheDropDownGV.WebFuzzerProxyList}
                                     isCacheDefaultValue={false}
+                                    options={proxyRouteOptions}
                                     defaultOptions={[
                                         {
                                             label: "http://127.0.0.1:7890",
@@ -535,26 +604,48 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     size='small'
                                     maxTagCount={1}
                                     dropdownMatchSelectWidth={245}
+                                    tokenSeparators={[",", " "]}
+                                    onChange={(value) => handleProxyChange((value as string[]) || [])}
                                     tagRender={(props) => {
+                                        const value = `${props.value}`
+                                        const display = value.startsWith(PROXY_RULE_PREFIX)
+                                            ? `${props.label || value.replace(PROXY_RULE_PREFIX, "")}`
+                                            : maskProxyPassword(value)
                                         return (
                                             <YakitTag size={"middle"} {...props}>
                                                 <span className='content-ellipsis' style={{width: "100%"}}>
-                                                    {maskProxyPassword(props.value)}
+                                                    {display}
                                                 </span>
                                             </YakitTag>
                                         )
                                     }}
                                 />
                             </Form.Item>
+                            <Form.Item name='proxyRuleId' hidden>
+                                <input type='hidden' />
+                            </Form.Item>
+                            <Form.Item name='proxyRuleLabel' hidden>
+                                <input type='hidden' />
+                            </Form.Item>
                             <Form.Item label={<> </>}>
-                                <YakitButton
-                                    size='small'
-                                    type='text'
-                                    onClick={() => setAgentConfigModalVisible(true)}
-                                    icon={<PlusSmIcon />}
-                                >
-                                    {t("HttpQueryAdvancedConfig.proxy_auth_config")}
-                                </YakitButton>
+                                <Space size={4}>
+                                    <YakitButton
+                                        size='small'
+                                        type='text'
+                                        onClick={() => setAgentConfigModalVisible(true)}
+                                        icon={<PlusSmIcon />}
+                                    >
+                                        {t("HttpQueryAdvancedConfig.proxy_auth_config")}
+                                    </YakitButton>
+                                    <YakitButton
+                                        size='small'
+                                        type='text'
+                                        onClick={fetchProxyRoutes}
+                                        icon={<RefreshIcon />}
+                                    >
+                                        刷新规则
+                                    </YakitButton>
+                                </Space>
                             </Form.Item>
                             <Form.Item
                                 label={t("HttpQueryAdvancedConfig.disable_system_proxy")}
@@ -1420,13 +1511,11 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 onCloseModal={() => setAgentConfigModalVisible(false)}
                 generateURL={(url) => {
                     const v = form.getFieldsValue()
-                    const copyProxyArr = structuredClone(v.proxy)
-                    copyProxyArr.push(url)
-                    proxyListRef.current.onSetRemoteValues([...new Set(copyProxyArr)])
-                    onSetValue({
-                        ...v,
-                        proxy: [...new Set(copyProxyArr)]
-                    })
+                    const existing = (v.proxy || []).filter(
+                        (item: string) => !`${item}`.startsWith(PROXY_RULE_PREFIX)
+                    )
+                    const unique = [...new Set([...existing, url])]
+                    handleProxyChange(unique)
                 }}
             ></AgentConfigModal>
             <BatchTargetModal

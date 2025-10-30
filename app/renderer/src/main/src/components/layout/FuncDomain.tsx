@@ -124,6 +124,7 @@ import {useTheme} from "@/hook/useTheme"
 import {grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder} from "@/utils/logCollection"
 import {useDownloadYakit} from "./update/DownloadYakit"
 import i18n from "@/i18n/i18n"
+import ProxyRulesLab from "./experimental/ProxyRulesLab/ProxyRulesLab"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1006,6 +1007,7 @@ const GetUIOpSettingMenu = () => {
                     key: "webshell-manager",
                     label: "网站管理"
                 },
+                {key: "proxy-rules-lab", label: "代理与规则"},
                 {key: "mcp", label: "Yak Mcp"},
                 {key: "ai-agent", label: "AI Agent"},
                 {key: "ssa-result-diff", label: "ssa-result-diff"},
@@ -1221,6 +1223,19 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "webshell-manager":
                 addToTab("**webshell-manager")
                 return
+            case "proxy-rules-lab": {
+                let modalInstance: any
+                modalInstance = showYakitModal({
+                    type: "white",
+                    title: null,
+                    width: 960,
+                    footer: null,
+                    maskClosable: false,
+                    bodyStyle: {padding: 0},
+                    content: <ProxyRulesLab onClose={() => modalInstance?.destroy()} />
+                })
+                return
+            }
             case "invalidCache":
                 invalidCacheAndUserData(delTemporaryProject)
                 return

@@ -217,7 +217,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     const downStreamTagClose = useMemoizedFn(() => {
         const tipStr = tip
             .split("|")
-            .filter((item) => !item.startsWith("下游代理"))
+            .filter((item) => !item.startsWith("下游代理") && !item.startsWith("代理规则"))
             .join("|")
         onSetTip(tipStr)
         setDownstreamProxyStr("")
@@ -248,12 +248,12 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                             .split("|")
                             .filter((item) => item)
                             .map((item) =>
-                                !item.startsWith("下游代理") ? (
-                                    <YakitTag color='success' key={item}>
+                                item.startsWith("下游代理") || item.startsWith("代理规则") ? (
+                                    <YakitTag closable={true} onClose={downStreamTagClose} key={item}>
                                         {item}
                                     </YakitTag>
                                 ) : (
-                                    <YakitTag closable={true} onClose={downStreamTagClose} key={item}>
+                                    <YakitTag color='success' key={item}>
                                         {item}
                                     </YakitTag>
                                 )
@@ -384,13 +384,12 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         }
         grpcMITMSetDownstreamProxy(proxyValue)
         if (downstreamProxy.length) {
-            if (tip.indexOf("下游代理") === -1) {
-                onSetTip(
-                    `下游代理：${downstreamProxy.map((item) => maskProxyPassword(item))}` +
-                        (tip.indexOf("|") === 0 ? tip : `|${tip}`)
-                )
+            const filtered = tipArr.filter((item) => !item.startsWith("代理规则"))
+            if (!filtered.some((item) => item.startsWith("下游代理"))) {
+                const newTip = `下游代理：${downstreamProxy.map((item) => maskProxyPassword(item))}`
+                onSetTip([newTip, ...filtered.filter((item) => item)].join("|"))
             } else {
-                const tipStr = tipArr
+                const tipStr = filtered
                     .map((item) => {
                         if (item.startsWith("下游代理")) {
                             return `下游代理：${downstreamProxy.map((item) => maskProxyPassword(item))}`
@@ -403,7 +402,9 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
             }
             setDownstreamProxyStr(downstreamProxy.join(","))
         } else {
-            const tipStr = tipArr.filter((item) => !item.startsWith("下游代理")).join("|")
+            const tipStr = tipArr
+                .filter((item) => !item.startsWith("下游代理") && !item.startsWith("代理规则"))
+                .join("|")
             onSetTip(tipStr)
             setDownstreamProxyStr("")
         }

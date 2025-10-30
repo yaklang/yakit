@@ -255,6 +255,7 @@ module.exports = {
 
         // global config
         require("./handlers/configNetwork")(win, getClient)
+        require("./handlers/proxyRules")(win, getClient)
 
         // misc
         require("./handlers/misc")(win, getClient)

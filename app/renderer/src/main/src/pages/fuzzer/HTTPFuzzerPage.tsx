@@ -333,6 +333,7 @@ export interface FuzzerRequestProps {
     FuzzTagMode: FuzzTagMode
     FuzzTagSyncIndex: boolean
     Proxy: string
+    DownstreamProxyRuleId?: string
     PerRequestTimeoutSeconds: number
     DialTimeoutSeconds: number
     BatchTarget?: Uint8Array
@@ -451,12 +452,17 @@ export const getAction = (mode) => {
             return ""
     }
 }
+const PROXY_RULE_PREFIX = "__proxy_rule__:";
 /**
  * @description 前端类型转为HTTPFuzzer/HTTPFuzzerSequence接口需要的类型 advancedConfigValue类型转为FuzzerRequests类型
  * @param {AdvancedConfigValueProps} value
  * @returns {FuzzerRequestProps}
  */
 export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValueProps) => {
+    const rawProxies = value.proxy || []
+    const directProxies = rawProxies.filter((item) => !item.startsWith(PROXY_RULE_PREFIX))
+    const ruleToken = rawProxies.find((item) => item.startsWith(PROXY_RULE_PREFIX))
+    const proxyRuleId = value.proxyRuleId || (ruleToken ? ruleToken.slice(PROXY_RULE_PREFIX.length) : "")
     const fuzzerRequests: FuzzerRequestProps = {
         // Request: request,
         RequestRaw: new Uint8Array(), // StringToUint8Array(request, "utf8"),
@@ -476,7 +482,8 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         NoSystemProxy: value.noSystemProxy,
         DisableUseConnPool: value.disableUseConnPool,
         DisableHotPatch: value.disableHotPatch,
-        Proxy: value.proxy ? value.proxy.join(",") : "",
+        Proxy: directProxies.join(","),
+        DownstreamProxyRuleId: proxyRuleId,
         ActualAddr: value.actualHost,
         HotPatchCode: "",
         HotPatchCodeWithParamGetter: "",
@@ -1151,10 +1158,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
         // FuzzerRequestProps
         const httpParams: FuzzerRequestProps = getFuzzerRequestParams()
-        if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
-            getProxyList(advancedConfigValue.proxy)
+        const directProxies = (advancedConfigValue.proxy || []).filter(
+            (item) => !item.startsWith(PROXY_RULE_PREFIX)
+        )
+        if (directProxies.length > 0) {
+            getProxyList(directProxies)
         }
-        setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
+        setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_PROXY, `${directProxies}`)
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
         setRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit, JSON.stringify(advancedConfigValue.resNumlimit))
@@ -2230,7 +2240,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             IsHttps: advancedConfigValue.isHttps,
                                             IsGmTLS: advancedConfigValue.isGmTLS,
                                             PerRequestTimeoutSeconds: advancedConfigValue.timeout,
-                                            Proxy: advancedConfigValue.proxy.join(","),
+                                            Proxy: (advancedConfigValue.proxy || [])
+                                                .filter((item) => !item.startsWith(PROXY_RULE_PREFIX))
+                                                .join(","),
                                             Extractors: advancedConfigValue.extractors,
                                             Matchers: advancedConfigValue.matchers,
                                             Params: advancedConfigValue.params || []
@@ -2563,43 +2575,61 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
             .catch((err) => debugToPrintLog(err))
     })
     const isShowSystemProxy = useCreation(() => {
-        return systemProxy?.Enable && !advancedConfigValue.noSystemProxy && !advancedConfigValue.proxy.length
-    }, [systemProxy, advancedConfigValue.noSystemProxy, advancedConfigValue.proxy])
+        const hasDirectProxy = (advancedConfigValue.proxy || []).some(
+            (item) => item && !item.startsWith(PROXY_RULE_PREFIX)
+        )
+        const hasRule = !!advancedConfigValue.proxyRuleId
+        return systemProxy?.Enable && !advancedConfigValue.noSystemProxy && !hasDirectProxy && !hasRule
+    }, [systemProxy, advancedConfigValue.noSystemProxy, advancedConfigValue.proxy, advancedConfigValue.proxyRuleId])
     const onCloseRandomChunked = useMemoizedFn(() => {
         setAdvancedConfigValue({
             ...advancedConfigValue,
             enableRandomChunked: false
         })
     })
+    const directProxyValues = useMemo(
+        () => (advancedConfigValue.proxy || []).filter((item) => !item.startsWith(PROXY_RULE_PREFIX)),
+        [advancedConfigValue.proxy]
+    )
+    const usingProxyRule = useMemo(() => !!advancedConfigValue.proxyRuleId, [advancedConfigValue.proxyRuleId])
+    const proxyTooltipContent = useMemo(() => {
+        if (usingProxyRule) {
+            return advancedConfigValue.proxyRuleLabel || advancedConfigValue.proxyRuleId
+        }
+        return directProxyValues.map((item) => maskProxyPassword(item))
+    }, [usingProxyRule, advancedConfigValue.proxyRuleLabel, advancedConfigValue.proxyRuleId, directProxyValues])
+
     return (
         <div className={styles["display-flex"]} ref={divRef}>
             {droppedCount > 0 && (
                 <YakitTag color='danger'>{t("FuzzerExtraShow.responsesDiscarded", {droppedCount})}</YakitTag>
             )}
-            {advancedConfigValue.proxy.length > 0 && (
-                <Tooltip title={advancedConfigValue.proxy.map((item) => maskProxyPassword(item))}>
+            {(directProxyValues.length > 0 || usingProxyRule) && (
+                <Tooltip title={proxyTooltipContent}>
                     <YakitTag
                         className={classNames(styles["proxy-text"], "content-ellipsis")}
                         closable={true}
                         onClose={() => {
                             setAdvancedConfigValue({
                                 ...advancedConfigValue,
-                                proxy: []
+                                proxy: [],
+                                proxyRuleId: "",
+                                proxyRuleLabel: ""
                             })
                         }}
                     >
                         {t("FuzzerExtraShow.proxy")}
-                        {(() => {
-                            const maxDisplay = 3 // 最多显示3条
-                            const {proxy} = advancedConfigValue
-                            const displayData = proxy
-                                .map((item) => maskProxyPassword(item))
-                                .slice(0, maxDisplay)
-                                .join(", ") // 取前3个
-                            const remainingCount = proxy.length - maxDisplay // 剩余数量
-
-                            return remainingCount > 0 ? `${displayData} +${remainingCount}...` : displayData
-                        })()}
+                        {usingProxyRule ? (
+                            ` ${advancedConfigValue.proxyRuleLabel || advancedConfigValue.proxyRuleId}`
+                        ) : (() => {
+                              const maxDisplay = 3 // 最多显示3条
+                              const displayData = directProxyValues
+                                  .map((item) => maskProxyPassword(item))
+                                  .slice(0, maxDisplay)
+                                  .join(", ")
+                              const remainingCount = directProxyValues.length - maxDisplay
+                              return remainingCount > 0 ? ` ${displayData} +${remainingCount}...` : ` ${displayData}`
+                          })()}
                     </YakitTag>
                 </Tooltip>
             )}
