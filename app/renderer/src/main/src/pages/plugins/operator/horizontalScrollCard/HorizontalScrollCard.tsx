@@ -9,8 +9,9 @@ import {
 import styles from "./HorizontalScrollCard.module.scss"
 import classNames from "classnames"
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon, OutlineHashtagIcon} from "@/assets/icon/outline"
-import {useLongPress, useThrottleFn} from "ahooks"
+import {useCreation, useLongPress, useThrottleFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
+import {isBoolean} from "lodash"
 
 const getTextColor = (id: string) => {
     switch (true) {
@@ -46,7 +47,7 @@ const getBgColor = (id: string) => {
 }
 
 export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.memo((props) => {
-    const {title, data = [], compact = false} = props
+    const {title, data = [], compact = false, hiddenHeard, className, itemProps} = props
     const [scroll, setScroll] = useState<HorizontalScrollCardScrollProps>({
         scrollLeft: 0,
         scrollRight: 0
@@ -85,7 +86,8 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
         scrollLeftIconRef,
         {
             delay: 300,
-            onClick: () => {
+            onClick: (e) => {
+                e.stopPropagation()
                 if (!horizontalScrollCardRef.current) return
                 horizontalScrollCardRef.current.scrollLeft -= 100
             },
@@ -104,7 +106,8 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
         scrollRightIconRef,
         {
             delay: 300,
-            onClick: () => {
+            onClick: (e) => {
+                e.stopPropagation()
                 if (!horizontalScrollCardRef.current) return
                 horizontalScrollCardRef.current.scrollLeft += 100
             },
@@ -127,9 +130,13 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
         },
         {wait: 200}
     ).run
+    const isHiddenHeard = useCreation(() => {
+        if (isBoolean(hiddenHeard)) return !hiddenHeard
+        return !compact
+    }, [compact, hiddenHeard])
     return (
-        <div className={styles["horizontal-scroll-card"]}>
-            {!compact && (
+        <div className={classNames(styles["horizontal-scroll-card"], className)}>
+            {isHiddenHeard && (
                 <div className={styles["horizontal-scroll-card-heard"]}>
                     <span className={styles["horizontal-scroll-card-heard-title"]}>{title}</span>
                     <div className={styles["horizontal-scroll-card-heard-total"]}>{data.length}</div>
@@ -164,9 +171,10 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
                     {data.map((cardItem) => (
                         <React.Fragment key={cardItem.tag}>
                             {cardItem.info.length > 1 ? (
-                                <HorizontalScrollCardItemInfoMultiple {...cardItem} />
+                                <HorizontalScrollCardItemInfoMultiple {...itemProps} {...cardItem} />
                             ) : (
                                 <HorizontalScrollCardItemInfoSingle
+                                    {...itemProps}
                                     tag={cardItem.tag}
                                     item={(cardItem.info || [])[0]}
                                     compact={compact}
@@ -246,7 +254,7 @@ export const HorizontalScrollCardItemInfoMultiple: React.FC<StatusCardListProps>
 
 export const HorizontalScrollCardItemInfoSingle: React.FC<HorizontalScrollCardItemInfoSingleProps> = React.memo(
     (props) => {
-        const {tag, item, compact, className = ""} = props
+        const {tag, item, compact, className = "", size} = props
         const isSuccess = useMemo(() => {
             return getTextColor(tag || item.Id) === "success"
         }, [tag, item.Id])
@@ -265,7 +273,8 @@ export const HorizontalScrollCardItemInfoSingle: React.FC<HorizontalScrollCardIt
                     {
                         [styles["text-success"]]: isSuccess,
                         [styles["text-error"]]: isError,
-                        [styles["card-item-compact"]]: compact
+                        [styles["card-item-compact"]]: compact,
+                        [styles["card-item-small"]]: size === "small"
                     },
                     className
                 )}

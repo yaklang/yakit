@@ -1,5 +1,7 @@
+import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
 import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 
+type ItemProps = Omit<HorizontalScrollCardItemInfoSingleProps, "tag" | "item" | "compact">
 export interface HorizontalScrollCardProps {
     /**卡片的标题 */
     title?: string
@@ -7,12 +9,20 @@ export interface HorizontalScrollCardProps {
     data: HoldGRPCStreamProps.InfoCards[]
     /**卡片标题数据横向排列 */
     compact?: boolean
+    /**隐藏头部 */
+    hiddenHeard?: boolean
+    /**自定义类名 */
+    className?: string
+    /** 单个项 */
+    itemProps?: ItemProps
 }
 
 export interface StatusCardListProps {
     /**具体信息 */
     info: HoldGRPCStreamProps.InfoCard[]
     tag: string
+    /** 单个项 */
+    itemProps?: ItemProps
 }
 /**插件返回的 CacheStatusCardProps */
 export interface StatusCardProps {
@@ -31,6 +41,7 @@ export interface HorizontalScrollCardItemInfoSingleProps {
     tag: string
     compact: boolean
     className?: string
+    size?: YakitSizeType
 }
 /**滚动信息记录 */
 export interface HorizontalScrollCardScrollProps {
