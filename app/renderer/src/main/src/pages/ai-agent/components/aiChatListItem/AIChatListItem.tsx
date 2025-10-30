@@ -120,17 +120,28 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
 
             case "task_index_node":
                 const task = getTask(data.taskIndex)
-                const props = {
+                const dividerCardProps = {
                     status: task?.progress as StreamsStatus,
                     desc: task?.goal,
                     name: task?.name,
                     success: 0,
                     error: 0
                 }
-                contentNode = <DividerCard {...props} />
+                contentNode = <DividerCard {...dividerCardProps} />
                 break
             case "tool_call_decision":
                 contentNode = <AIToolDecision item={item} />
+                break
+            case "end_plan_and_execution":
+                contentNode = (
+                    <DividerCard
+                        status={StreamsStatus.success}
+                        name='任务结束标志'
+                        desc='当前任务已经结束，下面为新的任务数据'
+                        success={0}
+                        error={0}
+                    />
+                )
                 break
             // TODO 更新任务队列
             // <AITaskUpdateNotice/>
