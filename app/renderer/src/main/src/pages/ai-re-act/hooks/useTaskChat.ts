@@ -560,6 +560,20 @@ function useTaskChat(params?: UseTaskChatParams) {
         }
     })
 
+    /** 任务规划全部执行完成的结束标识 */
+    const handlePlanExecEnd = useMemoizedFn((res: AIOutputEvent) => {
+        setStreams((old) => {
+            const newArr = [...old]
+            newArr.push({
+                id: uuidv4(),
+                type: "end_plan_and_execution",
+                Timestamp: res.Timestamp,
+                data: ""
+            })
+            return newArr
+        })
+    })
+
     // 处理数据方法
     const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
         try {
@@ -730,6 +744,12 @@ function useTaskChat(params?: UseTaskChatParams) {
             if (res.Type === "tool_call_decision") {
                 // 工具决策
                 handleToolCallDecision(res)
+                return
+            }
+
+            if (res.Type === "end_plan_and_execution") {
+                // 任务规划全部执行完成的结束标识
+                handlePlanExecEnd(res)
                 return
             }
         } catch (error) {

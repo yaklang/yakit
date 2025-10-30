@@ -124,6 +124,7 @@ type ChatExecAIForgeReview = AIChatQSDataBase<"exec_aiforge_review_require", UIE
 type ChatFileSystemPin = AIChatQSDataBase<"file_system_pin", AIFileSystemPin>
 type ChatTaskIndexNode = AIChatQSDataBase<"task_index_node", AITaskStartInfo>
 export type ChatToolCallDecision = AIChatQSDataBase<"tool_call_decision", AIToolCallDecision>
+type ChatPlanExecEnd = AIChatQSDataBase<"end_plan_and_execution", string>
 
 export type AIChatQSData =
     | ChatQuestion
@@ -140,4 +141,5 @@ export type AIChatQSData =
     | ChatFileSystemPin
     | ChatTaskIndexNode
     | ChatToolCallDecision
+    | ChatPlanExecEnd
 // #endregion
