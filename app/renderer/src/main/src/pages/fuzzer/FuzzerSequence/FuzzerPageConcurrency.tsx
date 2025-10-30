@@ -254,8 +254,9 @@ const ConcurrencyItem: React.FC<SequenceItemProps> = memo((props) => {
                             disabled={disabled}
                             onDropdownVisibleChange={(v) => setSelectVisible(v)}
                             open={selectVisible && !isDragging}
-                        >
-                           {options.map(({value, label}) => {
+                            options={options}
+                        />
+                           {/* {options.map(({value, label}) => {
                             const disable = selectedList.includes(value) && value !== selectValue.value;
                             return (
                                 <YakitSelect.Option key={value} disabled={disable}>
@@ -263,7 +264,7 @@ const ConcurrencyItem: React.FC<SequenceItemProps> = memo((props) => {
                                 </YakitSelect.Option>
                             )
                         })}
-                        </YakitSelect>
+                        </YakitSelect> */}
                         </div>
                         <div className={styles["fuzzer-sequence-list-item-heard-extra"]}>
                             <YakitButton
