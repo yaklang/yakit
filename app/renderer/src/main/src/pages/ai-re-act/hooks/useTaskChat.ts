@@ -553,19 +553,6 @@ function useTaskChat(params?: UseTaskChatParams) {
         }
     })
 
-    /** 任务规划全部执行完成的结束标识 */
-    const handlePlanExecEnd = useMemoizedFn((res: AIOutputEvent) => {
-        setStreams((old) => {
-            const newArr = [...old]
-            newArr.push({
-                ...genBaseAIChatData(res),
-                type: "end_plan_and_execution",
-                data: ""
-            })
-            return newArr
-        })
-    })
-
     // 处理数据方法
     const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
         try {
@@ -744,12 +731,6 @@ function useTaskChat(params?: UseTaskChatParams) {
                 handleToolCallDecision(res)
                 return
             }
-
-            if (res.Type === "end_plan_and_execution") {
-                // 任务规划全部执行完成的结束标识
-                handlePlanExecEnd(res)
-                return
-            }
         } catch (error) {
             handleGrpcDataPushLog({
                 type: "error",
@@ -807,9 +788,30 @@ function useTaskChat(params?: UseTaskChatParams) {
         handleFailTaskState()
     })
 
+    // 任务规划结束后的触发逻辑
+    const handlePlanExecEnd = useMemoizedFn((res: AIOutputEvent) => {
+        setStreams((old) => {
+            const newArr = [...old]
+            newArr.push({
+                ...genBaseAIChatData(res),
+                type: "end_plan_and_execution",
+                data: ""
+            })
+            return newArr
+        })
+    })
+
     return [
         {coordinatorId, plan, streams},
-        {handleSetData, handleResetData, handleSetCoordinatorId, handleSend, fetchPlanTree, handleCloseGrpc}
+        {
+            handleSetData,
+            handleResetData,
+            handleSetCoordinatorId,
+            handleSend,
+            fetchPlanTree,
+            handleCloseGrpc,
+            handlePlanExecEnd
+        }
     ] as const
 }
 

@@ -89,6 +89,8 @@ export interface UseTaskChatEvents extends UseHookBaseEvents {
     fetchPlanTree: () => AIAgentGrpcApi.PlanTask | undefined
     /** 接口关闭后的后续执行逻辑 */
     handleCloseGrpc: () => void
+    /** 任务规划结束的触发回调 */
+    handlePlanExecEnd: (res: AIOutputEvent) => void
 }
 // #endregion
 

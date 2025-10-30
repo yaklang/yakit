@@ -182,6 +182,14 @@ function useChatIPC(params?: UseChatIPCParams) {
                     }
                     return
                 }
+                if (res.Type === "end_plan_and_execution") {
+                    // 结束任务规划，并传出任务规划流的标识 coordinator_id
+                    const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
+                    if (startInfo.coordinator_id && planCoordinatorId.current === startInfo.coordinator_id) {
+                        taskChatEvent.handlePlanExecEnd(res)
+                    }
+                    return
+                }
 
                 casualChatEvent.handleSetCoordinatorId(res.CoordinatorId)
 
