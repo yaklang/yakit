@@ -1,4 +1,4 @@
-import type {FC} from "react"
+import type {FC, ReactNode} from "react"
 import {AIOnlineModelIconMap} from "../defaultConstant"
 import styles from "./ModelInfo.module.scss"
 import {DocumentDuplicateSvgIcon} from "@/assets/newIcon"
@@ -11,7 +11,8 @@ import {Tooltip} from "antd"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {AIChatToolDrawerContent} from "../chatTemplate/AIAgentChatTemplate"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
+import {OutlineAtomIconByStatus} from "../aiModelList/AIModelList"
 
 export interface ModalInfoProps {
     icon?: string
@@ -22,8 +23,13 @@ export interface ModalInfoProps {
 }
 
 const ModalInfo: FC<ModalInfoProps> = ({callToolId, icon, title, time, copyStr}) => {
-    const iconSvg = icon ? AIOnlineModelIconMap[icon] : null
-
+    const iconSvg = useCreation(() => {
+        return (
+            AIOnlineModelIconMap[title || ""] || (
+                <OutlineAtomIconByStatus isRunning={true} iconClassName={styles["icon-small"]} />
+            )
+        )
+    }, [title])
     const handleDetails = useMemoizedFn(() => {
         if (!callToolId) return
         const m = showYakitDrawer({

@@ -6,6 +6,7 @@ import styles from "./AIReviewResult.module.scss"
 import {formatTimestamp} from "@/utils/timeUtil"
 import React from "react"
 import ChatCard from "../ChatCard"
+import ModalInfo from "../ModelInfo"
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     const {info, timestamp} = props
@@ -68,16 +69,19 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
             title={title}
             subTitle={userAction.btnText}
             tip={userAction.userInput}
-            timestamp={timestamp}
+            modalInfo={{
+                title: info.AIService,
+                time: timestamp
+            }}
         />
     )
 })
 
 export const AISingHaveColorText: React.FC<AISingHaveColorTextProps> = React.memo((props) => {
-    const {title, subTitle, tip, timestamp, titleIcon, ...reset} = props
+    const {title, subTitle, tip, titleIcon, modalInfo,...reset} = props
     return (
         <ChatCard
-            footer={<span className={styles["time"]}>{formatTimestamp(timestamp)}</span>}
+            footer={modalInfo && <ModalInfo {...modalInfo} />}
             titleText={
                 <div className={styles["title-wrapper"]}>
                     <div className={styles["title-main"]}>

@@ -14,7 +14,10 @@ export const AIToolDecision: React.FC<AIToolDecisionProps> = React.memo((props) 
                 title='决策'
                 subTitle={nodeLabel}
                 tip={item.data?.summary}
-                timestamp={item.Timestamp}
+                modalInfo={{
+                    title: item.AIService,
+                    time: item.Timestamp
+                }}
             />
         </>
     )

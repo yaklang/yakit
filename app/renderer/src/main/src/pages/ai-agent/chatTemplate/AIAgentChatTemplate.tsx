@@ -421,7 +421,8 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                                         titleIcon={taskAnswerToIconMap[NodeId]}
                                         content={content}
                                         modalInfo={{
-                                            time: Timestamp
+                                            time: Timestamp,
+                                            title: info.AIService
                                         }}
                                         fileList={fileList}
                                     />

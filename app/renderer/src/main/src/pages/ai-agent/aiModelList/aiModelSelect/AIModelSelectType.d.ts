@@ -1,2 +1,4 @@
-export interface AIModelSelectProps {
+export interface AIModelSelectProps {}
+export interface AIModelItemProps {
+    value: string
 }

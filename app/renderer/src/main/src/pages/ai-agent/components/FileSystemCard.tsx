@@ -8,7 +8,8 @@ import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import {IconNotepadFileTypeDir} from "@/components/MilkdownEditor/icon/icon"
 import {AIFileSystemPin} from "@/pages/ai-re-act/hooks/aiRender"
 import emiter from "@/utils/eventBus/eventBus"
-import { AITabsEnum } from "../defaultConstant"
+import {AITabsEnum} from "../defaultConstant"
+import ModalInfo, { ModalInfoProps } from "./ModelInfo"
 
 const getFileIcon = (type, isDir) => {
     if (isDir) {
@@ -19,9 +20,10 @@ const getFileIcon = (type, isDir) => {
 
 interface FileSystemCardProps extends AIFileSystemPin {
     showDetail?: boolean
+    modalInfo: ModalInfoProps
 }
 
-const FileSystemCard: FC<FileSystemCardProps> = ({suffix, name, path, isDir, showDetail = true}) => {
+const FileSystemCard: FC<FileSystemCardProps> = ({suffix, name, path, isDir, showDetail = true, modalInfo}) => {
     const type = suffix ?? name.split(".").pop()
 
     const onDetail = () => onOpenLocalFileByPath(path)
@@ -30,7 +32,15 @@ const FileSystemCard: FC<FileSystemCardProps> = ({suffix, name, path, isDir, sho
         emiter.emit("switchAIActTab", AITabsEnum.File_System)
     }
     return (
-        <ChatCard titleIcon={<RefreshIcon className={styles["file-system-icon"]} />} titleText='更新文件系统'>
+        <ChatCard
+            titleIcon={<RefreshIcon className={styles["file-system-icon"]} />}
+            titleText='更新文件系统'
+            footer={
+                <>
+                    {modalInfo && <ModalInfo {...modalInfo} />}
+                </>
+            }
+        >
             <div className={styles["file-system"]}>
                 <div className={styles["file-system-title"]}>
                     <div>

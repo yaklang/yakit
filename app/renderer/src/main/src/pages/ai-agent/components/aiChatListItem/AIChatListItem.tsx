@@ -89,8 +89,9 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         params={data.callToolId}
                         fileList={fileList}
                         modalInfo={{
-                            time:Timestamp,
+                            time: Timestamp,
                             callToolId: data.callToolId,
+                            title: item.AIService
                         }}
                     />
                 )
@@ -115,7 +116,16 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                 }
                 break
             case "file_system_pin":
-                contentNode = <FileSystemCard {...data} {...aiFileSystemCard} />
+                contentNode = (
+                    <FileSystemCard
+                        {...data}
+                        {...aiFileSystemCard}
+                        modalInfo={{
+                            title: item.AIService,
+                            time: Timestamp
+                        }}
+                    />
+                )
                 break
 
             case "task_index_node":

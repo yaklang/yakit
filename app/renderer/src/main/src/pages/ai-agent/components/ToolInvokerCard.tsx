@@ -29,7 +29,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     desc,
     status = "fail",
     fileList,
-    modalInfo
+    modalInfo,
 }) => {
     const [statusColor, statusText] = useMemo(() => {
         if (status === "success") return ["success", "成功"]
@@ -66,7 +66,11 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
                     相关漏洞 <span>{risksLen}</span> <span>|</span> HTTP 流量 <span>{trafficLen}</span>
                 </div>
             }
-            footer={modalInfo?.time && <ModalInfo {...modalInfo} />}
+            footer={
+                <>
+                    {modalInfo && <ModalInfo {...modalInfo} />}
+                </>
+            }
         >
             <div className={classNames(styles["file-system"], styles[`file-system-${status}`])}>
                 <div className={styles["file-system-title"]}>

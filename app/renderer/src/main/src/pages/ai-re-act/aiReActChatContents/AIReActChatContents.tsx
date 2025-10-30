@@ -37,7 +37,8 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
                     titleIcon={taskAnswerToIconMap[NodeId]}
                     content={content}
                     modalInfo={{
-                        time: stream.Timestamp
+                        time: stream.Timestamp,
+                        title: stream.AIService
                     }}
                     fileList={fileList}
                 />
