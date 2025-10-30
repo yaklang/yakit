@@ -297,8 +297,22 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                     )
                 }
                 tagRender={(props) => {
-                    const tabEle =
-                        extraProps.options?.find((item) => item.value === props.value)?.tabLable || props.label
+                    const option = extraProps.options?.find((item) => item.value === props.value)
+                    let tabEle: React.ReactNode = option?.tabLable ?? props.label ?? props.value
+                    if (React.isValidElement(tabEle)) {
+                        // 尽量取可读内容
+                        if (typeof tabEle.props?.children === "string") {
+                            tabEle = tabEle.props.children
+                        } else if (Array.isArray(tabEle.props?.children)) {
+                            const textChild = tabEle.props.children.find((child) => typeof child === "string")
+                            tabEle = textChild ?? props.value
+                        } else {
+                            tabEle = props.value
+                        }
+                    }
+                    if (typeof tabEle !== "string") {
+                        tabEle = `${tabEle ?? props.value ?? ""}`
+                    }
                     return (
                         <YakitTag size={size} {...props}>
                             <span className='content-ellipsis' style={{width: "100%"}}>
