@@ -910,9 +910,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     } catch (e) {}
                 })()
             }
-            if ((props.type === "html" || props.type === "http") && !disableUnicodeDecodeRef.current) {
+            const needDecode = props.type && ["html", "http", 'json'].includes(props.type)
+            if (needDecode && !disableUnicodeDecodeRef.current) {
                 ;(() => {
-                    // http html
+                    // http html json
                     const text = model.getValue()
                     let match
                     const regex = /(\\u[\dabcdef]{4})+/gi
