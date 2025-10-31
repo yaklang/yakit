@@ -415,14 +415,14 @@ function useTaskChat(params?: UseTaskChatParams) {
             }
 
             const type = review.current.type
-            const info = cloneDeep(review.current.data) as AIReviewType
+            const reviewInfo = cloneDeep(review.current)
+            const info = reviewInfo.data as AIReviewType
             if (info?.id !== data.id) {
                 throw new Error("review_release data is invalid")
             }
 
             info.selected = JSON.stringify({suggestion: "continue"})
             info.optionValue = "continue"
-            const reviewInfo = cloneDeep(review.current)
             handleAutoRviewData(reviewInfo)
             review.current = undefined
             currentPlansId.current = ""
