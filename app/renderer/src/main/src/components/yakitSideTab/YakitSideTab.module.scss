@@ -57,14 +57,15 @@
     background-color: var(--Colors-Use-Basic-Background);
     bottom: 0;
 }
-.tab-wrap{
+.tab-wrap {
     display: flex;
     flex-direction: column;
     height: 100%;
 }
-.tab-wrap-vertical{
+.tab-wrap-vertical {
     flex-direction: row;
 }
+
 .yakit-side-tab {
     @include tab() {
         height: 100%;
@@ -72,10 +73,15 @@
 }
 .yakit-side-tab-item {
     @include tab-item() {
-        .item-text {
+        .item-text-left {
             writing-mode: vertical-rl;
-            text-orientation: sideways-right;
-            transform: rotate(180deg);
+            // text-orientation: sideways-right;
+            // transform: rotate(180deg);
+        }
+        .item-text-right {
+            writing-mode: vertical-rl;
+            // text-orientation: sideways-right;
+            // transform: rotate(0deg);
         }
         &::after {
             @extend %divider;
@@ -141,4 +147,25 @@
 
 .yakit-side-tab-horizontal-item-active {
     @include tab-item-active();
+}
+
+.tab-wrap-vertical-right {
+    .yakit-side-tab {
+        @include tab() {
+            height: unset;
+            padding-top: 12px;
+            background: unset;
+            gap: 4px;
+        }
+    }
+    .yakit-side-tab-item {
+        position: relative;
+        border-radius: 0 4px 4px 0;
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        border-left: 0;
+        &::after {
+            width: 0;
+            height: 0;
+        }
+    }
 }
