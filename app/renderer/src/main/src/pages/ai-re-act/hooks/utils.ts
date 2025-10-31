@@ -5,9 +5,10 @@
 import {generateTaskChatExecution} from "@/pages/ai-agent/defaultConstant"
 import {Uint8ArrayToString} from "@/utils/str"
 import {v4 as uuidv4} from "uuid"
-import {AIAgentGrpcApi, AIOutputEvent, AIStartParams} from "./grpcApi"
+import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
 import {AIChatQSData, AITaskInfoProps} from "./aiRender"
 import {convertNodeIdToVerbose} from "./defaultConstant"
+import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 
 /** 生成AI-UI展示的必须基础数据 */
 export const genBaseAIChatData = (info: AIOutputEvent) => {
@@ -75,7 +76,7 @@ export const handleFlatAITree = (sum: AIAgentGrpcApi.PlanTask[], task: AIAgentGr
 }
 
 /** 判断接口请求参数里，是否自动继续执行 review 操作 */
-export const isAutoContinueReview = (getFunc?: () => AIStartParams | undefined) => {
+export const isAutoContinueReview = (getFunc?: () => AIAgentSetting | undefined) => {
     try {
         if (getFunc) {
             const request = getFunc()

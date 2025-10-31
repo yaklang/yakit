@@ -42,7 +42,8 @@ const UseCasualAndTaskTypes = [
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
 function useChatIPC(params?: UseChatIPCParams) {
-    const {onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onTimelineMessage, onEnd} = params || {}
+    const {getRequest, onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onTimelineMessage, onEnd} =
+        params || {}
 
     // 自由对话-review 信息的自动释放
     const handleCasualReviewRelease = useMemoizedFn((id: string) => {
@@ -68,7 +69,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     // 建立通信时的请求参数
     const chatRequest = useRef<AIStartParams>()
     const fetchRequest = useMemoizedFn(() => {
-        return chatRequest.current
+        return getRequest?.()
     })
 
     // 通信的状态

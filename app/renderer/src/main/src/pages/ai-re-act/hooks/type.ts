@@ -2,6 +2,7 @@ import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AIChatQSData, AITokenConsumption, AIYakExecFileRecord} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {Dispatch, SetStateAction} from "react"
+import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 
 /** 公共 hoos 事件 */
 interface UseHookBaseParams {
@@ -42,7 +43,7 @@ export interface UseCasualChatParams extends UseHookBaseParams {
     /** 更新日志数据 */
     updateLog: Dispatch<SetStateAction<AIChatQSData[]>>
     /** 获取流接口请求参数 */
-    getRequest: () => AIStartParams | undefined
+    getRequest: () => AIAgentSetting | undefined
     /** 触发 review-release 后的回调事件 */
     onReviewRelease?: (id: string) => void
 }
@@ -61,7 +62,7 @@ export interface UseCasualChatEvents extends UseHookBaseEvents {
 // #region useTaskChat相关定义
 export interface UseTaskChatParams extends UseHookBaseParams {
     /** 获取流接口请求参数 */
-    getRequest: () => AIStartParams | undefined
+    getRequest: () => AIAgentSetting | undefined
     /** 更新日志数据 */
     updateLog: Dispatch<SetStateAction<AIChatQSData[]>>
     /** review 触发回调事件 */
@@ -97,6 +98,8 @@ export interface UseTaskChatEvents extends UseHookBaseEvents {
 // #region useChatIPC相关定义
 export type ChatIPCSendType = "casual" | "task" | ""
 export interface UseChatIPCParams {
+    /** 获取流接口请求参数 */
+    getRequest?: () => AIAgentSetting | undefined
     /** 出现任务规划的触发回调(id 是 coordinatorId) */
     onTaskStart?: (id: string) => void
     /** 任务规划的 review 事件 */

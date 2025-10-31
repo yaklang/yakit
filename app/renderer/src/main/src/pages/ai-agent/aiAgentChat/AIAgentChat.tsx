@@ -5,7 +5,6 @@ import {useCreation, useDebounceFn, useMap, useMemoizedFn, useUpdateEffect} from
 import {AIChatInfo} from "../type/aiChat"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTriggerEventInfo} from "../aiAgentType"
-import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIAgentStore from "../useContext/useStore"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
@@ -54,9 +53,9 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {} = props
 
     const {activeChat, setting} = useAIAgentStore()
-    const {setChats, setActiveChat, setSetting} = useAIAgentDispatcher()
+    const {setChats, setActiveChat, setSetting, getSetting} = useAIAgentDispatcher()
 
-    const [mode, setMode, getMode] = useGetSetState<AIAgentChatMode>("welcome")
+    const [mode, setMode] = useState<AIAgentChatMode>("welcome")
 
     const handleStartTriageChat = useMemoizedFn((qs: string) => {
         setMode("re-act")
@@ -233,7 +232,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onTaskReviewExtra: handleShowReviewExtra,
         onReviewRelease: handleReleaseReview,
         onTaskStart: handleTaskStart,
-        onTimelineMessage: handleTimelineMessage
+        onTimelineMessage: handleTimelineMessage,
+        getRequest: getSetting
     })
     const {execute, aiPerfData, logs, casualChat, taskChat, yakExecResult} = chatIPCData
 
