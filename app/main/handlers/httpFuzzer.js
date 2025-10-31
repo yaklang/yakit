@@ -67,8 +67,19 @@ module.exports = (win, getClient) => {
         return await asyncDeleteFuzzerLabel(params)
     })
 
+    let stringFuzzerCall = null;
+
+    ipcMain.handle("cancel-string-fuzzer", () => {
+        if (stringFuzzerCall) {
+            stringFuzzerCall.cancel();
+            stringFuzzerCall = null;
+        }
+    });
+
     ipcMain.handle("string-fuzzer", (e, params) => {
-        getClient().StringFuzzer({ Template: params.template }, (err, data) => {
+        // 如果有旧任务,先取消
+        stringFuzzerCall && stringFuzzerCall.cancel()
+        stringFuzzerCall = getClient().StringFuzzer({ Template: params.template }, (err, data) => {
             if (win) {
                 win.webContents.send(params.token, {
                     error: err,
@@ -79,6 +90,7 @@ module.exports = (win, getClient) => {
                     },
                 })
             }
+            stringFuzzerCall = null;
         })
     })
 
@@ -113,7 +125,6 @@ module.exports = (win, getClient) => {
         return await asyncGenerateFuzztag(params)
     })
 
-    const handlerHelper = require("./handleStreamWithContext");
     const streamHTTPFuzzerMap = new Map();
     ipcMain.handle("cancel-HTTPFuzzer", handlerHelper.cancelHandler(streamHTTPFuzzerMap));
     ipcMain.handle("HTTPFuzzer", (e, params, token) => {

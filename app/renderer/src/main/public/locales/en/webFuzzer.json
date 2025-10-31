@@ -450,7 +450,8 @@
     "insertTagPosition": "Insert Tag Position",
     "confirmResetDictionary": "Confirm you want to reset your Payload?",
     "addToFavoriteTags": "Add to favorite tags",
-    "tag": "Tag "
+    "tag": "Tag ",
+    "cancel": "cancel"
   },
   "HTTPFuzzerHostInput": {
     "domainRequired": "Domain cannot be empty",

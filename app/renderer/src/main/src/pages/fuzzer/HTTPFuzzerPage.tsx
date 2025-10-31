@@ -597,6 +597,8 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
         title: i18n.language === "zh" ? "Fuzzer Tag 调试工具" : "Fuzzer Tag Debug Tool",
         width: "70%",
         footer: null,
+        maskClosable: false,
+        keyboard: false,
         subTitle:
             i18n.language === "zh"
                 ? "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag"
@@ -622,7 +624,7 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
                         m.destroy()
                     }
                 }}
-                close={() => m.destroy()}
+                close={() => m.destroy()}///
             />
         )
     })
