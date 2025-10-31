@@ -207,7 +207,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         </div>
     )
 })
-
+/**@deprecated */
 const AICardList: React.FC<AICardListProps> = React.memo((props) => {
     const {list} = props
     return (
