@@ -537,7 +537,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     dropdownMatchSelectWidth={245}
                                     tagRender={(props) => {
                                         return (
-                                            <YakitTag size={"middle"} {...props}>
+                                            <YakitTag size={"small"} {...props}>
                                                 <span className='content-ellipsis' style={{width: "100%"}}>
                                                     {maskProxyPassword(props.value)}
                                                 </span>

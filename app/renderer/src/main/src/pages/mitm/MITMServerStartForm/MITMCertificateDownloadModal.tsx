@@ -2,12 +2,14 @@ import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
 import styles from "./MITMServerStartForm.module.scss"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {YakEditor} from "@/utils/editors"
 import {CaCertData} from "../MITMServerHijacking/MITMServerHijacking"
 import {useMemoizedFn} from "ahooks"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {Uint8ArrayToString} from "@/utils/str"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -17,6 +19,7 @@ interface MITMCertificateDownloadModalProps {
 }
 export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModalProps> = React.memo((props) => {
     const {visible, setVisible} = props
+    const {t, i18n} = useI18nNamespaces(["mitm", "yakitRoute"])
     const [isGMState, setIsGMState] = useState<boolean>(false) // 是否为国密证书
     const [caCerts, setCaCerts] = useState<CaCertData>({
         CaCerts: new Uint8Array(),
@@ -33,7 +36,9 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
      */
     const onDown = useMemoizedFn(() => {
         if (!caCerts.CaCerts) return
-        const fileName = isGMState ? "yakit国密证书.crt.pem" : "yakit证书.crt.pem"
+        const fileName = isGMState
+            ? t("MITMCertificateDownloadModal.yakitGMZSCertificate", {yakit: t("YakitRoute.Yakit")})
+            : t("MITMCertificateDownloadModal.yakitCertificate", {yakit: t("YakitRoute.Yakit")})
         saveABSFileToOpen(fileName, caCerts.CaCerts)
     })
     return (
@@ -41,15 +46,15 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
             visible={visible}
             onCancel={() => setVisible(false)}
             closable={true}
-            title={"下载证书以劫持 HTTPS"}
-            width={720}
+            title={t("MITMCertificateDownloadModal.downloadCertificateForHttpsHijack")}
+            width={750}
             className={styles["mitm-certificate-download-modal"]}
-            okText='下载到本地并打开'
+            okText={t("MITMCertificateDownloadModal.downloadAndOpenLocally")}
             footerExtra={
                 <div className={styles["certificate-download-modal-footer"]}>
-                    在设置代理后访问：
+                    {t("MITMCertificateDownloadModal.accessAfterSettingProxy")}
                     <YakitTag enableCopy copyText='http://mitm' iconColor='var(--Colors-Use-Main-Primary)' />
-                    可自动下载证书
+                    {t("MITMCertificateDownloadModal.autoDownloadCertificate")}
                 </div>
             }
             onOk={() => onDown()}
@@ -62,11 +67,11 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
                         options={[
                             {
                                 value: false,
-                                label: "SSL/TLS证书"
+                                label: t("MITMCertificateDownloadModal.sslTlsCertificate")
                             },
                             {
                                 value: true,
-                                label: "国密SSL/TLS证书"
+                                label: t("MITMCertificateDownloadModal.gmSslTlsCertificate")
                             }
                         ]}
                         value={isGMState}
@@ -80,7 +85,7 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
                 bodyStyle={{padding: 0}}
             >
                 <div className={styles["certificate-download-modal-body"]}>
-                    <YakEditor bytes={true} valueBytes={caCerts.CaCerts} />
+                    <YakitEditor readOnly value={Uint8ArrayToString(caCerts.CaCerts)} />
                 </div>
             </YakitCard>
         </YakitModal>

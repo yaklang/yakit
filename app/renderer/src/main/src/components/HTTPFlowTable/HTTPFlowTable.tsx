@@ -5049,7 +5049,7 @@ interface HistorySearchProps {
 }
 export const HistorySearch = React.memo<HistorySearchProps>((props) => {
     const {showPopoverSearch, handleSearch} = props
-    const {t, i18n} = useI18nNamespaces(["history"])
+    const {t, i18n} = useI18nNamespaces(["history", "yakitRoute"])
     const [isHoverSearch, setIsHoverSearch] = useState<boolean>(false)
     const [searchType, setSearchType, getSearchType] = useGetSetState<HistoryPluginSearchType>("all")
     const [searchVal, setSearchVal] = useControllableValue<string>(props, {
@@ -5127,7 +5127,7 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
             ) : (
                 searchNode()
             )}
-            <Tooltip title={t("HistorySearch.fuzzSearchExplanation")}>
+            <Tooltip title={t("HistorySearch.fuzzSearchExplanation", {Yakit: t("YakitRoute.Yakit")})}>
                 <OutlineQuestionmarkcircleIcon className={style["http-history-search-question-icon"]} />
             </Tooltip>
         </div>

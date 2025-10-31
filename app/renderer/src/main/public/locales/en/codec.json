@@ -1,0 +1,45 @@
+{
+  "NewCodec": {
+    "confirmSaveTemplateUpdate": "Do you want to save and update the current template?",
+    "unrecognizedData": "Unrecognized Data"
+  },
+  "NewCodecLeftDragList": {
+    "codecCategory": "{Codec} Category",
+    "collapseCodecCategory": "Collapse {Codec} Category",
+    "myFavoriteTools": "My Favorite Tools"
+  },
+  "NewCodecMiddleRunList": {
+    "dragCodecFromList": "Please drag the {Codec} tool you want to use from the list on the left",
+    "pleaseEnterName": "Please enter a name",
+    "duplicateHistoryName": "History with the same name already exists, please modify the name",
+    "saveSuccess": "Saved successfully",
+    "expandCodecCategory": "Expand {Codec} Category",
+    "codecOrder": "Codec Order",
+    "saveUpdate": "Save Update",
+    "historyStorage": "History Storage",
+    "autoExecute": "Auto Execute",
+    "executeNow": "Execute Now",
+    "saveCodecOrder": "Save Codec Order",
+    "enterCodecOrderName": "Please enter a name for the codec order...",
+    "requiredField": ": is a required field",
+    "validationFailed": ": validation failed"
+  },
+  "CodecRunListHistoryStore": {
+    "historyStorage": "History Storage"
+  },
+  "NewCodecMiddleTypeItem": {
+    "enableBreakpoint": "Enable Breakpoint",
+    "disableBreakpoint": "Disable Breakpoint"
+  },
+  "NewCodecRightEditorBox": {
+    "noSavedContent": "No saved content yet",
+    "selectFolder": "Please select a folder",
+    "wordWrap": "Word Wrap",
+    "noWordWrap": "No Word Wrap",
+    "replaceOutputToInput": "Replace Output to Input",
+    "oversizedInput": "Oversized Input",
+    "hexOriginal": "Hex Original",
+    "oversizedOutputTip": "Oversized output, please click to save and download the file to view",
+    "dataDistortion": "Data Distortion"
+  }
+}
