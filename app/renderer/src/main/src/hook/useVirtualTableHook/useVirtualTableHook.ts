@@ -117,7 +117,7 @@ export default function useVirtualTableHook<
 
         grpcFun(finalParams)
             .then((rsp: DataResponseProps<DataT, DataKey>) => {
-                console.log("rsp---", rsp)
+                // console.log("rsp---", rsp)
 
                 let newData: DataT[] = verifyResult.isReverse ? rsp[responseKey.data].reverse() : rsp[responseKey.data]
                 if (initResDataFun) {

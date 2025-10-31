@@ -105,6 +105,15 @@ export const startupDuplexConn = () => {
                 case "cps":
                     handleConcurrentLoadData("cps", obj)
                     break
+                case "knowledge_base_entry":
+                    emiter.emit("onKnowledgeBaseEntry", JSON.stringify(obj))
+                    break
+                case "vector_store_document":
+                    emiter.emit("onVectorStoreDocument", JSON.stringify(obj))
+                    break
+                case "er_model_relationship":
+                    emiter.emit("onErModelRelationship", JSON.stringify(obj))
+                    break
             }
         } catch (error) {}
     })

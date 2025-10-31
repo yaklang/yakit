@@ -11,6 +11,7 @@ import {KnowledgeTable} from "./KnowledgeTable"
 import {useSafeState} from "ahooks"
 import {tableHeaderGroupOptions} from "../utils"
 import {VectorTable} from "./VectorTable"
+import {EntityTable} from "./EntityTable"
 
 type UseMultipleHoldGRPCStreamReturn = ReturnType<typeof useMultipleHoldGRPCStream>
 
@@ -43,7 +44,14 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
     const TargetTableRender = useMemo(() => {
         switch (tableProps.type) {
             case "Entity":
-                break
+                return (
+                    <EntityTable
+                        knowledgeBaseItems={knowledgeBaseItems}
+                        streams={streams}
+                        setTableProps={setTableProps}
+                        tableProps={tableProps}
+                    />
+                )
             case "Knowledge":
                 return (
                     <KnowledgeTable
@@ -66,7 +74,7 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
             default:
                 break
         }
-    }, [tableProps.type, knowledgeBaseItems.ID])
+    }, [tableProps.type, knowledgeBaseItems.ID, knowledgeBaseItems.KnowledgeBaseName])
 
     return (
         <div className={styles["knowledge-base-table-container"]}>

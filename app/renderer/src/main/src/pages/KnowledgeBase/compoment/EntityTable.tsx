@@ -1,25 +1,28 @@
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import useVirtualTableHook from "@/hook/useVirtualTableHook/useVirtualTableHook"
-import {useCreation, useMemoizedFn, useSafeState, useUpdateEffect} from "ahooks"
+import {useCreation, useMemoizedFn, useRequest, useSafeState, useUpdateEffect} from "ahooks"
 import {useEffect, useRef, type FC} from "react"
 import ReactResizeDetector from "react-resize-detector"
 import styles from "../knowledgeBase.module.scss"
 
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {apiSearchKnowledgeBaseEntry} from "../utils"
+import {apiQueryEntity} from "../utils"
 
-import {KnowledgeBaseEntry, SearchKnowledgeBaseEntryRequest} from "../TKnowledgeBase"
+import {QueryEntityRequest} from "../TKnowledgeBase"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {KnowledgeBaseTableHeaderProps} from "./KnowledgeBaseTableHeader"
 import {v4 as uuidv4} from "uuid"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {ArrowCircleRightSvgIcon, PencilAltIcon, TrashIcon} from "@/assets/newIcon"
 import {Divider} from "antd"
+import {Entity} from "@/components/playground/entityRepository"
+import {failed} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
-const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
+const {ipcRenderer} = window.require("electron")
+
+const EntityTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
     const {streams, knowledgeBaseItems, setTableProps, tableProps} = props
     const tableBoxRef = useRef<HTMLDivElement>(null)
     const boxHeightRef = useRef<number>()
@@ -31,7 +34,6 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
     const [selectList, setSelectList] = useSafeState<any>([])
     const [allCheck, setAllCheck] = useSafeState<boolean>(false)
     const [scrollToIndex, setScrollToIndex] = useSafeState<number>()
-    const [isLoop, setIsLoop] = useSafeState<boolean>(false)
 
     const onFirst = useMemoizedFn(() => {
         setIsRefresh(!isRefresh)
@@ -41,27 +43,41 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
     })
 
     const [tableParams, tableData, tableTotal, pagination, tableLoading, offsetData, debugVirtualTableEvent] =
-        useVirtualTableHook<SearchKnowledgeBaseEntryRequest, KnowledgeBaseEntry, "KnowledgeBaseEntries", "ID">({
+        useVirtualTableHook<QueryEntityRequest, Entity, "Entities", "ID">({
             tableBoxRef,
             tableRef,
             boxHeightRef,
-            grpcFun: apiSearchKnowledgeBaseEntry,
+            grpcFun: apiQueryEntity,
             onFirst,
-            defaultParams: {
-                Filter: {KnowledgeBaseId: Number(knowledgeBaseItems?.ID)},
-                Pagination: genDefaultPagination(20)
-            },
-            responseKey: {data: "KnowledgeBaseEntries", id: "ID"}
+            responseKey: {data: "Entities", id: "ID"}
         })
 
+    const {run: knowledgeBaseIndexRun} = useRequest(
+        async () => {
+            const result = await ipcRenderer.invoke("ListEntityRepository", {})
+
+            const targetBaseIndex = result?.EntityRepositories?.find(
+                (it) => it.Name === knowledgeBaseItems?.KnowledgeBaseName
+            )?.HiddenIndex
+            return targetBaseIndex
+        },
+        {
+            manual: true,
+            onSuccess: (baseIndex) => {
+                debugVirtualTableEvent.setP({
+                    Pagination: genDefaultPagination(20),
+                    Filter: {
+                        ...tableParams.Filter,
+                        BaseIndex: baseIndex
+                    }
+                })
+            },
+            onError: (err) => failed(`获取全局知识库失败: ${err}`)
+        }
+    )
+
     useUpdateEffect(() => {
-        debugVirtualTableEvent.setP({
-            ...tableParams,
-            Filter: {
-                ...tableParams.Filter,
-                KnowledgeBaseId: knowledgeBaseItems.ID
-            }
-        })
+        knowledgeBaseIndexRun()
     }, [knowledgeBaseItems.ID, tableProps.type])
 
     useUpdateEffect(() => {
@@ -136,59 +152,50 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
                 }
             },
             {
-                title: "标题",
-                dataKey: "KnowledgeTitle",
+                title: "名称",
+                dataKey: "Name",
                 width: 100
             },
             {
                 title: "类型",
-                dataKey: "KnowledgeType",
-                width: 100,
+                dataKey: "Type",
+                width: 140,
                 render: (value) => (value ? <YakitTag color='blue'>{value}</YakitTag> : "-")
             },
+
             {
-                title: "关键词",
-                dataKey: "Keywords",
+                title: "描述",
+                dataKey: "Description"
+            },
+            {
+                title: "属性",
+                dataKey: "Attributes",
                 width: 200,
                 render: (value) => {
                     return value && value.length > 0
                         ? value?.map((it) => (
                               <YakitTag style={{marginRight: 4}} key={it + uuidv4()}>
-                                  {it}
+                                  {it.Value}
                               </YakitTag>
                           ))
                         : "-"
-                }
-            },
-            {
-                title: "摘要",
-                dataKey: "Summary",
+                },
                 enableDrag: false
             },
             {
                 title: "操作",
                 dataKey: "HiddenIndex",
-                width: 140,
+                width: 70,
                 fixed: "right",
-                render: (_, item: KnowledgeBaseEntry) => (
-                    <div className={styles["knowledge-base-render"]}>
-                        <YakitPopconfirm
-                            title='确认删除此条知识吗？'
-                            onCancel={(e) => e?.stopPropagation()}
-                            placement='top'
-                        >
-                            <TrashIcon onClick={(e) => e.stopPropagation()} className={styles["delete"]} />
-                        </YakitPopconfirm>
-                        <Divider type='vertical' />
-                        <PencilAltIcon className={styles["icon"]} onClick={(e) => e.stopPropagation()} />
-                        <Divider type='vertical' />
-                        <ArrowCircleRightSvgIcon
-                            className={styles["icon"]}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                            }}
-                        />
-                    </div>
+                render: (_, item: Entity) => (
+                    <YakitButton
+                        type='text'
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                    >
+                        详情
+                    </YakitButton>
                 )
             }
         ]
@@ -234,7 +241,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
         }
     })
 
-    const onKnowledgeBaseEntryFun = useMemoizedFn((data) => {
+    const onErModelRelationshipFun = useMemoizedFn((data) => {
         try {
             const updateData = JSON.parse(data)
             if (updateData === "create") {
@@ -244,9 +251,9 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
     })
 
     useEffect(() => {
-        emiter.on("onKnowledgeBaseEntry", onKnowledgeBaseEntryFun)
+        emiter.on("onErModelRelationship", onErModelRelationshipFun)
         return () => {
-            emiter.off("onKnowledgeBaseEntry", onKnowledgeBaseEntryFun)
+            emiter.off("onErModelRelationship", onErModelRelationshipFun)
         }
     })
 
@@ -275,7 +282,6 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
                         ref={tableRef}
                         query={tableParams.Filter}
                         scrollToIndex={scrollToIndex}
-                        // loading={tableLoading}
                         isRefresh={isRefresh}
                         titleHeight={32}
                         isShowTitle={false}
@@ -308,4 +314,4 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
     )
 }
 
-export {KnowledgeTable}
+export {EntityTable}

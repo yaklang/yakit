@@ -104,6 +104,43 @@ interface VectorStoreEntry {
 
 type VectorStoreEntryResponse = QueryGeneralResponseProps<VectorStoreEntry, "Entries">
 
+// 查询知识库-实体表入参
+interface EntityFilter {
+    BaseID: number
+    BaseIndex: string
+    ReposName: string
+    IDs: number[]
+    Types: string[]
+    Names: string[]
+    HiddenIndex: string[]
+    RuntimeID: string[]
+    Keywords: string[]
+}
+
+interface QueryEntityRequest {
+    Filter: Partial<EntityFilter>
+    Pagination: VirtualPaging
+}
+
+interface KVPair {
+    Key: string
+    Value: string
+    MarshalValue: string
+}
+
+interface Entity {
+    ID: number
+    Type: string
+    Name: string
+    Description: string
+    BaseID: number
+    BaseIndex: string
+    Attributes: KVPair[]
+    Rationale: string
+    HiddenIndex: string
+}
+type QueryEntityResponse = QueryGeneralResponseProps<Entity, "Entities">
+
 export type {
     TKnowledgeBaseProps,
     TDeleteConfirmProps,
@@ -117,5 +154,7 @@ export type {
     KnowledgeBaseEntry,
     ListVectorStoreEntriesRequest,
     VectorStoreEntryResponse,
-    VectorStoreEntry
+    VectorStoreEntry,
+    QueryEntityRequest,
+    QueryEntityResponse
 }

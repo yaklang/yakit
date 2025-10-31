@@ -3,6 +3,8 @@ import {defPluginExecuteFormValue} from "../plugins/operator/localPluginExecuteD
 import {apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
 import {
     ListVectorStoreEntriesRequest,
+    QueryEntityRequest,
+    QueryEntityResponse,
     SearchKnowledgeBaseEntryRequest,
     SearchKnowledgeBaseEntryResponse,
     VectorStoreEntryResponse,
@@ -102,7 +104,7 @@ const tableHeaderGroupOptions = [
     }
 ]
 
-/** SearchKnowledgeBaseEntry */
+// 查询知识库-知识列表
 const apiSearchKnowledgeBaseEntry: (
     query?: SearchKnowledgeBaseEntryRequest
 ) => Promise<SearchKnowledgeBaseEntryResponse> = (query) => {
@@ -124,6 +126,19 @@ const apiListVectorStoreEntries: (query?: ListVectorStoreEntriesRequest) => Prom
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("ListVectorStoreEntries", query)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify("error", `查询失败: ${e}`)
+                reject(e)
+            })
+    })
+}
+
+// 查询知识库-实体列表
+const apiQueryEntity: (query?: QueryEntityRequest) => Promise<QueryEntityResponse> = (query) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("QueryEntity", query)
             .then(resolve)
             .catch((e) => {
                 yakitNotify("error", `查询失败: ${e}`)
@@ -321,5 +336,6 @@ export {
     tableHeaderGroupOptions,
     apiSearchKnowledgeBaseEntry,
     apiListVectorStoreEntries,
+    apiQueryEntity,
     documentType
 }

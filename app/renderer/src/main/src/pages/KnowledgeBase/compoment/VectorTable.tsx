@@ -1,4 +1,4 @@
-import {useRef, type FC} from "react"
+import {useEffect, useRef, type FC} from "react"
 
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import useVirtualTableHook from "@/hook/useVirtualTableHook/useVirtualTableHook"
@@ -9,13 +9,14 @@ import styles from "../knowledgeBase.module.scss"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {apiListVectorStoreEntries, documentType} from "../utils"
 
-import {KnowledgeBaseEntry, ListVectorStoreEntriesRequest, VectorStoreEntry} from "../TKnowledgeBase"
+import {ListVectorStoreEntriesRequest, VectorStoreEntry} from "../TKnowledgeBase"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {KnowledgeBaseTableHeaderProps} from "./KnowledgeBaseTableHeader"
 
 import {Divider} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {VectorDetailDrawer} from "./VectorDetailDrawer"
+import emiter from "@/utils/eventBus/eventBus"
 
 const VectorTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
     const {streams, knowledgeBaseItems, setTableProps, tableProps} = props
@@ -26,8 +27,6 @@ const VectorTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
     const [isRefresh, setIsRefresh] = useSafeState<boolean>(false)
     const [currentSelectItem, setCurrentSelectItem] = useSafeState<any>()
 
-    const [selectList, setSelectList] = useSafeState<any>([])
-    const [allCheck, setAllCheck] = useSafeState<boolean>(false)
     const [scrollToIndex, setScrollToIndex] = useSafeState<number>()
 
     const [openVectorDetailDrawerData, setOpenVectorDetailDrawerData] = useSafeState<{
@@ -40,8 +39,7 @@ const VectorTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
 
     const onFirst = useMemoizedFn(() => {
         setIsRefresh(!isRefresh)
-        setSelectList([])
-        setAllCheck(false)
+
         setCurrentSelectItem(undefined)
     })
 
@@ -64,10 +62,10 @@ const VectorTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
             ...tableParams,
             Filter: {
                 ...tableParams.Filter,
-                KnowledgeBaseId: knowledgeBaseItems.ID
+                CollectionID: Number(knowledgeBaseItems?.ID)
             }
         })
-    }, [knowledgeBaseItems.ID])
+    }, [knowledgeBaseItems.ID, tableProps.type])
 
     useUpdateEffect(() => {
         setTableProps((preValue) => ({
@@ -75,11 +73,6 @@ const VectorTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
             tableTotal: tableTotal
         }))
     }, [tableTotal])
-
-    useUpdateEffect(() => {
-        if (allCheck) return setTableProps((preValue) => ({...preValue, selectNum: tableTotal}))
-        else return setTableProps((preValue) => ({...preValue, selectNum: selectList.length}))
-    }, [allCheck, selectList, tableTotal])
 
     const onTableResize = useMemoizedFn((width, height) => {
         if (!width || !height) {
@@ -96,45 +89,16 @@ const VectorTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
         }
     })
 
-    const selectedRowKeys = useCreation(() => {
-        return selectList.map((ele) => ele.ID) || []
-    }, [selectList])
-
-    const onSelectAll = useMemoizedFn((newSelectedRowKeys: string[], selected: any[], checked: boolean) => {
-        if (checked) {
-            setAllCheck(true)
-            setSelectList(tableData)
-        } else {
-            setAllCheck(false)
-            setSelectList([])
-        }
-    })
-
-    const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string, selectedRows: any) => {
-        if (c) {
-            setSelectList((s) => [...s, selectedRows])
-        } else {
-            setSelectList((s) => s.filter((ele) => ele.ID !== selectedRows.ID))
-            setAllCheck(false)
-        }
-    })
-
-    const onSetCurrentRow = useMemoizedFn((val?: any) => {
-        if (!val) {
-            setCurrentSelectItem(undefined)
-            return
-        }
-        if (val?.ID !== currentSelectItem?.ID) {
-            setCurrentSelectItem(val)
-        }
-    })
-
     const columns = useCreation(() => {
         const columnsArr: ColumnsTypeProps[] = [
             {
                 title: "ID",
                 dataKey: "ID",
-                width: 80
+                width: 80,
+                sorterProps: {
+                    sorter: true,
+                    sorterKey: "ID"
+                }
             },
             {
                 title: "向量类型",
@@ -192,30 +156,19 @@ const VectorTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
         return columnsArr
     }, [tableProps.type])
 
-    const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-        let sort = {...newSort}
-        if (sort.order === "none") {
-            sort.order = "desc"
-            sort.orderBy = "id"
-        }
-        if (filter["CreatedAt"]) {
-            const time = filter["CreatedAt"]
-            filter.AfterCreatedAt = time[0]
-            filter.BeforeCreatedAt = time[1]
-        } else {
-            const finalParams = {
-                Pagination: {
-                    ...tableParams.Pagination,
-                    Order: sort.order,
-                    OrderBy: sort.orderBy
-                },
-                Filter: {
-                    ...tableParams.Filter,
-                    ...filter,
-                    IsRead: tableProps.type === "all" ? 0 : -1
-                }
+    const onVectorStoreDocumentFun = useMemoizedFn((data) => {
+        try {
+            const updateData = JSON.parse(data)
+            if (updateData === "create") {
+                debugVirtualTableEvent.startT()
             }
-            debugVirtualTableEvent.setP(finalParams)
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        emiter.on("onVectorStoreDocument", onVectorStoreDocumentFun)
+        return () => {
+            emiter.off("onVectorStoreDocument", onVectorStoreDocumentFun)
         }
     })
 
@@ -239,13 +192,6 @@ const VectorTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
                 isShowTitle={false}
                 renderKey='ID'
                 data={tableData}
-                rowSelection={{
-                    isAll: allCheck,
-                    type: "checkbox",
-                    selectedRowKeys,
-                    onSelectAll,
-                    onChangeCheckboxSingle
-                }}
                 pagination={{
                     total: tableTotal,
                     limit: pagination.Limit,
@@ -254,8 +200,6 @@ const VectorTable: FC<KnowledgeBaseTableHeaderProps> = (props) => {
                 }}
                 columns={columns}
                 enableDrag={true}
-                useUpAndDown
-                onChange={onTableChange}
             />
             <VectorDetailDrawer
                 openVectorDetailDrawerData={openVectorDetailDrawerData}

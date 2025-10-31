@@ -52,9 +52,13 @@ const KnowledgeBaseTableHeader: FC<KnowledgeBaseTableHeaderProps> = ({
             <div className={styles["header-left-total"]}>
                 <div className={styles["caption"]}>Total</div>
                 <div className={styles["number"]}>{tableProps.tableTotal ?? 0}</div>
-                <Divider type='vertical' />
-                <div className={styles["caption"]}>Selected</div>
-                <div className={styles["number"]}>{tableProps.selectNum}</div>
+                {tableProps.type !== "Vector" ? (
+                    <>
+                        <Divider type='vertical' />
+                        <div className={styles["caption"]}>Selected</div>
+                        <div className={styles["number"]}>{tableProps.selectNum}</div>{" "}
+                    </>
+                ) : null}
             </div>
         )
     }, [tableProps])
