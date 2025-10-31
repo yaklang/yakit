@@ -39,6 +39,7 @@ import {AITool} from "../type/aiTool"
 
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
+import {AIChatContent} from "../aiChatContent/AIChatContent"
 
 const AIReActTaskChat = React.lazy(() => import("../../ai-re-act/aiReActTaskChat/AIReActTaskChat"))
 
@@ -486,12 +487,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     <AIAgentWelcome onTriageSubmit={handleStartTriageChat} />
                 ) : (
                     <ChatIPCContent.Provider value={{store, dispatcher}}>
-                        {isShowTask && (
+                        {/* {isShowTask && (
                             <React.Suspense fallback={<div>loading...</div>}>
                                 <AIReActTaskChat execute={execute} onStop={onStop} />
                             </React.Suspense>
                         )}
-                        <AIReActChat mode={mode} />
+                        <AIReActChat mode={mode} /> */}
+                        <AIChatContent />
                     </ChatIPCContent.Provider>
                 )}
                 <div className={styles["footer-forge-form"]}>

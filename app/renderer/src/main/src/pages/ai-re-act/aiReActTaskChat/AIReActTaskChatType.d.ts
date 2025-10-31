@@ -1,7 +1,4 @@
-export interface AIReActTaskChatProps {
-    execute: boolean
-    onStop: () => void
-}
+export interface AIReActTaskChatProps {}
 
 export interface AIReActTaskChatContentProps {}
 

@@ -1,0 +1,81 @@
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+.ai-chat-content-wrapper {
+    @extend %display-column-center;
+    flex: 1;
+    overflow: hidden;
+    .expand-retract-wrapper {
+        width: 100%;
+        border-bottom: 0;
+        .expand-retract-content {
+            @extend %display-column-center;
+            width: 100%;
+            flex: 1;
+        }
+    }
+    .header {
+        @extend %display-flex-center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        flex: 1;
+        .title {
+            @extend %display-flex-center;
+        }
+        .extra {
+            @extend %display-flex-center;
+            gap: 8px;
+        }
+    }
+    .card-list-wrapper {
+        width: 100%;
+        opacity: 1;
+        transition: all 0.3s ease;
+        padding-top: 12px;
+        .card-item {
+            height: 50px;
+            font-size: 14px;
+        }
+    }
+    .card-list-wrapper-hidden {
+        padding-top: 0;
+        height: 0;
+        opacity: 0;
+    }
+    .expand-retract-animation-wrapper {
+        top: unset;
+        bottom: -12px;
+    }
+    .ai-chat-tab-wrapper {
+        @extend %display-flex-center;
+        flex: 1;
+        width: 100%;
+        overflow: hidden;
+        background-color: var(--Colors-Use-Basic-Background);
+        padding: 0 12px 12px 12px;
+        justify-content: flex-end;
+
+        .ai-chat-content {
+            display: flex;
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            // border-right: 0;
+            border-radius: 4px;
+        }
+        .tab-content {
+            flex: 1;
+            overflow: hidden;
+        }
+    }
+}
+.tab-wrap {
+}
