@@ -51,7 +51,7 @@ import {
     AIToolGenerateMetadataRequest,
     SaveAIToolRequest,
     UpdateAIToolRequest
-} from "@/pages/ai-agent/type/aiChat"
+} from "@/pages/ai-agent/type/aiTool"
 import {
     grpcAIToolGenerateDescription,
     grpcAIToolGenerateKeywords,

@@ -1,8 +1,8 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatReviewExtra} from "@/pages/ai-agent/type/aiChat"
-import {AIChatQSData, AIChatReview, AITokenConsumption} from "./aiRender"
+import {AIChatQSData, AITokenConsumption, AIYakExecFileRecord} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {Dispatch, SetStateAction} from "react"
+import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 
 /** 公共 hoos 事件 */
 interface UseHookBaseParams {
@@ -13,6 +13,7 @@ interface UseHookBaseEvents {
     handleSetData: (res: AIOutputEvent) => void
     handleResetData: () => void
 }
+export type handleSendFunc = (params: {request: AIInputEvent; optionValue?: string; cb?: () => void}) => void
 
 // #region useAIPerfData相关定义
 export interface UseAIPerfDataParams extends UseHookBaseParams {}
@@ -31,6 +32,7 @@ export interface UseYakExecResultParams extends UseHookBaseParams {}
 
 export interface UseYakExecResultState {
     card: AIAgentGrpcApi.AIInfoCard[]
+    execFileRecord: Map<string, AIYakExecFileRecord[]>
     yakExecResultLogs: StreamResult.Log[]
 }
 export interface UseYakExecResultEvents extends UseHookBaseEvents {}
@@ -41,7 +43,7 @@ export interface UseCasualChatParams extends UseHookBaseParams {
     /** 更新日志数据 */
     updateLog: Dispatch<SetStateAction<AIChatQSData[]>>
     /** 获取流接口请求参数 */
-    getRequest: () => AIStartParams | undefined
+    getRequest: () => AIAgentSetting | undefined
     /** 触发 review-release 后的回调事件 */
     onReviewRelease?: (id: string) => void
 }
@@ -53,22 +55,24 @@ export interface UseCasualChatState {
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents {
     handleSetCoordinatorId: (id: string) => void
-    handleSend: (request: AIInputEvent, cb?: () => void) => void
+    handleSend: handleSendFunc
 }
 // #endregion
 
 // #region useTaskChat相关定义
 export interface UseTaskChatParams extends UseHookBaseParams {
     /** 获取流接口请求参数 */
-    getRequest: () => AIStartParams | undefined
+    getRequest: () => AIAgentSetting | undefined
     /** 更新日志数据 */
     updateLog: Dispatch<SetStateAction<AIChatQSData[]>>
     /** review 触发回调事件 */
-    onReview?: (data: AIChatReview) => void
+    onReview?: (data: AIChatQSData) => void
     /** plan_review 补充数据 */
-    onReviewExtra?: (data: AIChatReviewExtra) => void
+    onReviewExtra?: (data: AIAgentGrpcApi.PlanReviewRequireExtra) => void
     /** 触发 review-release 后的回调事件 */
     onReviewRelease?: (id: string) => void
+    /** 向接口发送消息 */
+    sendRequest?: (request: AIInputEvent) => void
 }
 
 export interface UseTaskChatState {
@@ -77,27 +81,31 @@ export interface UseTaskChatState {
     /** 正在执行的任务列表 */
     plan: AIAgentGrpcApi.PlanTask[]
     /** 流式输出 */
-    streams: Record<string, AIChatQSData[]>
+    streams: AIChatQSData[]
 }
 export interface UseTaskChatEvents extends UseHookBaseEvents {
     handleSetCoordinatorId: (id: string) => void
-    handleSend: (request: AIInputEvent, cb?: () => void) => void
+    handleSend: handleSendFunc
     /** 获取原始任务列表树 */
     fetchPlanTree: () => AIAgentGrpcApi.PlanTask | undefined
     /** 接口关闭后的后续执行逻辑 */
     handleCloseGrpc: () => void
+    /** 任务规划结束的触发回调 */
+    handlePlanExecEnd: (res: AIOutputEvent) => void
 }
 // #endregion
 
 // #region useChatIPC相关定义
 export type ChatIPCSendType = "casual" | "task" | ""
 export interface UseChatIPCParams {
+    /** 获取流接口请求参数 */
+    getRequest?: () => AIAgentSetting | undefined
     /** 出现任务规划的触发回调(id 是 coordinatorId) */
     onTaskStart?: (id: string) => void
     /** 任务规划的 review 事件 */
-    onTaskReview?: (data: AIChatReview) => void
+    onTaskReview?: (data: AIChatQSData) => void
     /** 任务规划中 plan_review 事件的补充数据 */
-    onTaskReviewExtra?: (data: AIChatReviewExtra) => void
+    onTaskReviewExtra?: (data: AIAgentGrpcApi.PlanReviewRequireExtra) => void
     /** 主动 review-release 的回调事件 */
     onReviewRelease?: (type: ChatIPCSendType, id: string) => void
     /** timeline 时间线消息回调事件 */
@@ -126,6 +134,7 @@ export interface AIChatSendParams {
     token: string
     type: ChatIPCSendType
     params: AIInputEvent
+    optionValue?: string
 }
 
 export interface UseChatIPCEvents {
@@ -148,3 +157,7 @@ export interface UseChatIPCEvents {
     onReset: () => void
 }
 // #endregion
+
+export interface AINodeLabelParams {
+    nodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+}

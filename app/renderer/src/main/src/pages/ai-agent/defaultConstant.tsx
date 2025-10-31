@@ -26,6 +26,13 @@ import {
 } from "./aiModelList/icon"
 import {UseAIPerfDataState, UseChatIPCState} from "../ai-re-act/hooks/type"
 import {AIAgentGrpcApi} from "../ai-re-act/hooks/grpcApi"
+import {
+    SolidCursorclickIcon,
+    SolidHashtagIcon,
+    SolidLightbulbIcon,
+    SolidLightningboltIcon,
+    SolidToolIcon
+} from "@/assets/icon/solid"
 import {MCPServerType} from "./type/aiMCP"
 
 /** AI-Agent 页面的唯一 id */
@@ -68,7 +75,8 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     ReActMaxIteration: 100,
     TimelineItemLimit: 100,
     TimelineContentSizeLimit: 20 * 1024,
-    UserInteractLimit: 0
+    UserInteractLimit: 0,
+    TimelineSessionID: "default"
 }
 
 /** mcp 自定义服务器配置类型选项 */
@@ -89,7 +97,11 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
         progress: "wait",
         isRemove: false,
         tools: [],
-        description: ""
+        description: "",
+        total_tool_call_count: 0,
+        success_tool_call_count: 0,
+        fail_tool_call_count: 0,
+        summary: ""
     }
     if (!!info) {
         data.index = info.index || ""
@@ -99,6 +111,10 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
         data.isRemove = info.isRemove || false
         data.tools = info.tools || []
         data.description = info.description || ""
+        data.total_tool_call_count = info.total_tool_call_count || 0
+        data.success_tool_call_count = info.success_tool_call_count || 0
+        data.fail_tool_call_count = info.fail_tool_call_count || 0
+        data.summary = info.summary || ""
     }
 
     return data
@@ -179,7 +195,7 @@ export const AIReviewRuleOptions = [
 ]
 export enum AIMCPServerTypeEnum {
     SSE = "sse",
-    Stdio = "stdio",
+    Stdio = "stdio"
 }
 //#region ai hooks 默认值
 export const defaultChatIPCData: UseChatIPCState = {
@@ -197,12 +213,13 @@ export const defaultChatIPCData: UseChatIPCState = {
     },
     yakExecResult: {
         card: [],
+        execFileRecord: new Map(),
         yakExecResultLogs: []
     },
     taskChat: {
         coordinatorId: "",
         plan: [],
-        streams: {}
+        streams: []
     }
 }
 export const defaultAIPerfData: UseAIPerfDataState = {
@@ -212,3 +229,12 @@ export const defaultAIPerfData: UseAIPerfDataState = {
     totalCost: []
 }
 //#endregion
+
+/** @name 任务回答类型对应图标 */
+export const taskAnswerToIconMap: Record<string, ReactNode> = {
+    plan: <SolidLightbulbIcon />,
+    execute: <SolidLightningboltIcon />,
+    summary: <SolidHashtagIcon />,
+    "call-tools": <SolidToolIcon />,
+    decision: <SolidCursorclickIcon />
+}

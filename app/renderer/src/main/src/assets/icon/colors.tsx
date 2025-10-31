@@ -1803,3 +1803,66 @@ const OutlineSparklesColors = () => {
 export const OutlineSparklesColorsIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineSparklesColors} {...props} />
 }
+
+const OutlineHandleColors = () => {
+    const id = uuidv4()
+    return (
+        <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
+            <path
+                d='M5.83331 9.58333V11.6667M5.83331 9.58333V4.58333C5.83331 3.89298 6.39296 3.33333 7.08331 3.33333C7.77367 3.33333 8.33331 3.89298 8.33331 4.58333M5.83331 9.58333C5.83331 8.89298 5.27367 8.33333 4.58331 8.33333C3.89296 8.33333 3.33331 8.89298 3.33331 9.58333V11.25C3.33331 14.7018 6.13153 17.5 9.58331 17.5C13.0351 17.5 15.8333 14.7018 15.8333 11.25V7.08333C15.8333 6.39298 15.2737 5.83333 14.5833 5.83333C13.893 5.83333 13.3333 6.39298 13.3333 7.08333M8.33331 4.58333V9.16667M8.33331 4.58333V3.75C8.33331 3.05964 8.89296 2.5 9.58331 2.5C10.2737 2.5 10.8333 3.05964 10.8333 3.75V4.58333M10.8333 4.58333V9.16667M10.8333 4.58333C10.8333 3.89298 11.393 3.33333 12.0833 3.33333C12.7737 3.33333 13.3333 3.89298 13.3333 4.58333V7.08333M13.3333 7.08333V9.16667'
+                stroke={`url(#${id})`}
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <defs>
+                <linearGradient id={id} x1='3.33331' y1='2.5' x2='18.7914' y2='6.75612' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#DC5CDF' />
+                    <stop offset='0.639423' stopColor='#8862F8' />
+                    <stop offset='1' stopColor='#4493FF' />
+                </linearGradient>
+            </defs>
+        </svg>
+    )
+}
+/**
+ * @description Outline/handle
+ */
+export const OutlineHandleColorsIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineHandleColors} {...props} />
+}
+
+const OutlineWarpColors = () => {
+    const id = uuidv4()
+    return (
+        <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+            <path
+                d='M4 0.5H12C13.933 0.5 15.5 2.067 15.5 4V12C15.5 13.933 13.933 15.5 12 15.5H4C2.067 15.5 0.5 13.933 0.5 12V4C0.5 2.067 2.067 0.5 4 0.5Z'
+                stroke={`url(#${id})`}
+                strokeOpacity='0.5'
+            />
+            <path
+                d='M12.5 3.43921V6.43921C12.5 8.64835 10.7091 10.4392 8.49998 10.4392H3.83331'
+                stroke='#FEF5EE'
+                strokeLinecap='round'
+            />
+            <path
+                d='M5.62134 8.31789L3.64144 10.2978C3.56333 10.3759 3.56333 10.5025 3.64144 10.5806L5.62134 12.5605'
+                stroke='#FEF5EE'
+                strokeLinecap='round'
+            />
+            <defs>
+                <linearGradient id={id} x1='0' y1='0' x2='16' y2='16' gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#FAE9FB' />
+                    <stop offset='0.639423' stopColor='#EFEAFE' />
+                    <stop offset='1' stopColor='#E6F1FF' />
+                </linearGradient>
+            </defs>
+        </svg>
+    )
+}
+/**
+ * @description Outline/换行
+ */
+export const OutlineWarpColorsIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineWarpColors} {...props} />
+}

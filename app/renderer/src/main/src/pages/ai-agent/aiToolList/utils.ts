@@ -7,7 +7,7 @@ import {
     GetAIToolListResponse,
     ToggleAIToolFavoriteRequest,
     ToggleAIToolFavoriteResponse
-} from "../type/aiChat"
+} from "../type/aiTool"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 const {ipcRenderer} = window.require("electron")
 

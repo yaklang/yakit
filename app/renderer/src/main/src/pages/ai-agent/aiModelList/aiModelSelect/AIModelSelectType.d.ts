@@ -1,3 +1,4 @@
-export interface AIModelSelectProps {
-    disabled?: boolean
+export interface AIModelSelectProps {}
+export interface AIModelItemProps {
+    value: string
 }

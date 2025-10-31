@@ -156,10 +156,19 @@
 }
 /* ---------- AIAgentChatStream ----------*/
 .ai-agent-chat-stream {
-    padding: 16px 16px 0px 12px;
+    padding: 16px 12px;
     width: 100%;
     height: 100%;
     overflow: hidden auto;
+    .item-wrapper {
+        margin-bottom: 4px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .item-wrapper:last-child {
+        margin-bottom: 0; // 最后一条不加间距
+    }
 }
 
 .task-type-header {
@@ -504,34 +513,9 @@
 }
 
 .task-review-wrapper {
-   
-}
-.task-review-summary-popover {
-    .task-long-summary {
-        color: var(--Colors-Use-Neutral-Text-4-Help-text, #9ca3b1);
-        font-size: 12px;
-        font-weight: 400;
-        .summary-header {
-            height: 16px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-        }
-        .summary-content {
-            width: 400px;
-            max-height: 64px;
-            overflow: hidden auto;
-            line-height: 16px;
-        }
-    }
 }
 
 .tool-review-wrapper {
-   
 }
 
 .ai-require-review-wrapper {

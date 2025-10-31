@@ -90,7 +90,40 @@ export interface AIStartParams {
     TimelineContentSizeLimit?: number
     /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
     UserInteractLimit?: number
+    /** timeline sessionID  用于多轮对话保持上下文 */
+    TimelineSessionID?: string
 }
+
+/**
+ * - SyncType类型:
+ *
+ *  SYNC_TYPE_PLAN                      = "plan"
+ *
+ *  SYNC_TYPE_CONSUMPTION               = "consumption"
+ *
+ *  SYNC_TYPE_PING                      = "ping"
+ *
+ *  SYNC_TYPE_SET_CONFIG                = "set_config"
+ *
+ *  SYNC_TYPE_PROCESS_EVENT             = "sync_process_event"
+ *
+ *  SYNC_TYPE_QUEUE_INFO                = "queue_info"
+ *
+ *  SYNC_TYPE_TIMELINE                  = "timeline"
+ *
+ *  SYNC_TYPE_KNOWLEDGE                 = "enhance_knowledge"
+ *
+ *  SYNC_TYPE_UPDATE_CONFIG             = "update_config"
+ *
+ *  SYNC_TYPE_MEMORY_CONTEXT            = "memory_sync"
+ *
+ *  SYNC_TYPE_REACT_CANCEL_CURRENT_TASK = "react_cancel_current_
+ *
+ *  SYNC_TYPE_REACT_JUMP_QUEUE          = "react_jump_queue"
+ *
+ *  SYNC_TYPE_REACT_REMOVE_TASK         = "react_remove_task"
+ *
+ */
 
 export interface AIInputEvent {
     IsStart?: boolean
@@ -106,6 +139,11 @@ export interface AIInputEvent {
 
     IsFreeInput?: boolean
     FreeInput?: string // 自由输入的文本
+}
+
+export interface AIOutputI18n {
+    Zh: string
+    En: string
 }
 
 export interface AIOutputEvent {
@@ -133,6 +171,14 @@ export interface AIOutputEvent {
     SyncID: string
     /** 事件的唯一标识 */
     EventUUID: string
+    /** 节点 ID 的展示内容, 包含18n */
+    NodeIdVerbose: AIOutputI18n
+    /** 内容的类型: markdown / yaklang_code / plain_code / text/plain */
+    ContentType: string
+    /** 如果是调用工具相关的事件，那么这里是调用的ID */
+    CallToolID: string
+    /** 如果是 AI 服务相关的事件，那么这里是 AI 服务的名称 */
+    AIService: string
 }
 // #endregion
 
@@ -234,6 +280,14 @@ export declare namespace AIAgentGrpcApi {
         description: string
         /**是否为用户添加的节点 */
         isUserAdd?: boolean
+        /** 执行工具的总数 */
+        total_tool_call_count: number
+        /** 执行工具成功的总数 */
+        success_tool_call_count: number
+        /** 执行工具失败的总数 */
+        fail_tool_call_count: number
+        /** 任务执行后的总结 */
+        summary: string
     }
     /** 改变任务状态 */
     export interface ChangeTask {
@@ -381,6 +435,20 @@ export declare namespace AIAgentGrpcApi {
         entries: TimelineDumpOpt[]
         limit: number
         total_entries: number
+    }
+
+    /** 文件系统操作相关 */
+    export interface FileSystemPin {
+        path: string
+        timestamp: number
+    }
+
+    /** 工具决策总结相关 */
+    export interface ToolCallDecision {
+        action: string
+        call_tool_id: string
+        summary: string
+        i18n: {zh: string; en: string}
     }
 }
 

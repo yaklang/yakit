@@ -1,4 +1,4 @@
-import React, {memo, ReactNode, useEffect, useMemo, useState} from "react"
+import React, {memo, MutableRefObject, useEffect, useMemo, useState} from "react"
 import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
 import {
     AIAgentChatStreamProps,
@@ -17,35 +17,35 @@ import {
 } from "@/assets/icon/outline"
 import {formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {
-    SolidCursorclickIcon,
-    SolidHashtagIcon,
-    SolidLightbulbIcon,
-    SolidLightningboltIcon,
-    SolidToolIcon
-} from "@/assets/icon/solid"
+
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {AITree} from "../aiTree/AITree"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "./AIEcharts"
 import {formatTime, formatTimestamp} from "@/utils/timeUtil"
-import {AIChatToolColorCard, AIChatToolItem} from "./AIChatTool"
 import {
     HorizontalScrollCardItemInfoMultiple,
     HorizontalScrollCardItemInfoSingle
 } from "@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard"
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
-import {AIStreamNodeIdToLabel} from "@/pages/ai-re-act/hooks/defaultConstant"
-import {v4 as uuidv4} from "uuid"
+import {convertNodeIdToVerbose} from "@/pages/ai-re-act/hooks/defaultConstant"
 import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
-import {AIMarkdown} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
 import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks/grpcApi"
+import {taskAnswerToIconMap} from "../defaultConstant"
+import {SolidLightningboltIcon} from "@/assets/icon/solid"
+import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
+import {AIChatListItem} from "../components/aiChatListItem/AIChatListItem"
+import StreamCard from "../components/StreamCard"
+import useAIChatUIData from "@/pages/ai-re-act/hooks/useAIChatUIData"
+import i18n from "@/i18n/i18n"
+import {Virtuoso} from "react-virtuoso"
+import useVirtuosoAutoScroll from "@/pages/ai-re-act/hooks/useVirtuosoAutoScroll"
+import {genBaseAIChatData} from "@/pages/ai-re-act/hooks/utils"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
-import {isToolExecStream} from "@/pages/ai-re-act/hooks/utils"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
@@ -230,84 +230,44 @@ const AICardList: React.FC<AICardListProps> = React.memo((props) => {
     )
 })
 
-/** @name 任务回答类型对应图标 */
-const taskAnswerToIconMap: Record<string, ReactNode> = {
-    plan: <SolidLightbulbIcon />,
-    execute: <SolidLightningboltIcon />,
-    summary: <SolidHashtagIcon />,
-    "call-tools": <SolidToolIcon />,
-    decision: <SolidCursorclickIcon />
-}
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {tasks, streams, defaultExpand} = props
+    const {streams} = props
+    const renderItem = (stream: AIChatQSData) => {
+        return <AIChatListItem item={stream} type='task-agent' />
+    }
 
-    // 任务集合
-    const lists = useMemo(() => {
-        return Object.keys(streams)
-    }, [streams])
-
-    // 生成任务展示名称
-    const handleGenerateTaskName = useMemoizedFn((order: string) => {
-        if (order === "system") return "系统输出"
-        const task = tasks.find((item) => item.index === order)
-        if (!task) return order
-        return task.name
-    })
+    const {scrollerRef, virtuosoRef} = useVirtuosoAutoScroll(streams)
 
     return (
         <div className={styles["ai-agent-chat-stream"]}>
-            {lists.map((taskName) => {
-                const headerTitle = handleGenerateTaskName(taskName)
-                return (
-                    <ChatStreamCollapse
-                        key={taskName}
-                        id={taskName}
-                        title={headerTitle}
-                        defaultExpand={defaultExpand ?? true}
-                        className={classNames({
-                            [styles["chat-stream-collapse-expand-first"]]: true // firstExpand
-                        })}
-                    >
-                        {(streams[taskName] || []).map((info) => {
-                            const {id, Timestamp, type, data} = info
-                            switch (type) {
-                                case "stream":
-                                    const {NodeId, EventUUID, content, NodeLabel} = data
-                                    if (isToolExecStream(NodeId)) {
-                                        return <AIChatToolColorCard key={id} toolCall={data} />
-                                    }
-                                    if (NodeId === "re-act-loop-answer-payload") {
-                                        return <AIMarkdown stream={content} nodeLabel={NodeLabel} />
-                                    }
-                                    return (
-                                        <ChatStreamCollapseItem
-                                            key={id}
-                                            info={data}
-                                            expandKey={EventUUID}
-                                            secondExpand={false}
-                                            handleChangeSecondPanel={() => {}}
-                                            defaultExpand={defaultExpand}
-                                            timestamp={Timestamp}
-                                        />
-                                    )
-
-                                case "tool_result":
-                                    return <AIChatToolItem key={id} time={Timestamp} item={data} />
-
-                                default:
-                                    break
-                            }
-                        })}
-                    </ChatStreamCollapse>
-                )
-            })}
+            <Virtuoso
+                scrollerRef={(ref) =>
+                    ((scrollerRef as MutableRefObject<HTMLDivElement>).current = ref as HTMLDivElement)
+                }
+                ref={virtuosoRef}
+                style={{height: "100%", width: "100%"}}
+                data={streams}
+                totalCount={streams.length}
+                itemContent={(_, item) => renderItem(item)}
+                overscan={300}
+                components={{
+                    Item: ({children, style, "data-index": dataIndex}) => (
+                        <div style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
+                            {children}
+                        </div>
+                    ),
+                    Footer: () => <div style={{height: "20px"}} />
+                }}
+            />
+            {/* {streams.map(renderItem)} */}
         </div>
     )
 })
 const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo((props) => {
     const {expandKey, info, className, defaultExpand, timestamp} = props
-    const {NodeId, NodeLabel, content} = info
+    const {NodeId, NodeIdVerbose, content} = info
+    const {nodeLabel} = useAINodeLabel(NodeIdVerbose)
     return (
         <ChatStreamCollapse
             key={expandKey}
@@ -316,7 +276,7 @@ const ChatStreamCollapseItem: React.FC<ChatStreamCollapseItemProps> = React.memo
             title={
                 <div className={styles["task-type-header"]}>
                     {taskAnswerToIconMap[NodeId] || <SolidLightningboltIcon />}
-                    <div className={styles["task-type-header-title"]}>{NodeLabel}</div>
+                    <div className={styles["task-type-header-title"]}>{nodeLabel}</div>
                     <div className={styles["task-type-header-time"]}>{formatTimestamp(timestamp)}</div>
                 </div>
             }
@@ -363,12 +323,14 @@ export const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props
 
 export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = memo((props) => {
     const {callToolId} = props
-    const [secondExpand, setSecondExpand] = useState<string[]>([])
+    // const [secondExpand, setSecondExpand] = useState<string[]>([])
     const [toolList, setToolList] = useState<AIChatQSData[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     useEffect(() => {
         getList()
     }, [])
+
+    const {yakExecResult} = useAIChatUIData()
 
     const getList = useMemoizedFn(() => {
         if (!callToolId) return
@@ -381,7 +343,6 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                 const {Events} = res
                 const list: AIChatQSData[] = []
                 Events.filter((ele) => ele.Type === "stream").forEach((item) => {
-                    const Timestamp = item.Timestamp
                     let ipcContent = ""
                     let ipcStreamDelta = ""
                     try {
@@ -389,27 +350,27 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                         ipcStreamDelta = Uint8ArrayToString(item.StreamDelta) || ""
                     } catch (error) {}
                     const current: AIChatQSData = {
-                        id: uuidv4(),
+                        ...genBaseAIChatData(item),
                         type: "stream",
-                        Timestamp: Timestamp,
                         data: {
+                            CallToolID: item.CallToolID,
                             NodeId: item.NodeId,
-                            NodeLabel: AIStreamNodeIdToLabel[item.NodeId]?.label || "",
+                            NodeIdVerbose: item.NodeIdVerbose || convertNodeIdToVerbose(item.NodeId),
                             content: ipcContent + ipcStreamDelta,
+                            ContentType: item.ContentType,
                             EventUUID: item.EventUUID,
-                            status: "end",
-                            DisableMarkdown: item.DisableMarkdown
+                            status: "end"
                         }
                     }
                     list.push(current)
                 })
                 setToolList(list)
-                setSecondExpand(
-                    list.map((ele) => {
-                        if (ele.type === "stream" && ele.data) return ele.data.EventUUID
-                        return ""
-                    })
-                )
+                // setSecondExpand(
+                //     list.map((ele) => {
+                //         if (ele.type === "stream" && ele.data) return ele.data.EventUUID
+                //         return ""
+                //     })
+                // )
             })
             .finally(() => {
                 setTimeout(() => {
@@ -418,15 +379,15 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
             })
     })
 
-    const handleChangeSecondPanel = useMemoizedFn((expand: boolean, expandKey: string) => {
-        setSecondExpand((preV) => {
-            if (expand) {
-                return [...preV, expandKey]
-            } else {
-                return preV.filter((item) => item !== expandKey)
-            }
-        })
-    })
+    // const handleChangeSecondPanel = useMemoizedFn((expand: boolean, expandKey: string) => {
+    //     setSecondExpand((preV) => {
+    //         if (expand) {
+    //             return [...preV, expandKey]
+    //         } else {
+    //             return preV.filter((item) => item !== expandKey)
+    //         }
+    //     })
+    // })
     return (
         <div className={styles["ai-chat-tool-drawer-content"]}>
             {loading ? (
@@ -437,19 +398,33 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                         const {id, Timestamp, type, data} = info
                         switch (type) {
                             case "stream":
-                                const {EventUUID} = data
-                                const expand = secondExpand.includes(EventUUID)
+                                const {NodeIdVerbose, CallToolID, content, NodeId} = data
+                                // const expand = secondExpand.includes(EventUUID)
+                                const {execFileRecord} = yakExecResult
+                                const fileList = execFileRecord.get(CallToolID)
+                                const language = i18n.language.charAt(0).toUpperCase() + i18n.language.slice(1)
+                                const nodeLabel = NodeIdVerbose[language]
                                 return (
-                                    <ChatStreamCollapseItem
-                                        key={id}
-                                        expandKey={EventUUID}
-                                        info={data}
-                                        secondExpand={expand}
-                                        handleChangeSecondPanel={handleChangeSecondPanel}
-                                        className={classNames({
-                                            [styles["ai-tool-collapse-expand"]]: expand
-                                        })}
-                                        timestamp={Timestamp}
+                                    // <ChatStreamCollapseItem
+                                    //     key={id}
+                                    //     expandKey={EventUUID}
+                                    //     info={data}
+                                    //     secondExpand={expand}
+                                    //     handleChangeSecondPanel={handleChangeSecondPanel}
+                                    //     className={classNames({
+                                    //         [styles["ai-tool-collapse-expand"]]: expand
+                                    //     })}
+                                    //     timestamp={Timestamp}
+                                    // />
+                                    <StreamCard
+                                        titleText={nodeLabel}
+                                        titleIcon={taskAnswerToIconMap[NodeId]}
+                                        content={content}
+                                        modalInfo={{
+                                            time: Timestamp,
+                                            title: info.AIService
+                                        }}
+                                        fileList={fileList}
                                     />
                                 )
                             default:

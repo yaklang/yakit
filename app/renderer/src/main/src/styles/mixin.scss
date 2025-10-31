@@ -1,0 +1,57 @@
+// 通用文本省略混入
+// $lines: 行数（1 表示单行）
+// $show-title: 是否自动把完整文本放到 title（用于悬浮提示）
+// $wrap-break: 是否允许长单词换行（默认 false）
+// $use-clamp: 是否使用 -webkit-line-clamp 实现多行（默认 true）
+
+@mixin text-ellipsis($lines: 1, $show-title: false, $wrap-break: false, $use-clamp: true) {
+    // 基本样式
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box; // for multiline clamp fallback
+    -webkit-box-orient: vertical;
+
+    @if $lines == 1 {
+        // 单行
+        white-space: nowrap;
+        display: block; // 保证 text-overflow 生效
+    } @else {
+        // 多行
+        @if $use-clamp {
+            -webkit-line-clamp: #{$lines};
+        } @else {
+            // fallback：使用 max-height + line-height 的方式（需要在外部设定 line-height）
+            // user should set line-height in calling context
+            max-height: calc(#{$lines} * 1em); // 仅作参考，建议在使用处重写
+        }
+
+        // 如果浏览器不支持 -webkit-line-clamp， -webkit-box 与 overflow:hidden 会尽量截断
+        white-space: normal;
+    }
+
+    @if $wrap-break {
+        // 允许长单词换行（避免超出容器）
+        word-break: break-word; // 某些浏览器会识别
+        overflow-wrap: anywhere;
+    } @else {
+        // 保持正常单词换行行为
+        word-break: normal;
+    }
+}
+
+@mixin mpb-color-text() {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    background: linear-gradient(
+        108deg,
+        var(--Colors-Use-Magenta-Primary) 0%,
+        var(--Colors-Use-Purple-Primary) 63.94%,
+        var(--Colors-Use-Blue-Primary) 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    @content;
+}

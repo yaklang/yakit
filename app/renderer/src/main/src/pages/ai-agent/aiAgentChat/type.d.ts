@@ -1,9 +1,9 @@
-import {AIChatReview} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
 import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
 
 export interface AIAgentChatProps {}
 export type AIAgentChatMode = "welcome" | "re-act" | "task"
 export interface AIReActTaskChatReviewProps {
-    reviewInfo: AIChatReview
+    reviewInfo: AIChatQSData
     planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
 }

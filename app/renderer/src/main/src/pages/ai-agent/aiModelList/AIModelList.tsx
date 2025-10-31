@@ -27,7 +27,7 @@ import {
     grpcStopLocalModel,
     reorderApplicationConfig
 } from "./utils"
-import {LocalModelConfig} from "../type/aiChat"
+import {LocalModelConfig} from "../type/aiModel"
 import {Divider, Tooltip} from "antd"
 import {yakitNotify} from "@/utils/notification"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -606,7 +606,9 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
                         token={tokenRef.current}
                         onFinished={installFinished}
                         onCancel={installCancel}
-                        getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined}
+                        getContainer={
+                            document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined
+                        }
                     />
                 )}
             </YakitSpin>
@@ -906,7 +908,9 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                     token={downTokenRef.current}
                     onFinished={installFinished}
                     onCancel={installCancel}
-                    getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${YakitRoute.AI_Agent}`) || undefined
+                    }
                 />
             )}
             {removeVisible && (

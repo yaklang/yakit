@@ -810,6 +810,8 @@ service Yak {
   rpc UpdateSSARiskTags(UpdateSSARiskTagsRequest)returns(DbOperateMessage);
   rpc GetSSARiskFieldGroup(Empty) returns (SSARiskFieldGroupResponse);
   rpc NewSSARiskRead(NewSSARiskReadRequest) returns (NewSSARiskReadResponse);
+  rpc ExportSSARisk(ExportSSARiskRequest) returns(stream ExportSSARiskResponse);
+  rpc ImportSSARisk(ImportSSARiskRequest) returns(stream ImportSSARiskResponse);
   // SSA risk diff
   rpc SSARiskDiff(SSARiskDiffRequest) returns (stream SSARiskDiffResponse);
   // SSA Risk Disposal CURD
@@ -945,6 +947,7 @@ service Yak {
   rpc GetKnowledgeBaseTypeList(Empty) returns(GetKnowledgeBaseTypeListResponse);
   rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns(GeneralResponse);
   rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns(GeneralResponse);
+  rpc CreateKnowledgeBaseV2(CreateKnowledgeBaseV2Request) returns(CreateKnowledgeBaseV2Response);
   rpc UpdateKnowledgeBase(UpdateKnowledgeBaseRequest) returns(GeneralResponse);
 
   rpc DeleteKnowledgeBaseEntry(DeleteKnowledgeBaseEntryRequest) returns(GeneralResponse);
@@ -976,6 +979,19 @@ service Yak {
 
   // RAG Collection Search
   rpc RAGCollectionSearch(RAGCollectionSearchRequest) returns (stream RAGCollectionSearchResponse);
+}
+
+message CreateKnowledgeBaseV2Request {
+  string Name = 1;
+  string Description = 2;
+  string Type = 3;
+}
+
+message CreateKnowledgeBaseV2Response {
+  KnowledgeBaseInfo KnowledgeBase = 1;
+  bool IsSuccess = 2;
+  string Message = 3;
+  string MessageType = 4;
 }
 
 message ExportKnowledgeBaseRequest {
@@ -1365,10 +1381,14 @@ message DeleteKnowledgeBaseEntryRequest {
   string KnowledgeBaseEntryHiddenIndex = 3;
   int64 KnowledgeBaseId = 2;
 }
-
+message SearchKnowledgeBaseEntryFilter {
+  int64 KnowledgeBaseId = 1;
+  string Keyword = 2;
+}
 message SearchKnowledgeBaseEntryRequest {
   int64 KnowledgeBaseId = 1;
   string Keyword = 2;
+  SearchKnowledgeBaseEntryFilter Filter = 4;
   Paging Pagination = 3;
 }
 
@@ -1455,11 +1475,18 @@ message VectorStoreCollection{
   string DistanceFuncType = 10;
 }
 
+message ListVectorStoreEntriesFilter {
+  int64 CollectionID = 1;
+  string Keyword = 2;
+  string CollectionName = 3;
+}
+
 message ListVectorStoreEntriesRequest {
   int64 CollectionID = 1;
   string Keyword = 2;
   Paging Pagination = 3;
   string CollectionName = 4;
+  ListVectorStoreEntriesFilter Filter = 5;
 }
 
 message CreateVectorStoreEntryRequest {
@@ -1636,6 +1663,7 @@ message AIOutputEvent {
   I18n NodeIdVerbose = 17; // 用于展示的节点ID，可能是节点名称
   string ContentType = 18; // markdown / yaklang_code / plain_code
   string CallToolID = 19; // 如果是调用工具相关的事件，那么这里是调用的ID
+  string AIService = 20; // 如果是 AI 服务相关的事件，那么这里是 AI 服务的名称
 }
 
 message I18n {
@@ -1762,6 +1790,9 @@ message AIStartParams {
 
   // 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题
   int64 UserInteractLimit = 30;
+
+  // timeline sessionID  用于多轮对话保持上下文
+  string TimelineSessionID = 31;
 }
 
 message AITaskFilter {
@@ -2498,6 +2529,11 @@ message DebugPluginRequest {
 
   // runtime id ,if empty, will create a new runtime
   string RuntimeId = 8;
+
+  // 是否在发送请求前渲染 fuzztag（如 {{int(1-100)}}）
+  // 如果为 true，会先渲染 fuzztag 再发送请求
+  // 默认为 false，保持原有行为
+  bool RenderFuzzTag = 9;
 }
 
 message HTTPRequestBuilderResult {
@@ -7317,6 +7353,7 @@ message SyntaxFlowScanRequest{
   bool Memory = 8;
   // 根据项目扫描
   uint64 SSAProjectId = 9;
+  repeated string ProjectName = 10;
 }
 
 message QuerySyntaxFlowScanTaskRequest{
@@ -7626,6 +7663,27 @@ message NewSSARiskReadRequest {
   SSARisksFilter Filter = 1;
 }
 message NewSSARiskReadResponse {
+}
+
+message ExportSSARiskRequest {
+  SSARisksFilter Filter = 1;
+  string TargetPath =2 ;
+  bool WithDataFlowPath =3 ;
+  bool WithFileContent = 4;
+}
+
+message ExportSSARiskResponse{
+  double  Process =1 ;
+  string  Verbose =2 ;
+}
+
+message ImportSSARiskRequest{
+  string InputPath = 1;
+}
+
+message ImportSSARiskResponse{
+  double  Process =1 ;
+  string  Verbose =2 ;
 }
 
 message SSARiskFeedbackToOnlineRequest {

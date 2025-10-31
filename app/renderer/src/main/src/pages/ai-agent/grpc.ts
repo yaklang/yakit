@@ -1,7 +1,9 @@
 import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
-import {AIForge, AIForgeFilter, GetAIForgeRequest, QueryAIForgeRequest, QueryAIForgeResponse} from "./AIForge/type"
 import {AIEventQueryRequest, AIEventQueryResponse} from "../ai-re-act/hooks/grpcApi"
+import {AIForge, AIForgeFilter, GetAIForgeRequest, QueryAIForgeRequest, QueryAIForgeResponse} from "./type/forge"
+import { YakQueryHTTPFlowResponse } from "@/components/HTTPFlowTable/HTTPFlowTable"
+import { YakQueryHTTPFlowRequest } from "@/utils/yakQueryHTTPFlow"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -76,6 +78,19 @@ export const grpcGetAIForge: APIFunc<GetAIForgeRequest, AIForge> = (param, hidde
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("GetAIForge", param)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "grpcGetAIForge 查询Forge详情失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 获取 HTTP 流列表 */
+export const grpcQueryHTTPFlows: APIFunc<YakQueryHTTPFlowRequest, YakQueryHTTPFlowResponse> = async (param, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("QueryHTTPFlows", param)
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcGetAIForge 查询Forge详情失败:" + e)

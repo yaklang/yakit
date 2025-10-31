@@ -1,5 +1,5 @@
 import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
-import {LocalModelConfig} from "../type/aiChat"
+import {LocalModelConfig} from "../type/aiModel"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
 

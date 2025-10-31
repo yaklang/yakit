@@ -2,15 +2,15 @@ import {useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
-import {AIChatReviewExtra} from "@/pages/ai-agent/type/aiChat"
 import {
     AIReviewJudgeLevelMap,
-    AIStreamNodeIdToLabel,
+    convertNodeIdToVerbose,
     DefaultAIToolResult,
-    DefaultToolStdOutSelectors
+    TaskDefaultReToolResultSummary
 } from "./defaultConstant"
-import {UseTaskChatEvents, UseTaskChatParams, UseTaskChatState} from "./type"
+import {handleSendFunc, UseTaskChatEvents, UseTaskChatParams, UseTaskChatState} from "./type"
 import {
+    genBaseAIChatData,
     handleFlatAITree,
     handleGrpcDataPushLog,
     isAutoContinueReview,
@@ -19,9 +19,9 @@ import {
     noSkipReviewTypes
 } from "./utils"
 import {yakitNotify} from "@/utils/notification"
-import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent} from "./grpcApi"
-import {AIChatQSData, AIChatReview, AIStreamOutput, AIToolResult, ToolStreamSelectors} from "./aiRender"
-import {v4 as uuidv4} from "uuid"
+import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
+import {AIChatQSData, AIReviewType, AIStreamOutput, AIToolResult, ToolStreamSelectors} from "./aiRender"
+import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
 
 // 属于该 hook 处理数据的类型
 export const UseTaskChatTypes = ["plan_review_require", "plan_task_analysis", "task_review_require", "plan"]
@@ -29,7 +29,7 @@ export const UseTaskChatTypes = ["plan_review_require", "plan_task_analysis", "t
 function useTaskChat(params?: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
 function useTaskChat(params?: UseTaskChatParams) {
-    const {pushLog, updateLog, getRequest, onReview, onReviewExtra, onReviewRelease} = params || {}
+    const {pushLog, updateLog, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest} = params || {}
 
     const handlePushLog = useMemoizedFn((logInfo: AIChatQSData) => {
         pushLog && pushLog(logInfo)
@@ -45,7 +45,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
     const [plan, setPlan] = useState<AIAgentGrpcApi.PlanTask[]>([])
 
-    const review = useRef<AIChatReview>()
+    const review = useRef<AIChatQSData>()
     const currentPlansId = useRef<string>("")
 
     // 存放流式输出的EventUUID的集合
@@ -53,24 +53,42 @@ function useTaskChat(params?: UseTaskChatParams) {
     const handleSetEventUUID = useMemoizedFn((id: string) => {
         if (!eventUUIDs.current.has(id)) eventUUIDs.current.add(id)
     })
-    const [streams, setStreams] = useState<Record<string, AIChatQSData[]>>({})
+    const [streams, setStreams] = useState<AIChatQSData[]>([])
 
-    const toolStdOutSelectors = useRef<ToolStreamSelectors>(cloneDeep(DefaultToolStdOutSelectors))
-
+    // 工具执行结果-map
     const toolResultMap = useRef<Map<string, AIToolResult>>(new Map())
-    const getToolResult = useMemoizedFn((callToolId: string): AIToolResult => {
-        return toolResultMap.current.get(callToolId) || cloneDeep(DefaultAIToolResult)
-    })
-    const onSetToolResult = useMemoizedFn((callToolId: string, value: Partial<AIToolResult>) => {
-        let current = getToolResult(callToolId)
+    const setToolResultMap = useMemoizedFn((callToolId: string, value: Partial<AIToolResult>) => {
+        let current = toolResultMap.current.get(callToolId) || cloneDeep(DefaultAIToolResult)
         current = {
             ...current,
             ...value
         }
         toolResultMap.current.set(callToolId, current)
     })
-    const onRemoveToolResult = useMemoizedFn((callToolId: string) => {
-        toolResultMap.current.delete(callToolId)
+
+    // 工具执行过程-可操作选项 map
+    const toolStdOutSelectors = useRef<Map<string, ToolStreamSelectors>>(new Map())
+    const setToolStdOutSelectorMap = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallWatcher
+
+            if (!data?.call_tool_id || !data?.id || !data?.selectors || !data.selectors?.length) {
+                throw new Error("tool_call_watcher data is invalid")
+            }
+
+            toolStdOutSelectors.current.set(data.call_tool_id, {
+                callToolId: data.call_tool_id,
+                InteractiveId: data.id,
+                selectors: data.selectors
+            })
+        } catch (error) {
+            handleGrpcDataPushLog({
+                type: "error",
+                info: res,
+                pushLog: handlePushLog
+            })
+        }
     })
     // #endregion
 
@@ -82,102 +100,87 @@ function useTaskChat(params?: UseTaskChatParams) {
     // #region 流数据处理相关逻辑
     // 接受流式输出数据并处理
     const handleStreams = useMemoizedFn((res: AIOutputEvent) => {
-        const {IsSystem, IsReason, NodeId, TaskIndex, Timestamp, EventUUID, Content, StreamDelta, DisableMarkdown} = res
-        let ipcContent = Uint8ArrayToString(Content) || ""
-        let ipcStreamDelta = Uint8ArrayToString(StreamDelta) || ""
-        const content = ipcContent + ipcStreamDelta
+        try {
+            const {
+                IsSystem,
+                IsReason,
+                CallToolID,
+                NodeId,
+                NodeIdVerbose,
+                TaskIndex,
+                EventUUID,
+                Content,
+                StreamDelta,
+                ContentType
+            } = res
+            if (!NodeId || !EventUUID) {
+                // 没有对应 UUID 算异常日志
+                throw new Error("stream data is invalid")
+            }
+            if (isToolExecStream(NodeId) && !TaskIndex) {
+                // 上述类型没有 taskindex 算异常日志
+                throw new Error("stream data is invalid")
+            }
 
-        if (!IsSystem && !IsReason) {
-            setStreams((old) => {
-                const streams = {...old}
-                const valueInfo = streams[TaskIndex]
-                if (valueInfo) {
-                    const streamInfo = valueInfo.find(
-                        (item) =>
-                            item.type === "stream" &&
-                            item.data &&
-                            item.data.NodeId === NodeId &&
-                            item.data.EventUUID === EventUUID
-                    )
-                    if (streamInfo && streamInfo.type === "stream") {
-                        streamInfo.data.content += content
+            handleSetEventUUID(EventUUID)
+
+            let ipcContent = Uint8ArrayToString(Content) || ""
+            let ipcStreamDelta = Uint8ArrayToString(StreamDelta) || ""
+            const content = ipcContent + ipcStreamDelta
+
+            const setFunc = !IsSystem && !IsReason ? setStreams : updateLog
+
+            if (setFunc) {
+                setFunc((old) => {
+                    let newArr = [...old]
+                    const itemInfo = newArr.find((item) => {
+                        if (item.type === "stream" && item.data) {
+                            return item.data.NodeId === NodeId && item.data.EventUUID === EventUUID
+                        }
+                        return false
+                    })
+                    if (!!itemInfo && itemInfo.type === "stream") {
+                        itemInfo.data.content += content
                     } else {
-                        let info: AIChatQSData = {
-                            id: uuidv4(),
+                        const streamsInfo: AIChatQSData = {
+                            ...genBaseAIChatData(res),
                             type: "stream",
-                            Timestamp: Timestamp,
                             data: {
-                                NodeId: NodeId,
-                                NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || NodeId,
-                                EventUUID: EventUUID,
+                                TaskIndex,
+                                CallToolID,
+                                NodeId,
+                                NodeIdVerbose: NodeIdVerbose || convertNodeIdToVerbose(NodeId),
+                                EventUUID,
                                 status: "start",
                                 content: content,
-                                DisableMarkdown: DisableMarkdown
+                                ContentType
                             }
                         }
-                        if (isToolStdoutStream(NodeId)) info.data.selectors = {...toolStdOutSelectors.current}
-                        valueInfo.push(info)
-                    }
-                    if (NodeId === "call-tools") {
-                        streams[TaskIndex] = valueInfo.filter(
-                            (item) => item.type === "stream" && !!item.data && item.data.NodeId !== "execute"
-                        )
-                    }
-                    if (isToolStdoutStream(NodeId)) {
-                        streams[TaskIndex] = valueInfo.filter(
-                            (item) => item.type === "stream" && !!item.data && item.data.NodeId !== "call-tools"
-                        )
-                    }
-                } else {
-                    const list: AIChatQSData[] = [
-                        {
-                            id: uuidv4(),
-                            type: "stream",
-                            Timestamp: Timestamp,
-                            data: {
-                                NodeId: NodeId,
-                                NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || NodeId,
-                                EventUUID: EventUUID,
-                                status: "start",
-                                content: content,
-                                DisableMarkdown: DisableMarkdown
-                            }
+                        const sls = toolStdOutSelectors.current.get(CallToolID)
+                        if (isToolStdoutStream(NodeId) && sls) {
+                            streamsInfo.data.selectors = sls
+                            toolStdOutSelectors.current.delete(CallToolID)
                         }
-                    ]
-                    streams[TaskIndex] = list
-                }
+                        newArr.push(streamsInfo)
+                    }
 
-                return streams
-            })
-        } else {
-            if (!updateLog) return
-            updateLog((old) => {
-                let newArr = [...old]
-                const itemInfo = newArr.find((item) => {
-                    if (item.type === "stream" && item.data) {
-                        return item.data.NodeId === NodeId && item.data.EventUUID === EventUUID
+                    // 出现tool_stdout时，删除前面的call-tools类型数据
+                    if (isToolStdoutStream(NodeId)) {
+                        newArr = newArr.filter((item) => {
+                            if (item.type === "stream" && item.data) {
+                                return item.data.NodeId !== "call-tools"
+                            }
+                            return true
+                        })
                     }
-                    return false
+                    return newArr
                 })
-                if (!!itemInfo && itemInfo.type === "stream") {
-                    itemInfo.data.content += content
-                } else {
-                    const streamsInfo: AIChatQSData = {
-                        id: uuidv4(),
-                        type: "stream",
-                        data: {
-                            NodeId,
-                            NodeLabel: AIStreamNodeIdToLabel[NodeId]?.label || NodeId,
-                            EventUUID,
-                            status: "start",
-                            content: content,
-                            DisableMarkdown: DisableMarkdown
-                        },
-                        Timestamp: Timestamp
-                    }
-                    newArr.push(streamsInfo)
-                }
-                return newArr
+            }
+        } catch (error) {
+            handleGrpcDataPushLog({
+                type: "error",
+                info: res,
+                pushLog: handlePushLog
             })
         }
     })
@@ -187,126 +190,160 @@ function useTaskChat(params?: UseTaskChatParams) {
         try {
             if (!eventUUIDs.current.has(EventUUID)) return
             setStreams((old) => {
-                const newData = {...old}
-                const keys = Object.keys(old)
-                for (let el of keys) {
-                    const lists = newData[el]
-                    if (!lists || !Array.isArray(lists)) continue
-                    let isSuc = false
-                    for (let item of lists) {
-                        if (item.type === "stream" && !!item.data && item.data.EventUUID === EventUUID) {
-                            item.data.status = "end"
-                            isSuc = true
-                            break
-                        }
+                return old.map((item) => {
+                    if (item.type === "stream" && item.data && item.data.EventUUID === EventUUID) {
+                        item.data = {...item.data, status: "end"}
+                        return item
                     }
-                    if (isSuc) break
-                }
-
-                return newData
+                    return item
+                })
             })
         } catch (error) {}
     })
 
-    const handleToolResultStatus = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
-        const {TaskIndex, Timestamp} = res
-        if (!TaskIndex) {
-            handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
-            return
-        }
-        setStreams((old) => {
-            const streams = cloneDeep(old)
-            const valueInfo = streams[TaskIndex]
-            if (valueInfo) {
-                const toolStdout = valueInfo.find(
-                    (ele) => ele.type === "stream" && !!ele.data && isToolStdoutStream(ele.data.NodeId)
-                )
-                const content = (toolStdout?.data as AIStreamOutput)?.content
-                const isShowAll = !!(content && content.length > 200)
-                const toolStdoutShowContent = isShowAll ? content.substring(0, 200) + "..." : content
+    // 生成工具执行结果的卡片
+    const handleToolResultStatus = useMemoizedFn(
+        (res: AIOutputEvent, status: "success" | "failed" | "user_cancelled") => {
+            try {
+                const ipcContent = Uint8ArrayToString(res.Content) || ""
+                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
 
-                const newValue = valueInfo.filter(
-                    (ele) => ele.type === "stream" && !!ele.data && !isToolExecStream(ele.data.NodeId)
-                )
-                const toolResult = getToolResult(callToolId)
-                newValue.push({
-                    id: uuidv4(),
-                    type: "tool_result",
-                    Timestamp: Timestamp,
-                    data: {
-                        ...toolResult,
-                        toolStdoutContent: {
-                            content: toolStdoutShowContent,
-                            isShowAll
+                if (!data?.call_tool_id) {
+                    throw new Error("tool_call_result data is invalid")
+                }
+
+                const toolResult = toolResultMap.current.get(data.call_tool_id)
+                if (!toolResult) {
+                    throw new Error("tool_call_result data is invalid")
+                }
+                toolResult.status = status
+                toolResult.summary = TaskDefaultReToolResultSummary[status]?.label || ""
+
+                setStreams((old) => {
+                    let newArr = [...old]
+
+                    const toolStdOut = newArr.find((item) => {
+                        if (item.type === "stream" && item.data) {
+                            return isToolStdoutStream(item.data.NodeId)
                         }
-                    }
-                })
-                streams[TaskIndex] = [...newValue]
-            }
-            return streams
-        })
-    })
+                        return false
+                    })
+                    const toolStdOutContent = (toolStdOut?.data as AIStreamOutput)?.content
+                    const isShowAll = !!(toolStdOutContent && toolStdOutContent.length > 200)
+                    const toolStdoutShowContent = isShowAll
+                        ? toolStdOutContent.substring(0, 200) + "..."
+                        : toolStdOutContent
+                    newArr = newArr.filter((item) => {
+                        if (item.type === "stream" && item.data) {
+                            return !isToolExecStream(item.data.NodeId)
+                        }
+                        return true
+                    })
 
-    const handleToolResultSummary = useMemoizedFn((res: AIOutputEvent, callToolId: string) => {
-        const {TaskIndex} = res
-        if (!TaskIndex) {
-            handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
-            return
+                    newArr.push({
+                        ...genBaseAIChatData(res),
+                        type: "tool_result",
+                        data: {
+                            ...toolResult,
+                            toolStdoutContent: {
+                                content: toolStdoutShowContent,
+                                isShowAll
+                            },
+                            TaskIndex: res.TaskIndex || undefined
+                        }
+                    })
+                    return newArr
+                })
+
+                toolResultMap.current.delete(data.call_tool_id)
+            } catch (error) {
+                handleGrpcDataPushLog({
+                    type: "error",
+                    info: res,
+                    pushLog: handlePushLog
+                })
+            }
         }
-        setStreams((old) => {
-            const streams = cloneDeep(old)
-            const valueInfo = streams[TaskIndex]
-            if (valueInfo) {
-                const newValue = valueInfo.map((ele) => {
-                    if (ele.type === "tool_result" && !!ele.data && ele.data.callToolId === callToolId) {
-                        const toolData = getToolResult(callToolId)
+    )
+    // 生成工具执行结果卡片里的结果总结内容
+    const handleToolResultSummary = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
+
+            if (!data?.call_tool_id) {
+                throw new Error("tool_result data is invalid")
+            }
+
+            setStreams((old) => {
+                return old.map((ele) => {
+                    if (ele.type === "tool_result" && !!ele.data && ele.data.callToolId === data.call_tool_id) {
+                        const status = ele.data.status
+                        const summary =
+                            status === "user_cancelled"
+                                ? "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
+                                : data.summary || ""
                         return {
                             ...ele,
-                            toolAggregation: {
-                                ...toolData,
-                                toolStdoutContent: ele.data.toolStdoutContent || {
-                                    ...DefaultAIToolResult.toolStdoutContent
-                                }
-                            }
+                            data: {...ele.data, summary}
                         }
                     }
                     return ele
                 })
-                streams[TaskIndex] = [...newValue]
-            }
-
-            return streams
-        })
-        onRemoveToolResult(callToolId)
-        toolStdOutSelectors.current = cloneDeep(DefaultToolStdOutSelectors)
+            })
+            toolResultMap.current.delete(data.call_tool_id)
+        } catch (error) {
+            handleGrpcDataPushLog({
+                type: "error",
+                info: res,
+                pushLog: handlePushLog
+            })
+        }
     })
     // #endregion
 
     // #region  review 相关逻辑
     // 处理 tool_review 的 ai 判断得分事件
-    const handleToolReviewJudgement = useMemoizedFn((score: AIAgentGrpcApi.AIReviewJudgement) => {
-        if (!review.current) return
+    const handleReviewJudgement = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const score = (JSON.parse(ipcContent) as AIAgentGrpcApi.AIReviewJudgement) || {}
+            const {interactive_id} = score
 
-        const isTrigger = !isAutoContinueReview(getRequest)
-        if (!isTrigger) return
+            if (
+                !review.current ||
+                !interactive_id ||
+                review.current.type !== "tool_use_review_require" ||
+                review.current.data.id !== interactive_id
+            ) {
+                throw new Error("review_judgement data is invalid")
+            }
 
-        const {interactive_id} = score
-        score.levelLabel = AIReviewJudgeLevelMap[score?.level || ""]?.label || undefined
-        const {type, data} = review.current
-        if (type === "tool_use_review_require" && data.id === interactive_id) {
-            const info = cloneDeep(data)
-            // aiReview 没有或者 aiReview 的 seconds 为空时可以赋值
-            if (!info.aiReview || (info.aiReview && typeof info.aiReview.seconds === "undefined")) {
-                info.aiReview = cloneDeep(score)
-                review.current.data = cloneDeep(info)
+            score.levelLabel = AIReviewJudgeLevelMap[score?.level || ""]?.label || undefined
+            if (review.current.type === "tool_use_review_require") {
+                const info = review.current.data
+                if (!info.aiReview || (info.aiReview && typeof info.aiReview.seconds === "undefined")) {
+                    // aiReview 没有或者 aiReview 的 seconds 为空时可以赋值
+                    info.aiReview = cloneDeep(score)
+                    review.current.data = cloneDeep(info)
+                }
+            }
+
+            const isTrigger = !isAutoContinueReview(getRequest)
+            if (isTrigger) {
                 onReview && onReview(cloneDeep(review.current))
             }
+        } catch (error) {
+            handleGrpcDataPushLog({
+                type: "error",
+                info: res,
+                pushLog: handlePushLog
+            })
         }
     })
 
     // 触发 review
-    const handleTriggerReview = useMemoizedFn((data: AIChatReview) => {
-        console.log(`${data.type}-----\n`, JSON.stringify(data.data))
+    const handleTriggerReview = useMemoizedFn((data: AIChatQSData) => {
         review.current = cloneDeep(data)
         const isTrigger = !isAutoContinueReview(getRequest) || noSkipReviewTypes(data.type)
         if (isTrigger) {
@@ -315,22 +352,50 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
 
     // plan_review 的补充数据
-    const handleTriggerReviewExtra = useMemoizedFn((item: AIChatReviewExtra) => {
-        if (!currentPlansId.current) {
-            currentPlansId.current = item.data.plans_id
-        }
-        if (currentPlansId.current !== item.data.plans_id) return
-        const isTrigger = !isAutoContinueReview(getRequest) || noSkipReviewTypes(item.type)
-        if (isTrigger) {
-            onReviewExtra && onReviewExtra(item)
+    const handleTriggerReviewExtra = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            if (!review.current || review.current.type !== "plan_review_require") {
+                throw new Error("plan_task_analysis data is invalid")
+            }
+
+            const reviewInfo = review.current.data
+            if (!reviewInfo.taskExtra) reviewInfo.taskExtra = new Map()
+
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanReviewRequireExtra
+
+            if (
+                !data?.plans_id ||
+                !data?.index ||
+                !data?.keywords?.length ||
+                (currentPlansId.current && currentPlansId.current !== data.plans_id)
+            ) {
+                throw new Error("plan_task_analysis data is invalid")
+            }
+
+            if (!currentPlansId.current) {
+                currentPlansId.current = data.plans_id
+            }
+            reviewInfo.taskExtra.set(data.index, data)
+
+            const isTrigger = !isAutoContinueReview(getRequest)
+            if (isTrigger) {
+                onReviewExtra && onReviewExtra(data)
+            }
+        } catch (error) {
+            handleGrpcDataPushLog({
+                type: "error",
+                info: res,
+                pushLog: handlePushLog
+            })
         }
     })
 
     // 自动处理 review 里的信息数据
-    const handleAutoRviewData = useMemoizedFn((data: AIChatReview) => {
-        if (data.type === "plan_review_require") {
+    const handleAutoRviewData = useMemoizedFn((reviewInfo: AIChatQSData) => {
+        if (reviewInfo.type === "plan_review_require") {
             // 如果是计划的审阅，继续执行代表任务列表已确认，可以进行数据保存
-            const tasks = data.data as AIAgentGrpcApi.PlanReviewRequire
+            const tasks = reviewInfo.data
             planTree.current = cloneDeep(tasks.plans.root_task)
             const sum: AIAgentGrpcApi.PlanTask[] = []
             handleFlatAITree(sum, tasks.plans.root_task)
@@ -339,22 +404,67 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
 
     // 是否 review 信号处理
-    const handleReviewRelease = useMemoizedFn((id: string) => {
-        console.log("review.current", review.current, id)
+    const handleReviewRelease = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            if (!review.current) return
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ReviewRelease
 
-        if (!review.current || review.current.data.id !== id) return
-        const isTrigger = !isAutoContinueReview(getRequest) || noSkipReviewTypes(review.current.type)
+            if (!data?.id) {
+                throw new Error("review_release data is invalid")
+            }
 
-        handleAutoRviewData(review.current)
-        review.current = undefined
-        currentPlansId.current = ""
-        if (isTrigger) {
-            onReviewRelease && onReviewRelease(id)
+            const type = review.current.type
+            const reviewInfo = cloneDeep(review.current)
+            const info = reviewInfo.data as AIReviewType
+            if (info?.id !== data.id) {
+                throw new Error("review_release data is invalid")
+            }
+
+            info.selected = JSON.stringify({suggestion: "continue"})
+            info.optionValue = "continue"
+            handleAutoRviewData(reviewInfo)
+            review.current = undefined
+            currentPlansId.current = ""
+            setStreams((old) => {
+                const newArr = [...old]
+                newArr.push(reviewInfo)
+                return newArr
+            })
+
+            const isTrigger = !isAutoContinueReview(getRequest) || noSkipReviewTypes(type)
+            if (isTrigger) {
+                onReviewRelease && onReviewRelease(data.id)
+            }
+        } catch (error) {
+            handleGrpcDataPushLog({
+                type: "error",
+                info: res,
+                pushLog: handlePushLog
+            })
         }
     })
     // #endregion
 
     // #region 改变任务状态相关方法
+    // 任务开始执行的节点数据生成
+    const handleTaskStartNode = useMemoizedFn((res: AIOutputEvent, nodeInfo: AIAgentGrpcApi.ChangeTask) => {
+        try {
+            setStreams((old) => {
+                const newArr = [...old]
+                newArr.push({
+                    ...genBaseAIChatData(res),
+                    type: "task_index_node",
+                    data: {
+                        taskIndex: nodeInfo.task.index,
+                        taskName: nodeInfo.task.name
+                    }
+                })
+                return newArr
+            })
+        } catch (error) {}
+    })
+
     // 更新未完成的任务状态
     const handleUpdateTaskState = useMemoizedFn((index: string, state: AIAgentGrpcApi.PlanTask["progress"]) => {
         setPlan((old) => {
@@ -382,34 +492,73 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
     // #endregion
 
+    /** 文件系统操作处理数据 */
+    const handleFileSystemPin = useMemoizedFn(async (res: AIOutputEvent) => {
+        try {
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const {path} = JSON.parse(ipcContent) as AIAgentGrpcApi.FileSystemPin
+            const fileInfo = await getLocalFileName(path, true)
+
+            setStreams((old) => {
+                const newArr = [...old]
+                newArr.push({
+                    ...genBaseAIChatData(res),
+                    type: "file_system_pin",
+                    data: {
+                        path: path,
+                        isDir: res.Type === "filesystem_pin_directory",
+                        name: fileInfo.name,
+                        suffix: fileInfo.suffix
+                    }
+                })
+                return newArr
+            })
+        } catch (error) {
+            handleGrpcDataPushLog({
+                type: "error",
+                info: res,
+                pushLog: handlePushLog
+            })
+        }
+    })
+
+    /** 工具决策数据处理 */
+    const handleToolCallDecision = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ToolCallDecision
+            const i18n = data?.i18n || {zh: data.action, en: data.action}
+
+            setStreams((old) => {
+                const newArr = [...old]
+                newArr.push({
+                    ...genBaseAIChatData(res),
+                    type: "tool_call_decision",
+                    data: {
+                        ...data,
+                        i18n: {
+                            Zh: i18n.zh,
+                            En: i18n.en
+                        }
+                    }
+                })
+                return newArr
+            })
+        } catch (error) {
+            handleGrpcDataPushLog({
+                type: "error",
+                info: res,
+                pushLog: handlePushLog
+            })
+        }
+    })
+
     // 处理数据方法
     const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
         try {
             let ipcContent = Uint8ArrayToString(res.Content) || ""
 
             if (res.Type === "stream") {
-                const {NodeId, EventUUID, TaskIndex} = res
-                if (!TaskIndex) return
-                if (!NodeId || !EventUUID) {
-                    // 没有必须信息算异常日志
-                    handleGrpcDataPushLog({
-                        type: "error",
-                        info: res,
-                        pushLog: handlePushLog
-                    })
-                    return
-                }
-                if (isToolExecStream(NodeId) && !TaskIndex) {
-                    // 这类类型没有 TaskIndex 算异常数据
-                    handleGrpcDataPushLog({
-                        type: "error",
-                        info: res,
-                        pushLog: handlePushLog
-                    })
-                    return
-                }
-
-                handleSetEventUUID(EventUUID)
                 handleStreams(res)
                 return
             }
@@ -419,8 +568,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                     // 标识哪个流式输出已经结束
                     const {event_writer_id} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStreamFinished
                     if (!event_writer_id) {
-                        handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
-                        return
+                        throw new Error("stream-finished data is invalid")
                     }
                     handleUpdateStreamStatus(event_writer_id)
                     return
@@ -431,6 +579,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 if (obj.type && obj.type === "push_task") {
                     // 开始任务
                     const data = obj as AIAgentGrpcApi.ChangeTask
+                    handleTaskStartNode(res, data)
                     handleUpdateTaskState(data.task.index, "in-progress")
                     return
                 }
@@ -438,6 +587,8 @@ function useTaskChat(params?: UseTaskChatParams) {
                     // 结束任务
                     const data = obj as AIAgentGrpcApi.ChangeTask
                     handleUpdateTaskState(data.task.index, "success")
+                    // 更新任务树数据
+                    sendRequest && sendRequest({IsSyncMessage: true, SyncType: "plan"})
                     return
                 }
 
@@ -450,22 +601,12 @@ function useTaskChat(params?: UseTaskChatParams) {
             }
 
             if (["ai_review_start", "ai_review_countdown", "ai_review_end"].includes(res.Type)) {
-                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIReviewJudgement
-                if (!review.current || review.current.type !== "tool_use_review_require" || !data?.interactive_id) {
-                    handleGrpcDataPushLog({
-                        type: "error",
-                        info: res,
-                        pushLog: handlePushLog
-                    })
-                    return
-                }
-                handleToolReviewJudgement(data)
+                handleReviewJudgement(res)
                 return
             }
 
             if (res.Type === "plan_review_require") {
                 const data = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanReviewRequire
-
                 if (
                     !data?.id ||
                     !data?.plans ||
@@ -473,133 +614,99 @@ function useTaskChat(params?: UseTaskChatParams) {
                     !data?.selectors ||
                     !data?.selectors?.length
                 ) {
-                    handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
-                    return
+                    throw new Error("plan_review_require data is invalid")
                 }
 
-                handleTriggerReview({type: "plan_review_require", data: data})
+                handleTriggerReview({
+                    type: "plan_review_require",
+                    data: data,
+                    ...genBaseAIChatData(res)
+                })
                 return
             }
             if (res.Type === "plan_task_analysis") {
-                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanReviewRequireExtra
-                if (!data?.plans_id || !data?.index || !data?.keywords?.length) {
-                    handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
-                    return
-                }
-                handleTriggerReviewExtra({
-                    type: "plan_task_analysis",
-                    data
-                })
+                handleTriggerReviewExtra(res)
                 return
             }
             if (res.Type === "tool_use_review_require") {
                 const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ToolUseReviewRequire
                 if (!data?.id || !data?.selectors || !data?.selectors?.length) {
-                    handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
-                    return
+                    throw new Error("tool_use_review_require data is invalid")
                 }
 
-                handleTriggerReview({type: "tool_use_review_require", data: data})
+                handleTriggerReview({
+                    type: "tool_use_review_require",
+                    data: data,
+                    ...genBaseAIChatData(res)
+                })
                 return
             }
             if (res.Type === "task_review_require") {
                 const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TaskReviewRequire
                 if (!data?.id || !data?.selectors || !data?.selectors?.length) {
-                    handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
-                    return
+                    throw new Error("task_review_require data is invalid")
                 }
 
-                handleTriggerReview({type: "task_review_require", data: data})
+                handleTriggerReview({
+                    type: "task_review_require",
+                    data: data,
+                    ...genBaseAIChatData(res)
+                })
                 return
             }
             if (res.Type === "require_user_interactive") {
                 const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIReviewRequire
                 if (!data?.id) {
-                    handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
-                    return
+                    throw new Error("require_user_interactive data is invalid")
                 }
 
-                handleTriggerReview({type: "require_user_interactive", data: data})
+                handleTriggerReview({
+                    type: "require_user_interactive",
+                    data: data,
+                    ...genBaseAIChatData(res)
+                })
                 return
             }
 
             if (res.Type === "review_release") {
-                // review释放通知
-                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ReviewRelease
-                if (!data?.id) {
-                    handleGrpcDataPushLog({
-                        type: "error",
-                        info: res,
-                        pushLog: handlePushLog
-                    })
-                    return
-                }
-                handleReviewRelease(data.id)
+                handleReviewRelease(res)
                 return
             }
 
             if (res.Type === "tool_call_start") {
                 // 工具调用开始
                 const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
-                onSetToolResult(data?.call_tool_id, {
-                    callToolId: data?.call_tool_id,
+                if (!data?.call_tool_id) {
+                    throw new Error("tool_call_start data is invalid")
+                }
+                setToolResultMap(data.call_tool_id, {
+                    callToolId: data.call_tool_id,
                     toolName: data?.tool?.name || "-"
                 })
-                toolStdOutSelectors.current.callToolId = data?.call_tool_id
+                return
+            }
+            if (res.Type === "tool_call_watcher") {
+                // 先于 isToolStdoutStream(nodeID) 为true的节点传给前端
+                setToolStdOutSelectorMap(res)
                 return
             }
 
             if (res.Type === "tool_call_user_cancel") {
-                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
-                onSetToolResult(data?.call_tool_id, {
-                    status: "user_cancelled"
-                })
-                handleToolResultStatus(res, data?.call_tool_id)
+                handleToolResultStatus(res, "user_cancelled")
                 return
             }
             if (res.Type === "tool_call_done") {
-                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
-                onSetToolResult(data?.call_tool_id, {
-                    status: "success"
-                })
-                handleToolResultStatus(res, data?.call_tool_id)
+                handleToolResultStatus(res, "success")
                 return
             }
             if (res.Type === "tool_call_error") {
-                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
-                onSetToolResult(data?.call_tool_id, {
-                    status: "failed"
-                })
-                handleToolResultStatus(res, data?.call_tool_id)
+                handleToolResultStatus(res, "failed")
                 return
             }
 
-            if (res.Type === "tool_call_watcher") {
-                // 先于 isToolStdout(nodeID) 为true的节点传给前端
-                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallWatcher
-                if (!data?.id) return
-                if (!data?.selectors || !data?.selectors?.length) return
-                const currentToolData = getToolResult(data.call_tool_id)
-                if (currentToolData.callToolId === toolStdOutSelectors.current.callToolId) {
-                    // 当前的callToolId与本地工具中的一致
-                    toolStdOutSelectors.current.selectors = data.selectors
-                    toolStdOutSelectors.current.InteractiveId = data.id
-                }
-                return
-            }
             if (res.Type === "tool_call_summary") {
                 // 工具调用总结
-                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
-                const currentToolData = getToolResult(data.call_tool_id)
-                if (currentToolData.status === "user_cancelled") {
-                    currentToolData.summary = "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
-                } else {
-                    currentToolData.summary = data.summary || ""
-                }
-                onSetToolResult(data?.call_tool_id, {
-                    summary: currentToolData.summary
-                })
-                handleToolResultSummary(res, data?.call_tool_id || "")
+                handleToolResultSummary(res)
                 return
             }
 
@@ -613,7 +720,17 @@ function useTaskChat(params?: UseTaskChatParams) {
                 return
             }
 
-            console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
+            if (["filesystem_pin_directory", "filesystem_pin_filename"].includes(res.Type)) {
+                // 文件系统操作
+                handleFileSystemPin(res)
+                return
+            }
+
+            if (res.Type === "tool_call_decision") {
+                // 工具决策
+                handleToolCallDecision(res)
+                return
+            }
         } catch (error) {
             handleGrpcDataPushLog({
                 type: "error",
@@ -630,13 +747,13 @@ function useTaskChat(params?: UseTaskChatParams) {
         review.current = undefined
         currentPlansId.current = ""
         eventUUIDs.current.clear()
-        setStreams({})
-        toolStdOutSelectors.current = cloneDeep(DefaultToolStdOutSelectors)
-        toolResultMap.current = new Map()
+        setStreams([])
+        toolResultMap.current.clear()
+        toolStdOutSelectors.current.clear()
     })
 
     /** review 界面选项触发事件 */
-    const handleSend = useMemoizedFn((request: AIInputEvent, cb?: () => void) => {
+    const handleSend: handleSendFunc = useMemoizedFn(({request, optionValue, cb}) => {
         try {
             if (!review.current) {
                 yakitNotify("error", " 未获取到审阅信息，请停止对话并重试")
@@ -649,8 +766,18 @@ function useTaskChat(params?: UseTaskChatParams) {
                 handleAutoRviewData(review.current)
             }
 
+            const reviewInfo = cloneDeep(review.current)
+            ;(reviewInfo.data as AIReviewType).selected = request.InteractiveJSONInput || ""
+            ;(reviewInfo.data as AIReviewType).optionValue = optionValue
+
             review.current = undefined
             currentPlansId.current = ""
+
+            setStreams((old) => {
+                const newArr = [...old]
+                newArr.push(reviewInfo)
+                return newArr
+            })
 
             cb && cb()
         } catch (error) {}
@@ -661,9 +788,30 @@ function useTaskChat(params?: UseTaskChatParams) {
         handleFailTaskState()
     })
 
+    // 任务规划结束后的触发逻辑
+    const handlePlanExecEnd = useMemoizedFn((res: AIOutputEvent) => {
+        setStreams((old) => {
+            const newArr = [...old]
+            newArr.push({
+                ...genBaseAIChatData(res),
+                type: "end_plan_and_execution",
+                data: ""
+            })
+            return newArr
+        })
+    })
+
     return [
         {coordinatorId, plan, streams},
-        {handleSetData, handleResetData, handleSetCoordinatorId, handleSend, fetchPlanTree, handleCloseGrpc}
+        {
+            handleSetData,
+            handleResetData,
+            handleSetCoordinatorId,
+            handleSend,
+            fetchPlanTree,
+            handleCloseGrpc,
+            handlePlanExecEnd
+        }
     ] as const
 }
 

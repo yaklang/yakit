@@ -7,10 +7,5 @@ export interface AIAgentWelcomeRef {
 }
 
 export interface AIAgentWelcomeProps {
-    ref?: ForwardedRef<AIAgentWelcomeRef>
-    replaceForgeNoPrompt: boolean
-    setReplaceForgeNoPrompt: Dispatch<SetStateAction<boolean>>
-    setCacheReplaceForgeNoPrompt: () => void
     onTriageSubmit: (question: string) => void
-    onTaskSubmit: (request: AIStartParams) => void
 }

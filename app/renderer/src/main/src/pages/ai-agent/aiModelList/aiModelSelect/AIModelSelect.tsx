@@ -1,26 +1,30 @@
 import React, {useEffect, useState} from "react"
-import {AIModelSelectProps} from "./AIModelSelectType"
+import {AIModelItemProps, AIModelSelectProps} from "./AIModelSelectType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import useAIAgentDispatcher from "../../useContext/useDispatcher"
 import {getAIModelList} from "../utils"
 import styles from "./AIModelSelect.module.scss"
 import classNames from "classnames"
-import {GetAIModelListResponse} from "../../type/aiChat"
-import {AIOnlineModelIconMap} from "../../defaultConstant"
+import {GetAIModelListResponse} from "../../type/aiModel"
+import {AIAgentSettingDefault, AIOnlineModelIconMap} from "../../defaultConstant"
 import {OutlineAtomIconByStatus} from "../AIModelList"
 import useAIAgentStore from "../../useContext/useStore"
 import {AIChatSelect} from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
+import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
+import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
 
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
-    const {disabled} = props
     //#region AI model
     const {setting} = useAIAgentStore()
     const {setSetting} = useAIAgentDispatcher()
+    const {chatIPCData} = useChatIPCStore()
+    const {handleSendSyncMessage} = useChatIPCDispatcher()
     const [aiModelOptions, setAIModelOptions] = useState<GetAIModelListResponse>({
         onlineModels: [],
         localModels: []
     })
+    const [open, setOpen] = useState<boolean>(false)
     useEffect(() => {
         getAIModelListOption()
     }, [])
@@ -48,8 +52,20 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         setSetting && setSetting((old) => ({...old, AIService: value}))
     })
 
+    const onSetOpen = useMemoizedFn((v: boolean) => {
+        setOpen(v)
+        if (!v && chatIPCData.execute) {
+            handleSendSyncMessage({
+                syncType: "update_config",
+                params: {
+                    AIService: modelValue
+                }
+            })
+        }
+    })
+
     const modelValue = useCreation(() => {
-        return setting?.AIService || ""
+        return setting?.AIService || AIAgentSettingDefault.AIService
     }, [setting?.AIService])
 
     const isHaveData = useCreation(() => {
@@ -59,7 +75,6 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     //#endregion
     return isHaveData ? (
         <AIChatSelect
-            disabled={disabled}
             value={modelValue}
             onSelect={onSelectModel}
             dropdownRender={(menu, setOpen) => {
@@ -71,15 +86,18 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 )
             }}
             getList={getAIModelListOption}
+            open={open}
+            setOpen={onSetOpen}
         >
             {aiModelOptions.onlineModels.length > 0 && (
                 <YakitSelect.OptGroup key='线上' label='线上'>
                     {aiModelOptions.onlineModels.map((nodeItem) => (
                         <YakitSelect.Option key={nodeItem.Type} value={nodeItem.Type}>
-                            <div className={classNames(styles["select-option-wrapper"])}>
+                            {/* <div className={classNames(styles["select-option-wrapper"])}>
                                 {AIOnlineModelIconMap[nodeItem.Type]}
                                 <div className={styles["option-text"]}>{nodeItem.Type}</div>
-                            </div>
+                            </div> */}
+                            <AIModelItem value={nodeItem.Type} />
                         </YakitSelect.Option>
                     ))}
                 </YakitSelect.OptGroup>
@@ -88,10 +106,11 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 <YakitSelect.OptGroup key='本地' label='本地'>
                     {aiModelOptions.localModels.map((nodeItem) => (
                         <YakitSelect.Option key={nodeItem.Name} value={nodeItem.Name}>
-                            <div className={styles["select-option-wrapper"]}>
+                            {/* <div className={styles["select-option-wrapper"]}>
                                 <OutlineAtomIconByStatus isRunning={true} iconClassName={styles["icon-small"]} />
                                 <div className={styles["option-text"]}>{nodeItem.Name}</div>
-                            </div>
+                            </div> */}
+                            <AIModelItem value={nodeItem.Name} />
                         </YakitSelect.Option>
                     ))}
                 </YakitSelect.OptGroup>
@@ -99,5 +118,22 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         </AIChatSelect>
     ) : (
         <></>
+    )
+})
+
+export const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
+    const {value} = props
+    const icon = useCreation(() => {
+        return (
+            AIOnlineModelIconMap[value] || (
+                <OutlineAtomIconByStatus isRunning={true} iconClassName={styles["icon-small"]} />
+            )
+        )
+    }, [value])
+    return (
+        <div className={classNames(styles["select-option-wrapper"])}>
+            {icon}
+            <div className={styles["option-text"]}>{value}</div>
+        </div>
     )
 })

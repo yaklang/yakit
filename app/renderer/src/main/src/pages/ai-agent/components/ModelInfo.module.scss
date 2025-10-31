@@ -1,0 +1,37 @@
+.modal-info {
+    width: 100%;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    &-title {   
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 14px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        padding: 3px 6px;
+        display: flex;
+        align-items: center;
+       
+        svg {
+            width: 12px;
+            height: 12px;
+            margin-right: 2px;
+        }
+        &-time {
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            margin-left: 6px;
+        }
+        .icon-small{
+            svg {
+                width: 12px;
+                height: 12px;
+                margin-right: 2px;
+            }
+        }
+    }
+    &-icons{
+        display: flex;
+        align-items: center;
+    }
+}

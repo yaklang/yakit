@@ -1,0 +1,62 @@
+@use "../../../styles/mixin.scss" as mixin;
+
+.chat-card {
+    width: 100%;
+    padding: 8px 12px;
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    &-title {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0 8px;
+
+        &-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px 0 0;
+            flex: 1 1 auto; 
+            min-width: 0; 
+        }
+
+        &-icon {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+
+            svg {
+                width: 100%;
+                height: 100%;
+                color: var(--Colors-Use-Neutral-Text-2-Primary);
+            }
+        }
+
+        &-text {
+            font-size: 16px;
+            line-height: 24px;
+            flex: 1;
+            min-width: 0; 
+            @include mixin.text-ellipsis(1, false, false, true);
+        }
+
+        &-more {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            overflow: hidden;
+        }
+    }
+
+    &-footer {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+}

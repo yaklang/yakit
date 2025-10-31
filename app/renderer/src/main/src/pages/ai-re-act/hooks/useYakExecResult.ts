@@ -7,7 +7,7 @@ import {UseYakExecResultEvents, UseYakExecResultParams, UseYakExecResultState} f
 import {handleGrpcDataPushLog} from "./utils"
 import {v4 as uuidv4} from "uuid"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
-import {AIChatQSData} from "./aiRender"
+import {AIChatQSData, AIYakExecFileRecord} from "./aiRender"
 
 // 属于该 hook 处理数据的类型
 export const UseYakExecResultTypes = ["yak_exec_result"]
@@ -25,7 +25,23 @@ function useYakExecResult(params?: UseYakExecResultParams) {
     const cardKVPair = useRef<Map<string, AIAgentGrpcApi.AICacheCard>>(new Map<string, AIAgentGrpcApi.AICacheCard>())
     const cardTimeRef = useRef<NodeJS.Timeout | null>(null)
     const [card, setCard] = useState<AIAgentGrpcApi.AIInfoCard[]>([])
-    const [yakExecResultLogs, setYakExecResultLogs] = useState<StreamResult.Log[]>([]) // log:目前只有file
+    const [yakExecResultLogs, setYakExecResultLogs] = useState<StreamResult.Log[]>([]) // log
+
+    const execFileRecordOrder = useRef(1)
+    /** 插件执行过程中的文件操作记录 */
+    const [execFileRecord, setExecFileRecord] = useState<Map<string, AIYakExecFileRecord[]>>(new Map())
+    const updateExecFileRecord = useMemoizedFn((CallToolID: string, info: StreamResult.Log) => {
+        try {
+            setExecFileRecord((old) => {
+                const newMap = new Map(old)
+                const keyName = CallToolID || "system"
+                const record = newMap.get(keyName) || []
+                record.push({...info, id: uuidv4(), order: execFileRecordOrder.current++})
+                newMap.set(keyName, [...record])
+                return newMap
+            })
+        } catch (error) {}
+    })
 
     const onHandleCard = useMemoizedFn((value: AIAgentGrpcApi.AICardMessage) => {
         const logData = value.content as StreamResult.Log
@@ -54,20 +70,15 @@ function useYakExecResult(params?: UseYakExecResultParams) {
         }, 500)
     })
 
-    const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
-        try {
-            let ipcContent = Uint8ArrayToString(res.Content) || ""
-
-            if (res.Type === "yak_exec_result") {
-                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIPluginExecResult
-                onHandleYakExecResult(data)
-                return
-            }
-        } catch (error) {
-            handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
-        }
+    /**
+     * @description 该方法可以记录yak_exec_result中所有的日志，但是目前只对接level:file;后续根据可需求更改
+     */
+    const onHandleYakExecResultLogs = useMemoizedFn((obj: AIAgentGrpcApi.AICardMessage) => {
+        const log = obj.content as StreamResult.Log
+        setYakExecResultLogs((perLog) => [...perLog, {...log, id: uuidv4()}])
     })
-    const onHandleYakExecResult = useMemoizedFn((value: AIAgentGrpcApi.AIPluginExecResult) => {
+
+    const onHandleYakExecResult = useMemoizedFn((CallToolID: string, value: AIAgentGrpcApi.AIPluginExecResult) => {
         try {
             if (!value?.IsMessage) return
             const message = value?.Message || ""
@@ -80,29 +91,40 @@ function useYakExecResult(params?: UseYakExecResultParams) {
                     onHandleCard(obj)
                     break
                 case "file":
-                    onHandleYakExecResultLogs(obj)
+                    updateExecFileRecord(CallToolID, content)
                     break
                 default:
                     break
             }
         } catch (error) {}
     })
-    /**
-     * @description 该方法可以记录yak_exec_result中所有的日志，但是目前只对接level:file;后续根据可需求更改
-     */
-    const onHandleYakExecResultLogs = useMemoizedFn((obj: AIAgentGrpcApi.AICardMessage) => {
-        const log = obj.content as StreamResult.Log
-        setYakExecResultLogs((perLog) => [...perLog, {...log, id: uuidv4()}])
+
+    const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            let ipcContent = Uint8ArrayToString(res.Content) || ""
+
+            if (res.Type === "yak_exec_result") {
+                const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIPluginExecResult
+                onHandleYakExecResult(res.CallToolID || "", data)
+                return
+            }
+        } catch (error) {
+            handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
+        }
     })
+
     /** 重置所有数据 */
     const handleResetData = useMemoizedFn(() => {
         cardKVPair.current = new Map()
         cardTimeRef.current = null
         setCard([])
+        setYakExecResultLogs([])
+        execFileRecordOrder.current = 1
+        setExecFileRecord(new Map())
     })
 
     return [
-        {card, yakExecResultLogs},
+        {card, execFileRecord, yakExecResultLogs},
         {handleSetData, handleResetData}
     ] as const
 }

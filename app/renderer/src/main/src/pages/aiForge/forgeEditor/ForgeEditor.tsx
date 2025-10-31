@@ -40,7 +40,7 @@ import {
     DefaultForgeTypeList,
     DefaultForgeYakToCode
 } from "../defaultConstant"
-import {GetAIToolListRequest} from "@/pages/ai-agent/type/aiChat"
+import {GetAIToolListRequest} from "@/pages/ai-agent/type/aiTool"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
@@ -61,7 +61,7 @@ import {grpcGetAIToolList} from "@/pages/ai-agent/aiToolList/utils"
 import {QSInputTextarea} from "@/pages/ai-agent/template/template"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {AIForge} from "@/pages/ai-agent/AIForge/type"
+import {AIForge} from "@/pages/ai-agent/type/forge"
 
 import classNames from "classnames"
 import styles from "./ForgeEditor.module.scss"
@@ -119,7 +119,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
             }
             console.log("handleModifyInit-fetchCacheID", id)
 
-            grpcGetAIForge({ID:id})
+            grpcGetAIForge({ID: id})
                 .then((res) => {
                     if (!res) {
                         yakitNotify("error", `未获取到待编辑模板的详情, 请关闭页面重试`)
@@ -262,7 +262,16 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
                     yakitNotify("warning", "保存成功但未获取到执行的模板数据")
                     return
                 }
-                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))    
+                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
+                setTimeout(() => {
+                    emiter.emit(
+                        "onReActChatEvent",
+                        JSON.stringify({
+                            type: "open-forge-form",
+                            params: {value: forgeData.current}
+                        })
+                    )
+                }, 100)
             })
             .catch(() => {})
     })

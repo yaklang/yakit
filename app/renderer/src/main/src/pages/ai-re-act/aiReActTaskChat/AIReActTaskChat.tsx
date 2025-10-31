@@ -10,7 +10,7 @@ import {
     VulnerabilitiesRisksTable
 } from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {AITabsEnumType} from "@/pages/ai-agent/aiAgentType"
-import {AITabs, AITabsEnum, defaultChatIPCData} from "@/pages/ai-agent/defaultConstant"
+import {AITabs, AITabsEnum} from "@/pages/ai-agent/defaultConstant"
 import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
@@ -18,38 +18,28 @@ import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import classNames from "classnames"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {ChevrondownButton, RoundedStopButton} from "../aiReActChat/AIReActComponent"
-import {UseAIPerfDataState, UseTaskChatState, UseYakExecResultState} from "../hooks/type"
 import {AIReActTaskChatReview} from "@/pages/ai-agent/aiAgentChat/AIAgentChat"
 import {OutlineArrowdownIcon, OutlineArrowupIcon} from "@/assets/icon/outline"
 import {formatNumberUnits} from "@/pages/ai-agent/utils"
-import {LocalPluginLog} from "@/pages/plugins/operator/pluginExecuteResult/LocalPluginLog"
+import {AIFileSystemList} from "@/pages/ai-agent/components/aiFileSystemList/AIFileSystemList"
+import useAIChatUIData from "../hooks/useAIChatUIData"
+import emiter from "@/utils/eventBus/eventBus"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {execute, onStop} = props
-    const {activeChat} = useAIAgentStore()
-    const {chatIPCData} = useChatIPCStore()
-
-    const aiPerfData: UseAIPerfDataState = useCreation(() => {
-        return chatIPCData.aiPerfData || defaultChatIPCData.aiPerfData
-    }, [chatIPCData.aiPerfData])
-
-    // ui实际渲染数据-consumption
-    const uiConsumption = useCreation(() => {
-        if (activeChat && activeChat.answer && activeChat.answer.aiPerfData)
-            return activeChat.answer.aiPerfData.consumption
-        return aiPerfData.consumption
-    }, [activeChat, aiPerfData.consumption])
+    const {aiPerfData} = useAIChatUIData()
     // AI的Token消耗
     const token = useCreation(() => {
         let input = 0
         let output = 0
-        const keys = Object.keys(uiConsumption || {})
+        const {consumption} = aiPerfData
+        const keys = Object.keys(consumption || {})
         for (let name of keys) {
-            input += uiConsumption[name]?.input_consumption || 0
-            output += uiConsumption[name]?.output_consumption || 0
+            input += consumption[name]?.input_consumption || 0
+            output += consumption[name]?.output_consumption || 0
         }
         return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
-    }, [uiConsumption])
+    }, [aiPerfData.consumption])
     return (
         <div className={styles["ai-re-act-task-chat"]}>
             <AIReActTaskChatLeftSide />
@@ -82,19 +72,11 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 })
 
 export default AIReActTaskChat
-
 const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
-    const {chatIPCData, reviewInfo, planReviewTreeKeywordsMap} = useChatIPCStore()
-
-    const taskChat: UseTaskChatState = useCreation(() => {
-        return chatIPCData.taskChat || defaultChatIPCData.taskChat
-    }, [chatIPCData.taskChat])
-
-    const yakExecResult: UseYakExecResultState = useCreation(() => {
-        return chatIPCData.yakExecResult || defaultChatIPCData.yakExecResult
-    }, [chatIPCData.yakExecResult])
-
-    const {coordinatorId, plan, streams} = taskChat
+    const {reviewInfo, planReviewTreeKeywordsMap} = useChatIPCStore()
+    const {taskChat, yakExecResult} = useAIChatUIData()
+    const {chatIPCData} = useChatIPCStore()
+    const {coordinatorId, streams} = taskChat
 
     //#region AI tab 相关逻辑
     const [activeKey, setActiveKey] = useState<AITabsEnumType>(AITabsEnum.Task_Content)
@@ -111,11 +93,12 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         }
     }, [coordinatorId])
     useInterval(() => {
-        getTotal()
+        if (chatIPCData.execute) getTotal()
     }, interval)
     const getTotal = useMemoizedFn(() => {
         if (!coordinatorId) return
         apiQueryRisksTotalByRuntimeId(coordinatorId).then((allRes) => {
+            console.log("allRes.Total in task chat", allRes.Total)
             if (+allRes.Total > 0) {
                 setTempTotal(+allRes.Total)
             }
@@ -133,11 +116,11 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             case AITabsEnum.Task_Content:
                 return (
                     <>
-                        <AIAgentChatStream tasks={plan} streams={streams} />
+                        <AIAgentChatStream streams={streams} />
                     </>
                 )
             case AITabsEnum.File_System:
-                return <LocalPluginLog loading={false} list={yakExecResult.yakExecResultLogs} />
+                return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} />
             case AITabsEnum.Risk:
                 return !!coordinatorId ? (
                     <VulnerabilitiesRisksTable
@@ -185,6 +168,14 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         }
         return tab
     }, [tempTotal])
+
+    useEffect(() => {
+        emiter.on("switchAIActTab", setActiveKey)
+        return () => {
+            emiter.off("switchAIActTab", setActiveKey)
+        }
+    }, [])
+
     //#endregion
     return (
         <>
@@ -206,45 +197,8 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
 })
 
 const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = React.memo((props) => {
-    const {} = props
-
-    const {chatIPCData} = useChatIPCStore()
-    const {aiPerfData, yakExecResult, taskChat} = chatIPCData
-
-    const {activeChat} = useAIAgentStore()
-
+    const {aiPerfData, yakExecResult, taskChat} = useAIChatUIData()
     const [leftExpand, setLeftExpand] = useState(true)
-
-    // #region chat-UI实际展示数据
-    const activeAIPerfData = useCreation(() => {
-        return activeChat?.answer?.aiPerfData
-    }, [activeChat?.id])
-    const activeAITaskChat = useCreation(() => {
-        return activeChat?.answer?.taskChat
-    }, [activeChat?.id])
-    // ui实际渲染数据-pressure
-    const uiPressure = useCreation(() => {
-        if (!!activeAIPerfData) return activeAIPerfData.pressure
-        return aiPerfData.pressure
-    }, [activeAIPerfData?.pressure, aiPerfData.pressure])
-    // ui实际渲染数据-firstCost
-    const uiFirstCost = useCreation(() => {
-        if (!!activeAIPerfData) return activeAIPerfData.firstCost
-        return aiPerfData.firstCost
-    }, [activeAIPerfData?.firstCost, aiPerfData.firstCost])
-    // ui实际渲染数据-consumption
-    const uiConsumption = useCreation(() => {
-        if (!!activeAIPerfData) return activeAIPerfData.consumption
-        return aiPerfData.consumption
-    }, [activeAIPerfData?.consumption, aiPerfData.consumption])
-    const uiPlan = useCreation(() => {
-        if (!!activeAITaskChat) return activeAITaskChat.plan
-        return taskChat.plan
-    }, [activeAITaskChat?.plan, taskChat.plan])
-    // useEffect(() => {
-    //     console.log("aiPerfData", aiPerfData)
-    // }, [aiPerfData])
-    // #endregion
     return (
         <div
             className={classNames(styles["content-left-side"], {
@@ -254,9 +208,9 @@ const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = React.me
             <AIChatLeftSide
                 expand={leftExpand}
                 setExpand={setLeftExpand}
-                tasks={uiPlan}
-                pressure={uiPressure}
-                cost={uiFirstCost}
+                tasks={taskChat.plan}
+                pressure={aiPerfData.pressure}
+                cost={aiPerfData.firstCost}
                 card={yakExecResult.card}
             />
             <div className={styles["open-wrapper"]} onClick={() => setLeftExpand(true)}>

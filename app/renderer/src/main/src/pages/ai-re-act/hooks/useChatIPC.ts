@@ -7,12 +7,12 @@ import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
 import useCasualChat, {UseCasualChatTypes} from "./useCasualChat"
 import useYakExecResult, {UseYakExecResultTypes} from "./useYakExecResult"
-import {v4 as uuidv4} from "uuid"
 import useTaskChat, {UseTaskChatTypes} from "./useTaskChat"
-import {handleGrpcDataPushLog} from "./utils"
+import {genBaseAIChatData, handleGrpcDataPushLog} from "./utils"
 import {AIChatSendParams, UseCasualChatEvents, UseChatIPCEvents, UseChatIPCParams, UseChatIPCState} from "./type"
 import {AIChatQSData} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
+import {convertNodeIdToVerbose} from "./defaultConstant"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -21,7 +21,7 @@ const UseCasualAndTaskTypes = [
     "tool_use_review_require",
     "require_user_interactive",
     "review_release",
-    // "stream",
+    "stream",
     "tool_call_start",
     "tool_call_user_cancel",
     "tool_call_done",
@@ -31,13 +31,19 @@ const UseCasualAndTaskTypes = [
     // 对 tool_review 的 ai 评分
     "ai_review_start",
     "ai_review_countdown",
-    "ai_review_end"
+    "ai_review_end",
+    // 文件系统操作相关
+    "filesystem_pin_directory",
+    "filesystem_pin_filename",
+    // 决策总结
+    "tool_call_decision"
 ]
 
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
 function useChatIPC(params?: UseChatIPCParams) {
-    const {onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onTimelineMessage, onEnd} = params || {}
+    const {getRequest, onTaskStart, onTaskReview, onTaskReviewExtra, onReviewRelease, onTimelineMessage, onEnd} =
+        params || {}
 
     // 自由对话-review 信息的自动释放
     const handleCasualReviewRelease = useMemoizedFn((id: string) => {
@@ -46,6 +52,12 @@ function useChatIPC(params?: UseChatIPCParams) {
     // 任务规划-review 信息的自动释放
     const handleTaskReviewRelease = useMemoizedFn((id: string) => {
         onReviewRelease && onReviewRelease("task", id)
+    })
+
+    // 向接口发送消息
+    const sendRequest = useMemoizedFn((request: AIInputEvent) => {
+        if (!chatID.current) return
+        ipcRenderer.invoke("send-ai-re-act", chatID.current, request)
     })
 
     // #region 启动流接口后的相关全局数据
@@ -57,7 +69,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     // 建立通信时的请求参数
     const chatRequest = useRef<AIStartParams>()
     const fetchRequest = useMemoizedFn(() => {
-        return chatRequest.current
+        return getRequest?.()
     })
 
     // 通信的状态
@@ -94,13 +106,14 @@ function useChatIPC(params?: UseChatIPCParams) {
         updateLog: setLogs,
         onReview: onTaskReview,
         onReviewExtra: onTaskReviewExtra,
-        onReviewRelease: handleTaskReviewRelease
+        onReviewRelease: handleTaskReviewRelease,
+        sendRequest: sendRequest
     })
     // #endregion
 
     // #region review事件相关方法
     /** review 界面选项触发事件 */
-    const onSend = useMemoizedFn(({token, type, params}: AIChatSendParams) => {
+    const onSend = useMemoizedFn(({token, type, params, optionValue}: AIChatSendParams) => {
         try {
             if (!execute) {
                 yakitNotify("warning", "AI 未执行任务，无法发送选项")
@@ -116,9 +129,13 @@ function useChatIPC(params?: UseChatIPCParams) {
                 case "task":
                     const events: UseCasualChatEvents | UseChatIPCEvents =
                         type === "casual" ? casualChatEvent : taskChatEvent
-                    events.handleSend(params, () => {
-                        console.log("send-ai-re-act---\n", token, params)
-                        ipcRenderer.invoke("send-ai-re-act", token, params)
+                    events.handleSend({
+                        request: params,
+                        optionValue,
+                        cb: () => {
+                            console.log("send-ai-re-act---\n", token, params)
+                            ipcRenderer.invoke("send-ai-re-act", token, params)
+                        }
                     })
                     break
 
@@ -166,6 +183,14 @@ function useChatIPC(params?: UseChatIPCParams) {
                     }
                     return
                 }
+                if (res.Type === "end_plan_and_execution") {
+                    // 结束任务规划，并传出任务规划流的标识 coordinator_id
+                    const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
+                    if (startInfo.coordinator_id && planCoordinatorId.current === startInfo.coordinator_id) {
+                        taskChatEvent.handlePlanExecEnd(res)
+                    }
+                    return
+                }
 
                 casualChatEvent.handleSetCoordinatorId(res.CoordinatorId)
 
@@ -178,6 +203,14 @@ function useChatIPC(params?: UseChatIPCParams) {
                 if (UseYakExecResultTypes.includes(res.Type)) {
                     // 执行过程中插件输出的卡片
                     yakExecResultEvent.handleSetData(res)
+
+                    // 其中的文件输出也要和对话内容绑定一次
+                    if (planCoordinatorId.current === res.CoordinatorId) {
+                        taskChatEvent.handleSetData(res)
+                    } else {
+                        casualChatEvent.handleSetData(res)
+                    }
+
                     return
                 }
 
@@ -188,7 +221,15 @@ function useChatIPC(params?: UseChatIPCParams) {
                     if (obj.level) {
                         // 执行日志信息
                         const data = obj as AIAgentGrpcApi.Log
-                        pushLog({id: uuidv4(), type: "log", data: data, Timestamp: res.Timestamp})
+                        pushLog({
+                            ...genBaseAIChatData(res),
+                            type: "log",
+                            data: {
+                                ...data,
+                                NodeId: res.NodeId,
+                                NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId)
+                            }
+                        })
                     } else if (res.NodeId === "timeline") {
                         const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineDump
                         onTimelineMessage && onTimelineMessage(data.dump)
@@ -229,16 +270,6 @@ function useChatIPC(params?: UseChatIPCParams) {
                     return
                 }
 
-                // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
-                if (res.Type === "stream") {
-                    if (planCoordinatorId.current === res.CoordinatorId && !!res.TaskIndex) {
-                        taskChatEvent.handleSetData(res)
-                    } else {
-                        casualChatEvent.handleSetData(res)
-                    }
-                    return
-                }
-
                 if (UseCasualAndTaskTypes.includes(res.Type)) {
                     // 自由对话和任务规划共用的类型
                     if (planCoordinatorId.current === res.CoordinatorId) {
@@ -250,19 +281,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 }
 
                 console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
-                setLogs((pre) =>
-                    pre.concat([
-                        {
-                            id: uuidv4(),
-                            type: "log",
-                            Timestamp: res.Timestamp,
-                            data: {
-                                level: "info",
-                                message: `${JSON.stringify({...res, Content: ipcContent, StreamDelta: undefined})}`
-                            }
-                        }
-                    ])
-                )
+                handleGrpcDataPushLog({type: "info", info: res, pushLog: pushLog})
             } catch (error) {
                 handleGrpcDataPushLog({type: "error", info: res, pushLog})
             }
@@ -285,7 +304,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         console.log("start-ai-re-act", token, params)
 
         // 初次用户对话的问题，属于自由对话中的问题
-        casualChatEvent.handleSend({IsFreeInput: true, FreeInput: params?.Params?.UserQuery || ""})
+        casualChatEvent.handleSend({request: {IsFreeInput: true, FreeInput: params?.Params?.UserQuery || ""}})
 
         ipcRenderer.invoke("start-ai-re-act", token, params)
     })
@@ -295,7 +314,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         if (option?.tip) {
             option.tip()
         } else {
-            yakitNotify("info", "useChatIPC AI 任务已取消")
+            // yakitNotify("info", "useChatIPC AI 任务已取消")
         }
     })
 

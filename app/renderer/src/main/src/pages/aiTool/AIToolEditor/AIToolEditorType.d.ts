@@ -1,4 +1,4 @@
-import {SaveAIToolRequest} from "@/pages/ai-agent/type/aiChat"
+import {SaveAIToolRequest} from "@/pages/ai-agent/type/aiTool"
 
 export interface AIToolEditorProps {
     pageId: string

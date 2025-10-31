@@ -1,0 +1,40 @@
+.stream-content {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.stream-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.stream-prompt {
+    width: 100%;
+    height: 52px;
+    border-left: 2px solid var(--yakit-colors-Yellow-70);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-radius: 0 4px 4px 0;
+    background-color: var(--yakit-colors-Yellow-30);
+    font-size: 12px;
+    font-weight: 400;
+    border-radius: 0 4px 4px 0;
+    &-title {
+        display: flex;
+        align-items: center;
+        color: var(--yakit-colors-Yellow-80);
+        gap: 4px;
+    }
+    &-content {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+
+    svg {
+        color: var(--yakit-colors-Yellow-70);
+    }
+}

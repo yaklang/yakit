@@ -74,7 +74,7 @@ type Events = [
     AIAgentEventProps,
     YakRunnerScanHistoryEventProps,
     AIReActEventProps,
-    ReportPageEventProps
+    ReportPageEventProps,
 ]
 
 type CheckVal = Exchange<ArrContrast<Events>>

@@ -1,0 +1,18 @@
+.question-wrapper {
+    justify-content: flex-start;
+}
+.content-wrapper {
+    max-width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+}
+.review-wrapper {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    flex: none;
+}
+
+.ai-mark-down-wrapper {
+    padding: 8px 12px;
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    border-radius: 8px;
+}

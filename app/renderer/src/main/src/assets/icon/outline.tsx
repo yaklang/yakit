@@ -5877,3 +5877,21 @@ const MCP = () => (
 export const OutlineMCPIcon = (props: Partial<IconProps>) => {
     return <Icon component={MCP} {...props} />
 }
+const ListTodo = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M3 17L5 19L9 15M13 6H21M13 12H21M13 18H21M4 5H8C8.55228 5 9 5.44772 9 6V10C9 10.5523 8.55228 11 8 11H4C3.44772 11 3 10.5523 3 10V6C3 5.44772 3.44772 5 4 5Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Outline/ListTodo
+ */
+export const OutlineListTodoIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ListTodo} {...props} />
+}

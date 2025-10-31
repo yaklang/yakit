@@ -1,14 +1,11 @@
-import {AIChatQSData} from "../hooks/aiRender"
+import {AIMarkdownProps} from "@/pages/ai-agent/components/aiMarkdown/type"
+import {AIChatQSData, ChatStream} from "../hooks/aiRender"
 
 export interface AIReActChatContentsPProps {
     chats: AIChatQSData[]
 }
 
-export interface AIStreamChatContentProps {
-    stream: string
-    nodeLabel: string
-}
-
-export interface AIMarkdownProps extends AIStreamChatContentProps {
-    className?:string
+export interface AIStreamNodeProps {
+    stream: ChatStream
+    aiMarkdownProps?: {className: string}
 }

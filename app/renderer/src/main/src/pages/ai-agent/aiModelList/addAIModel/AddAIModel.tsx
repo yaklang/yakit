@@ -5,7 +5,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-import {AddLocalModelRequest} from "../../type/aiChat"
+import {AddLocalModelRequest} from "../../type/aiModel"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {grpcAddLocalModel, grpcUpdateLocalModel} from "../utils"
@@ -28,7 +28,7 @@ export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
     const modelTypeOptions: YakitSelectProps["options"] = useCreation(() => {
         return [
             {label: "aichat", value: AILocalModelTypeEnum.AIChat},
-            {label: "embedding", value: AILocalModelTypeEnum.Embedding},
+            {label: "embedding", value: AILocalModelTypeEnum.Embedding}
             // {label: "speech-to-text", value: AILocalModelTypeEnum.SpeechToText}
         ]
     }, [])
