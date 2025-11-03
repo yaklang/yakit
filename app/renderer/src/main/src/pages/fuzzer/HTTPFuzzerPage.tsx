@@ -1,4 +1,4 @@
-import React, {CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react"
+import React, {CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState, createRef} from "react"
 import {Form, Result, Space, Popover, Tooltip, Divider, Descriptions} from "antd"
 import {
     IMonacoEditor,
@@ -8,7 +8,7 @@ import {
 } from "../../utils/editors"
 import {showDrawer} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
-import {QueryFuzzerLabelResponseProps, StringFuzzer} from "./StringFuzzer"
+import {QueryFuzzerLabelResponseProps, StringFuzzer, StringFuzzerRef} from "./StringFuzzer"
 import {CodingPopover, FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info, yakitFailed, yakitNotify, warn} from "../../utils/notification"
@@ -593,16 +593,25 @@ export const newWebFuzzerTab = (params: {
 
 /**@description 插入 yak.fuzz 语法 */
 export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
+    const stringFuzzerRef = createRef<StringFuzzerRef>()
+    
     const m = showYakitModal({
         title: i18n.language === "zh" ? "Fuzzer Tag 调试工具" : "Fuzzer Tag Debug Tool",
         width: "70%",
         footer: null,
+        maskClosable: false,
+        keyboard: false,
+        onCancel: () => {
+            //关闭弹窗取消任务
+            stringFuzzerRef.current?.handleCancel();
+        },
         subTitle:
             i18n.language === "zh"
                 ? "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag"
                 : 'Debug mode is suitable for generating or modifying payloads. Nesting defaults to the outermost level, but you can select a position to nest. "Insert" simply inserts the fuzztag at the cursor position.',
         content: (
             <StringFuzzer
+                ref={stringFuzzerRef}
                 insertCallback={(template: string) => {
                     if (!template) {
                         yakitNotify(

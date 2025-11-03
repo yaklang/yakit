@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useState, useImperativeHandle, forwardRef} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
@@ -65,7 +65,11 @@ interface StringFuzzerProps {
     close?: () => void
 }
 
-export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
+export interface StringFuzzerRef {
+    handleCancel: () => void
+}
+
+export const StringFuzzer = forwardRef<StringFuzzerRef, StringFuzzerProps>((props, ref) => {
     const {insertCallback, close} = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const [templateEditor, setTemplateEditor] = useState<IMonacoEditor>()
@@ -85,6 +89,16 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
         setLoading(true)
         ipcRenderer.invoke("string-fuzzer", {template, token})
     })
+
+    const handleCancel = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-string-fuzzer", token).then(() => {
+            setLoading(false)
+        })
+    })
+
+    useImperativeHandle(ref, () => ({
+        handleCancel
+    }))
 
     useEffect(() => {
         if (!random) return
@@ -252,9 +266,10 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
     }
 
     return (
-        <YakitSpin spinning={loading}>
+        <>
             <div className={styles["stringFuzzer"]}>
                 <div className={styles["stringFuzzer-left"]}>
+                    <YakitSpin spinning={loading} indicator={<></>}>
                     <div className={styles["stringFuzzer-search"]}>
                         <YakitInput
                             allowClear
@@ -339,9 +354,11 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                             <YakitEmpty></YakitEmpty>
                         )}
                     </div>
+                    </YakitSpin>
                 </div>
                 <div className={styles["stringFuzzer-right"]}>
                     <div className={styles["stringFuzzer-right-editor"]}>
+                        <YakitSpin spinning={loading}>
                         <YakitEditor
                             type={"http"}
                             value={template}
@@ -351,8 +368,14 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                                 setTemplateEditor(editor)
                             }}
                         />
+                        </YakitSpin>
                     </div>
-                    <div className={styles["stringFuzzer-right-btns"]}>
+                <div className={styles["stringFuzzer-right-btns"]}>
+                {loading ? 
+                        <YakitButton type="primary" onClick={handleCancel}>
+                            {t("StringFuzzer.cancel")}
+                        </YakitButton>: 
+                    <>
                         <YakitButton type='outline2' onClick={onSubmit}>
                             {t("StringFuzzer.viewGeneratedPayload")}
                         </YakitButton>
@@ -378,9 +401,10 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                         <YakitButton type='outline2' onClick={addToCommonTag}>
                             {t("StringFuzzer.addToFavoriteTags")}
                         </YakitButton>
+                    </>}
                     </div>
                 </div>
             </div>
-        </YakitSpin>
+        </>
     )
-}
+})

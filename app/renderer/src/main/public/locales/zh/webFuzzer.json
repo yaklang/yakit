@@ -450,7 +450,8 @@
     "insertTagPosition": "插入标签所在位置",
     "confirmResetDictionary": "确认要重置你的字典管理吗？",
     "addToFavoriteTags": "添加到常用标签",
-    "tag": "标签"
+    "tag": "标签",
+    "cancel": "取消"
   },
   "HTTPFuzzerHostInput": {
     "domainRequired": "域名不能为空",
