@@ -40,6 +40,7 @@ import {AITool} from "../type/aiTool"
 import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
 import {AIChatContent} from "../aiChatContent/AIChatContent"
+import {AITabsEnum} from "../defaultConstant"
 
 const AIReActTaskChat = React.lazy(() => import("../../ai-re-act/aiReActTaskChat/AIReActTaskChat"))
 
@@ -62,15 +63,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setMode("re-act")
         handleStart(qs)
     })
-    const [isShowTask, setIsShowTask] = useState<boolean>(false)
 
     useEffect(() => {
         if (taskChatIsEmpty(activeChat?.answer?.taskChat)) {
-            setMode("task")
-            setIsShowTask(true)
+            onSetKeyTask()
         } else if (!!activeChat?.id) {
-            setMode("re-act")
-            setIsShowTask(false)
+            onSetReAct()
         }
     }, [activeChat])
 
@@ -94,8 +92,17 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
     /**自由对话中触发任务开始 */
     const handleTaskStart = useMemoizedFn(() => {
+        onSetKeyTask()
+    })
+
+    const onSetKeyTask = useMemoizedFn(() => {
         setMode("task")
-        setIsShowTask(true)
+        emiter.emit("switchAIActTab", AITabsEnum.Task_Content)
+    })
+
+    const onSetReAct = useMemoizedFn(() => {
+        setMode("re-act")
+        emiter.emit("switchAIActTab")
     })
 
     // 储存 replaceForgeNoPrompt 存放到缓存里值，阻止多次设置重复值
@@ -281,8 +288,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         }
         setActiveChat && setActiveChat(newChat)
         setChats && setChats((old) => [...old, newChat])
-        setMode("re-act")
-        setIsShowTask(false)
+        onSetReAct()
         // 发送初始化参数
         const startParams: AIInputEvent = {
             IsStart: true,

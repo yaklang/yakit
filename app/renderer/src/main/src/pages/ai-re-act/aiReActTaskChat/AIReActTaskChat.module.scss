@@ -22,7 +22,6 @@
     align-items: flex-start;
     flex: 1;
     overflow: hidden;
-    border-right: 1px solid var(--Colors-Use-Neutral-Border);
     @include AIReActChat.content-side("left");
     .chat-content-wrapper {
         @extend %display-column-center;

@@ -33,6 +33,13 @@
             @extend %display-flex-center;
             gap: 8px;
         }
+        .echarts-wrapper {
+            @extend %display-flex-center;
+            gap: 4px;
+        }
+        .diver {
+            margin: 0 8px;
+        }
     }
     .card-list-wrapper {
         width: 100%;
@@ -72,8 +79,10 @@
             border-radius: 4px;
         }
         .tab-content {
+            display: flex;
             flex: 1;
             overflow: hidden;
+            border-right: 1px solid var(--Colors-Use-Neutral-Border);
         }
     }
 }

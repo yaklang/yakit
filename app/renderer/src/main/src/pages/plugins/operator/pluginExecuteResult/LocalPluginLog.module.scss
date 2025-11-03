@@ -7,6 +7,7 @@
 }
 .log-body {
     @extend %log-body;
+    flex: 1;
     :global {
         .ant-timeline-item-head {
             background-color: transparent;
