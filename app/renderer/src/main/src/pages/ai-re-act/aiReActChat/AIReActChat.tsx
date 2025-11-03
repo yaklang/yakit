@@ -133,14 +133,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                 自由对话
                             </div>
                             <div className={styles["chat-header-extra"]}>
-                                <YakitButton
+                                {/* <YakitButton
                                     type='secondary2'
                                     isHover={logVisible}
                                     icon={<OutlineNewspaperIcon />}
                                     onClick={() => setLogVisible((v) => !v)}
                                 >
                                     日志
-                                </YakitButton>
+                                </YakitButton> */}
                                 {isShowRetract && <ChevronleftButton onClick={handleCancelExpand} />}
                             </div>
                         </div>
@@ -179,7 +179,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                     <div className={styles["text"]}>自由对话</div>
                 </div>
             </div>
-            {logVisible && <AIReActLog logs={logs} setLogVisible={setLogVisible} />}
+            {/* {logVisible && <AIReActLog logs={logs} setLogVisible={setLogVisible} />} */}
             <YakitDrawer
                 title='上下文信息'
                 visible={timelineVisible}
