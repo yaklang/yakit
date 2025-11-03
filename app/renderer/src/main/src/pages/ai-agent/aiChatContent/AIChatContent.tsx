@@ -25,8 +25,8 @@ import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEchart
 import {formatTime} from "@/utils/timeUtil"
 import {formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineNewspaperIcon} from "@/assets/icon/outline"
-import {Divider} from "antd"
+import {OutlineArrowdownIcon, OutlineArrowupIcon, OutlineNewspaperIcon} from "@/assets/icon/outline"
+import {SolidChatalt2Icon} from "@/assets/icon/solid"
 const {TabPane} = PluginTabs
 
 const getCardData = () => {
@@ -174,22 +174,42 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         })
         return {data, xAxis}
     }, [aiPerfData.firstCost])
+    // AI的Token消耗
+    const token = useCreation(() => {
+        let input = 0
+        let output = 0
+        const {consumption} = aiPerfData
+        const keys = Object.keys(consumption || {})
+        for (let name of keys) {
+            input += consumption[name]?.input_consumption || 0
+            output += consumption[name]?.output_consumption || 0
+        }
+        return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
+    }, [aiPerfData.consumption])
     return (
         <div className={styles["ai-chat-content-wrapper"]}>
             <ExpandAndRetract
                 isExpand={isExpand}
                 onExpand={onExpand}
-                className={styles["expand-retract-wrapper"]}
-                animationWrapperClassName={styles["expand-retract-animation-wrapper"]}
+                className={classNames(styles["expand-retract-wrapper"], {
+                    [styles["expand-retract-wrapper-collapsed"]]: !yakExecResult.card.length
+                })}
+                animationWrapperClassName={classNames(styles["expand-retract-animation-wrapper"], {
+                    [styles["expand-retract-animation-wrapper-hidden"]]: !yakExecResult.card.length
+                })}
             >
                 <div className={styles["expand-retract-content"]}>
                     <div className={styles["header"]}>
-                        <div className={styles["title"]}>新会话</div>
+                        <div className={styles["title"]}>
+                            <SolidChatalt2Icon />
+                            新会话
+                        </div>
                         <div className={styles["extra"]}>
                             {currentPressuresEcharts?.data?.length > 0 && (
                                 <div className={styles["echarts-wrapper"]}>
-                                    <div>
-                                        上下文压力：<span> {formatNumberUnits(lastPressure)}</span>
+                                    <div className={styles["title"]}>
+                                        上下文压力：
+                                        <span className={styles["pressure"]}> {formatNumberUnits(lastPressure)}</span>
                                     </div>
                                     <ContextPressureEcharts
                                         dataEcharts={currentPressuresEcharts}
@@ -199,15 +219,26 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                             )}
                             {currentPressuresEcharts?.data?.length > 0 && (
                                 <div className={styles["echarts-wrapper"]}>
-                                    <div>
-                                        响应速度<span> {formatNumberUnits(lastPressure)}</span>
+                                    <div className={styles["title"]}>
+                                        响应速度
+                                        <span className={styles["cost"]}> {formatNumberUnits(lastPressure)}</span>
                                     </div>
-                                    {currentCostEcharts?.data?.length > 0 && (
-                                        <ResponseSpeedEcharts dataEcharts={currentCostEcharts} />
-                                    )}
+                                    <ResponseSpeedEcharts dataEcharts={currentCostEcharts} />
                                 </div>
                             )}
-                            <Divider type='vertical' className={styles["diver"]} />
+                            <div className={styles["info-token"]}>
+                                <div className={styles["token"]}>Tokens:</div>
+                                <div className={classNames(styles["token-tag"], styles["upload-token"])}>
+                                    <OutlineArrowupIcon />
+                                    {token[0]}
+                                </div>
+                                <div className={classNames(styles["token-tag"], styles["download-token"])}>
+                                    <OutlineArrowdownIcon />
+                                    {token[1]}
+                                </div>
+                                <div className={styles["divider-style"]}></div>
+                            </div>
+
                             <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />}>
                                 日志
                             </YakitButton>

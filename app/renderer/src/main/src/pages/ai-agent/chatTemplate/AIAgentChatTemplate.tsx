@@ -24,10 +24,6 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "./AIEcharts"
 import {formatTime, formatTimestamp} from "@/utils/timeUtil"
-import {
-    HorizontalScrollCardItemInfoMultiple,
-    HorizontalScrollCardItemInfoSingle
-} from "@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard"
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
 import {convertNodeIdToVerbose} from "@/pages/ai-re-act/hooks/defaultConstant"
@@ -49,7 +45,7 @@ import styles from "./AIAgentChatTemplate.module.scss"
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
-    const {tasks, pressure, cost, card} = props
+    const {tasks} = props
 
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
@@ -60,109 +56,6 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         setExpand(false)
     })
 
-    // 上下文压力集合
-    const currentPressuresEcharts: ContextPressureEchartsProps["dataEcharts"] = useMemo(() => {
-        const data: number[] = []
-        const xAxis: string[] = []
-        pressure.forEach((item) => {
-            data.push(item.current_cost_token_size)
-            xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
-        })
-        return {data, xAxis}
-    }, [pressure])
-    // 最新的上下文压力
-    const lastPressure = useMemo(() => {
-        const length = currentPressuresEcharts.data.length
-        if (length === 0) return 0
-        return currentPressuresEcharts.data[length - 1] || 0
-    }, [currentPressuresEcharts.data])
-    // 上下文压力预设值
-    const pressureThreshold = useMemo(() => {
-        const length = pressure.length
-        if (length === 0) return 0
-        return pressure[length - 1].pressure_token_size || 0
-    }, [pressure])
-
-    // 首字符延迟集合
-    const currentCostEcharts = useMemo(() => {
-        const data: number[] = []
-        const xAxis: string[] = []
-        cost.forEach((item) => {
-            data.push(item.ms)
-            xAxis.push(item.timestamp ? formatTime(item.timestamp) : "-")
-        })
-        return {data, xAxis}
-    }, [cost])
-    // 最新的首字符延迟
-    const lastFirstCost = useMemo(() => {
-        const length = currentCostEcharts.data.length
-        if (length === 0) return 0
-        return currentCostEcharts.data[length - 1] || 0
-    }, [currentCostEcharts])
-    //#region 折叠面板
-    const [expandKeys, setExpandKeys] = useState<string[]>(["Data Card", "上下文压力", "响应速度"])
-    const collapseList = useCreation(() => {
-        return [
-            {
-                value: "Data Card",
-                header: (
-                    <div className={styles["data-card-header"]}>
-                        <div className={styles["header-title"]}>Data Card</div>
-                        <div className={styles["total"]}>{card.length}</div>
-                    </div>
-                ),
-                extra: <></>,
-                content: <AICardList list={card} />
-            },
-            {
-                value: "上下文压力",
-                header: <div className={styles["header-title"]}>上下文压力</div>,
-                extra: (
-                    <div className={classNames(styles["tag-last"], styles["pressure-wrapper"])}>
-                        <OutlineEngineIcon />
-                        {formatNumberUnits(lastPressure)}
-                    </div>
-                ),
-                content: (
-                    <>
-                        {currentPressuresEcharts?.data?.length > 0 && (
-                            <ContextPressureEcharts
-                                dataEcharts={currentPressuresEcharts}
-                                threshold={pressureThreshold}
-                            />
-                        )}
-                    </>
-                )
-            },
-            {
-                value: "响应速度",
-                header: <div className={styles["header-title"]}>响应速度</div>,
-                extra: (
-                    <div className={classNames(styles["tag-last"], styles["cost-wrapper"])}>
-                        <OutlineRocketLaunchIcon />
-                        {`${lastFirstCost < 0 ? "-" : lastFirstCost}ms`}
-                    </div>
-                ),
-                content: (
-                    <>
-                        {currentCostEcharts?.data?.length > 0 && (
-                            <ResponseSpeedEcharts dataEcharts={currentCostEcharts} />
-                        )}
-                    </>
-                )
-            }
-        ]
-    }, [card, currentPressuresEcharts, pressureThreshold, currentCostEcharts, lastFirstCost, lastPressure])
-    const handleChangePanel = useMemoizedFn((expand: boolean, key: string) => {
-        setExpandKeys((old) => {
-            if (expand) {
-                return old.concat([key])
-            } else {
-                return old.filter((item) => item !== key)
-            }
-        })
-    })
-    //#endregion
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>
             <div className={styles["side-header"]}>
@@ -186,46 +79,6 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                     <YakitEmpty style={{marginTop: "20%"}} title='思考中...' description='' />
                 )}
             </div>
-
-            <div className={styles["task-token"]}>
-                {collapseList.map((item) => {
-                    const expandKey = expandKeys.includes(item.value)
-                    return (
-                        <ChatStreamCollapse
-                            key={item.value}
-                            style={{marginBottom: 0}}
-                            expand={expandKey}
-                            onChange={(value) => handleChangePanel(value, item.value)}
-                            title={item.header}
-                            className={classNames(styles["chat-left-side-collapse"])}
-                        >
-                            {item.content}
-                        </ChatStreamCollapse>
-                    )
-                })}
-            </div>
-        </div>
-    )
-})
-/**@deprecated */
-const AICardList: React.FC<AICardListProps> = React.memo((props) => {
-    const {list} = props
-    return (
-        <div className={styles["ai-card-list"]}>
-            {list.map((cardItem) => (
-                <React.Fragment key={cardItem.tag}>
-                    {cardItem.info.length > 1 ? (
-                        <HorizontalScrollCardItemInfoMultiple {...cardItem} />
-                    ) : (
-                        <HorizontalScrollCardItemInfoSingle
-                            tag={cardItem.tag}
-                            item={(cardItem.info || [])[0]}
-                            compact={true}
-                            className={styles["ai-card-list-single"]}
-                        />
-                    )}
-                </React.Fragment>
-            ))}
         </div>
     )
 })
