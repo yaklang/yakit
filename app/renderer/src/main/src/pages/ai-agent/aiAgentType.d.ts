@@ -59,9 +59,6 @@ export interface AIChatLeftSideProps {
     expand: boolean
     setExpand: Dispatch<SetStateAction<boolean>>
     tasks: AIAgentGrpcApi.PlanTask[]
-    pressure: AIAgentGrpcApi.Pressure[]
-    cost: AIAgentGrpcApi.AICostMS[]
-    card: AIAgentGrpcApi.AIInfoCard[]
 }
 
 export interface AICardListProps {

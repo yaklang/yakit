@@ -39,17 +39,6 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
                         深度规划
                     </div>
                     <div className={styles["extra"]}>
-                        <div className={styles["info-token"]}>
-                            Tokens:
-                            <div className={classNames(styles["token-tag"], styles["upload-token"])}>
-                                <OutlineArrowupIcon />
-                                {token[0]}
-                            </div>
-                            <div className={classNames(styles["token-tag"], styles["download-token"])}>
-                                <OutlineArrowdownIcon />
-                                {token[1]}
-                            </div>
-                        </div>
                         {chatIPCData.execute && (
                             <>
                                 <div className={styles["divider-style"]}></div>
@@ -84,7 +73,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
 })
 
 export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = React.memo((props) => {
-    const {aiPerfData, yakExecResult, taskChat} = useAIChatUIData()
+    const {taskChat} = useAIChatUIData()
     const [leftExpand, setLeftExpand] = useState(true)
     return (
         <div
@@ -92,14 +81,7 @@ export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = R
                 [styles["content-left-side-hidden"]]: !leftExpand
             })}
         >
-            <AIChatLeftSide
-                expand={leftExpand}
-                setExpand={setLeftExpand}
-                tasks={taskChat.plan}
-                pressure={aiPerfData.pressure}
-                cost={aiPerfData.firstCost}
-                card={yakExecResult.card}
-            />
+            <AIChatLeftSide expand={leftExpand} setExpand={setLeftExpand} tasks={taskChat.plan} />
             <div className={styles["open-wrapper"]} onClick={() => setLeftExpand(true)}>
                 <ChevrondownButton />
                 <div className={styles["text"]}>任务列表</div>
