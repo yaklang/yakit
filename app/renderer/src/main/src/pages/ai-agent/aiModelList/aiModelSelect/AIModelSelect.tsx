@@ -8,11 +8,13 @@ import styles from "./AIModelSelect.module.scss"
 import classNames from "classnames"
 import {GetAIModelListResponse} from "../../type/aiModel"
 import {AIAgentSettingDefault, AIOnlineModelIconMap} from "../../defaultConstant"
-import {OutlineAtomIconByStatus} from "../AIModelList"
+import {OutlineAtomIconByStatus, setAIModal} from "../AIModelList"
 import useAIAgentStore from "../../useContext/useStore"
 import {AIChatSelect} from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
 import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
+import {OutlinePencilaltIcon} from "@/assets/icon/outline"
+import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
     //#region AI model
@@ -122,10 +124,22 @@ export const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
             )
         )
     }, [value])
+    const onEdit = useMemoizedFn((e) => {
+        e.stopPropagation()
+        apiGetGlobalNetworkConfig().then((obj) => {
+            const item = obj.AppConfigs.find((it) => it.Type === value)
+            setAIModal({
+                config: obj,
+                item,
+                onSuccess: () => {}
+            })
+        })
+    })
     return (
         <div className={classNames(styles["select-option-wrapper"])}>
             {icon}
             <div className={styles["option-text"]}>{value}</div>
+            <OutlinePencilaltIcon className={styles["icon-pencilalt"]} onClick={onEdit} />
         </div>
     )
 })
