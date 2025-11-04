@@ -8,7 +8,7 @@ import {
     DefaultAIToolResult,
     TaskDefaultReToolResultSummary
 } from "./defaultConstant"
-import {handleSendFunc, UseTaskChatEvents, UseTaskChatParams, UseTaskChatState} from "./type"
+import {AIChatLogData, handleSendFunc, UseTaskChatEvents, UseTaskChatParams, UseTaskChatState} from "./type"
 import {
     genBaseAIChatData,
     handleFlatAITree,
@@ -36,9 +36,9 @@ export const UseTaskChatTypes = ["plan_review_require", "plan_task_analysis", "t
 function useTaskChat(params?: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
 function useTaskChat(params?: UseTaskChatParams) {
-    const {pushLog, updateLog, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest} = params || {}
+    const {pushLog, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest} = params || {}
 
-    const handlePushLog = useMemoizedFn((logInfo: AIChatQSData) => {
+    const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
     })
 
@@ -91,7 +91,6 @@ function useTaskChat(params?: UseTaskChatParams) {
             })
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -129,16 +128,15 @@ function useTaskChat(params?: UseTaskChatParams) {
                 throw new Error("stream data is invalid")
             }
 
-            handleSetEventUUID(EventUUID)
-
             let ipcContent = Uint8ArrayToString(Content) || ""
             let ipcStreamDelta = Uint8ArrayToString(StreamDelta) || ""
             const content = ipcContent + ipcStreamDelta
 
-            const setFunc = !IsSystem && !IsReason ? setStreams : updateLog
+            const setFunc = !IsSystem && !IsReason
 
             if (setFunc) {
-                setFunc((old) => {
+                handleSetEventUUID(EventUUID)
+                setStreams((old) => {
                     let newArr = [...old]
                     const itemInfo = newArr.find((item) => {
                         if (item.type === "stream" && item.data) {
@@ -182,10 +180,25 @@ function useTaskChat(params?: UseTaskChatParams) {
                     }
                     return newArr
                 })
+            } else {
+                // 输出到日志中
+                pushLog?.({
+                    type: "stream",
+                    Timestamp: res.Timestamp,
+                    data: {
+                        TaskIndex,
+                        CallToolID,
+                        NodeId,
+                        NodeIdVerbose: NodeIdVerbose || convertNodeIdToVerbose(NodeId),
+                        EventUUID,
+                        status: "start",
+                        content: content,
+                        ContentType
+                    }
+                })
             }
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -269,7 +282,6 @@ function useTaskChat(params?: UseTaskChatParams) {
                 toolResultMap.current.delete(data.call_tool_id)
             } catch (error) {
                 handleGrpcDataPushLog({
-                    type: "error",
                     info: res,
                     pushLog: handlePushLog
                 })
@@ -309,7 +321,6 @@ function useTaskChat(params?: UseTaskChatParams) {
             }
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -350,7 +361,6 @@ function useTaskChat(params?: UseTaskChatParams) {
             }
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -399,7 +409,6 @@ function useTaskChat(params?: UseTaskChatParams) {
             }
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -453,7 +462,6 @@ function useTaskChat(params?: UseTaskChatParams) {
             }
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -530,7 +538,6 @@ function useTaskChat(params?: UseTaskChatParams) {
             })
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -561,7 +568,6 @@ function useTaskChat(params?: UseTaskChatParams) {
             })
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -608,7 +614,6 @@ function useTaskChat(params?: UseTaskChatParams) {
                 }
 
                 handleGrpcDataPushLog({
-                    type: "info",
                     info: res,
                     pushLog: handlePushLog
                 })
@@ -748,7 +753,6 @@ function useTaskChat(params?: UseTaskChatParams) {
             }
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })

@@ -28,7 +28,7 @@ const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIRevi
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     const {mode} = props
 
-    const {casualChat, logs} = useAIChatUIData()
+    const {casualChat} = useAIChatUIData()
     const {chatIPCData, timelineMessage} = useChatIPCStore()
     const {chatIPCEvents, handleStart, handleStop, setTimelineMessage} = useChatIPCDispatcher()
     const {execute} = chatIPCData
@@ -179,7 +179,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                     <div className={styles["text"]}>自由对话</div>
                 </div>
             </div>
-            {/* {logVisible && <AIReActLog logs={logs} setLogVisible={setLogVisible} />} */}
             <YakitDrawer
                 title='上下文信息'
                 visible={timelineVisible}
@@ -198,6 +197,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     )
 })
 
+/** @deprecated 日志已移入单独一个win页面展示 */
 const AIReActLog: React.FC<AIReActLogProps> = React.memo((props) => {
     const {logs, setLogVisible} = props
     const logListRef = useRef<HTMLDivElement>(null)

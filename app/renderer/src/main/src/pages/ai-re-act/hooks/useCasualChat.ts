@@ -11,7 +11,7 @@ import {
     noSkipReviewTypes
 } from "./utils"
 import {v4 as uuidv4} from "uuid"
-import {handleSendFunc, UseCasualChatEvents, UseCasualChatParams, UseCasualChatState} from "./type"
+import {AIChatLogData, handleSendFunc, UseCasualChatEvents, UseCasualChatParams, UseCasualChatState} from "./type"
 import {
     AIReviewJudgeLevelMap,
     CasualDefaultToolResultSummary,
@@ -36,9 +36,9 @@ export const UseCasualChatTypes = ["thought", "result", "exec_aiforge_review_req
 function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
 function useCasualChat(params?: UseCasualChatParams) {
-    const {pushLog, updateLog, getRequest, onReviewRelease} = params || {}
+    const {pushLog, getRequest, onReviewRelease} = params || {}
 
-    const handlePushLog = useMemoizedFn((logInfo: AIChatQSData) => {
+    const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
         pushLog && pushLog(logInfo)
     })
 
@@ -71,16 +71,15 @@ function useCasualChat(params?: UseCasualChatParams) {
                 throw new Error("stream data is invalid")
             }
 
-            handleSetEventUUID(EventUUID)
-
             let ipcContent = Uint8ArrayToString(Content) || ""
             let ipcStreamDelta = Uint8ArrayToString(StreamDelta) || ""
             const content = ipcContent + ipcStreamDelta
 
-            const setFunc = !IsSystem && !IsReason ? setContents : updateLog
+            const setFunc = !IsSystem && !IsReason
 
             if (setFunc) {
-                setFunc((old) => {
+                handleSetEventUUID(EventUUID)
+                setContents((old) => {
                     let newArr = [...old]
                     const itemInfo = newArr.find((item) => {
                         if (item.type === "stream" && item.data) {
@@ -123,10 +122,24 @@ function useCasualChat(params?: UseCasualChatParams) {
                     }
                     return newArr
                 })
+            } else {
+                // 输出到日志中
+                pushLog?.({
+                    type: "stream",
+                    Timestamp: res.Timestamp,
+                    data: {
+                        CallToolID,
+                        NodeId,
+                        NodeIdVerbose: NodeIdVerbose || convertNodeIdToVerbose(NodeId),
+                        EventUUID,
+                        status: "start",
+                        content: content,
+                        ContentType
+                    }
+                })
             }
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -167,7 +180,6 @@ function useCasualChat(params?: UseCasualChatParams) {
             })
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -190,7 +202,6 @@ function useCasualChat(params?: UseCasualChatParams) {
             })
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -228,7 +239,6 @@ function useCasualChat(params?: UseCasualChatParams) {
             })
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -291,7 +301,6 @@ function useCasualChat(params?: UseCasualChatParams) {
                 toolResultMap.current.delete(data.call_tool_id)
             } catch (error) {
                 handleGrpcDataPushLog({
-                    type: "error",
                     info: res,
                     pushLog: handlePushLog
                 })
@@ -335,7 +344,6 @@ function useCasualChat(params?: UseCasualChatParams) {
             })
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -371,7 +379,6 @@ function useCasualChat(params?: UseCasualChatParams) {
             })
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -402,7 +409,6 @@ function useCasualChat(params?: UseCasualChatParams) {
             })
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -438,7 +444,6 @@ function useCasualChat(params?: UseCasualChatParams) {
             })
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -479,7 +484,6 @@ function useCasualChat(params?: UseCasualChatParams) {
             }
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -510,7 +514,6 @@ function useCasualChat(params?: UseCasualChatParams) {
             })
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -541,7 +544,6 @@ function useCasualChat(params?: UseCasualChatParams) {
             })
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })
@@ -584,7 +586,6 @@ function useCasualChat(params?: UseCasualChatParams) {
                 }
 
                 handleGrpcDataPushLog({
-                    type: "info",
                     info: res,
                     pushLog: handlePushLog
                 })
@@ -660,7 +661,6 @@ function useCasualChat(params?: UseCasualChatParams) {
             }
         } catch (error) {
             handleGrpcDataPushLog({
-                type: "error",
                 info: res,
                 pushLog: handlePushLog
             })

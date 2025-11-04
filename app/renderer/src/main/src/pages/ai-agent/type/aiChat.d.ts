@@ -20,7 +20,6 @@ export interface AIChatInfo {
     /** 回答 */
     answer?: {
         aiPerfData: UseChatIPCState["aiPerfData"]
-        logs: UseChatIPCState["logs"]
         casualChat: UseChatIPCState["casualChat"]
         taskChat: UseChatIPCState["taskChat"]
         yakExecResult: AIChatYakExecResult

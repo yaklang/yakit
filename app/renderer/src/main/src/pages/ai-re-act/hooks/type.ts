@@ -1,13 +1,12 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatQSData, AITokenConsumption, AIYakExecFileRecord} from "./aiRender"
+import {AIChatQSData, AIStreamOutput, AITokenConsumption, AIYakExecFileRecord} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
-import {Dispatch, SetStateAction} from "react"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 
 /** 公共 hoos 事件 */
 interface UseHookBaseParams {
     /** 将数据推送到日志集合中 */
-    pushLog: (log: AIChatQSData) => void
+    pushLog: (log: AIChatLogData) => void
 }
 interface UseHookBaseEvents {
     handleSetData: (res: AIOutputEvent) => void
@@ -40,8 +39,6 @@ export interface UseYakExecResultEvents extends UseHookBaseEvents {}
 
 // #region useCasualChat相关定义
 export interface UseCasualChatParams extends UseHookBaseParams {
-    /** 更新日志数据 */
-    updateLog: Dispatch<SetStateAction<AIChatQSData[]>>
     /** 获取流接口请求参数 */
     getRequest: () => AIAgentSetting | undefined
     /** 触发 review-release 后的回调事件 */
@@ -63,8 +60,6 @@ export interface UseCasualChatEvents extends UseHookBaseEvents {
 export interface UseTaskChatParams extends UseHookBaseParams {
     /** 获取流接口请求参数 */
     getRequest: () => AIAgentSetting | undefined
-    /** 更新日志数据 */
-    updateLog: Dispatch<SetStateAction<AIChatQSData[]>>
     /** review 触发回调事件 */
     onReview?: (data: AIChatQSData) => void
     /** plan_review 补充数据 */
@@ -117,8 +112,6 @@ export interface UseChatIPCParams {
 export interface UseChatIPCState {
     /** 流执行状态 */
     execute: boolean
-    /** 执行日志 */
-    logs: AIChatQSData[]
     /** 插件输出的卡片数据 */
     yakExecResult: UseYakExecResultState
     /** AI性能相关数据 */
@@ -140,8 +133,6 @@ export interface AIChatSendParams {
 export interface UseChatIPCEvents {
     /** 获取当前执行接口流的唯一标识符 */
     fetchToken: () => string
-    /** 获取当前执行接口流的请求参数 */
-    fetchRequest: () => AIStartParams | undefined
     /** 开始执行接口流 */
     onStart: (token: string, params: AIInputEvent) => void
     /** 向执行中的接口流主动输入信息 */
@@ -158,6 +149,28 @@ export interface UseChatIPCEvents {
 }
 // #endregion
 
-export interface AINodeLabelParams {
-    nodeIdVerbose: AIOutputEvent["NodeIdVerbose"]
+// #region useAIChatLog相关定义
+export interface AIChatLogToInfo {
+    type: "log"
+    Timestamp: AIOutputEvent["Timestamp"]
+    data: AIAgentGrpcApi.Log
 }
+export interface AIChatLogToStream {
+    type: "stream"
+    Timestamp: AIOutputEvent["Timestamp"]
+    data: AIStreamOutput
+}
+
+export type AIChatLogData = AIChatLogToInfo | AIChatLogToStream
+
+export interface UseAIChatLogEvents {
+    /** 获取当前执行接口流的唯一标识符 */
+    pushLog: (log: AIChatLogData) => string
+    /** 都劝我 */
+    sendStreamLog: (uuid: string) => void
+    /** 获取当前执行接口流的请求参数 */
+    clearLogs: () => AIStartParams | undefined
+    /** 关闭展示日志的页面窗口 */
+    cancelLogsWin: () => void
+}
+// #endregion
