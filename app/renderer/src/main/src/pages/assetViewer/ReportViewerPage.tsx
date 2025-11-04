@@ -338,9 +338,12 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                 width={"45%"}
                 footer={null}
                 onCancel={() => setCreateVisible(false)}
+                bodyStyle={{paddingTop: 0}}
             >
                 {/* <div>请选择扫描结果生成报告</div> */}
-                <CodeScanTaskList visible={createVisible} setVisible={setCreateVisible} />
+                <div className={styles['card-code-scan-task-list']}>
+                   <CodeScanTaskList visible={createVisible} setVisible={setCreateVisible} readonly={true}/> 
+                </div>
             </YakitModal>
         </YakitCard>
     )

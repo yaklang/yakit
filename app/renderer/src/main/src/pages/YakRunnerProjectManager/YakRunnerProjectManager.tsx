@@ -13,8 +13,7 @@ export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (
         setShowCompileModal(false)
     })
 
-    const onSuccee = () => {
-        onCloseCompileModal()
+    const onRefresh = () => {
         setRefresh(!refresh)
     }
 
@@ -42,8 +41,9 @@ export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (
             {isShowCompileModal && (
                 <AuditModalFormModal
                     onCancel={onCloseCompileModal}
-                    onSuccee={onSuccee}
+                    onSuccee={onCloseCompileModal}
                     warrpId={document.getElementById("yakrunner-project-manager")}
+                    onRefresh={onRefresh}
                 />
             )}
         </div>

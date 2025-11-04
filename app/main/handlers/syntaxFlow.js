@@ -1,7 +1,7 @@
-const { ipcMain } = require("electron")
+const {ipcMain} = require("electron")
 const fs = require("fs")
 const path = require("path")
-const { yakProjects } = require("../filePath")
+const {yakProjects} = require("../filePath")
 
 module.exports = (win, getClient) => {
     // query local rule group list
@@ -273,11 +273,11 @@ module.exports = (win, getClient) => {
     const exportSyntaxFlowsMap = new Map()
     ipcMain.handle("cancel-ExportSyntaxFlows", handlerHelper.cancelHandler(exportSyntaxFlowsMap))
     ipcMain.handle("ExportSyntaxFlows", (_, params, token) => {
-        const { TargetPath } = params
+        const {TargetPath} = params
         if (!fs.existsSync(yakProjects)) {
             try {
-                fs.mkdirSync(yakProjects, { recursive: true })
-            } catch (error) { }
+                fs.mkdirSync(yakProjects, {recursive: true})
+            } catch (error) {}
         }
         params.TargetPath = path.join(yakProjects, TargetPath)
         let stream = getClient().ExportSyntaxFlows(params)
@@ -308,6 +308,73 @@ module.exports = (win, getClient) => {
         return await asyncQuerySSAPrograms(params)
     })
 
+    const asyncQuerySSAProject = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QuerySSAProject(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 获取项目管理列表（新）
+    ipcMain.handle("QuerySSAProject", async (e, params) => {
+        return await asyncQuerySSAProject(params)
+    })
+
+    const asyncDeleteSSAProject = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteSSAProject(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
+    // 删除项目管理列表（新）
+    ipcMain.handle("DeleteSSAProject", async (e, params) => {
+        return await asyncDeleteSSAProject(params)
+    })
+
+    const asyncCreateSSAProject = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().CreateSSAProject(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 创建项目管理数据（新）
+    ipcMain.handle("CreateSSAProject", async (e, params) => {
+        return await asyncCreateSSAProject(params)
+    })
+
+    const asyncUpdateSSAProject = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpdateSSAProject(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
+    // 更新项目管理数据（新）
+    ipcMain.handle("UpdateSSAProject", async (e, params) => {
+        return await asyncUpdateSSAProject(params)
+    })
+
+
     const asyncUpdateSSAProgram = (params) => {
         return new Promise((resolve, reject) => {
             getClient().UpdateSSAProgram(params, (err, data) => {
@@ -319,7 +386,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    // 更新项目管理数据
+    // 更新项目管理数据（新）
     ipcMain.handle("UpdateSSAProgram", async (e, params) => {
         return await asyncUpdateSSAProgram(params)
     })
@@ -363,7 +430,10 @@ module.exports = (win, getClient) => {
 
     // 更新/获取规则
     const streamApplySyntaxFlowRuleUpdate = new Map()
-    ipcMain.handle("cancel-streamApplySyntaxFlowRuleUpdate", handlerHelper.cancelHandler(streamApplySyntaxFlowRuleUpdate))
+    ipcMain.handle(
+        "cancel-streamApplySyntaxFlowRuleUpdate",
+        handlerHelper.cancelHandler(streamApplySyntaxFlowRuleUpdate)
+    )
     ipcMain.handle("ApplySyntaxFlowRuleUpdate", async (e, token) => {
         let stream = getClient().ApplySyntaxFlowRuleUpdate()
         handlerHelper.registerHandler(win, stream, streamApplySyntaxFlowRuleUpdate, token)

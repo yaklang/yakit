@@ -250,6 +250,7 @@ interface ErrorProps {
 export interface VerifyStartProps {
     error: ErrorProps
     program_name: string
+    compile_immediately: boolean
 }
 
 type CodeScanTabKeys = "keyword" | "group"

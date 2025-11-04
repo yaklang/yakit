@@ -79,7 +79,7 @@ import {
     AuditNodeMapProps,
     AuditNodeProps,
     AuditYakUrlProps,
-    SSAProgramResponse
+    SSAProjectResponse
 } from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
 import {randomString} from "@/utils/randomUtil"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
@@ -785,24 +785,25 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             Pagination: genDefaultPagination(100)
         }
         projectLoading.current = true
-        ipcRenderer
-            .invoke("QuerySSAPrograms", request)
-            .then((res: QueryGeneralResponse<SSAProgramResponse>) => {
-                if (!res || !Array.isArray(res.Data)) {
-                    return
-                }
-                setProject(
-                    res.Data.map((item) => {
-                        return {label: item.Name, value: item.Name}
-                    })
-                )
-            })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    projectLoading.current = false
-                }, 200)
-            })
+        // TODO: 规则管理-执行结果与代码扫描项目名称控件一致
+        // ipcRenderer
+        //     .invoke("QuerySSAProject", request)
+        //     .then((res: QueryGeneralResponse<SSAProjectResponse>) => {
+        //         if (!res || !Array.isArray(res.Data)) {
+        //             return
+        //         }
+        //         setProject(
+        //             res.Data.map((item) => {
+        //                 return {label: item.Name, value: item.Name}
+        //             })
+        //         )
+        //     })
+        //     .catch(() => {})
+        //     .finally(() => {
+        //         setTimeout(() => {
+        //             projectLoading.current = false
+        //         }, 200)
+        //     })
     })
     const handleSearchProject = useDebounceFn(
         (val?: string) => {

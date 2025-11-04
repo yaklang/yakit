@@ -19,6 +19,8 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {SyntaxFlowScanRequest} from "../YakRunnerCodeScanType"
+import {CreateReportContentProps, onCreateReportModal} from "@/pages/portscan/CreateReport"
+import moment from "moment"
 const {ipcRenderer} = window.require("electron")
 interface CodeScanTaskListForwardedRefProps {
     onRemove: () => void
@@ -152,6 +154,7 @@ interface CodeScanTaskListProps {
     setVisible: (v: boolean) => void
     selectedRowKeys?: string[]
     setSelectedRowKeys?: (v: string[]) => void
+    readonly?: boolean
 }
 
 export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
@@ -162,7 +165,7 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
             }),
             shallow
         )
-        const {visible, setVisible} = props
+        const {visible, setVisible, readonly} = props
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
         const [params, setParams] = useState<QuerySyntaxFlowScanTaskRequest>({
             Pagination: genDefaultPagination(20, 1)
@@ -272,6 +275,24 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
             }
         })
 
+        /**生成报告 */
+        const onCreateReport = useMemoizedFn((record: SyntaxFlowScanTask) => {
+            setVisible(false)
+            const params: CreateReportContentProps = {
+                reportName: `代码扫描报告 ${formatTimestamp(moment().unix())}`,
+                runtimeId: `${record.TaskId}`,
+                type: "codeScan"
+            }
+            let getContainer =
+                document.getElementById(`main-operator-page-body-${YakitRoute.YakRunner_Code_Scan}`) || undefined
+            if (readonly) {
+                getContainer = undefined
+            }
+            onCreateReportModal(params, {
+                getContainer
+            })
+        })
+
         const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
             return [
                 {
@@ -374,46 +395,60 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                     title: "操作",
                     dataKey: "action",
                     fixed: "right",
-                    width: 200,
+                    width: readonly ? 100 : 200,
                     render: (_, record: SyntaxFlowScanTask) => (
                         <>
-                            {getAction(record)}
-                            <Divider type='vertical' style={{margin: 0}} />
-                            {record.Status === "error" ? (
+                            {readonly ? (
                                 <YakitButton
                                     type='text'
                                     onClick={(e) => {
                                         e.stopPropagation()
-                                        onDetails(record, "new")
-                                    }}
-                                >
-                                    重试
-                                </YakitButton>
-                            ) : (
-                                <YakitButton
-                                    type='text'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        onDetails(record, "status")
-                                    }}
-                                >
-                                    查看
-                                </YakitButton>
-                            )}
-                            {
-                                record.Status === "done" && (
-                                    <>
-                                        <Divider type='vertical' style={{margin: 0}} />
-                                        <YakitButton
-                                    type='text'
-                                    onClick={(e) => {
-                                        
+                                        onCreateReport(record)
                                     }}
                                 >
                                     生成报告
                                 </YakitButton>
-                                    </>)
-                            }
+                            ) : (
+                                <>
+                                    {getAction(record)}
+                                    <Divider type='vertical' style={{margin: 0}} />
+                                    {record.Status === "error" ? (
+                                        <YakitButton
+                                            type='text'
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                onDetails(record, "new")
+                                            }}
+                                        >
+                                            重试
+                                        </YakitButton>
+                                    ) : (
+                                        <YakitButton
+                                            type='text'
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                onDetails(record, "status")
+                                            }}
+                                        >
+                                            查看
+                                        </YakitButton>
+                                    )}
+                                    {record.Status === "done" && (
+                                        <>
+                                            <Divider type='vertical' style={{margin: 0}} />
+                                            <YakitButton
+                                                type='text'
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    onCreateReport(record)
+                                                }}
+                                            >
+                                                生成报告
+                                            </YakitButton>
+                                        </>
+                                    )}
+                                </>
+                            )}
                         </>
                     )
                 }
@@ -436,8 +471,8 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                 .then((res: QuerySyntaxFlowScanTaskResponse) => {
                     const newPage = +res.Pagination.Page
                     const d = newPage === 1 ? res.Data : (response?.Data || []).concat(res.Data)
-                    console.log("res.Data", res.Data, d);
-                    
+                    console.log("res.Data", res.Data, d)
+
                     setResponse({
                         ...res,
                         Data: d
@@ -602,14 +637,19 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                     onChange: update
                 }}
                 onChange={onTableChange}
-                isShowTotal={true}
-                rowSelection={{
-                    isAll: isAllSelect,
-                    type: "checkbox",
-                    selectedRowKeys: selectedRowKeys,
-                    onSelectAll,
-                    onChangeCheckboxSingle
-                }}
+                isShowTotal={!readonly}
+                title={readonly && <div>请选择扫描结果生成报告</div>}
+                rowSelection={
+                    !readonly
+                        ? {
+                              isAll: isAllSelect,
+                              type: "checkbox",
+                              selectedRowKeys: selectedRowKeys,
+                              onSelectAll,
+                              onChangeCheckboxSingle
+                          }
+                        : undefined
+                }
             />
         )
     })

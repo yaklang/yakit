@@ -19,7 +19,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {FieldName, Fields} from "../risks/RiskTable"
 import {QueryGeneralResponse} from "../invoker/schema"
-import {SSAProgramResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
+import {SSAProjectResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
 import {apiGetSSARiskFieldGroup} from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
@@ -52,7 +52,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
 
     // 获取编译项目数
     const updateSSAPrograms = () => {
-        ipcRenderer.invoke("QuerySSAPrograms", {}).then((i: QueryGeneralResponse<SSAProgramResponse>) => {
+        ipcRenderer.invoke("QuerySSAProject", {}).then((i: QueryGeneralResponse<SSAProjectResponse>) => {
             setTotal(i.Total)
         })
     }

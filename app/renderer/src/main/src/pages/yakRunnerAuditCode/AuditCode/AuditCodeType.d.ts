@@ -1,6 +1,7 @@
 import {YakURLResource} from "@/pages/yakURLTree/data"
 import {AuditEmiterYakUrlProps} from "../YakRunnerAuditCodeType"
 import {ShowItemType} from "../BottomEditorDetails/BottomEditorDetailsType"
+import { SyntaxFlowRuleFilter } from "@/pages/ruleManagement/RuleManagementType";
 import {ReactNode} from "react"
 export interface YakURLKVPair {
     Key: string
@@ -140,6 +141,8 @@ export interface AuditModalFormProps {
 export interface AuditModalFormModalProps {
     onCancel: () => void
     onSuccee: (path: string) => void
+    // 刷新
+    onRefresh?: () => void
     title?: string
     // 绑定容器
     warrpId?: HTMLElement | null
@@ -155,32 +158,49 @@ export interface AfreshAuditModalProps {
     warrpId?: HTMLElement | null
 }
 
-export interface QuerySSAProgramsProps {
-    ProgramNames?: string[]
+export interface QuerySSAProjectProps {
+    IDs?: number[]
+    ProjectNames?: string[]
+    SearchKeyword?: string
     Languages?: string[]
-    Ids?: number[]
-    BeforeUpdatedAt?: number
-    AfterUpdatedAt?: number
-    Keyword?: string
-    AfterID?: number
-    BeforeID?: number
 }
 
-export interface SSAProgramResponse {
+interface SSAProjectScanRuleConfig {
+    RuleFilter: SyntaxFlowRuleFilter
+}
+
+interface SSAProjectScanConfig {
+    Concurrency: number
+    Memory: boolean
+    IgnoreLanguage: boolean
+}
+
+interface SSAProjectCompileConfig {
+    StrictMode: boolean
+    PeepholeSize: number
+    ExcludeFiles: string[]
+    ReCompile: boolean
+    Memory: boolean
+    Concurrency: number
+}
+
+export interface SSAProjectResponse {
+    ID: number
     CreateAt: number
     UpdateAt: number
-    Name: string
-    Description: string
-    Dbpath: string
+    // 项目基础信息
+    ProjectName: string
     Language: string
-    EngineVersion: string
-    Recompile: boolean
-    Id: number
-    HighRiskNumber: number
-    CriticalRiskNumber: number
-    WarnRiskNumber: number
-    LowRiskNumber: number
-    InfoRiskNumber: number
+    Description: string
+    Tags: string[]
+    // 源代码来源
+    CodeSourceConfig: string
+    // 编译配置选项
+    CompileConfig: SSAProjectCompileConfig
+    // 扫描配置选项
+    ScanConfig: SSAProjectScanConfig
+    // 规则策略配置
+    RuleConfig: SSAProjectScanRuleConfig
 }
 
 export interface AuditHistoryTableProps {
@@ -193,8 +213,8 @@ export interface AuditHistoryTableProps {
 }
 
 export interface ProjectManagerEditFormProps {
-    record: SSAProgramResponse
-    setData: React.Dispatch<React.SetStateAction<SSAProgramResponse[]>>
+    record: SSAProjectResponse
+    setData: React.Dispatch<React.SetStateAction<SSAProjectResponse[]>>
     onClose: () => void
 }
 
@@ -219,7 +239,7 @@ export interface AuditHistoryListProps {
 }
 
 export interface CompileHistoryProps {
-    info: SSAProgramResponse
+    info: SSAProjectResponse
     pageType: "auditCode" | "projectManager"
     onClose?: () => void
 }
