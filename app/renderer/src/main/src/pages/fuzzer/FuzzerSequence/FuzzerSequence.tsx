@@ -52,6 +52,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import classNames from "classnames"
 import {LabelNodeItem, MatcherAndExtractionDrawer} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {
@@ -120,6 +121,7 @@ import { AdvancedSet, ConcurrencyItem, initSetValue } from "./FuzzerPageConcurre
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 const FuzzerPageSetting = React.lazy(() => import("./FuzzerPageSetting"))
 const PluginDebugDrawer = React.lazy(() => import("../components/PluginDebugDrawer/PluginDebugDrawer"))
+const HTTPHistoryAnalysis = React.lazy(() => import("@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis").then(({HTTPHistoryAnalysis}) => ({default: HTTPHistoryAnalysis})))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -199,6 +201,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     const [triggerPageSetting, setTriggerPageSetting] = useState<boolean>(false) // 刷新FuzzerPageSetting中的值
     const [triggerME, setTriggerME] = useState<boolean>(false) // 刷新匹配器和提取器的值
+    //流量分析页面显示
+    const [trafficAnalysisVisible, setTrafficAnalysisVisible] = useState<boolean>(false) // 流量分析遮罩层
+    const [trafficAnalysisType, setTrafficAnalysisType] = useState<"all" | "single">("all") // 流量分析类型：全部或单个
 
     // Request
     const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
@@ -1397,23 +1402,26 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     const onShowAllHeader = useMemoizedFn(() => {
         if (judgeMoreFuzzerTableMaxData()) {
-            let currentItem: PageNodeItemProps | undefined = undefined
-            if (currentSelectRequest?.pageId) {
-                currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, currentSelectRequest?.pageId)
-            }
-            emiter.emit(
-                "openPage",
-                JSON.stringify({
-                    route: YakitRoute.DB_HTTPHistoryAnalysis,
-                    params: {
-                        webFuzzer: true,
-                        runtimeId: allRuntimeIds(),
-                        sourceType: "scan",
-                        verbose: currentItem?.pageName ? `${currentItem?.pageName}-${t("FuzzerSequence.allTraffic")}` : "",
-                        pageId: currentItem?.pageId || ""
-                    }
-                })
-            )
+            //数据超过限制跳转到流量分析页
+            setTrafficAnalysisType("all") // 设置为查看全部
+            setTrafficAnalysisVisible(true)
+            // let currentItem: PageNodeItemProps | undefined = undefined
+            // if (currentSelectRequest?.pageId) {
+            //     currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, currentSelectRequest?.pageId)
+            // }
+            // emiter.emit(
+            //     "openPage",
+            //     JSON.stringify({
+            //         route: YakitRoute.DB_HTTPHistoryAnalysis,
+            //         params: {
+            //             webFuzzer: true,
+            //             runtimeId: allRuntimeIds(),
+            //             sourceType: "scan",
+            //             verbose: currentItem?.pageName ? `${currentItem?.pageName}-${t("FuzzerSequence.allTraffic")}` : "",
+            //             pageId: currentItem?.pageId || ""
+            //         }
+            //     })
+            // )
         } else {
             setShowAllResponse(true)
         }
@@ -1421,26 +1429,28 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     const onShowAll = useMemoizedFn(() => {
         if (!currentSequenceItem) return
-        let currentItem: PageNodeItemProps | undefined = undefined
-        if (currentSelectRequest?.pageId) {
-            currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, currentSelectRequest?.pageId)
-        }
+        setTrafficAnalysisType("single") // 设置为查看单个序列
+        setTrafficAnalysisVisible(true)
+        // let currentItem: PageNodeItemProps | undefined = undefined
+        // if (currentSelectRequest?.pageId) {
+        //     currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, currentSelectRequest?.pageId)
+        // }
 
-        emiter.emit(
-            "openPage",
-            JSON.stringify({
-                route: YakitRoute.DB_HTTPHistoryAnalysis,
-                params: {
-                    webFuzzer: true,
-                    runtimeId: currentSelectResponse?.runtimeIdFuzzer || [],
-                    sourceType: "scan",
-                    verbose: currentItem?.pageName
-                        ? `${currentItem?.pageName}-${currentSequenceItem.name}-${t("FuzzerSequence.allTraffic")}`
-                        : "",
-                    pageId: currentItem?.pageId || ""
-                }
-            })
-        )
+        // emiter.emit(
+        //     "openPage",
+        //     JSON.stringify({
+        //         route: YakitRoute.DB_HTTPHistoryAnalysis,
+        //         params: {
+        //             webFuzzer: true,
+        //             runtimeId: currentSelectResponse?.runtimeIdFuzzer || [],
+        //             sourceType: "scan",
+        //             verbose: currentItem?.pageName
+        //                 ? `${currentItem?.pageName}-${currentSequenceItem.name}-${t("FuzzerSequence.allTraffic")}`
+        //                 : "",
+        //             pageId: currentItem?.pageId || ""
+        //         }
+        //     })
+        // )
     })
 
     const onDebugSequenceResponse = useMemoizedFn((response) => {
@@ -1459,6 +1469,44 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             }
         }
         updatePagesDataCacheById(YakitRoute.HTTPFuzzer, newCurrentItem)
+    })
+
+    /* 流量分析遮罩层 */
+    const renderHistoryAnalysis = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = currentSelectRequest?.pageId 
+            ? queryPagesDataById(YakitRoute.HTTPFuzzer, currentSelectRequest.pageId)
+            : undefined
+        
+        if (!trafficAnalysisVisible || !currentItem) return null
+        
+        // 根据 trafficAnalysisType 判断是显示全部还是单个序列的流量
+        const runtimeId = trafficAnalysisType === "single" && currentSequenceItem && currentSelectResponse?.runtimeIdFuzzer 
+            ? currentSelectResponse.runtimeIdFuzzer 
+            : allRuntimeIds()
+        
+        const verbose = trafficAnalysisType === "single" && currentSequenceItem 
+            ? `${currentItem.pageName}-${currentSequenceItem.name}-${t("FuzzerSequence.allTraffic")}`
+            : `${currentItem.pageName}-${t("FuzzerSequence.allTraffic")}`
+        
+        const params = {
+            webFuzzer: true,
+            runtimeId: runtimeId,
+            sourceType: "scan",
+            verbose: verbose,
+            pageId: currentItem.pageId
+        }
+        
+        return (
+            <div className={styles["http-traffic-analysis-overlay"]}>
+                <React.Suspense fallback={<YakitSpin spinning={true} />}>
+                    <HTTPHistoryAnalysis
+                        pageId={currentItem.pageId}
+                        params={params}
+                        onClose={() => setTrafficAnalysisVisible(false)}
+                    />
+                </React.Suspense>
+            </div>
+        )
     })
 
     const emptyMap = useMemo(() => new Map(), [])
@@ -1723,6 +1771,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 onSave={onSaveMatcherAndExtractionDrawer}
                 defActiveKeyAndOrder={defActiveKeyAndOrder}
             />
+            {renderHistoryAnalysis()}
         </>
     )
 })
@@ -2460,7 +2509,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                 <div style={{fontSize: 12}}>
                     {t("HTTPFuzzerPage.response_overflow", {maxData: fuzzerTableMaxData})}
                     <YakitButton type='text' onClick={onShowAll} style={{padding: 0}}>
-                        {t("YakitButton.view_all_button")}
+                        {t("HTTPFuzzerPage.trafficAnalysisMode")}
                     </YakitButton>
                     {t("HTTPFuzzerPage.view_all_suffix")}
                 </div>
@@ -2549,6 +2598,13 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                         <div className={classNames(styles["resize-card-heard"])}>
                                             <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
                                             <div className={styles["resize-card-heard-extra"]}></div>
+                                            {cachedTotal >= 1 && <YakitButton
+                                                type='primary'
+                                                onClick={onShowAll}
+                                                className={styles["resize-card-heard-btn"]}
+                                            >
+                                                {t("HTTPFuzzerPage.trafficAnalysisMode")}
+                                            </YakitButton>}
                                             {secondNodeExtra()}
                                         </div>
                                         {cachedTotal > 1 ? (

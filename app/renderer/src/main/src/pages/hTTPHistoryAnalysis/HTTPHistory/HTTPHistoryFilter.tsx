@@ -122,6 +122,8 @@ interface HTTPHistoryFilterProps {
     runtimeId?: string[]
     sourceType?: string
     webFuzzerPageId?: string
+    /** 来自httpFuzzerPage */
+    onClose?: () => void
 }
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((props) => {
     const {
@@ -136,7 +138,8 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         toWebFuzzer,
         runtimeId,
         sourceType,
-        webFuzzerPageId
+        webFuzzerPageId,
+        onClose
     } = props
     const {t, i18n} = useI18nNamespaces(["history"])
     // #region 左侧tab
@@ -370,6 +373,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             runtimeId={runtimeId}
                             sourceType={sourceType}
                             webFuzzerPageId={webFuzzerPageId}
+                            onClose={onClose}
                         />
                     </div>
                 }
@@ -418,6 +422,7 @@ interface HTTPFlowTableProps {
     runtimeId?: string[]
     sourceType?: string
     webFuzzerPageId?: string
+    onClose?: () => void
 }
 const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
     const {
@@ -436,7 +441,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         toWebFuzzer = false,
         runtimeId = [],
         sourceType = "mitm",
-        webFuzzerPageId
+        webFuzzerPageId,
+        onClose
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "history", "yakitRoute"])
     const {currentPageTabRouteKey, queryPagesDataById} = usePageInfo(
@@ -2340,6 +2346,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                         icon={<OutlineReplyIcon />}
                                         size='small'
                                         onClick={() => {
+                                            // 如果有了onClose,代表是从httpFuzzerPage或fuzzerSequence打开的
+                                            if (onClose) {
+                                                onClose()
+                                                return
+                                            }
                                             const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
                                                 YakitRoute.HTTPFuzzer,
                                                 webFuzzerPageId

@@ -93,9 +93,12 @@ const MITMRule = React.lazy(() => import("../mitm/MITMRule/MITMRule"))
 const {ipcRenderer} = window.require("electron")
 interface HTTPHistoryAnalysisProps {
     pageId: string
+    /** 来自httpFuzzerPage或FuzzerSequence */
+    params?: HTTPHistoryAnalysisPageInfo
+    onClose?: () => void
 }
 export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.memo((props) => {
-    const {pageId} = props
+    const {pageId, params, onClose} = props
     const {t, i18n} = useI18nNamespaces(["HTTPHistoryAnalysis"])
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
@@ -104,6 +107,9 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
         shallow
     )
     const initPageInfo = useMemoizedFn(() => {
+        if (params) {
+            return {...defaultHTTPHistoryAnalysisPageInfo, ...params}
+        }
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.DB_HTTPHistoryAnalysis, pageId)
         if (currentItem && currentItem.pageParamsInfo.hTTPHistoryAnalysisPageInfo) {
             return {...currentItem.pageParamsInfo.hTTPHistoryAnalysisPageInfo}
@@ -237,6 +243,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                             runtimeId={pageInfo.runtimeId}
                             sourceType={pageInfo.sourceType}
                             webFuzzerPageId={pageInfo.pageId}
+                            onClose={onClose}
                         />
                     </div>
                 }

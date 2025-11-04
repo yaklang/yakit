@@ -168,6 +168,7 @@ import {maskProxyPassword} from "../mitm/MITMServerStartForm/MITMServerStartForm
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
+const HTTPHistoryAnalysis = React.lazy(() => import("../hTTPHistoryAnalysis/HTTPHistoryAnalysis").then(({HTTPHistoryAnalysis}) => ({default: HTTPHistoryAnalysis})))
 
 // 保留数组中非重复数据
 type TFilterNonUnique = <T>(arr: T[]) => T[]
@@ -791,6 +792,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const [onlyOneResEditor, setOnlyOneResEditor] = useState<IMonacoEditor>()
     const onlyOneResSelectionByteCount = useSelectionByteCount(onlyOneResEditor, 500)
+    //流量分析页面显示
+    const [trafficAnalysisVisible, setTrafficAnalysisVisible] = useState<boolean>(false)
 
     useEffect(() => {
         fuzzerTableMaxDataRef.current = fuzzerTableMaxData
@@ -2043,19 +2046,45 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const jumpHTTPHistoryAnalysis = useMemoizedFn(() => {
+        setTrafficAnalysisVisible(true)
+        // 原来的逻辑是跳转的流量分析器 现在改为httpHistoryAnalysis组件覆盖
+        // const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+        // emiter.emit(
+        //     "openPage",
+        //     JSON.stringify({
+        //         route: YakitRoute.DB_HTTPHistoryAnalysis,
+        //         params: {
+        //             webFuzzer: true,
+        //             runtimeId: runtimeIdRef.current.split(","),
+        //             sourceType: "scan",
+        //             verbose: currentItem?.pageName ? `${currentItem?.pageName}-${t("HTTPFuzzerPage.allTraffic")}` : "",
+        //             pageId: currentItem?.pageId || ""
+        //         }
+        //     })
+        // )
+    })
+
+    /* 流量分析遮罩层 */
+    const renderHistoryAnalysis = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
-        emiter.emit(
-            "openPage",
-            JSON.stringify({
-                route: YakitRoute.DB_HTTPHistoryAnalysis,
-                params: {
-                    webFuzzer: true,
-                    runtimeId: runtimeIdRef.current.split(","),
-                    sourceType: "scan",
-                    verbose: currentItem?.pageName ? `${currentItem?.pageName}-${t("HTTPFuzzerPage.allTraffic")}` : "",
-                    pageId: currentItem?.pageId || ""
-                }
-            })
+        if (!trafficAnalysisVisible || !currentItem) return
+        const params = {
+            webFuzzer: true,
+            runtimeId: runtimeIdRef.current.split(","),
+            sourceType: "scan",
+            verbose: `${currentItem.pageName}-${t("HTTPFuzzerPage.allTraffic")}`,
+            pageId: currentItem.pageId
+        }
+        return (
+            <div className={styles["http-traffic-analysis-overlay"]}>
+                <React.Suspense fallback={<YakitSpin spinning={true} />}>
+                    <HTTPHistoryAnalysis
+                        pageId={currentItem.pageId}
+                        params={params}
+                        onClose={() => setTrafficAnalysisVisible(false)}
+                    />
+                </React.Suspense>
+            </div>
         )
     })
 
@@ -2064,7 +2093,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             <div style={{fontSize: 12}}>
                 {t("HTTPFuzzerPage.response_overflow", {maxData: fuzzerTableMaxData})}
                 <YakitButton type='text' onClick={jumpHTTPHistoryAnalysis} style={{padding: 0}}>
-                    {t("YakitButton.view_all_button")}
+                    {t("HTTPFuzzerPage.trafficAnalysisMode")}
                 </YakitButton>
                 {t("HTTPFuzzerPage.view_all_suffix")}
             </div>
@@ -2400,6 +2429,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         <div className={classNames(styles["resize-card-heard"])}>
                                             <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
                                             <div className={styles["resize-card-heard-extra"]}></div>
+                                            {cachedTotal >= 1 && <YakitButton
+                                                type='primary'
+                                                onClick={jumpHTTPHistoryAnalysis}
+                                                className={styles["resize-card-heard-btn"]}
+                                            >
+                                                {t("HTTPFuzzerPage.trafficAnalysisMode")}
+                                            </YakitButton>}
                                             {secondNodeExtra()}
                                         </div>
                                         {cachedTotal >= 1 ? (
@@ -2500,6 +2536,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     />
                 </React.Suspense>
             </div>
+            {renderHistoryAnalysis()}
         </>
     )
 }
