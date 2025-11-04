@@ -281,16 +281,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
     }, [selectGroupId, queryPagesDataById])
 
-    const { startConcurrency, cancelConcurrency } = useStreamConcurrency<FuzzerResponse, FuzzerRequestProps>({
+    const { startConcurrency, cancelConcurrency } = useStreamConcurrency<FuzzerSequenceResponse>({
         baseToken: fuzzTokenRef.current,
-        onData: (data, params) => {
-            const { Response, Request: { FuzzerIndex = "" } }: FuzzerSequenceResponse = {
-                Request: {
-                    FuzzerIndex: params.FuzzerIndex || "",
-                    FuzzerTabIndex: params.FuzzerTabIndex || ""
-                } as any,
-                Response: data
-            }
+        onData: (data) => {
+            const { Response, Request: { FuzzerIndex = "" } } = data
 
             // 成功/失败计数
             if (Response.Ok) {
@@ -387,7 +381,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 }])
             }
         },
-        onAllCompleted: () => {
+        onStreamEnd: () => {
             // 并发模式全部完成的业务逻辑
             setLoading(false)
         }
@@ -1013,26 +1007,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     HotPatchCode: webFuzzerPageInfo.hotPatchCode,
                     HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
                     // 并发模式下禁用继承，避免并发请求之间互相干扰
-                    InheritCookies: isConcurrency ? false : item.inheritCookies,
-                    InheritVariables: isConcurrency ? false : item.inheritVariables,
+                    InheritCookies: item.inheritCookies,
+                    InheritVariables: item.inheritVariables,
                     FuzzerIndex: item.id,
                     FuzzerTabIndex: item.pageId,
                     EngineDropPacket: true
                 }
-                const ConcurrencyAdvancedConfigValue = pageGroupData?.pageParamsInfo?.ConcurrencyAdvancedConfigValue
-
-                // 并发模式下优先使用并发全局配置，如果没有则使用各自配置
-                if(!isEmpty(ConcurrencyAdvancedConfigValue) && isConcurrency){
-                    const {repeatTimes, disableUseConnPool, concurrent, minDelaySeconds, maxDelaySeconds} = ConcurrencyAdvancedConfigValue
-                    Object.assign(httpParamsItem,{
-                        RandomChunkedMinDelay: +minDelaySeconds,
-                        RandomChunkedMaxDelay: +maxDelaySeconds,
-                        RepeatTimes: repeatTimes,
-                        DisableUseConnPool: disableUseConnPool,
-                        Concurrent: concurrent
-                    })
-                }
-
                 setRequest(item.id, webFuzzerPageInfo.advancedConfigValue)
                 httpParams.push(httpParamsItem)
             }
@@ -1076,8 +1056,26 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         
         const httpParams = getHttpParams()
         if (isConcurrency) {
-            // 并发模式：使用 hook 管理多个独立的 HTTPFuzzer 流
-            startConcurrency(httpParams)
+            const ConcurrencyAdvancedConfigValue = pageGroupData?.pageParamsInfo?.ConcurrencyAdvancedConfigValue;
+            const params = {
+                Requests: httpParams,
+                EnableOverrides: !!ConcurrencyAdvancedConfigValue, //如果有高级配置 则优先高级配置
+            }
+            if(ConcurrencyAdvancedConfigValue){
+                const { repeatTimes, disableUseConnPool, concurrent, minDelaySeconds, maxDelaySeconds } = ConcurrencyAdvancedConfigValue
+                Object.assign(params, {
+                    Concurrent: concurrent,
+                    Overrides: {
+                        RepeatTimes: repeatTimes,
+                        Concurrent: concurrent,
+                        DelayMinSeconds: +minDelaySeconds,
+                        DelayMaxSeconds: +maxDelaySeconds,
+                        DisableUseConnPool: disableUseConnPool,
+                    }
+                })
+            }
+            console.log(params,'params');
+            startConcurrency(params)
         } else {
             ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: httpParams}, fuzzTokenRef.current)
         }

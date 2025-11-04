@@ -164,6 +164,12 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamHTTPFuzzerSequenceMap, token)
     })
 
+    const streamHTTPFuzzerGroupMap = new Map();
+    ipcMain.handle("cancel-HTTPFuzzerGroup", handlerHelper.cancelHandler(streamHTTPFuzzerGroupMap));
+    ipcMain.handle("HTTPFuzzerGroup", (_, params, token) => {
+        let stream = getClient().HTTPFuzzerGroup(params);
+        handlerHelper.registerHandler(win, stream, streamHTTPFuzzerGroupMap, token)
+    })
 
     // asyncExtractUrl wrapper
     const asyncExtractUrl = (params) => {

@@ -4,84 +4,75 @@ import { randomString } from "@/utils/randomUtil"
 
 const {ipcRenderer} = window.require("electron")
 
-interface StreamConcurrencyConfig<TData, TParams> {
-    onData: (data: TData, params: TParams, index: number) => void
-    onStreamEnd?: (params: TParams, index: number) => void
-    onAllCompleted?: () => void
+interface StreamConcurrencyConfig<TData> {
+    onData: (data: TData) => void
+    onStreamEnd?: () => void
     baseToken?: string
 }
 
 export const useStreamConcurrency = <TData = any, TParams = any>({
     onData,
     onStreamEnd,
-    onAllCompleted,
     baseToken
-}: StreamConcurrencyConfig<TData, TParams>) => {
-    const streamsRef = useRef<Map<string, () => void>>(new Map())
-    const totalRef = useRef(0)
-    const completedRef = useRef(0)
+}: StreamConcurrencyConfig<TData>) => {
+    const streamTokenRef = useRef<string>("")
+    const cleanupRef = useRef<(() => void) | null>(null)
 
-   
-    const checkAllCompleted = useMemoizedFn(() => {
-        if (completedRef.current >= totalRef.current && totalRef.current > 0) {
-            streamsRef.current.forEach((cleanup) => cleanup())
-            streamsRef.current.clear()
-            onAllCompleted?.()
+    const startConcurrency = useMemoizedFn((params: TParams) => {
+        if (cleanupRef.current) {
+            cleanupRef.current()
+        }
+
+        const token = baseToken || `stream-${randomString(40)}`
+        streamTokenRef.current = token
+
+        const dataToken = `${token}-data`
+        const errToken = `${token}-error`
+        const endToken = `${token}-end`
+
+        const handleData = (_: any, data: TData) => {
+            console.log(data,'data');
+            onData(data)
+        }
+
+        const handleError = () => {
+            onStreamEnd?.()
+        }
+
+        const handleEnd = () => {
+            onStreamEnd?.()
+            if (cleanupRef.current) {
+                cleanupRef.current()
+                cleanupRef.current = null
+            }
+        }
+
+        ipcRenderer.on(dataToken, handleData)
+        ipcRenderer.on(errToken, handleError)
+        ipcRenderer.on(endToken, handleEnd)
+
+        ipcRenderer.invoke("HTTPFuzzerGroup", params, token).catch(() => {
+            onStreamEnd?.()
+            if (cleanupRef.current) {
+                cleanupRef.current()
+                cleanupRef.current = null
+            }
+        })
+
+        cleanupRef.current = () => {
+            ipcRenderer.invoke("cancel-HTTPFuzzerGroup", token)
+            ipcRenderer.removeAllListeners(dataToken)
+            ipcRenderer.removeAllListeners(errToken)
+            ipcRenderer.removeAllListeners(endToken)
         }
     })
 
-    const startConcurrency = useMemoizedFn((httpParams: TParams[]) => {
-        if (!httpParams?.length) return
-
-        const token = baseToken || `stream-${randomString(40)}`
-        
-        totalRef.current = httpParams.length
-        completedRef.current = 0
-        streamsRef.current.clear()
-
-        httpParams.forEach((params, index) => {
-            const streamToken = `${token}-${index}`
-            const dataToken = `${streamToken}-data`
-            const errToken = `${streamToken}-error`
-            const endToken = `${streamToken}-end`
-
-            const handleData = (_: any, data: TData) => {
-                onData(data, params, index)
-            }
-
-            const handleError = () => {
-                checkAllCompleted()
-            }
-
-            const handleEnd = () => {
-                completedRef.current++
-                onStreamEnd?.(params, index)
-                checkAllCompleted()
-            }
-
-            ipcRenderer.on(dataToken, handleData)
-            ipcRenderer.on(errToken, handleError)
-            ipcRenderer.on(endToken, handleEnd)
-
-            ipcRenderer.invoke("HTTPFuzzer", params, streamToken).catch(() => {
-                completedRef.current++
-                checkAllCompleted()
-            })
-
-            streamsRef.current.set(streamToken, () => {
-                ipcRenderer.invoke("cancel-HTTPFuzzer", streamToken)
-                ipcRenderer.removeAllListeners(dataToken)
-                ipcRenderer.removeAllListeners(errToken)
-                ipcRenderer.removeAllListeners(endToken)
-            })
-        })
-    })
-
     const cancelConcurrency = useMemoizedFn(() => {
-        streamsRef.current.forEach((cleanup) => cleanup())
-        streamsRef.current.clear()
-        totalRef.current = 0
-        completedRef.current = 0
+        if (cleanupRef.current) {
+            cleanupRef.current()
+            cleanupRef.current = null
+        }
+        streamTokenRef.current = ""
     })
 
     return {startConcurrency, cancelConcurrency}
