@@ -7241,6 +7241,8 @@ message SSAProgramFilter{
   // id range
   int64 AfterID = 8;
   int64 BeforeID = 9;
+
+  repeated string ProjectNames = 10; 
 }
 
 
@@ -7417,6 +7419,7 @@ message SyntaxFlowScanTaskFilter{
   int64  UntilId = 5;
   string Keyword = 6; // fuzz search program-name
   repeated string Kind = 7; // "debug" | "scan";
+  repeated string ProjectNames = 8;
   bool HaveRisk = 17; // 是否有风险
 }
 
@@ -8363,6 +8366,7 @@ message SSAProjectFilter {
 
 message CreateSSAProjectRequest {
   SSAProject Project = 1;
+  string ProjectRawData = 2;  // json from ssa.yak 
 }
 
 message CreateSSAProjectResponse {
