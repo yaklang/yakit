@@ -52,7 +52,6 @@ export default createContext<ChatIPCContextValue>({
     dispatcher: {
         chatIPCEvents: {
             fetchToken: () => "",
-            fetchRequest: () => undefined,
             onStart: () => {},
             onSend: () => {},
             onClose: () => {},

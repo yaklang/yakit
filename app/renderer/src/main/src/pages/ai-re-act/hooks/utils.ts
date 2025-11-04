@@ -6,9 +6,9 @@ import {generateTaskChatExecution} from "@/pages/ai-agent/defaultConstant"
 import {Uint8ArrayToString} from "@/utils/str"
 import {v4 as uuidv4} from "uuid"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
-import {AIChatQSData, AIChatQSDataTypeEnum, AITaskInfoProps} from "./aiRender"
-import {convertNodeIdToVerbose} from "./defaultConstant"
+import {AITaskInfoProps} from "./aiRender"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
+import {AIChatLogData} from "./type"
 
 /** 生成AI-UI展示的必须基础数据 */
 export const genBaseAIChatData = (info: AIOutputEvent) => {
@@ -20,22 +20,16 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
 }
 
 /** 将接口数据(AIOutputEvent)转换为日志数据(AIAgentGrpcApi.Log), 并push到日志队列中 */
-export const handleGrpcDataPushLog = (params: {
-    type: string
-    info: AIOutputEvent
-    pushLog: (log: AIChatQSData) => void
-}) => {
+export const handleGrpcDataPushLog = (params: {info: AIOutputEvent; pushLog: (log: AIChatLogData) => void}) => {
     try {
-        const {type, info, pushLog} = params
+        const {info, pushLog} = params
         let ipcContent = Uint8ArrayToString(info.Content) || ""
-        const logInfo: AIChatQSData = {
-            ...genBaseAIChatData(info),
-            type: AIChatQSDataTypeEnum.LOG,
+        const logInfo: AIChatLogData = {
+            type: "log",
+            Timestamp: info.Timestamp,
             data: {
-                NodeId: info.NodeId,
-                NodeIdVerbose: info.NodeIdVerbose || convertNodeIdToVerbose(info.NodeId),
-                level: type || "info",
-                message: `${JSON.stringify({...info, Content: ipcContent, StreamDelta: undefined})}`
+                level: `${info.Type}-${info.NodeId}`,
+                message: ipcContent
             }
         }
         pushLog(logInfo)

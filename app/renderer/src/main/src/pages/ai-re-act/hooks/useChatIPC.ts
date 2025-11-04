@@ -1,18 +1,16 @@
-import {useEffect, useRef, useState} from "react"
+import {useEffect, useRef} from "react"
 import {yakitNotify} from "@/utils/notification"
 import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
-import cloneDeep from "lodash/cloneDeep"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import useAIPerfData, {UseAIPerfDataTypes} from "./useAIPerfData"
 import useCasualChat, {UseCasualChatTypes} from "./useCasualChat"
 import useYakExecResult, {UseYakExecResultTypes} from "./useYakExecResult"
 import useTaskChat, {UseTaskChatTypes} from "./useTaskChat"
-import {genBaseAIChatData, handleGrpcDataPushLog} from "./utils"
+import {handleGrpcDataPushLog} from "./utils"
 import {AIChatSendParams, UseCasualChatEvents, UseChatIPCEvents, UseChatIPCParams, UseChatIPCState} from "./type"
-import {AIChatQSData, AIChatQSDataTypeEnum} from "./aiRender"
-import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
-import {convertNodeIdToVerbose} from "./defaultConstant"
+import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent} from "./grpcApi"
+import useAIChatLog from "./useAIChatLog"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -54,6 +52,11 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReviewRelease && onReviewRelease("task", id)
     })
 
+    // 执行中的接口流里请求的配置参数
+    const fetchRequestParams = useMemoizedFn(() => {
+        return getRequest?.()
+    })
+
     // 向接口发送消息
     const sendRequest = useMemoizedFn((request: AIInputEvent) => {
         if (!chatID.current) return
@@ -66,11 +69,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     const fetchToken = useMemoizedFn(() => {
         return chatID.current
     })
-    // 建立通信时的请求参数
-    const chatRequest = useRef<AIStartParams>()
-    const fetchRequest = useMemoizedFn(() => {
-        return getRequest?.()
-    })
 
     // 通信的状态
     const [execute, setExecute, getExecute] = useGetSetState(false)
@@ -78,32 +76,27 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     // #region 单次流执行时的输出展示数据
     // 日志
-    const [logs, setLogs] = useState<AIChatQSData[]>([])
-    const pushLog = useMemoizedFn((logInfo: AIChatQSData) => {
-        setLogs((pre) => pre.concat([{...logInfo}]))
-    })
+    const logEvents = useAIChatLog()
 
     // AI性能相关数据和逻辑
-    const [aiPerfData, aiPerfDataEvent] = useAIPerfData({pushLog: pushLog})
+    const [aiPerfData, aiPerfDataEvent] = useAIPerfData({pushLog: logEvents.pushLog})
     // 执行过程中插件输出的卡片
-    const [yakExecResult, yakExecResultEvent] = useYakExecResult({pushLog: pushLog})
+    const [yakExecResult, yakExecResultEvent] = useYakExecResult({pushLog: logEvents.pushLog})
 
     // 设置任务规划的标识ID
     const planCoordinatorId = useRef<string>("")
 
     // 自由对话相关数据和逻辑
     const [casualChat, casualChatEvent] = useCasualChat({
-        pushLog,
-        getRequest: fetchRequest,
-        updateLog: setLogs,
+        pushLog: logEvents.pushLog,
+        getRequest: fetchRequestParams,
         onReviewRelease: handleCasualReviewRelease
     })
 
     // 任务规划相关数据和逻辑
     const [taskChat, taskChatEvent] = useTaskChat({
-        pushLog,
-        getRequest: fetchRequest,
-        updateLog: setLogs,
+        pushLog: logEvents.pushLog,
+        getRequest: fetchRequestParams,
         onReview: onTaskReview,
         onReviewExtra: onTaskReviewExtra,
         onReviewRelease: handleTaskReviewRelease,
@@ -150,9 +143,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     /** 重置所有数据 */
     const onReset = useMemoizedFn(() => {
         chatID.current = ""
-        chatRequest.current = undefined
         setExecute(false)
-        setLogs([])
+        // logEvents.clearLogs()
         aiPerfDataEvent.handleResetData()
         yakExecResultEvent.handleResetData()
         planCoordinatorId.current = ""
@@ -168,7 +160,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         onReset()
         setExecute(true)
         chatID.current = token
-        chatRequest.current = cloneDeep(params.Params)
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
             try {
                 let ipcContent = Uint8ArrayToString(res.Content) || ""
@@ -221,24 +212,22 @@ function useChatIPC(params?: UseChatIPCParams) {
                     if (obj.level) {
                         // 执行日志信息
                         const data = obj as AIAgentGrpcApi.Log
-                        pushLog({
-                            ...genBaseAIChatData(res),
-                            type:AIChatQSDataTypeEnum.LOG,
-                            data: {
-                                ...data,
-                                NodeId: res.NodeId,
-                                NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId)
-                            }
+                        logEvents.pushLog({
+                            type: "log",
+                            Timestamp: res.Timestamp,
+                            data: data
                         })
                     } else if (res.NodeId === "timeline") {
                         const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineDump
                         onTimelineMessage && onTimelineMessage(data.dump)
                     } else {
-                        // 特殊情况，新逻辑兼容老 UI 临时开发的代码块
+                        // 因为流数据有日志类型，所以都放入日志逻辑过滤一遍
                         if (res.NodeId === "stream-finished") {
-                            casualChatEvent.handleSetData(res)
-                            taskChatEvent.handleSetData(res)
-                            return
+                            const {event_writer_id} = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStreamFinished
+                            if (!event_writer_id) {
+                                throw new Error("stream-finished data is invalid")
+                            }
+                            logEvents.sendStreamLog(event_writer_id)
                         }
 
                         if (planCoordinatorId.current === res.CoordinatorId) {
@@ -253,7 +242,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 if (UseCasualChatTypes.includes(res.Type)) {
                     // 专属自由对话类型的流数据
                     if (!!planCoordinatorId.current && planCoordinatorId.current === res.CoordinatorId) {
-                        handleGrpcDataPushLog({type: "error", info: res, pushLog: pushLog})
+                        handleGrpcDataPushLog({info: res, pushLog: logEvents.pushLog})
                         return
                     }
                     casualChatEvent.handleSetData(res)
@@ -263,7 +252,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 if (UseTaskChatTypes.includes(res.Type)) {
                     // 专属任务规划类型的流数据
                     if (!planCoordinatorId.current || planCoordinatorId.current !== res.CoordinatorId) {
-                        handleGrpcDataPushLog({type: "error", info: res, pushLog: pushLog})
+                        handleGrpcDataPushLog({info: res, pushLog: logEvents.pushLog})
                         return
                     }
                     taskChatEvent.handleSetData(res)
@@ -279,11 +268,9 @@ function useChatIPC(params?: UseChatIPCParams) {
                     }
                     return
                 }
-
-                console.log("unkown---\n", {...res, Content: "", StreamDelta: ""}, ipcContent)
-                handleGrpcDataPushLog({type: "info", info: res, pushLog: pushLog})
+                handleGrpcDataPushLog({info: res, pushLog: logEvents.pushLog})
             } catch (error) {
-                handleGrpcDataPushLog({type: "error", info: res, pushLog})
+                handleGrpcDataPushLog({info: res, pushLog: logEvents.pushLog})
             }
         })
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
@@ -324,12 +311,14 @@ function useChatIPC(params?: UseChatIPCParams) {
                 onClose(chatID.current)
                 onReset()
             }
+            // 多个接口流不会清空，只在页面卸载时触发清空并关闭页面
+            logEvents.cancelLogsWin()
         }
     }, [])
 
     return [
-        {execute, logs, yakExecResult, aiPerfData, casualChat, taskChat},
-        {fetchToken, fetchRequest, onStart, onSend, onClose, onReset}
+        {execute, yakExecResult, aiPerfData, casualChat, taskChat},
+        {fetchToken, onStart, onSend, onClose, onReset}
     ] as const
 }
 

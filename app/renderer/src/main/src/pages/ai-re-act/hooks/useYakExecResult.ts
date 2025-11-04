@@ -3,11 +3,11 @@ import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
 import {checkStreamValidity, convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {UseYakExecResultEvents, UseYakExecResultParams, UseYakExecResultState} from "./type"
+import {AIChatLogData, UseYakExecResultEvents, UseYakExecResultParams, UseYakExecResultState} from "./type"
 import {handleGrpcDataPushLog} from "./utils"
 import {v4 as uuidv4} from "uuid"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
-import {AIChatQSData, AIYakExecFileRecord} from "./aiRender"
+import {AIYakExecFileRecord} from "./aiRender"
 
 // 属于该 hook 处理数据的类型
 export const UseYakExecResultTypes = ["yak_exec_result"]
@@ -15,7 +15,7 @@ export const UseYakExecResultTypes = ["yak_exec_result"]
 function useYakExecResult(params?: UseYakExecResultParams): [UseYakExecResultState, UseYakExecResultEvents]
 
 function useYakExecResult(params?: UseYakExecResultParams) {
-    const handlePushLog = useMemoizedFn((log: AIChatQSData) => {
+    const handlePushLog = useMemoizedFn((log: AIChatLogData) => {
         if (params?.pushLog) {
             params.pushLog(log)
         }
@@ -109,7 +109,7 @@ function useYakExecResult(params?: UseYakExecResultParams) {
                 return
             }
         } catch (error) {
-            handleGrpcDataPushLog({type: "error", info: res, pushLog: handlePushLog})
+            handleGrpcDataPushLog({info: res, pushLog: handlePushLog})
         }
     })
 

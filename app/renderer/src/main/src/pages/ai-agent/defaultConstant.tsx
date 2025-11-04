@@ -206,7 +206,6 @@ export const defaultChatIPCData: UseChatIPCState = {
         firstCost: [],
         totalCost: []
     },
-    logs: [],
     casualChat: {
         contents: [],
         coordinatorId: ""

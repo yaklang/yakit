@@ -45,13 +45,8 @@ function useAIChatUIData() {
         }
         return chatIPCData.casualChat
     }, [activeChat, chatIPCData.casualChat])
-    const logs: AIChatQSData[] = useCreation(() => {
-        if (!!activeChat?.answer?.logs) {
-            return activeChat?.answer?.logs
-        }
-        return chatIPCData.logs
-    }, [activeChat, chatIPCData.logs])
-    return {taskChat, yakExecResult, aiPerfData, casualChat, logs}
+
+    return {taskChat, yakExecResult, aiPerfData, casualChat}
 }
 
 export default useAIChatUIData
