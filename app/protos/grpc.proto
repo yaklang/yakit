@@ -811,6 +811,7 @@ service Yak {
   rpc DeleteSSARisks(DeleteSSARisksRequest)returns(DbOperateMessage);
   rpc UpdateSSARiskTags(UpdateSSARiskTagsRequest)returns(DbOperateMessage);
   rpc GetSSARiskFieldGroup(Empty) returns (SSARiskFieldGroupResponse);
+  rpc GetSSARiskFieldGroupEx(GetSSARiskFieldGroupRequest) returns(SSARiskFieldGroupResponse);
   rpc NewSSARiskRead(NewSSARiskReadRequest) returns (NewSSARiskReadResponse);
   rpc ExportSSARisk(ExportSSARiskRequest) returns(stream ExportSSARiskResponse);
   rpc ImportSSARisk(ImportSSARiskRequest) returns(stream ImportSSARiskResponse);
@@ -963,10 +964,16 @@ service Yak {
 
   // Entity Repository
   rpc ListEntityRepository(Empty) returns(ListEntityRepositoryResponse);
-
+  // Entity CRUD
   rpc QueryEntity(QueryEntityRequest) returns (QueryEntityResponse);
+  rpc CreateEntity(Entity) returns (DbOperateMessage);
+  rpc UpdateEntity(Entity) returns (DbOperateMessage);
   rpc DeleteEntity(DeleteEntityRequest) returns (DbOperateMessage);
+  // Relationship CRUD
   rpc QueryRelationship(QueryRelationshipRequest) returns (QueryRelationshipResponse);
+  rpc CreateRelationship(Relationship) returns (DbOperateMessage);
+  rpc UpdateRelationship(Relationship) returns (DbOperateMessage);
+  rpc DeleteRelationship(DeleteRelationshipRequest) returns (DbOperateMessage);
   rpc QuerySubERM(QuerySubERMRequest) returns (QuerySubERMResponse);
   rpc GenerateERMDot(GenerateERMDotRequest) returns (GenerateERMDotResponse);
 
@@ -998,6 +1005,7 @@ message CreateKnowledgeBaseV2Response {
 
 message ExportKnowledgeBaseRequest {
   int64 KnowledgeBaseId = 1;
+  string Name = 3;
   string TargetPath = 2;
 }
 
@@ -1153,6 +1161,9 @@ message Relationship {
 
   string SourceEntityIndex = 7;
   string TargetEntityIndex = 8;
+
+  string UUID = 9;
+  string RepositoryUUID = 10;
 }
 
 message RelationshipFilter {
@@ -1184,6 +1195,10 @@ message QueryRelationshipResponse {
   repeated Relationship Relationships = 1;
   Paging Pagination = 2;
   uint64 Total = 3;
+}
+
+message DeleteRelationshipRequest {
+  RelationshipFilter Filter = 1;
 }
 
 message QuerySubERMRequest {
@@ -1386,6 +1401,8 @@ message DeleteKnowledgeBaseEntryRequest {
 message SearchKnowledgeBaseEntryFilter {
   int64 KnowledgeBaseId = 1;
   string Keyword = 2;
+  repeated string HiddenIndex = 4;
+  repeated string RelatedEntityUUIDS = 3;
 }
 message SearchKnowledgeBaseEntryRequest {
   int64 KnowledgeBaseId = 1;
@@ -1458,6 +1475,7 @@ message KnowledgeBaseEntry {
 
 message DeleteKnowledgeBaseRequest {
   int64 KnowledgeBaseId = 1;
+  string Name = 2;
 }
 
 message DeleteSearchVectorDatabaseRequest {
@@ -1505,6 +1523,7 @@ message VectorStoreEntry {
   repeated float Embedding = 5;
   string DocumentType = 6;
   repeated string RelatedEntities = 7;
+  string EntityID = 8;
 }
 
 
@@ -7156,6 +7175,7 @@ message SyntaxFlowRuleFilter {
   int64 BeforeId = 12;
   string FilterRuleKind = 13; // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
   string FilterLibRuleKind = 14; // "lib"library规则，"noLib"非library规则，空为所有规则
+  repeated string RuleIds = 15;
 }
 
 message SSAProgram{
@@ -7466,7 +7486,6 @@ message SyntaxFlowScanActiveTask {
   // progress 
   double Progress = 5; 
 
-  // update 
   int64 RunningTime = 6;
   string Info = 7;
 }
@@ -7690,6 +7709,10 @@ message DeleteSSARisksRequest {
 message UpdateSSARiskTagsRequest {
   int64 ID = 1;
   repeated string Tags = 2;
+}
+
+message GetSSARiskFieldGroupRequest{
+  SSARisksFilter Filter = 1;
 }
 
 message SSARiskFieldGroupResponse {
@@ -8281,6 +8304,7 @@ message PluginTraceStats {
 message GenerateSSAReportRequest {
   string TaskID = 1;     // SSA扫描TaskID
   string ReportName = 2;    // 报告名称
+  SSARisksFilter Filter = 3;  // 风险过滤器，用于筛选要生成报告的Risk
 }
 
 message GenerateSSAReportResponse {
