@@ -20,15 +20,14 @@ const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props)
     const {setSetting} = useAIAgentDispatcher()
 
     const {chatIPCData} = useChatIPCStore()
-    const {chatIPCEvents, handleSendSyncMessage} = useChatIPCDispatcher()
+    const {handleSendSyncMessage} = useChatIPCDispatcher()
 
     const [visible, setVisible] = useState<boolean>(false)
     const [open, setOpen] = useState<boolean>(false)
 
     const modelValue = useCreation(() => {
-        // if (chatIPCData.execute) return chatIPCEvents.fetchRequest()?.ReviewPolicy
         return setting?.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
-    }, [setting?.ReviewPolicy, chatIPCData.execute, chatIPCEvents.fetchRequest])
+    }, [setting?.ReviewPolicy, chatIPCData.execute])
 
     const aiReviewRiskControlScore = useCreation(() => {
         return setting?.AIReviewRiskControlScore || AIAgentSettingDefault.AIReviewRiskControlScore
