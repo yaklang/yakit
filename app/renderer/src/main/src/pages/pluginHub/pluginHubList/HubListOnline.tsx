@@ -66,10 +66,12 @@ import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
 
-interface HubListOnlineProps extends HubListBaseProps {}
+interface HubListOnlineProps extends HubListBaseProps {
+    onChangeLocal?: (searchParams?: PluginSearchParams) => void
+}
 /** @name 插件商店 */
 export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
-    const {hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail} = props
+    const {hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail, onChangeLocal} = props
 
     useShortcutKeyTrigger("newPlugin", () => {
         onNewPlugin()
@@ -258,6 +260,10 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     /** 插件来源切换 */
     const onPluginSourceChange = useMemoizedFn((key: string) => {
         if (loading) return
+        if(key === 'local') {
+            onChangeLocal?.(getSearch())
+            return
+        }
         setPluginSource(key as PluginSource)
     })
     useUpdateEffect(() => {
@@ -627,8 +633,9 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                 filters={filters as Record<string, API.PluginsSearchData[]>}
                                 setFilters={setFilters}
                                 listTabs={[
-                                    {tab: "全部插件", key: "all"},
-                                    {tab: "官方插件", key: "official"}
+                                    {tab: "在线插件", key: "all"},
+                                    {tab: "官方插件", key: "official"},
+                                    {tab: "本地插件", key: "local"}
                                 ]}
                                 listTabActive={pluginSource}
                                 onListTabActiveChange={onPluginSourceChange}

@@ -83,6 +83,7 @@ interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
     openGroupDrawer: boolean
     onSetOpenGroupDrawer: (openGroupDrawer: boolean) => void
+    externalSearchParams?: PluginSearchParams // 外部传入的搜索参数
 }
 /** @name 本地插件 */
 export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
@@ -93,7 +94,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         hiddenDetailList,
         onPluginDetail,
         openGroupDrawer,
-        onSetOpenGroupDrawer
+        onSetOpenGroupDrawer,
+        externalSearchParams
     } = props
 
     const divRef = useRef<HTMLDivElement>(null)
@@ -156,8 +158,18 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         {wait: 300}
     ).run
 
+    // 监听外部传入的搜索参数
+    useUpdateEffect(() => {
+        externalSearchParams && onSearch(externalSearchParams)
+    }, [externalSearchParams])
+
     useEffect(() => {
         fetchPrivateDomain(() => {
+            //第一次加载判断是否带有搜索参数
+            if(externalSearchParams){
+                onSearch(externalSearchParams)
+                return;
+            }
             handleRefreshList(true)
         })
     }, [])
