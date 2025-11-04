@@ -963,12 +963,19 @@ service Yak {
 
   // Entity Repository
   rpc ListEntityRepository(Empty) returns(ListEntityRepositoryResponse);
-
+  // Entity CRUD
   rpc QueryEntity(QueryEntityRequest) returns (QueryEntityResponse);
+  rpc CreateEntity(Entity) returns (DbOperateMessage);
+  rpc UpdateEntity(Entity) returns (DbOperateMessage);
   rpc DeleteEntity(DeleteEntityRequest) returns (DbOperateMessage);
+  // Relationship CRUD
   rpc QueryRelationship(QueryRelationshipRequest) returns (QueryRelationshipResponse);
+  rpc CreateRelationship(Relationship) returns (DbOperateMessage);
+  rpc UpdateRelationship(Relationship) returns (DbOperateMessage);
+  rpc DeleteRelationship(DeleteRelationshipRequest) returns (DbOperateMessage);
   rpc QuerySubERM(QuerySubERMRequest) returns (QuerySubERMResponse);
   rpc GenerateERMDot(GenerateERMDotRequest) returns (GenerateERMDotResponse);
+
 
   // Export and Import Knowledge Base
   rpc ExportKnowledgeBase(ExportKnowledgeBaseRequest) returns (stream GeneralProgress);
