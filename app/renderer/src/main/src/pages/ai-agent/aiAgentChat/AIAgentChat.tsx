@@ -29,7 +29,7 @@ import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {AIAgentGrpcApi, AIInputEvent, AIStartParams} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIChatQSData, AIReviewType} from "@/pages/ai-re-act/hooks/aiRender"
 import {yakitNotify} from "@/utils/notification"
-import {AIForgeForm} from "../aiTriageChatTemplate/AITriageChatTemplate"
+import {AIForgeForm, AIToolForm} from "../aiTriageChatTemplate/AITriageChatTemplate"
 import {grpcGetAIForge} from "../grpc"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -41,6 +41,8 @@ import classNames from "classnames"
 import styles from "./AIAgentChat.module.scss"
 import {AIChatContent} from "../aiChatContent/AIChatContent"
 import {AITabsEnum} from "../defaultConstant"
+import {grpcGetAIToolById} from "../aiToolList/utils"
+import {isEqual} from "lodash"
 
 const AIReActTaskChat = React.lazy(() => import("../../ai-re-act/aiReActTaskChat/AIReActTaskChat"))
 
@@ -103,94 +105,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const onSetReAct = useMemoizedFn(() => {
         setMode("re-act")
         emiter.emit("switchAIActTab")
-    })
-
-    // 储存 replaceForgeNoPrompt 存放到缓存里值，阻止多次设置重复值
-    const replaceForgeNoPromptCache = useRef(false)
-    // 是否直接替换当前使用的forge模板，而不出现二次确认框
-    const [replaceForgeNoPrompt, setReplaceForgeNoPrompt] = useState(false)
-    const handleSetReplaceForgeNoPrompt = useMemoizedFn(() => {
-        if (replaceForgeNoPrompt && !replaceForgeNoPromptCache.current) {
-            replaceForgeNoPromptCache.current = true
-            setRemoteValue(RemoteAIAgentGV.AIAgentReplaceForgeNoPrompt, "true")
-        }
-    })
-    /** 从别的元素上触发使用 forge 模板的功能 */
-    const handleTriggerExecForge = useMemoizedFn((forge: AIForge) => {
-        console.log("onReActChatEvent-forge", forge)
-        if (!forge || !forge.Id) {
-            yakitNotify("error", "准备使用的模板数据异常，请稍后再试")
-            return
-        }
-        if (!chatIPCData.execute) {
-            handleReplaceActiveForge(forge.Id)
-        } else {
-            const m = YakitModalConfirm({
-                title: "切换forge模板",
-                width: 420,
-                footer: undefined,
-                footerStyle: {padding: "0 24px 24px"},
-                content: (
-                    <div className={styles["forge-modal-content"]}>
-                        是否<b>中断</b>当前正在进行的对话,使用
-                        <b>
-                            {forge.ForgeVerboseName}({forge.ForgeName})
-                        </b>
-                        forge模板?
-                    </div>
-                ),
-                onOk: () => {
-                    m.destroy()
-                    onStop()
-                    handleReplaceActiveForge(forge.Id)
-                },
-                onCancel: () => {
-                    m.destroy()
-                }
-            })
-        }
-    })
-
-    const handleAITool = useMemoizedFn((toolValue: AITool) => {
-        if (!toolValue || !toolValue.ID) {
-            yakitNotify("error", "准备使用的工具数据异常，请稍后再试")
-            return
-        }
-        const m = YakitModalConfirm({
-            title: "执行工具",
-            width: 420,
-            footer: undefined,
-            footerStyle: {padding: "0 24px 24px"},
-            content: (
-                <div className={styles["forge-modal-content"]}>
-                    {!!chatIPCData.execute ? (
-                        <>
-                            是否<b>中断</b>当前正在进行的对话,使用
-                            <b>
-                                {toolValue.VerboseName}({toolValue.Name})
-                            </b>
-                            forge模板?
-                        </>
-                    ) : (
-                        <>
-                            确定要执行{toolValue.VerboseName}({toolValue.Name})工具?
-                        </>
-                    )}
-                </div>
-            ),
-            onOk: () => {
-                m.destroy()
-                onStop()
-                setTimeout(() => {
-                    setActiveForge(undefined)
-                    setMode("re-act")
-                    handleStart(`我要使用 ${toolValue.VerboseName}(${toolValue.Name})工具执行任务"`)
-                }, 200)
-            },
-            onCancel: () => {
-                m.destroy()
-            }
-        })
     })
 
     // review数据中树的数据中需要的解释和关键词工具
@@ -351,8 +265,16 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     useEffect(() => {
         getRemoteValue(RemoteAIAgentGV.AIAgentReplaceForgeNoPrompt)
             .then((res) => {
-                replaceForgeNoPromptCache.current = !!res
-                setReplaceForgeNoPrompt(!!res)
+                const replace = res === "true"
+                replaceForgeNoPromptCache.current = replace
+                setReplaceForgeNoPrompt(replace)
+            })
+            .catch(() => {})
+        getRemoteValue(RemoteAIAgentGV.AIAgentReplaceToolNoPrompt)
+            .then((res) => {
+                const replace = res === "true"
+                replaceToolNoPromptCache.current = replace
+                setReplaceToolNoPrompt(replace)
             })
             .catch(() => {})
         // ai-re-act 页面左侧侧边栏向 chatUI 发送的事件
@@ -371,10 +293,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                     // 替换当前使用的 forge 模板
                     case "open-forge-form":
                         const {value: forgeValue} = data.params || {}
+                        handleClearActiveTool()
                         handleTriggerExecForge(forgeValue)
                         break
                     case "use-ai-tool":
                         const {value: toolValue} = data.params || {}
+                        handleClearActiveForge()
                         handleAITool(toolValue)
                         break
 
@@ -408,19 +332,124 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         }
     })
 
-    //#region 使用 AI-Forge 模板
+    //#region 使用 AI-Forge 模板/Tool 相关逻辑
+    const [activeTool, setActiveTool] = useState<AITool>()
+    const [replaceToolShow, setReplaceToolShow] = useState<boolean>(false)
+    // 是否直接替换当前使用的tool，而不出现二次确认框
+    const [replaceToolNoPrompt, setReplaceToolNoPrompt] = useState(false)
+
     const [activeForge, setActiveForge] = useState<AIForge>()
     const [replaceShow, setReplaceShow] = useState<boolean>(false)
+    // 是否直接替换当前使用的forge模板，而不出现二次确认框
+    const [replaceForgeNoPrompt, setReplaceForgeNoPrompt] = useState(false)
+
     const wrapperRef = useRef<HTMLDivElement>(null)
     const replaceForge = useRef<AIForge>()
+    const replaceTool = useRef<AITool>()
+    // 储存 replaceForgeNoPrompt 存放到缓存里值，阻止多次设置重复值
+    const replaceForgeNoPromptCache = useRef(false)
+    // 储存 replaceToolNoPrompt 存放到缓存里值，阻止多次设置重复值
+    const replaceToolNoPromptCache = useRef(false)
+
+    /** 从别的元素上触发使用 forge 模板的功能 */
+    const handleTriggerExecForge = useMemoizedFn((forge: AIForge) => {
+        console.log("onReActChatEvent-forge", forge)
+        if (!forge || !forge.Id) {
+            yakitNotify("error", "准备使用的模板数据异常，请稍后再试")
+            return
+        }
+        if (!chatIPCData.execute) {
+            handleReplaceActiveForge(forge.Id)
+        } else {
+            const m = YakitModalConfirm({
+                title: "切换forge模板",
+                width: 420,
+                footer: undefined,
+                footerStyle: {padding: "0 24px 24px"},
+                content: (
+                    <div className={styles["forge-modal-content"]}>
+                        是否<b>中断</b>当前正在进行的对话,使用
+                        <b>
+                            {forge.ForgeVerboseName}({forge.ForgeName})
+                        </b>
+                        forge模板?
+                    </div>
+                ),
+                onOk: () => {
+                    m.destroy()
+                    onStop()
+                    handleReplaceActiveForge(forge.Id)
+                },
+                onCancel: () => {
+                    m.destroy()
+                }
+            })
+        }
+    })
+
+    const handleAITool = useMemoizedFn((toolValue: AITool) => {
+        if (!toolValue || !toolValue.ID) {
+            yakitNotify("error", "准备使用的工具数据异常，请稍后再试")
+            return
+        }
+        if (!chatIPCData.execute) {
+            handleReplaceActiveTool(toolValue.ID)
+        } else {
+            const m = YakitModalConfirm({
+                title: "执行工具",
+                width: 420,
+                footer: undefined,
+                footerStyle: {padding: "0 24px 24px"},
+                content: (
+                    <div className={styles["forge-modal-content"]}>
+                        {!!chatIPCData.execute ? (
+                            <>
+                                是否<b>中断</b>当前正在进行的对话,使用
+                                <b>
+                                    {toolValue.VerboseName}({toolValue.Name})
+                                </b>
+                                forge模板?
+                            </>
+                        ) : (
+                            <>
+                                确定要执行{toolValue.VerboseName}({toolValue.Name})工具?
+                            </>
+                        )}
+                    </div>
+                ),
+                onOk: () => {
+                    m.destroy()
+                    onStop()
+                    handleReplaceActiveTool(toolValue.ID)
+                },
+                onCancel: () => {
+                    m.destroy()
+                }
+            })
+        }
+    })
 
     const handleClearActiveForge = useMemoizedFn(() => {
         setActiveForge(undefined)
     })
 
-    const handleTaskSubmit = useMemoizedFn((request: AIStartParams) => {
+    const handleClearActiveTool = useMemoizedFn(() => {
+        setActiveTool(undefined)
+    })
+
+    const handleSubmitForge = useMemoizedFn((request: AIStartParams) => {
         handleStartTaskChatByForge(request)
-        setActiveForge(undefined)
+        handleClearActiveForge()
+    })
+
+    const handleSubmitTool = useMemoizedFn(() => {
+        if (!activeTool) {
+            yakitNotify("warning", " tool 信息异常，请关闭重试")
+            return
+        }
+        setMode("re-act")
+        handleStart(`我要使用 ${activeTool.VerboseName}(${activeTool.Name})工具执行任务"`)
+        handleClearActiveTool()
     })
 
     const handleReplaceActiveForge = useMemoizedFn((id: number) => {
@@ -439,7 +468,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                         // 同一个forge模板, 检查名字和参数是否一至
                         let isReplace = false
                         isReplace = forgeInfo.ForgeName !== activeForge.ForgeName
-                        isReplace = forgeInfo.ParamsUIConfig !== activeForge.ParamsUIConfig
+                        isReplace = !isEqual(forgeInfo.ParamsUIConfig, activeForge.ParamsUIConfig)
                         if (isReplace) setActiveForge(forgeInfo)
                     } else {
                         // 不同forge模板，弹出提示框是否替换
@@ -447,21 +476,64 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                             setActiveForge({...forgeInfo})
                         } else {
                             replaceForge.current = {...forgeInfo}
-                            setReplaceShow(true)
+                            if (!replaceForgeNoPromptCache.current) setReplaceShow(true)
                         }
                     }
                 }
             })
             .catch(() => {})
     })
+    const handleReplaceActiveTool = useMemoizedFn((id: number) => {
+        const toolId = Number(id) || 0
+        if (!toolId) {
+            yakitNotify("error", `准备使用的工具异常: id('${id}'), 操作失败`)
+            return
+        }
+
+        grpcGetAIToolById(toolId)
+            .then((res) => {
+                if (!res) return
+                const toolInfo = cloneDeep(res)
+                if (!activeTool) setActiveTool(toolInfo)
+                else if (replaceToolNoPrompt) {
+                    setActiveTool(toolInfo)
+                } else {
+                    replaceTool.current = {...toolInfo}
+                    if (!replaceToolNoPromptCache.current) setReplaceToolShow(true)
+                }
+            })
+            .catch(() => {})
+    })
+    const handleSetReplaceToolNoPrompt = useMemoizedFn(() => {
+        if (replaceToolNoPrompt && !replaceToolNoPromptCache.current) {
+            replaceToolNoPromptCache.current = true
+            setRemoteValue(RemoteAIAgentGV.AIAgentReplaceToolNoPrompt, "true")
+        }
+    })
+
+    const handleSetReplaceForgeNoPrompt = useMemoizedFn(() => {
+        if (replaceForgeNoPrompt && !replaceForgeNoPromptCache.current) {
+            replaceForgeNoPromptCache.current = true
+            setRemoteValue(RemoteAIAgentGV.AIAgentReplaceForgeNoPrompt, "true")
+        }
+    })
     const handleReplaceOK = useMemoizedFn(() => {
         setActiveForge(cloneDeep(replaceForge.current))
         handleSetReplaceForgeNoPrompt()
         handleReplaceCancel()
     })
+    const handleReplaceToolOK = useMemoizedFn(() => {
+        setActiveTool(cloneDeep(replaceTool.current))
+        handleSetReplaceToolNoPrompt()
+        handleReplaceToolCancel()
+    })
     const handleReplaceCancel = useMemoizedFn(() => {
         replaceForge.current = undefined
         setReplaceShow(false)
+    })
+    const handleReplaceToolCancel = useMemoizedFn(() => {
+        replaceTool.current = undefined
+        setReplaceToolShow(false)
     })
     // #endregion
 
@@ -507,7 +579,15 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                             wrapperRef={wrapperRef}
                             info={activeForge}
                             onBack={handleClearActiveForge}
-                            onSubmit={handleTaskSubmit}
+                            onSubmit={handleSubmitForge}
+                        />
+                    )}
+                    {activeTool && (
+                        <AIToolForm
+                            wrapperRef={wrapperRef}
+                            info={activeTool}
+                            onBack={handleClearActiveTool}
+                            onSubmit={handleSubmitTool}
                         />
                     )}
                 </div>
@@ -529,6 +609,24 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 onOk={handleReplaceOK}
                 cancelButtonText='取消'
                 onCancel={handleReplaceCancel}
+            />
+            <YakitHint
+                getContainer={wrapperRef.current || undefined}
+                visible={replaceToolShow}
+                title='警告'
+                content={"是否要替换当前使用的工具?"}
+                footerExtra={
+                    <YakitCheckbox
+                        checked={replaceToolNoPrompt}
+                        onChange={(e) => setReplaceToolNoPrompt(e.target.checked)}
+                    >
+                        不再提醒
+                    </YakitCheckbox>
+                }
+                okButtonText='替换'
+                onOk={handleReplaceToolOK}
+                cancelButtonText='取消'
+                onCancel={handleReplaceToolCancel}
             />
         </div>
     )
