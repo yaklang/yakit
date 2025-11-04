@@ -13,5 +13,8 @@ export enum RemoteAIAgentGV {
     AIAgentCacheClear = "ai-agent-cache-clear",
 
     /** @name 替换 forge 模板时是否隐藏提示框, 直接进行替换 */
-    AIAgentReplaceForgeNoPrompt = "ai-agent-replace-forge-no-prompt"
+    AIAgentReplaceForgeNoPrompt = "ai-agent-replace-forge-no-prompt",
+
+    /** @name 替换tool时是否隐藏提示框, 直接进行替换 */
+    AIAgentReplaceToolNoPrompt = "ai-agent-replace-tool-no-prompt"
 }

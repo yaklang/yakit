@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {AIForgeFormProps, AIForgeInfoOptProps} from "./type"
+import {AIForgeFormProps, AIForgeInfoOptProps, AIToolFormProps} from "./type"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {SolidToolIcon} from "@/assets/icon/solid"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -302,6 +302,67 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
                         />
                     </div>
                 )}
+            </div>
+        </div>
+    )
+})
+
+/**
+ * @name 可选择的 tool 模块选项 */
+export const AIToolForm: React.FC<AIToolFormProps> = memo((props) => {
+    const {wrapperRef, info, onBack, onSubmit} = props
+
+    // #region 控制该组件最大高度
+    const wrapperSize = useSize(wrapperRef)
+    // #endregion
+
+    const [question, setQuestion] = useState<string>("")
+
+    const [loading, setLoading] = useState(false)
+    const handleParamsSubmit = useMemoizedFn(() => {
+        if (!info || (!info.Name && !info.VerboseName)) {
+            yakitNotify("warning", " Forge 模板信息异常，请关闭重试")
+            return
+        }
+        if (loading) return
+        setLoading(true)
+        onSubmit()
+        setTimeout(() => {
+            setLoading(false)
+        }, 150)
+    })
+
+    return (
+        <div style={{maxHeight: wrapperSize ? (wrapperSize.height || 0) - 40 : 240}} className={styles["ai-tool-form"]}>
+            <div className={styles["tool-form-header"]}>
+                <div
+                    className={classNames(styles["header-title"], "yakit-content-single-ellipsis")}
+                    title={`${info.VerboseName}(${info.Name})`}
+                >
+                    {info.VerboseName}({info.Name})
+                </div>
+
+                <div className={styles["header-extra"]}>
+                    <AIModelSelect />
+                    <React.Suspense fallback={<div>loading...</div>}>
+                        <AIReviewRuleSelect />
+                    </React.Suspense>
+                    <YakitButton loading={loading} onClick={handleParamsSubmit}>
+                        开始执行
+                    </YakitButton>
+                    <YakitButton type='text2' icon={<OutlineXIcon />} onClick={onBack} />
+                </div>
+            </div>
+
+            <div className={styles["tool-form-body"]}>
+                <div className={styles["tool-no-param-ui"]}>
+                    <QSInputTextarea
+                        className={styles["ui-textarea"]}
+                        placeholder='请输入目标'
+                        value={question}
+                        onChange={(e) => setQuestion(e.target.value)}
+                    />
+                </div>
             </div>
         </div>
     )
