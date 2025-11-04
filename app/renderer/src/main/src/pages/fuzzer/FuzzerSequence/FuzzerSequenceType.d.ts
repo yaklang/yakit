@@ -114,6 +114,26 @@ export interface FuzzerSequenceResponse {
     Request: FuzzerRequestProps
     Response: FuzzerResponse
 }
+
+export interface FuzzerGroupResponse {
+    Request: FuzzerRequestProps
+    Response: FuzzerResponse
+}
+
+export interface GroupHTTPFuzzerOverridesProps {
+    RepeatTimes?: number | string
+    Concurrent?: number | string
+    DelayMinSeconds?: number
+    DelayMaxSeconds?: number
+    DisableUseConnPool?: boolean
+}
+
+export interface GroupHTTPFuzzerRequestProps {
+    Requests: FuzzerRequestProps[]
+    Concurrent?: number | string
+    EnableOverrides?: boolean
+    Overrides?: GroupHTTPFuzzerOverridesProps
+}
 /**
  * @description 请求和响应
  * @property {React.ForwardedRef<SequenceResponseRefProps>} responseViewerRef 返回包调试匹配器和提取器时,验证是否保存

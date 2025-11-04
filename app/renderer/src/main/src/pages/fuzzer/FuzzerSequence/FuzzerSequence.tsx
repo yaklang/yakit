@@ -3,6 +3,8 @@ import {
     ExtraSettingProps,
     FuzzerSequenceProps,
     FuzzerSequenceResponse,
+    GroupHTTPFuzzerRequestProps,
+    GroupHTTPFuzzerOverridesProps,
     ResponseProps,
     SequenceItemProps,
     SequenceProps,
@@ -12,7 +14,6 @@ import {
     WebFuzzerDroppedProps
 } from "./FuzzerSequenceType"
 import styles from "./FuzzerSequence.module.scss"
-import { useStreamConcurrency } from "@/pages/pluginHub/hooks/useStreamConcurrency"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     SolidDragsortIcon,
@@ -276,117 +277,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
     }, [selectGroupId, queryPagesDataById])
 
-    const { startConcurrency, cancelConcurrency } = useStreamConcurrency<FuzzerResponse, FuzzerRequestProps>({
-        baseToken: fuzzTokenRef.current,
-        onData: (data, params) => {
-            const { Response, Request: { FuzzerIndex = "" } }: FuzzerSequenceResponse = {
-                Request: {
-                    FuzzerIndex: params.FuzzerIndex || "",
-                    FuzzerTabIndex: params.FuzzerTabIndex || ""
-                } as any,
-                Response: data
-            }
-
-            // 成功/失败计数
-            if (Response.Ok) {
-                let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
-                successCountRef.current.set(FuzzerIndex, (currentSuccessCount || 0) + 1)
-            } else {
-                let currentFailedCount = failedCountRef.current.get(FuzzerIndex)
-                failedCountRef.current.set(FuzzerIndex, (currentFailedCount || 0) + 1)
-            }
-            onSetFirstAsSelected(FuzzerIndex)
-
-            // 数据项计数
-            let count = countRef.current.get(FuzzerIndex)
-            if (count !== undefined) {
-                count++
-                countRef.current.set(FuzzerIndex, count)
-            } else {
-                countRef.current.set(FuzzerIndex, 0)
-            }
-
-            // RuntimeID 收集
-            if (Response.RuntimeID) {
-                let runtimeId = runtimeIdBufferRef.current.get(FuzzerIndex)
-                if (runtimeId) {
-                    runtimeId.push(Response.RuntimeID)
-                    runtimeIdBufferRef.current.set(FuzzerIndex, [...new Set(runtimeId)])
-                } else {
-                    runtimeIdBufferRef.current.set(FuzzerIndex, [Response.RuntimeID])
-                }
-            }
-
-            // 构建响应对象
-            let r = {
-                ...Response,
-                Headers: Response.Headers || [],
-                UUID: Response.UUID,
-                Count: countRef.current.get(FuzzerIndex),
-                cellClassName: ""
-            } as FuzzerResponse
-
-            if (Response.MatchedByMatcher) {
-                let colors = filterColorTag(Response.HitColor) || undefined
-                r.cellClassName = colors
-            }
-
-            // 分类存储成功/失败响应
-            if (Response.Ok) {
-                let successList = successBufferRef.current.get(FuzzerIndex)
-                let fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
-                if (successList) {
-                    successList.push(r)
-                    if (successList.length > fuzzerTableMaxData) {
-                        successList.shift()
-                    }
-                    successBufferRef.current.set(FuzzerIndex, successList)
-                } else {
-                    successBufferRef.current.set(FuzzerIndex, [r])
-                }
-            } else {
-                let failedList = failedBufferRef.current.get(FuzzerIndex)
-                if (failedList) {
-                    failedList.push(r)
-                    failedBufferRef.current.set(FuzzerIndex, failedList)
-                } else {
-                    failedBufferRef.current.set(FuzzerIndex, [r])
-                }
-            }
-
-            if (!fuzzerIndexArr.current.includes(FuzzerIndex)) {
-                fuzzerIndexArr.current.push(FuzzerIndex)
-            }
-
-            // 图表数据
-            let fuzzerResChartData = fuzzerResChartDataBufferRef.current.get(FuzzerIndex)
-            if (fuzzerResChartData) {
-                fuzzerResChartData.push({
-                    Count: (r.Count as number) + 1,
-                    TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
-                    TCPDurationMs: +r.TCPDurationMs,
-                    ConnectDurationMs: +r.ConnectDurationMs,
-                    DurationMs: +r.DurationMs
-                })
-                if (fuzzerResChartData.length > 5000) {
-                    fuzzerResChartData.shift()
-                }
-                fuzzerResChartDataBufferRef.current.set(FuzzerIndex, fuzzerResChartData)
-            } else {
-                fuzzerResChartDataBufferRef.current.set(FuzzerIndex, [{
-                    Count: (r.Count as number) + 1,
-                    TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
-                    TCPDurationMs: +r.TCPDurationMs,
-                    ConnectDurationMs: +r.ConnectDurationMs,
-                    DurationMs: +r.DurationMs
-                }])
-            }
-        },
-        onAllCompleted: () => {
-            // 并发模式全部完成的业务逻辑
-            setLoading(false)
-        }
-    })
 
     useDebounceEffect(
         () => {
@@ -682,6 +572,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
         return () => {
             ipcRenderer.invoke("cancel-HTTPFuzzerSequence", token)
+            ipcRenderer.invoke("cancel-HTTPFuzzerGroup", token)
             ipcRenderer.removeAllListeners(errToken)
             ipcRenderer.removeAllListeners(dataToken)
             ipcRenderer.removeAllListeners(endToken)
@@ -1071,8 +962,32 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         
         const httpParams = getHttpParams()
         if (isConcurrency) {
-            // 并发模式：使用 hook 管理多个独立的 HTTPFuzzer 流
-            startConcurrency(httpParams)
+            const concurrencyConfig = pageGroupData?.pageParamsInfo?.ConcurrencyAdvancedConfigValue
+            const rawGroupConcurrent = Number(concurrencyConfig?.concurrent) || 0
+            const groupConcurrent = rawGroupConcurrent > 0 ? rawGroupConcurrent : 0
+            const enableOverrides = !!concurrencyConfig
+            const overridesPayload: GroupHTTPFuzzerOverridesProps | undefined = enableOverrides
+                ? {
+                      RepeatTimes: Number(concurrencyConfig?.repeatTimes) || 0,
+                      Concurrent: rawGroupConcurrent > 0 ? rawGroupConcurrent : undefined,
+                      DelayMinSeconds: Number(concurrencyConfig?.minDelaySeconds) || 0,
+                      DelayMaxSeconds: Number(concurrencyConfig?.maxDelaySeconds) || 0,
+                      DisableUseConnPool: !!concurrencyConfig?.disableUseConnPool
+                  }
+                : undefined
+            const payload: GroupHTTPFuzzerRequestProps = {
+                Requests: httpParams,
+                Concurrent: groupConcurrent,
+                EnableOverrides: enableOverrides
+            }
+            if (enableOverrides && overridesPayload) {
+                payload.Overrides = overridesPayload
+            }
+            ipcRenderer.invoke("HTTPFuzzerGroup", payload, fuzzTokenRef.current).catch((error) => {
+                const errorMessage = (error && (error.details || error.message)) || ""
+                yakitNotify("error", `${t("FuzzerSequence.fuzz_request_fail")} ${errorMessage}`.trim())
+                setLoading(false)
+            })
         } else {
             ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: httpParams}, fuzzTokenRef.current)
         }
@@ -1080,7 +995,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const onForcedStop = useMemoizedFn(() => {
         setLoading(false)
         if (isConcurrency) {
-            cancelConcurrency()
+            ipcRenderer.invoke("cancel-HTTPFuzzerGroup", fuzzTokenRef.current)
         } else {
             ipcRenderer.invoke("cancel-HTTPFuzzerSequence", fuzzTokenRef.current)
         }
