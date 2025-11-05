@@ -5,7 +5,6 @@ import {useCreation, useMemoizedFn} from "ahooks"
 import {AIChatToolColorCard} from "@/pages/ai-agent/components/aiChatToolColorCard/AIChatToolColorCard"
 import {AIMarkdown} from "@/pages/ai-agent/components/aiMarkdown/AIMarkdown"
 import {AIStreamChatContent} from "@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent"
-import {isToolExecStream} from "../hooks/utils"
 import StreamCard from "@/pages/ai-agent/components/StreamCard"
 import {taskAnswerToIconMap} from "@/pages/ai-agent/defaultConstant"
 import useAINodeLabel from "../hooks/useAINodeLabel"
@@ -21,32 +20,6 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     const {yakExecResult} = useAIChatUIData()
     const {nodeLabel} = useAINodeLabel(NodeIdVerbose)
 
-    // if (isToolExecStream(NodeId)) {
-    //     return <AIChatToolColorCard toolCall={stream.data} />
-    // }
-
-    // switch (NodeId) {
-    //     case "re-act-loop-answer-payload":
-    //         return <AIMarkdown data={stream.data} {...aiMarkdownProps} />
-    //     case "re-act-loop":
-    //     case "re-act-loop-thought":
-    //         return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} />
-    //     default:
-    //         const {execFileRecord} = yakExecResult
-    //         const fileList = execFileRecord.get(CallToolID)
-    //         return (
-    //             <StreamCard
-    //                 titleText={nodeLabel}
-    //                 titleIcon={taskAnswerToIconMap[NodeId]}
-    //                 content={content}
-    //                 modalInfo={{
-    //                     time: stream.Timestamp,
-    //                     title: stream.AIService
-    //                 }}
-    //                 fileList={fileList}
-    //             />
-    //         )
-    // }
     const modalInfo: ModalInfoProps = useCreation(() => {
         return {
             time: stream.Timestamp,

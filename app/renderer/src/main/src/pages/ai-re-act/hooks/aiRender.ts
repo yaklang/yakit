@@ -101,7 +101,23 @@ export interface AITaskInfoProps extends AIAgentGrpcApi.PlanTask {
     /** 层级(代表在树里的第几层) */
     level: number
 }
-
+export enum AIChatQSDataTypeEnum {
+    QUESTION = "question",
+    LOG = "log",
+    STREAM = "stream",
+    THOUGHT = "thought",
+    RESULT = "result",
+    TOOL_RESULT = "tool_result",
+    PLAN_REVIEW_REQUIRE = "plan_review_require",
+    TASK_REVIEW_REQUIRE = "task_review_require",
+    TOOL_USE_REVIEW_REQUIRE = "tool_use_review_require",
+    REQUIRE_USER_INTERACTIVE = "require_user_interactive",
+    EXEC_AIFORGE_REVIEW_REQUIRE = "exec_aiforge_review_require",
+    FILE_SYSTEM_PIN = "file_system_pin",
+    TASK_INDEX_NODE = "task_index_node",
+    TOOL_CALL_DECISION = "tool_call_decision",
+    END_PLAN_AND_EXECUTION = "end_plan_and_execution"
+}
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 interface AIChatQSDataBase<T extends string, U> {
     type: T
@@ -111,21 +127,21 @@ interface AIChatQSDataBase<T extends string, U> {
     Timestamp: AIOutputEvent["Timestamp"]
 }
 
-type ChatQuestion = AIChatQSDataBase<"question", string>
-type ChatLog = AIChatQSDataBase<"log", UIAIOutputLog>
-export type ChatStream = AIChatQSDataBase<"stream", AIStreamOutput>
-type ChatThought = AIChatQSDataBase<"thought", string>
-type ChatResult = AIChatQSDataBase<"result", string>
-type ChatToolResult = AIChatQSDataBase<"tool_result", AIToolResult>
-type ChatPlanReviewRequire = AIChatQSDataBase<"plan_review_require", UIPlanReview>
-type ChatTaskReviewRequire = AIChatQSDataBase<"task_review_require", UITaskReview>
-type ChatToolUseReviewRequire = AIChatQSDataBase<"tool_use_review_require", UIToolUseReview>
-type ChatRequireUserInteractive = AIChatQSDataBase<"require_user_interactive", UIRequireUserInteractive>
-type ChatExecAIForgeReview = AIChatQSDataBase<"exec_aiforge_review_require", UIExecAIForgeReview>
-type ChatFileSystemPin = AIChatQSDataBase<"file_system_pin", AIFileSystemPin>
-type ChatTaskIndexNode = AIChatQSDataBase<"task_index_node", AITaskStartInfo>
-export type ChatToolCallDecision = AIChatQSDataBase<"tool_call_decision", AIToolCallDecision>
-type ChatPlanExecEnd = AIChatQSDataBase<"end_plan_and_execution", string>
+type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
+type ChatLog = AIChatQSDataBase<AIChatQSDataTypeEnum.LOG, UIAIOutputLog>
+export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
+type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
+type ChatResult = AIChatQSDataBase<AIChatQSDataTypeEnum.RESULT, string>
+type ChatToolResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_RESULT, AIToolResult>
+type ChatPlanReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE, UIPlanReview>
+type ChatTaskReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE, UITaskReview>
+type ChatToolUseReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE, UIToolUseReview>
+type ChatRequireUserInteractive = AIChatQSDataBase<AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE, UIRequireUserInteractive>
+type ChatExecAIForgeReview = AIChatQSDataBase<AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE, UIExecAIForgeReview>
+type ChatFileSystemPin = AIChatQSDataBase<AIChatQSDataTypeEnum.FILE_SYSTEM_PIN, AIFileSystemPin>
+type ChatTaskIndexNode = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_INDEX_NODE, AITaskStartInfo>
+export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
+type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
 
 export type AIChatQSData =
     | ChatQuestion

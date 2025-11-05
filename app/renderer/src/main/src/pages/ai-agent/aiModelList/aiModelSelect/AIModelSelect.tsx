@@ -93,10 +93,6 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 <YakitSelect.OptGroup key='线上' label='线上'>
                     {aiModelOptions.onlineModels.map((nodeItem) => (
                         <YakitSelect.Option key={nodeItem.Type} value={nodeItem.Type}>
-                            {/* <div className={classNames(styles["select-option-wrapper"])}>
-                                {AIOnlineModelIconMap[nodeItem.Type]}
-                                <div className={styles["option-text"]}>{nodeItem.Type}</div>
-                            </div> */}
                             <AIModelItem value={nodeItem.Type} />
                         </YakitSelect.Option>
                     ))}
@@ -106,10 +102,6 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 <YakitSelect.OptGroup key='本地' label='本地'>
                     {aiModelOptions.localModels.map((nodeItem) => (
                         <YakitSelect.Option key={nodeItem.Name} value={nodeItem.Name}>
-                            {/* <div className={styles["select-option-wrapper"]}>
-                                <OutlineAtomIconByStatus isRunning={true} iconClassName={styles["icon-small"]} />
-                                <div className={styles["option-text"]}>{nodeItem.Name}</div>
-                            </div> */}
                             <AIModelItem value={nodeItem.Name} />
                         </YakitSelect.Option>
                     ))}

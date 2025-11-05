@@ -67,7 +67,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         if (taskChatIsEmpty(activeChat?.answer?.taskChat)) {
             setMode("task")
             setIsShowTask(true)
-        } else {
+        } else if (!!activeChat?.id) {
             setMode("re-act")
             setIsShowTask(false)
         }
