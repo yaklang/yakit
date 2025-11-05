@@ -1,6 +1,7 @@
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {KVPair} from "@/models/kv"
 import {ExecResult} from "@/pages/invoker/schema"
+import { AITaskInfoProps } from "./aiRender"
 
 // #region 双工接口请求和响应结构
 export interface McpConfig {
@@ -271,7 +272,7 @@ export declare namespace AIAgentGrpcApi {
         goal: string
         /** 后端发送的任务状态 */
         progress?: string
-        subtasks?: PlanTask[]
+        subtasks?: AITaskInfoProps[]
         /**评阅时树节点是否被删 */
         isRemove: boolean
         /**关联工具 */
