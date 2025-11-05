@@ -92,6 +92,41 @@
         .code-scan-by-group-wrapper-hidden {
             display: none;
         }
+        .code-scan-by-execute-wrapper {
+            display: flex;
+            flex: 1;
+            justify-content: center;
+            overflow: hidden;
+
+            .code-scan-by-execute-item {
+                display: flex;
+                flex-direction: column;
+
+                gap: 4px;
+                margin-bottom: 8px;
+                background-color: var(--Colors-Use-Neutral-Bg-Hover);
+                border-radius: 4px;
+                padding: 16px 12px;
+                height: 120px;
+                .name {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                }
+                .footer {
+                    display: flex;
+                    justify-content: space-between;
+                    .progress {
+                        color: var(--Colors-Use-Main-Primary);
+                    }
+                    .time{
+                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+                    }
+                }
+            }
+        }
     }
 }
 .no-audit {

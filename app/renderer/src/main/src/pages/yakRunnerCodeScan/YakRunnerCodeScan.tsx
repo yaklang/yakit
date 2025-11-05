@@ -3,6 +3,7 @@ import {
     CodeScaMainExecuteContentProps,
     CodeScanAuditExecuteFormProps,
     CodeScanAuditExecuteRefProps,
+    CodeScanByExecuteProps,
     CodeScanByGroupProps,
     CodeScanExecuteContentProps,
     CodeScanExecuteContentRefProps,
@@ -11,6 +12,9 @@ import {
     CodeScanGroupByKeyWordProps,
     FlowRuleDetailsListItemProps,
     SyntaxFlowResult,
+    SyntaxFlowScanActiveTask,
+    SyntaxFlowScanActiveTaskItemProps,
+    SyntaxFlowScanActiveTaskShow,
     SyntaxFlowScanExecuteState,
     SyntaxFlowScanModeType,
     SyntaxFlowScanRequest,
@@ -98,6 +102,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateReport"
 import CodeScanExtraParamsDrawer, {CodeScanExtraParam} from "./CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer"
 import {YakParamProps} from "../plugins/pluginsType"
+import moment from "moment"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -457,6 +462,55 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
     )
 })
 
+const CodeScanByExecute: React.FC<CodeScanByExecuteProps> = React.memo((props) => {
+    const {data} = props
+    const [recalculation, setRecalculation] = useState<boolean>(false)
+    useUpdateEffect(()=>{
+        setRecalculation(!recalculation)
+    },[data])
+    return (
+        <div className={classNames(styles["code-scan-by-execute-wrapper"])}>
+            {data.length === 0 ? (
+                <YakitEmpty title='暂无更多执行规则' style={{paddingTop: 48}} />
+            ) : (
+                <RollingLoadList<SyntaxFlowScanActiveTaskShow>
+                    data={data}
+                    recalculation={recalculation}
+                    loadMoreData={() => {}}
+                    renderRow={(info: SyntaxFlowScanActiveTaskShow) => {
+                        const m = moment(info.UpdateTime * 1000)
+                        // 计算分钟、秒
+                        const minutes = m.minutes()
+                        const seconds = m.seconds()
+                        const time = `${minutes===0?"":minutes+"分"}${seconds}秒`
+                        return (
+                            <>
+                                <span className={classNames(styles["name"], "content-ellipsis")}>
+                                    规则名: {info.RuleName}
+                                </span>
+                                <span className='content-ellipsis'>项目名 : {info.ProgramName}</span>
+                                <span className='content-ellipsis'>Info : {info.Info}</span>
+                                <span className={styles["footer"]}>
+                                    <span className={classNames(styles["progress"])}>
+                                        百分比: {Math.round(info.Progress * 100)}%
+                                    </span>
+                                    <span className={classNames(styles["time"])}>{time}</span>
+                                </span>
+                            </>
+                        )
+                    }}
+                    page={1}
+                    hasMore={false}
+                    loading={false}
+                    defItemHeight={128}
+                    rowKey='id'
+                    classNameRow={styles["code-scan-by-execute-item"]}
+                />
+            )}
+        </div>
+    )
+})
+
 const CodeScanGroupByKeyWordItem: React.FC<CodeScanGroupByKeyWordItemProps> = React.memo((props) => {
     const {item, onSelect, selected} = props
     return (
@@ -606,9 +660,57 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         } as CodeScanExtraParam)
         setExtraParamsVisible(false)
     })
+
+    const [ActiveTask, setActiveTask] = useState<SyntaxFlowScanActiveTask[]>([])
+    const CodeScanByExecuteLastDataRef = useRef<SyntaxFlowScanActiveTaskShow[]>([])
+    // 合并两个数组，依据id进行合并，如若存在则更新
+    const mergeArraysById = useMemoizedFn(
+        (arr1: SyntaxFlowScanActiveTaskShow[], arr2: SyntaxFlowScanActiveTaskShow[]) => {
+            const map = new Map(arr1.map((item) => [item.id, {...item}]))
+            for (const obj of arr2) {
+                const existing = map.get(obj.id)
+                if (existing) {
+                    Object.assign(existing, obj)
+                } else {
+                    map.set(obj.id, {...obj})
+                }
+            }
+            return Array.from(map.values())
+        }
+    )
+    // 将 Progress===1 的项移动到数组末尾，且保持顺序不变
+    const moveProgressToEndStable = useMemoizedFn((arr) => {
+        // 找到最后一段连续的 Progress===1 的起始索引
+        let lastIndex = arr.length - 1
+        while (lastIndex >= 0 && arr[lastIndex].Progress === 1) {
+            lastIndex--
+        }
+
+        const beforeTail = arr.slice(0, lastIndex + 1)
+        const tailOnes = arr.slice(lastIndex + 1)
+
+        // 从前面部分分离出 Progress===1 的项
+        const toMove = beforeTail.filter((item) => item.Progress === 1)
+        const remain = beforeTail.filter((item) => item.Progress !== 1)
+
+        // 保证顺序：非1项 → 尾部已有1项 → 要移动的1项
+        return [...remain, ...tailOnes, ...toMove]
+    })
+    const CodeScanByExecuteData = useCreation(() => {
+        const data: SyntaxFlowScanActiveTaskShow[] = ActiveTask.map((item) => {
+            return {
+                ...item,
+                id: `${item.RuleName}-${item.ProgramName}`
+            }
+        })
+        const newData = mergeArraysById(CodeScanByExecuteLastDataRef.current || [], data)
+        const sortedData = moveProgressToEndStable(newData)
+        CodeScanByExecuteLastDataRef.current = sortedData
+        return sortedData
+    }, [ActiveTask])
     return (
         <>
-            {isShowFlowRule && (
+            {isShowFlowRule && executeStatus === "default" && (
                 <div className={styles["midden-wrapper"]}>
                     <div className={styles["midden-heard"]}>
                         {hidden && (
@@ -644,6 +746,23 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         filterLibRuleKind={filterLibRuleKind}
                         setTotal={setTotal}
                     />
+                </div>
+            )}
+            {isShowFlowRule && executeStatus !== "default" && (
+                <div className={styles["midden-wrapper"]}>
+                    <div className={styles["midden-heard"]}>
+                        {hidden && (
+                            <Tooltip title='展开' placement='top' overlayClassName='plugins-tooltip'>
+                                <YakitButton
+                                    type='text2'
+                                    onClick={() => setHidden(false)}
+                                    icon={<OutlineOpenIcon className={styles["header-icon"]} />}
+                                ></YakitButton>
+                            </Tooltip>
+                        )}
+                        <span className={styles["header-text"]}>规则执行</span>
+                    </div>
+                    <CodeScanByExecute data={CodeScanByExecuteData} />
                 </div>
             )}
             <div className={styles["code-scan-execute-wrapper"]}>
@@ -794,6 +913,8 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         setPageInfo={setPageInfo}
                         setExtraParamsVisible={setExtraParamsVisible}
                         extraParamsValue={extraParamsValue}
+                        setActiveTask={setActiveTask}
+                        CodeScanByExecuteLastDataRef={CodeScanByExecuteLastDataRef}
                     />
                 </div>
             </div>
@@ -878,7 +999,9 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             pageId,
             setPageInfo,
             setExtraParamsVisible,
-            extraParamsValue
+            extraParamsValue,
+            setActiveTask,
+            CodeScanByExecuteLastDataRef
         } = props
 
         const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
@@ -1167,7 +1290,9 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 if (res) {
                     // console.log("token-data:", res)
                     const data = res.ExecResult
-
+                    if (!!res?.ActiveTask && res.ActiveTask.length > 0) {
+                        setActiveTask(res.ActiveTask)
+                    }
                     if (!!res.Status) {
                         switch (res.Status) {
                             case "done":
@@ -1278,6 +1403,9 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 getAduitList()
                 form.setFieldsValue({project})
             }
+            // 清空已展示的规则执行数据
+            setActiveTask([])
+            CodeScanByExecuteLastDataRef.current = []
             const params: SyntaxFlowScanRequest = {
                 ...extraParamsValue,
                 ControlMode: "start",

@@ -9,7 +9,7 @@ import {
     SyntaxFlowRuleFilter,
     SyntaxFlowRuleInput
 } from "../ruleManagement/RuleManagementType"
-import { CodeScanExtraParam } from "./CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer";
+import {CodeScanExtraParam} from "./CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer"
 
 export interface YakRunnerCodeScanProps {
     pageId: string
@@ -45,6 +45,10 @@ export interface CodeScanByGroupProps {
     setTotal: (v: number) => void
     selectGroupList: string[]
     filterLibRuleKind: "" | "noLib"
+}
+
+export interface CodeScanByExecuteProps {
+    data: SyntaxFlowScanActiveTaskShow[]
 }
 
 export interface CodeScanExecuteContentRefProps {
@@ -88,10 +92,16 @@ export interface CodeScaMainExecuteContentProps {
     setPageInfo: (v: CodeScanPageInfoProps) => void
     setExtraParamsVisible: (v: boolean) => void
     extraParamsValue: CodeScanExtraParam
+    setActiveTask: (v: SyntaxFlowScanActiveTask[]) => void
+    CodeScanByExecuteLastDataRef: React.MutableRefObject<SyntaxFlowScanActiveTaskShow[] | null>
 }
 
 export interface FlowRuleDetailsListItemProps {
     data: SyntaxFlowRule
+}
+
+export interface SyntaxFlowScanActiveTaskItemProps {
+    data: SyntaxFlowScanActiveTaskShow
 }
 
 /** 根据状态显示过度动画 */
@@ -116,10 +126,26 @@ export interface SyntaxFlowScanRequest {
 
 export type SyntaxFlowScanStatus = "executing" | "done" | "paused" | "error"
 
+export interface SyntaxFlowScanActiveTask {
+    // index
+    RuleName: string
+    ProgramName: string
+    // progress
+    Progress: number
+    // update
+    UpdateTime: number
+    Info: string
+}
+
+export interface SyntaxFlowScanActiveTaskShow extends SyntaxFlowScanActiveTask {
+    id: string
+}
+
 export interface SyntaxFlowScanResponse {
     TaskID: string
     Status: SyntaxFlowScanStatus
     ExecResult: ExecResult
+    ActiveTask: SyntaxFlowScanActiveTask[]
 }
 
 export interface SyntaxFlowResultFilter {

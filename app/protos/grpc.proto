@@ -1501,6 +1501,8 @@ message VectorStoreEntry {
   string Content = 3;
   string Metadata = 4;
   repeated float Embedding = 5;
+  string DocumentType = 6;
+  repeated string RelatedEntities = 7;
 }
 
 
@@ -4333,6 +4335,7 @@ message Risk {
   uint64 ResultID = 30;
   string SyntaxFlowVariable = 31;
   string ProgramName = 32;
+  bool IsPotential = 33;
 }
 
 message QueryRisksRequest {
@@ -4356,6 +4359,7 @@ message QueryRisksRequest {
   repeated int64 Ids = 14;
 
   string RuntimeId = 15;
+  repeated string RuntimeIds = 19;
 
   // ssa program
   repeated string SSAProgramNames = 16;
@@ -7430,6 +7434,20 @@ message SyntaxFlowScanResponse{
   SyntaxFlowResult Result = 4;
   repeated Risk risks = 5;
   repeated SSARisk SSARisks = 6;
+
+  repeated SyntaxFlowScanActiveTask ActiveTask = 7;
+}
+
+message SyntaxFlowScanActiveTask {
+  // index 
+  string RuleName = 3;
+  string ProgramName = 4; 
+  // progress 
+  double Progress = 5; 
+
+  // update 
+  int64 UpdateTime = 6;
+  string Info = 7;
 }
 
 
