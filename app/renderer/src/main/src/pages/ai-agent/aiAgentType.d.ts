@@ -4,7 +4,7 @@ import {AITreeNodeProps} from "./aiTree/type"
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AITabsEnum} from "./defaultConstant"
 import {AIAgentGrpcApi, AIStartParams} from "../ai-re-act/hooks/grpcApi"
-import {AIChatQSData, AIStreamOutput} from "../ai-re-act/hooks/aiRender"
+import {AIChatQSData, AIStreamOutput, AITaskInfoProps} from "../ai-re-act/hooks/aiRender"
 import {UseYakExecResultState} from "../ai-re-act/hooks/type"
 
 export interface AIAgentProps {}
@@ -58,7 +58,7 @@ export interface ServerInfoModalProps {
 export interface AIChatLeftSideProps {
     expand: boolean
     setExpand: Dispatch<SetStateAction<boolean>>
-    tasks: AIAgentGrpcApi.PlanTask[]
+    tasks: AITaskInfoProps[]
 }
 
 export interface AICardListProps {
