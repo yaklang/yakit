@@ -1193,6 +1193,10 @@ message QueryRelationshipResponse {
   uint64 Total = 3;
 }
 
+message DeleteRelationshipRequest {
+  RelationshipFilter Filter = 1;
+}
+
 message QuerySubERMRequest {
   EntityFilter Filter = 1;
   uint64 Depth = 2;
