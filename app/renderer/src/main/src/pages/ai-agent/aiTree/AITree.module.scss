@@ -1,3 +1,5 @@
+@use "../../../styles/mixin.scss" as mixin;
+
 .ai-tree {
     height: 100%;
     padding-top: 10px;
@@ -5,76 +7,229 @@
     overflow: hidden auto;
 }
 
-/* ---------- AITreeNode ----------*/
+@mixin line($deg: 24deg) {
+    content: "";
+    height: 26px;
+    width: 2px;
+    position: absolute;
+    transform: rotate($deg);
+    background-color: var(--Colors-Use-Neutral-Disable);
+    border-radius: 12px;
+    z-index: -1;
+}
+
 .ai-tree-node {
-    .node-wrapper {
-        height: 16px;
+    width: 100%;
+    height: max-content;
+    max-height: 102px;
+    display: flex;
+    .node-icon {
+        width: 16px;
+        position: relative;
         display: flex;
-        .content {
+        flex-direction: column;
+        align-items: center;
+        height: initial;
+        z-index: 1;
+        &-line {
+            width: 2px;
             flex: 1;
-            padding-left: 4px;
+            background-color: var(--Colors-Use-Neutral-Disable);
+        }
+        &-line-top {
+            width: 2px;
+            height: 6px;
+        }
+        &-line-bottom {
+            width: 2px;
+            height: 6px;
+        }
+    }
+    --bg-color: var(--Colors-Use-Success-Focus);
+    --text-color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    --bg-hover-color: var(--Colors-Use-Success-Border);
+
+    .node-wrapper {
+        position: relative;
+        flex: 1;
+        width: 0;
+        border-radius: 8px;
+        border: 1px solid var(--bg-color);
+        background-color: var(--bg-color);
+        margin: 0 0 4px 4px;
+        padding: 2px;
+        &::before {
+            content: "";
+            position: absolute;
+            left: -4px;
+            top: 12px;
+            width: 0;
+            height: 0;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            border-right: 4px solid var(--bg-color);
+        }
+        &:hover {
+            background-color: var(--bg-hover-color);
+            &::before {
+                border-right: 4px solid var(--bg-hover-color);
+            }
+            .node-title svg {
+                display: block;
+            }
+        }
+        .node-title {
+            padding: 4px 6px;
+            box-sizing: border-box;
             display: flex;
             align-items: center;
-            position: relative;
-            cursor: pointer;
-            .content-title {
-                padding-left: 2px;
-                overflow: hidden;
-                color: var(--Colors-Use-Neutral-Text-2-Primary);
-                font-size: 12px;
-                font-weight: 400;
-                line-height: 16px;
+            justify-content: space-between;
+            p {
+                margin: 0;
+                @include mixin.text-ellipsis;
             }
-            .hover-wrapper {
+            svg {
+                width: 16px;
+                height: 16px;
                 cursor: pointer;
                 display: none;
-                position: absolute;
-                top: -4px;
-                left: 2px;
-                width: calc(100% - 4px);
-                padding: 4px;
-                justify-content: space-between;
-                align-items: center;
-                border-radius: 4px;
-                background: var(--Colors-Use-Neutral-Bg-Hover);
-                .task-title {
-                    flex: 1;
-                    overflow: hidden;
-                    color: var(--Colors-Use-Neutral-Text-2-Primary);
-                    font-size: 12px;
-                    font-weight: 400;
-                    line-height: 16px;
-                }
-                .task-extra-btns {
-                    display: flex;
-                    justify-content: flex-end;
-                    align-items: center;
-                    gap: 4px;
-                    .info-icon {
-                        width: 16px;
-                        height: 16px;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                        svg {
-                            width: 16px;
-                            height: 16px;
-                        }
-                        .hover-icon {
-                            color:var(--Colors-Use-Main-Primary);
-                        }
-                    }
-                }
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
-            &:hover {
-                .hover-wrapper {
-                    display: flex;
-                }
+        }
+        .node-content {
+            padding: 4px 6px;
+            border-radius: 6px;
+            background-color: var(--Colors-Use-Basic-Background);
+
+            &-text {
+                @include mixin.text-ellipsis(2, true, false, true);
             }
-            .show-hover-wrapper {
+            &-tag {
                 display: flex;
+                align-items: center;
+                margin-top: 4px;
+                &-num {
+                    width: 16px;
+                    height: 16px;
+                    text-align: center;
+                    display: flex;
+                    justify-content: center;
+                }
             }
+        }
+    }
+
+    .node-wrapper-success {
+        margin-bottom: 4px;
+        --bg-color: var(--Colors-Use-Success-Focus);
+        --text-color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        --bg-hover-color: var(--Colors-Use-Success-Border);
+    }
+    .node-wrapper-error {
+        margin-bottom: 4px;
+        --bg-color: var(--Colors-Use-Error-Focus);
+        --text-color: var(--Colors-Use-Error-Primary);
+        --bg-hover-color: var(--Colors-Use-Error-Border);
+    }
+    .node-wrapper-in-progress {
+        margin-bottom: 4px;
+        --bg-color: var(--Colors-Use-Warning-Focus);
+        --text-color: var(--Colors-Use-Warning-Primary);
+        --bg-hover-color: var(--Colors-Use-Warning-Border);
+    }
+    .node-wrapper-default {
+        --bg-color: transparent;
+        --text-color: var(--Colors-Use-Neutral-Text-2-Primary);
+        --bg-hover-color: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+
+    .node-icon-backslash {
+        &::before {
+            @include line(-24deg);
+            top: -17px;
+            left: 0;
+        }
+
+        &:has(+ *:not(.node-wrapper-default))::before {
+            transform: rotate(-30deg);
+            left: -3px;
+        }
+    }
+    .node-icon-slash {
+        .node-icon-line {
+            background-color: transparent;
+        }
+        &::after {
+            @include line();
+            top: 19px;
+            left: 0;
+        }
+        &:has(+ *:not(.node-wrapper-default))::after {
+            transform: rotate(30deg);
+            left: -3px;
+        }
+    }
+    .node-icon-parent-slash {
+        justify-content: flex-start;
+        &::after {
+            content: "";
+            height: 16px;
+            width: 2px;
+            position: absolute;
+            transform: rotate(90deg);
+            background-color: var(--Colors-Use-Neutral-Disable);
+            top: 34px;
+            left: -1px;
+            border-radius: none;
+            z-index: -1;
+        }
+        & + .node-icon-slash::after {
+            transform: rotate(36deg);
+            left: -1px;
+        }
+    }
+    .node-circle-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid var(--Colors-Use-Neutral-Disable);
+    }
+    &:has(+ .ai-tree-node-end) {
+        .node-icon:not(.node-icon-parent-slash) + .node-icon-slash::after {
+            height: 32px;
+            left: -2px;
+        }
+    }
+}
+
+.ai-tree-node-end {
+    width: 16px;
+    height: 40px;
+
+    div {
+        width: 2px;
+        margin: 0 auto;
+        height: 100%;
+        background-color: var(--Colors-Use-Neutral-Disable);
+        position: relative;
+
+        &::after,
+        &::before {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            height: 12px;
+            background-color: var(--Colors-Use-Neutral-Disable);
+            transform-origin: bottom center;
+        }
+
+        &::after {
+            transform: translateX(-50%) rotate(45deg);
+        }
+        &::before {
+            transform: translateX(-50%) rotate(-45deg);
         }
     }
 }
@@ -114,138 +269,6 @@
             top: 0;
         }
     }
-}
-
-/* ---------- AITreeEmptyNode ----------*/
-.node-horizontal-line {
-    width: 16px;
-    height: 16px;
-    position: relative;
-    &::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 7px;
-        width: 2px;
-        height: 50%;
-        background-color: var(--Colors-Use-Neutral-Border);
-    }
-    &::after {
-        content: "";
-        position: absolute;
-        top: 7px;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        background-color: var(--Colors-Use-Neutral-Border);
-    }
-}
-.node-vertical-line {
-    width: 16px;
-    height: 16px;
-    position: relative;
-    &::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 7px;
-        width: 2px;
-        height: 100%;
-        background-color: var(--Colors-Use-Neutral-Border);
-    }
-}
-.node-T-line {
-    width: 16px;
-    height: 16px;
-    position: relative;
-    &::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 7px;
-        width: 2px;
-        height: 100%;
-        background-color: var(--Colors-Use-Neutral-Border);
-    }
-    &::after {
-        content: "";
-        position: absolute;
-        top: 7px;
-        left: 8px;
-        width: 50%;
-        height: 2px;
-        background-color: var(--Colors-Use-Neutral-Border);
-    }
-}
-
-.node-start-oblique-line {
-    width: 16px;
-    height: 16px;
-    position: relative;
-    &::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        bottom: -4px;
-        width: 2px;
-        height: 142%;
-        background: var(--Colors-Use-Neutral-Border);
-        transform: rotate(-30deg);
-    }
-}
-
-.node-end-oblique-line {
-    width: 16px;
-    height: 16px;
-    position: relative;
-    &::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: -4px;
-        width: 2px;
-        height: 142%;
-        background: var(--Colors-Use-Neutral-Border);
-        transform: rotate(30deg);
-    }
-}
-
-.node-end-half-oblique-line {
-    width: 16px;
-    height: 16px;
-    position: relative;
-    &::before {
-        content: "";
-        position: absolute;
-        left: 1px;
-        top: -2px;
-        width: 2px;
-        height: 71%;
-        background: var(--Colors-Use-Neutral-Border);
-        transform: rotate(30deg);
-    }
-}
-
-.node-icon {
-    width: 16.3px;
-    height: 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2;
-    svg {
-        width: 16px;
-        height: 16px;
-    }
-}
-
-/* ---------- TaskWaitIcon ----------*/
-.task-wait-icon {
-    width: 16px;
-    height: 16px;
-    border: 1px solid var(--Colors-Use-Neutral-Border);
-    border-radius: 50%;
-    background-color: var(--Colors-Use-Basic-Background);
 }
 
 /* ---------- TaskInProgressIcon ----------*/

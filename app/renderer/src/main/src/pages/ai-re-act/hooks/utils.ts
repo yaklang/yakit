@@ -41,12 +41,10 @@ export const handleGrpcDataPushLog = (params: {info: AIOutputEvent; pushLog: (lo
 const genExecTask = (params: {task: AIAgentGrpcApi.PlanTask; level: number; tasks: AITaskInfoProps[]}) => {
     const {task, level, tasks} = params
 
-    if (!Array.isArray(task.subtasks) || task.subtasks.length === 0) {
-        tasks.push({...task, subtasks: undefined, level: 1})
-    } else {
-        for (let subtask of task.subtasks) {
-            genExecTask({level: level + 1, task: subtask, tasks: tasks})
-        }
+    tasks.push({...task, subtasks: undefined, level})
+    if (!Array.isArray(task.subtasks) || task.subtasks.length === 0) return
+    for (let subtask of task.subtasks) {
+        genExecTask({level: level + 1, task: subtask, tasks: tasks})
     }
 }
 
@@ -54,6 +52,7 @@ const genExecTask = (params: {task: AIAgentGrpcApi.PlanTask; level: number; task
 export const genExecTasks = (taskTree: AIAgentGrpcApi.PlanTask) => {
     const execTasks: AITaskInfoProps[] = []
     genExecTask({task: taskTree, level: 1, tasks: execTasks})
+    execTasks.shift()
     return execTasks
 }
 // #endregion

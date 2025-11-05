@@ -27,6 +27,7 @@ import {formatNumberUnits} from "../utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineArrowdownIcon, OutlineArrowupIcon, OutlineNewspaperIcon} from "@/assets/icon/outline"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
+import useAiChatLog from "@/hook/useAiChatLog/useAiChatLog.ts"
 const {TabPane} = PluginTabs
 
 const getCardData = () => {
@@ -186,6 +187,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
         }
         return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
     }, [aiPerfData.consumption])
+
+    const {onOpenLogWindow} = useAiChatLog()
+
     return (
         <div className={styles["ai-chat-content-wrapper"]}>
             <ExpandAndRetract
@@ -239,7 +243,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                                 <div className={styles["divider-style"]}></div>
                             </div>
 
-                            <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />}>
+                            <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLogWindow}>
                                 日志
                             </YakitButton>
                         </div>

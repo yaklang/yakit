@@ -19,8 +19,7 @@ function useAIChatLog() {
                 message: logInfo.message,
                 timestamp: formatTimestamp(info.Timestamp)
             }
-            // 将 sendData 通过 ipc 发送到另一个页面
-            const content = `[${sendData.level}](${sendData.timestamp})\n${sendData.message}`
+            ipcRenderer.invoke("forward-ai-chat-log-data", sendData)
         }
         if (info.type === "stream") {
             const {EventUUID, content} = info.data
@@ -43,18 +42,19 @@ function useAIChatLog() {
             timestamp: formatTimestamp(stream.Timestamp)
         }
         streamInfo.current.delete(uuid)
-        // 将 sendData 通过 ipc 发送到另一个页面
-        const content = `[${sendData.level}](${sendData.timestamp})\n${sendData.message}`
+        ipcRenderer.invoke("forward-ai-chat-log-data", sendData)
     })
 
     const clearLogs = useMemoizedFn(() => {
         streamInfo.current.clear()
         // 发送ipc通信通知另一个页面清空展示的所有内容
+        ipcRenderer.invoke("clear-ai-chat-log-data")
     })
 
     const cancelLogsWin = useMemoizedFn(() => {
         clearLogs()
         // ipc 发送关闭页面的通知
+        ipcRenderer.send("close-ai-chat-window")
     })
 
     return {pushLog, sendStreamLog, clearLogs, cancelLogsWin}
