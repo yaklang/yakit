@@ -1,5 +1,5 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {AIChatQSData, AIStreamOutput, AITokenConsumption, AIYakExecFileRecord} from "./aiRender"
+import {AIChatQSData, AIStreamOutput, AITaskInfoProps, AITokenConsumption, AIYakExecFileRecord} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 
@@ -74,7 +74,7 @@ export interface UseTaskChatState {
     /** 任务对话的 id */
     coordinatorId: string
     /** 正在执行的任务列表 */
-    plan: AIAgentGrpcApi.PlanTask[]
+    plan: AITaskInfoProps[]
     /** 流式输出 */
     streams: AIChatQSData[]
 }

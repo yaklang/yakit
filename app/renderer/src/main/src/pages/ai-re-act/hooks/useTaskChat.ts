@@ -11,7 +11,7 @@ import {
 import {AIChatLogData, handleSendFunc, UseTaskChatEvents, UseTaskChatParams, UseTaskChatState} from "./type"
 import {
     genBaseAIChatData,
-    handleFlatAITree,
+    genExecTasks,
     handleGrpcDataPushLog,
     isAutoContinueReview,
     isToolExecStream,
@@ -25,6 +25,7 @@ import {
     AIChatQSDataTypeEnum,
     AIReviewType,
     AIStreamOutput,
+    AITaskInfoProps,
     AIToolResult,
     ToolStreamSelectors
 } from "./aiRender"
@@ -50,7 +51,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     const fetchPlanTree = useMemoizedFn(() => {
         return cloneDeep(planTree.current)
     })
-    const [plan, setPlan] = useState<AIAgentGrpcApi.PlanTask[]>([])
+    const [plan, setPlan] = useState<AITaskInfoProps[]>([])
 
     const review = useRef<AIChatQSData>()
     const currentPlansId = useRef<string>("")
@@ -421,9 +422,9 @@ function useTaskChat(params?: UseTaskChatParams) {
             // 如果是计划的审阅，继续执行代表任务列表已确认，可以进行数据保存
             const tasks = reviewInfo.data
             planTree.current = cloneDeep(tasks.plans.root_task)
-            const sum: AIAgentGrpcApi.PlanTask[] = []
-            handleFlatAITree(sum, tasks.plans.root_task)
-            setPlan([...sum])
+            const plans = genExecTasks(tasks.plans.root_task)
+            setPlan(cloneDeep(plans))
+            return cloneDeep(plans)
         }
     })
 
@@ -489,7 +490,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     })
 
     // 更新未完成的任务状态
-    const handleUpdateTaskState = useMemoizedFn((index: string, state: AIAgentGrpcApi.PlanTask["progress"]) => {
+    const handleUpdateTaskState = useMemoizedFn((index: string, state: AITaskInfoProps["progress"]) => {
         setPlan((old) => {
             const newData = cloneDeep(old)
             return newData.map((item) => {
@@ -734,9 +735,8 @@ function useTaskChat(params?: UseTaskChatParams) {
                 // 更新正在执行的任务树
                 const tasks = JSON.parse(ipcContent) as {root_task: AIAgentGrpcApi.PlanTask}
                 planTree.current = cloneDeep(tasks.root_task)
-                const sum: AIAgentGrpcApi.PlanTask[] = []
-                handleFlatAITree(sum, tasks.root_task)
-                setPlan([...sum])
+                const plans = genExecTasks(tasks.root_task)
+                setPlan(cloneDeep(plans))
                 return
             }
 
