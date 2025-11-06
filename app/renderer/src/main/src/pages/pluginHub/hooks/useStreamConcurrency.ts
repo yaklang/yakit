@@ -26,9 +26,9 @@ export const useStreamConcurrency = <TData = any, TParams = any>({
         const token = baseToken || `stream-${randomString(40)}`
         streamTokenRef.current = token
 
-        const dataToken = `${token}-data`
-        const errToken = `${token}-error`
-        const endToken = `${token}-end`
+        const dataToken = `fuzzer-group-data-${token}`
+        const errToken = `fuzzer-group-error-${token}`
+        const endToken = `fuzzer-group-end-${token}`
 
         const handleData = (_: any, data: TData) => {
             console.log(data,'data');

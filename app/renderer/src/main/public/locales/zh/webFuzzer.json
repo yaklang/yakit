@@ -17,7 +17,7 @@
     "config": "配置",
     "rule": "规则",
     "sequence": "序列",
-    "concurrency": "并发"
+    "concurrency": "组并发"
   },
   "PacketScanButton": {
     "packetScan": "数据包扫描"

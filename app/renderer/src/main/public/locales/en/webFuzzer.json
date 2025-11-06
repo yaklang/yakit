@@ -17,7 +17,7 @@
     "config": "Config",
     "rule": "Rule",
     "sequence": "Sequence",
-    "concurrency": "Concurrency"
+    "concurrency": "Group Concurrency"
   },
   "PacketScanButton": {
     "packetScan": "Packet Scan"

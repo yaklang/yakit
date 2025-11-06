@@ -168,7 +168,29 @@ module.exports = (win, getClient) => {
     ipcMain.handle("cancel-HTTPFuzzerGroup", handlerHelper.cancelHandler(streamHTTPFuzzerGroupMap));
     ipcMain.handle("HTTPFuzzerGroup", (_, params, token) => {
         let stream = getClient().HTTPFuzzerGroup(params);
-        handlerHelper.registerHandler(win, stream, streamHTTPFuzzerGroupMap, token)
+        
+        const currentStream = streamHTTPFuzzerGroupMap.get(token)
+        if (!!currentStream) {
+            return
+        }
+
+        streamHTTPFuzzerGroupMap.set(token, stream)
+        stream.on("data", (data) => {
+            if (win) {
+                win.webContents.send(`fuzzer-group-data-${token}`, data)
+            }
+        })
+        stream.on("error", (error) => {
+            if (win) {
+                win.webContents.send(`fuzzer-group-error-${token}`, error && error.details)
+            }
+        })
+        stream.on("end", () => {
+            streamHTTPFuzzerGroupMap.delete(token)
+            if (win) {
+                win.webContents.send(`fuzzer-group-end-${token}`)
+            }
+        })
     })
 
     // asyncExtractUrl wrapper

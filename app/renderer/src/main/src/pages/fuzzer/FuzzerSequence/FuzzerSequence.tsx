@@ -1399,30 +1399,29 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     })
 
     const onShowAllHeader = useMemoizedFn(() => {
-        if (judgeMoreFuzzerTableMaxData()) {
-            //数据超过限制跳转到流量分析页
-            setTrafficAnalysisType("all") // 设置为查看全部
-            setTrafficAnalysisVisible(true)
-            // let currentItem: PageNodeItemProps | undefined = undefined
-            // if (currentSelectRequest?.pageId) {
-            //     currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, currentSelectRequest?.pageId)
-            // }
-            // emiter.emit(
-            //     "openPage",
-            //     JSON.stringify({
-            //         route: YakitRoute.DB_HTTPHistoryAnalysis,
-            //         params: {
-            //             webFuzzer: true,
-            //             runtimeId: allRuntimeIds(),
-            //             sourceType: "scan",
-            //             verbose: currentItem?.pageName ? `${currentItem?.pageName}-${t("FuzzerSequence.allTraffic")}` : "",
-            //             pageId: currentItem?.pageId || ""
-            //         }
-            //     })
-            // )
-        } else {
-            setShowAllResponse(true)
-        }
+        setTrafficAnalysisType("all") // 设置为查看全部
+        setTrafficAnalysisVisible(true)
+        // if (judgeMoreFuzzerTableMaxData()) {
+        //     // let currentItem: PageNodeItemProps | undefined = undefined
+        //     // if (currentSelectRequest?.pageId) {
+        //     //     currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, currentSelectRequest?.pageId)
+        //     // }
+        //     // emiter.emit(
+        //     //     "openPage",
+        //     //     JSON.stringify({
+        //     //         route: YakitRoute.DB_HTTPHistoryAnalysis,
+        //     //         params: {
+        //     //             webFuzzer: true,
+        //     //             runtimeId: allRuntimeIds(),
+        //     //             sourceType: "scan",
+        //     //             verbose: currentItem?.pageName ? `${currentItem?.pageName}-${t("FuzzerSequence.allTraffic")}` : "",
+        //     //             pageId: currentItem?.pageId || ""
+        //     //         }
+        //     //     })
+        //     // )
+        // } else {
+        //     setShowAllResponse(true)
+        // }
     })
 
     const onShowAll = useMemoizedFn(() => {
