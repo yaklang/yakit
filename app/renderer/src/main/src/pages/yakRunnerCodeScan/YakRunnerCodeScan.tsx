@@ -870,7 +870,7 @@ const CodeScanByExecute: React.FC<CodeScanByExecuteProps> = React.memo((props) =
                     recalculation={recalculation}
                     loadMoreData={() => {}}
                     renderRow={(info: SyntaxFlowScanActiveTaskShow) => {
-                        const m = moment(info.UpdateTime * 1000)
+                        const m = moment(info.RunningTime * 1000)
                         // 计算分钟、秒
                         const minutes = m.minutes()
                         const seconds = m.seconds()
@@ -883,7 +883,9 @@ const CodeScanByExecute: React.FC<CodeScanByExecuteProps> = React.memo((props) =
                                 <span className='content-ellipsis'>项目名 : {info.ProgramName}</span>
                                 <span className='content-ellipsis'>Info : {info.Info}</span>
                                 <span className={styles["footer"]}>
-                                    <span className={classNames(styles["progress"])}>
+                                    <span className={classNames(styles["progress"],{
+                                    [styles["progress-gray"]]: info.Progress === 1,
+                                    }) }>
                                         百分比: {Math.round(info.Progress * 100)}%
                                     </span>
                                     <span className={classNames(styles["time"])}>{time}</span>
@@ -1833,6 +1835,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
         const getTabsState = useMemo(() => {
             const tabsState = [
+                {tabName: "漏洞与风险", type: "ssa-risk"},
                 {tabName: "日志", type: "log"},
                 {tabName: "Console", type: "console"}
             ]
@@ -1843,7 +1846,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         type: "result",
                         customProps: {onDetail: handleShowDetail, updateDataCallback: handleUpdateAuditData}
                     },
-                    {tabName: "漏洞与风险", type: "ssa-risk"},
                     ...tabsState
                 ]
             }
@@ -2030,7 +2032,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                             riskState: [],
                             rulesState: []
                         }}
-                        runtimeId={runtimeId}
+                        // 后端建议没有则传任意数字填充
+                        runtimeId={runtimeId||"1111111111"}
                         loading={isExecuting}
                         defaultActiveKey={undefined}
                     />
@@ -2419,13 +2422,13 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                     {groupParamsHeader.length > 0 && (
                         <>
                             {groupParamsHeader.map((item, index) => (
-                                <>
+                                <React.Fragment key={item.group}>
                                     {item.data?.map((formItem) => (
                                         <React.Fragment key={formItem.Field + formItem.FieldVerbose}>
                                             <FormContentItemByType item={formItem} pluginType={"yak"} />
                                         </React.Fragment>
                                     ))}
-                                </>
+                                </React.Fragment>
                             ))}
                         </>
                     )}
@@ -2452,13 +2455,13 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                 {groupParamsShow.length > 0 && (
                                     <>
                                         {groupParamsShow.map((item) => (
-                                            <>
+                                            <React.Fragment key={item.group}>
                                                 {item.data?.map((formItem) => (
                                                     <React.Fragment key={formItem.Field + formItem.FieldVerbose}>
                                                         <FormContentItemByType item={formItem} pluginType={"yak"} />
                                                     </React.Fragment>
                                                 ))}
-                                            </>
+                                            </React.Fragment>
                                         ))}
                                     </>
                                 )}

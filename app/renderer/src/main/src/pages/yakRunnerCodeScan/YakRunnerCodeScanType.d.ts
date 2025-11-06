@@ -145,7 +145,7 @@ export interface SyntaxFlowScanActiveTask {
     // progress
     Progress: number
     // update
-    UpdateTime: number
+    RunningTime: number
     Info: string
 }
 

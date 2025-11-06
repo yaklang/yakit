@@ -227,6 +227,9 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 if (updateData.action === "create") {
                     debugVirtualTableEvent.startT()
                 }
+                if(updateData.action === "update"){
+                    debugVirtualTableEvent.startT()
+                }
             }
         } catch (error) {}
     })
