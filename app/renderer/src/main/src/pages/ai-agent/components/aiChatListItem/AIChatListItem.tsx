@@ -161,5 +161,5 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         }
         return <React.Fragment key={id}>{contentNode}</React.Fragment>
     })
-    return <>{renderContent()}</>
+    return renderContent()
 })
