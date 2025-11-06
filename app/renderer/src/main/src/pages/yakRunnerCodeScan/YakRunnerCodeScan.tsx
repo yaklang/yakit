@@ -12,7 +12,6 @@ import {
     FlowRuleDetailsListItemProps,
     SyntaxFlowResult,
     SyntaxFlowScanActiveTask,
-    SyntaxFlowScanActiveTaskItemProps,
     SyntaxFlowScanActiveTaskShow,
     SyntaxFlowScanExecuteState,
     SyntaxFlowScanModeType,
@@ -43,11 +42,8 @@ import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
     OutlineClipboardlistIcon,
-    OutlineCloseIcon,
-    OutlineOpenIcon,
     OutlineQuestionmarkcircleIcon,
     OutlineTerminalIcon,
-    OutlineXIcon
 } from "@/assets/icon/outline"
 import {defYakitAutoCompleteRef, YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -58,7 +54,6 @@ import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakScript} from "../invoker/schema"
 import {ExpandAndRetract} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {
-    ExecuteEnterNodeByPluginParams,
     FormContentItemByType,
     PluginExecuteProgress
 } from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
@@ -66,7 +61,7 @@ import {randomString} from "@/utils/randomUtil"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {grpcFetchAuditTree} from "../yakRunnerAuditCode/utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {apiCancelSyntaxFlowScan, apiSyntaxFlowScan} from "./utils"
+import {apiCancelSyntaxFlowScan, apiSyntaxFlowScan, getGroupNamesTotal} from "./utils"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps, CodeScanPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -82,7 +77,6 @@ import {ExtraParamsNodeByType} from "../plugins/operator/localPluginExecuteDetai
 import {getValueByType, getYakExecutorParam, ParamsToGroupByGroupName} from "../plugins/editDetails/utils"
 import {apiCancelDebugPlugin, apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
-import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
 import {CodeScanTaskListDrawer} from "./CodeScanTaskListDrawer/CodeScanTaskListDrawer"
 import emiter from "@/utils/eventBus/eventBus"
 import {grpcFetchLocalRuleGroupList, grpcFetchLocalRuleList} from "../ruleManagement/api"
@@ -241,44 +235,14 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
         return response.length
     }, [response])
 
-    const getGroupNamesTotal = useMemoizedFn((GroupNames: string[]) => {
-        return new Promise<number>(async (resolve, reject) => {
-            try {
-                setLoading(true)
-                const query: QuerySyntaxFlowRuleRequest = {
-                    Filter: {
-                        RuleNames: [],
-                        Language: [],
-                        GroupNames,
-                        Severity: [],
-                        Purpose: [],
-                        Tag: [],
-                        Keyword: keywords,
-                        FilterLibRuleKind: ""
-                    },
-                    Pagination: {
-                        Limit: 10,
-                        Page: 1,
-                        OrderBy: "updated_at",
-                        Order: "desc"
-                    }
-                }
-                const res = await grpcFetchLocalRuleList(query)
-                setLoading(false)
-                resolve(parseInt(res.Total + ""))
-            } catch (error) {
-                reject(error)
-            }
-        })
-    })
-
     const onSelect = useMemoizedFn(async (val: SyntaxFlowGroup) => {
         try {
             const isExist = (pageInfo.GroupNames || []).includes(val.GroupName)
             if (isExist) {
                 const newList = (pageInfo.GroupNames || []).filter((ele) => ele !== val.GroupName)
+                setLoading(true)
                 const selectTotal = await getGroupNamesTotal(newList)
-
+                setLoading(false)
                 setPageInfo((prev: CodeScanPageInfoProps) => ({
                     ...prev,
                     GroupNames: newList,
@@ -290,7 +254,9 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                 setAllCheck(newList.length === response.length)
             } else {
                 const newList = [...(pageInfo.GroupNames || []), val.GroupName]
+                setLoading(true)
                 const selectTotal = await getGroupNamesTotal(newList)
+                setLoading(false)
                 setPageInfo((prev: CodeScanPageInfoProps) => ({
                     ...prev,
                     GroupNames: newList,
@@ -1735,8 +1701,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
         /**开始执行 */
         const onStartExecute = useMemoizedFn(async (value, isSetForm?: boolean) => {
-            const GroupNames = pageInfo.GroupNames || []
-            if (GroupNames.length === 0) {
+            console.log("pageInfo---", pageInfo);
+            if ((pageInfo.selectTotal||0) === 0) {
                 warn("请选择扫描规则")
                 return
             }
@@ -1751,8 +1717,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 form.setFieldsValue({project})
             }
             // 清空已展示的规则执行数据
-            setActiveTask([])
             CodeScanByExecuteLastDataRef.current = []
+            setActiveTask([])
             const params: SyntaxFlowScanRequest = {
                 ...extraParamsValue,
                 ControlMode: "start",
@@ -1982,7 +1948,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                     showSearch
                                     placeholder='请选择项目名称'
                                     options={auditCodeList}
-                                    onChange={(arr: string[]) => {
+                                    onChange={async(arr: string[]) => {
                                         let selectGroup = pageInfo.GroupNames ? [...pageInfo.GroupNames] : []
                                         arr.forEach((item) => {
                                             let language = auditCodeList.find((itemIn) => itemIn.value === item)
@@ -1993,7 +1959,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                             }
                                         })
                                         const newSelectGroup = filter(selectGroup)
-                                        setPageInfo({...pageInfo, GroupNames: newSelectGroup})
+                                        const selectTotal = await getGroupNamesTotal(newSelectGroup)
+                                        setPageInfo({...pageInfo,...clearRuleByPageInfo, GroupNames: newSelectGroup, selectTotal})
                                     }}
                                 />
                             </Form.Item>
