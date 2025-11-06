@@ -1059,12 +1059,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             const ConcurrencyAdvancedConfigValue = pageGroupData?.pageParamsInfo?.ConcurrencyAdvancedConfigValue;
             const params = {
                 Requests: httpParams,
-                EnableOverrides: !!ConcurrencyAdvancedConfigValue, //如果有高级配置 则优先高级配置
             }
             if(ConcurrencyAdvancedConfigValue){
                 const { repeatTimes, disableUseConnPool, concurrent, minDelaySeconds, maxDelaySeconds } = ConcurrencyAdvancedConfigValue
                 Object.assign(params, {
-                    Concurrent: concurrent,
+                    Concurrent: 0,
                     Overrides: {
                         RepeatTimes: repeatTimes,
                         Concurrent: concurrent,

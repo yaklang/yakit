@@ -5762,8 +5762,7 @@ message GroupHTTPFuzzerOverrides {
 message GroupHTTPFuzzerRequest {
   repeated FuzzerRequest Requests = 1;
   int64 Concurrent = 2;
-  bool EnableOverrides = 3;
-  GroupHTTPFuzzerOverrides Overrides = 4;
+  GroupHTTPFuzzerOverrides Overrides = 3;
 }
 
 message GroupHTTPFuzzerResponse {
