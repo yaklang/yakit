@@ -224,7 +224,11 @@ function useTaskChat(params?: UseTaskChatParams) {
                     throw new Error("tool_call_result data is invalid")
                 }
                 toolResult.status = status
-                toolResult.summary = TaskDefaultReToolResultSummary[status]?.label || ""
+                toolResult.summary = toolResult.summary
+                    ? status === "user_cancelled"
+                        ? "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
+                        : data.summary || ""
+                    : TaskDefaultReToolResultSummary[status]?.label || ""
 
                 setStreams((old) => {
                     let newArr = [...old]
@@ -282,23 +286,27 @@ function useTaskChat(params?: UseTaskChatParams) {
                 throw new Error("tool_result data is invalid")
             }
 
-            setStreams((old) => {
-                return old.map((ele) => {
-                    if (ele.type === "tool_result" && !!ele.data && ele.data.callToolId === data.call_tool_id) {
-                        const status = ele.data.status
-                        const summary =
-                            status === "user_cancelled"
-                                ? "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
-                                : data.summary || ""
-                        return {
-                            ...ele,
-                            data: {...ele.data, summary}
+            const toolResult = toolResultMap.current.get(data.call_tool_id)
+            if (toolResult) {
+                toolResultMap.current.set(data.call_tool_id, {...toolResult, summary: data.summary || ""})
+            } else {
+                setStreams((old) => {
+                    return old.map((ele) => {
+                        if (ele.type === "tool_result" && !!ele.data && ele.data.callToolId === data.call_tool_id) {
+                            const status = ele.data.status
+                            const summary =
+                                status === "user_cancelled"
+                                    ? "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
+                                    : data.summary || ""
+                            return {
+                                ...ele,
+                                data: {...ele.data, summary}
+                            }
                         }
-                    }
-                    return ele
+                        return ele
+                    })
                 })
-            })
-            toolResultMap.current.delete(data.call_tool_id)
+            }
         } catch (error) {
             handleGrpcDataPushLog({
                 type: "error",
