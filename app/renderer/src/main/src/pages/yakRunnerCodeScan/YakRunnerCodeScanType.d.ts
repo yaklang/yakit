@@ -16,11 +16,18 @@ export interface YakRunnerCodeScanProps {
     CodeScanPageInfoProps?: CodeScanPageInfoProps
 }
 
-export interface CodeScanGroupByKeyWordProps {
+export interface CodeScanRuleByKeyWordProps {
     inViewport: boolean
-    /**选择的插件组列表 按关键词搜索的 */
-    selectGroupListByKeyWord?: string[]
-    setSelectGroupListByKeyWord?: (s: string[]) => void
+    filterLibRuleKind: "" | "noLib"
+    setFilterLibRuleKind: (v: "" | "noLib") => void
+    pageInfo: CodeScanPageInfoProps
+    setPageInfo: (v: CodeScanPageInfoProps) => void
+}
+
+export interface CodeScanRuleByGroupProps {
+    inViewport: boolean
+    pageInfo: CodeScanPageInfoProps
+    setPageInfo: (v: CodeScanPageInfoProps) => void
 }
 
 export interface CodeScanGroupByKeyWordItemProps {
@@ -32,19 +39,24 @@ export interface CodeScanGroupByKeyWordItemProps {
 export interface CodeScanExecuteContentProps {
     hidden: boolean
     setHidden: (v: boolean) => void
-    onClearAll: () => void
-    selectGroupList: string[]
     pageInfo: CodeScanPageInfoProps
     pageId: string
-    onSetSelectGroupListByKeyWord: (v: string[]) => void
     setPageInfo: (v: CodeScanPageInfoProps) => void
+    filterLibRuleKind: "" | "noLib"
 }
 
 export interface CodeScanByGroupProps {
     hidden: boolean
-    setTotal: (v: number) => void
-    selectGroupList: string[]
+    response: QuerySyntaxFlowRuleResponse
+    setResponse: (v: QuerySyntaxFlowRuleResponse) => void
     filterLibRuleKind: "" | "noLib"
+    selectedRules?: SyntaxFlowRule[]
+    setSelectedRules?: (v: SyntaxFlowRule[]) => void
+    allCheck: boolean
+    setAllCheck: (v: boolean) => void
+    selectGroup: string[]
+    keywords: string
+    isRefresh: boolean
 }
 
 export interface CodeScanByExecuteProps {
@@ -69,7 +81,6 @@ export interface CodeScaMainExecuteContentProps {
     setHidden: (v: boolean) => void
     executeStatus: SyntaxFlowScanExecuteState
     setExecuteStatus: (value: SyntaxFlowScanExecuteState) => void
-    selectGroupList: string[]
     filterLibRuleKind: "" | "noLib"
     /**进度条信息 */
     setProgressShow: (s?: {type: "new" | "old"; progress: number; name?: string}) => void
@@ -81,7 +92,6 @@ export interface CodeScaMainExecuteContentProps {
     isAuditExecuting: boolean
     setAuditsExecuting: (v: boolean) => void
     setExecuteType: (v: "new" | "old") => void
-    onSetSelectGroupListByKeyWord: (v: string[]) => void
     pageId: string
     pauseLoading: boolean
     setPauseLoading: (v: boolean) => void
@@ -98,6 +108,8 @@ export interface CodeScaMainExecuteContentProps {
 
 export interface FlowRuleDetailsListItemProps {
     data: SyntaxFlowRule
+    check: boolean
+    onCheck: (checked: boolean, rule: SyntaxFlowRule) => void
 }
 
 export interface SyntaxFlowScanActiveTaskItemProps {
@@ -214,7 +226,6 @@ export interface CodeScanAuditExecuteRefProps {
 
 export interface CodeScanAuditExecuteFormProps {
     ref?: React.ForwardedRef<CodeScanAuditExecuteRefProps>
-    selectGroupList: string[]
     plugin?: YakScript
     onStartExecute: (v: {project: string[]}, is?: boolean) => void
     /**进度条信息 */
@@ -228,6 +239,7 @@ export interface CodeScanAuditExecuteFormProps {
     resetStreamInfo: () => void
     setAuditError: (v: boolean) => void
     openExtraPropsDrawer: () => void
+    pageInfo: CodeScanPageInfoProps
 }
 
 interface ErrorProps {
@@ -238,4 +250,11 @@ interface ErrorProps {
 export interface VerifyStartProps {
     error: ErrorProps
     program_name: string
+}
+
+type CodeScanTabKeys = "keyword" | "group"
+export interface CodeScanTabsItem {
+    key: CodeScanTabKeys
+    label: ReactElement | string
+    contShow: boolean
 }
