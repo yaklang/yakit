@@ -20,7 +20,14 @@ import {
 } from "./defaultConstant"
 import {yakitNotify} from "@/utils/notification"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
-import {AIChatQSData, AIReviewType, AIStreamOutput, AIToolResult, ToolStreamSelectors} from "./aiRender"
+import {
+    AIChatQSData,
+    AIChatQSDataTypeEnum,
+    AIReviewType,
+    AIStreamOutput,
+    AIToolResult,
+    ToolStreamSelectors
+} from "./aiRender"
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
 
 // 属于该 hook 处理数据的类型
@@ -86,7 +93,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     } else {
                         const streamsInfo: AIChatQSData = {
                             ...genBaseAIChatData(res),
-                            type: "stream",
+                            type: AIChatQSDataTypeEnum.STREAM,
                             data: {
                                 CallToolID,
                                 NodeId,
@@ -153,7 +160,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 const newArr = [...old]
                 newArr.push({
                     ...genBaseAIChatData(res),
-                    type: "thought",
+                    type: AIChatQSDataTypeEnum.THOUGHT,
                     data: data.thought
                 })
                 return newArr
@@ -176,7 +183,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 const newArr = [...old]
                 newArr.push({
                     ...genBaseAIChatData(res),
-                    type: "result",
+                    type: AIChatQSDataTypeEnum.RESULT,
                     data: result
                 })
                 return newArr
@@ -269,7 +276,7 @@ function useCasualChat(params?: UseCasualChatParams) {
 
                     newArr.push({
                         ...genBaseAIChatData(res),
-                        type: "tool_result",
+                        type: AIChatQSDataTypeEnum.TOOL_RESULT,
                         data: {
                             ...toolResult,
                             toolStdoutContent: {
@@ -347,7 +354,7 @@ function useCasualChat(params?: UseCasualChatParams) {
 
             const isTrigger = !isAutoContinueReview(getRequest) || noSkipReviewTypes("tool_use_review_require")
             review.current = cloneDeep({
-                type: "tool_use_review_require",
+                type: AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE,
                 data: {
                     ...cloneDeep(data),
                     selected: isTrigger ? undefined : JSON.stringify({suggestion: "continue"}),
@@ -382,7 +389,7 @@ function useCasualChat(params?: UseCasualChatParams) {
             }
 
             review.current = cloneDeep({
-                type: "require_user_interactive",
+                type: AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
                 data: cloneDeep(data),
                 ...genBaseAIChatData(res)
             })
@@ -414,7 +421,7 @@ function useCasualChat(params?: UseCasualChatParams) {
 
             const isTrigger = !isAutoContinueReview(getRequest) || noSkipReviewTypes("exec_aiforge_review_require")
             review.current = cloneDeep({
-                type: "exec_aiforge_review_require",
+                type: AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE,
                 data: {
                     ...cloneDeep(data),
                     selected: isTrigger ? undefined : JSON.stringify({suggestion: "continue"}),
@@ -491,7 +498,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 const newArr = [...old]
                 newArr.push({
                     ...genBaseAIChatData(res),
-                    type: "file_system_pin",
+                    type: AIChatQSDataTypeEnum.FILE_SYSTEM_PIN,
                     data: {
                         path: path,
                         isDir: res.Type === "filesystem_pin_directory",
@@ -521,7 +528,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                 const newArr = [...old]
                 newArr.push({
                     ...genBaseAIChatData(res),
-                    type: "tool_call_decision",
+                    type: AIChatQSDataTypeEnum.TOOL_CALL_DECISION,
                     data: {
                         ...data,
                         i18n: {
@@ -692,7 +699,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                     const newArr = [...old]
                     newArr.push({
                         id: uuidv4(),
-                        type: "question",
+                        type: AIChatQSDataTypeEnum.QUESTION,
                         Timestamp: Date.now(),
                         data: FreeInput || "",
                         AIService: ""

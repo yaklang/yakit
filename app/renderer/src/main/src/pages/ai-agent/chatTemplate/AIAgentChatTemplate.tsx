@@ -31,7 +31,7 @@ import {
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
 import {convertNodeIdToVerbose} from "@/pages/ai-re-act/hooks/defaultConstant"
-import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIChatQSData, AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
 import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks/grpcApi"
 import {taskAnswerToIconMap} from "../defaultConstant"
 import {SolidLightningboltIcon} from "@/assets/icon/solid"
@@ -351,7 +351,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                     } catch (error) {}
                     const current: AIChatQSData = {
                         ...genBaseAIChatData(item),
-                        type: "stream",
+                        type: AIChatQSDataTypeEnum.STREAM,
                         data: {
                             CallToolID: item.CallToolID,
                             NodeId: item.NodeId,
