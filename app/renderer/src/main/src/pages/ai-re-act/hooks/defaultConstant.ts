@@ -14,7 +14,7 @@ export const DefaultAIToolResult: AIToolResult = {
 
 /** AI 流式输出中, NodeId 对应展示的内容 */
 const AIStreamNodeIdToLabel: Record<string, {label: string}> = {
-    "re-act-loop": {label: "推理与行动"}, // 单行组件 AIStreamChatContent
+    "re-act-loop": {label: "推理与行动"},
     "call-forge": {label: "智能应用"},
     "call-tools": {label: "工具调用"},
     review: {label: "审查系统"},
@@ -33,7 +33,7 @@ const AIStreamNodeIdToLabel: Record<string, {label: string}> = {
     decision: {label: "决策"},
     output: {label: "通用输出"},
     forge: {label: "智能应用"},
-    "re-act-loop-thought": {label: "思考"}, // 单行组件 AIStreamChatContent
+    "re-act-loop-thought": {label: "思考"},
     "re-act-loop-answer-payload": {label: "AI 响应"},
     "enhance-query": {label: "知识增强"}
 }
@@ -67,9 +67,14 @@ export const TaskDefaultReToolResultSummary: Record<string, {label: string}> = {
 }
 /**流内容的展示类型枚举 */
 export enum AIStreamContentType {
+    /**md格式 */
     MARKDOWN = "markdown",
+    /**YakitEditor */
     YAKLANG_CODE = "yaklang_code",
+    /**YakitEditor */
     PLAIN_CODE = "plain_code",
+    /**卡片/多行 */
     TEXT_PLAIN = "text/plain",
+    /**tool 紫色卡片 */
     TOOL_LOG = "tool_log"
 }
