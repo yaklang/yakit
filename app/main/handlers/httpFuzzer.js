@@ -67,8 +67,25 @@ module.exports = (win, getClient) => {
         return await asyncDeleteFuzzerLabel(params)
     })
 
+    let stringFuzzerCall = null;
+
+    ipcMain.handle("cancel-string-fuzzer", () => {
+        if (stringFuzzerCall) {
+            stringFuzzerCall.cancel();
+            stringFuzzerCall = null;
+        }
+    });
+
     ipcMain.handle("string-fuzzer", (e, params) => {
-        getClient().StringFuzzer({ Template: params.template }, (err, data) => {
+        // 如果有旧任务,先取消
+        stringFuzzerCall && stringFuzzerCall.cancel()
+        stringFuzzerCall = getClient().StringFuzzer({ Template: params.template }, (err, data) => {
+            // 忽略取消操作导致的错误
+            if (err?.message.includes('Cancelled')) {
+                stringFuzzerCall = null
+                return
+            }
+            
             if (win) {
                 win.webContents.send(params.token, {
                     error: err,
@@ -79,6 +96,7 @@ module.exports = (win, getClient) => {
                     },
                 })
             }
+            stringFuzzerCall = null;
         })
     })
 
@@ -146,6 +164,17 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamHTTPFuzzerSequenceMap, token)
     })
 
+    const streamHTTPFuzzerGroupMap = new Map();
+    ipcMain.handle("cancel-HTTPFuzzerGroup", handlerHelper.cancelHandler(streamHTTPFuzzerGroupMap));
+    ipcMain.handle("HTTPFuzzerGroup", (_, params, token) => {
+        let stream = getClient().HTTPFuzzerGroup(params);
+        const currentStream = streamHTTPFuzzerGroupMap.get(token)
+        if (!!currentStream) {
+            return
+        }
+        streamHTTPFuzzerGroupMap.set(token, stream)
+        handlerHelper.registerHandler(win, stream, streamHTTPFuzzerGroupMap, token)
+    })
 
     // asyncExtractUrl wrapper
     const asyncExtractUrl = (params) => {

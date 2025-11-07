@@ -236,6 +236,7 @@ service Yak {
   rpc DeleteHistoryHTTPFuzzerTask(DeleteHistoryHTTPFuzzerTaskRequest) returns (Empty);
   rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
   rpc HTTPFuzzerSequence(FuzzerRequests) returns (stream FuzzerSequenceResponse);
+  rpc HTTPFuzzerGroup(GroupHTTPFuzzerRequest) returns (stream GroupHTTPFuzzerResponse);
   rpc PreloadHTTPFuzzerParams(PreloadHTTPFuzzerParamsRequest) returns (PreloadHTTPFuzzerParamsResponse);
   rpc RenderVariables(RenderVariablesRequest) returns (RenderVariablesResponse);
   rpc MatchHTTPResponse(MatchHTTPResponseParams) returns (MatchHTTPResponseResult);
@@ -5752,6 +5753,25 @@ message FuzzerRequests {
   repeated FuzzerRequest Requests = 1;
   // concurrent flow
   int64 Concurrent = 2;
+}
+
+message GroupHTTPFuzzerOverrides {
+  int64 RepeatTimes = 1;
+  int64 Concurrent = 2;
+  double DelayMinSeconds = 3;
+  double DelayMaxSeconds = 4;
+  bool DisableUseConnPool = 5;
+}
+
+message GroupHTTPFuzzerRequest {
+  repeated FuzzerRequest Requests = 1;
+  int64 Concurrent = 2;
+  GroupHTTPFuzzerOverrides Overrides = 3;
+}
+
+message GroupHTTPFuzzerResponse {
+  FuzzerRequest Request = 1;
+  FuzzerResponse Response = 2;
 }
 
 message FuzzerRequest {// last index 68

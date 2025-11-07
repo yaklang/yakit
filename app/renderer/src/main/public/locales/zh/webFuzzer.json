@@ -17,7 +17,7 @@
     "config": "配置",
     "rule": "规则",
     "sequence": "序列",
-    "concurrency": "并发"
+    "concurrency": "组并发"
   },
   "PacketScanButton": {
     "packetScan": "数据包扫描"
@@ -88,7 +88,8 @@
     "success_and_failure_length": "成功与失败的长度",
     "success_failure_count": "成功：{success}——失败：${failed}",
     "send_request": "发送请求",
-    "parameter": "参数"
+    "parameter": "参数",
+    "trafficAnalysisMode": "流量分析模式"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丢弃[{droppedCount}]个响应",
@@ -450,7 +451,8 @@
     "insertTagPosition": "插入标签所在位置",
     "confirmResetDictionary": "确认要重置你的字典管理吗？",
     "addToFavoriteTags": "添加到常用标签",
-    "tag": "标签"
+    "tag": "标签",
+    "cancel": "取消"
   },
   "HTTPFuzzerHostInput": {
     "domainRequired": "域名不能为空",

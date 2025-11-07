@@ -930,8 +930,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         })
 
         const showAlertFlag = useMemo(() => {
-            return (moreLimtAlertMsg || noMoreLimtAlertMsg) && data.length > 1
-        }, [moreLimtAlertMsg, noMoreLimtAlertMsg, data])
+            return (moreLimtAlertMsg || noMoreLimtAlertMsg) && data.length >= fuzzerTableMaxData
+        }, [moreLimtAlertMsg, noMoreLimtAlertMsg, data, fuzzerTableMaxData])
 
         return (
             <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>

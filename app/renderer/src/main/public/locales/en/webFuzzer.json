@@ -17,7 +17,7 @@
     "config": "Config",
     "rule": "Rule",
     "sequence": "Sequence",
-    "concurrency": "Concurrency"
+    "concurrency": "Group Concurrency"
   },
   "PacketScanButton": {
     "packetScan": "Packet Scan"
@@ -88,7 +88,8 @@
     "success_and_failure_length": "Success and Failure Length",
     "success_failure_count": "Success: {success} -- Failed: ${failed}",
     "send_request": "Send Request",
-    "parameter": "Parameter"
+    "parameter": "Parameter",
+    "trafficAnalysisMode": "TrafficAnalysis Mode"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "Discarded [{droppedCount}] responses",
@@ -450,7 +451,8 @@
     "insertTagPosition": "Insert Tag Position",
     "confirmResetDictionary": "Confirm you want to reset your Payload?",
     "addToFavoriteTags": "Add to favorite tags",
-    "tag": "Tag "
+    "tag": "Tag ",
+    "cancel": "cancel"
   },
   "HTTPFuzzerHostInput": {
     "domainRequired": "Domain cannot be empty",
