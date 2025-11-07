@@ -54,8 +54,9 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     }, [params])
 
     useEffect(() => {
-        getHTTPTraffic()
-        getQueryRisksTotalByRuntimeId()
+        Promise.all([getHTTPTraffic(), getQueryRisksTotalByRuntimeId()]).catch((error) => {
+            console.error("error:", error)
+        })
     }, [getHTTPTraffic, getQueryRisksTotalByRuntimeId])
     return (
         <ChatCard
