@@ -124,9 +124,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
                                 y2='6.75561'
                                 gradientUnits='userSpaceOnUse'
                             >
-                                <stop stopColor='#DC5CDF' />
-                                <stop offset='0.639423' stopColor='#8862F8' />
-                                <stop offset='1' stopColor='#4493FF' />
+                                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                                <stop offset='1' stopColor='var((--Colors-Use-Blue-Primary)' />
                             </linearGradient>
                         </defs>
                     </svg>
@@ -134,7 +134,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo((props) => {
 
                 <QSInputTextarea
                     ref={textareaRef}
-                    placeholder='请输入内容...(shift + enter 换行)'
                     {...textareaRest}
                     className={classNames(styles["textarea-textarea"], textareaClassName)}
                     value={question}

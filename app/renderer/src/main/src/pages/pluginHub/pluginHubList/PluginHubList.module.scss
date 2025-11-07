@@ -384,7 +384,7 @@
                 align-items: center;
                 gap: 8px;
 
-                color: #b4bbca;
+                color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 font-size: 12px;
                 line-height: 16px;
                 .divider-style {
@@ -393,7 +393,7 @@
                     background-color: var(--Colors-Use-Neutral-Bg);
                 }
                 .num-style {
-                    color: #f28b44;
+                    color: var(--Colors-Use-Main-Primary);
                 }
             }
         }
@@ -415,7 +415,7 @@
                 line-height: 16px;
                 height: 24px;
                 .total-style {
-                    color: #f28b44;
+                    color: var(--Colors-Use-Main-Primary);
                 }
                 svg {
                     color: var(--Colors-Use-Neutral-Text-3-Secondary);

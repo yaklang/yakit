@@ -1,3 +1,4 @@
+import {IconProps} from "@/assets/newIcon"
 import Icon from "@ant-design/icons"
 import type {CustomIconComponentProps} from "@ant-design/icons/lib/components/Icon"
 
@@ -69,7 +70,6 @@ const YakitCloseSvg = () => (
     </svg>
 )
 /** @name 关闭图标 */
-export const YakitCloseSvgIcon = (props: Partial<CustomIconComponentProps>) => {
+export const YakitCloseSvgIcon = (props: Partial<IconProps>) => {
     return <Icon component={YakitCloseSvg} {...props} />
 }
-

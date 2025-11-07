@@ -1,87 +1,68 @@
-import {FC, useEffect, useRef, useState} from "react"
-import {useRequest, useSafeState} from "ahooks"
-import {Progress} from "antd"
+import {useEffect, useMemo, useRef, type FC} from "react"
+
+import {Form} from "antd"
+import {useAsyncEffect, useRequest, useSafeState, useUpdateEffect} from "ahooks"
+
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import AllInstallPlugins from "./compoment/AllInstallPlugins"
+import {success, failed, info} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
-import {success, failed} from "@/utils/notification"
-import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {KnowledgeBaseManage} from "./KnowledgeBaseManage"
-import KnowledgeBaseTable from "./knowledgeBaseTable"
-import styles from "./knowledgeBase.module.scss"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+
+import KnowledgeBaseContent from "./compoment/KnowledgeBaseContent"
+import {SolidPlayIcon} from "@/assets/icon/solid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {CloudDownloadIcon} from "@/assets/newIcon"
+import {CreateKnowledgeBase} from "./compoment/CreateKnowledgeBase"
+
+import {compareKnowledgeBaseChange, getFileInfoList, targetInstallList} from "./utils"
+
+import {useKnowledgeBase} from "./hooks/useKnowledgeBase"
+
+import styles from "./knowledgeBase.module.scss"
+
+import type {CreateKnowledgeBaseData, KnowledgeBaseContentProps} from "./TKnowledgeBase"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 
-const targetInstallList = [
-    "ffmpeg",
-    "llama-server",
-    "model-Qwen3-Embedding-0.6B-Q4",
-    "model-whisper-medium-q5",
-    "page2image",
-    "pandoc",
-    "whisper.cpp"
-]
-
-interface ExecResult {
-    Progress: number
-    IsMessage: boolean
-    Message?: Uint8Array
-}
-
-interface BinaryInfo {
-    Name: string
-    InstallPath?: string
-    installToken: string
-}
-
-// Promise，-end resolve，-error reject
-const installWithEvents = (binary: {Name: string}, token: string) => {
-    return new Promise<void>((resolve, reject) => {
-        ipcRenderer.invoke("InstallThirdPartyBinary", binary, token).catch(reject)
-
-        ipcRenderer.once(`${token}-end`, () => {
-            resolve()
-        })
-
-        ipcRenderer.once(`${token}-error`, (_, error) => {
-            reject(error)
-        })
-    })
-}
-
 const KnowledgeBase: FC = () => {
-    const [knowledgeBaseitems, setKnowledgeBaseItems] = useSafeState<{id: number; name: string}>()
-    const [binariesToInstall, setBinariesToInstall] = useSafeState<BinaryInfo[]>([])
-    const [installTokens, setInstallTokens] = useState<string[]>([])
-    const [overallProgress, setOverallProgress] = useState(0)
-    const progressMap = useRef<Record<string, number>>({})
-    const [installPlug, setInstallPlug] = useState(false)
+    const [form] = Form.useForm()
+    const {initialize, editKnowledgeBase, knowledgeBases, addKnowledgeBase, clearAll, previousKnowledgeBases} =
+        useKnowledgeBase()
+
+    const [installPlug, setInstallPlug] = useSafeState(false)
+    const [knowledgeBaseID, setKnowledgeBaseID] = useSafeState("")
+
+    const createKnwledgeDataRef = useRef<CreateKnowledgeBaseData>()
 
     // 拉取还没安装的 binaries
-    const {run: fetchBinaries} = useRequest(
+    const {data: binariesToInstall, loading} = useRequest(
         async () => {
-            const result = await ipcRenderer.invoke("ListThirdPartyBinary", {})
-            const binariesList: BinaryInfo[] =
-                result?.Binaries?.map((it: any) => ({
+            const result = await ipcRenderer.invoke("ListThirdPartyBinary", {
+                Pagination: {
+                    Limit: 999
+                }
+            })
+            const binariesList =
+                result?.Binaries?.map((it) => ({
                     Name: it?.Name,
                     InstallPath: it?.InstallPath,
-                    installToken: randomString(50)
+                    installToken: randomString(50),
+                    Description: it.Description
                 })) ?? []
-
             const resultList = targetInstallList
-                .map((name) => binariesList.find((it) => it.Name === name && !it.InstallPath))
-                .filter((v) => v !== undefined) as BinaryInfo[]
+                .map((name) => binariesList.find((it) => it.Name === name))
+                .filter((v) => v !== undefined)
 
-            setBinariesToInstall(resultList)
             return resultList
         },
         {
-            manual: true,
             onSuccess: (result) => {
-                if (result.length !== 0) {
-                    success(`获取所需安装插件成功，共 ${result.length} 个`)
-                    // runInstallAll()
+                const resultList = targetInstallList
+                    .map((name) => result.find((it) => it.Name === name && !it.InstallPath))
+                    .filter((v) => v !== undefined)
+                if (resultList.length !== 0) {
+                    info(`使用知识库缺少第三方依赖，需安装${resultList.length}个`)
                     setInstallPlug(true)
                 }
             },
@@ -91,113 +72,186 @@ const KnowledgeBase: FC = () => {
         }
     )
 
-    useEffect(() => {
-        fetchBinaries()
-    }, [])
-
-    // 并发安装所有
-    const {run: runInstallAll, loading} = useRequest(
-        async () => {
-            if (!binariesToInstall || binariesToInstall.length === 0) {
-                return
-            }
-
-            setOverallProgress(0)
-            progressMap.current = {}
-
-            const tokens = binariesToInstall.map((b) => b.installToken)
-            setInstallTokens(tokens)
-
-            // 并发执行安装
-            const promises = binariesToInstall.map((b) => installWithEvents({Name: b.Name}, b.installToken))
-            await Promise.all(promises)
-
-            return "ok"
+    // 创建知识库
+    const {runAsync: createKnowledgRunAsync, loading: createKnowledgLoading} = useRequest(
+        async (params) => {
+            const result = await ipcRenderer.invoke("CreateKnowledgeBaseV2", {
+                Name: params.KnowledgeBaseName,
+                Description: params.KnowledgeBaseDescription,
+                Type: params.KnowledgeBaseType
+            })
+            return result
         },
         {
             manual: true,
-            onSuccess: () => {
-                success("知识库所需插件安装完成")
-                setOverallProgress(100)
-                setInstallPlug(false)
-                setInstallTokens([])
+            onSuccess: async (value) => {
+                try {
+                    await refreshAsync()
+                    const KnowledgeBaseID = value?.KnowledgeBase?.ID
+                    setKnowledgeBaseID(KnowledgeBaseID)
+                    const addKnowledgeData = {
+                        ...createKnwledgeDataRef.current,
+                        ID: KnowledgeBaseID,
+                        addManuallyItem: false
+                    }
+                    addKnowledgeBase(addKnowledgeData as CreateKnowledgeBaseData & {ID: string})
+                    form.resetFields()
+                    createKnwledgeDataRef.current = undefined
+                    success("创建知识库成功")
+                } catch (error) {
+                    failed(`刷新知识库列表失败: ${error}`)
+                }
             },
-            onError: (err) => {
-                failed(`插件安装失败: ${err}`)
+            onError: (error) => {
+                failed(`创建知识库失败: ${error}`)
             }
         }
     )
 
-    // 进度监听
-    useEffect(() => {
-        installTokens.forEach((token) => {
-            const onData = (_, data: ExecResult) => {
-                if (data.Progress > 0) {
-                    progressMap.current[token] = Math.ceil(data.Progress)
+    // 获取数据库侧边栏是否存在数据
+    const {
+        data: existsKnowledgeBase,
+        runAsync: existsKnowledgeBaseAsync,
+        refreshAsync
+    } = useRequest(
+        async (Keyword?: string) => {
+            const result: KnowledgeBaseContentProps = await ipcRenderer.invoke("GetKnowledgeBase", {
+                Keyword,
+                Pagination: {Limit: 9999}
+            })
+            const {KnowledgeBases} = result
 
-                    const values = Object.values(progressMap.current)
-                    const sum = values.reduce((a, b) => a + b, 0)
-                    const avg = installTokens.length > 0 ? Math.floor(sum / installTokens.length) : 0
-
-                    setOverallProgress(avg)
+            const resultData = KnowledgeBases?.map((it) => ({
+                ...createKnwledgeDataRef.current,
+                ...it
+            }))
+            return resultData
+        },
+        {
+            manual: true,
+            onSuccess: (value) => {
+                if (value) {
+                    const KnowledgeBaseID = value?.[0]?.ID || ""
+                    !knowledgeBaseID && setKnowledgeBaseID(KnowledgeBaseID)
                 }
             }
+        }
+    )
 
-            const onError = (_, error) => {
-                failed(`下载失败:${error}`)
-            }
+    useUpdateEffect(() => {
+        const diffKnowledgeBase = compareKnowledgeBaseChange(knowledgeBases, existsKnowledgeBase)
+        if (typeof diffKnowledgeBase === "object" && diffKnowledgeBase.increase) {
+            addKnowledgeBase(diffKnowledgeBase.increase)
+        }
+    }, [existsKnowledgeBase])
 
-            const onEnd = () => {}
-
-            ipcRenderer.on(`${token}-data`, onData)
-            ipcRenderer.on(`${token}-error`, onError)
-            ipcRenderer.on(`${token}-end`, onEnd)
-        })
-
-        return () => {
-            installTokens.forEach((token) => {
-                ipcRenderer.removeAllListeners(`${token}-data`)
-                ipcRenderer.removeAllListeners(`${token}-error`)
-                ipcRenderer.removeAllListeners(`${token}-end`)
+    useAsyncEffect(async () => {
+        if (!installPlug) {
+            existsKnowledgeBaseAsync().then((res) => {
+                const initKnowledgeBase =
+                    res?.map((it) => ({
+                        ...it,
+                        streamstep: "success" as 1 | 2 | "success",
+                        addManuallyItem: false,
+                        historyGenerateKnowledgeList: []
+                    })) ?? []
+                res && initialize(initKnowledgeBase)
             })
         }
-    }, [installTokens])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [installPlug])
+
+    useEffect(() => {
+        setKnowledgeBaseID(knowledgeBases?.[0]?.ID || "")
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    useUpdateEffect(() => {
+        refreshAsync()
+    }, [knowledgeBases])
+
+    // 创建知识库回调事件
+    const handCreateKnowledgBase = async () => {
+        try {
+            const resultFormData = await form.validateFields()
+            const file = getFileInfoList(resultFormData.KnowledgeBaseFile)
+            const transformFormData = {
+                ...resultFormData,
+                KnowledgeBaseFile: file,
+                streamToken: randomString(50),
+                streamstep: 1,
+                addManuallyItem: false,
+                historyGenerateKnowledgeList: []
+            }
+            createKnwledgeDataRef.current = transformFormData
+            await createKnowledgRunAsync(transformFormData)
+        } catch (error) {
+            failed(error + "")
+        }
+    }
+
+    useUpdateEffect(() => {
+        return () => {
+            clearAll()
+        }
+    }, [])
+
+    const onCloseKnowledgeRepository = () => {
+        emiter.emit("closePage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
+    }
+
+    useEffect(() => {
+        emiter.on("onCloseKnowledgeRepository", onCloseKnowledgeRepository)
+        return () => {
+            emiter.off("onCloseKnowledgeRepository", onCloseKnowledgeRepository)
+        }
+    }, [])
+
+    const knowledgeBaseEntrance = useMemo(() => {
+        switch (true) {
+            // 缺失插件时展示需下载插件页面
+            case installPlug:
+                return (
+                    <YakitSpin spinning={loading}>
+                        <AllInstallPlugins onInstallPlug={setInstallPlug} binariesToInstall={binariesToInstall} />
+                    </YakitSpin>
+                )
+            // 无知识库时展示添加知识库页面
+            case !existsKnowledgeBase?.length:
+                return (
+                    <div className={styles["create-knowledgBase"]}>
+                        <div className={styles["create-content"]}>
+                            <div className={styles["create-title"]}>创建知识库</div>
+                            <CreateKnowledgeBase form={form} />
+                            <div className={styles["create-button"]} onClick={handCreateKnowledgBase}>
+                                <YakitButton icon={<SolidPlayIcon />} loading={createKnowledgLoading}>
+                                    开始创建
+                                </YakitButton>
+                            </div>
+                        </div>
+                    </div>
+                )
+
+            // 正常进入知识库页面
+            default:
+                return (
+                    <KnowledgeBaseContent
+                        knowledgeBaseID={knowledgeBaseID}
+                        setKnowledgeBaseID={setKnowledgeBaseID}
+                        knowledgeBases={knowledgeBases}
+                        previousKnowledgeBases={previousKnowledgeBases}
+                        editKnowledgeBase={editKnowledgeBase}
+                        clearAll={clearAll}
+                        binariesToInstall={binariesToInstall}
+                    />
+                )
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [existsKnowledgeBase, installPlug, loading, knowledgeBaseID])
 
     return (
         <div className={styles["repository-manage"]} id='repository-manage'>
-            {!installPlug ? (
-                <YakitResizeBox
-                    firstNodeStyle={{padding: 0}}
-                    lineStyle={{display: "none"}}
-                    firstNode={
-                        <KnowledgeBaseManage
-                            setKnowledgeBaseItems={setKnowledgeBaseItems}
-                            knowledgeBaseitems={knowledgeBaseitems}
-                        />
-                    }
-                    firstRatio='300px'
-                    firstMinSize={300}
-                    secondNode={<KnowledgeBaseTable knowledgeBaseitems={knowledgeBaseitems} />}
-                />
-            ) : (
-                <div className={styles["install-box"]}>
-                    <YakitEmpty title='暂无数据' description='请点击下载，在创建知识库' />
-                    {overallProgress ? (
-                        <div className={styles["install-content"]}>
-                            <Progress percent={overallProgress} />
-                        </div>
-                    ) : (
-                        <YakitButton
-                            type='outline1'
-                            icon={<CloudDownloadIcon />}
-                            onClick={() => runInstallAll()}
-                            loading={loading}
-                        >
-                            一键下载
-                        </YakitButton>
-                    )}
-                </div>
-            )}
+            <div className={styles["repository-container"]}>{knowledgeBaseEntrance}</div>
         </div>
     )
 }

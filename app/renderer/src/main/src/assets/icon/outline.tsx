@@ -1020,6 +1020,72 @@ export const OutlineChataltIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineChatalt} {...props} />
 }
 
+const OutLineAiChat = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M5.33333 8H5.34M8 8H8.00667M10.6667 8H10.6733M14 8C14 10.9455 11.3137 13.3333 8 13.3333C6.97382 13.3333 6.00781 13.1043 5.16311 12.7007L2 13.3333L2.92999 10.8534C2.34104 10.0282 2 9.04952 2 8C2 5.05448 4.68629 2.66667 8 2.66667C11.3137 2.66667 14 5.05448 14 8Z'
+            stroke='url(#paint0_linear_46437_36788)'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <circle cx='5.33317' cy='8' r='0.666667' fill='url(#paint1_linear_46437_36788)' />
+        <circle cx='8.00016' cy='8' r='0.666667' fill='url(#paint2_linear_46437_36788)' />
+        <ellipse cx='10.6667' cy='8' rx='0.666667' ry='0.666667' fill='url(#paint3_linear_46437_36788)' />
+        <defs>
+            <linearGradient
+                id='paint0_linear_46437_36788'
+                x1='2'
+                y1='2.66667'
+                x2='16.0268'
+                y2='7.88042'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+            <linearGradient
+                id='paint1_linear_46437_36788'
+                x1='4.6665'
+                y1='7.33333'
+                x2='6.26579'
+                y2='7.86173'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+            <linearGradient
+                id='paint2_linear_46437_36788'
+                x1='7.3335'
+                y1='7.33333'
+                x2='8.93278'
+                y2='7.86173'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+            <linearGradient
+                id='paint3_linear_46437_36788'
+                x1='10'
+                y1='7.33333'
+                x2='11.5993'
+                y2='7.86173'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+
+export const OutlineAiChatIcon = (props: Partial<IconProps>) => <Icon component={OutLineAiChat} {...props} />
+
 const OutlineChatalt2 = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
@@ -3434,6 +3500,24 @@ export const OutlinePluscircleIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlinePluscircle} {...props} />
 }
 
+const OutlineTime = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M8 5.33333V8L10 10M14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            strokeWidth='1'
+        />
+    </svg>
+)
+/**
+ * @description  Icon/Outline/time
+ */
+export const OutlineTimeIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineTime} {...props} />
+}
+
 const OutlinePlussm = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
@@ -5841,6 +5925,42 @@ const Siren = () => (
     </svg>
 )
 
+const Home = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='20' height='22' viewBox='0 0 20 22' fill='none'>
+        <path
+            d='M1.30005 5.99805L10 10.998M10 10.998L18.7001 5.99805M10 10.998L10 20.998M19 6.99795C18.9996 6.64722 18.9071 6.30276 18.7315 5.99911C18.556 5.69546 18.3037 5.44331 18 5.26795L11 1.26795C10.696 1.09241 10.3511 1 10 1C9.64893 1 9.30404 1.09241 9 1.26795L2 5.26795C1.69626 5.44331 1.44398 5.69546 1.26846 5.99911C1.09294 6.30276 1.00036 6.64722 1 6.99795V14.9979C1.00036 15.3487 1.09294 15.6931 1.26846 15.9968C1.44398 16.3004 1.69626 16.5526 2 16.7279L9 20.7279C9.30404 20.9035 9.64893 20.9959 10 20.9959C10.3511 20.9959 10.696 20.9035 11 20.7279L18 16.7279C18.3037 16.5526 18.556 16.3004 18.7315 15.9968C18.9071 15.6931 18.9996 15.3487 19 14.9979V6.99795Z'
+            stroke='currentColor'
+            strokeWidth='1'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description   Outline/home
+ */
+export const HomeIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Home} {...props} />
+}
+
+const Wand = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M15 4V2M15 16V14M8 9H10M20 9H22M17.7998 11.8L18.9998 13M15 9H15.01M17.7998 6.2L18.9998 5M3 21L12 12M12.2 6.2L11 5'
+            stroke='currentColor'
+            strokeWidth='1'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description   Outline/Wand
+ */
+export const WandIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Wand} {...props} />
+}
+
 /**
  * @description  Outline/Siren
  */
@@ -5894,4 +6014,144 @@ const ListTodo = () => (
  */
 export const OutlineListTodoIcon = (props: Partial<IconProps>) => {
     return <Icon component={ListTodo} {...props} />
+}
+
+const OutlinePlusSm = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <g clipPath='url(#clip0_47688_39165)'>
+            <path
+                d='M12.2468 1.75357L9.3335 4.6669L8.2735 3.6069C8.02368 3.35857 7.68574 3.21918 7.3335 3.21918C6.98125 3.21918 6.64331 3.35857 6.3935 3.6069L5.3335 4.6669L11.3335 10.6669L12.3935 9.6069C12.6418 9.35709 12.7812 9.01915 12.7812 8.6669C12.7812 8.31466 12.6418 7.97672 12.3935 7.7269L11.3335 6.6669L14.2468 3.75357C14.512 3.48835 14.661 3.12864 14.661 2.75357C14.661 2.3785 14.512 2.01879 14.2468 1.75357C13.9816 1.48835 13.6219 1.33936 13.2468 1.33936C12.8718 1.33936 12.512 1.48835 12.2468 1.75357Z'
+                stroke='currentColor'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M6.00016 5.3335C4.66683 7.3335 3.3335 7.66683 1.3335 8.00016L6.66683 14.6668C8.00016 14.0002 10.6668 11.3335 10.6668 10.0002'
+                stroke='currentColor'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+        </g>
+        <defs>
+            <clipPath id='clip0_47688_39165'>
+                <rect width='16' height='16' fill='white' />
+            </clipPath>
+        </defs>
+    </svg>
+)
+
+/**
+ * @description  Outline/plus-sm
+ */
+export const OutlinePlusSmIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlinePlusSm} {...props} />
+}
+
+const OutlineQAAdjustments = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M8.00008 3.99984V2.6665M8.00008 3.99984C7.2637 3.99984 6.66675 4.59679 6.66675 5.33317C6.66675 6.06955 7.2637 6.6665 8.00008 6.6665M8.00008 3.99984C8.73646 3.99984 9.33341 4.59679 9.33341 5.33317C9.33341 6.06955 8.73646 6.6665 8.00008 6.6665M4.00008 11.9998C4.73646 11.9998 5.33341 11.4029 5.33341 10.6665C5.33341 9.93012 4.73646 9.33317 4.00008 9.33317M4.00008 11.9998C3.2637 11.9998 2.66675 11.4029 2.66675 10.6665C2.66675 9.93012 3.2637 9.33317 4.00008 9.33317M4.00008 11.9998V13.3332M4.00008 9.33317V2.6665M8.00008 6.6665V13.3332M12.0001 11.9998C12.7365 11.9998 13.3334 11.4029 13.3334 10.6665C13.3334 9.93012 12.7365 9.33317 12.0001 9.33317M12.0001 11.9998C11.2637 11.9998 10.6667 11.4029 10.6667 10.6665C10.6667 9.93012 11.2637 9.33317 12.0001 9.33317M12.0001 11.9998V13.3332M12.0001 9.33317V2.6665'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Outline/plus-sm
+ */
+export const OutlineQAAdjustmentsIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineQAAdjustments} {...props} />
+}
+
+const SolidBookopenText = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M8.00016 4.66667C8.00016 3.95942 7.71921 3.28115 7.21911 2.78105C6.71902 2.28095 6.04074 2 5.3335 2H1.3335V12H6.00016C6.5306 12 7.0393 12.2107 7.41438 12.5858C7.78945 12.9609 8.00016 13.4696 8.00016 14M8.00016 4.66667V14M8.00016 4.66667C8.00016 3.95942 8.28111 3.28115 8.78121 2.78105C9.28131 2.28095 9.95959 2 10.6668 2H14.6668V12H10.0002C9.46973 12 8.96102 12.2107 8.58595 12.5858C8.21088 12.9609 8.00016 13.4696 8.00016 14M4.00016 5.33333H5.3335M4.00016 8H5.3335M10.6668 5.33333H12.0002M10.6668 8H12.0002'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Outline/plus-sm
+ */
+export const SolidBookopenTextIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidBookopenText} {...props} />
+}
+
+const SolidChevronDoubleRight = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='17' height='16' viewBox='0 0 17 16' fill='none'>
+        <path
+            d='M9 1L16 8L9 15M1 1L8 8L1 15'
+            strokeWidth='2'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description Outline/chevron-double-right
+ */
+export const SolidChevronDoubleRightIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidChevronDoubleRight} {...props} />
+}
+
+const SolidPuzzle = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M11 4C11 2.89543 11.8954 2 13 2C14.1046 2 15 2.89543 15 4V5C15 5.55228 15.4477 6 16 6H19C19.5523 6 20 6.44772 20 7V10C20 10.5523 19.5523 11 19 11H18C16.8954 11 16 11.8954 16 13C16 14.1046 16.8954 15 18 15H19C19.5523 15 20 15.4477 20 16V19C20 19.5523 19.5523 20 19 20H16C15.4477 20 15 19.5523 15 19V18C15 16.8954 14.1046 16 13 16C11.8954 16 11 16.8954 11 18V19C11 19.5523 10.5523 20 10 20H7C6.44772 20 6 19.5523 6 19V16C6 15.4477 5.55228 15 5 15H4C2.89543 15 2 14.1046 2 13C2 11.8954 2.89543 11 4 11H5C5.55228 11 6 10.5523 6 10V7C6 6.44772 6.44772 6 7 6H10C10.5523 6 11 5.55228 11 5V4Z'
+            stroke='currentColor'
+            strokeWidth='1'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description Outline/puzzle
+ */
+export const SolidPuzzleIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidPuzzle} {...props} />
+}
+
+const OutlineLogs = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M4.25 13.5C5.2165 13.5 6 12.7165 6 11.75C6 10.7835 5.2165 10 4.25 10C3.2835 10 2.5 10.7835 2.5 11.75C2.5 12.7165 3.2835 13.5 4.25 13.5Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M4.25 6C5.2165 6 6 5.2165 6 4.25C6 3.2835 5.2165 2.5 4.25 2.5C3.2835 2.5 2.5 3.2835 2.5 4.25C2.5 5.2165 3.2835 6 4.25 6Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M11.75 10.5C12.7165 10.5 13.5 9.7165 13.5 8.75C13.5 7.7835 12.7165 7 11.75 7C10.7835 7 10 7.7835 10 8.75C10 9.7165 10.7835 10.5 11.75 10.5Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M10 9H8.15625C7.71591 9.00088 7.28082 8.9044 6.88212 8.71748C6.48342 8.53055 6.13097 8.2578 5.85 7.91875L4.25 6V10'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/*
+ * @description  Outline/log
+ */
+export const OutlineLogsIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineLogs} {...props} />
 }

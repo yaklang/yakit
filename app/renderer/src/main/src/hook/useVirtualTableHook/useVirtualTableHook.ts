@@ -54,9 +54,13 @@ export const verifyOrder = (pagination: VirtualPaging, AfterId?: number) => {
 //   }
 
 /** @name 关于虚拟表格偏移量的上下加载与动态更新 */
-export default function useVirtualTableHook<T extends ParamsTProps, DataT extends DataTProps>(
-    props: useVirtualTableHookParams<T, DataT>
-) {
+export default function useVirtualTableHook<
+    T extends ParamsTProps,
+    DataT extends DataTProps<IdKey>,
+    // TODO 此处我现阶段设想如果不想传递这两个范型，可能会涉及到类型类，复杂度过高放弃了，等待有缘人
+    DataKey extends string,
+    IdKey extends string
+>(props: useVirtualTableHookParams<T, DataT, DataKey>) {
     const {
         tableBoxRef,
         tableRef,
@@ -64,7 +68,8 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
         grpcFun,
         defaultParams = {Pagination: genDefaultPagination(20), Filter: {}},
         onFirst,
-        initResDataFun
+        initResDataFun,
+        responseKey = {data: "Data", id: "Id"}
     } = props
 
     const [params, setParams] = useState<ParamsTProps>(defaultParams)
@@ -111,10 +116,9 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
         // console.log("finalParams---", finalParams)
 
         grpcFun(finalParams)
-            .then((rsp: DataResponseProps<DataT>) => {
+            .then((rsp: DataResponseProps<DataT, DataKey>) => {
                 // console.log("rsp---", rsp)
-
-                let newData: DataT[] = verifyResult.isReverse ? rsp.Data.reverse() : rsp.Data
+                let newData: DataT[] = verifyResult.isReverse ? rsp[responseKey.data].reverse() : rsp[responseKey.data]
                 if (initResDataFun) {
                     newData = initResDataFun(newData)
                 }
@@ -127,12 +131,12 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
                     }
                     if (["desc", "none"].includes(query.Pagination.Order)) {
                         setData([...newData, ...data])
-                        maxIdRef.current = newData[0].Id
+                        maxIdRef.current = newData[0][responseKey.id]
                     } else {
                         // 升序
                         if (rsp.Pagination.Limit - data.length >= 0) {
                             setData([...data, ...newData])
-                            maxIdRef.current = newData[newData.length - 1].Id
+                            maxIdRef.current = newData[newData.length - 1][responseKey.id]
                         }
                     }
                 } else if (type === "bottom") {
@@ -144,10 +148,10 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
                     const arr = [...data, ...newData]
                     setData(arr)
                     if (["desc", "none"].includes(query.Pagination.Order)) {
-                        minIdRef.current = newData[newData.length - 1].Id
+                        minIdRef.current = newData[newData.length - 1][responseKey.id]
                     } else {
                         // 升序
-                        maxIdRef.current = newData[newData.length - 1].Id
+                        maxIdRef.current = newData[newData.length - 1][responseKey.id]
                     }
                 } else if (type === "offset") {
                     if (newData.length <= 0) {
@@ -157,7 +161,7 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
                     }
                     if (["desc", "none"].includes(query.Pagination.Order)) {
                         const newOffsetData = newData.concat(getOffsetData())
-                        maxIdRef.current = newOffsetData[0].Id
+                        maxIdRef.current = newOffsetData[0][responseKey.id]
                         setOffsetData(newOffsetData)
                     }
                 } else {
@@ -169,11 +173,11 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
                     setPagination(rsp.Pagination)
                     setData([...newData])
                     if (["desc", "none"].includes(query.Pagination.Order)) {
-                        maxIdRef.current = newData.length > 0 ? newData[0].Id : 0
-                        minIdRef.current = newData.length > 0 ? newData[newData.length - 1].Id : 0
+                        maxIdRef.current = newData.length > 0 ? newData[0][responseKey.id] : 0
+                        minIdRef.current = newData.length > 0 ? newData[newData.length - 1][responseKey.id] : 0
                     } else {
-                        maxIdRef.current = newData.length > 0 ? newData[newData.length - 1].Id : 0
-                        minIdRef.current = newData.length > 0 ? newData[0].Id : 0
+                        maxIdRef.current = newData.length > 0 ? newData[newData.length - 1][responseKey.id] : 0
+                        minIdRef.current = newData.length > 0 ? newData[0][responseKey.id] : 0
                     }
                 }
                 setTotal(rsp.Total)

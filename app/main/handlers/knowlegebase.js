@@ -68,6 +68,23 @@ module.exports = (win, getClient) => {
         return await asyncCreateKnowledgeBase(params)
     })
 
+    // asyncCreateKnowledgeBaseV2 wrapper
+    const asyncCreateKnowledgeBaseV2 = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().CreateKnowledgeBaseV2(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
+    ipcMain.handle("CreateKnowledgeBaseV2", async (e, params) => {
+        return await asyncCreateKnowledgeBaseV2(params)
+    })
+
     const asyncGetKnowledgeBaseTypeList = (params) => {
         return new Promise((resolve, reject) => {
             getClient().GetKnowledgeBaseTypeList(params, (err, data) => {
