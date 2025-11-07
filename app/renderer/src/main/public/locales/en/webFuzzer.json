@@ -89,7 +89,7 @@
     "success_failure_count": "Success: {success} -- Failed: ${failed}",
     "send_request": "Send Request",
     "parameter": "Parameter",
-    "trafficAnalysisMode": "TrafficAnalysis Mode"
+    "trafficAnalysisMode": "TrafficAnalysis"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "Discarded [{droppedCount}] responses",
@@ -121,7 +121,9 @@
     "exportData": "Export Data",
     "exportAll": "Export All",
     "exportPayloadOnly": "Export Payload Only",
-    "extractFromResponsePacket": "Extract content from the response packet"
+    "extractFromResponsePacket": "Extract content from the response packet",
+    "exportExtractedData": "Export Extracted Data",
+    "matchAndExtract": "Match And Extract"
   },
   "SecondNodeTitle": {
     "oversizedResponse": "Oversized Response",
@@ -359,7 +361,10 @@
     "viewHeader": "View Header",
     "viewBody": "View Body",
     "targetFileNotExist": "Target file no longer exists!",
-    "fullResponse": "Full Response"
+    "fullResponse": "Full Response",
+    "noEmpty":"No Empty",
+    "includes": "includes",
+    "notIncludes": "Not Includes"
   },
   "HttpQueryAdvancedConfig": {
     "force_https": "Force HTTPS",
@@ -462,7 +467,7 @@
   },
   "MatchersPanel": {
     "matcher": "Matcher",
-    "add_debug": "Add/Debug"
+    "add_debug": "Debug"
   },
   "MatchersAndExtractorsListItemOperate": {
     "debug": "Debug"
@@ -473,7 +478,7 @@
   },
   "ExtractorsPanel": {
     "dataExtractor": "Data Extractor",
-    "add_debug": "Add/Debug"
+    "add_debug": "Debug"
   },
   "VariablePanel": {
     "renderedVariableContent": "Rendered Variable Content",
@@ -524,7 +529,8 @@
     "addCondition": "Add Condition",
     "debugExecute": "Debug Execute",
     "matching_extraction_tip": "Added <count>{{num}}</count> items",
-    "extractionResult": "Extraction Result"
+    "extractionResult": "Extraction Result",
+    "save_changes_prompt": "Save the modified content?"
   },
   "MatcherCollapse": {
     "emptyMatcherConditionExists": "This matcher already has an empty condition",

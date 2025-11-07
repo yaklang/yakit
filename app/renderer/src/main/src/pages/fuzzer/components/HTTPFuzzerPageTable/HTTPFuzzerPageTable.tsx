@@ -35,11 +35,13 @@ import ReactResizeDetector from "react-resize-detector"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
 import {CodingPopover} from "@/components/HTTPFlowDetail"
-import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {OutlineSearchIcon, OutlineSelectorIcon} from "@/assets/icon/outline"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {isCellRedSingleColor} from "@/components/TableVirtualResize/utils"
 import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { ExportDataType } from "@/utils/exporter"
+import ExtractedFilter from "./extractedFilter"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -66,6 +68,8 @@ interface HTTPFuzzerPageTableProps {
     noMoreLimtAlertMsg?: React.ReactNode
     tableKeyUpDownEnabled?: boolean
     fuzzerTableMaxData?: number
+    /**@name 是否有提取器规则 */
+    hasExtractorRules?: boolean
 }
 
 /**
@@ -97,6 +101,8 @@ export interface HTTPFuzzerPageTableQuery {
     StatusCode?: string
     Color?: string[]
     ExtractedResults?: string
+    ExtractedResultsMatchType?: "includes" | "notIncludes" // 包含或不包含
+    ExtractedResultsNotEmpty?: boolean // 是否不为空
     // bodyLengthUnit: "B" | "k" | "M"
 }
 
@@ -175,7 +181,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             moreLimtAlertMsg,
             noMoreLimtAlertMsg,
             tableKeyUpDownEnabled = true,
-            fuzzerTableMaxData = DefFuzzerTableMaxData
+            fuzzerTableMaxData = DefFuzzerTableMaxData,
+            hasExtractorRules = false
         } = props
         const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
         const [listTable, setListTable] = useState<FuzzerResponse[]>([])
@@ -234,6 +241,71 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         )
 
         const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
+            // 提取数据列定义
+            const extractedResultsColumn: ColumnsTypeProps = {
+                title: t("HTTPFuzzerPageTable.extractData"),
+                dataKey: "ExtractedResults",
+                width: 300,
+                filterProps: {
+                    filterIcon: (
+                        <OutlineSelectorIcon
+                            className={classNames(styles["search-icon"], styles["filter-icon"], {
+                                [styles["active-icon"]]: !!query?.ExtractedResults?.length
+                            })}
+                        />
+                    ),
+                    filterRender: () => (
+                        <ExtractedFilter
+                            onSearch={(ExtractedParams)=>{
+                                setQuery({ 
+                                    ...query,
+                                    ...ExtractedParams, 
+                                 })
+                                setTimeout(() => update(), 100)
+                            }} 
+                        />
+                    )
+                },
+                render: (item, record) =>
+                    extractedMap.size > 0 ? (
+                        extractedMap.get(record["UUID"]) || "-"
+                    ) : item?.length > 0 ? (
+                        <div className={styles["table-item-extracted-results"]}>
+                            <span className={styles["extracted-results-text"]}>
+                                {/* 匹配项只有一个时 只显示值 多个用 Divider 分割 */}
+                                {item.length === 1 
+                                    ? `${item[0].Value}` 
+                                    : item.map((i, index) => (
+                                        <>
+                                            {!!index && <Divider type='vertical' style={{margin: '0 4px'}} />}
+                                            {`${i.Key}: ${i.Value}`}
+                                        </>
+                                    ))
+                                }
+                            </span>
+                            {item?.length > 1 && (
+                                <YakitButton
+                                    type='text'
+                                    size='small'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onViewExecResults(item)
+                                    }}
+                                    style={{
+                                        color: !isCellRedSingleColor(record.cellClassName)
+                                            ? undefined
+                                            : "#fff"
+                                    }}
+                                >
+                                    {t("YakitButton.detail")}
+                                </YakitButton>
+                            )}
+                        </div>
+                    ) : (
+                        "-"
+                    )
+            }
+
             return success
                 ? [
                       {
@@ -242,16 +314,17 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           render: (v) => {
                               return v + 1
                           },
-                          width: 100,
+                          width: 72,
                           sorterProps: {
                               sorter: true
                           },
                           fixed: "left"
                       },
+                      ...(hasExtractorRules ? [extractedResultsColumn] : []),
                       {
                           title: "Method",
                           dataKey: "Method",
-                          width: 100,
+                          width: 93,
                           sorterProps: {
                               sorter: true
                           }
@@ -271,7 +344,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               ) : (
                                   "-"
                               ),
-                          width: 140,
+                          width: 100,
                           sorterProps: {
                               sorter: true
                           },
@@ -388,58 +461,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               return v ? v.join(",") : "-"
                           }
                       },
-                      {
-                          title: t("HTTPFuzzerPageTable.extractData"),
-                          dataKey: "ExtractedResults",
-                          width: 300,
-                          filterProps: {
-                              filterKey: "ExtractedResults",
-                              filtersType: "input",
-                              filterIcon: (
-                                  <OutlineSearchIcon
-                                      className={classNames(styles["search-icon"], styles["filter-icon"], {
-                                          [styles["active-icon"]]: !!query?.ExtractedResults?.length
-                                      })}
-                                  />
-                              ),
-                              filterInputProps: {
-                                  placeholder: t("YakitInput.searchKeyWordPlaceholder")
-                              }
-                          },
-                          render: (item, record) =>
-                              extractedMap.size > 0 ? (
-                                  extractedMap.get(record["UUID"]) || "-"
-                              ) : item?.length > 0 ? (
-                                  <div className={styles["table-item-extracted-results"]}>
-                                      <span className={styles["extracted-results-text"]}>
-                                          {item.map((i) => `${i.Key}: ${i.Value} `)}
-                                      </span>
-                                      {item?.length > 1 && (
-                                          <YakitButton
-                                              type='text'
-                                              size='small'
-                                              onClick={(e) => {
-                                                  e.stopPropagation()
-                                                  onViewExecResults(item)
-                                              }}
-                                              style={{
-                                                  color: !isCellRedSingleColor(record.cellClassName)
-                                                      ? undefined
-                                                      : "#fff"
-                                              }}
-                                          >
-                                              {t("YakitButton.detail")}
-                                          </YakitButton>
-                                      )}
-                                  </div>
-                              ) : (
-                                  "-"
-                              )
-                      },
+                      ...(!hasExtractorRules ? [extractedResultsColumn] : []),
                       {
                           title: t("HTTPFuzzerPageTable.responseSimilarity"),
                           dataKey: "BodySimilarity",
-                          width: 180,
+                          width: 120,
                           render: (v, rowData) => {
                               const text = parseFloat(`${v}`).toFixed(3)
                               return text ? (
@@ -465,7 +491,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           title: t("HTTPFuzzerPageTable.httpHeaderSimilarity"),
                           dataKey: "HeaderSimilarity",
                           render: (v) => (v ? parseFloat(`${v}`).toFixed(3) : "-"),
-                          width: 180,
+                          width: 140,
                           sorterProps: {
                               sorter: true
                           }
@@ -474,12 +500,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       {
                           title: "Content-Type",
                           dataKey: "ContentType",
-                          width: 300
+                          width: 140
                       },
                       {
                           title: "time",
                           dataKey: "Timestamp",
-                          width: 165,
+                          width: 150,
                           render: (text) => (text ? formatTimestamp(text) : "-"),
                           sorterProps: {
                               sorter: true
@@ -574,6 +600,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   ]
         }, [
             success,
+            hasExtractorRules,
             query?.StatusCode,
             query?.afterBodyLength,
             query?.beforeBodyLength,
@@ -754,7 +781,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             durationMsMaxIsPush = Number(record.DurationMs) <= query.beforeDurationMs
                         }
                         // 是否有提取数据
-                        if (query?.ExtractedResults) {
+                        if (query?.ExtractedResults || query?.ExtractedResultsNotEmpty) {
                             let extractedResultsString = ""
                             if (extractedMap.size > 0) {
                                 extractedResultsString = extractedMap.get(record["UUID"]) || ""
@@ -763,11 +790,30 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     .map((item) => `${item.Key}: ${item.Value}`)
                                     .join("")
                             }
-                            isHaveDataIsPush = extractedResultsString
-                                .toLocaleLowerCase()
-                                .includes(query.ExtractedResults.trim().toLocaleLowerCase())
+                            
+                            // 不为空判断
+                            if (query?.ExtractedResultsNotEmpty) {
+                                isHaveDataIsPush = extractedResultsString.trim().length > 0
+                            }
+                            
+                            // 关键字匹配判断（如果有关键字）
+                            if (query?.ExtractedResults && query.ExtractedResults.length > 0) {
+                                const keyword = query.ExtractedResults.trim().toLocaleLowerCase()
+                                const content = extractedResultsString.toLocaleLowerCase()
+                                const matchType = query?.ExtractedResultsMatchType || "includes"
+                                
+                                const matchResult = matchType === "includes" 
+                                    ? content.includes(keyword)
+                                    : !content.includes(keyword)
+                                
+                                // 如果同时有不为空和关键字条件，需要同时满足
+                                if (query?.ExtractedResultsNotEmpty) {
+                                    isHaveDataIsPush = isHaveDataIsPush && matchResult
+                                } else {
+                                    isHaveDataIsPush = matchResult
+                                }
+                            }
                         }
-                        // 搜索同时为true时，push新数组
                         if (
                             colorIsPush &&
                             keyWordIsPush &&
@@ -802,7 +848,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         const onGetExportFuzzerEvent = useMemoizedFn((v: string) => {
             try {
-                const obj: {pageId: string; type: "all" | "payload"} = JSON.parse(v)
+                const obj: {pageId: string; type: ExportDataType} = JSON.parse(v)
                 if (pageId === obj.pageId) {
                     // 处理Uint8Array经过JSON.parse(JSON.stringify())导致数据损失和变形
                     const newListTable = listTable.map((item) => ({

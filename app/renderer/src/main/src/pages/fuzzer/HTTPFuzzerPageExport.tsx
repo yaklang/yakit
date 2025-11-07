@@ -24,7 +24,23 @@ export const exportHTTPFuzzerResponse = (responses: FuzzerResponse[], extractedM
                 Response: {BytesValue: i.ResponseRaw}
             }
         }) as unknown as ExtractableData[],
-        false
+        "all"
+    )
+}
+
+export const exportExtractedDataResponse = (responses: FuzzerResponse[], extractedMap) => {
+    exportData(
+        responses.map((i) => {
+            return {
+                ExtractedResults: {
+                    StringValue:
+                        extractedMap && extractedMap.size > 0
+                            ? extractedMap.get(i["UUID"]) || "-"
+                            : (i?.ExtractedResults || []).map((i) => `${i.Key}: ${i.Value}`).join("|")
+                }
+            }
+        }) as unknown as ExtractableData[],
+        "extracted"
     )
 }
 
@@ -35,6 +51,6 @@ export const exportPayloadResponse = (responses: FuzzerResponse[]) => {
                 Payloads: {StringValue: (i?.Payloads || []).join("|")} as ExtractableValue
             }
         }) as unknown as ExtractableData[],
-        true
+        "payload"
     )
 }

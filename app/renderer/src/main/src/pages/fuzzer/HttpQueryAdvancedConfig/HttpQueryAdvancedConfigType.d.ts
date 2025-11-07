@@ -123,4 +123,5 @@ export interface HttpQueryAdvancedConfigProps {
     showFormContentType: WebFuzzerType
     proxyListRef: React.Ref
     isbuttonIsSendReqStatus: boolean
+    cachedTotal: number
 }

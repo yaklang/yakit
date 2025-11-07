@@ -143,7 +143,8 @@
     "YakitInput": {
         "please_enter": "Please enter...",
         "searchKeyWordPlaceholder": "Please enter keywords to search",
-        "supportInputFormat": "Supports input in formats like 200, 200-204, multiple values separated by commas"
+        "supportInputFormat": "Supports input in formats like 200, 200-204, multiple values separated by commas",
+        "search": "search"
     },
     "YakitEmpty": {
         "noData": "No data available",

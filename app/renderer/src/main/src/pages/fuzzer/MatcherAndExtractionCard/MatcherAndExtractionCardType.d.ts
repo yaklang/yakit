@@ -18,13 +18,14 @@ export interface MatcherAndExtractionProps {
     ref?: React.ForwardedRef<MatcherAndExtractionRefProps>
     httpResponse: string
     onClose: () => void
-    onSave: (m: MatcherValueProps, e: ExtractorValueProps) => void
+    onSave: (m: MatcherValueProps, e: ExtractorValueProps, isApply: boolean) => void
     matcherValue: MatcherValueProps
     extractorValue: ExtractorValueProps
     defActiveKey: string
     defActiveType: MatchingAndExtraction
     defActiveKeyAndOrder: MatcherActiveKey
     pageType: MatcherAndExtractionDrawerPageType
+    hasApplyBtn?: boolean
 }
 
 export interface MatcherAndExtractionRefProps {
@@ -161,7 +162,8 @@ export interface MatcherAndExtractionDrawerProps {
     matcherValue: MatcherValueProps
     extractorValue: ExtractorValueProps
     onClose: () => void
-    onSave: (m: MatcherValueProps, e: ExtractorValueProps) => void
+    onSave: (m: MatcherValueProps, e: ExtractorValueProps, isApply: boolean) => void
     /**匹配器默认选中 */
     defActiveKeyAndOrder: MatcherActiveKey
+    hasApplyBtn?: boolean
 }
