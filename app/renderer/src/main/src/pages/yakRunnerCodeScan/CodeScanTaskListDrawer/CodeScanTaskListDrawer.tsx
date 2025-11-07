@@ -448,7 +448,7 @@ const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
         const onDetails = useMemoizedFn((record: SyntaxFlowScanTask, codeScanMode: HybridScanModeType) => {
             const runtimeId = record.TaskId
             const projectName = record.Programs
-            const selectGroupListByKeyWord = record.Config.Filter?.GroupNames
+            const GroupNames = record.Config.Filter?.GroupNames
             const route = YakitRoute.YakRunner_Code_Scan
             const current: PageNodeItemProps | undefined = getPageInfoByRuntimeId(route, runtimeId)
             // 重试new 都是新建页面
@@ -463,7 +463,7 @@ const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                                 runtimeId,
                                 codeScanMode,
                                 projectName,
-                                selectGroupListByKeyWord,
+                                GroupNames,
                                 pageId: current.pageId
                             })
                         )
@@ -478,7 +478,7 @@ const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                             runtimeId,
                             codeScanMode,
                             projectName,
-                            selectGroupListByKeyWord
+                            GroupNames
                         }
                     })
                 )

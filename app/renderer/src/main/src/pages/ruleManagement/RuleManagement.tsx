@@ -356,6 +356,13 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
             setSelectList([])
         }
     })
+
+    useUpdateEffect(()=>{
+        if(allCheck){
+            setSelectList(data.Rule)
+        }
+    },[data.Rule])
+
     const handleCheckboxChange = useMemoizedFn((checked: boolean, key: string, row: SyntaxFlowRule) => {
         if (checked) {
             setSelectList((s) => [...s, row])

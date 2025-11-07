@@ -227,6 +227,9 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 if (updateData.action === "create") {
                     debugVirtualTableEvent.startT()
                 }
+                if(updateData.action === "update"){
+                    debugVirtualTableEvent.startT()
+                }
             }
         } catch (error) {}
     })
@@ -646,6 +649,13 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             setSelectList([])
         }
     })
+
+    useUpdateEffect(()=>{
+        if(allCheck){
+            setSelectList(tableData)
+        }
+    },[tableData])
+    
     const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string, selectedRows: SSARisk) => {
         if (c) {
             setSelectList((s) => [...s, selectedRows])

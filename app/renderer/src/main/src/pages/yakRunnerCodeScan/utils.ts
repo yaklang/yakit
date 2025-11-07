@@ -7,6 +7,8 @@ import {
     SyntaxFlowScanRequest
 } from "./YakRunnerCodeScanType"
 import {APIOptionalFunc} from "@/apiUtils/type"
+import {QuerySyntaxFlowRuleRequest} from "../ruleManagement/RuleManagementType"
+import {grpcFetchLocalRuleList} from "../ruleManagement/api"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -90,5 +92,39 @@ export const apiDeleteQuerySyntaxFlowResult: APIOptionalFunc<
                 reject(e)
                 yakitNotify("error", "删除审计结果：" + e)
             })
+    })
+}
+
+// 获取选中分组下规则总数
+export const getGroupNamesTotal = (GroupNames: string[]) => {
+    return new Promise<number>(async (resolve, reject) => {
+        try {
+            if(GroupNames.length === 0) {
+                resolve(0)
+                return
+            }
+            const query: QuerySyntaxFlowRuleRequest = {
+                Filter: {
+                    RuleNames: [],
+                    Language: [],
+                    GroupNames,
+                    Severity: [],
+                    Purpose: [],
+                    Tag: [],
+                    Keyword: "",
+                    FilterLibRuleKind: ""
+                },
+                Pagination: {
+                    Limit: 10,
+                    Page: 1,
+                    OrderBy: "updated_at",
+                    Order: "desc"
+                }
+            }
+            const res = await grpcFetchLocalRuleList(query)
+            resolve(parseInt(res.Total + ""))
+        } catch (error) {
+            reject(error)
+        }
     })
 }

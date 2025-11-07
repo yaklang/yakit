@@ -2375,7 +2375,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                             route: YakitRoute.YakRunner_Code_Scan,
                                             params: {
                                                 projectName: [record.Name],
-                                                selectGroupListByKeyWord: [record.Language]
+                                                GroupNames: [record.Language]
                                             }
                                         })
                                     )

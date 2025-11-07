@@ -13,6 +13,7 @@ import {PluginSourceType} from "@/pages/pluginHub/type"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {SyntaxFlowScanModeType} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
 import { ConcurrencyAdvancedConfigValue } from "@/pages/fuzzer/FuzzerSequence/FuzzerPageConcurrency"
+import { FilterLibRuleKind } from "@/pages/ruleManagement/RuleManagementType"
 
 /**
  * @description 页面暂存数据
@@ -236,9 +237,16 @@ export interface AuditCodePageInfoProps {
 
 export interface CodeScanPageInfoProps {
     projectName?: string[]
-    selectGroupListByKeyWord?: string[]
     codeScanMode?: SyntaxFlowScanModeType
     runtimeId?: string
+
+    // rule 相关过滤条件
+    RuleNames?: string[]
+    GroupNames?: string[]
+    Keyword?: string
+    FilterLibRuleKind?: FilterLibRuleKind
+    // 所选规则总数
+    selectTotal?: number
 }
 
 export interface ModifyNotepadPageInfoProps {
