@@ -1,5 +1,5 @@
 import {SolidToolIcon} from "@/assets/icon/solid"
-import {FC, useCallback, useEffect, useMemo, useState} from "react"
+import {FC, memo, useCallback, useEffect, useMemo, useState} from "react"
 import ChatCard from "./ChatCard"
 import styles from "./ToolInvokerCard.module.scss"
 import classNames from "classnames"
@@ -21,33 +21,6 @@ interface ToolInvokerCardProps {
     modalInfo?: ModalInfoProps
 }
 
-interface CacheData {
-    trafficLen: number
-    risksLen: number
-    fetched: boolean
-    timestamp: number
-}
-
-// 全局缓存（key = params）
-const toolCache = new Map<string, CacheData>()
-// 缓存有效期 5 分钟
-const CACHE_EXPIRE =  60 * 1000
-
-let clearTimer: NodeJS.Timeout | null = null
-function startCacheAutoClear() {
-    if (clearTimer) return
-    clearTimer = setInterval(() => {
-        toolCache.clear()
-    }, CACHE_EXPIRE)
-}
-
-function stopCacheAutoClear() {
-    if (clearTimer) {
-        clearInterval(clearTimer)
-        clearTimer = null
-    }
-}
-
 const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     titleText,
     name,
@@ -58,62 +31,32 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     fileList,
     modalInfo
 }) => {
-    useEffect(() => {
-        startCacheAutoClear()
-        return () => stopCacheAutoClear()
-    }, [])
-
-    const [trafficLen, setTrafficLen] = useState<number>(() => toolCache.get(params)?.trafficLen ?? 0)
-    const [risksLen, setRisksLen] = useState<number>(() => toolCache.get(params)?.risksLen ?? 0)
-
     const [statusColor, statusText] = useMemo(() => {
         if (status === "success") return ["success", "成功"]
         if (status === "fail") return ["danger", "失败"]
         return ["white", "已取消"]
     }, [status])
 
-    const fetchData = useCallback(async () => {
-        const current = toolCache.get(params)
-        const now = Date.now()
-        if (current && current.fetched && now - current.timestamp < CACHE_EXPIRE) {
-            setTrafficLen(current.trafficLen)
-            setRisksLen(current.risksLen)
-            return
-        }
+    const [trafficLen, setTrafficLen] = useState(0)
+    const [risksLen, setRisksLen] = useState(0)
 
-        try {
-            const [trafficResult, riskResult] = await Promise.all([
-                grpcQueryHTTPFlows({RuntimeId: params}),
-                apiQueryRisksTotalByRuntimeId(params)
-            ])
-            const test = Math.random() * 100
-            const newData: CacheData = {
-                trafficLen: test ?? 0,
-                risksLen: riskResult?.Total ?? 0,
-                fetched: true,
-                timestamp: now
-            }
+    //  HTTP 流量
+    const getHTTPTraffic = useCallback(async () => {
+        const result = await grpcQueryHTTPFlows({RuntimeId: params})
+        // 随机数
+        setTrafficLen(result.Total)
+    }, [params])
 
-            toolCache.set(params, newData)
-            setTrafficLen(newData.trafficLen)
-            setRisksLen(newData.risksLen)
-        } catch (error) {
-            console.error(`ToolInvokerCard(${params}) fetchData error:`, error)
-        }
+    // 相关漏洞
+    const getQueryRisksTotalByRuntimeId = useCallback(async () => {
+        const result = await apiQueryRisksTotalByRuntimeId(params)
+        setRisksLen(result.Total)
     }, [params])
 
     useEffect(() => {
-        if (!params) return
-        const current = toolCache.get(params)
-        const now = Date.now()
-        if (current?.fetched && now - current.timestamp < CACHE_EXPIRE) {
-            setTrafficLen(current.trafficLen)
-            setRisksLen(current.risksLen)
-        } else {
-            fetchData()
-        }
-    }, [params, fetchData])
-
+        getHTTPTraffic()
+        getQueryRisksTotalByRuntimeId()
+    }, [getHTTPTraffic, getQueryRisksTotalByRuntimeId])
     return (
         <ChatCard
             titleText={titleText}
@@ -148,4 +91,4 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     )
 }
 
-export default ToolInvokerCard
+export default memo(ToolInvokerCard)

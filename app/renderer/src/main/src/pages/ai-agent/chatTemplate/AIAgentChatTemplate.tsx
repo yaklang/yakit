@@ -239,6 +239,18 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
     const {scrollerRef, virtuosoRef} = useVirtuosoAutoScroll(streams)
 
+    const components = useMemo(
+        () => ({
+            Item: ({children, style, "data-index": dataIndex}) => (
+                <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
+                    {children}
+                </div>
+            ),
+            Footer: () => <div style={{height: "20px"}} />
+        }),
+        []
+    )
+
     return (
         <div className={styles["ai-agent-chat-stream"]}>
             <Virtuoso
@@ -251,14 +263,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 totalCount={streams.length}
                 itemContent={(_, item) => renderItem(item)}
                 overscan={300}
-                components={{
-                    Item: ({children, style, "data-index": dataIndex}) => (
-                        <div style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
-                            {children}
-                        </div>
-                    ),
-                    Footer: () => <div style={{height: "20px"}} />
-                }}
+                components={components}
             />
             {/* {streams.map(renderItem)} */}
         </div>
