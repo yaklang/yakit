@@ -21,6 +21,14 @@ interface ToolInvokerCardProps {
     modalInfo?: ModalInfoProps
 }
 
+interface CacheData {
+    trafficLen: number
+    risksLen: number
+    fetched: boolean
+}
+
+const toolCache = new Map<string, CacheData>()
+
 const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     titleText,
     name,
@@ -29,7 +37,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     desc,
     status = "fail",
     fileList,
-    modalInfo,
+    modalInfo
 }) => {
     const [statusColor, statusText] = useMemo(() => {
         if (status === "success") return ["success", "成功"]
@@ -37,25 +45,34 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
         return ["white", "已取消"]
     }, [status])
 
-    const [trafficLen, setTrafficLen] = useState(0)
-    const [risksLen, setRisksLen] = useState(0)
+    const cached = toolCache.get(params)
+    const [trafficLen, setTrafficLen] = useState(cached?.trafficLen ?? 0)
+    const [risksLen, setRisksLen] = useState(cached?.risksLen ?? 0)
 
-    //  HTTP 流量
-    const getHTTPTraffic = useCallback(async () => {
-        const result = await grpcQueryHTTPFlows({RuntimeId: params})
-        setTrafficLen(result.Total)
-    }, [params])
+    const fetchData = useCallback(async () => {
+        if (cached && cached.fetched) {
+            setTrafficLen(cached.trafficLen)
+            setRisksLen(cached.risksLen)
+            return
+        }
+        const trafficResult = await grpcQueryHTTPFlows({RuntimeId: params})
+        setTrafficLen(trafficResult.Total)
 
-    // 相关漏洞
-    const getQueryRisksTotalByRuntimeId = useCallback(async () => {
-        const result = await apiQueryRisksTotalByRuntimeId(params)
-        setRisksLen(result.Total)
-    }, [params])
+        const riskResult = await apiQueryRisksTotalByRuntimeId(params)
+        setRisksLen(riskResult.Total)
+
+        const newData: CacheData = {
+            trafficLen: trafficResult?.Total ?? 0,
+            risksLen: riskResult?.Total ?? 0,
+            fetched: true
+        }
+
+        toolCache.set(params, newData)
+    }, [cached, params])
 
     useEffect(() => {
-        getHTTPTraffic()
-        getQueryRisksTotalByRuntimeId()
-    }, [getHTTPTraffic, getQueryRisksTotalByRuntimeId])
+        fetchData()
+    }, [fetchData])
 
     return (
         <ChatCard
@@ -66,11 +83,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
                     相关漏洞 <span>{risksLen}</span> <span>|</span> HTTP 流量 <span>{trafficLen}</span>
                 </div>
             }
-            footer={
-                <>
-                    {modalInfo && <ModalInfo {...modalInfo} />}
-                </>
-            }
+            footer={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
         >
             <div className={classNames(styles["file-system"], styles[`file-system-${status}`])}>
                 <div className={styles["file-system-title"]}>
