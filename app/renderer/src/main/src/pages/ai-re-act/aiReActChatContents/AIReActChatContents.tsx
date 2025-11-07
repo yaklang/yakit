@@ -27,11 +27,18 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
         }
     }, [stream.Timestamp, stream.AIService])
     switch (ContentType) {
-        case AIStreamContentType.MARKDOWN:
+        case AIStreamContentType.TEXT_MARKDOWN:
             return <AIMarkdown content={content} nodeLabel={nodeLabel} modalInfo={modalInfo} {...aiMarkdownProps} />
-        case AIStreamContentType.YAKLANG_CODE:
-        case AIStreamContentType.PLAIN_CODE:
-            return <AIYaklangCode content={content} nodeLabel={nodeLabel} modalInfo={modalInfo} />
+        case AIStreamContentType.CODE_YAKLANG:
+        case AIStreamContentType.CODE_HTTP_REQUEST:
+            return (
+                <AIYaklangCode
+                    contentType={ContentType}
+                    content={content}
+                    nodeLabel={nodeLabel}
+                    modalInfo={modalInfo}
+                />
+            )
         case AIStreamContentType.TEXT_PLAIN:
             const {execFileRecord} = yakExecResult
             const fileList = execFileRecord.get(CallToolID)
@@ -44,7 +51,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
                     fileList={fileList}
                 />
             )
-        case AIStreamContentType.TOOL_LOG:
+        case AIStreamContentType.LOG_TOOL:
             return <AIChatToolColorCard toolCall={stream.data} />
         default:
             return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} />

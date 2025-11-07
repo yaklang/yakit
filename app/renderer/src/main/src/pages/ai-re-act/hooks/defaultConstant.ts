@@ -68,13 +68,13 @@ export const TaskDefaultReToolResultSummary: Record<string, {label: string}> = {
 /**流内容的展示类型枚举 */
 export enum AIStreamContentType {
     /**md格式 */
-    MARKDOWN = "markdown",
+    TEXT_MARKDOWN = "text/markdown",
     /**YakitEditor */
-    YAKLANG_CODE = "yaklang_code",
-    /**YakitEditor */
-    PLAIN_CODE = "plain_code",
+    CODE_YAKLANG = "code/yaklang",
+    /**请求包 */
+    CODE_HTTP_REQUEST = "code/http-request",
     /**卡片/多行 */
     TEXT_PLAIN = "text/plain",
     /**tool 紫色卡片 */
-    TOOL_LOG = "tool_log"
+    LOG_TOOL = "log/tool"
 }
