@@ -1,4 +1,4 @@
-import {useRef} from "react"
+import {useEffect, useRef} from "react"
 import {useMemoizedFn} from "ahooks"
 import { randomString } from "@/utils/randomUtil"
 
@@ -7,31 +7,26 @@ const {ipcRenderer} = window.require("electron")
 interface StreamConcurrencyConfig<TData> {
     onData: (data: TData) => void
     onStreamEnd?: () => void
-    baseToken?: string
 }
 
 export const useStreamConcurrency = <TData = any, TParams = any>({
     onData,
     onStreamEnd,
-    baseToken
 }: StreamConcurrencyConfig<TData>) => {
-    const streamTokenRef = useRef<string>("")
     const cleanupRef = useRef<(() => void) | null>(null)
-
+    const tokenRef = useRef<string>(randomString(40))
     const startConcurrency = useMemoizedFn((params: TParams) => {
         if (cleanupRef.current) {
             cleanupRef.current()
         }
 
-        const token = baseToken || `stream-${randomString(40)}`
-        streamTokenRef.current = token
+        const token = tokenRef.current
 
-        const dataToken = `fuzzer-group-data-${token}`
-        const errToken = `fuzzer-group-error-${token}`
-        const endToken = `fuzzer-group-end-${token}`
+        const dataToken = `${token}-data`
+        const errToken = `${token}-error`
+        const endToken = `${token}-end`
 
         const handleData = (_: any, data: TData) => {
-            console.log(data,'data');
             onData(data)
         }
 
@@ -72,8 +67,14 @@ export const useStreamConcurrency = <TData = any, TParams = any>({
             cleanupRef.current()
             cleanupRef.current = null
         }
-        streamTokenRef.current = ""
     })
+
+    
+    useEffect(() => {
+        return () => {
+            cancelConcurrency()
+        }
+    }, [])
 
     return {startConcurrency, cancelConcurrency}
 }

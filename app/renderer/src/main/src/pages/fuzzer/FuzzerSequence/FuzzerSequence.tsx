@@ -282,7 +282,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     }, [selectGroupId, queryPagesDataById])
 
     const { startConcurrency, cancelConcurrency } = useStreamConcurrency<FuzzerSequenceResponse>({
-        baseToken: fuzzTokenRef.current,
         onData: (data) => {
             const { Response, Request: { FuzzerIndex = "" } } = data
 
@@ -1073,7 +1072,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     }
                 })
             }
-            console.log(params,'params');
             startConcurrency(params)
         } else {
             ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: httpParams}, fuzzTokenRef.current)
