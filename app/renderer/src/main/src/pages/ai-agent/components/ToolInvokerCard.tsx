@@ -25,9 +25,28 @@ interface CacheData {
     trafficLen: number
     risksLen: number
     fetched: boolean
+    timestamp: number
 }
 
+// 全局缓存（key = params）
 const toolCache = new Map<string, CacheData>()
+// 缓存有效期 5 分钟
+const CACHE_EXPIRE =  60 * 1000
+
+let clearTimer: NodeJS.Timeout | null = null
+function startCacheAutoClear() {
+    if (clearTimer) return
+    clearTimer = setInterval(() => {
+        toolCache.clear()
+    }, CACHE_EXPIRE)
+}
+
+function stopCacheAutoClear() {
+    if (clearTimer) {
+        clearInterval(clearTimer)
+        clearTimer = null
+    }
+}
 
 const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     titleText,
@@ -39,40 +58,61 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     fileList,
     modalInfo
 }) => {
+    useEffect(() => {
+        startCacheAutoClear()
+        return () => stopCacheAutoClear()
+    }, [])
+
+    const [trafficLen, setTrafficLen] = useState<number>(() => toolCache.get(params)?.trafficLen ?? 0)
+    const [risksLen, setRisksLen] = useState<number>(() => toolCache.get(params)?.risksLen ?? 0)
+
     const [statusColor, statusText] = useMemo(() => {
         if (status === "success") return ["success", "成功"]
         if (status === "fail") return ["danger", "失败"]
         return ["white", "已取消"]
     }, [status])
 
-    const cached = toolCache.get(params)
-    const [trafficLen, setTrafficLen] = useState(cached?.trafficLen ?? 0)
-    const [risksLen, setRisksLen] = useState(cached?.risksLen ?? 0)
-
     const fetchData = useCallback(async () => {
-        if (cached && cached.fetched) {
-            setTrafficLen(cached.trafficLen)
-            setRisksLen(cached.risksLen)
+        const current = toolCache.get(params)
+        const now = Date.now()
+        if (current && current.fetched && now - current.timestamp < CACHE_EXPIRE) {
+            setTrafficLen(current.trafficLen)
+            setRisksLen(current.risksLen)
             return
         }
-        const trafficResult = await grpcQueryHTTPFlows({RuntimeId: params})
-        setTrafficLen(trafficResult.Total)
 
-        const riskResult = await apiQueryRisksTotalByRuntimeId(params)
-        setRisksLen(riskResult.Total)
+        try {
+            const [trafficResult, riskResult] = await Promise.all([
+                grpcQueryHTTPFlows({RuntimeId: params}),
+                apiQueryRisksTotalByRuntimeId(params)
+            ])
+            const test = Math.random() * 100
+            const newData: CacheData = {
+                trafficLen: test ?? 0,
+                risksLen: riskResult?.Total ?? 0,
+                fetched: true,
+                timestamp: now
+            }
 
-        const newData: CacheData = {
-            trafficLen: trafficResult?.Total ?? 0,
-            risksLen: riskResult?.Total ?? 0,
-            fetched: true
+            toolCache.set(params, newData)
+            setTrafficLen(newData.trafficLen)
+            setRisksLen(newData.risksLen)
+        } catch (error) {
+            console.error(`ToolInvokerCard(${params}) fetchData error:`, error)
         }
-
-        toolCache.set(params, newData)
-    }, [cached, params])
+    }, [params])
 
     useEffect(() => {
-        fetchData()
-    }, [fetchData])
+        if (!params) return
+        const current = toolCache.get(params)
+        const now = Date.now()
+        if (current?.fetched && now - current.timestamp < CACHE_EXPIRE) {
+            setTrafficLen(current.trafficLen)
+            setRisksLen(current.risksLen)
+        } else {
+            fetchData()
+        }
+    }, [params, fetchData])
 
     return (
         <ChatCard
