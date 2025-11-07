@@ -139,7 +139,9 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     // 选中插件
     const [selectList, setSelectList] = useState<YakScript[]>([])
     // 搜索条件
-    const [search, setSearch, getSearch] = useGetSetState<PluginSearchParams>(cloneDeep(defaultSearch))
+    const [search, setSearch, getSearch] = useGetSetState<PluginSearchParams>(
+        cloneDeep({...defaultSearch, ...externalSearchParams})
+    )
     const [filters, setFilters, getFilters] = useGetSetState<PluginFilterParams>(cloneDeep(defaultFilter))
 
     const showIndex = useRef<number>(0)
@@ -165,11 +167,6 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
 
     useEffect(() => {
         fetchPrivateDomain(() => {
-            //第一次加载判断是否带有搜索参数
-            if(externalSearchParams){
-                onSearch(externalSearchParams)
-                return;
-            }
             handleRefreshList(true)
         })
     }, [])
