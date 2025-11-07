@@ -16,6 +16,7 @@ import {PluginEnvVariables} from "../pluginEnvVariables/PluginEnvVariables"
 
 import classNames from "classnames"
 import styles from "./PluginHubList.module.scss"
+import { PluginSearchParams } from "@/pages/plugins/baseTemplateType"
 
 interface PluginHubListProps {
     /** 根元素的id */
@@ -169,6 +170,13 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         }
     })
 
+    /** 跳转到本地页面并根据搜索条件展示结果 */
+    const [localSearchParams, setLocalSearchParams] = useState<PluginSearchParams | undefined>(undefined)
+    const onChangeLocal = useMemoizedFn((searchParams?: PluginSearchParams) => {
+        setLocalSearchParams(searchParams)
+        onSetActive("local")
+    })
+
     useEffect(() => {
         emiter.on("openPluginHubListAndDetail", handleOpenHubListAndDetail)
         emiter.on("editorLocalNewToLocalList", handleUpdatePluginInfo)
@@ -246,6 +254,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                             isDetailList={isDetail}
                             hiddenDetailList={hiddenDetail}
                             onPluginDetail={onClickPlugin}
+                            onChangeLocal={onChangeLocal}
                         />
                     </div>
                 )}
@@ -279,6 +288,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                             onPluginDetail={onClickPlugin}
                             openGroupDrawer={openGroupDrawer}
                             onSetOpenGroupDrawer={setOpenGroupDrawer}
+                            externalSearchParams={localSearchParams}
                         />
                     </div>
                 )}

@@ -188,7 +188,7 @@ export interface PluginSearchParams {
 }
 
 /** 插件来源 */
-export type PluginSource = "all" | "official"
+export type PluginSource = "all" | "official" | "local"
 export interface PluginListTabs {
     tab: string
     key: string

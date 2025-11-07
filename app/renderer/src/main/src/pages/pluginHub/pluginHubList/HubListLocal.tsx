@@ -83,6 +83,7 @@ interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
     openGroupDrawer: boolean
     onSetOpenGroupDrawer: (openGroupDrawer: boolean) => void
+    externalSearchParams?: PluginSearchParams // 外部传入的搜索参数
 }
 /** @name 本地插件 */
 export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
@@ -93,7 +94,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         hiddenDetailList,
         onPluginDetail,
         openGroupDrawer,
-        onSetOpenGroupDrawer
+        onSetOpenGroupDrawer,
+        externalSearchParams
     } = props
 
     const divRef = useRef<HTMLDivElement>(null)
@@ -137,7 +139,9 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     // 选中插件
     const [selectList, setSelectList] = useState<YakScript[]>([])
     // 搜索条件
-    const [search, setSearch, getSearch] = useGetSetState<PluginSearchParams>(cloneDeep(defaultSearch))
+    const [search, setSearch, getSearch] = useGetSetState<PluginSearchParams>(
+        cloneDeep({...defaultSearch, ...externalSearchParams})
+    )
     const [filters, setFilters, getFilters] = useGetSetState<PluginFilterParams>(cloneDeep(defaultFilter))
 
     const showIndex = useRef<number>(0)
@@ -155,6 +159,11 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         }),
         {wait: 300}
     ).run
+
+    // 监听外部传入的搜索参数
+    useUpdateEffect(() => {
+        externalSearchParams && onSearch(externalSearchParams)
+    }, [externalSearchParams])
 
     useEffect(() => {
         fetchPrivateDomain(() => {
