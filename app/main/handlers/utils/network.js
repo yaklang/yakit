@@ -285,6 +285,16 @@ const fetchLatestYakitIRifyEEVersion = async (requestConfig) => {
 /** 引擎下载地址 */
 const getYakEngineDownloadUrl = async (version) => {
     const domain = await getAvailableOSSDomain()
+    let system_mode = ""
+    try {
+        // 开发环境是不添加-legacy
+        if(!electronIsDev){
+            system_mode = fs.readFileSync(loadExtraFilePath(path.join("bins", "yakit-system-mode.txt"))).toString("utf8")
+        }
+    } catch (error) {
+        console.log("error", error)
+    }
+    const suffix = system_mode === "legacy"
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
@@ -293,7 +303,7 @@ const getYakEngineDownloadUrl = async (version) => {
                 return `https://${domain}/yak/${version}/yak_darwin_amd64`
             }
         case "win32":
-            return `https://${domain}/yak/${version}/yak_windows_amd64.exe`
+            return `https://${domain}/yak/${version}/yak_windows_${suffix ? "legacy_" : ""}amd64.exe`
         case "linux":
             if (process.arch === "arm64") {
                 return `https://${domain}/yak/${version}/yak_linux_arm64`
