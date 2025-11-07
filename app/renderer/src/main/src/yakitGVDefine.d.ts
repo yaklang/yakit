@@ -2,7 +2,7 @@
 export type YakitSystem = "Linux" | "Darwin" | "Windows_NT"
 
 /** 当前启动yaklang引擎模式 */
-export type YaklangEngineMode = "local" | "remote"
+export type YaklangEngineMode = "local" | "remote" | "secret-local"
 
 /** 下载进度条-时间数据 */
 interface DownloadingTime {

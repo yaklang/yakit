@@ -5,6 +5,7 @@ import emiter from "../eventBus/eventBus"
 import {Uint8ArrayToString} from "../str"
 
 const {ipcRenderer} = window.require("electron")
+
 let id = randomString(40)
 
 export interface FileMonitorItemProps {
@@ -59,7 +60,6 @@ function handleConcurrentLoadData(key: keyof ConcurrentLoad, number: number) {
 }
 
 export const startupDuplexConn = () => {
-    info("Server Push Enabled Already")
     ipcRenderer.on(`${id}-data`, (e, data: DuplexConnectionProps) => {
         try {
             const resultData: Buffer = data.Data
@@ -112,7 +112,6 @@ export const startupDuplexConn = () => {
         console.log(error)
     })
     ipcRenderer.invoke("DuplexConnection", {}, id).then(() => {
-        info("Server Push Enabled")
     })
 }
 
