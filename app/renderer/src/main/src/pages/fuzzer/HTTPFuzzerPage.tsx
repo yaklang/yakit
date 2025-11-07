@@ -26,7 +26,7 @@ import {
 import {getRemoteValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
-import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
+import {exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse} from "./HTTPFuzzerPageExport"
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
 import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import styles from "./HTTPFuzzerPage.module.scss"
@@ -165,6 +165,7 @@ import {formatTimeYMD} from "@/utils/timeUtil"
 import {type LoggerData, useLogger} from "@/hook/useLogger/useLogger"
 import i18n from "@/i18n/i18n"
 import {maskProxyPassword} from "../mitm/MITMServerStartForm/MITMServerStartForm"
+import { ExportDataType } from "@/utils/exporter"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -2144,6 +2145,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         showFormContentType={advancedConfigShowType}
                         proxyListRef={proxyListRef}
                         isbuttonIsSendReqStatus={isbuttonIsSendReqStatus}
+                        cachedTotal={cachedTotal}
                     />
                 </React.Suspense>
                 <div className={styles["http-fuzzer-page"]}>
@@ -2430,7 +2432,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
                                             <div className={styles["resize-card-heard-extra"]}></div>
                                             {cachedTotal >= 1 && <YakitButton
-                                                type='primary'
+                                                type='outline2'
                                                 onClick={jumpHTTPHistoryAnalysis}
                                                 className={styles["resize-card-heard-btn"]}
                                             >
@@ -2454,6 +2456,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         moreLimtAlertMsg={moreLimtAlertMsg}
                                                         noMoreLimtAlertMsg={noMoreLimtAlertMsg}
                                                         fuzzerTableMaxData={fuzzerTableMaxData}
+                                                        hasExtractorRules={!!advancedConfigValue.extractors.length}
                                                     />
                                                 )}
                                                 {showSuccess === "false" && (
@@ -2791,7 +2794,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
 
     const onGetExportFuzzerCallBackEvent = useMemoizedFn((v) => {
         try {
-            const obj: {listTable: any; type: "all" | "payload"; pageId: string} = JSON.parse(v)
+            const obj: {listTable: any; type: ExportDataType; pageId: string} = JSON.parse(v)
             if (obj.pageId === pageId) {
                 const {listTable, type} = obj
                 const newListTable = listTable.map((item) => ({
@@ -2801,6 +2804,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 }))
                 if (type === "all") {
                     exportHTTPFuzzerResponse(newListTable, extractedMap)
+                } else if (type === "extracted") {
+                    exportExtractedDataResponse(newListTable, extractedMap)
                 } else {
                     exportPayloadResponse(newListTable)
                 }
@@ -2809,6 +2814,25 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             debugToPrintLog(error)
         }
     })
+
+    const renderExtractedDataBtn = useMemoizedFn(() => (
+        <YakitButton
+            size={size}
+            type={"primary"}
+            onClick={() => {
+                setExportDataVisible(false)
+                emiter.emit(
+                    "onGetExportFuzzer",
+                    JSON.stringify({
+                        pageId,
+                        type: "extracted"
+                    })
+                )
+            }}
+        >
+            {t("SecondNodeExtra.exportExtractedData")}
+        </YakitButton>
+    ))
 
     // const onViewExecResults = useMemoizedFn(() => {
     //     showYakitModal({
@@ -3098,13 +3122,13 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             <>
                                 {noPopconfirm ? (
                                     <YakitButton
-                                        type='outline2'
+                                        type='primary'
                                         size={size}
                                         onClick={() => {
                                             matchSubmit && matchSubmit()
                                         }}
                                     >
-                                        {t("SecondNodeExtra.matchOnly")}
+                                        {t("SecondNodeExtra.matchAndExtract")}
                                     </YakitButton>
                                 ) : (
                                     <YakitPopconfirm
@@ -3115,8 +3139,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         }}
                                         placement='top'
                                     >
-                                        <YakitButton type='outline2' size={size}>
-                                            {t("SecondNodeExtra.matchOnly")}
+                                        <YakitButton type='primary' size={size}>
+                                            {t("SecondNodeExtra.matchAndExtract")}
                                         </YakitButton>
                                     </YakitPopconfirm>
                                 )}
@@ -3124,7 +3148,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         ) : (
                             <>
                                 {noPopconfirm ? (
-                                    <Tooltip title={t("SecondNodeExtra.matchOnly")}>
+                                    <Tooltip title={t("SecondNodeExtra.matchAndExtract")}>
                                         <YakitButton
                                             type='outline2'
                                             size={size}
@@ -3143,7 +3167,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         }}
                                         placement='top'
                                     >
-                                        <Tooltip title={t("SecondNodeExtra.matchOnly")}>
+                                        <Tooltip title={t("SecondNodeExtra.matchAndExtract")}>
                                             <YakitButton type='outline2' size={size} icon={<OutlinePlugsIcon />} />
                                         </Tooltip>
                                     </YakitPopconfirm>
@@ -3153,7 +3177,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     </>
                 )}
 
-                {+(secondNodeSize?.width || 0) >= 610 ? (
+                {/* {+(secondNodeSize?.width || 0) >= 610 ? (
                     <YakitButton
                         type='outline2'
                         size={size}
@@ -3190,7 +3214,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             }}
                         />
                     </Tooltip>
-                )}
+                )} */}
                 {+(secondNodeSize?.width || 0) >= 610 ? (
                     <YakitPopover
                         title={t("SecondNodeExtra.exportData")}
@@ -3230,6 +3254,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                     >
                                         {t("SecondNodeExtra.exportPayloadOnly")}
                                     </YakitButton>
+                                    {renderExtractedDataBtn()}
                                 </Space>
                             </>
                         }
@@ -3281,6 +3306,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                     >
                                         {t("SecondNodeExtra.exportPayloadOnly")}
                                     </YakitButton>
+                                    {renderExtractedDataBtn()}
                                 </Space>
                             </>
                         }

@@ -128,7 +128,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         matchSubmitFun,
         showFormContentType,
         proxyListRef,
-        isbuttonIsSendReqStatus
+        isbuttonIsSendReqStatus,
+        cachedTotal
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
 
@@ -153,9 +154,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [inViewport = true] = useInViewport(queryRef)
 
     const [batchTargetModalVisible, setBatchTargetModalVisible] = useState<boolean>(false)
-
-    // 是否通过仅匹配打开的弹窗
-    const [isOpenByMacth, setOpenByMacth] = useState<boolean>(false)
 
     const retry = useMemo(() => advancedConfigValue.retry, [advancedConfigValue.retry])
     const noRetry = useMemo(() => advancedConfigValue.noRetry, [advancedConfigValue.noRetry])
@@ -262,7 +260,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const onOpenMatchingAndExtractionCardEvent = useMemoizedFn((pageId: string) => {
         if (pageId === id) {
             onAddMatchingAndExtractionCard("matchers")
-            setOpenByMacth(true)
         }
     })
 
@@ -346,23 +343,28 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         return width
     }
     const onClose = useMemoizedFn(() => {
-        if (isOpenByMacth) {
-            setOpenByMacth(false)
-        }
         setVisibleDrawer(false)
     })
-    const onSave = useMemoizedFn((matcher, extractor) => {
+    const onSave = useMemoizedFn((matcher, extractor, isApply = false) => {
         const v = form.getFieldsValue()
         onSetValue({
             ...v,
             matchers: matcher.matchersList || [],
             extractors: extractor.extractorList || []
         })
-        if (isOpenByMacth) {
+        if (isApply) {
             setTimeout(() => {
                 matchSubmitFun()
             }, 500)
         }
+    })
+
+    const onApply = useMemoizedFn(()=>{
+        if(!cachedTotal){
+            yakitNotify("warning", `请发送多个请求包后再应用`)
+            return;
+        }
+        matchSubmitFun()
     })
 
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
@@ -1178,12 +1180,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
                                 onEdit={onEditMatchers}
                                 onSetValue={onSetValue}
+                                onApply={onApply}
                             />
                             <ExtractorsPanel
                                 key='数据提取器'
                                 onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
                                 onEdit={onEditExtractors}
                                 onSetValue={onSetValue}
+                                onApply={onApply}
                             />
                             <VariablePanel
                                 key='设置变量'
@@ -1414,6 +1418,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 extractorValue={{extractorList: extractorList || []}}
                 onClose={onClose}
                 onSave={onSave}
+                hasApplyBtn={!!cachedTotal}
             />
             <AgentConfigModal
                 agentConfigModalVisible={agentConfigModalVisible}

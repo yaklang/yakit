@@ -135,7 +135,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
             defActiveKey,
             httpResponse,
             defActiveType,
-            defActiveKeyAndOrder
+            defActiveKeyAndOrder,
+            hasApplyBtn = false
         } = props
         const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
         const [type, setType] = useState<MatchingAndExtraction>(defActiveType)
@@ -312,12 +313,13 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                     }, 200)
                 )
         })
-        const onApplyConfirm = useMemoizedFn(() => {
+        const onApplyConfirm = useMemoizedFn((type: 'save'| 'apply'='save') => {
             const matcherAndExtractor = onClearEmptyGroups()
             if (onIsDuplicateName(matcherAndExtractor.newExtractorList)) return
             onSave(
                 {...matcher, matchersList: matcherAndExtractor.newMatchersList},
-                {...extractor, extractorList: matcherAndExtractor.newExtractorList}
+                {...extractor, extractorList: matcherAndExtractor.newExtractorList},
+                type === 'apply'
             )
             onClose()
         })
@@ -398,18 +400,18 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                 let m = YakitModalConfirm({
                     width: 420,
                     type: "white",
-                    onCancelText: t("YakitButton.do_not_apply"),
-                    onOkText: t("YakitButton.apply"),
+                    onCancelText: t("YakitButton.doNotSave"),
+                    onOkText: t("YakitButton.save"),
                     icon: <ExclamationCircleOutlined />,
                     onOk: () => {
-                        onApplyConfirm()
+                        onApplyConfirm('save')
                         m.destroy()
                     },
                     onCancel: () => {
                         onClose()
                         // m.destroy()
                     },
-                    content: t("MatcherAndExtraction.apply_changes_prompt")
+                    content: t("MatcherAndExtraction.save_changes_prompt")
                 })
             }
         })
@@ -504,12 +506,19 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                                 )}
                             </>
                             <YakitButton
+                                type= {hasApplyBtn ? "outline1" : 'primary'}
+                                onClick={() => onApplyConfirm('save')}
+                                size={isSmallMode ? "small" : undefined}
+                            >
+                                {t("YakitButton.save")}
+                            </YakitButton>
+                            {hasApplyBtn && <YakitButton
                                 type='primary'
-                                onClick={() => onApplyConfirm()}
+                                onClick={() => onApplyConfirm('apply')}
                                 size={isSmallMode ? "small" : undefined}
                             >
                                 {t("YakitButton.apply")}
-                            </YakitButton>
+                            </YakitButton>}
                             <RemoveIcon className={styles["remove-icon"]} onClick={() => onCheckClose()} />
                         </div>
                     </div>
@@ -1348,7 +1357,8 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
         extractorValue,
         onClose,
         onSave,
-        defActiveKeyAndOrder
+        defActiveKeyAndOrder,
+        hasApplyBtn
     } = props
     const {menuBodyHeight} = useMenuHeight(
         (s) => ({
@@ -1381,6 +1391,7 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
                 onClose={onClose}
                 onSave={onSave}
                 defActiveKeyAndOrder={defActiveKeyAndOrder}
+                hasApplyBtn={hasApplyBtn}
             />
         </YakitDrawer>
     )

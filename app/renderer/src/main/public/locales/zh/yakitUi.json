@@ -143,7 +143,8 @@
     "YakitInput": {
         "please_enter": "请输入...",
         "searchKeyWordPlaceholder": "请输入关键词搜索",
-        "supportInputFormat": "支持输入200,200-204格式，多个用逗号分隔"
+        "supportInputFormat": "支持输入200,200-204格式，多个用逗号分隔",
+        "search": "搜索"
     },
     "YakitEmpty": {
         "noData": "暂无数据",

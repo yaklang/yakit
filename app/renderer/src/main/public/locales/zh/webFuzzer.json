@@ -89,7 +89,7 @@
     "success_failure_count": "成功：{success}——失败：${failed}",
     "send_request": "发送请求",
     "parameter": "参数",
-    "trafficAnalysisMode": "流量分析模式"
+    "trafficAnalysisMode": "流量分析"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丢弃[{droppedCount}]个响应",
@@ -121,7 +121,9 @@
     "exportData": "导出数据",
     "exportAll": "导出所有",
     "exportPayloadOnly": "仅导出 Payload",
-    "extractFromResponsePacket": "提取响应数据包中内容"
+    "extractFromResponsePacket": "提取响应数据包中内容",
+    "exportExtractedData": "导出提取数据",
+    "matchAndExtract": "匹配/提取"
   },
   "SecondNodeTitle": {
     "oversizedResponse": "超大响应",
@@ -359,7 +361,10 @@
     "viewHeader": "查看Header",
     "viewBody": "查看Body",
     "targetFileNotExist": "目标文件已不存在!",
-    "fullResponse": "完整响应"
+    "fullResponse": "完整响应",
+    "noEmpty":"不为空",
+    "includes": "包含",
+    "notIncludes": "不包含"
   },
   "HttpQueryAdvancedConfig": {
     "force_https": "强制 HTTPS",
@@ -462,7 +467,7 @@
   },
   "MatchersPanel": {
     "matcher": "匹配器",
-    "add_debug": "添加/调试"
+    "add_debug": "调试"
   },
   "MatchersAndExtractorsListItemOperate": {
     "debug": "调试"
@@ -473,7 +478,7 @@
   },
   "ExtractorsPanel": {
     "dataExtractor": "数据提取器",
-    "add_debug": "添加/调试"
+    "add_debug": "调试"
   },
   "VariablePanel": {
     "renderedVariableContent": "渲染后变量内容",
@@ -524,7 +529,8 @@
     "addCondition": "添加条件",
     "debugExecute": "调试执行",
     "matching_extraction_tip": "已添加 <count>{{num}}</count> 条",
-    "extractionResult": "提取结果"
+    "extractionResult": "提取结果",
+    "save_changes_prompt": "是否保存修改的内容"
   },
   "MatcherCollapse": {
     "emptyMatcherConditionExists": "该匹配器已有空匹配器条件",

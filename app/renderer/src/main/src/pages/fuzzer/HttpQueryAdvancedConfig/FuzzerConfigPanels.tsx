@@ -34,9 +34,10 @@ interface MatchersPanelProps {
     onAddMatchingAndExtractionCard: (type: MatchingAndExtraction) => void
     onEdit: (params: MatchersPanelEditProps) => void
     onSetValue?: (v: AdvancedConfigValueProps) => void
+    onApply?: () => void 
 }
 export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) => {
-    const {onAddMatchingAndExtractionCard, onEdit, onSetValue, ...restProps} = props
+    const {onAddMatchingAndExtractionCard, onEdit, onSetValue, onApply, ...restProps} = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const form = Form.useFormInstance()
     const matchers: HTTPResponseMatcher[] = Form.useWatch("matchers", form) || []
@@ -117,6 +118,17 @@ export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) =>
                             {t("YakitButton.reset")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
+                        <YakitButton 
+                            type='text' 
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onApply?.()
+                            }}
+                            size='small'
+                        >
+                            {t("YakitButton.apply")}
+                        </YakitButton>
+                        <Divider type='vertical' style={{margin: 0}} />
                         <YakitButton
                             type='text'
                             size='small'
@@ -149,7 +161,7 @@ interface ExtractorsPanelProps extends Omit<MatchersPanelProps, "onEdit"> {
     onEdit: (index: number, type: MatchingAndExtraction) => void
 }
 export const ExtractorsPanel: React.FC<ExtractorsPanelProps> = React.memo((props) => {
-    const {onAddMatchingAndExtractionCard, onEdit, onSetValue, ...restProps} = props
+    const {onAddMatchingAndExtractionCard, onEdit, onSetValue, onApply, ...restProps} = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const form = Form.useFormInstance()
     const extractors = Form.useWatch("extractors", form) || []
@@ -210,6 +222,17 @@ export const ExtractorsPanel: React.FC<ExtractorsPanelProps> = React.memo((props
                             size='small'
                         >
                             {t("YakitButton.reset")}
+                        </YakitButton>
+                        <Divider type='vertical' style={{margin: 0}} />
+                        <YakitButton 
+                            type='text' 
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onApply?.()
+                            }} 
+                            size='small'
+                        >
+                            {t("YakitButton.apply")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         <YakitButton

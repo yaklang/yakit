@@ -107,7 +107,8 @@ const GeneralExporter: React.FC<GeneralExporterProp> = (props) => {
     )
 }
 
-export const exportData = (data: ExtractableData[], onlyPayloads: boolean) => {
+export type ExportDataType = "all" | "payload" | "extracted"
+export const exportData = (data: ExtractableData[], exportType: ExportDataType = "all") => {
     const m = showYakitModal({
         title: i18n.language === "zh" ? "导出数据" : "Export Data",
         width: 700,
@@ -116,7 +117,7 @@ export const exportData = (data: ExtractableData[], onlyPayloads: boolean) => {
             <>
                 <GeneralExporterForm
                     Data={data}
-                    onlyPayloads={onlyPayloads}
+                    exportType={exportType}
                     destroyModal={() => {
                         m.destroy()
                     }}
@@ -135,12 +136,12 @@ interface ExportColumns {
 interface GeneralExporterFormProp {
     Config?: basicConfig
     Data: ExtractableData[]
-    onlyPayloads: boolean
+    exportType: ExportDataType
     destroyModal: () => void
 }
 
 const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
-    const {Config, Data, onlyPayloads, destroyModal} = props
+    const {Config, Data, exportType, destroyModal} = props
     const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitRoute"])
     const [params, setParams] = useState<basicConfig>(
         !!Config
@@ -222,9 +223,19 @@ const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
                 disabled: false
             }
         ]
-        if (onlyPayloads) {
+        if (exportType === "payload") {
             arr.forEach((item) => {
                 if (item.dataKey === "Payloads") {
+                    item.isChecked = true
+                    item.disabled = true
+                } else {
+                    item.isChecked = false
+                    item.disabled = true
+                }
+            })
+        } else if (exportType === "extracted") {
+            arr.forEach((item) => {
+                if (item.dataKey === "ExtractedResults") {
                     item.isChecked = true
                     item.disabled = true
                 } else {
@@ -236,7 +247,7 @@ const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
         return arr
     })
     useEffect(() => {
-        if (!onlyPayloads) {
+        if (exportType === "all") {
             getRemoteValue(FuzzerRemoteGV.FuzzerExportCustomFields).then((res) => {
                 if (res) {
                     try {
@@ -254,7 +265,7 @@ const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
                 }
             })
         }
-    }, [onlyPayloads])
+    }, [exportType])
 
     return (
         <Form
@@ -317,7 +328,7 @@ const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
                             {...params}
                             Data={filteredData}
                             onFinish={() => {
-                                if (!onlyPayloads) {
+                                if (exportType === "all") {
                                     setRemoteValue(
                                         FuzzerRemoteGV.FuzzerExportCustomFields,
                                         JSON.stringify(
