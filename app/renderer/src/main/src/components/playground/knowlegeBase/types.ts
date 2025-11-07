@@ -133,4 +133,4 @@ export interface KnowledgeBaseQAProps {
     onRefresh?: () => void
     /** 从入口控制：是否默认查询所有集合 */
     queryAllCollectionsDefault?: boolean
-} 
+}

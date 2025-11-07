@@ -1524,12 +1524,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 children: [
                     {
                         key: "发送到对比器左侧",
-                        label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft"),
+                        label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft")
                         // disabled: [false, true, false][compareState]
                     },
                     {
                         key: "发送到对比器右侧",
-                        label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight"),
+                        label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight")
                         // disabled: [false, false, true][compareState]
                     }
                 ]
@@ -2409,6 +2409,20 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                 </div>
                                 <HistorySearch
                                     showPopoverSearch={size?.width ? size?.width <= 1200 : true}
+                                    addonBeforeOption={[
+                                        {
+                                            label: t("HistorySearch.keyword"),
+                                            value: "all"
+                                        },
+                                        {
+                                            label: t("HistorySearch.request"),
+                                            value: "request"
+                                        },
+                                        {
+                                            label: t("HistorySearch.response"),
+                                            value: "response"
+                                        }
+                                    ]}
                                     handleSearch={useMemoizedFn((searchValue, searchType) => {
                                         setQuery((prev) => {
                                             return {

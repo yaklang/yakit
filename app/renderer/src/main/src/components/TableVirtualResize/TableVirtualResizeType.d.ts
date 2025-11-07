@@ -73,7 +73,7 @@ export interface TableVirtualResizeProps<T> {
     disableSorting?: boolean //禁用排序
     query?: object
     currentSelectItem?: T
-    onSetCurrentRow?: (record?: T) => void
+    onSetCurrentRow?: (record?: T, cancelRender?: T) => void
     onMoveRow?: (dragIndex: number, hoverIndex: number) => void
     enableDragSort?: boolean
     onMoveRowEnd?: () => void
@@ -85,6 +85,8 @@ export interface TableVirtualResizeProps<T> {
     isHiddenLoadingUI?: boolean
 
     onRowDoubleClick?: (record?: T) => void
+    // TODO 单机行是否需要高亮显示
+    lineHighlight?: boolean
 }
 
 export interface SortProps {

@@ -169,7 +169,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
             if (data.RuleData && data.ExtractedContent !== undefined) {
                 ruleData.current.push({...data.RuleData, ExtractedContent: data.ExtractedContent})
             }
-            
+
             const isMessage = data.IsMessage || data.ExecResult?.IsMessage
             if (isMessage) {
                 try {
@@ -333,7 +333,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         })
         // token-error
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            yakitFailed(`[Mod] ${taskName} error: ${error}`,true)
+            yakitFailed(`[Mod] ${taskName} error: ${error}`, true)
             if (onError) {
                 onError(error)
             }

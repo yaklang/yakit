@@ -143,7 +143,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     const tableRef = useRef<any>(null)
     const boxHeightRef = useRef<number>()
     const [tableParams, tableData, tableTotal, pagination, tableLoading, offsetData, debugVirtualTableEvent] =
-        useVirtualTableHook<QuerySSARisksRequest, SSARisk>({
+        useVirtualTableHook<QuerySSARisksRequest, SSARisk, "Data", "Id">({
             tableBoxRef,
             tableRef,
             boxHeightRef,
@@ -1029,10 +1029,10 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
             }
         ]
         // if (disposalData.length > 0) {
-            options.push({
-                label: "处置历史",
-                value: "history"
-            })
+        options.push({
+            label: "处置历史",
+            value: "history"
+        })
         // }
         return options
     }, [disposalData])
@@ -1224,7 +1224,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
 })
 
 export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props) => {
-    const {info, setLatestDisposalStatus, style, getSSARiskDisposal,refreshFileOrRuleTree} = props
+    const {info, setLatestDisposalStatus, style, getSSARiskDisposal, refreshFileOrRuleTree} = props
     const [disposalData, setDisposalData] = useControllableValue<SSARiskDisposalData[]>(props, {
         defaultValue: [],
         valuePropName: "disposalData",
@@ -1386,7 +1386,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                             allowClear
                             value={selectValue}
                             onChange={(v) => {
-                                setSelectValue(v || "")
+                                setSelectValue(v)
                             }}
                             size='small'
                         >
@@ -1415,7 +1415,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                     size='small'
                 />
                 <div className={styles["right-footer"]}>
-                    <YakitButton size="small" loading={loading} disabled={disabled} onClick={onSubmit}>
+                    <YakitButton size='small' loading={loading} disabled={disabled} onClick={onSubmit}>
                         <SolidPaperairplaneIcon />
                         发布处置
                     </YakitButton>

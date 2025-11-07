@@ -1811,6 +1811,34 @@ export const SolidDotsverticalIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidDotsvertical} {...props} />
 }
 
+const SolidOutlineSearch = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'>
+        <path
+            d='M13 13L9 9M10.3333 5.66667C10.3333 8.244 8.244 10.3333 5.66667 10.3333C3.08934 10.3333 1 8.244 1 5.66667C1 3.08934 3.08934 1 5.66667 1C8.244 1 10.3333 3.08934 10.3333 5.66667Z'
+            stroke='var(--Colors-Use-Neutral-Text-3-Secondary)'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+export const SolidOutlineSearchIcon = (props: Partial<IconProps>) => <Icon component={SolidOutlineSearch} {...props} />
+
+const SolidLightningBolt = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='12' height='14' viewBox='0 0 12 14' fill='none'>
+        <path
+            d='M6.66675 5.66667V1L0.666748 8.33333H5.33342L5.33342 13L11.3334 5.66667L6.66675 5.66667Z'
+            stroke='var(--Colors-Use-Neutral-Text-3-Secondary)'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+export const SolidLightningBoltIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidLightningBolt} {...props} />
+}
+
 const SolidDownload = () => (
     <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
@@ -4861,4 +4889,39 @@ const SolidTool = () => (
  */
 export const SolidToolIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidTool} {...props} />
+}
+
+const OutlineLog = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M4.25 13.5C5.2165 13.5 6 12.7165 6 11.75C6 10.7835 5.2165 10 4.25 10C3.2835 10 2.5 10.7835 2.5 11.75C2.5 12.7165 3.2835 13.5 4.25 13.5Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M4.25 6C5.2165 6 6 5.2165 6 4.25C6 3.2835 5.2165 2.5 4.25 2.5C3.2835 2.5 2.5 3.2835 2.5 4.25C2.5 5.2165 3.2835 6 4.25 6Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M11.75 10.5C12.7165 10.5 13.5 9.7165 13.5 8.75C13.5 7.7835 12.7165 7 11.75 7C10.7835 7 10 7.7835 10 8.75C10 9.7165 10.7835 10.5 11.75 10.5Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M10 9H8.15625C7.71591 9.00088 7.28082 8.9044 6.88212 8.71748C6.48342 8.53055 6.13097 8.2578 5.85 7.91875L4.25 6V10'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/*
+ * @description  Outline/log
+ */
+export const OutlineLogIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineLog} {...props} />
 }

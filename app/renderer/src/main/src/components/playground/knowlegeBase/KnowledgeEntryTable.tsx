@@ -5,33 +5,24 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {Form, Space, InputNumber} from "antd"
 import {useMemoizedFn} from "ahooks"
 import {failed, success} from "@/utils/notification"
-import {
-    KnowledgeBase,
-    KnowledgeBaseEntry,
-    KnowledgeEntryTableProps,
-    KnowledgeEntryFormData,
-    SearchKnowledgeEntryParams
-} from "./types"
+import {KnowledgeBaseEntry, KnowledgeEntryTableProps, KnowledgeEntryFormData, SearchKnowledgeEntryParams} from "./types"
+
 import styles from "./KnowledgeEntryTable.module.scss"
 import {PlusIcon, TrashIcon} from "@/assets/newIcon"
 import {OutlinePencilaltIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {SolidPlayIcon} from "@/assets/icon/solid"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 
 const {ipcRenderer} = window.require("electron")
 
-export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
-    knowledgeBase,
-    onRefresh
-}) => {
+export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowledgeBase, onRefresh}) => {
     const [entries, setEntries] = useState<KnowledgeBaseEntry[]>([])
-    const [loading, setLoading] = useState(false)
     const [searchLoading, setSearchLoading] = useState(false)
     const [modalVisible, setModalVisible] = useState(false)
     const [editingEntry, setEditingEntry] = useState<KnowledgeBaseEntry>()
@@ -83,13 +74,13 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
     // 创建知识条目
     const handleCreate = useMemoizedFn(async (values: KnowledgeEntryFormData) => {
         if (!knowledgeBase) return
-        
+
         try {
             const params = {
                 ...values,
                 KnowledgeBaseID: knowledgeBase.ID,
-                Keywords: values.Keywords.filter(k => k.trim() !== ""),
-                PotentialQuestions: values.PotentialQuestions.filter(q => q.trim() !== ""),
+                Keywords: values.Keywords.filter((k) => k.trim() !== ""),
+                PotentialQuestions: values.PotentialQuestions.filter((q) => q.trim() !== ""),
                 PotentialQuestionsVector: [] // 向量会由后端生成
             }
             await ipcRenderer.invoke("CreateKnowledgeBaseEntry", params)
@@ -106,15 +97,15 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
     // 更新知识条目
     const handleUpdate = useMemoizedFn(async (values: KnowledgeEntryFormData) => {
         if (!editingEntry) return
-        
+
         try {
             const params = {
                 ...values,
                 KnowledgeBaseEntryID: editingEntry.ID,
                 KnowledgeBaseID: editingEntry.KnowledgeBaseId,
                 KnowledgeBaseEntryHiddenIndex: editingEntry.HiddenIndex,
-                Keywords: values.Keywords.filter(k => k.trim() !== ""),
-                PotentialQuestions: values.PotentialQuestions.filter(q => q.trim() !== "")
+                Keywords: values.Keywords.filter((k) => k.trim() !== ""),
+                PotentialQuestions: values.PotentialQuestions.filter((q) => q.trim() !== "")
             }
             await ipcRenderer.invoke("UpdateKnowledgeBaseEntry", params)
             success("更新知识条目成功")
@@ -130,12 +121,11 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
 
     // 删除知识条目
     const handleDelete = useMemoizedFn(async (entry: KnowledgeBaseEntry) => {
-        console.log("entry",entry.HiddenIndex)
         try {
             await ipcRenderer.invoke("DeleteKnowledgeBaseEntry", {
                 KnowledgeBaseEntryId: entry.ID,
                 KnowledgeBaseId: entry.KnowledgeBaseId,
-                KnowledgeBaseEntryHiddenIndex:entry.HiddenIndex
+                KnowledgeBaseEntryHiddenIndex: entry.HiddenIndex
             })
             success("删除知识条目成功")
             searchEntries()
@@ -188,20 +178,20 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
     // 为单个知识条目创建索引
     const handleCreateIndex = useMemoizedFn(async (entry: KnowledgeBaseEntry) => {
         try {
-            setIndexingEntries(prev => new Set(prev.add(entry.ID)))
-            
+            setIndexingEntries((prev) => new Set(prev.add(entry.ID)))
+
             await ipcRenderer.invoke("BuildVectorIndexForKnowledgeBaseEntry", {
                 KnowledgeBaseEntryId: entry.ID,
-                KnowledgeBaseId:entry.KnowledgeBaseId,
-                KnowledgeBaseEntryHiddenIndex:entry.HiddenIndex,
-                DistanceFuncType:"cosine"
+                KnowledgeBaseId: entry.KnowledgeBaseId,
+                KnowledgeBaseEntryHiddenIndex: entry.HiddenIndex,
+                DistanceFuncType: "cosine"
             })
-            
+
             success(`为知识条目 "${entry.KnowledgeTitle}" 创建索引成功`)
         } catch (error) {
             failed(`为知识条目创建索引失败: ${error}`)
         } finally {
-            setIndexingEntries(prev => {
+            setIndexingEntries((prev) => {
                 const newSet = new Set(prev)
                 newSet.delete(entry.ID)
                 return newSet
@@ -221,25 +211,23 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
             dataKey: "KnowledgeTitle",
             width: 200,
             render: (text, item: KnowledgeBaseEntry) => (
-                <div className={styles["title-cell"]}>
-                    {item.KnowledgeTitle}
-                </div>
+                <div className={styles["title-cell"]}>{item.KnowledgeTitle}</div>
             )
         },
         {
             title: "类型",
             dataKey: "KnowledgeType",
             width: 120,
-            render: (text, item: KnowledgeBaseEntry) => (
-                <YakitTag>{item.KnowledgeType}</YakitTag>
-            )
+            render: (text, item: KnowledgeBaseEntry) => <YakitTag>{item.KnowledgeType}</YakitTag>
         },
         {
             title: "重要度",
             dataKey: "ImportanceScore",
             width: 100,
             render: (text, item: KnowledgeBaseEntry) => (
-                <YakitTag color={item.ImportanceScore > 7 ? "danger" : item.ImportanceScore > 4 ? "warning" : "success"}>
+                <YakitTag
+                    color={item.ImportanceScore > 7 ? "danger" : item.ImportanceScore > 4 ? "warning" : "success"}
+                >
                     {item.ImportanceScore}
                 </YakitTag>
             )
@@ -248,12 +236,14 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
             title: "关键词",
             dataKey: "Keywords",
             width: 200,
-            render: (text, item: KnowledgeBaseEntry) => (
+            render: (_, item: KnowledgeBaseEntry) => (
                 <div className={styles["keywords-cell"]}>
-                    {item.Keywords.slice(0, 3).map((keyword, index) => (
-                        <YakitTag key={index} size="small">{keyword}</YakitTag>
+                    {item.Keywords.slice(0, 3).map((keyword, key) => (
+                        <YakitTag size='small' key={key}>
+                            {keyword}
+                        </YakitTag>
                     ))}
-                    {item.Keywords.length > 3 && <YakitTag size="small">+{item.Keywords.length - 3}</YakitTag>}
+                    {item.Keywords.length > 3 && <YakitTag size='small'>+{item.Keywords.length - 3}</YakitTag>}
                 </div>
             )
         },
@@ -281,44 +271,33 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
             render: (text, item: KnowledgeBaseEntry) => (
                 <Space>
                     {indexingEntries.has(item.ID) ? (
-                        <YakitButton
-                            type="text2"
-                            size="small"
-                            loading={true}
-                            title="正在创建索引..."
-                        >
+                        <YakitButton type='text2' size='small' loading={true} title='正在创建索引...'>
                             索引中...
                         </YakitButton>
                     ) : (
                         <YakitButton
-                            type="text2"
-                            size="small"
+                            type='text2'
+                            size='small'
                             icon={<SolidPlayIcon />}
                             onClick={() => handleCreateIndex(item)}
-                            title="为此条目创建向量索引"
+                            title='为此条目创建向量索引'
                         >
                             索引
                         </YakitButton>
                     )}
                     <YakitButton
-                        type="text2"
-                        size="small"
+                        type='text2'
+                        size='small'
                         icon={<OutlinePencilaltIcon />}
                         onClick={() => handleOpenEdit(item)}
-                        title="编辑"
+                        title='编辑'
                     />
                     <YakitPopconfirm
-                        title="确认删除此知识条目吗？"
+                        title='确认删除此知识条目吗？'
                         onConfirm={() => handleDelete(item)}
-                        placement="topRight"
+                        placement='topRight'
                     >
-                        <YakitButton
-                            type="text2"
-                            size="small"
-                            colors="danger"
-                            icon={<TrashIcon />}
-                            title="删除"
-                        />
+                        <YakitButton type='text2' size='small' colors='danger' icon={<TrashIcon />} title='删除' />
                     </YakitPopconfirm>
                 </Space>
             )
@@ -328,11 +307,8 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
     if (!knowledgeBase) {
         return (
             <div className={styles["knowledge-entry-table"]}>
-                <AutoCard
-                    title="知识条目"
-                    bodyStyle={{padding: 24}}
-                >
-                    <YakitEmpty description="请先选择一个知识库" />
+                <AutoCard title='知识条目' bodyStyle={{padding: 24}}>
+                    <YakitEmpty description='请先选择一个知识库' />
                 </AutoCard>
             </div>
         )
@@ -342,23 +318,18 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
         <div className={styles["knowledge-entry-table"]}>
             <AutoCard
                 title={`知识条目 - ${knowledgeBase.KnowledgeBaseName}`}
-                size="small"
+                size='small'
                 bodyStyle={{padding: 0}}
                 extra={
                     <Space>
                         <YakitInput
-                            placeholder="搜索知识条目..."
+                            placeholder='搜索知识条目...'
                             value={searchKeyword}
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             style={{width: 200}}
                             suffix={<OutlineSearchIcon />}
                         />
-                        <YakitButton
-                            type="primary"
-                            size="small"
-                            icon={<PlusIcon />}
-                            onClick={handleOpenCreate}
-                        >
+                        <YakitButton type='primary' size='small' icon={<PlusIcon />} onClick={handleOpenCreate}>
                             新增条目
                         </YakitButton>
                     </Space>
@@ -368,14 +339,14 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
                     loading={searchLoading}
                     columns={columns}
                     data={entries}
-                    renderKey="ID"
+                    renderKey='ID'
                     isRefresh={false}
                     pagination={{
                         page: pagination.Page,
                         limit: pagination.Limit,
                         total: total,
                         onChange: (page, limit) => {
-                            setPagination(prev => ({
+                            setPagination((prev) => ({
                                 ...prev,
                                 Page: page,
                                 Limit: limit || prev.Limit
@@ -395,131 +366,93 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
                 }}
                 onOk={handleSubmit}
                 width={800}
-                okText="确认"
-                cancelText="取消"
+                okText='确认'
+                cancelText='取消'
             >
-                <Form form={form} layout="vertical" style={{marginTop: 16}}>
+                <Form form={form} layout='vertical' style={{marginTop: 16}}>
                     <Form.Item
-                        label="知识标题"
-                        name="KnowledgeTitle"
+                        label='知识标题'
+                        name='KnowledgeTitle'
                         rules={[{required: true, message: "请输入知识标题"}]}
                     >
-                        <YakitInput placeholder="请输入知识标题" />
+                        <YakitInput placeholder='请输入知识标题' />
                     </Form.Item>
-                    
+
                     <Form.Item
-                        label="知识类型"
-                        name="KnowledgeType"
+                        label='知识类型'
+                        name='KnowledgeType'
                         rules={[{required: true, message: "请输入知识类型"}]}
                     >
-                        <YakitInput placeholder="请输入知识类型" />
+                        <YakitInput placeholder='请输入知识类型' />
                     </Form.Item>
-                    
+
                     <Form.Item
-                        label="重要度评分"
-                        name="ImportanceScore"
+                        label='重要度评分'
+                        name='ImportanceScore'
                         rules={[{required: true, message: "请输入重要度评分"}]}
                     >
-                        <InputNumber min={1} max={10} style={{width: "100%"}} />
+                        <YakitInputNumber min={1} max={10} style={{width: "100%"}} />
                     </Form.Item>
-                    
-                    <Form.Item
-                        label="关键词"
-                        name="Keywords"
-                    >
-                        <Form.List name="Keywords">
+
+                    <Form.Item label='关键词' name='Keywords'>
+                        <Form.List name='Keywords'>
                             {(fields, {add, remove}) => (
                                 <>
                                     {fields.map(({key, name, ...restField}) => (
-                                        <Space key={key} style={{display: "flex", marginBottom: 8}} align="baseline">
-                                            <Form.Item
-                                                {...restField}
-                                                name={[name]}
-                                                style={{marginBottom: 0, flex: 1}}
-                                            >
-                                                <YakitInput placeholder="请输入关键词" />
+                                        <Space key={key} style={{display: "flex", marginBottom: 8}} align='baseline'>
+                                            <Form.Item {...restField} name={[name]} style={{marginBottom: 0, flex: 1}}>
+                                                <YakitInput placeholder='请输入关键词' />
                                             </Form.Item>
                                             <YakitButton
-                                                type="text2"
-                                                colors="danger"
+                                                type='text2'
+                                                colors='danger'
                                                 icon={<TrashIcon />}
                                                 onClick={() => remove(name)}
                                             />
                                         </Space>
                                     ))}
-                                    <YakitButton
-                                        type="outline1"
-                                        onClick={() => add()}
-                                        icon={<PlusIcon />}
-                                    >
+                                    <YakitButton type='outline1' onClick={() => add()} icon={<PlusIcon />}>
                                         添加关键词
                                     </YakitButton>
                                 </>
                             )}
                         </Form.List>
                     </Form.Item>
-                    
+
                     <Form.Item
-                        label="知识详情"
-                        name="KnowledgeDetails"
+                        label='知识详情'
+                        name='KnowledgeDetails'
                         rules={[{required: true, message: "请输入知识详情"}]}
                     >
-                        <YakitInput.TextArea
-                            placeholder="请输入知识详情"
-                            rows={6}
-                            maxLength={5000}
-                            showCount
-                        />
+                        <YakitInput.TextArea placeholder='请输入知识详情' rows={6} maxLength={5000} showCount />
                     </Form.Item>
-                    
-                    <Form.Item
-                        label="摘要"
-                        name="Summary"
-                    >
-                        <YakitInput.TextArea
-                            placeholder="请输入摘要"
-                            rows={3}
-                            maxLength={500}
-                            showCount
-                        />
+
+                    <Form.Item label='摘要' name='Summary'>
+                        <YakitInput.TextArea placeholder='请输入摘要' rows={3} maxLength={500} showCount />
                     </Form.Item>
-                    
-                    <Form.Item
-                        label="源页码"
-                        name="SourcePage"
-                    >
+
+                    <Form.Item label='源页码' name='SourcePage'>
                         <InputNumber min={1} style={{width: "100%"}} />
                     </Form.Item>
-                    
-                    <Form.Item
-                        label="潜在问题"
-                        name="PotentialQuestions"
-                    >
-                        <Form.List name="PotentialQuestions">
+
+                    <Form.Item label='潜在问题' name='PotentialQuestions'>
+                        <Form.List name='PotentialQuestions'>
                             {(fields, {add, remove}) => (
                                 <>
                                     {fields.map(({key, name, ...restField}) => (
-                                        <Space key={key} style={{display: "flex", marginBottom: 8}} align="baseline">
-                                            <Form.Item
-                                                {...restField}
-                                                name={[name]}
-                                                style={{marginBottom: 0, flex: 1}}
-                                            >
-                                                <YakitInput placeholder="请输入潜在问题" />
+                                        <Space key={key} style={{display: "flex", marginBottom: 8}} align='baseline'>
+                                            <Form.Item {...restField} name={[name]} style={{marginBottom: 0, flex: 1}}>
+                                                <YakitInput placeholder='请输入潜在问题' />
                                             </Form.Item>
                                             <YakitButton
-                                                type="text2"
-                                                colors="danger"
+                                                type='text2'
+                                                colors='danger'
                                                 icon={<TrashIcon />}
                                                 onClick={() => remove(name)}
                                             />
                                         </Space>
                                     ))}
-                                    <YakitButton
-                                        type="outline1"
-                                        onClick={() => add()}
-                                        icon={<PlusIcon />}
-                                    >
+                                    <YakitButton type='outline1' onClick={() => add()} icon={<PlusIcon />}>
                                         添加问题
                                     </YakitButton>
                                 </>
@@ -530,4 +463,4 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({
             </YakitModal>
         </div>
     )
-} 
+}

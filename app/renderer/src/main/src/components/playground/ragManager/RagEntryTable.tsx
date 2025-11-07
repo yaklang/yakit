@@ -3,7 +3,6 @@ import {AutoCard} from "@/components/AutoCard"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
@@ -17,10 +16,7 @@ import {OutlineSearchIcon, OutlineEyeIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
-export const RagEntryTable: React.FC<RagEntryTableProps> = ({
-    selectedCollection,
-    onRefresh
-}) => {
+export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection, onRefresh}) => {
     const [entries, setEntries] = useState<VectorStoreEntry[]>([])
     const [loading, setLoading] = useState(false)
     const [searchKeyword, setSearchKeyword] = useState("")
@@ -50,7 +46,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({
                 Keyword: searchKeyword || undefined,
                 Pagination: pagination
             })
-            
+
             if (response && response.Entries) {
                 setEntries(response.Entries)
                 setTotal(response.Total || 0)
@@ -74,14 +70,14 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({
     // 搜索功能
     const handleSearch = useMemoizedFn((value: string) => {
         setSearchKeyword(value)
-        setPagination(prev => ({...prev, Page: 1}))
+        setPagination((prev) => ({...prev, Page: 1}))
     })
 
     // 查看条目详情
     const handleViewDetail = useMemoizedFn(async (entry: VectorStoreEntry) => {
         setSelectedEntryDetail(entry)
         setDetailModalVisible(true)
-        
+
         // 获取条目的完整文档内容
         if (entry.ID) {
             try {
@@ -108,20 +104,14 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({
             title: "ID",
             dataKey: "ID",
             width: 100,
-            render: (text, item: VectorStoreEntry) => (
-                <div className={styles["id-cell"]}>
-                    {item.ID}
-                </div>
-            )
+            render: (text, item: VectorStoreEntry) => <div className={styles["id-cell"]}>{item.ID}</div>
         },
         {
             title: "UID",
             dataKey: "UID",
             width: 120,
             render: (text, item: VectorStoreEntry) => (
-                <div className={styles["document-id-cell"]}>
-                    {item.UID || "-"}
-                </div>
+                <div className={styles["document-id-cell"]}>{item.UID || "-"}</div>
             )
         },
         {
@@ -142,7 +132,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({
                 <div className={styles["metadata-cell"]}>
                     {item.Metadata ? (
                         <div className={styles["metadata-tags"]}>
-                            <YakitTag size="small">
+                            <YakitTag size='small'>
                                 {item.Metadata.substring(0, 20)}
                                 {item.Metadata.length > 20 ? "..." : ""}
                             </YakitTag>
@@ -158,20 +148,14 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({
             dataKey: "VectorDimension",
             width: 100,
             render: (text, item: VectorStoreEntry) => (
-                <YakitTag color="blue">
-                    {item.Embedding ? item.Embedding.length : 0}
-                </YakitTag>
+                <YakitTag color='blue'>{item.Embedding ? item.Embedding.length : 0}</YakitTag>
             )
         },
         {
             title: "创建时间",
             dataKey: "CreatedAt",
             width: 150,
-            render: (text, item: VectorStoreEntry) => (
-                <div className={styles["time-cell"]}>
-                    -
-                </div>
-            )
+            render: (text, item: VectorStoreEntry) => <div className={styles["time-cell"]}>-</div>
         },
         {
             title: "操作",
@@ -181,11 +165,11 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({
             render: (text, item: VectorStoreEntry) => (
                 <Space>
                     <YakitButton
-                        type="text2"
-                        size="small"
+                        type='text2'
+                        size='small'
                         icon={<OutlineEyeIcon />}
                         onClick={() => handleViewDetail(item)}
-                        title="查看详情"
+                        title='查看详情'
                     />
                 </Space>
             )
@@ -195,11 +179,8 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({
     if (!selectedCollection) {
         return (
             <div className={styles["rag-entry-table"]}>
-                <AutoCard
-                    title="RAG 向量条目"
-                    bodyStyle={{padding: 24}}
-                >
-                    <YakitEmpty description="请先选择一个向量存储集合" />
+                <AutoCard title='RAG 向量条目' bodyStyle={{padding: 24}}>
+                    <YakitEmpty description='请先选择一个向量存储集合' />
                 </AutoCard>
             </div>
         )
@@ -209,22 +190,20 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({
         <div className={styles["rag-entry-table"]}>
             <AutoCard
                 title={`RAG 向量条目 - ${selectedCollection.Name}`}
-                size="small"
+                size='small'
                 bodyStyle={{padding: 0}}
                 extra={
                     <Space>
                         <YakitInput.Search
-                            placeholder="搜索条目内容..."
+                            placeholder='搜索条目内容...'
                             value={searchKeyword}
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             onSearch={handleSearch}
                             style={{width: 250}}
-                            size="small"
+                            size='small'
                             suffix={<OutlineSearchIcon />}
                         />
-                        <YakitTag color="blue">
-                            共 {selectedCollection.VectorCount} 条
-                        </YakitTag>
+                        <YakitTag color='blue'>共 {selectedCollection.VectorCount} 条</YakitTag>
                     </Space>
                 }
             >
@@ -232,14 +211,14 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({
                     loading={loading}
                     columns={columns}
                     data={entries}
-                    renderKey="ID"
+                    renderKey='ID'
                     isRefresh={false}
                     pagination={{
                         page: pagination.Page,
                         limit: pagination.Limit,
                         total: total,
                         onChange: (page, limit) => {
-                            setPagination(prev => ({
+                            setPagination((prev) => ({
                                 ...prev,
                                 Page: page,
                                 Limit: limit || prev.Limit
@@ -251,11 +230,11 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({
 
             {/* 条目详情弹窗 */}
             <YakitModal
-                title="向量存储条目详情"
+                title='向量存储条目详情'
                 visible={detailModalVisible}
                 onCancel={handleCloseDetail}
                 footer={[
-                    <YakitButton key="close" onClick={handleCloseDetail}>
+                    <YakitButton key='close' onClick={handleCloseDetail}>
                         关闭
                     </YakitButton>
                 ]}
@@ -299,48 +278,65 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({
                                 </div>
                             </div>
                         </div>
-                        
+
                         {selectedEntryDetail.Content && (
                             <div className={styles["detail-section"]}>
                                 <h4>内容预览</h4>
-                                <div className={styles["content-display"]}>
-                                    {selectedEntryDetail.Content}
-                                </div>
+                                <div className={styles["content-display"]}>{selectedEntryDetail.Content}</div>
                             </div>
                         )}
-                        
+
                         {entryDocument && (
                             <div className={styles["detail-section"]}>
                                 <h4>关联知识库条目</h4>
                                 <div className={styles["document-display"]}>
                                     {entryDocument.KnowledgeTitle && (
-                                        <div><strong>标题:</strong> {entryDocument.KnowledgeTitle}</div>
+                                        <div>
+                                            <strong>标题:</strong> {entryDocument.KnowledgeTitle}
+                                        </div>
                                     )}
                                     {entryDocument.KnowledgeType && (
-                                        <div><strong>类型:</strong> {entryDocument.KnowledgeType}</div>
+                                        <div>
+                                            <strong>类型:</strong> {entryDocument.KnowledgeType}
+                                        </div>
                                     )}
                                     {entryDocument.Summary && (
-                                        <div><strong>摘要:</strong> {entryDocument.Summary}</div>
+                                        <div>
+                                            <strong>摘要:</strong> {entryDocument.Summary}
+                                        </div>
                                     )}
                                     {entryDocument.KnowledgeDetails && (
-                                        <div><strong>详细内容:</strong><br/>{entryDocument.KnowledgeDetails}</div>
+                                        <div>
+                                            <strong>详细内容:</strong>
+                                            <br />
+                                            {entryDocument.KnowledgeDetails}
+                                        </div>
                                     )}
                                     {entryDocument.Keywords && entryDocument.Keywords.length > 0 && (
-                                        <div><strong>关键词:</strong> {entryDocument.Keywords.join(', ')}</div>
+                                        <div>
+                                            <strong>关键词:</strong> {entryDocument.Keywords.join(", ")}
+                                        </div>
                                     )}
                                     {entryDocument.ImportanceScore !== undefined && (
-                                        <div><strong>重要度:</strong> {entryDocument.ImportanceScore}</div>
+                                        <div>
+                                            <strong>重要度:</strong> {entryDocument.ImportanceScore}
+                                        </div>
                                     )}
                                     {entryDocument.SourcePage && (
-                                        <div><strong>源页码:</strong> {entryDocument.SourcePage}</div>
+                                        <div>
+                                            <strong>源页码:</strong> {entryDocument.SourcePage}
+                                        </div>
                                     )}
-                                    {entryDocument.PotentialQuestions && entryDocument.PotentialQuestions.length > 0 && (
-                                        <div><strong>潜在问题:</strong> {entryDocument.PotentialQuestions.join('; ')}</div>
-                                    )}
+                                    {entryDocument.PotentialQuestions &&
+                                        entryDocument.PotentialQuestions.length > 0 && (
+                                            <div>
+                                                <strong>潜在问题:</strong> {entryDocument.PotentialQuestions.join("; ")}
+                                            </div>
+                                        )}
                                 </div>
                             </div>
                         )}
-                        
+
                         {selectedEntryDetail.Metadata && (
                             <div className={styles["detail-section"]}>
                                 <h4>元数据</h4>
@@ -351,18 +347,18 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({
                                 </div>
                             </div>
                         )}
-                        
+
                         {selectedEntryDetail.Embedding && selectedEntryDetail.Embedding.length > 0 && (
                             <div className={styles["detail-section"]}>
                                 <h4>向量数据 (前20维)</h4>
                                 <div className={styles["vector-display"]}>
                                     {selectedEntryDetail.Embedding.slice(0, 20).map((value, index) => (
-                                        <YakitTag key={index} size="small">
-                                            {index}: {typeof value === 'number' ? value.toFixed(6) : value}
+                                        <YakitTag key={index} size='small'>
+                                            {index}: {typeof value === "number" ? value.toFixed(6) : value}
                                         </YakitTag>
                                     ))}
                                     {selectedEntryDetail.Embedding.length > 20 && (
-                                        <YakitTag size="small" color="blue">
+                                        <YakitTag size='small' color='blue'>
                                             ... 还有 {selectedEntryDetail.Embedding.length - 20} 维
                                         </YakitTag>
                                     )}

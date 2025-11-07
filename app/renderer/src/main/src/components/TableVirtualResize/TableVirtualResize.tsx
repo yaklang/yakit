@@ -139,7 +139,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         containerClassName,
         isRightClickBatchOperate,
         isHiddenLoadingUI = false,
-        onRowDoubleClick
+        onRowDoubleClick,
+        lineHighlight
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const defItemHeight = useCreation(() => {
@@ -721,7 +722,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             // 反选
             if (currentRow && currentRow[renderKey] === record[renderKey]) {
                 setCurrentRow(undefined)
-                onSetCurrentRow && onSetCurrentRow(undefined)
+
+                onSetCurrentRow && onSetCurrentRow(undefined, record)
             } else {
                 setCurrentRow(record)
                 onSetCurrentRow && onSetCurrentRow(record)
@@ -1139,6 +1141,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                             colIndex={index}
                                             currentRow={currentRow}
                                             selectedRows={selectedRows}
+                                            lineHighlight={lineHighlight}
                                             key={`${columnsItem.dataKey}-${index}` || index}
                                             columnsItem={columnsItem}
                                             list={list}
@@ -1423,6 +1426,7 @@ interface ColRenderProps {
     moveRowEnd?: () => void
     size: "small" | "middle" | "large"
     checkboxPropsMap: Map<React.Key, Partial<YakitProtoCheckboxProps>>
+    lineHighlight?: boolean
 }
 const ColRender = React.memo((props: ColRenderProps) => {
     const {
@@ -1448,7 +1452,8 @@ const ColRender = React.memo((props: ColRenderProps) => {
         enableDragSort,
         moveRowEnd,
         size,
-        checkboxPropsMap
+        checkboxPropsMap,
+        lineHighlight = true
     } = props
 
     return (
@@ -1490,6 +1495,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                                     onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
                                     currentRow={currentRow}
                                     selectedRows={selectedRows}
+                                    lineHighlight={lineHighlight}
                                     // isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
                                     renderKey={renderKey}
                                     rowSelection={rowSelection}
@@ -1521,6 +1527,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                                     onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
                                     currentRow={currentRow}
                                     selectedRows={selectedRows}
+                                    lineHighlight={lineHighlight}
                                     // isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
                                     renderKey={renderKey}
                                     rowSelection={rowSelection}
@@ -1561,6 +1568,7 @@ interface CellRenderProps {
     enableDragSort?: boolean
     moveRowEnd?: () => void
     size: "small" | "middle" | "large"
+    lineHighlight?: boolean
 }
 const CellRender = React.memo(
     (props: CellRenderProps) => {
@@ -1582,7 +1590,8 @@ const CellRender = React.memo(
             mouseCellId,
             size,
             currentRow,
-            selectedRows
+            selectedRows,
+            lineHighlight
         } = props
         const isSelect = useCreation(() => {
             return currentRow && currentRow[renderKey] === item.data[renderKey]
@@ -1605,7 +1614,7 @@ const CellRender = React.memo(
                     [styles["virtual-table-row-cell-middle"]]: size === "middle",
                     [styles["virtual-table-batch-active-row"]]: batchActive,
                     [styles["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
-                    [styles["virtual-table-active-row"]]: isSelect,
+                    [styles["virtual-table-active-row"]]: isSelect && lineHighlight,
 
                     [styles[`virtual-table-cell-${colorTypes}`]]: !!colorTypes,
                     [styles[`virtual-table-hover-cell-${colorTypes}`]]:
@@ -1613,7 +1622,8 @@ const CellRender = React.memo(
                     [styles[`virtual-table-active-cell-${colorTypes}`]]: !!colorTypes && isSelect,
 
                     [styles["virtual-table-row-cell-border-right-0"]]: isLastItem,
-                    [styles["virtual-table-row-cell-border-right-1"]]: (batchActive || isSelect) && isLastItem,
+                    [styles["virtual-table-row-cell-border-right-1"]]:
+                        (batchActive || isSelect) && isLastItem && lineHighlight,
                     [styles["virtual-table-row-cell-border-left-1"]]: (batchActive || isSelect) && colIndex === 0,
                     [styles["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"]
                 })}
@@ -1721,7 +1731,8 @@ const CellRenderDrop = React.memo(
             size,
             currentRow,
             selectedRows,
-            checkboxPropsMap
+            checkboxPropsMap,
+            lineHighlight
         } = props
         const dragRef = useRef<any>()
 
@@ -1822,7 +1833,7 @@ const CellRenderDrop = React.memo(
                     [styles["virtual-table-row-cell-middle"]]: size === "middle",
                     [styles["virtual-table-batch-active-row"]]: batchActive,
                     [styles["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
-                    [styles["virtual-table-active-row"]]: isSelect,
+                    [styles["virtual-table-active-row"]]: isSelect && lineHighlight,
 
                     [styles[`virtual-table-cell-${colorTypes}`]]: !!colorTypes,
                     [styles[`virtual-table-hover-cell-${colorTypes}`]]:
@@ -1831,7 +1842,8 @@ const CellRenderDrop = React.memo(
 
                     [styles["virtual-table-row-cell-border-right-0"]]: isLastItem,
                     [styles["virtual-table-row-cell-border-right-1"]]: (batchActive || isSelect) && isLastItem,
-                    [styles["virtual-table-row-cell-border-left-1"]]: (batchActive || isSelect) && colIndex === 0,
+                    [styles["virtual-table-row-cell-border-left-1"]]:
+                        (batchActive || isSelect) && colIndex === 0 && lineHighlight,
                     [styles["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"],
                     [styles["virtual-table-row-cell-move"]]: enableDragSort && colIndex === 0
                 })}

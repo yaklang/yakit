@@ -22,4 +22,11 @@ export type RefreshDataEventProps = {
     onRefreshCps?: string
     // 通知本地规则管理
     onRefreshRuleManagement?: string
+
+    // 知识库-知识表
+    onKnowledgeBaseEntry: string
+    // 知识库-向量表
+    onVectorStoreDocument: string
+    // 知识库-实体表
+    onErModelRelationship: string
 }
