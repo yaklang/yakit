@@ -170,8 +170,8 @@ import {
     sortKeysCombination,
     unregisterShortcutFocusHandle
 } from "@/utils/globalShortcutKey/utils"
-import { keepSearchNameMapStore } from "@/store/keepSearchName"
-import { useHttpFlowStore } from "@/store/httpFlow"
+import {keepSearchNameMapStore} from "@/store/keepSearchName"
+import {useHttpFlowStore} from "@/store/httpFlow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
@@ -566,7 +566,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [bugList, setBugList] = useState<GroupCount[]>([])
     const [bugTestValue, setBugTestValue] = useState<string>()
     const [bugUrl, setBugUrl] = useState<string>("")
-    const { resetCompareData }  = useHttpFlowStore() 
+    const {resetCompareData} = useHttpFlowStore()
 
     // 在组件启动的时候，执行一次，用于初始化服务端推送（DuplexConnection）
     useEffect(() => {
@@ -732,7 +732,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
 
-    const dbReport = useMemoizedFn(()=>{
+    const dbReport = useMemoizedFn(() => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.DB_Report).length
         if (isExist) {
             emiter.emit("onRefreshDBReport")
@@ -1970,6 +1970,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.YakScript:
                 emiter.emit("onCloseYakRunner")
                 break
+            case YakitRoute.AI_REPOSITORY:
+                emiter.emit("onCloseKnowledgeRepository")
+                break
+
             case YakitRoute.MITMHacker:
                 removeMenuPage(data)
                 keepSearchNameMapStore.removeKeepSearchRouteNameMap(YakitRoute.MITMHacker)
@@ -2034,10 +2038,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (data.route === YakitRoute.HTTPFuzzer) {
             clearFuzzerSequence()
         }
-        if(data.route === YakitRoute.DataCompare) {
+        if (data.route === YakitRoute.DataCompare) {
             //替换ipcRenderer.invoke("reset-data-compare")
             resetCompareData()
-            
+
             // ipcRenderer.invoke("reset-data-compare")
         }
     })
@@ -2605,7 +2609,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             id: `${randomString(8)}-${order}`,
             routeKey: YakitRoute.DataCompare,
             pageGroupId: node.groupId,
-            pageId: node.id, 
+            pageId: node.id,
             pageName: node.verbose,
             pageParamsInfo: {},
             sortFieId: order
@@ -2635,7 +2639,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
 
     const switchComparePage = () => {
-        const dataCompareSub = getPageCache().find(item => item.route === YakitRoute.DataCompare)?.multipleNode
+        const dataCompareSub = getPageCache().find((item) => item.route === YakitRoute.DataCompare)?.multipleNode
         const last = dataCompareSub?.[dataCompareSub.length - 1] || {}
         emiter.emit("switchSubMenuItem", JSON.stringify({pageId: last.id, forceRefresh: true}))
     }
@@ -2646,7 +2650,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMenuPage({route: YakitRoute.DataCompare}, {openFlag: params.openFlag ?? true})
             switchComparePage()
         })
-        ipcRenderer.on("switch-compare-page",() => {
+        ipcRenderer.on("switch-compare-page", () => {
             setCurrentTabKey(YakitRoute.DataCompare)
             switchComparePage()
         })
@@ -3270,7 +3274,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             ref.focus()
         }, 100)
     })
-    const onAddGroup = useMemoizedFn((e, {pageId, type: addType }: { pageId: string, type: WebFuzzerType }) => {
+    const onAddGroup = useMemoizedFn((e, {pageId, type: addType}: {pageId: string; type: WebFuzzerType}) => {
         if (!inViewport) return
         const {index} = getPageItemById(subPage, pageId)
         if (index === -1) return
@@ -3489,8 +3493,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             shallow
         )
 
-        const { resetCompareData } = useHttpFlowStore()
-
+        const {resetCompareData} = useHttpFlowStore()
 
         useImperativeHandle(
             ref,
@@ -4022,7 +4025,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
 
             //新增对比tab清除当前store数据
-            pageItem.route === YakitRoute.DataCompare && resetCompareData();
+            pageItem.route === YakitRoute.DataCompare && resetCompareData()
             openMultipleMenuPage({
                 route: pageItem.route,
                 pluginId: pageItem.pluginId,
@@ -5234,7 +5237,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                         )
                                     )}
                                     {isWebFuzzerRoute && (
-                                        <Tooltip title={t("MainOperatorContent.SubTabs.save_webfuzzer_history")} placement={isExpand ? "left" : "top"}>
+                                        <Tooltip
+                                            title={t("MainOperatorContent.SubTabs.save_webfuzzer_history")}
+                                            placement={isExpand ? "left" : "top"}
+                                        >
                                             <OutlineStoreIcon
                                                 className={styles["extra-operate-icon"]}
                                                 onClick={() => onSaveHistory(currentTabKey)}
@@ -5720,7 +5726,11 @@ const judgeDataIsFuncOrSettingForConfirm = async (
 }
 
 // 多开页面的一级页面关闭的确认弹窗
-const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?: React.MutableRefObject<boolean>, route?: YakitRoute) => {
+const onModalSecondaryConfirm = (
+    props?: YakitSecondaryConfirmProps,
+    visibleRef?: React.MutableRefObject<boolean>,
+    route?: YakitRoute
+) => {
     if (visibleRef) visibleRef.current = true
     let m = YakitModalConfirm({
         width: 420,
@@ -5739,7 +5749,7 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?
             if (visibleRef) {
                 visibleRef.current = false
             }
-            if(route){
+            if (route) {
                 keepSearchNameMapStore.removeKeepSearchRouteNameMap(route)
             }
             if (props?.onOk) {

@@ -510,7 +510,8 @@
             background-color: var(--Colors-Use-Basic-Background);
         }
         .ant-input-disabled + .textArea-resizer-icon {
-            background-color: var(--Colors-Use-Neutral-Bg);
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }
@@ -528,8 +529,9 @@
         }
 
         .ant-input[disabled] {
-            background-color: var(--Colors-Use-Neutral-Bg);
+            background-color:  var(--Colors-Use-Neutral-Bg-Hover);
             border-color: var(--Colors-Use-Neutral-Border);
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }

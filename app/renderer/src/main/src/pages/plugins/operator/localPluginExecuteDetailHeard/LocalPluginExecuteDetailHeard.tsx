@@ -270,7 +270,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         }
         debugPluginStreamEvent.reset()
         setRuntimeId("")
-
         apiDebugPlugin({
             params: executeParams,
             token: token,

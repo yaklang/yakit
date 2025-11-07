@@ -127,6 +127,7 @@ import {useStore} from "@/store"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitEmpty} from "../yakitUI/YakitEmpty/YakitEmpty"
 import i18n from "@/i18n/i18n"
+import {OptionProps, YakitCombinationSearchProps} from "../YakitCombinationSearch/YakitCombinationSearchType"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -1683,7 +1684,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 如果YakitResizeBox只展示第一个节点，则要清除Selected
     useEffect(() => {
         onlyShowFirstNode && setCurrentIndex(undefined)
-    },[onlyShowFirstNode] )
+    }, [onlyShowFirstNode])
 
     const onSetCurrentRow = useDebounceFn(
         (rowDate: HTTPFlow | undefined) => {
@@ -3161,12 +3162,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 children: [
                     {
                         key: "发送到对比器左侧",
-                        label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft"),
+                        label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft")
                         // disabled: [false, true, false][compareState]
                     },
                     {
                         key: "发送到对比器右侧",
-                        label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight"),
+                        label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight")
                         // disabled: [false, false, true][compareState]
                     }
                 ]
@@ -5069,9 +5070,11 @@ interface HistorySearchProps {
     setSearchVal?: (s: string) => void
     showPopoverSearch: boolean
     handleSearch: (searchValue: string, searchType: HistoryPluginSearchType) => void
+    addonBeforeOption?: YakitCombinationSearchProps["addonBeforeOption"]
+    hint?: boolean
 }
 export const HistorySearch = React.memo<HistorySearchProps>((props) => {
-    const {showPopoverSearch, handleSearch} = props
+    const {showPopoverSearch, handleSearch, hint = true} = props
     const {t, i18n} = useI18nNamespaces(["history"])
     const [isHoverSearch, setIsHoverSearch] = useState<boolean>(false)
     const [searchType, setSearchType, getSearchType] = useGetSetState<HistoryPluginSearchType>("all")
@@ -5109,20 +5112,7 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
                 onSelectBeforeOption={onSelectBeforeOption}
                 selectProps={{size: "small"}}
                 beforeOptionWidth={100}
-                addonBeforeOption={[
-                    {
-                        label: t("HistorySearch.keyword"),
-                        value: "all"
-                    },
-                    {
-                        label: t("HistorySearch.request"),
-                        value: "request"
-                    },
-                    {
-                        label: t("HistorySearch.response"),
-                        value: "response"
-                    }
-                ]}
+                addonBeforeOption={props.addonBeforeOption ?? []}
                 inputSearchModuleTypeProps={{
                     size: "middle",
                     value: searchVal,
@@ -5150,9 +5140,11 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
             ) : (
                 searchNode()
             )}
-            <Tooltip title={t("HistorySearch.fuzzSearchExplanation")}>
-                <OutlineQuestionmarkcircleIcon className={style["http-history-search-question-icon"]} />
-            </Tooltip>
+            {hint ? (
+                <Tooltip title={t("HistorySearch.fuzzSearchExplanation")}>
+                    <OutlineQuestionmarkcircleIcon className={style["http-history-search-question-icon"]} />
+                </Tooltip>
+            ) : null}
         </div>
     )
 })

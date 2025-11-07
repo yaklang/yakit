@@ -1020,6 +1020,72 @@ export const OutlineChataltIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineChatalt} {...props} />
 }
 
+const OutLineAiChat = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M5.33333 8H5.34M8 8H8.00667M10.6667 8H10.6733M14 8C14 10.9455 11.3137 13.3333 8 13.3333C6.97382 13.3333 6.00781 13.1043 5.16311 12.7007L2 13.3333L2.92999 10.8534C2.34104 10.0282 2 9.04952 2 8C2 5.05448 4.68629 2.66667 8 2.66667C11.3137 2.66667 14 5.05448 14 8Z'
+            stroke='url(#paint0_linear_46437_36788)'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <circle cx='5.33317' cy='8' r='0.666667' fill='url(#paint1_linear_46437_36788)' />
+        <circle cx='8.00016' cy='8' r='0.666667' fill='url(#paint2_linear_46437_36788)' />
+        <ellipse cx='10.6667' cy='8' rx='0.666667' ry='0.666667' fill='url(#paint3_linear_46437_36788)' />
+        <defs>
+            <linearGradient
+                id='paint0_linear_46437_36788'
+                x1='2'
+                y1='2.66667'
+                x2='16.0268'
+                y2='7.88042'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+            <linearGradient
+                id='paint1_linear_46437_36788'
+                x1='4.6665'
+                y1='7.33333'
+                x2='6.26579'
+                y2='7.86173'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stop-olor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+            <linearGradient
+                id='paint2_linear_46437_36788'
+                x1='7.3335'
+                y1='7.33333'
+                x2='8.93278'
+                y2='7.86173'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+            <linearGradient
+                id='paint3_linear_46437_36788'
+                x1='10'
+                y1='7.33333'
+                x2='11.5993'
+                y2='7.86173'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='var(--Colors-Use-Magenta-Primary)' />
+                <stop offset='0.639423' stopColor='var(--Colors-Use-Purple-Primary)' />
+                <stop offset='1' stopColor='var(--Colors-Use-Blue-Primary)' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+
+export const OutlineAiChatIcon = (props: Partial<IconProps>) => <Icon component={OutLineAiChat} {...props} />
+
 const OutlineChatalt2 = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
@@ -3434,6 +3500,23 @@ export const OutlinePluscircleIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlinePluscircle} {...props} />
 }
 
+const OutlineTime = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 13 13' fill='none'>
+        <path
+            d='M6.5 3.83333V6.5L8.5 8.5M12.5 6.5C12.5 9.81371 9.81371 12.5 6.5 12.5C3.18629 12.5 0.5 9.81371 0.5 6.5C0.5 3.18629 3.18629 0.5 6.5 0.5C9.81371 0.5 12.5 3.18629 12.5 6.5Z'
+            stroke='var(--Colors-Use-Neutral-Text-3-Secondary)'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description  Icon/Outline/time
+ */
+export const OutlineTimeIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineTime} {...props} />
+}
+
 const OutlinePlussm = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
@@ -5840,6 +5923,40 @@ const Siren = () => (
         />
     </svg>
 )
+
+const Home = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='13' height='15' viewBox='0 0 13 15' fill='none'>
+        <path
+            d='M0.700033 3.83203L6.50003 7.16536M6.50003 7.16536L12.3 3.83203M6.50003 7.16536L6.5 13.832M12.5 4.49863C12.4998 4.26482 12.438 4.03517 12.321 3.83274C12.204 3.63031 12.0358 3.46221 11.8333 3.3453L7.16667 0.678633C6.96397 0.561608 6.73405 0.5 6.5 0.5C6.26595 0.5 6.03603 0.561608 5.83333 0.678633L1.16667 3.3453C0.964175 3.46221 0.795987 3.63031 0.678974 3.83274C0.561962 4.03517 0.50024 4.26482 0.5 4.49863V9.83197C0.50024 10.0658 0.561962 10.2954 0.678974 10.4979C0.795987 10.7003 0.964175 10.8684 1.16667 10.9853L5.83333 13.652C6.03603 13.769 6.26595 13.8306 6.5 13.8306C6.73405 13.8306 6.96397 13.769 7.16667 13.652L11.8333 10.9853C12.0358 10.8684 12.204 10.7003 12.321 10.4979C12.438 10.2954 12.4998 10.0658 12.5 9.83197V4.49863Z'
+            stroke='var(--Colors-Use-Neutral-Text-3-Secondary)'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description   Outline/home
+ */
+export const HomeIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Home} {...props} />
+}
+
+const Wand = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M10 2.66659V1.33325M10 10.6666V9.33325M5.33333 5.99992H6.66667M13.3333 5.99992H14.6667M11.8665 7.86662L12.6665 8.66662M10 5.99992H10.0067M11.8665 4.13325L12.6665 3.33325M2 13.9999L8 7.99992M8.13333 4.13325L7.33333 3.33325'
+            stroke='var(--Colors-Use-Neutral-Text-3-Secondary)'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description   Outline/Wand
+ */
+export const WandIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Wand} {...props} />
+}
 
 /**
  * @description  Outline/Siren

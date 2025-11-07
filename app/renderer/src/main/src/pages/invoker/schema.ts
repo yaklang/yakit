@@ -34,6 +34,12 @@ export interface QueryGeneralResponse<T> {
     Total: number
 }
 
+export type QueryGeneralResponseProps<T, DataKey extends string = "Data"> = {
+    [key in DataKey]: T[]
+} & {
+    Pagination: PaginationSchema
+    Total: number
+}
 export interface QueryGeneralRequest {
     Pagination: PaginationSchema
 }

@@ -6,12 +6,11 @@ import {Form, Progress} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import styles from "../knowledgeBase.module.scss"
 import {useEffect} from "react"
+import {TExistsKnowledgeBaseAsync} from "../TKnowledgeBase"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-import {KnowledgeBase} from "@/components/playground/knowlegeBase"
 
 const {ipcRenderer} = window.require("electron")
 
-// 进度信息类型
 interface GeneralProgress {
     Percent: number
     Message: string
@@ -21,10 +20,9 @@ interface GeneralProgress {
 interface TImportModalProps {
     visible: boolean
     onVisible: (visible: boolean) => void
-    existsKnowledgeBaseAsync: (Keyword?: string) => Promise<KnowledgeBase[]>
+    existsKnowledgeBaseAsync: TExistsKnowledgeBaseAsync["existsKnowledgeBaseAsync"]
 }
 
-// 导入知识库弹窗（创建新知识库）
 const ImportModal: React.FC<TImportModalProps> = (props) => {
     const {visible, onVisible, existsKnowledgeBaseAsync} = props
     const [form] = Form.useForm()
@@ -35,33 +33,35 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
         MessageType: ""
     })
     const [token, setToken] = useSafeState<string>("")
+    const [hasError, setHasError] = useSafeState(false)
 
     useEffect(() => {
         if (visible) {
-            // 生成唯一token
             const newToken = `import-kb-${Date.now()}`
             setToken(newToken)
+            setHasError(false)
         }
     }, [visible])
 
     useEffect(() => {
         if (!token) return
 
-        // 监听进度数据
         const handleData = (e: any, data: GeneralProgress) => {
             setProgress(data)
         }
 
-        // 监听错误
         const handleError = (e: any, error: any) => {
             setImportLoading(false)
+            setHasError(true)
             failed(`导入知识库失败: ${error}`)
         }
 
-        // 监听完成
         const handleEnd = () => {
             setImportLoading(false)
-            success("导入知识库成功")
+            // 失败时不显示成功提示，但仍然刷新和关闭
+            if (!hasError) {
+                success("导入知识库成功")
+            }
             existsKnowledgeBaseAsync()
             onVisible(false)
             form.resetFields()
@@ -77,7 +77,7 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
-    }, [token])
+    }, [token, hasError])
 
     const handleImport = useMemoizedFn(async () => {
         try {
@@ -85,34 +85,41 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             setImportLoading(true)
             setProgress({Percent: 0, Message: "开始导入...", MessageType: "info"})
 
-            // 调用流式接口，创建新知识库
+            const knowledgeBaseName = values.knowledgeBaseName
+                ? values.knowledgeBaseName
+                : values.importPath.substring(
+                      values.importPath.lastIndexOf("/") + 1,
+                      values.importPath.lastIndexOf(".")
+                  )
+
             await ipcRenderer.invoke(
                 "ImportKnowledgeBase",
                 {
-                    NewKnowledgeBaseName: values.knowledgeBaseName,
+                    NewKnowledgeBaseName: knowledgeBaseName,
                     InputPath: values.importPath
                 },
                 token
             )
         } catch (error: any) {
             if (error?.errorFields) {
-                // 表单验证错误，不显示错误提示
+                // 表单验证错误
                 return
             }
             setImportLoading(false)
+            setHasError(true)
             failed(`导入知识库失败: ${error}`)
         }
     })
 
     const handleCancel = useMemoizedFn(() => {
         if (importLoading && token) {
-            // 取消导入
             ipcRenderer.invoke("cancel-ImportKnowledgeBase", token)
         }
         onVisible(false)
         form.resetFields()
         setProgress({Percent: 0, Message: "", MessageType: ""})
         setImportLoading(false)
+        setHasError(false)
     })
 
     return (
@@ -135,24 +142,6 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             ]}
         >
             <Form form={form} layout='vertical'>
-                <Form.Item
-                    label='新知识库名称'
-                    name='knowledgeBaseName'
-                    rules={[
-                        {required: true, message: "请输入知识库名称"},
-                        {
-                            validator: (_, value) => {
-                                if (typeof value === "string" && value.length > 0 && value.trim() === "") {
-                                    return Promise.reject(new Error("知识库名称不能为空字符串"))
-                                }
-                                return Promise.resolve()
-                            }
-                        }
-                    ]}
-                >
-                    <YakitInput placeholder='请输入新知识库名称' disabled={importLoading} />
-                </Form.Item>
-
                 <YakitFormDragger
                     formItemProps={{
                         label: "导入文件路径",
@@ -166,6 +155,9 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
                     disabled={importLoading}
                     fileExtensionIsExist={false}
                 />
+                <Form.Item label='新知识库名称' name='knowledgeBaseName'>
+                    <YakitInput placeholder='请输入新知识库名称' disabled={importLoading} />
+                </Form.Item>
 
                 {importLoading && (
                     <div style={{marginTop: 16}}>
@@ -174,7 +166,15 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
                             status={progress.MessageType === "error" ? "exception" : "active"}
                         />
                         {progress.Message && (
-                            <div style={{marginTop: 8, fontSize: 12, color: "#666"}}>{progress.Message}</div>
+                            <div
+                                style={{
+                                    marginTop: 8,
+                                    fontSize: 12,
+                                    color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                                }}
+                            >
+                                {progress.Message}
+                            </div>
                         )}
                     </div>
                 )}
