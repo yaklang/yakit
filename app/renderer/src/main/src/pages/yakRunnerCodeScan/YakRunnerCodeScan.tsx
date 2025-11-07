@@ -305,7 +305,6 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                                 placeholder='请输入组名搜索'
                                 onSearch={onSearch}
                                 onPressEnter={onPressEnter}
-                                size='large'
                             />
                         </YakitAutoComplete>
                     </div>
@@ -630,17 +629,17 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
 
     const [codeScanTabs, setCodeScanTabs] = useState<Array<CodeScanTabsItem>>([
         {
-            key: "keyword",
-            label: <>按关键词</>,
+            key: "group",
+            label: <>按组选</>,
             contShow: true // 初始为true
         },
         {
-            key: "group",
-            label: <>按组选</>,
-            contShow: false
+            key: "keyword",
+            label: <>按关键词</>,
+            contShow: false 
         }
     ])
-    const [type, setType] = useState<"keyword" | "group">("keyword")
+    const [type, setType] = useState<"keyword" | "group">("group")
     const handleTabClick = useMemoizedFn((item: CodeScanTabsItem) => {
         const contShow = !item.contShow
         codeScanTabs.forEach((i) => {
@@ -1703,7 +1702,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
         /**开始执行 */
         const onStartExecute = useMemoizedFn(async (value, isSetForm?: boolean) => {
-            console.log("pageInfo---", pageInfo);
             if ((pageInfo.selectTotal||0) === 0) {
                 warn("请选择扫描规则")
                 return

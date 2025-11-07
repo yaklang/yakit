@@ -49,7 +49,6 @@
     .left-wrapper {
         display: flex;
         flex-direction: column;
-        gap: 16px;
         height: 100%;
         overflow: hidden;
         border-right: 1px solid var(--Colors-Use-Neutral-Border);
@@ -61,6 +60,7 @@
             @extend %display-flex-center;
             justify-content: space-between;
             padding: 0 4px;
+            margin-bottom: 8px;
             .header-type-wrapper {
                 @extend %display-flex-center;
                 gap: 8px;
