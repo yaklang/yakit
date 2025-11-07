@@ -52,23 +52,17 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
     }
     const renderContent = useMemoizedFn(() => {
         const {id, type, Timestamp, data} = item
-        let contentNode: ReactNode = <></>
         switch (type) {
             case AIChatQSDataTypeEnum.QUESTION:
-                contentNode = (
+                return (
                     <AITriageChatContent isAnswer={false} loading={false} content={data} {...chatContentExtraProps} />
                 )
-                break
             case AIChatQSDataTypeEnum.STREAM:
-                contentNode = <AIStreamNode {...aiStreamNodeProps} stream={item} />
-                break
+                return <AIStreamNode {...aiStreamNodeProps} stream={item} />
             case AIChatQSDataTypeEnum.RESULT:
-                contentNode = (
-                    <AITriageChatContent isAnswer={true} loading={false} content={data} {...chatContentExtraProps} />
-                )
-                break
+                return <AITriageChatContent isAnswer={true} loading={false} content={data} {...chatContentExtraProps} />
             case AIChatQSDataTypeEnum.THOUGHT:
-                contentNode = (
+                return (
                     <AITriageChatContent
                         isAnswer={true}
                         loading={false}
@@ -76,11 +70,10 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         {...chatContentExtraProps}
                     />
                 )
-                break
             case AIChatQSDataTypeEnum.TOOL_RESULT:
                 const {execFileRecord} = yakExecResult
                 const fileList = execFileRecord.get(data.callToolId)
-                contentNode = (
+                return (
                     <ToolInvokerCard
                         titleText={"工具调用"}
                         name={data.toolName}
@@ -96,16 +89,15 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         }}
                     />
                 )
-                break
             case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
             case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
             case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
             case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
             case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
                 if (!!item.data.selected) {
-                    contentNode = <AIReviewResult info={item} timestamp={Timestamp} />
+                    return <AIReviewResult info={item} timestamp={Timestamp} />
                 } else {
-                    contentNode = (
+                    return (
                         <AIReActChatReview
                             info={item}
                             onSendAI={handleSendCasual}
@@ -115,9 +107,8 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         />
                     )
                 }
-                break
             case AIChatQSDataTypeEnum.FILE_SYSTEM_PIN:
-                contentNode = (
+                return (
                     <FileSystemCard
                         {...data}
                         {...aiFileSystemCard}
@@ -127,7 +118,6 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         }}
                     />
                 )
-                break
 
             case AIChatQSDataTypeEnum.TASK_INDEX_NODE:
                 const task = getTask(data.taskIndex)
@@ -138,13 +128,13 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                     success: 0,
                     error: 0
                 }
-                contentNode = <DividerCard {...dividerCardProps} />
-                break
+                return <DividerCard {...dividerCardProps} />
+
             case AIChatQSDataTypeEnum.TOOL_CALL_DECISION:
-                contentNode = <AIToolDecision item={item} />
-                break
+                return <AIToolDecision item={item} />
+
             case AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION:
-                contentNode = (
+                return (
                     <DividerCard
                         status={StreamsStatus.success}
                         name='任务结束标志'
@@ -153,13 +143,11 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
                         error={0}
                     />
                 )
-                break
             // TODO 更新任务队列
             // <AITaskUpdateNotice/>
             default:
-                break
+                return <></>
         }
-        return <React.Fragment key={id}>{contentNode}</React.Fragment>
     })
-    return renderContent()
+    return <React.Fragment key={item.id}>{renderContent()}</React.Fragment>
 })
