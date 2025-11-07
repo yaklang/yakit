@@ -125,6 +125,40 @@ For more technical content, you can check:
 
 [Whitepaper](https://yaklang.oss-cn-beijing.aliyuncs.com/yakit-technical-white-paper.pdf)
 
+## Development Setup
+
+Prerequisites:
+
+- Node.js 18.x (recommended) and Yarn 1.x
+- Git
+- Windows, macOS, or Linux
+
+Steps:
+
+1. Install dependencies at repo root
+     
+     ```bash
+     yarn
+     ```
+
+2. Install renderer dependencies
+     
+     ```bash
+     yarn install-render
+     ```
+
+3. Start development (starts React renderer and Electron)
+     
+     ```bash
+     yarn dev
+     ```
+
+Useful scripts (from package.json):
+
+- Build renderer only: `yarn build-render`
+- Start Electron only (after renderer runs on 3000): `yarn start-electron`
+- Package (Windows example): `yarn pack-win`
+
 ## Community
 
 If you have any constructive feedback or bug reports regarding our product, we welcome everyone to raise an issue.
