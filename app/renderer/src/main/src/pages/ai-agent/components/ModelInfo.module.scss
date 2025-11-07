@@ -4,7 +4,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    &-title {   
+    &-title {
         font-size: 11px;
         font-weight: 400;
         line-height: 14px;
@@ -12,7 +12,7 @@
         padding: 3px 6px;
         display: flex;
         align-items: center;
-       
+
         svg {
             width: 12px;
             height: 12px;
@@ -22,15 +22,17 @@
             color: var(--Colors-Use-Neutral-Text-4-Help-text);
             margin-left: 6px;
         }
-        .icon-small{
+        .icon-small {
+            width: 12px;
+            height: 12px;
             svg {
-                width: 12px;
-                height: 12px;
-                margin-right: 2px;
+                width: 8px;
+                height: 8px;
+                margin-right: 0px;
             }
         }
     }
-    &-icons{
+    &-icons {
         display: flex;
         align-items: center;
     }

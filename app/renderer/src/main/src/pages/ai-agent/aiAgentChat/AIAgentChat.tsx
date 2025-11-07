@@ -67,7 +67,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         if (taskChatIsEmpty(activeChat?.answer?.taskChat)) {
             setMode("task")
             setIsShowTask(true)
-        } else {
+        } else if (!!activeChat?.id) {
             setMode("re-act")
             setIsShowTask(false)
         }
@@ -86,7 +86,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             })
         handleStart(
             `我要使用 ${request.ForgeName}forge执行任务,${
-                !!request.ForgeParams ? `参数是${JSON.stringify(request.ForgeParams)},` : "无参数"
+                !!request.ForgeParams ? `参数是${JSON.stringify(request.ForgeParams)},` : request.UserQuery || "无参数"
             }`
         )
     })

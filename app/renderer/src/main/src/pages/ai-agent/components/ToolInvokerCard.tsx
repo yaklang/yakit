@@ -1,5 +1,5 @@
 import {SolidToolIcon} from "@/assets/icon/solid"
-import {FC, useCallback, useEffect, useMemo, useState} from "react"
+import {FC, memo, useCallback, useEffect, useMemo, useState} from "react"
 import ChatCard from "./ChatCard"
 import styles from "./ToolInvokerCard.module.scss"
 import classNames from "classnames"
@@ -29,7 +29,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     desc,
     status = "fail",
     fileList,
-    modalInfo,
+    modalInfo
 }) => {
     const [statusColor, statusText] = useMemo(() => {
         if (status === "success") return ["success", "成功"]
@@ -43,6 +43,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     //  HTTP 流量
     const getHTTPTraffic = useCallback(async () => {
         const result = await grpcQueryHTTPFlows({RuntimeId: params})
+        // 随机数
         setTrafficLen(result.Total)
     }, [params])
 
@@ -53,10 +54,10 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     }, [params])
 
     useEffect(() => {
-        getHTTPTraffic()
-        getQueryRisksTotalByRuntimeId()
+        Promise.all([getHTTPTraffic(), getQueryRisksTotalByRuntimeId()]).catch((error) => {
+            console.error("error:", error)
+        })
     }, [getHTTPTraffic, getQueryRisksTotalByRuntimeId])
-
     return (
         <ChatCard
             titleText={titleText}
@@ -66,11 +67,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
                     相关漏洞 <span>{risksLen}</span> <span>|</span> HTTP 流量 <span>{trafficLen}</span>
                 </div>
             }
-            footer={
-                <>
-                    {modalInfo && <ModalInfo {...modalInfo} />}
-                </>
-            }
+            footer={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
         >
             <div className={classNames(styles["file-system"], styles[`file-system-${status}`])}>
                 <div className={styles["file-system-title"]}>
@@ -95,4 +92,4 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = ({
     )
 }
 
-export default ToolInvokerCard
+export default memo(ToolInvokerCard)

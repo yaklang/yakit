@@ -20,7 +20,14 @@ import {
 } from "./utils"
 import {yakitNotify} from "@/utils/notification"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
-import {AIChatQSData, AIReviewType, AIStreamOutput, AIToolResult, ToolStreamSelectors} from "./aiRender"
+import {
+    AIChatQSData,
+    AIChatQSDataTypeEnum,
+    AIReviewType,
+    AIStreamOutput,
+    AIToolResult,
+    ToolStreamSelectors
+} from "./aiRender"
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
 
 // 属于该 hook 处理数据的类型
@@ -144,7 +151,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                     } else {
                         const streamsInfo: AIChatQSData = {
                             ...genBaseAIChatData(res),
-                            type: "stream",
+                            type: AIChatQSDataTypeEnum.STREAM,
                             data: {
                                 TaskIndex,
                                 CallToolID,
@@ -217,7 +224,11 @@ function useTaskChat(params?: UseTaskChatParams) {
                     throw new Error("tool_call_result data is invalid")
                 }
                 toolResult.status = status
-                toolResult.summary = TaskDefaultReToolResultSummary[status]?.label || ""
+                toolResult.summary = toolResult.summary
+                    ? status === "user_cancelled"
+                        ? "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
+                        : data.summary || ""
+                    : TaskDefaultReToolResultSummary[status]?.label || ""
 
                 setStreams((old) => {
                     let newArr = [...old]
@@ -242,7 +253,7 @@ function useTaskChat(params?: UseTaskChatParams) {
 
                     newArr.push({
                         ...genBaseAIChatData(res),
-                        type: "tool_result",
+                        type: AIChatQSDataTypeEnum.TOOL_RESULT,
                         data: {
                             ...toolResult,
                             toolStdoutContent: {
@@ -275,23 +286,27 @@ function useTaskChat(params?: UseTaskChatParams) {
                 throw new Error("tool_result data is invalid")
             }
 
-            setStreams((old) => {
-                return old.map((ele) => {
-                    if (ele.type === "tool_result" && !!ele.data && ele.data.callToolId === data.call_tool_id) {
-                        const status = ele.data.status
-                        const summary =
-                            status === "user_cancelled"
-                                ? "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
-                                : data.summary || ""
-                        return {
-                            ...ele,
-                            data: {...ele.data, summary}
+            const toolResult = toolResultMap.current.get(data.call_tool_id)
+            if (toolResult) {
+                toolResultMap.current.set(data.call_tool_id, {...toolResult, summary: data.summary || ""})
+            } else {
+                setStreams((old) => {
+                    return old.map((ele) => {
+                        if (ele.type === "tool_result" && !!ele.data && ele.data.callToolId === data.call_tool_id) {
+                            const status = ele.data.status
+                            const summary =
+                                status === "user_cancelled"
+                                    ? "当前工具调用已被取消，会使用当前输出结果进行后续工作决策"
+                                    : data.summary || ""
+                            return {
+                                ...ele,
+                                data: {...ele.data, summary}
+                            }
                         }
-                    }
-                    return ele
+                        return ele
+                    })
                 })
-            })
-            toolResultMap.current.delete(data.call_tool_id)
+            }
         } catch (error) {
             handleGrpcDataPushLog({
                 type: "error",
@@ -454,7 +469,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 const newArr = [...old]
                 newArr.push({
                     ...genBaseAIChatData(res),
-                    type: "task_index_node",
+                    type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
                     data: {
                         taskIndex: nodeInfo.task.index,
                         taskName: nodeInfo.task.name
@@ -503,7 +518,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 const newArr = [...old]
                 newArr.push({
                     ...genBaseAIChatData(res),
-                    type: "file_system_pin",
+                    type: AIChatQSDataTypeEnum.FILE_SYSTEM_PIN,
                     data: {
                         path: path,
                         isDir: res.Type === "filesystem_pin_directory",
@@ -533,7 +548,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 const newArr = [...old]
                 newArr.push({
                     ...genBaseAIChatData(res),
-                    type: "tool_call_decision",
+                    type: AIChatQSDataTypeEnum.TOOL_CALL_DECISION,
                     data: {
                         ...data,
                         i18n: {
@@ -618,7 +633,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 }
 
                 handleTriggerReview({
-                    type: "plan_review_require",
+                    type: AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE,
                     data: data,
                     ...genBaseAIChatData(res)
                 })
@@ -635,7 +650,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 }
 
                 handleTriggerReview({
-                    type: "tool_use_review_require",
+                    type: AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE,
                     data: data,
                     ...genBaseAIChatData(res)
                 })
@@ -648,7 +663,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 }
 
                 handleTriggerReview({
-                    type: "task_review_require",
+                    type: AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE,
                     data: data,
                     ...genBaseAIChatData(res)
                 })
@@ -661,7 +676,7 @@ function useTaskChat(params?: UseTaskChatParams) {
                 }
 
                 handleTriggerReview({
-                    type: "require_user_interactive",
+                    type: AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
                     data: data,
                     ...genBaseAIChatData(res)
                 })
@@ -794,7 +809,7 @@ function useTaskChat(params?: UseTaskChatParams) {
             const newArr = [...old]
             newArr.push({
                 ...genBaseAIChatData(res),
-                type: "end_plan_and_execution",
+                type: AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION,
                 data: ""
             })
             return newArr

@@ -3,7 +3,9 @@
     flex-direction: column;
     font-size: 14px;
     gap: 8px;
-
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    border-radius: 8px;
+    padding: 8px 12px;
     .milkdown-header {
         display: flex;
         align-items: center;

@@ -10,7 +10,7 @@ import useYakExecResult, {UseYakExecResultTypes} from "./useYakExecResult"
 import useTaskChat, {UseTaskChatTypes} from "./useTaskChat"
 import {genBaseAIChatData, handleGrpcDataPushLog} from "./utils"
 import {AIChatSendParams, UseCasualChatEvents, UseChatIPCEvents, UseChatIPCParams, UseChatIPCState} from "./type"
-import {AIChatQSData} from "./aiRender"
+import {AIChatQSData, AIChatQSDataTypeEnum} from "./aiRender"
 import {AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams} from "./grpcApi"
 import {convertNodeIdToVerbose} from "./defaultConstant"
 
@@ -223,7 +223,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                         const data = obj as AIAgentGrpcApi.Log
                         pushLog({
                             ...genBaseAIChatData(res),
-                            type: "log",
+                            type:AIChatQSDataTypeEnum.LOG,
                             data: {
                                 ...data,
                                 NodeId: res.NodeId,

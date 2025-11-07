@@ -1,34 +1,45 @@
 import React, {useEffect, useRef} from "react"
 import {AIReActChatContentsPProps, AIStreamNodeProps} from "./AIReActChatContentsType.d"
 import styles from "./AIReActChatContents.module.scss"
-import {useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {AIChatToolColorCard} from "@/pages/ai-agent/components/aiChatToolColorCard/AIChatToolColorCard"
 import {AIMarkdown} from "@/pages/ai-agent/components/aiMarkdown/AIMarkdown"
 import {AIStreamChatContent} from "@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent"
-import {isToolExecStream} from "../hooks/utils"
 import StreamCard from "@/pages/ai-agent/components/StreamCard"
 import {taskAnswerToIconMap} from "@/pages/ai-agent/defaultConstant"
 import useAINodeLabel from "../hooks/useAINodeLabel"
 import {AIChatListItem} from "@/pages/ai-agent/components/aiChatListItem/AIChatListItem"
 import useAIChatUIData from "../hooks/useAIChatUIData"
+import {AIYaklangCode} from "@/pages/ai-agent/components/aiYaklangCode/AIYaklangCode"
+import {ModalInfoProps} from "@/pages/ai-agent/components/ModelInfo"
+import {AIStreamContentType} from "../hooks/defaultConstant"
 
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     const {stream, aiMarkdownProps} = props
-    const {NodeId, content, NodeIdVerbose, CallToolID} = stream.data
+    const {NodeId, content, NodeIdVerbose, CallToolID, ContentType} = stream.data
     const {yakExecResult} = useAIChatUIData()
     const {nodeLabel} = useAINodeLabel(NodeIdVerbose)
 
-    if (isToolExecStream(NodeId)) {
-        return <AIChatToolColorCard toolCall={stream.data} />
-    }
-
-    switch (NodeId) {
-        case "re-act-loop-answer-payload":
-            return <AIMarkdown data={stream.data} {...aiMarkdownProps} />
-        case "re-act-loop":
-        case "re-act-loop-thought":
-            return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} />
-        default:
+    const modalInfo: ModalInfoProps = useCreation(() => {
+        return {
+            time: stream.Timestamp,
+            title: stream.AIService
+        }
+    }, [stream.Timestamp, stream.AIService])
+    switch (ContentType) {
+        case AIStreamContentType.TEXT_MARKDOWN:
+            return <AIMarkdown content={content} nodeLabel={nodeLabel} modalInfo={modalInfo} {...aiMarkdownProps} />
+        case AIStreamContentType.CODE_YAKLANG:
+        case AIStreamContentType.CODE_HTTP_REQUEST:
+            return (
+                <AIYaklangCode
+                    contentType={ContentType}
+                    content={content}
+                    nodeLabel={nodeLabel}
+                    modalInfo={modalInfo}
+                />
+            )
+        case AIStreamContentType.TEXT_PLAIN:
             const {execFileRecord} = yakExecResult
             const fileList = execFileRecord.get(CallToolID)
             return (
@@ -36,13 +47,14 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
                     titleText={nodeLabel}
                     titleIcon={taskAnswerToIconMap[NodeId]}
                     content={content}
-                    modalInfo={{
-                        time: stream.Timestamp,
-                        title: stream.AIService
-                    }}
+                    modalInfo={modalInfo}
                     fileList={fileList}
                 />
             )
+        case AIStreamContentType.LOG_TOOL:
+            return <AIChatToolColorCard toolCall={stream.data} />
+        default:
+            return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} />
     }
 })
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {

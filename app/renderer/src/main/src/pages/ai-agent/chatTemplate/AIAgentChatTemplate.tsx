@@ -31,7 +31,7 @@ import {
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
 import {convertNodeIdToVerbose} from "@/pages/ai-re-act/hooks/defaultConstant"
-import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
+import {AIChatQSData, AIChatQSDataTypeEnum} from "@/pages/ai-re-act/hooks/aiRender"
 import {AIEventQueryRequest, AIEventQueryResponse} from "@/pages/ai-re-act/hooks/grpcApi"
 import {taskAnswerToIconMap} from "../defaultConstant"
 import {SolidLightningboltIcon} from "@/assets/icon/solid"
@@ -239,6 +239,18 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
     const {scrollerRef, virtuosoRef} = useVirtuosoAutoScroll(streams)
 
+    const components = useMemo(
+        () => ({
+            Item: ({children, style, "data-index": dataIndex}) => (
+                <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
+                    {children}
+                </div>
+            ),
+            Footer: () => <div style={{height: "20px"}} />
+        }),
+        []
+    )
+
     return (
         <div className={styles["ai-agent-chat-stream"]}>
             <Virtuoso
@@ -251,14 +263,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 totalCount={streams.length}
                 itemContent={(_, item) => renderItem(item)}
                 overscan={300}
-                components={{
-                    Item: ({children, style, "data-index": dataIndex}) => (
-                        <div style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
-                            {children}
-                        </div>
-                    ),
-                    Footer: () => <div style={{height: "20px"}} />
-                }}
+                components={components}
             />
             {/* {streams.map(renderItem)} */}
         </div>
@@ -351,7 +356,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                     } catch (error) {}
                     const current: AIChatQSData = {
                         ...genBaseAIChatData(item),
-                        type: "stream",
+                        type: AIChatQSDataTypeEnum.STREAM,
                         data: {
                             CallToolID: item.CallToolID,
                             NodeId: item.NodeId,

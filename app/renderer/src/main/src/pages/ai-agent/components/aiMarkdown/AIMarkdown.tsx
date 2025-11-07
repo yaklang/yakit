@@ -9,7 +9,7 @@ import styles from "./AIMarkdown.module.scss"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon} from "@/assets/icon/outline"
-import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
+import ModalInfo from "../ModelInfo"
 const aiMilkdownOptions: YakitRadioButtonsProps["options"] = [
     {
         label: "预览",
@@ -21,17 +21,16 @@ const aiMilkdownOptions: YakitRadioButtonsProps["options"] = [
     }
 ]
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
-    const {data, className} = props
-    const {nodeLabel} = useAINodeLabel(data.NodeIdVerbose)
+    const {content, nodeLabel, className, modalInfo} = props
     const [type, setType] = useState<"preview" | "code">("preview")
     const [expand, setExpand] = useState<boolean>(true)
     const item: ReportItem = useCreation(() => {
         const value: ReportItem = {
             type: "",
-            content: data.content
+            content: content
         }
         return value
-    }, [data.content])
+    }, [content])
     const renderContent = useMemoizedFn(() => {
         let content: ReactNode = <></>
         switch (type) {
@@ -73,6 +72,7 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
             >
                 {renderContent()}
             </div>
+            <ModalInfo {...modalInfo} />
         </div>
     )
 })

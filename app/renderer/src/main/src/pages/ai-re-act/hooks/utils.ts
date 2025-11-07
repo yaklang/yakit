@@ -6,7 +6,7 @@ import {generateTaskChatExecution} from "@/pages/ai-agent/defaultConstant"
 import {Uint8ArrayToString} from "@/utils/str"
 import {v4 as uuidv4} from "uuid"
 import {AIAgentGrpcApi, AIOutputEvent} from "./grpcApi"
-import {AIChatQSData, AITaskInfoProps} from "./aiRender"
+import {AIChatQSData, AIChatQSDataTypeEnum, AITaskInfoProps} from "./aiRender"
 import {convertNodeIdToVerbose} from "./defaultConstant"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 
@@ -30,7 +30,7 @@ export const handleGrpcDataPushLog = (params: {
         let ipcContent = Uint8ArrayToString(info.Content) || ""
         const logInfo: AIChatQSData = {
             ...genBaseAIChatData(info),
-            type: "log",
+            type: AIChatQSDataTypeEnum.LOG,
             data: {
                 NodeId: info.NodeId,
                 NodeIdVerbose: info.NodeIdVerbose || convertNodeIdToVerbose(info.NodeId),
