@@ -70,7 +70,8 @@
         "release-breachtrace": "electron-builder --publish always -mwl --config ./multibuilder/breachtrace.yaml",
         "release-render": "cd app/renderer/src/main && yarn release-render",
         "release-irify": "node scripts/release-irify.js",
-        "release-yakit": "node scripts/prod-pack.js"
+        "release-yakit": "node scripts/prod-pack.js",
+        "i18n:check": "node scripts/locale-parity.js"
     },
     "keywords": [],
     "author": "",
