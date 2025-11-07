@@ -1,15 +1,14 @@
-
 <p align="center">
   <a href="https://yaklang.io/"><img src="imgs/head.jpg" style="width: 400px"/></a> 
  <h2 align="center"> YAKIT-A Cyber Security ALL-IN-ONE Platform based on Yak language</h2>
 <p align="center">
 <img src="https://img.shields.io/github/issues-pr/yaklang/yakit">
 <a href="https://github.com/yaklang/yakit/releases"><img src="https://img.shields.io/github/downloads/yaklang/yakit/total">
-<a href="https://github.com/yaklang/yakkit/graphs/contributors"><img src="https://img.shields.io/github/contributors-anon/yaklang/yakit">
+<a href="https://github.com/yaklang/yakit/graphs/contributors"><img src="https://img.shields.io/github/contributors-anon/yaklang/yakit">
 <a href="https://github.com/yaklang/yakit/releases/"><img src="https://img.shields.io/github/release/yaklang/yakit">
 <a href="https://github.com/yaklang/yakit/issues"><img src="https://img.shields.io/github/issues-raw/yaklang/yakit">
 <a href="https://github.com/yaklang/yakit/discussions"><img src="https://img.shields.io/github/stars/yaklang/yakit">
-<a href="https://github.com/yaklang/yakit/blob/main/LICENSE.md"><img src="https://img.shields.io/github/license/yaklang/yakit">
+<a href="https://github.com/yaklang/yakit/blob/master/LICENSE.md"><img src="https://img.shields.io/github/license/yaklang/yakit">
 </p>
 
 <p align="center">
@@ -17,13 +16,13 @@
   <a href="https://yaklang.io/products/intro/">Official documentation</a> •
   <a href="https://github.com/yaklang/yakit/issues">Issue feedback</a> •
   <a href="https://yaklang.io/">Official website</a> •
-  <a href="#Community. ">Community</a> •
+  <a href="#Community">Community</a> •
   <a href="#Architecture">Architecture</a> 
 </p>
 
 <p align="center">
  :book:Language： <a href="https://github.com/yaklang/yakit/blob/master/README-EN.md">English</a> • 
-  <a href="https://github.com/yaklang/yakit/blob/main/README.md">中文</a> 
+  <a href="https://github.com/yaklang/yakit/blob/master/README.md">中文</a> 
 </p>
 
 ---
@@ -46,7 +45,7 @@ In order to make Yaklang's security capabilities more relevant to practical use,
 </h3>
 
 
-## Core technologies：CDSL
+## Core technologies: CDSL
 
 CDSL, which stands for CyberSecurity Domain Specific Language, is a specialized programming language in the field of cybersecurity. We have developed a stack virtual machine to handle the runtime state of this Turing-complete language. Our aim is to integrate security capabilities and achieve a unified underlying platform through the use of CDSL.
 
@@ -103,7 +102,7 @@ In addition to generating parameters using tags, the Web Fuzzer module also supp
 <img src="imgs/fuzztag.png" style="width: 600px" alt="fuzztag.png" ></a>
 </h3>
 
->You can refer to the following for more information about Fuzztag： [Fuzztag ](https://yaklang.com/docs/newforyak/fuzztag)
+You can refer to the following for more information about Fuzztag： [Fuzztag ](https://yaklang.com/docs/newforyak/fuzztag)
 
 ### Reverse Connection Technique and Application Protocol Multiplexing Technique.
 
@@ -116,9 +115,9 @@ Meanwhile, Yakit implements a reverse connection module based on the Port Protoc
 
 ## How to Use
 
-- You can visit the [official website] (https://yaklang.com/) to download and install Yakit.
+- You can visit the [official website](https://yaklang.com/) to download and install Yakit.
 
-- You can refer to our [official documentation的](https://yaklang.io/products/intro/)to learn and use Yakit.
+- You can refer to our [official documentation](https://yaklang.io/products/intro/) to learn and use Yakit.
 
 For more technical content, you can check:
 
