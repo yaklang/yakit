@@ -168,11 +168,6 @@ module.exports = (win, getClient) => {
     ipcMain.handle("cancel-HTTPFuzzerGroup", handlerHelper.cancelHandler(streamHTTPFuzzerGroupMap));
     ipcMain.handle("HTTPFuzzerGroup", (_, params, token) => {
         let stream = getClient().HTTPFuzzerGroup(params);
-        const currentStream = streamHTTPFuzzerGroupMap.get(token)
-        if (!!currentStream) {
-            return
-        }
-        streamHTTPFuzzerGroupMap.set(token, stream)
         handlerHelper.registerHandler(win, stream, streamHTTPFuzzerGroupMap, token)
     })
 
