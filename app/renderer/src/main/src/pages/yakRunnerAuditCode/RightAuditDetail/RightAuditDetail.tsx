@@ -459,10 +459,11 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         }
     }, [refresh, nodeId])
 
-    const firstOffsetRef = useRef<{x: number; y: number}>()
-    const [scale, setScale] = useState(1) // 初始缩放比例为1
-    const [dragging, setDragging] = useState(false) // 是否正在拖动
-    const [offset, setOffset] = useState({x: 0, y: 0}) // 鼠标拖动的偏移量
+    const [scale, setScale] = useState(1)
+    const [isDragging, setIsDragging] = useState(false)
+    const [offset, setOffset] = useState({x: 0, y: 0})
+    const lastPositionRef = useRef<{x: number; y: number} | null>(null)
+    const rafRef = useRef<number | null>(null)
 
     // 放大
     const handleZoomIn = useMemoizedFn(() => {
@@ -474,57 +475,53 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         setScale((prevScale) => Math.max(0.2, prevScale - 0.2)) // 最小缩放比例为0.2
     })
 
-    useUpdateEffect(() => {
-        if (svgRef.current && svgBoxRef.current) {
-            const svg = svgRef.current as SVGSVGElement
-            svg.style.transform = `scale(${scale})`
-            svgBoxRef.current.style.cursor = dragging ? "grabbing" : "grab"
-            svg.style.position = "relative"
-            svg.style.left = `${offset.x}px`
-            svg.style.top = `${offset.y}px`
-        }
-    }, [scale, dragging, offset])
-
     // 处理鼠标按下事件
     const handleMouseDown = (e) => {
-        setDragging(true)
-        firstOffsetRef.current = {
-            x: e.nativeEvent.offsetX,
-            y: e.nativeEvent.offsetY
-        }
+        setIsDragging(true)
+        lastPositionRef.current = {x: e.clientX, y: e.clientY}
     }
 
     // 处理鼠标抬起事件
     const handleMouseUp = () => {
-        setDragging(false)
-        firstOffsetRef.current = undefined
+        setIsDragging(false)
+        lastPositionRef.current = null
+        if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
 
     // 处理鼠标移动事件
-    const handleMouseMove = useThrottleFn(
-        (e) => {
-            if (dragging && firstOffsetRef.current) {
-                const newOffsetX = e.nativeEvent.offsetX
-                const newOffsetY = e.nativeEvent.offsetY
-                const firstX = firstOffsetRef.current.x
-                const firstY = firstOffsetRef.current.y
-                setOffset((prevOffset) => ({
-                    x: prevOffset.x + (newOffsetX - firstX),
-                    y: prevOffset.y + (newOffsetY - firstY)
-                }))
-            }
-        },
-        {wait: 200}
-    ).run
+    const handleMouseMove = useMemoizedFn((e: React.MouseEvent) => {
+        if (!isDragging || !lastPositionRef.current) return
+        const dx = e.clientX - lastPositionRef.current.x
+        const dy = e.clientY - lastPositionRef.current.y
+        lastPositionRef.current = {x: e.clientX, y: e.clientY}
 
-    const handleWheel = useMemoizedFn((event: WheelEvent<HTMLDivElement>) => {
-        if (event.deltaY > 0) {
-            // 最小缩放比例为0.2
-            setScale((prevScale) => Math.max(0.2, prevScale - 0.2))
-        } else if (event.deltaY < 0) {
-            setScale((prevScale) => prevScale + 0.2)
-        }
+        // 使用 requestAnimationFrame 提高性能
+        if (rafRef.current) cancelAnimationFrame(rafRef.current)
+        rafRef.current = requestAnimationFrame(() => {
+            // 根据缩放比例调整拖拽距离
+            setOffset((prev) => ({
+                x: prev.x + dx / scale,
+                y: prev.y + dy / scale
+            }))
+        })
     })
+
+    const handleWheel = useMemoizedFn((e: WheelEvent<HTMLDivElement>) => {
+        // 最小缩放比例为0.2
+        e.preventDefault()
+        if (e.deltaY > 0) setScale((prev) => Math.max(0.2, prev - 0.1))
+        else setScale((prev) => prev + 0.1)
+    })
+
+    // 应用样式变化
+    useUpdateEffect(() => {
+        if (svgRef.current) {
+            const svg = svgRef.current as SVGSVGElement
+            svg.style.transform = `translate(${offset.x}px, ${offset.y}px) scale(${scale})`
+            svg.style.transformOrigin = "0 0"
+            svg.style.cursor = isDragging ? "grabbing" : "grab"
+        }
+    }, [offset, scale, isDragging])
 
     return (
         <div className={styles["flow-chart-box"]} id={idBoxRef.current}>
@@ -553,14 +550,14 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                 </div>
             </div>
             <div
-                style={{cursor: "grab"}}
+                ref={svgBoxRef}
                 className={styles["svg-box"]}
+                style={{cursor: isDragging ? "grabbing" : "grab"}}
                 onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 onWheel={handleWheel}
-                ref={svgBoxRef}
             />
             {nodeId && (
                 <div className={styles["root-detail"]}>
