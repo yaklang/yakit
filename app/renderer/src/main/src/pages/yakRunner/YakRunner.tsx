@@ -1,12 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {
-    useDebounceEffect,
-    useGetState,
-    useInViewport,
-    useMemoizedFn,
-    useThrottleFn,
-    useUpdateEffect
-} from "ahooks"
+import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {FileNodeMapProps, FileTreeListProps} from "./FileTree/FileTreeType"
@@ -32,12 +25,7 @@ import {
     setYakRunnerLastFolderExpanded,
     updateAreaFileInfo
 } from "./utils"
-import {
-    AreaInfoProps,
-    OpenFileByPathProps,
-    YakRunnerHistoryProps,
-    YakRunnerProps
-} from "./YakRunnerType"
+import {AreaInfoProps, OpenFileByPathProps, YakRunnerHistoryProps, YakRunnerProps} from "./YakRunnerType"
 import {failed, success, yakitNotify} from "@/utils/notification"
 import YakRunnerContext, {YakRunnerContextDispatcher, YakRunnerContextStore} from "./hooks/YakRunnerContext"
 import {FileDefault, FileSuffix, FolderDefault} from "./FileTree/icon"
@@ -67,6 +55,8 @@ import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
 import {registerShortcutKeyHandle, unregisterShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"
 import {getStorageYakRunnerShortcutKeyEvents} from "@/utils/globalShortcutKey/events/page/yakRunner"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import {WatchFolderID} from "./FileTreeMap/watchFolderID"
+import {randomString} from "@/utils/randomUtil"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -190,21 +180,27 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     const startMonitorFolder = useMemoizedFn((absolutePath) => {
-        // 先停止 再启用
-        const stopData = StringToUint8Array(
-            JSON.stringify({
-                operate: "stop"
+        if (WatchFolderID.Id) {
+            // 先停止 再启用
+            const stopData = StringToUint8Array(
+                JSON.stringify({
+                    operate: "stop",
+                    id: WatchFolderID.Id
+                })
+            )
+            sendDuplexConn({
+                Data: stopData,
+                MessageType: "file_monitor",
+                Timestamp: new Date().getTime()
             })
-        )
-        sendDuplexConn({
-            Data: stopData,
-            MessageType: "file_monitor",
-            Timestamp: new Date().getTime()
-        })
+        }
+
+        WatchFolderID.Id = randomString(16)
         const startData = StringToUint8Array(
             JSON.stringify({
                 operate: "new",
-                path: absolutePath
+                path: absolutePath,
+                id: WatchFolderID.Id
             })
         )
         sendDuplexConn({
@@ -538,15 +534,15 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }, [fileTree])
 
     // 计算areaInfo区域是否变化
-    const areaKey = useMemo(()=>{
-        let areaKey:string = ""
+    const areaKey = useMemo(() => {
+        let areaKey: string = ""
         areaInfo.forEach((item, index) => {
             item.elements.forEach((_, indexIn) => {
                 areaKey += `${index}-${indexIn},`
             })
         })
         return areaKey
-    },[areaInfo])
+    }, [areaInfo])
 
     useDebounceEffect(
         () => {
