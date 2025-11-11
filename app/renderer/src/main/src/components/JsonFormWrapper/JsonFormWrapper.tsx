@@ -6,7 +6,7 @@ import {RJSFSchema, UiSchema, WidgetProps} from "@rjsf/utils"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitDragger} from "../yakitUI/YakitForm/YakitForm"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 import {Checkbox} from "antd"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
@@ -16,7 +16,7 @@ import classNames from "classnames"
 import ArrayFieldTemplate from "./templates/ArrayFieldTemplate"
 import ObjectFieldTemplate from "./templates/ObjectFieldTemplate"
 import {ColumnSchemaProps, EditTable, UiSchemaTableProps} from "./editTable/EditTable"
-import { cloneDeep } from "lodash"
+import {cloneDeep} from "lodash"
 
 export const getJsonSchemaListResult = (obj: {[key: string]: any}) => {
     // 此处的key用于筛选重复的表单数据
@@ -83,7 +83,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     const [formData, setFormData, getFormData] = useGetState<any>(value || {})
     const jsonSchemaRef = useRef<any>()
     // 用于强制刷新
-    const [formKey, setFormKey] = useState(0) 
+    const [formKey, setFormKey] = useState(0)
 
     useEffect(() => {
         if (jsonSchemaListRef.current) {
@@ -100,9 +100,6 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     const validate = () => {
         try {
             const result = jsonSchemaRef.current?.validate(getFormData())
-            // console.log("result?.errors", result?.errors)
-            // console.log("formData---", field, getFormData())
-
             return {
                 pass: (result?.errors || []).length === 0,
                 error: result?.errors,
@@ -119,7 +116,37 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         }
     }
 
+/** 填充必填字段为 undefined，用于让校验失败 */
+const fillRequiredEmpty = (schema, data) => {
+    if (!schema || schema.type !== "object") return data;
+    const result = { ...data };
+
+    const requiredFields = schema.required || [];
+    for (const key of requiredFields) {
+        // 若当前必填字段不存在，则填充 undefined
+        if (!(key in result)) {
+            result[key] = undefined;
+        }
+    }
+
+    // 递归处理子对象
+    for (const key in schema.properties || {}) {
+        const prop = schema.properties?.[key];
+        if (prop && prop.type === "object") {
+            result[key] = fillRequiredEmpty(prop as RJSFSchema, result[key] || {});
+        }
+    }
+
+    return result;
+};
+
     useEffect(() => {
+        // 初始化时填充必填字段的默认值（否则默认值为{}校验通过）
+        const initFormData = fillRequiredEmpty(schema, getFormData())
+        setFormData(initFormData)
+    }, [])
+
+    useUpdateEffect(() => {
         // 当外部 value 变化时更新内部状态
         value && setFormData(value)
     }, [value])
@@ -580,15 +607,15 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 disabled={disabled}
                 formData={formData}
                 onChange={(e) => {
-                    const newFormData = cloneDeep(e.formData) 
+                    const newFormData = cloneDeep(e.formData)
                     // 手动触发 allOf 条件逻辑
                     const updated = handleAllOfUpdate(newFormData)
-                     // 判断 allOf 更新后是否真的改变了数据
+                    // 判断 allOf 更新后是否真的改变了数据
                     const isSame = JSON.stringify(updated) === JSON.stringify(e.formData)
                     // 更新表单值
                     setFormData(updated)
                     // 强制刷新
-                    if(!isSame){
+                    if (!isSame) {
                         setFormKey((k) => k + 1)
                     }
                 }}
