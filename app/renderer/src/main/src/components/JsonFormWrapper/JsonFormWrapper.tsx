@@ -16,6 +16,7 @@ import classNames from "classnames"
 import ArrayFieldTemplate from "./templates/ArrayFieldTemplate"
 import ObjectFieldTemplate from "./templates/ObjectFieldTemplate"
 import {ColumnSchemaProps, EditTable, UiSchemaTableProps} from "./editTable/EditTable"
+import { cloneDeep } from "lodash"
 
 export const getJsonSchemaListResult = (obj: {[key: string]: any}) => {
     // 此处的key用于筛选重复的表单数据
@@ -81,6 +82,8 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
 
     const [formData, setFormData, getFormData] = useGetState<any>(value || {})
     const jsonSchemaRef = useRef<any>()
+    // 用于强制刷新
+    const [formKey, setFormKey] = useState(0) 
 
     useEffect(() => {
         if (jsonSchemaListRef.current) {
@@ -478,6 +481,30 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         )
     })
 
+    // 处理 allOf 条件更新
+    const handleAllOfUpdate = (data: any) => {
+        const newData = {...data}
+        const allOfRules = schema?.allOf || []
+
+        allOfRules.forEach((rule: any) => {
+            const cond = rule.if?.properties
+            const thenProps = rule.then?.properties
+            if (!cond || !thenProps) return
+
+            // 判断 if 条件是否满足
+            const isMatch = Object.entries(cond).every(([k, v]: any) => {
+                return newData[k] === v.const
+            })
+
+            if (isMatch) {
+                Object.entries(thenProps).forEach(([key, val]: any) => {
+                    if (val.const !== undefined) newData[key] = val.const
+                })
+            }
+        })
+
+        return newData
+    }
     // const uiSchema: UiSchema = Object.keys(schema.properties || {}).reduce((acc, key) => {
     //     // 是否显示字段的 label
     //     acc[key] = {
@@ -522,6 +549,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     return (
         <>
             <JsonForm
+                key={formKey} // 使用 key 强制刷新组件
                 ref={jsonSchemaRef}
                 // tagName={AntdForm}
                 // 此处的json-schema-form应用于特殊页面的另类布局处理
@@ -552,8 +580,17 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 disabled={disabled}
                 formData={formData}
                 onChange={(e) => {
+                    const newFormData = cloneDeep(e.formData) 
+                    // 手动触发 allOf 条件逻辑
+                    const updated = handleAllOfUpdate(newFormData)
+                     // 判断 allOf 更新后是否真的改变了数据
+                    const isSame = JSON.stringify(updated) === JSON.stringify(e.formData)
                     // 更新表单值
-                    setFormData(e.formData)
+                    setFormData(updated)
+                    // 强制刷新
+                    if(!isSame){
+                        setFormKey((k) => k + 1)
+                    }
                 }}
                 /**
                  * 如果omitExtraData和liveOmit都被设置为true，那么当onChange被调用时，
