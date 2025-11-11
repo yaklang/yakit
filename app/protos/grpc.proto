@@ -976,7 +976,6 @@ service Yak {
   rpc QuerySubERM(QuerySubERMRequest) returns (QuerySubERMResponse);
   rpc GenerateERMDot(GenerateERMDotRequest) returns (GenerateERMDotResponse);
 
-
   // Export and Import Knowledge Base
   rpc ExportKnowledgeBase(ExportKnowledgeBaseRequest) returns (stream GeneralProgress);
   rpc ImportKnowledgeBase(ImportKnowledgeBaseRequest) returns (stream GeneralProgress);
@@ -1160,6 +1159,9 @@ message Relationship {
 
   string SourceEntityIndex = 7;
   string TargetEntityIndex = 8;
+
+  string UUID = 9;
+  string RepositoryUUID = 10;
 }
 
 message RelationshipFilter {
@@ -1397,6 +1399,7 @@ message DeleteKnowledgeBaseEntryRequest {
 message SearchKnowledgeBaseEntryFilter {
   int64 KnowledgeBaseId = 1;
   string Keyword = 2;
+  repeated string RelatedEntityUUIDS = 3;
 }
 message SearchKnowledgeBaseEntryRequest {
   int64 KnowledgeBaseId = 1;
@@ -7167,6 +7170,7 @@ message SyntaxFlowRuleFilter {
   int64 BeforeId = 12;
   string FilterRuleKind = 13; // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
   string FilterLibRuleKind = 14; // "lib"library规则，"noLib"非library规则，空为所有规则
+  repeated string RuleIds = 15;
 }
 
 message SSAProgram{
@@ -7477,7 +7481,6 @@ message SyntaxFlowScanActiveTask {
   // progress 
   double Progress = 5; 
 
-  // update 
   int64 RunningTime = 6;
   string Info = 7;
 }
