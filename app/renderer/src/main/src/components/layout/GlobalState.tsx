@@ -719,11 +719,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     <div className={styles["title-style"]}>引擎不是官方发布版本</div>
                                     <div className={styles["subtitle-style"]}>可能会造成本地使用出现问题</div>
                                 </div>
-                                {forceManualMITMInstall && manualInstallReason && (
-                                    <div className={styles["subtitle-style"]} style={{marginTop: 4}}>
-                                        上次自动安装失败原因：{manualInstallReason}
-                                    </div>
-                                )}
                             </div>
                             <div className={styles["info-right"]}>
                                 <YakitButton
