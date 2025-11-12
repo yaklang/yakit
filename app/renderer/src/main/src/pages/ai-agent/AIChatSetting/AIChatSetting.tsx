@@ -143,7 +143,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 {/* <Form.Item label='搜索互联网搜索引擎' name='EnableAISearchInternet' valuePropName='checked'>
                     <YakitSwitch />
                 </Form.Item> */}
-                <Form.Item
+                {/* <Form.Item
                     label={
                         <>
                             关闭思考模式
@@ -159,7 +159,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     valuePropName='checked'
                 >
                     <YakitSwitch />
-                </Form.Item>
+                </Form.Item> */}
                 <Form.Item label='允许任务规划阶段人机交互' name='AllowPlanUserInteract' valuePropName='checked'>
                     <YakitSwitch />
                 </Form.Item>
