@@ -290,7 +290,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const showManualInstallGuide = useMemoizedFn(() => {
         setShow(false)
         const m = showYakitModal({
-            title: t("Home.generateAutoInstallScript"),
+            title: t("home.cert.manualInstallTitle"),
             width: "600px",
             centered: true,
             content: (
@@ -300,19 +300,19 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                         color: "var(--Colors-Use-Neutral-Text-1-Title)"
                     }}
                 >
-                    {t("Home.pleaseFollowSteps")}
+                    {t("home.cert.manualInstallSteps")}
                     <br />
                     <br />
-                    1. {t("Home.openScriptDir")}
+                    1. {t("home.cert.manualInstallStep1")}
                     <br />
-                    2. {t("Home.runAutoInstallScript")}
+                    2. {t("home.cert.manualInstallStep2")}
                     <br />
-                    3. {t("Home.installSuccessMessage")}
+                    3. {t("home.cert.manualInstallStep3")}
                     <br />
                     <br />
-                    {t("Home.closeAppsBeforeRun")}
+                    {t("home.cert.manualInstallSafeHint")}
                     <br />
-                    {t("Home.mitmReadyAfterInstall", {name: t("YakitRoute.MITM")})}
+                    {t("home.cert.manualInstallReadyHint", {name: t("YakitRoute.MITM")})}
                     <br />
                     <br />
                     {t("Home.contactForHelp")}
@@ -341,7 +341,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             return (
                 <>
                     <br />
-                    建议：检测到系统缺少 pkexec，可安装 policykit（例如执行 sudo apt install policykit-1）后再次尝试自动安装。
+                    {t("home.cert.autoInstallPkexecHint")}
                 </>
             )
         }
@@ -349,7 +349,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             return (
                 <>
                     <br />
-                    建议：请确保系统存在并已启动认证代理（如 polkit-gnome-authentication-agent-1），否则可改为手动安装。
+                    {t("home.cert.autoInstallAuthAgentHint")}
                 </>
             )
         }
@@ -359,11 +359,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const showAutoInstallFailure = useMemoizedFn((reason?: string) => {
         setShow(false)
         const modal = showYakitModal({
-            title: "自动安装失败",
+            title: t("home.cert.autoInstallFailedTitle"),
             width: "520px",
             centered: true,
-            okText: "查看手动安装步骤",
-            cancelText: "关闭",
+            okText: t("home.cert.autoInstallFailedManualBtn"),
+            cancelText: t("common.cancel"),
             content: (
                 <div
                     style={{
@@ -371,10 +371,12 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                         color: "var(--Colors-Use-Neutral-Text-1-Title)"
                     }}
                 >
-                    <div style={{marginBottom: 10}}>自动安装过程中出现错误：</div>
-                    <div style={{color: "var(--Colors-Use-Danger-Text)"}}>{reason || "未知错误"}</div>
+                    <div style={{marginBottom: 10}}>{t("home.cert.autoInstallFailedDesc")}</div>
+                    <div style={{color: "var(--Colors-Use-Danger-Text)"}}>
+                        {reason || t("home.cert.autoInstallUnknownError")}
+                    </div>
                     {renderAutoInstallSuggestion(reason)}
-                    <div style={{marginTop: 16}}>您可以查看手动安装步骤继续完成配置。</div>
+                    <div style={{marginTop: 16}}>{t("home.cert.autoInstallGuideHint")}</div>
                 </div>
             ),
             onOk: () => {
@@ -386,7 +388,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
     const handleAutoInstallMITMCertificate = useMemoizedFn(() => {
         setShow(false)
-        yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗中的权限请求")
+        yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗/杀毒软件的权限请求")
         ipcRenderer
             .invoke("InstallMITMCertificate", {})
             .then((res: {Ok: boolean; Reason?: string}) => {
@@ -778,14 +780,14 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                         className={styles["btn-style"]}
                                         onClick={handleAutoInstallMITMCertificate}
                                     >
-                                        自动安装
+                                        {t("home.cert.autoInstallButton")}
                                     </YakitButton>
                                     <YakitButton
                                         type='text'
                                         className={styles["btn-style"]}
                                         onClick={() => showManualInstallGuide()}
                                     >
-                                        手动安装
+                                        {t("home.cert.manualInstallButton")}
                                     </YakitButton>
                                 </div>
                             </div>

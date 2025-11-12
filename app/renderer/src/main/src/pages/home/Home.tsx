@@ -519,7 +519,7 @@ const Home: React.FC<HomeProp> = (props) => {
             return (
                 <>
                     <br />
-                    建议：检测到系统缺少 pkexec，可安装 policykit（例如执行 sudo apt install policykit-1）后再次尝试自动安装。
+                    {t("home.cert.autoInstallPkexecHint")}
                 </>
             )
         }
@@ -527,7 +527,7 @@ const Home: React.FC<HomeProp> = (props) => {
             return (
                 <>
                     <br />
-                    建议：请确保系统存在并已启动认证代理（如 polkit-gnome-authentication-agent-1），否则可改为手动安装。
+                    {t("home.cert.autoInstallAuthAgentHint")}
                 </>
             )
         }
@@ -537,17 +537,19 @@ const Home: React.FC<HomeProp> = (props) => {
     const showAutoInstallFailure = useMemoizedFn((reason?: string) => {
         const modal = showYakitModal({
             type: "white",
-            title: "自动安装失败",
+            title: t("home.cert.autoInstallFailedTitle"),
             width: "520px",
             centered: true,
-            okText: "查看手动安装步骤",
-            cancelText: "关闭",
+            okText: t("home.cert.autoInstallFailedManualBtn"),
+            cancelText: t("common.cancel"),
             content: (
                 <div style={{padding: 15}}>
-                    <div style={{marginBottom: 10}}>自动安装过程中出现错误：</div>
-                    <div style={{color: "var(--Colors-Use-Danger-Text)"}}>{reason || "未知错误"}</div>
+                    <div style={{marginBottom: 10}}>{t("home.cert.autoInstallFailedDesc")}</div>
+                    <div style={{color: "var(--Colors-Use-Danger-Text)"}}>
+                        {reason || t("home.cert.autoInstallUnknownError")}
+                    </div>
                     {renderAutoInstallSuggestion(reason)}
-                    <div style={{marginTop: 16}}>您可以查看手动安装步骤继续完成配置。</div>
+                    <div style={{marginTop: 16}}>{t("home.cert.autoInstallGuideHint")}</div>
                 </div>
             ),
             onOk: () => {
@@ -560,7 +562,7 @@ const Home: React.FC<HomeProp> = (props) => {
     // 下载安装MITM证书
     const handleAutoInstall = useMemoizedFn((e?: React.MouseEvent<HTMLElement>) => {
         e?.stopPropagation()
-        yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗中的权限请求")
+        yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗/杀毒软件的权限请求")
         ipcRenderer
             .invoke("InstallMITMCertificate", {})
             .then((res: {Ok: boolean; Reason?: string}) => {
@@ -893,14 +895,14 @@ const Home: React.FC<HomeProp> = (props) => {
                                                 className={styles["config-detection-btn"]}
                                                 onClick={handleAutoInstall}
                                             >
-                                                自动安装
+                                                {t("home.cert.autoInstallButton")}
                                             </YakitButton>
                                             <YakitButton
                                                 type='text'
                                                 className={styles["config-detection-btn"]}
                                                 onClick={handleManualInstall}
                                             >
-                                                手动安装
+                                                {t("home.cert.manualInstallButton")}
                                             </YakitButton>
                                         </div>
                                     </div>
