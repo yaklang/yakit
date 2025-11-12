@@ -826,8 +826,8 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
             let uiSchema: any = {}
             let value: any = undefined
             try {
-                schema = JSON.parse(item.JsonSchema || "{}")
-                uiSchema = JSON.parse(item.UISchema || "{}")
+                schema = JSON.parse(item?.JsonSchema || "{}")
+                uiSchema = JSON.parse(item?.UISchema || "{}")
                 if (jsonSchemaInitial && jsonSchemaInitial[item.Field]) {
                     value = JSON.parse(jsonSchemaInitial[item.Field])
                 }

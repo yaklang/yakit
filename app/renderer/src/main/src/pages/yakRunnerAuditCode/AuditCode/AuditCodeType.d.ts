@@ -2,6 +2,7 @@ import {YakURLResource} from "@/pages/yakURLTree/data"
 import {AuditEmiterYakUrlProps} from "../YakRunnerAuditCodeType"
 import {ShowItemType} from "../BottomEditorDetails/BottomEditorDetailsType"
 import { SyntaxFlowRuleFilter } from "@/pages/ruleManagement/RuleManagementType";
+import {DbOperateMessage} from "../../layout/mainOperatorContent/utils"
 import {ReactNode} from "react"
 export interface YakURLKVPair {
     Key: string
@@ -201,6 +202,21 @@ export interface SSAProjectResponse {
     ScanConfig: SSAProjectScanConfig
     // 规则策略配置
     RuleConfig: SSAProjectScanRuleConfig
+    // JSON字符串配置（用于JSONSchema渲染表单的数据）
+    JSONStringConfig: string
+    // 漏洞个数
+    RiskNumber: number
+    // 编译次数
+    CompileTimes: number
+}
+
+export interface UpdateSSAProjectRequest {
+    Project: Partial<SSAProjectResponse>
+}
+
+export interface UpdateSSAProjectResponse {
+    Project: SSAProjectResponse
+    Message: DbOperateMessage
 }
 
 export interface AuditHistoryTableProps {
@@ -216,6 +232,7 @@ export interface ProjectManagerEditFormProps {
     record: SSAProjectResponse
     setData: React.Dispatch<React.SetStateAction<SSAProjectResponse[]>>
     onClose: () => void
+    schema:RJSFSchema
 }
 
 export interface AuditHistoryListRefProps {
@@ -242,4 +259,14 @@ export interface CompileHistoryProps {
     info: SSAProjectResponse
     pageType: "auditCode" | "projectManager"
     onClose?: () => void
+}
+
+export interface ResultDataProps {
+    description: string;
+    language: string;
+    path: string;
+    project_id: number;
+    project_name: string;
+    success: boolean;
+    tags: string[];
 }

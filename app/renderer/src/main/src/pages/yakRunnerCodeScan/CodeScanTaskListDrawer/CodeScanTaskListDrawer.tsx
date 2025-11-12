@@ -471,7 +471,6 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                 .then((res: QuerySyntaxFlowScanTaskResponse) => {
                     const newPage = +res.Pagination.Page
                     const d = newPage === 1 ? res.Data : (response?.Data || []).concat(res.Data)
-                    console.log("res.Data", res.Data, d)
 
                     setResponse({
                         ...res,
