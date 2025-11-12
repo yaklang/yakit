@@ -294,6 +294,25 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         })
     })
 
+    const renderManualReason = () => {
+        if (!manualInstallReason) return null
+        const lower = manualInstallReason.toLowerCase()
+        let suggestion = ""
+        if (lower.includes("pkexec not found")) {
+            suggestion =
+                "检测到系统缺少 pkexec，可安装 policykit（例如执行 sudo apt install policykit-1）后再次尝试自动安装。"
+        }
+        return (
+            <>
+                <br />
+                <b>自动安装失败原因：</b>
+                {manualInstallReason}
+                <br />
+                {suggestion}
+            </>
+        )
+    }
+
     const showAutoInstallScriptGuide = useMemoizedFn(() => {
         const m = showYakitModal({
             title: t("Home.generateAutoInstallScript"),
@@ -322,6 +341,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     <br />
                     <br />
                     {t("Home.contactForHelp")}
+                    {renderManualReason()}
                 </div>
             ),
             onOk: () => {

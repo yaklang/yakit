@@ -478,6 +478,25 @@ const Home: React.FC<HomeProp> = (props) => {
         })
     })
 
+    const renderManualReason = () => {
+        if (!manualInstallReason) return null
+        const lower = manualInstallReason.toLowerCase()
+        let suggestion = ""
+        if (lower.includes("pkexec not found")) {
+            suggestion =
+                "检测到系统缺少 pkexec，可安装 policykit（例如执行 sudo apt install policykit-1）后再次尝试自动安装。"
+        }
+        return (
+            <>
+                <br />
+                <b>自动安装失败原因：</b>
+                {manualInstallReason}
+                <br />
+                {suggestion}
+            </>
+        )
+    }
+
     const showAutoInstallScriptGuide = useMemoizedFn(() => {
         const m = showYakitModal({
             type: "white",
@@ -502,6 +521,7 @@ const Home: React.FC<HomeProp> = (props) => {
                     <br />
                     <br />
                     {t("Home.contactForHelp")}
+                    {renderManualReason()}
                 </div>
             ),
             onOk: () => {
@@ -890,11 +910,6 @@ const Home: React.FC<HomeProp> = (props) => {
                                                 </YakitButton>
                                             )}
                                         </div>
-                                        {forceManualMITMInstall && manualInstallReason && (
-                                            <div className={styles["config-detection-left"]} style={{marginTop: 4}}>
-                                                上次自动安装失败原因：{manualInstallReason}
-                                            </div>
-                                        )}
                                     </div>
                                 )}
                                 <div
