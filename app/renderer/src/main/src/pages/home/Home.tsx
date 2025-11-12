@@ -450,12 +450,7 @@ const Home: React.FC<HomeProp> = (props) => {
     }
 
     // 获取是否安装MITM证书
-    const [forceManualMITMInstall, setForceManualMITMInstall] = useState<boolean>(() => {
-        return sessionStorage.getItem("forceManualMITMInstall") === "1"
-    })
-    const [manualInstallReason, setManualInstallReason] = useState<string | undefined>(() => {
-        return sessionStorage.getItem("forceManualMITMInstallReason") || undefined
-    })
+    const [lastInstallError, setLastInstallError] = useState<string>()
 
     const updateMITMCert = useMemoizedFn(() => {
         return new Promise((resolve, reject) => {
@@ -478,9 +473,9 @@ const Home: React.FC<HomeProp> = (props) => {
         })
     })
 
-    const renderManualReason = () => {
-        if (!manualInstallReason) return null
-        const lower = manualInstallReason.toLowerCase()
+    const renderManualReason = (reason?: string) => {
+        if (!reason) return null
+        const lower = reason.toLowerCase()
         let suggestion = ""
         if (lower.includes("pkexec not found")) {
             suggestion =
@@ -490,14 +485,14 @@ const Home: React.FC<HomeProp> = (props) => {
             <>
                 <br />
                 <b>自动安装失败原因：</b>
-                {manualInstallReason}
+                {reason}
                 <br />
                 {suggestion}
             </>
         )
     }
 
-    const showAutoInstallScriptGuide = useMemoizedFn(() => {
+    const showManualInstallGuide = useMemoizedFn((reason?: string) => {
         const m = showYakitModal({
             type: "white",
             title: t("Home.generateAutoInstallScript"),
@@ -521,7 +516,7 @@ const Home: React.FC<HomeProp> = (props) => {
                     <br />
                     <br />
                     {t("Home.contactForHelp")}
-                    {renderManualReason()}
+                    {renderManualReason(reason)}
                 </div>
             ),
             onOk: () => {
@@ -541,50 +536,36 @@ const Home: React.FC<HomeProp> = (props) => {
     })
 
     // 下载安装MITM证书
-    const enableManualFallback = useMemoizedFn((reason?: string) => {
-        sessionStorage.setItem("forceManualMITMInstall", "1")
-        sessionStorage.setItem("forceManualMITMInstallReason", reason || "")
-        setManualInstallReason(reason)
-        setForceManualMITMInstall(true)
-        if (reason) {
-            let extra = ""
-            if (reason.toLowerCase().includes("pkexec not found")) {
-                extra =
-                    "。检测到系统缺少 pkexec，可通过安装 policykit（例如运行 sudo apt install policykit-1）后再尝试一键安装"
-            }
-            yakitNotify("error", `MITM 证书安装失败：${reason}${extra}`)
-        }
-        showAutoInstallScriptGuide()
-    })
-
-    const resetManualFallback = useMemoizedFn(() => {
-        sessionStorage.removeItem("forceManualMITMInstall")
-        sessionStorage.removeItem("forceManualMITMInstallReason")
-        setManualInstallReason(undefined)
-        setForceManualMITMInstall(false)
-    })
-
-    const handleDownMitmCert = useMemoizedFn((e?: React.MouseEvent<HTMLElement>) => {
+    const handleAutoInstall = useMemoizedFn((e?: React.MouseEvent<HTMLElement>) => {
         e?.stopPropagation()
-        if (forceManualMITMInstall) {
-            showAutoInstallScriptGuide()
-            return
-        }
         yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗中的权限请求")
         ipcRenderer
             .invoke("InstallMITMCertificate", {})
             .then((res: {Ok: boolean; Reason?: string}) => {
                 if (res?.Ok) {
+                    setLastInstallError(undefined)
                     yakitNotify("success", "MITM 证书安装成功")
                     updateMITMCert()
                 } else {
-                    enableManualFallback(res?.Reason || "未知错误")
+                    const reason = res?.Reason || "未知错误"
+                    setLastInstallError(reason)
+                    yakitNotify("error", `MITM 证书安装失败：${reason}`)
+                    showManualInstallGuide(reason)
                 }
             })
             .catch((err) => {
-                enableManualFallback(`${err}`)
+                const reason = `${err}`
+                setLastInstallError(reason)
+                yakitNotify("error", `MITM 证书安装失败：${reason}`)
+                showManualInstallGuide(reason)
             })
     })
+
+    const handleManualInstall = useMemoizedFn((e?: React.MouseEvent<HTMLElement>) => {
+        e?.stopPropagation()
+        showManualInstallGuide(lastInstallError)
+    })
+
 
     // 爆破示例
     const handleBlastingExample = (animationType: string) => {
@@ -891,24 +872,17 @@ const Home: React.FC<HomeProp> = (props) => {
                                             <YakitButton
                                                 type='text'
                                                 className={styles["config-detection-btn"]}
-                                                onClick={handleDownMitmCert}
+                                                onClick={handleAutoInstall}
                                             >
-                                                {forceManualMITMInstall
-                                                    ? t("Home.generateAutoInstallScript")
-                                                    : t("YakitButton.downloadInstall")}
+                                                自动安装
                                             </YakitButton>
-                                            {forceManualMITMInstall && (
-                                                <YakitButton
-                                                    type='text'
-                                                    className={styles["config-detection-btn"]}
-                                                    onClick={() => {
-                                                        resetManualFallback()
-                                                        handleDownMitmCert()
-                                                    }}
-                                                >
-                                                    重新尝试自动安装
-                                                </YakitButton>
-                                            )}
+                                            <YakitButton
+                                                type='text'
+                                                className={styles["config-detection-btn"]}
+                                                onClick={handleManualInstall}
+                                            >
+                                                手动安装
+                                            </YakitButton>
                                         </div>
                                     </div>
                                 )}

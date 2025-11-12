@@ -266,12 +266,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         })
     })
     const [showMITMCertWarn, setShowMITMCertWarn] = useState<boolean>(false)
-    const [forceManualMITMInstall, setForceManualMITMInstall] = useState<boolean>(() => {
-        return sessionStorage.getItem("forceManualMITMInstall") === "1"
-    })
-    const [manualInstallReason, setManualInstallReason] = useState<string | undefined>(() => {
-        return sessionStorage.getItem("forceManualMITMInstallReason") || undefined
-    })
+    const [lastInstallError, setLastInstallError] = useState<string>()
 
     const updateMITMCert = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -294,9 +289,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         })
     })
 
-    const renderManualReason = () => {
-        if (!manualInstallReason) return null
-        const lower = manualInstallReason.toLowerCase()
+    const renderManualReason = (reason?: string) => {
+        if (!reason) return null
+        const lower = reason.toLowerCase()
         let suggestion = ""
         if (lower.includes("pkexec not found")) {
             suggestion =
@@ -306,14 +301,15 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             <>
                 <br />
                 <b>自动安装失败原因：</b>
-                {manualInstallReason}
+                {reason}
                 <br />
                 {suggestion}
             </>
         )
     }
 
-    const showAutoInstallScriptGuide = useMemoizedFn(() => {
+    const showManualInstallGuide = useMemoizedFn((reason?: string) => {
+        setShow(false)
         const m = showYakitModal({
             title: t("Home.generateAutoInstallScript"),
             width: "600px",
@@ -341,7 +337,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     <br />
                     <br />
                     {t("Home.contactForHelp")}
-                    {renderManualReason()}
+                    {renderManualReason(reason)}
                 </div>
             ),
             onOk: () => {
@@ -360,48 +356,28 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         })
     })
 
-    const enableManualFallback = useMemoizedFn((reason?: string) => {
-        sessionStorage.setItem("forceManualMITMInstall", "1")
-        sessionStorage.setItem("forceManualMITMInstallReason", reason || "")
-        setManualInstallReason(reason)
-        setForceManualMITMInstall(true)
-        if (reason) {
-            let extra = ""
-            if (reason.toLowerCase().includes("pkexec not found")) {
-                extra =
-                    "。检测到系统缺少 pkexec，可通过安装 policykit（例如运行 sudo apt install policykit-1）后再尝试一键安装"
-            }
-            yakitNotify("error", `MITM 证书安装失败：${reason}${extra}`)
-        }
-        showAutoInstallScriptGuide()
-    })
-
-    const resetManualFallback = useMemoizedFn(() => {
-        sessionStorage.removeItem("forceManualMITMInstall")
-        sessionStorage.removeItem("forceManualMITMInstallReason")
-        setManualInstallReason(undefined)
-        setForceManualMITMInstall(false)
-    })
-
-    const handleInstallMITMCertificate = useMemoizedFn(() => {
+    const handleAutoInstallMITMCertificate = useMemoizedFn(() => {
         setShow(false)
-        if (forceManualMITMInstall) {
-            showAutoInstallScriptGuide()
-            return
-        }
         yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗中的权限请求")
         ipcRenderer
             .invoke("InstallMITMCertificate", {})
             .then((res: {Ok: boolean; Reason?: string}) => {
                 if (res?.Ok) {
+                    setLastInstallError(undefined)
                     yakitNotify("success", "MITM 证书安装成功")
                     updateMITMCert()
                 } else {
-                    enableManualFallback(res?.Reason || "未知错误")
+                    const reason = res?.Reason || "未知错误"
+                    setLastInstallError(reason)
+                    yakitNotify("error", `MITM 证书安装失败：${reason}`)
+                    showManualInstallGuide(reason)
                 }
             })
             .catch((e) => {
-                enableManualFallback(`${e}`)
+                const reason = `${e}`
+                setLastInstallError(reason)
+                yakitNotify("error", `MITM 证书安装失败：${reason}`)
+                showManualInstallGuide(reason)
             })
     })
 
@@ -780,22 +756,17 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     <YakitButton
                                         type='text'
                                         className={styles["btn-style"]}
-                                        onClick={handleInstallMITMCertificate}
+                                        onClick={handleAutoInstallMITMCertificate}
                                     >
-                                        {forceManualMITMInstall ? "生成安装脚本" : "下载安装"}
+                                        自动安装
                                     </YakitButton>
-                                    {forceManualMITMInstall && (
-                                        <YakitButton
-                                            type='text'
-                                            className={styles["btn-style"]}
-                                            onClick={() => {
-                                                resetManualFallback()
-                                                handleInstallMITMCertificate()
-                                            }}
-                                        >
-                                            重新尝试自动安装
-                                        </YakitButton>
-                                    )}
+                                    <YakitButton
+                                        type='text'
+                                        className={styles["btn-style"]}
+                                        onClick={() => showManualInstallGuide(lastInstallError)}
+                                    >
+                                        手动安装
+                                    </YakitButton>
                                 </div>
                             </div>
                         </div>
