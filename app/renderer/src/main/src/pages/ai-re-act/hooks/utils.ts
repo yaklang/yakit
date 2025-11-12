@@ -90,6 +90,11 @@ export const isToolStdoutStream = (nodeID: string) => {
     if (!nodeID) return false
     return nodeID.startsWith("tool-") && nodeID.endsWith("-stdout")
 }
+/** 判断是否为tool_xxx_stderr类型数据 */
+export const isToolStderrStream = (nodeID: string) => {
+    if (!nodeID) return false
+    return nodeID.startsWith("tool-") && nodeID.endsWith("-stderr")
+}
 /** 判断是否为工具执行的流程类型数据(call-tools 和 tool-xxx-stdout) */
 export const isToolExecStream = (nodeID: string) => {
     if (nodeID === "call-tools") return true

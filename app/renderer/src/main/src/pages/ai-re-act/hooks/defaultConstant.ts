@@ -9,7 +9,8 @@ export const DefaultAIToolResult: AIToolResult = {
     toolStdoutContent: {
         content: "",
         isShowAll: false
-    }
+    },
+    execError: ""
 }
 
 /** AI 流式输出中, NodeId 对应展示的内容 */

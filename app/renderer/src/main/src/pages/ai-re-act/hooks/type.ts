@@ -46,12 +46,9 @@ export interface UseCasualChatParams extends UseHookBaseParams {
 }
 
 export interface UseCasualChatState {
-    /** 自由对话的 id */
-    coordinatorId: string
     contents: AIChatQSData[]
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents {
-    handleSetCoordinatorId: (id: string) => void
     handleSend: handleSendFunc
 }
 // #endregion
@@ -71,15 +68,12 @@ export interface UseTaskChatParams extends UseHookBaseParams {
 }
 
 export interface UseTaskChatState {
-    /** 任务对话的 id */
-    coordinatorId: string
     /** 正在执行的任务列表 */
     plan: AITaskInfoProps[]
     /** 流式输出 */
     streams: AIChatQSData[]
 }
 export interface UseTaskChatEvents extends UseHookBaseEvents {
-    handleSetCoordinatorId: (id: string) => void
     handleSend: handleSendFunc
     /** 获取原始任务列表树 */
     fetchPlanTree: () => AIAgentGrpcApi.PlanTask | undefined
@@ -112,6 +106,8 @@ export interface UseChatIPCParams {
 export interface UseChatIPCState {
     /** 流执行状态 */
     execute: boolean
+    /** 运行时的runtimeid合集 */
+    runTimeIDs: string[]
     /** 插件输出的卡片数据 */
     yakExecResult: UseYakExecResultState
     /** AI性能相关数据 */

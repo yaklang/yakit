@@ -45,9 +45,7 @@ const getCardData = () => {
     return data
 }
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) => {
-    const {taskChat, yakExecResult, aiPerfData} = useAIChatUIData()
-
-    const {coordinatorId} = taskChat
+    const {runTimeIDs, yakExecResult, aiPerfData} = useAIChatUIData()
 
     const [isExpand, setIsExpand] = useState<boolean>(true)
     const [activeKey, setActiveKey] = useState<AITabsEnumType>()
@@ -64,19 +62,20 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     }, [])
 
     useEffect(() => {
-        if (coordinatorId) {
+        if (runTimeIDs.length > 0) {
             setInterval(1000)
         } else {
             setAllTotal(0)
             setTempTotal(0)
         }
-    }, [coordinatorId])
+    }, [runTimeIDs])
     useInterval(() => {
         getTotal()
     }, interval)
     const getTotal = useMemoizedFn(() => {
-        if (!coordinatorId) return
-        apiQueryRisksTotalByRuntimeId(coordinatorId).then((allRes) => {
+        if (!runTimeIDs.length) return
+        // todo 需要改成数组传参
+        apiQueryRisksTotalByRuntimeId(runTimeIDs.join(",")).then((allRes) => {
             if (+allRes.Total > 0) {
                 setTempTotal(+allRes.Total)
             }
@@ -120,9 +119,10 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
             case AITabsEnum.File_System:
                 return <AIFileSystemList execFileRecord={yakExecResult.execFileRecord} />
             case AITabsEnum.Risk:
-                return !!coordinatorId ? (
+                return !!runTimeIDs.length ? (
                     <VulnerabilitiesRisksTable
-                        runtimeId={coordinatorId}
+                        // todo 需要改成数组传参
+                        runtimeId={runTimeIDs.join(",")}
                         allTotal={allTotal}
                         setAllTotal={onSetRiskTotal}
                     />
@@ -132,8 +132,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                     </>
                 )
             case AITabsEnum.HTTP:
-                return !!coordinatorId ? (
-                    <PluginExecuteHttpFlow runtimeId={coordinatorId} website={false} />
+                return !!runTimeIDs.length ? (
+                    // todo 需要改成数组传参
+                    <PluginExecuteHttpFlow runtimeId={runTimeIDs.join(",")} website={false} />
                 ) : (
                     <>
                         <YakitEmpty />
