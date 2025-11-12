@@ -266,7 +266,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         })
     })
     const [showMITMCertWarn, setShowMITMCertWarn] = useState<boolean>(false)
-    const [lastInstallError, setLastInstallError] = useState<string>()
 
     const updateMITMCert = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -288,27 +287,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 })
         })
     })
-
-    const renderManualReason = (reason?: string) => {
-        if (!reason) return null
-        const lower = reason.toLowerCase()
-        let suggestion = ""
-        if (lower.includes("pkexec not found")) {
-            suggestion =
-                "检测到系统缺少 pkexec，可安装 policykit（例如执行 sudo apt install policykit-1）后再次尝试自动安装。"
-        }
-        return (
-            <>
-                <br />
-                <b>自动安装失败原因：</b>
-                {reason}
-                <br />
-                {suggestion}
-            </>
-        )
-    }
-
-    const showManualInstallGuide = useMemoizedFn((reason?: string) => {
+    const showManualInstallGuide = useMemoizedFn(() => {
         setShow(false)
         const m = showYakitModal({
             title: t("Home.generateAutoInstallScript"),
@@ -337,7 +316,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     <br />
                     <br />
                     {t("Home.contactForHelp")}
-                    {renderManualReason(reason)}
                 </div>
             ),
             onOk: () => {
@@ -356,6 +334,56 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         })
     })
 
+    const renderAutoInstallSuggestion = (reason?: string) => {
+        if (!reason) return null
+        const lower = reason.toLowerCase()
+        if (lower.includes("pkexec not found")) {
+            return (
+                <>
+                    <br />
+                    建议：检测到系统缺少 pkexec，可安装 policykit（例如执行 sudo apt install policykit-1）后再次尝试自动安装。
+                </>
+            )
+        }
+        if (lower.includes("authentication agent")) {
+            return (
+                <>
+                    <br />
+                    建议：请确保系统存在并已启动认证代理（如 polkit-gnome-authentication-agent-1），否则可改为手动安装。
+                </>
+            )
+        }
+        return null
+    }
+
+    const showAutoInstallFailure = useMemoizedFn((reason?: string) => {
+        setShow(false)
+        const modal = showYakitModal({
+            title: "自动安装失败",
+            width: "520px",
+            centered: true,
+            okText: "查看手动安装步骤",
+            cancelText: "关闭",
+            content: (
+                <div
+                    style={{
+                        padding: 15,
+                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                    }}
+                >
+                    <div style={{marginBottom: 10}}>自动安装过程中出现错误：</div>
+                    <div style={{color: "var(--Colors-Use-Danger-Text)"}}>{reason || "未知错误"}</div>
+                    {renderAutoInstallSuggestion(reason)}
+                    <div style={{marginTop: 16}}>您可以查看手动安装步骤继续完成配置。</div>
+                </div>
+            ),
+            onOk: () => {
+                modal.destroy()
+                showManualInstallGuide()
+            }
+        })
+    })
+
     const handleAutoInstallMITMCertificate = useMemoizedFn(() => {
         setShow(false)
         yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗中的权限请求")
@@ -363,21 +391,18 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             .invoke("InstallMITMCertificate", {})
             .then((res: {Ok: boolean; Reason?: string}) => {
                 if (res?.Ok) {
-                    setLastInstallError(undefined)
                     yakitNotify("success", "MITM 证书安装成功")
                     updateMITMCert()
                 } else {
                     const reason = res?.Reason || "未知错误"
-                    setLastInstallError(reason)
                     yakitNotify("error", `MITM 证书安装失败：${reason}`)
-                    showManualInstallGuide(reason)
+                    showAutoInstallFailure(reason)
                 }
             })
             .catch((e) => {
                 const reason = `${e}`
-                setLastInstallError(reason)
                 yakitNotify("error", `MITM 证书安装失败：${reason}`)
-                showManualInstallGuide(reason)
+                showAutoInstallFailure(reason)
             })
     })
 
@@ -758,7 +783,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     <YakitButton
                                         type='text'
                                         className={styles["btn-style"]}
-                                        onClick={() => showManualInstallGuide(lastInstallError)}
+                                        onClick={() => showManualInstallGuide()}
                                     >
                                         手动安装
                                     </YakitButton>
