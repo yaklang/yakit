@@ -3,5 +3,17 @@
     "dataExport": "数据导出",
     "pageNumber": "第{page}页",
     "totalItems": "共 {total} 条"
+  },
+  "JsonFormWrapper": {
+    "EditableCell": {
+      "pleaseEnter": "请输入",
+      "thisField": "该字段"
+    },
+    "EditTable": {
+      "parseTableFailed": "解析表格失败：",
+      "currentRowValidationFailed": "当前行校验未通过",
+      "maxLimitReached": "已达最大数量{maxItems}",
+      "addRow": "添加一行数据"
+    }
   }
 }

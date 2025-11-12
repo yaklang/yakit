@@ -10,6 +10,7 @@ import {MITMFilterData, MITMFilterSchema} from "../MITMServerStartForm/MITMFilte
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
 import {MITMVersion} from "../Context/MITMContext"
 import {ManualHijackListAction, ManualHijackListStatus} from "@/defaultConstants/mitmV2"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -41,7 +42,8 @@ export const grpcMITMStopCall: APIFunc<string, null> = (version, hiddenError) =>
             .invoke(url)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMStopCall 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify("error", "grpcMITMStopCall " + (i18n.language === "zh" ? "失败：" : "failed:") + e)
                 reject(e)
             })
     })
@@ -76,7 +78,11 @@ export const grpcMITMHaveCurrentStream: APIFunc<string, MITMHaveCurrentStreamRes
             .invoke(url)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMHaveCurrentStream 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMHaveCurrentStream " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -118,7 +124,8 @@ export const grpcMITMRecover: APIFunc<string, null> = (version, hiddenError) => 
             .invoke(url)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMRecover 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify("error", "grpcMITMRecover " + (i18n.language === "zh" ? "失败：" : "failed:") + e)
                 reject(e)
             })
     })
@@ -195,7 +202,7 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
                   FilterWebsocket: value.extra.filterWebsocket,
                   DisableCACertPage: value.extra.disableCACertPage,
                   DisableWebsocketCompression: value.extra.DisableWebsocketCompression,
-                  PluginConcurrency: value.extra.PluginConcurrency,
+                  PluginConcurrency: value.extra.PluginConcurrency
               }
     }
     return data
@@ -226,7 +233,8 @@ export const grpcMITMStartCallV1: APIFunc<MITMStartCallRequestV1, null> = (param
             .invoke(url, params)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMStartCallV1 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify("error", "grpcMITMStartCallV1 " + (i18n.language === "zh" ? "失败：" : "failed:") + e)
                 reject(e)
             })
     })
@@ -239,7 +247,8 @@ export const grpcMITMStartCallV2: APIFunc<MITMStartCallRequestV2, null> = (param
             .invoke(url, params)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMStartCallV2 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify("error", "grpcMITMStartCallV2 " + (i18n.language === "zh" ? "失败：" : "failed:") + e)
                 reject(e)
             })
     })
@@ -260,7 +269,11 @@ export const grpcMITMExecScriptById: APIFunc<MITMExecScriptByIdRequest, null> = 
             .invoke(url, value)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMExecScriptById 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMExecScriptById " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -279,7 +292,8 @@ export const grpcMITMRemoveHook: APIFunc<MITMRemoveHookRequest, null> = (params,
             .invoke(url, value)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMRemoveHook 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify("error", "grpcMITMRemoveHook " + (i18n.language === "zh" ? "失败：" : "failed:") + e)
                 reject(e)
             })
     })
@@ -293,7 +307,8 @@ export const grpcMITMResetFilter: APIFunc<string, null> = (version, hiddenError)
             .invoke(url)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMResetFilter 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify("error", "grpcMITMResetFilter " + (i18n.language === "zh" ? "失败：" : "failed:") + e)
                 reject(e)
             })
     })
@@ -307,7 +322,8 @@ export const grpcResetMITMFilter: APINoRequestFunc<null> = (hiddenError) => {
             .invoke(url)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcResetMITMFilter 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify("error", "grpcResetMITMFilter " + (i18n.language === "zh" ? "失败：" : "failed:") + e)
                 reject(e)
             })
     })
@@ -341,7 +357,8 @@ export const grpcMITMSetFilter: APIFunc<MITMSetFilterRequest, null> = (params, h
             .invoke(url, value)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMSetFilter 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify("error", "grpcMITMSetFilter " + (i18n.language === "zh" ? "失败：" : "failed:") + e)
                 reject(e)
             })
     })
@@ -354,7 +371,8 @@ export const grpcMITMGetFilter: APINoRequestFunc<MITMFilterSchema> = (hiddenErro
             .invoke(url)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMGetFilter 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify("error", "grpcMITMGetFilter " + (i18n.language === "zh" ? "失败：" : "failed:") + e)
                 reject(e)
             })
     })
@@ -373,7 +391,11 @@ export const grpcMITMHijackSetFilter: APIFunc<MITMHijackSetFilterRequest, null> 
             .invoke(url, value)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMHijackSetFilter 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMHijackSetFilter " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -387,7 +409,11 @@ export const grpcMITMHijackGetFilter: APINoRequestFunc<MITMFilterSchema> = (hidd
             .invoke(url)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMHijackGetFilter 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMHijackGetFilter " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -405,7 +431,8 @@ export const grpcMITMAutoForward: APIFunc<MITMHijackGetFilterRequest, null> = (p
             .invoke(url, params.isManual)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMAutoForward 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify("error", "grpcMITMAutoForward " + (i18n.language === "zh" ? "失败：" : "failed:") + e)
                 reject(e)
             })
     })
@@ -485,7 +512,11 @@ export const grpcMITMDropRequestById: APIFunc<number, null> = (id, hiddenError) 
             .invoke(url, id)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMDropRequestById 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMDropRequestById " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -498,7 +529,11 @@ export const grpcMITMDropResponseById: APIFunc<number, null> = (id, hiddenError)
             .invoke(url, id)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMDropResponseById 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMDropResponseById " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -511,7 +546,11 @@ export const grpcMITMForwardRequestById: APIFunc<number, null> = (id, hiddenErro
             .invoke(url, id)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMForwardRequestById 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMForwardRequestById " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -524,7 +563,11 @@ export const grpcMITMForwardResponseById: APIFunc<number, null> = (id, hiddenErr
             .invoke(url, id)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMForwardResponseById 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMForwardResponseById " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -537,7 +580,11 @@ export const grpcMITMHijackedCurrentResponseById: APIFunc<number, null> = (id, h
             .invoke(url, id, true)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMHijackedCurrentResponseById 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMHijackedCurrentResponseById " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -550,7 +597,13 @@ export const grpcMITMCancelHijackedCurrentResponseById: APIFunc<number, null> = 
             .invoke(url, id, false)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMCancelHijackedCurrentResponseById 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMCancelHijackedCurrentResponseById " +
+                            (i18n.language === "zh" ? "失败：" : "failed:") +
+                            e
+                    )
                 reject(e)
             })
     })
@@ -568,7 +621,11 @@ export const grpcMITMEnablePluginMode: APIFunc<MITMEnablePluginModeRequest, null
             .invoke(url, value.initPluginNames)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMEnablePluginMode 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMEnablePluginMode " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -587,7 +644,11 @@ export const grpcMITMForwardModifiedRequest: APIFunc<MITMForwardModifiedRequest,
             .invoke(url, params)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMForwardModifiedRequest 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMForwardModifiedRequest " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -607,7 +668,11 @@ export const grpcMITMForwardModifiedResponse: APIFunc<MITMForwardModifiedRespons
             .invoke(url, params)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMForwardModifiedResponse 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMForwardModifiedResponse " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -625,7 +690,11 @@ export const grpcMITMExecScriptContent: APIFunc<MITMExecScriptContentRequest, nu
             .invoke(url, params.YakScriptContent)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMExecScriptContent 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMExecScriptContent " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -639,7 +708,11 @@ export const grpcMITMGetCurrentHook: APIFunc<string, null> = (version, hiddenErr
             .invoke(url)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMGetCurrentHook 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMGetCurrentHook " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -658,7 +731,11 @@ export const grpcMITMContentReplacers: APIFunc<MITMContentReplacersRequest, null
             .invoke(url, value.replacers)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMContentReplacers 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMContentReplacers " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -672,7 +749,11 @@ export const grpcMITMClearPluginCache: APIFunc<string, null> = (version, hiddenE
             .invoke(url)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMClearPluginCache 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMClearPluginCache " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -689,7 +770,11 @@ export const grpcMITMFilterWebsocket: APIFunc<MITMFilterWebsocketRequest, null> 
             .invoke(url, params.filterWebsocket)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMFilterWebsocket 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMFilterWebsocket " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -707,7 +792,11 @@ export const grpcMITMSetDownstreamProxy: APIFunc<MITMSetDownstreamProxyRequest, 
             .invoke(url, params.downstreamProxy)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMSetDownstreamProxy 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify(
+                        "error",
+                        "grpcMITMSetDownstreamProxy " + (i18n.language === "zh" ? "失败：" : "failed:") + e
+                    )
                 reject(e)
             })
     })
@@ -726,7 +815,8 @@ export const grpcMITMHotPort: APIFunc<MITMHotPortRequest, null> = (params, hidde
             .invoke(url, value)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "grpcMITMHotPort 失败:" + e)
+                if (!hiddenError)
+                    yakitNotify("error", "grpcMITMHotPort " + (i18n.language === "zh" ? "失败：" : "failed:") + e)
                 reject(e)
             })
     })
