@@ -269,6 +269,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const [forceManualMITMInstall, setForceManualMITMInstall] = useState<boolean>(() => {
         return sessionStorage.getItem("forceManualMITMInstall") === "1"
     })
+    const [manualInstallReason, setManualInstallReason] = useState<string | undefined>(() => {
+        return sessionStorage.getItem("forceManualMITMInstallReason") || undefined
+    })
 
     const updateMITMCert = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -339,11 +342,25 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
     const enableManualFallback = useMemoizedFn((reason?: string) => {
         sessionStorage.setItem("forceManualMITMInstall", "1")
+        sessionStorage.setItem("forceManualMITMInstallReason", reason || "")
+        setManualInstallReason(reason)
         setForceManualMITMInstall(true)
         if (reason) {
-            yakitNotify("error", `MITM 证书安装失败：${reason}`)
+            let extra = ""
+            if (reason.toLowerCase().includes("pkexec not found")) {
+                extra =
+                    "。检测到系统缺少 pkexec，可通过安装 policykit（例如运行 sudo apt install policykit-1）后再尝试一键安装"
+            }
+            yakitNotify("error", `MITM 证书安装失败：${reason}${extra}`)
         }
         showAutoInstallScriptGuide()
+    })
+
+    const resetManualFallback = useMemoizedFn(() => {
+        sessionStorage.removeItem("forceManualMITMInstall")
+        sessionStorage.removeItem("forceManualMITMInstallReason")
+        setManualInstallReason(undefined)
+        setForceManualMITMInstall(false)
     })
 
     const handleInstallMITMCertificate = useMemoizedFn(() => {
@@ -706,6 +723,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     <div className={styles["title-style"]}>引擎不是官方发布版本</div>
                                     <div className={styles["subtitle-style"]}>可能会造成本地使用出现问题</div>
                                 </div>
+                                {forceManualMITMInstall && manualInstallReason && (
+                                    <div className={styles["subtitle-style"]} style={{marginTop: 4}}>
+                                        上次自动安装失败原因：{manualInstallReason}
+                                    </div>
+                                )}
                             </div>
                             <div className={styles["info-right"]}>
                                 <YakitButton
@@ -734,13 +756,27 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 </div>
                             </div>
                             <div className={styles["info-right"]}>
-                                <YakitButton
-                                    type='text'
-                                    className={styles["btn-style"]}
-                                    onClick={handleInstallMITMCertificate}
-                                >
-                                    {forceManualMITMInstall ? "生成安装脚本" : "下载安装"}
-                                </YakitButton>
+                                <div style={{display: "flex", alignItems: "center", gap: 8}}>
+                                    <YakitButton
+                                        type='text'
+                                        className={styles["btn-style"]}
+                                        onClick={handleInstallMITMCertificate}
+                                    >
+                                        {forceManualMITMInstall ? "生成安装脚本" : "下载安装"}
+                                    </YakitButton>
+                                    {forceManualMITMInstall && (
+                                        <YakitButton
+                                            type='text'
+                                            className={styles["btn-style"]}
+                                            onClick={() => {
+                                                resetManualFallback()
+                                                handleInstallMITMCertificate()
+                                            }}
+                                        >
+                                            重新尝试自动安装
+                                        </YakitButton>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}

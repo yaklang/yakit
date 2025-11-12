@@ -453,6 +453,9 @@ const Home: React.FC<HomeProp> = (props) => {
     const [forceManualMITMInstall, setForceManualMITMInstall] = useState<boolean>(() => {
         return sessionStorage.getItem("forceManualMITMInstall") === "1"
     })
+    const [manualInstallReason, setManualInstallReason] = useState<string | undefined>(() => {
+        return sessionStorage.getItem("forceManualMITMInstallReason") || undefined
+    })
 
     const updateMITMCert = useMemoizedFn(() => {
         return new Promise((resolve, reject) => {
@@ -520,11 +523,25 @@ const Home: React.FC<HomeProp> = (props) => {
     // 下载安装MITM证书
     const enableManualFallback = useMemoizedFn((reason?: string) => {
         sessionStorage.setItem("forceManualMITMInstall", "1")
+        sessionStorage.setItem("forceManualMITMInstallReason", reason || "")
+        setManualInstallReason(reason)
         setForceManualMITMInstall(true)
         if (reason) {
-            yakitNotify("error", `MITM 证书安装失败：${reason}`)
+            let extra = ""
+            if (reason.toLowerCase().includes("pkexec not found")) {
+                extra =
+                    "。检测到系统缺少 pkexec，可通过安装 policykit（例如运行 sudo apt install policykit-1）后再尝试一键安装"
+            }
+            yakitNotify("error", `MITM 证书安装失败：${reason}${extra}`)
         }
         showAutoInstallScriptGuide()
+    })
+
+    const resetManualFallback = useMemoizedFn(() => {
+        sessionStorage.removeItem("forceManualMITMInstall")
+        sessionStorage.removeItem("forceManualMITMInstallReason")
+        setManualInstallReason(undefined)
+        setForceManualMITMInstall(false)
     })
 
     const handleDownMitmCert = useMemoizedFn((e?: React.MouseEvent<HTMLElement>) => {
@@ -850,15 +867,34 @@ const Home: React.FC<HomeProp> = (props) => {
                                             <SolidExclamationIcon className={styles["exclamation-icon"]} />
                                             {t("Home.certNotConfigured")}
                                         </div>
-                                        <YakitButton
-                                            type='text'
-                                            className={styles["config-detection-btn"]}
-                                            onClick={handleDownMitmCert}
-                                        >
-                                            {forceManualMITMInstall
-                                                ? t("Home.generateAutoInstallScript")
-                                                : t("YakitButton.downloadInstall")}
-                                        </YakitButton>
+                                        <div style={{display: "flex", alignItems: "center", gap: 8}}>
+                                            <YakitButton
+                                                type='text'
+                                                className={styles["config-detection-btn"]}
+                                                onClick={handleDownMitmCert}
+                                            >
+                                                {forceManualMITMInstall
+                                                    ? t("Home.generateAutoInstallScript")
+                                                    : t("YakitButton.downloadInstall")}
+                                            </YakitButton>
+                                            {forceManualMITMInstall && (
+                                                <YakitButton
+                                                    type='text'
+                                                    className={styles["config-detection-btn"]}
+                                                    onClick={() => {
+                                                        resetManualFallback()
+                                                        handleDownMitmCert()
+                                                    }}
+                                                >
+                                                    重新尝试自动安装
+                                                </YakitButton>
+                                            )}
+                                        </div>
+                                        {forceManualMITMInstall && manualInstallReason && (
+                                            <div className={styles["config-detection-left"]} style={{marginTop: 4}}>
+                                                上次自动安装失败原因：{manualInstallReason}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                                 <div
