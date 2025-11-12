@@ -7219,7 +7219,8 @@ message SSAProgramFilter{
   int64 AfterID = 8;
   int64 BeforeID = 9;
 
-  repeated string ProjectNames = 10; 
+  repeated string ProjectNames = 10; // abort
+  repeated int64 ProjectIds = 11;
 }
 
 
@@ -8311,6 +8312,10 @@ message SSAProject {
   SSAProjectScanRuleConfig RuleConfig = 11;
 
   string JSONStringConfig = 12;
+  // 漏洞个数
+  int64 RiskNumber = 13;
+  // 编译次数
+  int64 CompileTimes = 14;
 }
 
 message SSAProjectCompileConfig{
