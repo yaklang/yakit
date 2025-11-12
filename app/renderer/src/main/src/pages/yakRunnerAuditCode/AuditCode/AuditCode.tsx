@@ -6,7 +6,6 @@ import {
     AuditHistoryListRefProps,
     AuditHistoryTableProps,
     AuditNodeSearchItemProps,
-    AuditMainItemFormProps,
     AuditModalFormModalProps,
     AuditModalFormProps,
     AuditNodeDetailProps,
@@ -18,35 +17,26 @@ import {
     QuerySSAProjectProps,
     SSAProjectResponse,
     AuditDetailItemProps,
-    CompileHistoryProps
+    CompileHistoryProps,
+    ResultDataProps
 } from "./AuditCodeType"
 import classNames from "classnames"
 import styles from "./AuditCode.module.scss"
 import {genDefaultPagination, QueryGeneralResponse, YakScript} from "@/pages/invoker/schema"
-import {Badge, Divider, Form, FormInstance, Input, Progress, Slider, Tooltip, Tree} from "antd"
+import {Divider, Form, Progress, Slider, Tooltip, Tree} from "antd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ExtraParamsNodeByType} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
-import {
-    ExecuteEnterNodeByPluginParams,
-    FormContentItemByType
-} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {FormContentItemByType} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
-import {
-    getValueByType,
-    getYakExecutorParam,
-    onCodeToInfo,
-    ParamsToGroupByGroupName
-} from "@/pages/plugins/editDetails/utils"
+import {getValueByType, getYakExecutorParam, ParamsToGroupByGroupName} from "@/pages/plugins/editDetails/utils"
 import {
     useControllableValue,
     useDebounceFn,
     useGetState,
     useInterval,
-    useInViewport,
     useMemoizedFn,
     useSafeState,
     useSize,
-    useThrottleEffect,
     useUpdateEffect
 } from "ahooks"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
@@ -66,7 +56,6 @@ import {
     OutlineClockIcon,
     OutlineDeprecatedIcon,
     OutlineDocumentduplicateIcon,
-    OutlineDotshorizontalIcon,
     OutlineEyeIcon,
     OutlinePencilaltIcon,
     OutlineRefreshIcon,
@@ -89,13 +78,9 @@ import {
 } from "@/assets/icon/solid"
 import {AuditCodeStreamData, AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {RequestYakURLResponse, YakURLResource} from "@/pages/yakURLTree/data"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
-import {formatTimestamp} from "@/utils/timeUtil"
-import {QuestionMarkCircleIcon, TerminalIcon, TrashIcon} from "@/assets/newIcon"
-import {addToTab} from "@/pages/MainTabs"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import {apiDeleteQuerySyntaxFlowResult, apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
@@ -113,7 +98,7 @@ import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
-import {YakitDragger, YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
+import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {PluginExecuteLog} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import useDispatcher from "../hooks/useDispatcher"
@@ -121,7 +106,7 @@ import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {setClipboardText} from "@/utils/clipboard"
-import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
+import {getJsonSchemaListResult, JsonFormWrapper} from "@/components/JsonFormWrapper/JsonFormWrapper"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -136,9 +121,9 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {FileDefault, FileSuffix, KeyToIcon} from "../../yakRunner/FileTree/icon"
 import {RiskTree} from "../RunnerFileTree/RunnerFileTree"
 import {getNameByPath} from "@/pages/yakRunner/utils"
-import {FuncFilterPopover} from "@/pages/plugins/funcTemplate"
 import cloneDeep from "lodash/cloneDeep"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {RJSFSchema} from "@rjsf/utils"
+import {TrashIcon} from "@/assets/newIcon"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -1533,7 +1518,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
         })
         let fieldsValue = {...cloneDeep(defaultValue || {}), ...newFormValue}
         // compile-immediately 特例处理（应后端要求）
-        if((plugin?.Params||[]).filter(item => item.Field === "compile-immediately").length > 0){
+        if ((plugin?.Params || []).filter((item) => item.Field === "compile-immediately").length > 0) {
             fieldsValue["compile-immediately"] = true
         }
         form.setFieldsValue(fieldsValue)
@@ -1742,7 +1727,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
 
 // 公共封装组件用于编译项目
 export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) => {
-    const {onCancel, onSuccee,onRefresh, title, warrpId, initForm} = props
+    const {onCancel, onSuccee, onRefresh, title, warrpId, initForm} = props
     const [isShowCompileModal, setShowCompileModal] = useState<boolean>(true)
     const tokenRef = useRef<string>(randomString(40))
     const [isShowRunAuditModal, setShowRunAuditModal] = useState<boolean>(false)
@@ -1815,7 +1800,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                     // CreateSSAProject 创建项目管理数据
                     ipcRenderer
                         .invoke("CreateSSAProject", {
-                            ProjectRawData: startLog?.data || ""
+                            JSONStringConfig: startLog?.data || ""
                         })
                         .then(() => {
                             onRefresh?.()
@@ -1889,7 +1874,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                             ])
                             break
                         default:
-                            if(!isCompileImmediatelyRef.current){
+                            if (!isCompileImmediatelyRef.current) {
                                 success("创建项目成功，请手动编译")
                                 setShowCompileModal(false)
                                 return
@@ -1917,7 +1902,6 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                     onSuccee(pathCacheRef.current)
                 }, 300)
             }
-            console.log("streamInfo.logState", streamInfo.logState)
 
             logInfoRef.current = streamInfo.logState.slice(0, 8)
             setExportStreamData({
@@ -2094,188 +2078,164 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
 }
 
 export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = memo((props) => {
-    const {onClose, record, setData} = props
-    const {ProjectName, Description} = record
-    const [formType, setFormType] = useSafeState<"baseInfo" | "compile">("baseInfo")
-    const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
-    const [form] = Form.useForm()
+    const {onClose, record, setData, schema} = props
+    const {JSONStringConfig} = record
+    const [value, setValue] = useState<any>()
+    const [formType, setFormType] = useSafeState<"baseInfo" | "compile" | "codeSource">("baseInfo")
+    const tokenRef = useRef<string>(randomString(40))
+    const JSONStringConfigCacheRef = useRef<string>()
+    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+        taskName: "debug-plugin",
+        apiKey: "DebugPlugin",
+        token: tokenRef.current,
+        onEnd: () => {
+            debugPluginStreamEvent.stop()
+        },
+        onError: () => {},
+        setRuntimeId: (rId) => {}
+    })
 
     useEffect(() => {
-        if (record) {
-            form.setFieldsValue({
-                ProjectName,
-                Description
-            })
+        // 当任务结束时
+        if (streamInfo.logState[0]?.level === "json") {
+            try {
+                const resultData = JSON.parse(streamInfo.logState[0].data) as ResultDataProps
+                if (resultData.success) {
+                    onFinish(resultData)
+                }
+            } catch (error) {}
         }
+    }, [streamInfo])
+
+    useEffect(() => {
+        try {
+            const newValue = JSON.parse(JSONStringConfig)
+            setValue(newValue)
+        } catch (error) {}
     }, [])
 
-    // const onFinish = useMemoizedFn(async (v: {Name: string; Description: string}) => {
-    //     ipcRenderer
-    //         .invoke("UpdateSSAProgram", {
-    //             ProgramInput: v
-    //         })
-    //         .then(() => {
-    //             setData((pre) =>
-    //                 pre.map((item) => {
-    //                     if (item.Name === v.Name) {
-    //                         return {
-    //                             ...item,
-    //                             Description: v.Description
-    //                         }
-    //                     }
-    //                     return item
-    //                 })
-    //             )
-    //             onClose()
-    //         })
-    //         .catch((e) => {
-    //             yakitNotify("error", "编辑列表数据失败：" + e)
-    //         })
-    // })
+    const jsonSchemaListRef = useRef<{
+        [key: string]: any
+    }>({})
 
     const onSubmit = useMemoizedFn(() => {
-        form.validateFields().then((value) => {})
+        const result = getJsonSchemaListResult(jsonSchemaListRef.current)
+        if (result.jsonSchemaError.length > 0) {
+            failed(`jsonSchema校验失败`)
+            return
+        }
+        let JSONStringConfig = ""
+        result.jsonSchemaSuccess.forEach((item) => {
+            if (item.key === "JSONStringConfig") {
+                JSONStringConfig = JSON.stringify(item.value)
+            }
+        })
+        debugPluginStreamEvent.reset()
+        const params: DebugPluginRequest = {
+            Code: "",
+            Input: "",
+            HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
+            PluginType: "yak",
+            PluginName: "SSA 项目更新",
+            ExecParams: [
+                {
+                    Key: "project_id",
+                    Value: record.ID + ""
+                },
+                {
+                    Key: "config_data",
+                    Value: JSONStringConfig
+                }
+            ]
+        }
+        JSONStringConfigCacheRef.current = JSONStringConfig
+
+        apiDebugPlugin({params, token: tokenRef.current}).then(() => {
+            debugPluginStreamEvent.start()
+        })
+    })
+
+    const onFinish = useMemoizedFn((data: ResultDataProps) => {
+        success("更新项目成功")
+        const {project_name, language, description, path} = data
+        setData((pre) =>
+            pre.map((item) => {
+                if (item.ID === record.ID) {
+                    return {
+                        ...item,
+                        ProjectName: project_name,
+                        Language: language,
+                        Description: description,
+                        CodeSourceConfig: path,
+                        JSONStringConfig: JSONStringConfigCacheRef.current || item.JSONStringConfig
+                    }
+                }
+                return item
+            })
+        )
+        onClose()
     })
 
     return (
         <div className={styles["project-manager-edit"]}>
-            <YakitRadioButtons
-                className={styles["form-type-radio"]}
-                value={formType}
-                onChange={(e) => {
-                    const value = e.target.value
-                    setFormType(value)
-                }}
-                buttonStyle='solid'
-                options={[
-                    {
-                        label: "基础信息",
-                        value: "baseInfo"
-                    },
-                    {
-                        label: "编译配置",
-                        value: "compile"
-                    }
-                ]}
-            />
-            <div className={styles["project-manager-edit-form"]}>
-                <Form layout='horizontal' labelCol={{span: 5}} wrapperCol={{span: 17}} form={form}>
-                    {formType === "baseInfo" ? (
-                        <>
-                            <Form.Item
-                                name='ProjectName'
-                                label='项目名称'
-                                rules={[{required: true, message: "该项为必填"}]}
-                            >
-                                <YakitInput disabled placeholder='请输入项目名称...' />
-                            </Form.Item>
-                            <Form.Item
-                                name='Address'
-                                label='项目地址'
-                                rules={[{required: true, message: "该项为必填"}]}
-                            >
-                                <YakitInput placeholder='请输入项目地址...' />
-                            </Form.Item>
-                            <Form.Item name='Language' label='语言' rules={[{required: true, message: "该项为必填"}]}>
-                                <YakitSelect placeholder='请选择语言...'>
-                                    <YakitSelect.Option value='javascript'>JavaScript</YakitSelect.Option>
-                                    <YakitSelect.Option value='typescript'>TypeScript</YakitSelect.Option>
-                                </YakitSelect>
-                            </Form.Item>
-                            <Form.Item name='Description' label='项目描述'>
-                                <YakitInput.TextArea rows={3} allowClear placeholder='请输入项目描述...' />
-                            </Form.Item>
-                            <Form.Item name='Tags' label='项目标签'>
-                                <YakitInput placeholder='请输入项目标签...' />
-                            </Form.Item>
-                            <Form.Item
-                                name='proxy'
-                                label='代理'
-                                help={
-                                    <div
-                                        className={styles["agent-down-stream-proxy"]}
-                                        onClick={() => setAgentConfigModalVisible(true)}
-                                    >
-                                        配置代理认证
-                                    </div>
-                                }
-                            >
-                                <YakitAutoComplete placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' />
-                            </Form.Item>
-                        </>
-                    ) : (
-                        <>
-                            <Form.Item name='Exclude' label='排除文件/文件夹'>
-                                <YakitInput placeholder='请输入...' />
-                            </Form.Item>
-                            <Form.Item name='StrictMode' label='严格模式' valuePropName='checked'>
-                                <YakitSwitch />
-                            </Form.Item>
-                            <Form.Item name='Recompile' label='是否重新编译' valuePropName='checked'>
-                                <YakitSwitch />
-                            </Form.Item>
-                            <Form.Item
-                                name='Concurrency'
-                                label='并发数'
-                                tooltip='编译时同时处理的文件数量，数值越大，编译速度越快，但会占用更多的系统资源，建议根据系统性能进行调整。'
-                                valuePropName='checked'
-                            >
-                                <YakitSwitch />
-                            </Form.Item>
-                            <Form.Item
-                                name='peephole'
-                                label='编译速度'
-                                help='小文件无需配置，大文件可根据需求选择，速度越快，精度越小'
-                            >
-                                <Slider
-                                    style={{width: 300}}
-                                    dots
-                                    min={0}
-                                    max={3}
-                                    tipFormatter={(value) => {
-                                        switch (value) {
-                                            case 0:
-                                                return "关闭，精度IV"
-                                            case 1:
-                                                return "慢速，精度III"
-                                            case 2:
-                                                return "中速，精度II"
-                                            case 3:
-                                                return "快速，精度I"
-                                            default:
-                                                return value
-                                        }
-                                    }}
-                                />
-                            </Form.Item>
-                            <Form.Item name='InMemoryCompile' label='内存编译' valuePropName='checked'>
-                                <YakitSwitch />
-                            </Form.Item>
-                        </>
-                    )}
-                </Form>
-            </div>
-            <div className={styles["opt-btn"]}>
-                <YakitButton
-                    size='large'
-                    onClick={() => {
-                        onClose()
-                    }}
-                    type='outline2'
-                >
-                    取消
-                </YakitButton>
-                <YakitButton size='large' type='primary' htmlType={"submit"} onSubmit={onSubmit}>
-                    保存
-                </YakitButton>
-            </div>
-            <AgentConfigModal
-                agentConfigModalVisible={agentConfigModalVisible}
-                onCloseModal={() => setAgentConfigModalVisible(false)}
-                generateURL={(url) => {
-                    form.setFieldsValue({proxy: url})
-                }}
-            />
+            {value && (
+                <>
+                    <YakitRadioButtons
+                        className={styles["form-type-radio"]}
+                        value={formType}
+                        onChange={(e) => {
+                            const value = e.target.value
+                            setFormType(value)
+                        }}
+                        buttonStyle='solid'
+                        options={[
+                            {
+                                label: "基础信息",
+                                value: "baseInfo"
+                            },
+                            {
+                                label: "代码源配置",
+                                value: "codeSource"
+                            },
+                            {
+                                label: "编译配置",
+                                value: "compile"
+                            }
+                        ]}
+                    />
+
+                    <div
+                        className={classNames(styles["form-json-schema-wrapper"], {
+                            [styles["baseInfo"]]: formType === "baseInfo",
+                            [styles["codeSource"]]: formType === "codeSource",
+                            [styles["compile"]]: formType === "compile"
+                        })}
+                    >
+                        <JsonFormWrapper
+                            field={"JSONStringConfig"}
+                            schema={schema}
+                            uiSchema={{}}
+                            jsonSchemaListRef={jsonSchemaListRef}
+                            value={value}
+                        />
+                    </div>
+
+                    <div className={styles["opt-btn"]}>
+                        <YakitButton
+                            size='large'
+                            onClick={() => {
+                                onClose()
+                            }}
+                            type='outline2'
+                        >
+                            取消
+                        </YakitButton>
+                        <YakitButton size='large' type='primary' onClick={onSubmit}>
+                            保存
+                        </YakitButton>
+                    </div>
+                </>
+            )}
         </div>
     )
 })
@@ -2292,7 +2252,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     const [params, setParams] = useState<QuerySSAProjectProps>({
         SearchKeyword: ""
     })
-    const [pagination, setPagination] = useState<Paging>({...genDefaultPagination(20), Order: "asc"})
+    const [pagination, setPagination] = useState<Paging>({
+        ...genDefaultPagination(20),
+        Order: "asc",
+        OrderBy: "created_at"
+    })
     const [loading, setLoading] = useState<boolean>(false)
     const [data, setData] = useState<SSAProjectResponse[]>([])
     const [total, setTotal] = useState<number>(0)
@@ -2303,6 +2267,29 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     // 接口是否正在请求
     const isGrpcRef = useRef<boolean>(false)
     const afterId = useRef<number>()
+    const [schema, setSchema] = useState<RJSFSchema>({})
+    // 获取JSONSchema表单
+    const handleFetchJSONSchema = useDebounceFn(
+        useMemoizedFn(async () => {
+            try {
+                const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目更新"}, true)
+                newPlugin.Params.forEach((item) => {
+                    if (item.Field === "config_data") {
+                        let schema = JSON.parse(item?.JsonSchema || "{}")
+                        // let uiSchema = JSON.parse(item?.UISchema || "{}")
+                        setSchema(schema)
+                    }
+                })
+            } catch (error) {
+                failed("获取JSONSchema失败")
+            }
+        }),
+        {wait: 300}
+    ).run
+
+    useEffect(() => {
+        handleFetchJSONSchema()
+    }, [])
 
     const onSelectAll = useMemoizedFn(() => {
         if (isAllSelect) {
@@ -2347,14 +2334,6 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 Pagination: {...paginationProps, AfterId: reload ? undefined : parseInt(afterId.current + "")}
             })
             .then((item: QueryGeneralResponse<SSAProjectResponse>) => {
-                console.log(
-                    "item.Data",
-                    {
-                        Filter: params,
-                        Pagination: {...paginationProps, AfterId: reload ? undefined : parseInt(afterId.current + "")}
-                    },
-                    item
-                )
                 item.Data = (item as any).Projects
 
                 const newData = reload ? item.Data : data.concat(item.Data)
@@ -2424,13 +2403,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     const columns: VirtualListColumns<SSAProjectResponse>[] = [
         {
             title: "项目名称",
-            dataIndex: "Name",
-            render: (text, record) => {
+            dataIndex: "ProjectName",
+            render: (text) => {
                 return (
-                    <Tooltip title={record.ProjectName}>
-                        <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>
-                            {record.ProjectName}
-                        </div>
+                    <Tooltip title={text}>
+                        <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>{text}</div>
                     </Tooltip>
                 )
             }
@@ -2438,7 +2415,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         {
             title: "语言",
             dataIndex: "Language",
-            width: 60
+            width: 120
         },
         {
             title: "项目描述",
@@ -2451,57 +2428,57 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 )
             }
         },
-        // {
-        //     title: "项目路径",
-        //     dataIndex: "Dbpath",
-        //     render: (text, record) => {
-        //         return (
-        //             <>
-        //                 <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>
-        //                     {record.Dbpath}
-        //                 </div>
-        //                 <Tooltip title={"复制"}>
-        //                     <div className={styles["extra-icon"]} onClick={() => setClipboardText(record.Dbpath)}>
-        //                         <OutlineDocumentduplicateIcon />
-        //                     </div>
-        //                 </Tooltip>
-        //             </>
-        //         )
-        //     }
-        // },
+        {
+            title: "项目路径",
+            dataIndex: "CodeSourceConfig",
+            render: (text) => {
+                try {
+                    const codeSourceConfig = JSON.parse(text)
+                    const {local_file, url} = codeSourceConfig
+                    const path = local_file || url || "未知路径"
+                    // local_file url
+                    return (
+                        <>
+                            <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>
+                                {path}
+                            </div>
+                            <Tooltip title={"复制"}>
+                                <div className={styles["extra-icon"]} onClick={() => setClipboardText(path)}>
+                                    <OutlineDocumentduplicateIcon />
+                                </div>
+                            </Tooltip>
+                        </>
+                    )
+                } catch (error) {
+                    return text
+                }
+            }
+        },
         {
             title: "漏洞数",
-            dataIndex: "LowRiskNumber",
-            render: (text, record) => {
-                // const {CriticalRiskNumber, HighRiskNumber, WarnRiskNumber, LowRiskNumber, InfoRiskNumber} = record
-                // const countNum =
-                //     parseInt(CriticalRiskNumber + "") +
-                //     parseInt(HighRiskNumber + "") +
-                //     parseInt(WarnRiskNumber + "") +
-                //     parseInt(LowRiskNumber + "") +
-                //     parseInt(InfoRiskNumber + "")
-                // return <>{countNum !== 0 ? <YakitTag color='info'>{countNum}</YakitTag> : "-"}</>
-                return <></>
+            dataIndex: "RiskNumber",
+            render: (text) => {
+                try {
+                    const countNum = parseInt(text + "")
+                    return <>{countNum !== 0 ? <YakitTag color='info'>{countNum}</YakitTag> : "-"}</>
+                } catch (error) {
+                    return "-"
+                }
             },
             width: 120
         },
         {
             title: "编译次数",
-            dataIndex: "CompileNumber",
+            dataIndex: "CompileTimes",
             render: (text, record) => {
-                return (
-                    <>
-                        {text !== 0 ? (
-                            <YakitButton type='text' onClick={() => openCompileHistory(record)}>
-                                2
-                            </YakitButton>
-                        ) : (
-                            "-"
-                        )}
-                    </>
-                )
+                try {
+                    const countNum = parseInt(text + "")
+                    return <>{countNum !== 0 ? countNum : "-"}</>
+                } catch (error) {
+                    return "-"
+                }
             },
-            width: 80
+            width: 120
         },
         {
             title: "操作",
@@ -2546,32 +2523,20 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 }}
                             />
                         </Tooltip>
-
-                        {/* 此处的Tooltip会导致页面抖动(待处理) */}
-                        <Tooltip title={"打开项目"}>
+                        <Tooltip title={"项目历史"}>
                             <YakitButton
                                 type='text'
-                                icon={<OutlineArrowcirclerightIcon />}
+                                icon={<OutlineClockIcon />}
                                 onClick={() => {
-                                    // PS:弹框选择编译历史中的某一项
-                                    // if (pageType === "projectManager") {
-                                    //     // 跳转到审计页面的参数
-                                    //     const params: AuditCodePageInfoProps = {
-                                    //         Schema: "syntaxflow",
-                                    //         Location: record.Name,
-                                    //         Path: `/`
-                                    //     }
-                                    //     emiter.emit(
-                                    //         "openPage",
-                                    //         JSON.stringify({
-                                    //             route: YakitRoute.YakRunner_Audit_Code,
-                                    //             params
-                                    //         })
-                                    //     )
-                                    // } else {
-                                    //     onClose && onClose()
-                                    //     emiter.emit("onCodeAuditOpenAuditTree", record.Name)
-                                    // }
+                                    emiter.emit(
+                                        "openPage",
+                                        JSON.stringify({
+                                            route: YakitRoute.YakRunner_ScanHistory,
+                                            params: {
+                                                Programs: [record.ProjectName]
+                                            }
+                                        })
+                                    )
                                 }}
                             />
                         </Tooltip>
@@ -2591,62 +2556,31 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                                 record={record}
                                                 setData={setData}
                                                 onClose={() => m.destroy()}
+                                                schema={schema}
                                             />
                                         )
                                     })
                                 }}
                             />
                         </Tooltip>
-
-                        <Divider type={"vertical"} style={{margin: 0}} />
-                        <FuncFilterPopover
-                            icon={<OutlineDotshorizontalIcon />}
-                            button={{type: "text2"}}
-                            menu={{
-                                type: "primary",
-                                data: [
-                                    {
-                                        key: "scanHistory",
-                                        label: "扫描历史",
-                                        itemIcon: <OutlineClockIcon />,
-                                        type: undefined
-                                    },
-                                    {
-                                        key: "del",
-                                        label: "删除",
-                                        itemIcon: <OutlineTrashIcon />,
-                                        type: "danger"
+                        <YakitPopconfirm
+                            title={`确认删除${record.ProjectName}？`}
+                            onConfirm={(e) => {
+                                e?.stopPropagation()
+                                onDelete({
+                                    Filter: {
+                                        IDs: [parseInt(record.ID + "")]
                                     }
-                                ],
-                                onClick: ({key}) => handleOperates(key, record)
+                                })
                             }}
-                            placement='bottomRight'
-                        />
+                        >
+                            <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
+                        </YakitPopconfirm>
                     </div>
                 )
             }
         }
     ]
-
-    const handleOperates = (type: string, record: SSAProjectResponse) => {
-        if (type === "del") {
-            onDelete({
-                Filter: {
-                    IDs: [parseInt(record.ID + "")]
-                }
-            })
-        } else if (type === "scanHistory") {
-            emiter.emit(
-                "openPage",
-                JSON.stringify({
-                    route: YakitRoute.YakRunner_ScanHistory,
-                    params: {
-                        Programs: [record.ProjectName]
-                    }
-                })
-            )
-        }
-    }
 
     const loadMoreData = useMemoizedFn(() => {
         if (data.length > 0) {

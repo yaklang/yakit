@@ -381,21 +381,61 @@
     }
 }
 .project-manager-edit {
+    // 以下为jsonSchema样式特殊处理---start
+    .form-json-schema-wrapper {
+        padding: 0px 16px;
+        max-height: 600px;
+        overflow: auto;
+        *:has(> label[title="基础信息"]),*:has(> label[title="代码源配置"]),*:has(> label[title="编译配置"]) {
+            display: none;
+        }
+    }
+    .baseInfo {
+        fieldset[id="root"] > div:first-child > div:nth-child(2) {
+            height: 0px;
+            overflow: hidden;
+        }
+        fieldset[id="root"] > div:first-child > div:nth-child(3) {
+            height: 0px;
+            overflow: hidden;
+        }
+    }
+    .codeSource {
+        fieldset[id="root"] > div:first-child > div:first-child {
+            height: 0px;
+            overflow: hidden;
+        }
+        fieldset[id="root"] > div:first-child > div:nth-child(3) {
+            height: 0px;
+            overflow: hidden;
+        }
+    }
+    .compile {
+        fieldset[id="root"] > div:first-child > div:first-child {
+            height: 0px;
+            overflow: hidden;
+        }
+        fieldset[id="root"] > div:first-child > div:nth-child(2) {
+            height: 0px;
+            overflow: hidden;
+        }
+    }
+    // 以上为jsonSchema样式特殊处理---end
+
     .form-type-radio {
         padding: 0px 16px;
     }
     .project-manager-edit-form {
         padding: 8px 24px 8px 24px;
-        
     }
     .opt-btn {
         padding: 0px 24px;
-            display: flex;
-            flex-direction: row;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
 }
 
 .extra-icon {
