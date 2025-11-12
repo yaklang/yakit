@@ -1,4 +1,4 @@
-import {useEffect, useRef} from "react"
+import {useEffect, useRef, useState} from "react"
 import {yakitNotify} from "@/utils/notification"
 import {useMemoizedFn} from "ahooks"
 import {Uint8ArrayToString} from "@/utils/str"
@@ -75,6 +75,9 @@ function useChatIPC(params?: UseChatIPCParams) {
     // #endregion
 
     // #region 单次流执行时的输出展示数据
+    // RunTimeIDs
+    const [runTimeIDs, setRunTimeIDs] = useState<string[]>([])
+
     // 日志
     const logEvents = useAIChatLog()
 
@@ -144,6 +147,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     const onReset = useMemoizedFn(() => {
         chatID.current = ""
         setExecute(false)
+        setRunTimeIDs([])
         // logEvents.clearLogs()
         aiPerfDataEvent.handleResetData()
         yakExecResultEvent.handleResetData()
@@ -162,14 +166,20 @@ function useChatIPC(params?: UseChatIPCParams) {
         chatID.current = token
         ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
             try {
+                // 记录会话中所有的RunTimeID
+                setRunTimeIDs((old) => {
+                    if (!res.CallToolID || old.includes(res.CallToolID)) return old
+                    return [...old, res.CallToolID]
+                })
+
                 let ipcContent = Uint8ArrayToString(res.Content) || ""
                 console.log("onStart-res", res, ipcContent)
+
                 if (res.Type === "start_plan_and_execution") {
                     // 触发任务规划，并传出任务规划流的标识 coordinator_id
                     const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
                     if (startInfo.coordinator_id && planCoordinatorId.current !== startInfo.coordinator_id) {
                         onTaskStart && onTaskStart(startInfo.coordinator_id)
-                        taskChatEvent.handleSetCoordinatorId(startInfo.coordinator_id)
                         planCoordinatorId.current = startInfo.coordinator_id
                     }
                     return
@@ -183,7 +193,6 @@ function useChatIPC(params?: UseChatIPCParams) {
                     return
                 }
 
-                casualChatEvent.handleSetCoordinatorId(res.CoordinatorId)
 
                 if (UseAIPerfDataTypes.includes(res.Type)) {
                     // AI性能数据处理
@@ -317,7 +326,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     }, [])
 
     return [
-        {execute, yakExecResult, aiPerfData, casualChat, taskChat},
+        {execute, runTimeIDs, yakExecResult, aiPerfData, casualChat, taskChat},
         {fetchToken, onStart, onSend, onClose, onReset}
     ] as const
 }

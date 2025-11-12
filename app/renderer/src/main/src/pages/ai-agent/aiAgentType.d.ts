@@ -23,8 +23,6 @@ export interface AIAgentTriggerEventInfo {
 
 // #region UI左侧组件定义
 export interface AIAgentSideListProps {}
-// 侧边栏 tab 类型
-export type AIAgentTab = "history" | "setting" | "forgeName" | "tool" | "AIModel" //  | "mcp"
 
 // 编辑对话名字
 export interface EditChatNameModalProps {

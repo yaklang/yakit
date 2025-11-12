@@ -19,6 +19,7 @@ export interface AIChatInfo {
     request: AIStartParams
     /** 回答 */
     answer?: {
+        runTimeIDs: string[]
         aiPerfData: UseChatIPCState["aiPerfData"]
         casualChat: UseChatIPCState["casualChat"]
         taskChat: UseChatIPCState["taskChat"]

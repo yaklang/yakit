@@ -48,10 +48,10 @@ const AIReActTaskChat = React.lazy(() => import("../../ai-re-act/aiReActTaskChat
 
 const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
     if (!taskChat) return false
-    const isHaveId = !!taskChat.coordinatorId
+
     const isHavePlan = !!taskChat.plan.length
     const isHaveStreams = !!taskChat.streams.length
-    return isHaveId || isHavePlan || isHaveStreams
+    return isHavePlan || isHaveStreams
 }
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {} = props
@@ -157,7 +157,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onTimelineMessage: handleTimelineMessage,
         getRequest: getSetting
     })
-    const {execute, aiPerfData, casualChat, taskChat, yakExecResult} = chatIPCData
+    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult} = chatIPCData
 
     // 保存上次对话信息
     const handleSaveChatInfo = useMemoizedFn(() => {
@@ -165,6 +165,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
         if (showID && events.fetchToken() && showID === events.fetchToken()) {
             const answer: AIChatInfo["answer"] = {
+                runTimeIDs: cloneDeep(runTimeIDs),
                 taskChat: cloneDeep(taskChat),
                 aiPerfData: cloneDeep(aiPerfData),
                 casualChat: cloneDeep(casualChat),

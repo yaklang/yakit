@@ -1,5 +1,5 @@
 import {ReactNode} from "react"
-import {AIAgentSetting, AIAgentTab} from "./aiAgentType"
+import {AIAgentSetting} from "./aiAgentType"
 import {
     OutlineChipIcon,
     OutlineCogIcon,
@@ -200,6 +200,7 @@ export enum AIMCPServerTypeEnum {
 //#region ai hooks 默认值
 export const defaultChatIPCData: UseChatIPCState = {
     execute: false,
+    runTimeIDs: [],
     aiPerfData: {
         consumption: {},
         pressure: [],
@@ -207,8 +208,7 @@ export const defaultChatIPCData: UseChatIPCState = {
         totalCost: []
     },
     casualChat: {
-        contents: [],
-        coordinatorId: ""
+        contents: []
     },
     yakExecResult: {
         card: [],
@@ -216,7 +216,6 @@ export const defaultChatIPCData: UseChatIPCState = {
         yakExecResultLogs: []
     },
     taskChat: {
-        coordinatorId: "",
         plan: [],
         streams: []
     }

@@ -7,6 +7,7 @@ import {
     handleGrpcDataPushLog,
     isAutoContinueReview,
     isToolExecStream,
+    isToolStderrStream,
     isToolStdoutStream,
     noSkipReviewTypes
 } from "./utils"
@@ -44,13 +45,156 @@ function useCasualChat(params?: UseCasualChatParams) {
 
     const review = useRef<AIChatQSData>()
 
-    const [coordinatorId, setCoordinatorId] = useState<string>("")
     // 存放流式输出的EventUUID的集合
     const eventUUIDs = useRef<Set<string>>(new Set())
     const handleSetEventUUID = useMemoizedFn((id: string) => {
         if (!eventUUIDs.current.has(id)) eventUUIDs.current.add(id)
     })
     const [contents, setContents] = useState<AIChatQSData[]>([])
+
+    // #region 工具执行过程相关数据和逻辑
+    /** @description 工具执行过程的数据和工具相关的流数据，在执行过程中，顺序是无序，所以需要对其关联记录 */
+    /**
+     * 这里存放着已经展示到UI上的tool_工具名_stdout流
+     * 对应关系是call_tool_id -> EventUUID
+     * 供无序的tool_call_watcher消息判断是直接UI展示还是先储存着
+     */
+    const showUIToolSelectorsUUID = useRef<Map<string, string>>(new Map())
+    // 工具执行过程-可操作选项 map
+    const toolStdOutSelectors = useRef<Map<string, ToolStreamSelectors>>(new Map())
+    const setToolStdOutSelectorMap = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallWatcher
+
+            if (!data?.call_tool_id || !data?.id || !data?.selectors || !data.selectors?.length) {
+                throw new Error("tool_call_watcher data is invalid")
+            }
+
+            if (showUIToolSelectorsUUID.current.has(data.call_tool_id)) {
+                const eventUUID = showUIToolSelectorsUUID.current.get(data.call_tool_id)
+                setContents((old) => {
+                    let newArr = [...old]
+                    const itemInfo = newArr.find((item) => {
+                        if (item.type === "stream" && item.data) {
+                            const {NodeId, EventUUID, CallToolID} = item.data
+                            return (
+                                isToolStdoutStream(NodeId) &&
+                                EventUUID === eventUUID &&
+                                CallToolID === data.call_tool_id
+                            )
+                        }
+                        return false
+                    })
+                    if (!!itemInfo && itemInfo.type === "stream") {
+                        itemInfo.data.selectors = {
+                            callToolId: data.call_tool_id,
+                            InteractiveId: data.id,
+                            selectors: data.selectors
+                        }
+                    }
+
+                    return newArr
+                })
+                showUIToolSelectorsUUID.current.delete(data.call_tool_id)
+            } else {
+                toolStdOutSelectors.current.set(data.call_tool_id, {
+                    callToolId: data.call_tool_id,
+                    InteractiveId: data.id,
+                    selectors: data.selectors
+                })
+            }
+        } catch (error) {
+            handleGrpcDataPushLog({
+                info: res,
+                pushLog: handlePushLog
+            })
+        }
+    })
+
+    // 工具执行结果-map
+    const toolResultMap = useRef<Map<string, AIToolResult>>(new Map())
+    const setToolResultMap = useMemoizedFn((callToolId: string, value: Partial<AIToolResult>) => {
+        let current = toolResultMap.current.get(callToolId) || cloneDeep(DefaultAIToolResult)
+        current = {
+            ...current,
+            ...value
+        }
+        toolResultMap.current.set(callToolId, current)
+    })
+
+    /**
+     * 工具执行结果的错误信息处理
+     * 因为错误信息是流数据，所以统一收集到一个地方，等流输出结束后再进行信息的赋值
+     * 需要两个map进行储存，一个是eventUUID -> callToolId，另一个是eventUUID -> 错误信息
+     */
+    const errorUUIDToCallToolId = useRef<Map<string, string>>(new Map())
+    const errorUUIDToMessage = useRef<Map<string, {content: string; status: "start" | "end"}>>(new Map())
+    const handleSetErrorToolMessage = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const {CallToolID, EventUUID, Content, StreamDelta} = res
+
+            let ipcContent = Uint8ArrayToString(Content) || ""
+            let ipcStreamDelta = Uint8ArrayToString(StreamDelta) || ""
+            const content = ipcContent + ipcStreamDelta
+
+            errorUUIDToCallToolId.current.set(EventUUID, CallToolID)
+            const existing = errorUUIDToMessage.current.get(EventUUID)
+            errorUUIDToMessage.current.set(EventUUID, {
+                content: existing ? existing.content + content : content,
+                status: "start"
+            })
+        } catch (error) {
+            handleGrpcDataPushLog({
+                info: res,
+                pushLog: handlePushLog
+            })
+        }
+    })
+
+    // 错误流信息处理完毕，准备填充到工具结果对象中
+    const handleErrorToolMessageEnd = useMemoizedFn((uuid: string) => {
+        try {
+            const callToolID = errorUUIDToCallToolId.current.get(uuid)
+            const errorMessage = errorUUIDToMessage.current.get(uuid)?.content
+            if (!callToolID || !errorMessage) {
+                errorUUIDToCallToolId.current.delete(uuid)
+                errorUUIDToMessage.current.delete(uuid)
+                return
+            }
+
+            const toolResult = toolResultMap.current.get(callToolID)
+            if (toolResult) {
+                toolResultMap.current.set(callToolID, {...toolResult, execError: errorMessage || ""})
+            } else {
+                setContents((old) => {
+                    return old.map((ele) => {
+                        if (
+                            ele.type === AIChatQSDataTypeEnum.TOOL_RESULT &&
+                            !!ele.data &&
+                            ele.data.callToolId === callToolID
+                        ) {
+                            return {
+                                ...ele,
+                                data: {...ele.data, execError: errorMessage || ""}
+                            }
+                        }
+                        return ele
+                    })
+                })
+            }
+            errorUUIDToCallToolId.current.delete(uuid)
+            errorUUIDToMessage.current.delete(uuid)
+        } catch (error) {}
+    })
+
+    // 工具执行过程相关数据重置
+    const handleToolCallDataReset = useMemoizedFn(() => {
+        showUIToolSelectorsUUID.current.clear()
+        toolStdOutSelectors.current.clear()
+        toolResultMap.current.clear()
+    })
+    // #endregion
 
     // #region 流式输出处理的相关逻辑
     const handleStreams = useMemoizedFn((res: AIOutputEvent) => {
@@ -71,13 +215,24 @@ function useCasualChat(params?: UseCasualChatParams) {
                 throw new Error("stream data is invalid")
             }
 
+            // 工具结果为错误信息时的单独逻辑处理(nodeID为["tool-工具名-stderr"])
+            if (isToolStderrStream(NodeId)) {
+                handleSetErrorToolMessage(res)
+                return
+            }
+
+            // 需要显示工具执行操作选项的流，对应的uuid
+            if (isToolStdoutStream(NodeId) && !showUIToolSelectorsUUID.current.has(CallToolID)) {
+                showUIToolSelectorsUUID.current.set(CallToolID, EventUUID)
+            }
+
             let ipcContent = Uint8ArrayToString(Content) || ""
             let ipcStreamDelta = Uint8ArrayToString(StreamDelta) || ""
             const content = ipcContent + ipcStreamDelta
 
-            const setFunc = !IsSystem && !IsReason
+            const noLog = !IsSystem && !IsReason
 
-            if (setFunc) {
+            if (noLog) {
                 handleSetEventUUID(EventUUID)
                 setContents((old) => {
                     let newArr = [...old]
@@ -103,9 +258,10 @@ function useCasualChat(params?: UseCasualChatParams) {
                                 ContentType
                             }
                         }
-                        const sls = toolStdOutSelectors.current.get(CallToolID)
-                        if (isToolStdoutStream(NodeId) && sls) {
+                        if (isToolStdoutStream(NodeId) && toolStdOutSelectors.current.has(CallToolID)) {
+                            const sls = toolStdOutSelectors.current.get(CallToolID)
                             streamsInfo.data.selectors = sls
+                            showUIToolSelectorsUUID.current.delete(CallToolID)
                             toolStdOutSelectors.current.delete(CallToolID)
                         }
                         newArr.push(streamsInfo)
@@ -149,7 +305,11 @@ function useCasualChat(params?: UseCasualChatParams) {
     // 将流式输出的状态改成已完成
     const handleUpdateStreamStatus = useMemoizedFn((EventUUID: string) => {
         try {
-            if (!eventUUIDs.current.has(EventUUID)) return
+            if (!eventUUIDs.current.has(EventUUID)) {
+                // 没有进入streams变量的数据，可能是不展示的(isToolStderrStream)数据，过滤一遍
+                handleErrorToolMessageEnd(EventUUID)
+                return
+            }
             setContents((old) => {
                 return old.map((item) => {
                     if (item.type === "stream" && item.data && item.data.EventUUID === EventUUID) {
@@ -210,41 +370,6 @@ function useCasualChat(params?: UseCasualChatParams) {
     // #endregion
 
     // #region 调用工具数据的相关处理逻辑
-    // 工具执行结果-map
-    let toolResultMap = useRef<Map<string, AIToolResult>>(new Map())
-    const setToolResultMap = useMemoizedFn((callToolId: string, value: Partial<AIToolResult>) => {
-        let current = toolResultMap.current.get(callToolId) || cloneDeep(DefaultAIToolResult)
-        current = {
-            ...current,
-            ...value
-        }
-        toolResultMap.current.set(callToolId, current)
-    })
-
-    // 工具执行过程-可操作选项 map
-    const toolStdOutSelectors = useRef<Map<string, ToolStreamSelectors>>(new Map())
-    const setToolStdOutSelectorMap = useMemoizedFn((res: AIOutputEvent) => {
-        try {
-            const ipcContent = Uint8ArrayToString(res.Content) || ""
-            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallWatcher
-
-            if (!data?.call_tool_id || !data?.id || !data?.selectors || !data.selectors?.length) {
-                throw new Error("tool_call_watcher data is invalid")
-            }
-
-            toolStdOutSelectors.current.set(data.call_tool_id, {
-                callToolId: data.call_tool_id,
-                InteractiveId: data.id,
-                selectors: data.selectors
-            })
-        } catch (error) {
-            handleGrpcDataPushLog({
-                info: res,
-                pushLog: handlePushLog
-            })
-        }
-    })
-
     // 工具执行结果生成为答案UI的逻辑
     const handleToolResultStatus = useMemoizedFn(
         (res: AIOutputEvent, status: "success" | "failed" | "user_cancelled") => {
@@ -272,7 +397,7 @@ function useCasualChat(params?: UseCasualChatParams) {
                         }
                         return false
                     })
-                    const toolStdOutContent = (toolStdOut?.data as AIStreamOutput)?.content
+                    const toolStdOutContent = toolStdOut ? (toolStdOut.data as AIStreamOutput).content : ""
                     const isShowAll = !!(toolStdOutContent && toolStdOutContent.length > 200)
                     const toolStdoutShowContent = isShowAll
                         ? toolStdOutContent.substring(0, 200) + "..."
@@ -550,11 +675,6 @@ function useCasualChat(params?: UseCasualChatParams) {
         }
     })
 
-    // 设置自由对话的 id
-    const handleSetCoordinatorId = useMemoizedFn((id: string) => {
-        setCoordinatorId((old) => (old === id ? old : id))
-    })
-
     // 处理数据方法
     const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
         try {
@@ -713,17 +833,12 @@ function useCasualChat(params?: UseCasualChatParams) {
 
     const handleResetData = useMemoizedFn(() => {
         review.current = undefined
-        setCoordinatorId("")
         eventUUIDs.current.clear()
         setContents([])
-        toolResultMap.current.clear()
-        toolStdOutSelectors.current.clear()
+        handleToolCallDataReset()
     })
 
-    return [
-        {coordinatorId, contents},
-        {handleSetData, handleResetData, handleSetCoordinatorId, handleSend}
-    ] as const
+    return [{contents}, {handleSetData, handleResetData, handleSend}] as const
 }
 
 export default useCasualChat

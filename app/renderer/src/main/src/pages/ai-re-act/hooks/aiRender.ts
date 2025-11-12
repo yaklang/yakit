@@ -49,6 +49,8 @@ export interface AIToolResult {
         /**@deprecated UI展示不显示 */
         isShowAll: boolean
     }
+    /** 执行错误相关信息 */
+    execError: string
 }
 
 /** 任务开始节点的信息 */
