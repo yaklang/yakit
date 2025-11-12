@@ -450,6 +450,10 @@ const Home: React.FC<HomeProp> = (props) => {
     }
 
     // 获取是否安装MITM证书
+    const [forceManualMITMInstall, setForceManualMITMInstall] = useState<boolean>(() => {
+        return sessionStorage.getItem("forceManualMITMInstall") === "1"
+    })
+
     const updateMITMCert = useMemoizedFn(() => {
         return new Promise((resolve, reject) => {
             ipcRenderer
@@ -514,8 +518,21 @@ const Home: React.FC<HomeProp> = (props) => {
     })
 
     // 下载安装MITM证书
-    const handleDownMitmCert = useMemoizedFn((e?: React.MouseEvent<HTMLButtonElement>) => {
+    const enableManualFallback = useMemoizedFn((reason?: string) => {
+        sessionStorage.setItem("forceManualMITMInstall", "1")
+        setForceManualMITMInstall(true)
+        if (reason) {
+            yakitNotify("error", `MITM 证书安装失败：${reason}`)
+        }
+        showAutoInstallScriptGuide()
+    })
+
+    const handleDownMitmCert = useMemoizedFn((e?: React.MouseEvent<HTMLElement>) => {
         e?.stopPropagation()
+        if (forceManualMITMInstall) {
+            showAutoInstallScriptGuide()
+            return
+        }
         yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗中的权限请求")
         ipcRenderer
             .invoke("InstallMITMCertificate", {})
@@ -524,13 +541,11 @@ const Home: React.FC<HomeProp> = (props) => {
                     yakitNotify("success", "MITM 证书安装成功")
                     updateMITMCert()
                 } else {
-                    yakitNotify("error", `MITM 证书安装失败：${res?.Reason || "未知错误"}`)
-                    showAutoInstallScriptGuide()
+                    enableManualFallback(res?.Reason || "未知错误")
                 }
             })
             .catch((err) => {
-                yakitNotify("error", `MITM 证书安装失败：${err}`)
-                showAutoInstallScriptGuide()
+                enableManualFallback(`${err}`)
             })
     })
 
@@ -840,7 +855,9 @@ const Home: React.FC<HomeProp> = (props) => {
                                             className={styles["config-detection-btn"]}
                                             onClick={handleDownMitmCert}
                                         >
-                                            {t("YakitButton.downloadInstall")}
+                                            {forceManualMITMInstall
+                                                ? t("Home.generateAutoInstallScript")
+                                                : t("YakitButton.downloadInstall")}
                                         </YakitButton>
                                     </div>
                                 )}

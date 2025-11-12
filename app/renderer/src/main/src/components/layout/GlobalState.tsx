@@ -266,6 +266,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         })
     })
     const [showMITMCertWarn, setShowMITMCertWarn] = useState<boolean>(false)
+    const [forceManualMITMInstall, setForceManualMITMInstall] = useState<boolean>(() => {
+        return sessionStorage.getItem("forceManualMITMInstall") === "1"
+    })
 
     const updateMITMCert = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -334,8 +337,21 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         })
     })
 
+    const enableManualFallback = useMemoizedFn((reason?: string) => {
+        sessionStorage.setItem("forceManualMITMInstall", "1")
+        setForceManualMITMInstall(true)
+        if (reason) {
+            yakitNotify("error", `MITM 证书安装失败：${reason}`)
+        }
+        showAutoInstallScriptGuide()
+    })
+
     const handleInstallMITMCertificate = useMemoizedFn(() => {
         setShow(false)
+        if (forceManualMITMInstall) {
+            showAutoInstallScriptGuide()
+            return
+        }
         yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗中的权限请求")
         ipcRenderer
             .invoke("InstallMITMCertificate", {})
@@ -344,13 +360,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     yakitNotify("success", "MITM 证书安装成功")
                     updateMITMCert()
                 } else {
-                    yakitNotify("error", `MITM 证书安装失败：${res?.Reason || "未知错误"}`)
-                    showAutoInstallScriptGuide()
+                    enableManualFallback(res?.Reason || "未知错误")
                 }
             })
             .catch((e) => {
-                yakitNotify("error", `MITM 证书安装失败：${e}`)
-                showAutoInstallScriptGuide()
+                enableManualFallback(`${e}`)
             })
     })
 
@@ -725,7 +739,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     className={styles["btn-style"]}
                                     onClick={handleInstallMITMCertificate}
                                 >
-                                    下载安装
+                                    {forceManualMITMInstall ? "生成安装脚本" : "下载安装"}
                                 </YakitButton>
                             </div>
                         </div>
