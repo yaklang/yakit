@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useState} from "react"
+import React, {memo, useEffect} from "react"
 import {AIChatSettingProps, FormItemSliderProps} from "./type"
 import {Form, Slider, Tooltip} from "antd"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"

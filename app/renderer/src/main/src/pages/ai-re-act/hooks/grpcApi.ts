@@ -26,7 +26,7 @@ export interface AIStartParams {
     /** 模板参数 */
     ForgeParams?: KVPair[]
 
-    /** 是否禁用人机交互（AI 可能会主动问人问题）@default false */
+    /** 是否禁用人机交互（AI 可能会主动问人问题）@default true */
     DisallowRequireForUserPrompt?: boolean
 
     /**
@@ -70,7 +70,7 @@ export interface AIStartParams {
     /** 禁用工具名 */
     ExcludeToolNames?: string[]
 
-    /** ollama 本地模型部署可以使用 /nothink 关闭，使用这个选项可以移除 qwen3 的思考模式 */
+    /** ollama 本地模型部署可以使用 /nothink 关闭，使用这个选项可以移除 qwen3 的思考模式 @default false */
     EnableQwenNoThinkMode?: boolean
 
     /** 在任务规划的时候，AI 是否被允许主动问用户问题 @default true */

@@ -67,49 +67,35 @@ export const formatNumberUnits = (num: number) => {
 
 /** @name 将全局配置信息转换为可以请求的数据结构 */
 export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting => {
-    const data: AIAgentSetting = {}
+    const data: AIAgentSetting = {...setting}
 
     try {
-        if (!isNil(setting?.EnableSystemFileSystemOperator)) {
-            data.EnableSystemFileSystemOperator = setting.EnableSystemFileSystemOperator
-        }
-        if (!isNil(setting?.UseDefaultAIConfig)) {
-            data.UseDefaultAIConfig = setting.UseDefaultAIConfig
-        }
-        if (!!setting?.ForgeName) {
-            data.ForgeName = setting.ForgeName || ""
-        }
-        if (!isNil(setting?.DisallowRequireForUserPrompt)) {
-            data.DisallowRequireForUserPrompt = setting.DisallowRequireForUserPrompt
-        }
+        data.EnableSystemFileSystemOperator =
+            setting.EnableSystemFileSystemOperator ?? AIAgentSettingDefault.EnableSystemFileSystemOperator
 
-        if (!!setting?.ReviewPolicy) {
-            data.ReviewPolicy = setting.ReviewPolicy || "manual"
-        } else {
-            data.ReviewPolicy = "manual"
-        }
+        data.UseDefaultAIConfig = setting.UseDefaultAIConfig ?? AIAgentSettingDefault.UseDefaultAIConfig
 
-        if (!isNil(setting?.AIReviewRiskControlScore)) {
-            data.AIReviewRiskControlScore = setting.AIReviewRiskControlScore || 0.5
-        }
-        if (!isNil(setting?.DisableToolUse)) {
-            data.DisableToolUse = setting.DisableToolUse
-        }
-        if (!isNil(setting?.AICallAutoRetry)) {
-            data.AICallAutoRetry = setting.AICallAutoRetry || 3
-        }
-        if (!isNil(setting?.AITransactionRetry)) {
-            data.AITransactionRetry = setting.AITransactionRetry || 5
-        }
-        if (!isNil(setting?.EnableAISearchTool)) {
-            data.EnableAISearchTool = setting.EnableAISearchTool
-        }
-        if (!isNil(setting?.EnableAISearchInternet)) {
-            data.EnableAISearchInternet = setting.EnableAISearchInternet
-        }
-        if (!isNil(setting?.AllowPlanUserInteract)) {
-            data.AllowPlanUserInteract = setting.AllowPlanUserInteract
-        }
+        data.ForgeName = setting.ForgeName || AIAgentSettingDefault.ForgeName
+
+        data.DisallowRequireForUserPrompt =
+            setting.DisallowRequireForUserPrompt ?? AIAgentSettingDefault.DisallowRequireForUserPrompt
+
+        data.ReviewPolicy = setting.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
+
+        data.AIReviewRiskControlScore =
+            setting.AIReviewRiskControlScore ?? AIAgentSettingDefault.AIReviewRiskControlScore
+
+        data.DisableToolUse = setting.DisableToolUse ?? AIAgentSettingDefault.DisableToolUse
+
+        data.AICallAutoRetry = setting.AICallAutoRetry ?? AIAgentSettingDefault.AICallAutoRetry
+
+        data.AITransactionRetry = setting.AITransactionRetry ?? AIAgentSettingDefault.AITransactionRetry
+
+        data.EnableAISearchTool = setting.EnableAISearchTool ?? AIAgentSettingDefault.EnableAISearchTool
+        data.EnableAISearchInternet = setting.EnableAISearchInternet ?? AIAgentSettingDefault.EnableAISearchInternet
+        data.EnableQwenNoThinkMode = setting.EnableQwenNoThinkMode ?? AIAgentSettingDefault.EnableQwenNoThinkMode
+        data.AllowPlanUserInteract = setting.AllowPlanUserInteract ?? AIAgentSettingDefault.AllowPlanUserInteract
+
         if (setting?.AllowPlanUserInteract) {
             if (!isNil(setting?.PlanUserInteractMaxCount)) {
                 data.PlanUserInteractMaxCount = setting.PlanUserInteractMaxCount || 3
