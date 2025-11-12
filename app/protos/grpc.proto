@@ -8309,6 +8309,8 @@ message SSAProject {
   SSAProjectScanConfig ScanConfig = 10;
   // 规则策略配置
   SSAProjectScanRuleConfig RuleConfig = 11;
+
+  string JSONStringConfig = 12;
 }
 
 message SSAProjectCompileConfig{
@@ -8339,7 +8341,7 @@ message SSAProjectFilter {
 
 message CreateSSAProjectRequest {
   SSAProject Project = 1;
-  string ProjectRawData = 2;  // json from ssa.yak 
+  string JSONStringConfig = 2;
 }
 
 message CreateSSAProjectResponse {
