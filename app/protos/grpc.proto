@@ -131,6 +131,7 @@ service Yak {
   rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
 
   rpc VerifySystemCertificate(Empty) returns (VerifySystemCertificateResponse);
+  rpc InstallMITMCertificate(Empty) returns (GeneralResponse);
 
   // 中间人劫持
   rpc MITM(stream MITMRequest) returns (stream MITMResponse);

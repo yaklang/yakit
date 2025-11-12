@@ -288,6 +288,72 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         })
     })
 
+    const showAutoInstallScriptGuide = useMemoizedFn(() => {
+        const m = showYakitModal({
+            title: t("Home.generateAutoInstallScript"),
+            width: "600px",
+            centered: true,
+            content: (
+                <div
+                    style={{
+                        padding: 15,
+                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
+                    }}
+                >
+                    {t("Home.pleaseFollowSteps")}
+                    <br />
+                    <br />
+                    1. {t("Home.openScriptDir")}
+                    <br />
+                    2. {t("Home.runAutoInstallScript")}
+                    <br />
+                    3. {t("Home.installSuccessMessage")}
+                    <br />
+                    <br />
+                    {t("Home.closeAppsBeforeRun")}
+                    <br />
+                    {t("Home.mitmReadyAfterInstall", {name: t("YakitRoute.MITM")})}
+                    <br />
+                    <br />
+                    {t("Home.contactForHelp")}
+                </div>
+            ),
+            onOk: () => {
+                ipcRenderer
+                    .invoke("generate-install-script", {})
+                    .then((p: string) => {
+                        if (p) {
+                            openABSFileLocated(p)
+                        } else {
+                            failed(t("YakitNotification.generationFailed"))
+                        }
+                    })
+                    .catch(() => {})
+                m.destroy()
+            }
+        })
+    })
+
+    const handleInstallMITMCertificate = useMemoizedFn(() => {
+        setShow(false)
+        yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗中的权限请求")
+        ipcRenderer
+            .invoke("InstallMITMCertificate", {})
+            .then((res: {Ok: boolean; Reason?: string}) => {
+                if (res?.Ok) {
+                    yakitNotify("success", "MITM 证书安装成功")
+                    updateMITMCert()
+                } else {
+                    yakitNotify("error", `MITM 证书安装失败：${res?.Reason || "未知错误"}`)
+                    showAutoInstallScriptGuide()
+                }
+            })
+            .catch((e) => {
+                yakitNotify("error", `MITM 证书安装失败：${e}`)
+                showAutoInstallScriptGuide()
+            })
+    })
+
     // 校验引擎是否为官方发布版本
     const [showCheckEngine, setShowCheckEngine] = useState<boolean>(false)
     const getCurrentYak = async (): Promise<string> => {
@@ -657,52 +723,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 <YakitButton
                                     type='text'
                                     className={styles["btn-style"]}
-                                    onClick={() => {
-                                        setShow(false)
-                                        const m = showYakitModal({
-                                            title: t("Home.generateAutoInstallScript"),
-                                            width: "600px",
-                                            centered: true,
-                                            content: (
-                                                <div
-                                                    style={{
-                                                        padding: 15,
-                                                        color: "var(--Colors-Use-Neutral-Text-1-Title)"
-                                                    }}
-                                                >
-                                                    {t("Home.pleaseFollowSteps")}
-                                                    <br />
-                                                    <br />
-                                                    1. {t("Home.openScriptDir")}
-                                                    <br />
-                                                    2. {t("Home.runAutoInstallScript")}
-                                                    <br />
-                                                    3. {t("Home.installSuccessMessage")}
-                                                    <br />
-                                                    <br />
-                                                    {t("Home.closeAppsBeforeRun")}
-                                                    <br />
-                                                    {t("Home.mitmReadyAfterInstall", {name: t("YakitRoute.MITM")})}
-                                                    <br />
-                                                    <br />
-                                                    {t("Home.contactForHelp")}
-                                                </div>
-                                            ),
-                                            onOk: () => {
-                                                ipcRenderer
-                                                    .invoke("generate-install-script", {})
-                                                    .then((p: string) => {
-                                                        if (p) {
-                                                            openABSFileLocated(p)
-                                                        } else {
-                                                            failed(t("YakitNotification.generationFailed"))
-                                                        }
-                                                    })
-                                                    .catch(() => {})
-                                                m.destroy()
-                                            }
-                                        })
-                                    }}
+                                    onClick={handleInstallMITMCertificate}
                                 >
                                     下载安装
                                 </YakitButton>

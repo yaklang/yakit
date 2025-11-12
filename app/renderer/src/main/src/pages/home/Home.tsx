@@ -471,9 +471,7 @@ const Home: React.FC<HomeProp> = (props) => {
         })
     })
 
-    // 下载安装MITM证书
-    const handleDownMitmCert = (e) => {
-        e.stopPropagation()
+    const showAutoInstallScriptGuide = useMemoizedFn(() => {
         const m = showYakitModal({
             type: "white",
             title: t("Home.generateAutoInstallScript"),
@@ -513,7 +511,28 @@ const Home: React.FC<HomeProp> = (props) => {
                 m.destroy()
             }
         })
-    }
+    })
+
+    // 下载安装MITM证书
+    const handleDownMitmCert = useMemoizedFn((e?: React.MouseEvent<HTMLButtonElement>) => {
+        e?.stopPropagation()
+        yakitNotify("info", "正在尝试一键安装 MITM 证书，请允许系统弹窗中的权限请求")
+        ipcRenderer
+            .invoke("InstallMITMCertificate", {})
+            .then((res: {Ok: boolean; Reason?: string}) => {
+                if (res?.Ok) {
+                    yakitNotify("success", "MITM 证书安装成功")
+                    updateMITMCert()
+                } else {
+                    yakitNotify("error", `MITM 证书安装失败：${res?.Reason || "未知错误"}`)
+                    showAutoInstallScriptGuide()
+                }
+            })
+            .catch((err) => {
+                yakitNotify("error", `MITM 证书安装失败：${err}`)
+                showAutoInstallScriptGuide()
+            })
+    })
 
     // 爆破示例
     const handleBlastingExample = (animationType: string) => {
