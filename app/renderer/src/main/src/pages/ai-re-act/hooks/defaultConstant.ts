@@ -68,6 +68,8 @@ export const TaskDefaultReToolResultSummary: Record<string, {label: string}> = {
 }
 /**流内容的展示类型枚举 */
 export enum AIStreamContentType {
+    /**默认 */
+    DEFAULT = "default",
     /**md格式 */
     TEXT_MARKDOWN = "text/markdown",
     /**YakitEditor */
@@ -77,5 +79,7 @@ export enum AIStreamContentType {
     /**卡片/多行 */
     TEXT_PLAIN = "text/plain",
     /**tool 紫色卡片 */
-    LOG_TOOL = "log/tool"
+    LOG_TOOL = "log/tool",
+    /**tool 错误输出 */
+    LOG_TOOL_ERROR_OUTPUT = "log/tool-error-output"
 }

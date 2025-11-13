@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 
 import styles from "./AIReActChat.module.scss"
-import {AIReActChatProps, AIReActLogProps, AIReActTimelineMessageProps} from "./AIReActChatType"
+import {AIReActChatProps, AIReActTimelineMessageProps} from "./AIReActChatType"
 import {AIChatTextarea} from "@/pages/ai-agent/template/template"
 import {AIReActChatContents} from "../aiReActChatContents/AIReActChatContents"
 import {AIChatTextareaProps} from "@/pages/ai-agent/template/type"
@@ -9,7 +9,6 @@ import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn} from "a
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ColorsChatIcon} from "@/assets/icon/colors"
-import {OutlineNewspaperIcon, OutlineXIcon} from "@/assets/icon/outline"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import {AIModelSelect} from "@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect"
 import classNames from "classnames"
@@ -20,8 +19,8 @@ import {AIInputEvent} from "../hooks/grpcApi"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {AIStreamChatContent} from "@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent"
 import useAIChatUIData from "../hooks/useAIChatUIData"
+import emiter from "@/utils/eventBus/eventBus"
 
 const AIReviewRuleSelect = React.lazy(() => import("../aiReviewRuleSelect/AIReviewRuleSelect"))
 
@@ -35,7 +34,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     const wrapperRef = useRef<HTMLDivElement>(null)
 
-    const [logVisible, setLogVisible] = useState<boolean>(false)
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true)
 
     const [timelineVisible, setTimelineVisible] = useState<boolean>(false)
@@ -82,14 +80,21 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
 
     // #endregion
 
+    useEffect(() => {
+        emiter.on("switchReActShow", handleSwitchShowFreeChat)
+        return () => {
+            emiter.off("switchReActShow", handleSwitchShowFreeChat)
+        }
+    }, [])
+
     const isShowRetract = useCreation(() => {
         return mode === "task" && showFreeChat
     }, [mode, showFreeChat])
     const isShowExpand = useCreation(() => {
         return mode === "task" && !showFreeChat
     }, [mode, showFreeChat])
-    const handleCancelExpand = useMemoizedFn(() => {
-        setShowFreeChat(false)
+    const handleSwitchShowFreeChat = useMemoizedFn((v) => {
+        setShowFreeChat(v)
     })
     const onViewContext = useDebounceFn(
         useMemoizedFn(() => {
@@ -141,7 +146,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                                 >
                                     日志
                                 </YakitButton> */}
-                                {isShowRetract && <ChevronleftButton onClick={handleCancelExpand} />}
+                                {isShowRetract && <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />}
                             </div>
                         </div>
                         <AIReActChatContents chats={casualChat.contents} />
@@ -174,7 +179,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
                         </div>
                     </div>
                 </div>
-                <div className={styles["open-wrapper"]} onClick={() => setShowFreeChat(true)}>
+                <div className={styles["open-wrapper"]} onClick={() => handleSwitchShowFreeChat(true)}>
                     <ChevrondownButton />
                     <div className={styles["text"]}>自由对话</div>
                 </div>
@@ -197,61 +202,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo((props) => {
     )
 })
 
-/** @deprecated 日志已移入单独一个win页面展示 */
-const AIReActLog: React.FC<AIReActLogProps> = React.memo((props) => {
-    const {logs, setLogVisible} = props
-    const logListRef = useRef<HTMLDivElement>(null)
-    useEffect(() => {
-        scrollToBottom()
-    }, [logs])
-
-    const scrollToBottom = useMemoizedFn(() => {
-        const messagesWrapper = logListRef.current
-        if (!messagesWrapper) return
-        requestAnimationFrame(() => {
-            const {clientHeight, scrollHeight, scrollTop} = messagesWrapper
-            const scrollBottom = scrollHeight - scrollTop - clientHeight
-            if (scrollBottom > 80) return
-            if (scrollHeight > clientHeight) {
-                messagesWrapper.scrollTop = messagesWrapper.scrollHeight
-            }
-        })
-    })
-    return (
-        <div className={styles["ai-re-act-log"]}>
-            <div className={styles["ai-re-act-log-heard"]}>
-                <span>日志</span>
-                <YakitButton type='text' icon={<OutlineXIcon />} onClick={() => setLogVisible(false)} />
-            </div>
-            <div ref={logListRef} className={styles["ai-re-act-log-list"]}>
-                {logs.map((row) => {
-                    const {id, type, data} = row
-                    switch (type) {
-                        case "log":
-                            const {level, message} = data
-                            return (
-                                <div className={styles["ai-re-act-log-row"]} key={id}>
-                                    • {level}:{message}
-                                </div>
-                            )
-                        case "stream":
-                            return (
-                                <AIStreamChatContent
-                                    key={id}
-                                    content={data.content}
-                                    nodeIdVerbose={data.NodeIdVerbose}
-                                />
-                            )
-
-                        default:
-                            return <React.Fragment key={id}></React.Fragment>
-                    }
-                })}
-                <div className={styles["ai-re-act-log-no-more"]}>暂无更多数据</div>
-            </div>
-        </div>
-    )
-})
 const AIReActTimelineMessage: React.FC<AIReActTimelineMessageProps> = React.memo((props) => {
     const {message} = props
     const [loading, setLoading] = useControllableValue<boolean>(props, {

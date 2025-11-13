@@ -57,6 +57,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            .review-footer-extra {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
         }
     }
     .review-mini {

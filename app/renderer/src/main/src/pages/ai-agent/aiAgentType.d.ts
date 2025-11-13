@@ -74,6 +74,7 @@ export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
 export interface AIAgentChatStreamProps {
     streams: AIChatQSData[]
     defaultExpand?: boolean
+    scrollToBottom: boolean
 }
 export interface ChatStreamCollapseItemProps {
     expandKey: string

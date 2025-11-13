@@ -1,6 +1,6 @@
-import { useMount, useThrottleEffect } from "ahooks"
-import { useCallback, useRef, useState } from "react"
-import { VirtuosoHandle } from "react-virtuoso"
+import {useMount, useThrottleEffect} from "ahooks"
+import {useCallback, useRef, useState} from "react"
+import {VirtuosoHandle} from "react-virtuoso"
 
 const useVirtuosoAutoScroll = (streams) => {
     const virtuosoRef = useRef<VirtuosoHandle>(null)
@@ -21,20 +21,13 @@ const useVirtuosoAutoScroll = (streams) => {
     useMount(() => {
         const el = scrollerRef.current
         if (!el) return
-
         el.addEventListener("scroll", handleScroll)
         return () => el.removeEventListener("scroll", handleScroll)
     })
     useThrottleEffect(
         () => {
             if (!virtuosoRef.current || !isNearBottom) return
-            requestIdleCallback(() => {
-                virtuosoRef.current?.scrollToIndex({
-                    index: "LAST",
-                    align: "end",
-                    behavior: "smooth"
-                })
-            })
+            scrollToIndex("LAST")
         },
         [streams],
         {
@@ -43,7 +36,17 @@ const useVirtuosoAutoScroll = (streams) => {
         }
     )
 
-    return { virtuosoRef, scrollerRef }
+    const scrollToIndex = useCallback((index: "LAST" | number) => {
+        requestIdleCallback(() => {
+            virtuosoRef.current?.scrollToIndex({
+                index,
+                align: "end",
+                behavior: "smooth"
+            })
+        })
+    }, [])
+
+    return {virtuosoRef, scrollerRef, scrollToIndex}
 }
 
 export default useVirtuosoAutoScroll

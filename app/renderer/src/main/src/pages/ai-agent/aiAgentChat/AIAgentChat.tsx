@@ -42,6 +42,7 @@ import {AIChatContent} from "../aiChatContent/AIChatContent"
 import {AITabsEnum} from "../defaultConstant"
 import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
+import {RoundedStopButton} from "@/pages/ai-re-act/aiReActChat/AIReActComponent"
 
 const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
@@ -629,7 +630,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 })
 
 export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React.memo((props) => {
-    const {reviewInfo, planReviewTreeKeywordsMap} = props
+    const {reviewInfo, planReviewTreeKeywordsMap,onStopTask} = props
     const {reviewExpand} = useChatIPCStore()
     const {handleSendTask} = useChatIPCDispatcher()
     const [expand, setReviewExpand] = useState<boolean>(true)
@@ -649,7 +650,10 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                 >
                     {expand ? "隐藏，稍后审阅" : "展开审阅信息"}
                 </YakitButton>
-                {node}
+                <div className={styles["review-footer-extra"]}>
+                    <RoundedStopButton onClick={onStopTask}/>
+                    {node}
+                </div>
             </div>
         )
     })
