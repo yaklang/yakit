@@ -6,20 +6,22 @@ import emiter from "@/utils/eventBus/eventBus"
 import {StringToUint8Array} from "@/utils/str"
 import {useMemoizedFn, useThrottleFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
-import {useEffect, useRef} from "react"
+import {MutableRefObject, useEffect, useRef} from "react"
 import {v4 as uuidv4} from "uuid"
 
 // #region useFileTree 相关定义
 export interface UseFileTreeParams {
     /** 需要加载的文件夹路径 */
     path: string
+    /** 文件树的初始化完成的回调 */
+    onInitComplete?: () => void
     /** 触发文件树数据重渲染的事件 */
     onRefreshTreeData?: () => void
 }
 
 export interface UseFileTreeState {
-    treeData?: FileNodeProps
-    folderChildrenSet: Set<string>
+    treeData: MutableRefObject<FileNodeProps | undefined>
+    folderChildrenSet: MutableRefObject<Set<string>>
 }
 export interface UseFileTreeEvents {
     /** 主动加载指定文件夹下的子集 */
@@ -30,7 +32,7 @@ export interface UseFileTreeEvents {
 function useFileTree(params?: UseFileTreeParams): [UseFileTreeState, UseFileTreeEvents]
 
 function useFileTree(params?: UseFileTreeParams) {
-    const {path, onRefreshTreeData} = params || {}
+    const {path, onInitComplete, onRefreshTreeData} = params || {}
 
     // 主动触发UI文件树更新
     const onTriggerUIUpdate = useThrottleFn(
@@ -116,6 +118,7 @@ function useFileTree(params?: UseFileTreeParams) {
             treeData.current = node
             startPolling()
             startWatchFolder(path)
+            onInitComplete && onInitComplete()
         } catch (error) {}
     })
 
@@ -468,10 +471,7 @@ function useFileTree(params?: UseFileTreeParams) {
         }
     }, [])
 
-    return [
-        {treeData: treeData.current, folderChildrenSet: folderNodeSet.current},
-        {onLoadFolderChildren: loadFolderChildren}
-    ]
+    return [{treeData: treeData, folderChildrenSet: folderNodeSet}, {onLoadFolderChildren: loadFolderChildren}]
 }
 
 export default useFileTree
