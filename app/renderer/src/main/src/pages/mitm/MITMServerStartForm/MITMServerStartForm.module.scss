@@ -269,6 +269,22 @@
     .certificate-download-modal-body {
         height: 466px;
     }
+    .certificate-download-modal-btn{
+        position: relative;
+        display: inline-block;
+        span{
+            text-decoration: underline;
+        }
+        .certificate-download-modal-icon{
+            position: absolute;
+            top: -0;
+            right: 0;
+            svg{
+                height: 10px;
+                width: 10px;
+            }
+        }
+    }
 }
 
 .mitm-save-filter {

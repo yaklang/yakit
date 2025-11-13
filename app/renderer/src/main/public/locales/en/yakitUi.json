@@ -65,7 +65,8 @@
         "retryAll": "Retry All",
         "debugExecution": "Debug Execution",
         "restore": "Restore",
-        "share": "Share"
+        "share": "Share",
+        "ImportTutorial": "Import Tutorial"
     },
     "YakitNotification": {
         "unknown_error": "Unknown Error",

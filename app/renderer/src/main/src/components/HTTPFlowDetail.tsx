@@ -48,6 +48,7 @@ import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {useSelectionByteCount} from "./yakitUI/YakitEditor/useSelectionByteCount"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import { formatTimestamp } from "@/utils/timeUtil"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -276,6 +277,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         }
     }
 
+    const formatUpdatedAt = useMemo(()=> formatTimestamp(flow?.UpdatedAt || 0), [flow] ) 
     return (
         <YakitSpin
             spinning={loading}
@@ -331,7 +333,15 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             <Descriptions.Item key={"method"} span={1} label={t("HTTPFlowDetail.hTTPMethod")}>
                                 <YakitTag color='blue'>{flow.Method}</YakitTag>
                             </Descriptions.Item>
-                            <Descriptions.Item key={"url"} span={3} label={t("HTTPFlowDetail.requestURL")}>
+                            <Descriptions.Item 
+                                key={"UpdatedAt"} 
+                                span={1} 
+                                label={t("HTTPFlowTable.updatedAt")}
+                                style={{ padding: '0 0 0 16px'}}
+                            >
+                                <span style={{ fontSize: 12 }}>{formatUpdatedAt}</span>
+                            </Descriptions.Item>
+                            <Descriptions.Item key={"url"} span={2} label={t("HTTPFlowDetail.requestURL")}>
                                 <div style={{display: "flex"}}>
                                     <Tooltip title={flow.Url} overlayInnerStyle={{maxHeight: 300, overflowY: "auto"}}>
                                         <span className='content-ellipsis'>{flow.Url}</span>

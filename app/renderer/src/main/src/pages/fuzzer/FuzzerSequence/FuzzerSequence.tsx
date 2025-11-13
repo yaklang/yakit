@@ -117,6 +117,7 @@ import {updateConcurrentLoad} from "@/utils/duplex/duplex"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { isEmpty } from "lodash"
 import { AdvancedSet, ConcurrencyItem, initSetValue } from "./FuzzerPageConcurrency"
+import { YakitDrawer } from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 const FuzzerPageSetting = React.lazy(() => import("./FuzzerPageSetting"))
@@ -1465,6 +1466,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         updatePagesDataCacheById(YakitRoute.HTTPFuzzer, newCurrentItem)
     })
 
+    const getContainerSize = useSize(fuzzerSequenceRef || document.body)
+    // 抽屉展示高度
+    const showHeight = useMemo(() => getContainerSize?.height || 400, [getContainerSize])
+
     /* 流量分析遮罩层 */
     const renderHistoryAnalysis = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = currentSelectRequest?.pageId 
@@ -1491,15 +1496,24 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
         
         return (
-            <div className={styles["http-traffic-analysis-overlay"]}>
+            <YakitDrawer
+                getContainer={fuzzerSequenceRef.current || document.body}
+                placement='bottom'
+                mask={false}
+                keyboard={false}
+                height={showHeight}
+                visible={true}
+                onClose={() => setTrafficAnalysisVisible(false)}
+                className={styles["http-traffic-analysis-overlay"]}
+            >
                 <React.Suspense fallback={<YakitSpin spinning={true} />}>
                     <HTTPHistoryAnalysis
                         pageId={currentItem.pageId}
                         params={params}
-                        onClose={() => setTrafficAnalysisVisible(false)}
+                        closable={false}
                     />
                 </React.Suspense>
-            </div>
+            </YakitDrawer>
         )
     })
 
