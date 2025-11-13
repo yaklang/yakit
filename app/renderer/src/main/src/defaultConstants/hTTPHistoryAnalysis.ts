@@ -5,7 +5,8 @@ export const defaultHTTPHistoryAnalysisPageInfo: HTTPHistoryAnalysisPageInfo = {
     runtimeId: [],
     sourceType: "mitm",
     verbose: "",
-    pageId: ""
+    pageId: "",
+    matchers: []
 }
 export const HotPatchDefaultContent = `
 // f = file.OpenFile(tempFile, file.O_APPEND|file.O_CREATE, 0o777)~

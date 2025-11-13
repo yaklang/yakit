@@ -167,6 +167,7 @@ import i18n from "@/i18n/i18n"
 import {maskProxyPassword} from "../mitm/MITMServerStartForm/MITMServerStartForm"
 import { ExportDataType } from "@/utils/exporter"
 import { YakitDrawer } from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import { PublicHTTPHistoryIcon } from "@/routes/publicIcon"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -2150,7 +2151,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || ""
                         }
                         outsideShowResponseMatcherAndExtraction={
-                            onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
+                            onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw || '')
                         }
                         onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
                         inViewportCurrent={inViewport === true}
@@ -2392,7 +2393,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 oneResponseValue={
                                     onlyOneResponse
                                         ? {
-                                              originValue: Uint8ArrayToString(httpResponse.ResponseRaw),
+                                              originValue: Uint8ArrayToString(httpResponse.ResponseRaw || ''),
                                               originalPackage: httpResponse.ResponseRaw
                                           }
                                         : undefined
@@ -2726,6 +2727,7 @@ interface SecondNodeExtraProps {
     resumeAndPause?: () => void
     isHttps?: boolean
     request?: string
+    onShowAll?: () => void
 }
 
 /**
@@ -2759,7 +2761,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         pageId,
         noPopconfirm = true,
         retryNoPopconfirm = true,
-        cancelCurrentHTTPFuzzer
+        cancelCurrentHTTPFuzzer,
+        onShowAll
     } = props
     const {t, i18n} = useI18nNamespaces(["webFuzzer", "history", "yakitUi"])
     const [color, setColor] = useState<string[]>()
@@ -2987,7 +2990,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             </div>
         )
     }
-    if (!onlyOneResponse && cachedTotal > 1 && showSuccess === "true") {
+    if ((!onlyOneResponse && cachedTotal > 1 && showSuccess === "true") || sendPayloadsType === 'concurrencyAllRes') {
         const searchNode = (
             <YakitInput.Search
                 size={size === "small" ? "small" : "middle"}
@@ -3229,6 +3232,14 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         />
                     </Tooltip>
                 )} */}
+                {onShowAll ? (+(secondNodeSize?.width || 0) >= 610 ? 
+                    <YakitButton type='primary' size={"small"} onClick={onShowAll} >
+                        {t("HTTPFuzzerPage.trafficAnalysisMode")}
+                    </YakitButton>
+                : 
+                <Tooltip title={t("HTTPFuzzerPage.trafficAnalysisMode")}>
+                    <YakitButton type='outline2' onClick={onShowAll} icon={<PublicHTTPHistoryIcon />} size={size} />
+                </Tooltip>): null}
                 {+(secondNodeSize?.width || 0) >= 610 ? (
                     <YakitPopover
                         title={t("SecondNodeExtra.exportData")}
@@ -3764,7 +3775,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         }, [fuzzerResponse])
 
         const responseRawString = useCreation(() => {
-            return Uint8ArrayToString(fuzzerResponse.ResponseRaw)
+            return Uint8ArrayToString(fuzzerResponse.ResponseRaw || '')
         }, [fuzzerResponse.ResponseRaw])
 
         const copyUrl = useMemoizedFn(() => {
@@ -3908,7 +3919,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     ref={ref}
                                     onClose={onClose}
                                     onSave={onSaveMatcherAndExtraction}
-                                    httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
+                                    httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw||'')}
                                     matcherValue={matcherValue}
                                     extractorValue={extractorValue}
                                     defActiveKey={activeKey}

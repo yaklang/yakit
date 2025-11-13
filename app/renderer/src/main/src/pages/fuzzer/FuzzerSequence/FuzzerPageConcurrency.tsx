@@ -28,7 +28,7 @@ import styles from "./FuzzerSequence.module.scss"
 
 export type ConcurrencyAdvancedConfigValue = Pick<
     AdvancedConfigValueProps,
-    'concurrent' | 'minDelaySeconds' | 'maxDelaySeconds' | 'repeatTimes' | 'disableUseConnPool'
+    'concurrent' | 'minDelaySeconds' | 'maxDelaySeconds' | 'repeatTimes' | 'disableUseConnPool' | 'matchers' | 'extractors'
 >
 
 interface AdvancedSetProps  {
@@ -36,6 +36,7 @@ interface AdvancedSetProps  {
     advancedConfigValue: ConcurrencyAdvancedConfigValue
     onSave: (values: ConcurrencyAdvancedConfigValue) => void
     onCancel: () => void
+    onOpenMatcherExtractor?: () => void
 }
 
 const initSetValue: ConcurrencyAdvancedConfigValue = {
@@ -43,7 +44,9 @@ const initSetValue: ConcurrencyAdvancedConfigValue = {
     minDelaySeconds: 0,
     maxDelaySeconds: 0,
     repeatTimes: 0,
-    disableUseConnPool: false
+    disableUseConnPool: false,
+    matchers: [],
+    extractors:[]
 }
 
 
@@ -240,7 +243,7 @@ const ConcurrencyItem: React.FC<SequenceItemProps> = memo((props) => {
                     style={{ flexDirection: 'row'}}
                 >
                         <div
-                            style={{ flex: 1 }}
+                            style={{ flex: 1, marginRight: 24 }}
                             ref={selectRef}
                             onClick={(e) => {
                                 e.stopPropagation()

@@ -275,6 +275,10 @@
         overflow: hidden;
         background-color: var(--Colors-Use-Basic-Background);
 
+        &-no-padding {
+            padding: 0;
+        }
+
         .sequence-response-heard {
             @extend .display-flex-center;
             justify-content: space-between;

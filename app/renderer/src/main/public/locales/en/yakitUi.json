@@ -169,7 +169,8 @@
         "orange": "Orange",
         "purple": "Purple",
         "cyan": "Cyan",
-        "grey": "Grey"
+        "grey": "Grey",
+        "filter": "filter"
     },
     "YakitModal": {
         "friendlyReminder": "Friendly Reminder",
