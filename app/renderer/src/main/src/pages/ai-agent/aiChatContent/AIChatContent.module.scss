@@ -156,7 +156,9 @@
         }
         .tab-content {
             display: flex;
+            justify-content: center;
             flex: 1;
+            width: 100%;
             overflow: hidden;
             border-right: 1px solid var(--Colors-Use-Neutral-Border);
         }

@@ -15,6 +15,7 @@
 }
 .tab-content {
     flex: 1;
+    width: 100%;
     overflow: hidden;
 }
 .ai-re-act-task-chat {
@@ -59,11 +60,31 @@
             @extend %display-flex-center;
             gap: 8px;
             flex-shrink: 0;
-           
+
             .divider-style {
                 width: 1px;
                 height: 12px;
                 border-left: 1px solid var(--Colors-Use-Neutral-Border);
+            }
+        }
+    }
+}
+.footer {
+    position: absolute;
+    bottom: 12px;
+    margin: 0 auto;
+    display: flex;
+    gap: 12px;
+    .position-button {
+        border-color: var(--Colors-Use-Neutral-Border);
+        box-shadow: 0 4px 8px 0 var(--Colors-Use-Basic-Shadow);
+        svg {
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        }
+        &:hover {
+            border-color: var(--Colors-Use-Main-Primary);
+            svg {
+                color: var(--Colors-Use-Main-Primary);
             }
         }
     }

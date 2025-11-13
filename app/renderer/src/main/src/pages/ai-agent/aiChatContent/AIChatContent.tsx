@@ -128,7 +128,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                     />
                 ) : (
                     <>
-                        <YakitEmpty />
+                        <YakitEmpty style={{paddingTop: 48}} />
                     </>
                 )
             case AITabsEnum.HTTP:
@@ -137,7 +137,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                     <PluginExecuteHttpFlow runtimeId={runTimeIDs.join(",")} website={false} />
                 ) : (
                     <>
-                        <YakitEmpty />
+                        <YakitEmpty style={{paddingTop: 48}} />
                     </>
                 )
             default:

@@ -53,6 +53,8 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
             )
         case AIStreamContentType.LOG_TOOL:
             return <AIChatToolColorCard toolCall={stream.data} />
+        case AIStreamContentType.LOG_TOOL_ERROR_OUTPUT:
+            return <></>
         default:
             return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} />
     }
@@ -80,7 +82,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         <div ref={listRef} className={styles["ai-re-act-chat-contents"]}>
             <div className={styles["re-act-contents-list"]}>
                 {chats.map((item) => (
-                    <AIChatListItem item={item} type='re-act' />
+                    <AIChatListItem key={item.id} item={item} type='re-act' />
                 ))}
             </div>
         </div>

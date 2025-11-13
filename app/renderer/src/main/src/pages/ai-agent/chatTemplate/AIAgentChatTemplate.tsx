@@ -1,8 +1,7 @@
 import React, {memo, MutableRefObject, useEffect, useMemo, useState} from "react"
-import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
+import {useControllableValue, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {
     AIAgentChatStreamProps,
-    AICardListProps,
     AIChatLeftSideProps,
     AIChatToolDrawerContentProps,
     ChatStreamCollapseItemProps,
@@ -11,19 +10,14 @@ import {
 } from "../aiAgentType"
 import {
     OutlineChevrondownIcon,
-    OutlineChevronrightIcon,
-    OutlineEngineIcon,
-    OutlineRocketLaunchIcon
-} from "@/assets/icon/outline"
-import {formatNumberUnits} from "../utils"
+    OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {AITree} from "../aiTree/AITree"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "./AIEcharts"
-import {formatTime, formatTimestamp} from "@/utils/timeUtil"
+import {formatTimestamp} from "@/utils/timeUtil"
 import {grpcQueryAIEvent} from "../grpc"
 import {Uint8ArrayToString} from "@/utils/str"
 import {convertNodeIdToVerbose} from "@/pages/ai-re-act/hooks/defaultConstant"
@@ -85,12 +79,14 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {streams} = props
+    const {streams, scrollToBottom} = props
+    const {scrollerRef, virtuosoRef, scrollToIndex} = useVirtuosoAutoScroll(streams)
+    useUpdateEffect(() => {
+        scrollToIndex("LAST")
+    }, [scrollToBottom])
     const renderItem = (stream: AIChatQSData) => {
         return <AIChatListItem item={stream} type='task-agent' />
     }
-
-    const {scrollerRef, virtuosoRef} = useVirtuosoAutoScroll(streams)
 
     const components = useMemo(
         () => ({

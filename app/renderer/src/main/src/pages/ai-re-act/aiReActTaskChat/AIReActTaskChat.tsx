@@ -3,35 +3,30 @@ import {AIReActTaskChatContentProps, AIReActTaskChatLeftSideProps, AIReActTaskCh
 import styles from "./AIReActTaskChat.module.scss"
 import {ColorsBrainCircuitIcon} from "@/assets/icon/colors"
 import {AIAgentChatStream, AIChatLeftSide} from "@/pages/ai-agent/chatTemplate/AIAgentChatTemplate"
-import {useCreation} from "ahooks"
+import {useControllableValue, useMemoizedFn} from "ahooks"
 import classNames from "classnames"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {ChevrondownButton, RoundedStopButton} from "../aiReActChat/AIReActComponent"
 import {AIReActTaskChatReview} from "@/pages/ai-agent/aiAgentChat/AIAgentChat"
-import {OutlineArrowdownIcon, OutlineArrowupIcon} from "@/assets/icon/outline"
-import {formatNumberUnits} from "@/pages/ai-agent/utils"
+import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlinePositionIcon} from "@/assets/icon/outline"
 import useAIChatUIData from "../hooks/useAIChatUIData"
-import useChatIPCDispatcher from "@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import emiter from "@/utils/eventBus/eventBus"
+import {yakitNotify} from "@/utils/notification"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
-    const {aiPerfData} = useAIChatUIData()
-    const {chatIPCData} = useChatIPCStore()
-    const {handleStop} = useChatIPCDispatcher()
-    // AI的Token消耗
-    const token = useCreation(() => {
-        let input = 0
-        let output = 0
-        const {consumption} = aiPerfData
-        const keys = Object.keys(consumption || {})
-        for (let name of keys) {
-            input += consumption[name]?.input_consumption || 0
-            output += consumption[name]?.output_consumption || 0
-        }
-        return [formatNumberUnits(input || 0), formatNumberUnits(output || 0)]
-    }, [aiPerfData.consumption])
+    const [leftExpand, setLeftExpand] = useState(true)
+    const [expand, setExpand] = useState(false)
+
+    const onIsExpand = useMemoizedFn(() => {
+        setLeftExpand(expand)
+        emiter.emit("switchReActShow", expand)
+        setExpand((v) => !v)
+    })
+
     return (
         <div className={styles["ai-re-act-task-chat"]}>
-            <AIReActTaskChatLeftSide />
+            <AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
             <div className={styles["chat-content-wrapper"]}>
                 <div className={styles["header"]}>
                     <div className={styles["title"]}>
@@ -39,12 +34,11 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
                         深度规划
                     </div>
                     <div className={styles["extra"]}>
-                        {chatIPCData.execute && (
-                            <>
-                                <div className={styles["divider-style"]}></div>
-                                <RoundedStopButton onClick={handleStop} />
-                            </>
-                        )}
+                        <YakitButton
+                            type='text2'
+                            icon={expand ? <OutlineArrowsexpandIcon /> : <OutlineArrowscollapseIcon />}
+                            onClick={onIsExpand}
+                        />
                     </div>
                 </div>
                 <AIReActTaskChatContent />
@@ -60,13 +54,37 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     const {taskChat} = useAIChatUIData()
 
     const {streams} = taskChat
+
+    const [scrollToBottom, setScrollToBottom] = useState(false)
+    const onScrollToBottom = useMemoizedFn(() => {
+        setScrollToBottom((v) => !v)
+    })
+    const onStopTask = useMemoizedFn(() => {
+        yakitNotify("info", "开发中...")
+    })
     return (
         <>
             <div className={styles["tab-content"]}>
-                <AIAgentChatStream streams={streams} />
+                <AIAgentChatStream streams={streams} scrollToBottom={scrollToBottom} />
             </div>
-            {!!reviewInfo && (
-                <AIReActTaskChatReview reviewInfo={reviewInfo} planReviewTreeKeywordsMap={planReviewTreeKeywordsMap} />
+            {!!reviewInfo ? (
+                <AIReActTaskChatReview
+                    reviewInfo={reviewInfo}
+                    planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
+                    setScrollToBottom={setScrollToBottom}
+                    onStopTask={onStopTask}
+                />
+            ) : (
+                <div className={styles["footer"]}>
+                    <RoundedStopButton onClick={onStopTask} />
+                    <YakitButton
+                        type='outline2'
+                        icon={<OutlinePositionIcon />}
+                        radius='50%'
+                        onClick={onScrollToBottom}
+                        className={styles["position-button"]}
+                    />
+                </div>
             )}
         </>
     )
@@ -74,7 +92,11 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
 
 export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = React.memo((props) => {
     const {taskChat} = useAIChatUIData()
-    const [leftExpand, setLeftExpand] = useState(true)
+    const [leftExpand, setLeftExpand] = useControllableValue(props, {
+        defaultValue: true,
+        valuePropName: "leftExpand",
+        trigger: "setLeftExpand"
+    })
     return (
         <div
             className={classNames(styles["content-left-side"], {

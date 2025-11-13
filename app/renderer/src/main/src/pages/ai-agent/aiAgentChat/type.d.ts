@@ -6,4 +6,6 @@ export type AIAgentChatMode = "welcome" | "re-act" | "task"
 export interface AIReActTaskChatReviewProps {
     reviewInfo: AIChatQSData
     planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
+    setScrollToBottom: (v: boolean) => void
+    onStopTask: () => void
 }
