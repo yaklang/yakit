@@ -109,16 +109,18 @@ const EditableCell: React.FC<EditableCellProps> = ({
     )
 }
 
-interface itemsProps {
-    properties: {
-        [key: string]: {
-            type: CellTypeProps
-            title: string
-            default?: string
-            enum?: string[]
-            description?: string
-        }
+interface PropertiesProps {
+    [key: string]: {
+        type: CellTypeProps
+        title: string
+        default?: string
+        enum?: string[]
+        description?: string
     }
+}
+
+interface itemsProps {
+    properties: PropertiesProps
     require: string[]
 }
 
@@ -178,6 +180,10 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
     // 初始化表格数据
     useEffect(() => {
         try {
+            // 在 EditTable 保存时，检测并“剥掉多余的嵌套层”：
+            if (columnSchema?.items?.properties?.properties) {
+                columnSchema.items.properties = columnSchema.items.properties.properties as unknown as PropertiesProps
+            }
             // columnSchema
             const {minItems, maxItems = 50, items} = columnSchema
             const {require = [], properties} = items
@@ -210,7 +216,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                     enum: properties[key]?.enum,
                     render: (text) => {
                         if (type === "boolean") {
-                            return <YakitSwitch checked={text} />
+                            return <YakitSwitch checked={text} disabled />
                         }
                         if (newUiKeys?.[key]?.["ui:widget"] === "textarea") {
                             return (
@@ -357,7 +363,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
     // 失焦自动保存（如若此时点击可选组件时，不应调用自动保存）
     const onBlur = useMemoizedFn((record: Item) => {
         isFoucus.current = false
-        setTimeout(async() => {
+        setTimeout(async () => {
             if (editingId && !isFoucus.current) {
                 try {
                     await onSave(record)
