@@ -2394,12 +2394,6 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         }
     })
 
-    const [compileHistorySource, setCompileHistorySource] = useSafeState<SSAProjectResponse>()
-    // 打开编译历史
-    const openCompileHistory = useMemoizedFn((record: SSAProjectResponse) => {
-        setCompileHistorySource(record)
-    })
-
     const columns: VirtualListColumns<SSAProjectResponse>[] = [
         {
             title: "项目名称",
@@ -2512,7 +2506,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                         JSON.stringify({
                                             route: YakitRoute.YakRunner_Code_Scan,
                                             params: {
-                                                projectName: [record.Name],
+                                                projectName: [record.ProjectName],
                                                 GroupNames: [record.Language]
                                             }
                                         })
@@ -2687,7 +2681,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 warrpId={warrpId || document.getElementById("audit-history-table")}
             />
 
-            <YakitModal
+            {/* <YakitModal
                 centered
                 getContainer={warrpId || document.getElementById("audit-history-table") || document.body}
                 visible={!!compileHistorySource}
@@ -2710,106 +2704,106 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 {compileHistorySource && (
                     <CompileHistory info={compileHistorySource} pageType={pageType} onClose={onClose} />
                 )}
-            </YakitModal>
+            </YakitModal> */}
         </div>
     )
 })
 
-export const CompileHistory: React.FC<CompileHistoryProps> = (props) => {
-    const {info, pageType, onClose} = props
+// export const CompileHistory: React.FC<CompileHistoryProps> = (props) => {
+//     const {info, pageType, onClose} = props
 
-    const [loading, setLoading] = useState<boolean>(false)
-    const [response, setResponse] = useState({
-        Results: [{time: "2025-10-15"}, {time: "2025-10-14"}],
-        Pagination: genDefaultPagination(20),
-        DbMessage: {
-            TableName: "",
-            Operation: "",
-            EffectRows: "",
-            ExtraMessage: ""
-        },
-        Total: 0
-    })
+//     const [loading, setLoading] = useState<boolean>(false)
+//     const [response, setResponse] = useState({
+//         Results: [{time: "2025-10-15"}, {time: "2025-10-14"}],
+//         Pagination: genDefaultPagination(20),
+//         DbMessage: {
+//             TableName: "",
+//             Operation: "",
+//             EffectRows: "",
+//             ExtraMessage: ""
+//         },
+//         Total: 0
+//     })
 
-    const onDelete = useMemoizedFn(() => {
-        try {
-            setLoading(true)
-            ipcRenderer.invoke("DeleteSSAProject", {}).then(() => {})
-        } catch (error) {
-            setLoading(false)
-            failed(`删除失败${error}`)
-        }
-    })
+//     const onDelete = useMemoizedFn(() => {
+//         try {
+//             setLoading(true)
+//             ipcRenderer.invoke("DeleteSSAProject", {}).then(() => {})
+//         } catch (error) {
+//             setLoading(false)
+//             failed(`删除失败${error}`)
+//         }
+//     })
 
-    return (
-        <div className={styles["compile-history"]}>
-            <div className={styles["compile-history-list-container"]}>
-                {response.Results.map((rowData: any) => {
-                    return (
-                        <div className={styles["history-item-box"]} key={rowData.time}>
-                            <div className={styles["time"]}>{rowData.time}</div>
-                            <div className={styles["option"]}>
-                                <Tooltip title={"代码扫描"}>
-                                    <YakitButton
-                                        type='text'
-                                        icon={<OutlineScanIcon />}
-                                        onClick={() => {
-                                            emiter.emit(
-                                                "openPage",
-                                                JSON.stringify({
-                                                    route: YakitRoute.YakRunner_Code_Scan,
-                                                    params: {
-                                                        projectName: [rowData.Name],
-                                                        GroupNames: [rowData.Language]
-                                                    }
-                                                })
-                                            )
-                                            if (pageType === "auditCode") {
-                                                onClose && onClose()
-                                            }
-                                        }}
-                                    />
-                                </Tooltip>
-                                {/* 此处的Tooltip会导致页面抖动(待处理) */}
-                                <Tooltip title={"打开项目"}>
-                                    <YakitButton
-                                        type='text'
-                                        icon={<OutlineArrowcirclerightIcon />}
-                                        onClick={() => {
-                                            if (pageType === "projectManager") {
-                                                // 跳转到审计页面的参数
-                                                const params: AuditCodePageInfoProps = {
-                                                    Schema: "syntaxflow",
-                                                    Location: rowData.Name,
-                                                    Path: `/`
-                                                }
-                                                emiter.emit(
-                                                    "openPage",
-                                                    JSON.stringify({
-                                                        route: YakitRoute.YakRunner_Audit_Code,
-                                                        params
-                                                    })
-                                                )
-                                            } else {
-                                                onClose && onClose()
-                                                emiter.emit("onCodeAuditOpenAuditTree", rowData.Name)
-                                            }
-                                        }}
-                                    />
-                                </Tooltip>
-                                <YakitButton
-                                    type='text'
-                                    danger
-                                    icon={<OutlineTrashIcon />}
-                                    onClick={() => {
-                                        onDelete()
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    )
-                })}
-            </div>
-        </div>
-    )
-}
+//     return (
+//         <div className={styles["compile-history"]}>
+//             <div className={styles["compile-history-list-container"]}>
+//                 {response.Results.map((rowData: any) => {
+//                     return (
+//                         <div className={styles["history-item-box"]} key={rowData.time}>
+//                             <div className={styles["time"]}>{rowData.time}</div>
+//                             <div className={styles["option"]}>
+//                                 <Tooltip title={"代码扫描"}>
+//                                     <YakitButton
+//                                         type='text'
+//                                         icon={<OutlineScanIcon />}
+//                                         onClick={() => {
+//                                             emiter.emit(
+//                                                 "openPage",
+//                                                 JSON.stringify({
+//                                                     route: YakitRoute.YakRunner_Code_Scan,
+//                                                     params: {
+//                                                         projectName: [rowData.Name],
+//                                                         GroupNames: [rowData.Language]
+//                                                     }
+//                                                 })
+//                                             )
+//                                             if (pageType === "auditCode") {
+//                                                 onClose && onClose()
+//                                             }
+//                                         }}
+//                                     />
+//                                 </Tooltip>
+//                                 {/* 此处的Tooltip会导致页面抖动(待处理) */}
+//                                 <Tooltip title={"打开项目"}>
+//                                     <YakitButton
+//                                         type='text'
+//                                         icon={<OutlineArrowcirclerightIcon />}
+//                                         onClick={() => {
+//                                             if (pageType === "projectManager") {
+//                                                 // 跳转到审计页面的参数
+//                                                 const params: AuditCodePageInfoProps = {
+//                                                     Schema: "syntaxflow",
+//                                                     Location: rowData.Name,
+//                                                     Path: `/`
+//                                                 }
+//                                                 emiter.emit(
+//                                                     "openPage",
+//                                                     JSON.stringify({
+//                                                         route: YakitRoute.YakRunner_Audit_Code,
+//                                                         params
+//                                                     })
+//                                                 )
+//                                             } else {
+//                                                 onClose && onClose()
+//                                                 emiter.emit("onCodeAuditOpenAuditTree", rowData.Name)
+//                                             }
+//                                         }}
+//                                     />
+//                                 </Tooltip>
+//                                 <YakitButton
+//                                     type='text'
+//                                     danger
+//                                     icon={<OutlineTrashIcon />}
+//                                     onClick={() => {
+//                                         onDelete()
+//                                     }}
+//                                 />
+//                             </div>
+//                         </div>
+//                     )
+//                 })}
+//             </div>
+//         </div>
+//     )
+// }
