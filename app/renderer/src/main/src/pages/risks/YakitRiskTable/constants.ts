@@ -19,6 +19,7 @@ export const defQueryRisksRequest: QueryRisksRequest = {
     SeverityList: [],
     TagList: [],
     IPList: [],
-    Ids:[],
-    RuntimeId:'',
+    Ids: [],
+    RuntimeId: "",
+    RuntimeIds: []
 }

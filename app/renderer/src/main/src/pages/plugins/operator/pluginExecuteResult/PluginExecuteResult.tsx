@@ -436,7 +436,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
 
 /**风险与漏洞tab表 */
 export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
-    const {runtimeId} = props
+    const {runtimeId, runTimeIDs} = props
     const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
     const [riskLoading, setRiskLoading] = useState<boolean>(false)
     const [allTotal, setAllTotal] = useControllableValue<number>(props, {
@@ -446,12 +446,17 @@ export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps>
     })
     const [query, setQuery] = useState<QueryRisksRequest>({
         ...defQueryRisksRequest,
-        RuntimeId: runtimeId
+        RuntimeId: runtimeId,
+        RuntimeIds: runTimeIDs
     })
 
     useUpdateEffect(() => {
-        setQuery({...query, RuntimeId: runtimeId})
+        setQuery((pre) => ({...pre, RuntimeId: runtimeId}))
     }, [runtimeId])
+
+    useUpdateEffect(() => {
+        setQuery((pre) => ({...pre, RuntimeIds: runTimeIDs}))
+    }, [runTimeIDs])
 
     const onJumpRisk = useMemoizedFn(() => {
         const info: RouteToPageProps = {

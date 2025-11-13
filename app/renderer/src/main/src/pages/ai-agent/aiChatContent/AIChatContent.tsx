@@ -18,7 +18,7 @@ import {
     VulnerabilitiesRisksTable
 } from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
+import {apiQueryRisksTotalByRuntimeIds} from "@/pages/risks/YakitRiskTable/utils"
 import AIReActTaskChat from "@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat"
 import emiter from "@/utils/eventBus/eventBus"
 import {ContextPressureEcharts, ContextPressureEchartsProps, ResponseSpeedEcharts} from "../chatTemplate/AIEcharts"
@@ -74,8 +74,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
     }, interval)
     const getTotal = useMemoizedFn(() => {
         if (!runTimeIDs.length) return
-        // todo 需要改成数组传参
-        apiQueryRisksTotalByRuntimeId(runTimeIDs.join(",")).then((allRes) => {
+        apiQueryRisksTotalByRuntimeIds(runTimeIDs).then((allRes) => {
             if (+allRes.Total > 0) {
                 setTempTotal(+allRes.Total)
             }
@@ -121,8 +120,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
             case AITabsEnum.Risk:
                 return !!runTimeIDs.length ? (
                     <VulnerabilitiesRisksTable
-                        // todo 需要改成数组传参
-                        runtimeId={runTimeIDs.join(",")}
+                        runTimeIDs={runTimeIDs}
                         allTotal={allTotal}
                         setAllTotal={onSetRiskTotal}
                     />
@@ -133,7 +131,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo((props) =>
                 )
             case AITabsEnum.HTTP:
                 return !!runTimeIDs.length ? (
-                    // todo 需要改成数组传参
                     <PluginExecuteHttpFlow runtimeId={runTimeIDs.join(",")} website={false} />
                 ) : (
                     <>
