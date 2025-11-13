@@ -12,4 +12,6 @@ export interface AIChatTextareaProps {
     extraFooterRight?: ReactNode
     onSubmit?: (qs: string) => void
     textareaProps?: Omit<QSInputTextareaProps, "value">
+    className?: string
+    children?: ReactNode
 }

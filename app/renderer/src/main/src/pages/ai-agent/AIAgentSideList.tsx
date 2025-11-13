@@ -1,4 +1,4 @@
-import React, {ReactNode, useState} from "react"
+import React, {ReactNode, useEffect, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {AIAgentTabList, AIAgentTabListEnum} from "./defaultConstant"
 import {AIAgentSideListProps, AIAgentTriggerEventInfo} from "./aiAgentType"
@@ -24,6 +24,13 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     const handleSetActive = useMemoizedFn((value: AIAgentTabListEnum) => {
         setActive(value)
     })
+
+    useEffect(() => {
+        emiter.on("switchAIAgentTab", handleSetActive)
+        return () => {
+            emiter.off("switchAIAgentTab", handleSetActive)
+        }
+    }, [])
 
     /** 向对话框组件进行事件触发的通信 */
     const onEmiter = useMemoizedFn((key: string) => {

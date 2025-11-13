@@ -129,7 +129,7 @@ const AIReviewRuleSelect: React.FC<AIReviewRuleSelectProps> = React.memo((props)
 export default AIReviewRuleSelect
 
 export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
-    const {getList, dropdownRender, children, ...rest} = props
+    const {getList, dropdownRender, children, setOpen: defSetOpen, ...rest} = props
     const [open, setOpen] = useControllableValue(props, {
         defaultValue: false,
         valuePropName: "open",
