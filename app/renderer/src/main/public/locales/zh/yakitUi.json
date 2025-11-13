@@ -65,7 +65,8 @@
         "retryAll": "一键重试",
         "debugExecution": "调试执行",
         "restore": "复原",
-        "share": "分享"
+        "share": "分享",
+        "ImportTutorial": "导入教程"
     },
     "YakitNotification": {
         "unknown_error": "未知错误",

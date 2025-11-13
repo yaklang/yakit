@@ -2189,6 +2189,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 } catch (error) {
                     setLoading(false)
                     yakitNotify("error", `onInitFuzzer初始化WF数据失败:${error}`)
+                    //进入webfuzzer页面,出现初始化数据失败报错时,弹窗【恢复标签页】,支持用户手动恢复
+                    onRestoreHistory(YakitRoute.HTTPFuzzer)
                 }
             }
         }

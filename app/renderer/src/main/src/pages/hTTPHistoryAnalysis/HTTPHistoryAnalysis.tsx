@@ -95,10 +95,10 @@ interface HTTPHistoryAnalysisProps {
     pageId: string
     /** 来自httpFuzzerPage或FuzzerSequence */
     params?: HTTPHistoryAnalysisPageInfo
-    onClose?: () => void
+    closable?: boolean
 }
 export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.memo((props) => {
-    const {pageId, params, onClose} = props
+    const {pageId, params, closable } = props
     const {t, i18n} = useI18nNamespaces(["HTTPHistoryAnalysis"])
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
@@ -243,7 +243,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                             runtimeId={pageInfo.runtimeId}
                             sourceType={pageInfo.sourceType}
                             webFuzzerPageId={pageInfo.pageId}
-                            onClose={onClose}
+                            closable={closable}
                         />
                     </div>
                 }

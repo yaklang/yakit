@@ -166,6 +166,7 @@ import {type LoggerData, useLogger} from "@/hook/useLogger/useLogger"
 import i18n from "@/i18n/i18n"
 import {maskProxyPassword} from "../mitm/MITMServerStartForm/MITMServerStartForm"
 import { ExportDataType } from "@/utils/exporter"
+import { YakitDrawer } from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -181,7 +182,7 @@ const httpFuzzerLog = ({name, title, content, status}: Partial<LoggerData>) => {
     return {
         name: name || "HTTPFuzzerPage",
         title: title || "sendRequest",
-        content: content || i18n.language === "zh" ? "发送请求" : "Send Request",
+        content: content || (i18n.language === "zh" ? "发送请求" : "Send Request"),
         status,
         time: formatTimeYMD(Date.now())
     }
@@ -2065,6 +2066,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // )
     })
 
+    const getContainerSize = useSize(fuzzerRef || document.body)
+    // 抽屉展示高度
+    const showHeight = useMemo(() => getContainerSize?.height || 400, [getContainerSize])
+
     /* 流量分析遮罩层 */
     const renderHistoryAnalysis = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
@@ -2077,15 +2082,24 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             pageId: currentItem.pageId
         }
         return (
-            <div className={styles["http-traffic-analysis-overlay"]}>
-                <React.Suspense fallback={<YakitSpin spinning={true} />}>
-                    <HTTPHistoryAnalysis
-                        pageId={currentItem.pageId}
-                        params={params}
-                        onClose={() => setTrafficAnalysisVisible(false)}
-                    />
-                </React.Suspense>
-            </div>
+             <YakitDrawer
+                getContainer={fuzzerRef.current || document.body}
+                placement='bottom'
+                mask={false}
+                keyboard={false}
+                height={showHeight}
+                visible={true}
+                onClose={() => setTrafficAnalysisVisible(false)}
+                className={styles["http-traffic-analysis-overlay"]}
+            >
+                    <React.Suspense fallback={<YakitSpin spinning={true} />}>
+                        <HTTPHistoryAnalysis
+                            pageId={currentItem.pageId}
+                            params={params}
+                            closable={false}
+                        />
+                    </React.Suspense>
+            </YakitDrawer>
         )
     })
 

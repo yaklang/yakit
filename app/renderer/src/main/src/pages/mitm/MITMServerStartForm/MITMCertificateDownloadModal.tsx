@@ -5,9 +5,12 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakEditor} from "@/utils/editors"
 import {CaCertData} from "../MITMServerHijacking/MITMServerHijacking"
 import {useMemoizedFn} from "ahooks"
-import {saveABSFileToOpen} from "@/utils/openWebsite"
+import {saveABSFileToOpen, openExternalWebsite} from "@/utils/openWebsite"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import { OutlineQuestionmarkcircleIcon } from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -22,6 +25,7 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
         CaCerts: new Uint8Array(),
         LocalFile: ""
     })
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     useEffect(() => {
         const apiName = isGMState ? "DownloadMITMGMCert" : "DownloadMITMCert"
         ipcRenderer.invoke(apiName, {}).then((data: CaCertData) => {
@@ -78,6 +82,16 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
                 style={{borderRadius: 4}}
                 headStyle={{height: 36}}
                 bodyStyle={{padding: 0}}
+                extra={
+                    isGMState ? <YakitButton 
+                        type="text" 
+                        onClick={()=>{ openExternalWebsite('https://mp.weixin.qq.com/s/smGfZar2H0arbkZx_4b-Iw')}} 
+                        className={styles["certificate-download-modal-btn"]}
+                    >
+                        {t("YakitButton.ImportTutorial")}
+                        <OutlineQuestionmarkcircleIcon className={styles["certificate-download-modal-icon"]}/>
+                    </YakitButton> : null
+                }
             >
                 <div className={styles["certificate-download-modal-body"]}>
                     <YakEditor bytes={true} valueBytes={caCerts.CaCerts} />

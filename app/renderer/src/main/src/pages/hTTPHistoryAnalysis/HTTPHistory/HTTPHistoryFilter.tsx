@@ -123,7 +123,7 @@ interface HTTPHistoryFilterProps {
     sourceType?: string
     webFuzzerPageId?: string
     /** 来自httpFuzzerPage */
-    onClose?: () => void
+    closable?: boolean
 }
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((props) => {
     const {
@@ -139,7 +139,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         runtimeId,
         sourceType,
         webFuzzerPageId,
-        onClose
+        closable
     } = props
     const {t, i18n} = useI18nNamespaces(["history"])
     // #region 左侧tab
@@ -373,7 +373,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             runtimeId={runtimeId}
                             sourceType={sourceType}
                             webFuzzerPageId={webFuzzerPageId}
-                            onClose={onClose}
+                            closable={closable}
                         />
                     </div>
                 }
@@ -422,7 +422,7 @@ interface HTTPFlowTableProps {
     runtimeId?: string[]
     sourceType?: string
     webFuzzerPageId?: string
-    onClose?: () => void
+    closable?: boolean
 }
 const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
     const {
@@ -442,7 +442,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         runtimeId = [],
         sourceType = "mitm",
         webFuzzerPageId,
-        onClose
+        closable = true
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi", "history", "yakitRoute"])
     const {currentPageTabRouteKey, queryPagesDataById} = usePageInfo(
@@ -2341,16 +2341,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                 />
                             </div>
                             <div className={styles["http-history-table-right"]}>
-                                {webFuzzerPageId && toWebFuzzer && (
+                                {webFuzzerPageId && toWebFuzzer && closable &&(
                                     <YakitButton
                                         icon={<OutlineReplyIcon />}
                                         size='small'
                                         onClick={() => {
-                                            // 如果有了onClose,代表是从httpFuzzerPage或fuzzerSequence打开的
-                                            if (onClose) {
-                                                onClose()
-                                                return
-                                            }
                                             const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
                                                 YakitRoute.HTTPFuzzer,
                                                 webFuzzerPageId

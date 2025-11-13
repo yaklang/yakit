@@ -14,7 +14,8 @@ import {
     useGetState,
     useMemoizedFn,
     useUpdateEffect,
-    useVirtualList
+    useVirtualList,
+    useInViewport
 } from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {
@@ -4800,6 +4801,7 @@ interface RangeInputNumberTableWrapperProps extends RangeInputNumberProps {
     onCheckThan0: DebouncedFunc<(check: boolean) => void>
 }
 export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapperProps> = React.memo((props) => {
+    const ref = useRef<HTMLDivElement>(null)
     const {
         showSort = false,
         bodyLengthSort,
@@ -4815,21 +4817,39 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
     const {t, i18n} = useI18nNamespaces(["history", "yakitUi"])
     const [show, setShow] = useState<boolean>(false)
 
+    // valueChanged判断用户输入值 点击其他区域触发筛选列表
+    const [_, setValueChanged, getValueChanged] = useGetSetState<boolean>(false)
+    
+    const onchangeValued = useMemoizedFn(() => {
+        setValueChanged(true)
+    })
+
+    const [inViewport] = useInViewport(ref);
+
+    useUpdateEffect(()=>{
+        if(!inViewport && getValueChanged()){
+            onSure?.()
+        }
+    },[inViewport])
+
     return (
-        <div className={style["rangeInputNumberTableWrapper"]} style={{padding: show ? undefined : "0 8px 8px"}}>
+        <div className={style["rangeInputNumberTableWrapper"]} style={{padding: show ? undefined : "0 8px 8px"}} ref={ref}>
             {show ? (
                 <RangeInputNumberTable
                     {...reset}
                     minNumber={minNumber}
                     maxNumber={maxNumber}
                     onSure={() => {
+                        setValueChanged(false)
                         setShow(false)
                         onSure?.()
                     }}
                     onReset={() => {
+                        setValueChanged(false)
                         setShow(false)
                         onReset?.()
                     }}
+                    onchangeValued={onchangeValued}
                 />
             ) : (
                 <>
@@ -4890,10 +4910,11 @@ interface RangeInputNumberProps {
     onReset?: () => void
     onSure?: () => void
     showFooter?: boolean
+    onchangeValued?: () => void 
 }
 
 export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo((props) => {
-    const {minNumber, setMinNumber, maxNumber, setMaxNumber, extra, onReset, onSure, showFooter} = props
+    const {minNumber, setMinNumber, maxNumber, setMaxNumber, extra, onReset, onSure, showFooter, onchangeValued} = props
     return (
         <div className={style["table-body-length-filter"]}>
             <Input.Group compact size='small' className={style["input-group"]}>
@@ -4904,6 +4925,7 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
                     value={minNumber}
                     onChange={(v) => {
                         if (setMinNumber) setMinNumber(v as number)
+                        onchangeValued?.();
                     }}
                     size='small'
                 />
@@ -4915,6 +4937,7 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
                     value={maxNumber}
                     onChange={(v) => {
                         if (setMaxNumber) setMaxNumber(v as number)
+                        onchangeValued?.();
                     }}
                     size='small'
                 />
