@@ -1,6 +1,5 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps} from "./type"
-import {AIAgentWelcome} from "../AIAgentWelcome/AIAgentWelcome"
 import {useCreation, useDebounceFn, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AIChatInfo} from "../type/aiChat"
 import emiter from "@/utils/eventBus/eventBus"
@@ -44,7 +43,7 @@ import {AITabsEnum} from "../defaultConstant"
 import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
 
-const AIReActTaskChat = React.lazy(() => import("../../ai-re-act/aiReActTaskChat/AIReActTaskChat"))
+const AIChatWelcome = React.lazy(() => import("../aiChatWelcome/AIChatWelcome"))
 
 const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
     if (!taskChat) return false
@@ -289,7 +288,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                         onStop()
                         handleSaveChatInfo()
                         events.onReset()
-
+                        setMode("welcome")
                         break
                     // 替换当前使用的 forge 模板
                     case "open-forge-form":
@@ -562,15 +561,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         <div ref={wrapperRef} className={styles["ai-agent-chat"]}>
             <div className={styles["chat-wrapper"]}>
                 {mode === "welcome" ? (
-                    <AIAgentWelcome onTriageSubmit={handleStartTriageChat} />
+                    <React.Suspense fallback={<div>loading...</div>}>
+                        <AIChatWelcome onTriageSubmit={handleStartTriageChat} />
+                    </React.Suspense>
                 ) : (
                     <ChatIPCContent.Provider value={{store, dispatcher}}>
-                        {/* {isShowTask && (
-                            <React.Suspense fallback={<div>loading...</div>}>
-                                <AIReActTaskChat execute={execute} onStop={onStop} />
-                            </React.Suspense>
-                        )}
-                        <AIReActChat mode={mode} /> */}
                         <AIChatContent />
                     </ChatIPCContent.Provider>
                 )}
