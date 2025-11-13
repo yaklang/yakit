@@ -9,8 +9,8 @@ import {saveABSFileToOpen, openExternalWebsite} from "@/utils/openWebsite"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { QuestionMarkCircleIcon } from "@/assets/newIcon"
 import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import { OutlineQuestionmarkcircleIcon } from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -89,7 +89,7 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
                         className={styles["certificate-download-modal-btn"]}
                     >
                         {t("YakitButton.ImportTutorial")}
-                        <QuestionMarkCircleIcon className={styles["certificate-download-modal-icon"]}/>
+                        <OutlineQuestionmarkcircleIcon className={styles["certificate-download-modal-icon"]}/>
                     </YakitButton> : null
                 }
             >

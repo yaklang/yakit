@@ -4828,7 +4828,6 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
 
     useUpdateEffect(()=>{
         if(!inViewport && getValueChanged()){
-            console.log(getValueChanged());
             onSure?.()
         }
     },[inViewport])
