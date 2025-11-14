@@ -652,7 +652,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     {expand ? "隐藏，稍后审阅" : "展开审阅信息"}
                 </YakitButton>
                 <div className={styles["review-footer-extra"]}>
-                    <RoundedStopButton onClick={onStopTask} />
+                    <RoundedStopButton onClick={onStopTask} size='large'/>
                     {node}
                 </div>
             </div>
