@@ -11,7 +11,8 @@ const FileTreeSystemItem: FC<{
     data: FileNodeProps
     isOpen?: boolean
     expanded?: boolean
-}> = ({data, isOpen, expanded}) => {
+    onResetTree?: () => void
+}> = ({data, isOpen, expanded, onResetTree}) => {
     // 文件图标
     const iconImage = useMemo(() => {
         if (!data.isFolder) return KeyToIcon[data.icon].iconPath
@@ -57,7 +58,7 @@ const FileTreeSystemItem: FC<{
                 setClipboardText(data.path)
                 break
             case "refreshFolder":
-                customFolderStore.addCustomFolder(data.path)
+                onResetTree?.()
                 break
             default:
                 break

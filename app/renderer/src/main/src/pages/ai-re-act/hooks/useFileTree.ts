@@ -215,6 +215,7 @@ function useFileTree(params?: UseFileTreeParams) {
         parentNode.isLeaf = !parentNode.children?.length
         if (parentNode.isLeaf) setNodeDetailMap(parentNode)
         folderNodeSet.current.delete(folderPath)
+        updateTreeNodeData(parentNode)
         onTriggerUIUpdate()
     })
     // 创建文件夹
