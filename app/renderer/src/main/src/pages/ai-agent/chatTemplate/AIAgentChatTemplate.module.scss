@@ -153,13 +153,12 @@
     height: 100%;
     overflow: hidden auto;
     .item-wrapper {
-        margin-bottom: 4px;
         width: 100%;
         box-sizing: border-box;
-    }
-
-    .item-wrapper:last-child {
-        margin-bottom: 0; // 最后一条不加间距
+        padding-bottom: 4px;
+        &:last-child {
+            padding-bottom: 0;
+        }
     }
 }
 

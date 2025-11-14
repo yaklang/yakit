@@ -63,8 +63,8 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     const onStopTask = useMemoizedFn(() => {
         yakitNotify("info", "开发中...")
     })
-    const hiddenStop = useCreation(() => {
-        return chatIPCData.execute && streams[streams.length - 1]?.type === AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION
+    const showStop = useCreation(() => {
+        return chatIPCData.execute && streams[streams.length - 1]?.type !== AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION
     }, [streams.length, chatIPCData.execute])
     return (
         <>
@@ -81,7 +81,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             ) : (
                 streams.length > 0 && (
                     <div className={styles["footer"]}>
-                        {!hiddenStop && <RoundedStopButton onClick={onStopTask} />}
+                        {showStop && <RoundedStopButton onClick={onStopTask} />}
                         <YakitButton
                             type='outline2'
                             icon={<OutlinePositionIcon />}

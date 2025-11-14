@@ -126,7 +126,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const handleShowReviewExtra = useMemoizedFn((info: AIAgentGrpcApi.PlanReviewRequireExtra) => {
         setPlanReviewTreeKeywords(info.index, info)
     })
-    const handleReleaseReview = useMemoizedFn((id: string) => {
+    const handleReleaseReview = useMemoizedFn((type: ChatIPCSendType, id: string) => {
         if (!reviewInfo) return
         if ((reviewInfo.data as AIReviewType).id === id) {
             // if (!delayLoading) yakitNotify("warning", "审阅自动执行，弹框将自动关闭")
