@@ -1921,6 +1921,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 retryNoPopconfirm={!canPlayAgain}
                 cancelCurrentHTTPFuzzer={cancelCurrentHTTPFuzzer}
                 resumeAndPause={resumeAndPause}
+                onShowAll={jumpHTTPHistoryAnalysis}
             />
             <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
                 {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
@@ -2109,7 +2110,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             <div style={{fontSize: 12}}>
                 {t("HTTPFuzzerPage.response_overflow", {maxData: fuzzerTableMaxData})}
                 <YakitButton type='text' onClick={jumpHTTPHistoryAnalysis} style={{padding: 0}}>
-                    {t("HTTPFuzzerPage.trafficAnalysisMode")}
+                    {t("HTTPFuzzerPage.trafficAnalysis")}
                 </YakitButton>
                 {t("HTTPFuzzerPage.view_all_suffix")}
             </div>
@@ -2446,13 +2447,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         <div className={classNames(styles["resize-card-heard"])}>
                                             <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
                                             <div className={styles["resize-card-heard-extra"]}></div>
-                                            {cachedTotal >= 1 && <YakitButton
-                                                type='outline2'
-                                                onClick={jumpHTTPHistoryAnalysis}
-                                                className={styles["resize-card-heard-btn"]}
-                                            >
-                                                {t("HTTPFuzzerPage.trafficAnalysisMode")}
-                                            </YakitButton>}
                                             {secondNodeExtra()}
                                         </div>
                                         {cachedTotal >= 1 ? (
@@ -3233,11 +3227,11 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     </Tooltip>
                 )} */}
                 {onShowAll ? (+(secondNodeSize?.width || 0) >= 610 ? 
-                    <YakitButton type='primary' size={"small"} onClick={onShowAll} >
-                        {t("HTTPFuzzerPage.trafficAnalysisMode")}
+                    <YakitButton type='outline2' size={"small"} onClick={onShowAll} >
+                        {t("HTTPFuzzerPage.trafficAnalysis")}
                     </YakitButton>
                 : 
-                <Tooltip title={t("HTTPFuzzerPage.trafficAnalysisMode")}>
+                <Tooltip title={t("HTTPFuzzerPage.trafficAnalysis")}>
                     <YakitButton type='outline2' onClick={onShowAll} icon={<PublicHTTPHistoryIcon />} size={size} />
                 </Tooltip>): null}
                 {+(secondNodeSize?.width || 0) >= 610 ? (

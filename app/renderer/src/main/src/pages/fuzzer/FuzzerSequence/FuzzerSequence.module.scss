@@ -68,6 +68,14 @@
                 svg {
                     color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 }
+
+
+            }
+
+            &-active {
+                svg {
+                    color: var(--Colors-Use-Warning-Primary);
+                }
             }
 
             &-extra {
@@ -578,6 +586,18 @@
             }
         }
     }
+    .advanced-config-form-label {
+        display: flex;
+        align-items: center;
+
+        .info-icon {
+            margin-left: 4px;
+            svg {
+                    color: var(--Colors-Use-Neutral-Disable);
+                }
+            }
+        }
+
 }
 
 .http-traffic-analysis-overlay{
@@ -590,7 +610,7 @@
             overflow: hidden;
         }
         .ant-drawer-header-title{
-            justify-content: end;
+            flex-direction: row-reverse;
         }
     }
 }

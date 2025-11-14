@@ -25,18 +25,21 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { YakitDrawer } from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import { YakitInputNumber } from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import styles from "./FuzzerSequence.module.scss"
+import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
+import { InformationCircleIcon } from "@/assets/newIcon"
 
 export type ConcurrencyAdvancedConfigValue = Pick<
     AdvancedConfigValueProps,
     'concurrent' | 'minDelaySeconds' | 'maxDelaySeconds' | 'repeatTimes' | 'disableUseConnPool' | 'matchers' | 'extractors'
->
+> & {
+    disableAdvancedSet?: boolean
+}
 
 interface AdvancedSetProps  {
     visible: boolean
     advancedConfigValue: ConcurrencyAdvancedConfigValue
     onSave: (values: ConcurrencyAdvancedConfigValue) => void
     onCancel: () => void
-    onOpenMatcherExtractor?: () => void
 }
 
 const initSetValue: ConcurrencyAdvancedConfigValue = {
@@ -46,7 +49,8 @@ const initSetValue: ConcurrencyAdvancedConfigValue = {
     repeatTimes: 0,
     disableUseConnPool: false,
     matchers: [],
-    extractors:[]
+    extractors: [],
+    disableAdvancedSet: false
 }
 
 
@@ -180,6 +184,125 @@ const AdvancedSet: React.FC<AdvancedSetProps> = memo((props) => {
     )
 })
 
+interface AdvancedSetV2Props {
+    visible: boolean
+    advancedConfigValue: ConcurrencyAdvancedConfigValue
+    onCancel: () => void
+    children: React.ReactNode
+    onSave: (values: ConcurrencyAdvancedConfigValue) => void
+}
+
+const AdvancedSetV2: React.FC<AdvancedSetV2Props> = memo((props) => {
+    const {onCancel, visible, advancedConfigValue, children, onSave} = props
+    const [form] = Form.useForm()
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "history", "webFuzzer"])
+
+    useEffect(() => {
+        visible &&
+            form.setFieldsValue({
+                ...advancedConfigValue
+            })
+    }, [visible])
+
+    return (
+        <YakitPopover
+            title={t("AdvancedSet.advancedConfig")}
+            onVisibleChange={onCancel}
+            overlayInnerStyle={{width: 350}}
+            overlayClassName={styles["history-advanced-set-wrapper"]}
+            visible={visible}
+            placement='right'
+            content={
+                <>
+                    <Form
+                        form={form}
+                        colon={false}
+                        size='small'
+                        labelCol={{span: 8}}
+                        wrapperCol={{span: 14}}
+                        initialValues={{
+                            ...advancedConfigValue
+                        }}
+                        onValuesChange={(values) => onSave({...advancedConfigValue, ...values})}
+                    >
+                        <Form.Item
+                            label={t("HttpQueryAdvancedConfig.disable_connection_pool")}
+                            className={styles["form-item-with-reset-button"]}
+                            valuePropName='checked'
+                        >
+                            <YakitSwitch />
+                        </Form.Item>
+                        <Form.Item
+                            label={t("HttpQueryAdvancedConfig.repeat_send")}
+                            name='repeatTimes'
+                            help={t("HttpQueryAdvancedConfig.concurrency_test_tip")}
+                        >
+                            <YakitInputNumber type='horizontal' size='small' min={0} />
+                        </Form.Item>
+                        <Form.Item label={t("HttpQueryAdvancedConfig.concurrent_threads")} name='concurrent'>
+                            <YakitInputNumber type='horizontal' size='small' min={0} />
+                        </Form.Item>
+
+                        <Form.Item label={t("HttpQueryAdvancedConfig.random_delay2")}>
+                            <div className={styles["advanced-configuration-drawer-delay"]}>
+                                <Form.Item
+                                    name='minDelaySeconds'
+                                    noStyle
+                                    normalize={(value) => {
+                                        return value.replace(/\D/g, "")
+                                    }}
+                                >
+                                    <YakitInput
+                                        allowClear={false}
+                                        prefix='Min'
+                                        suffix='s'
+                                        size='small'
+                                        className={styles["input-left"]}
+                                    />
+                                </Form.Item>
+                                <Form.Item
+                                    name='maxDelaySeconds'
+                                    noStyle
+                                    normalize={(value) => {
+                                        return value.replace(/\D/g, "")
+                                    }}
+                                >
+                                    <YakitInput
+                                        allowClear={false}
+                                        prefix='Max'
+                                        suffix='s'
+                                        size='small'
+                                        className={styles["input-right"]}
+                                    />
+                                </Form.Item>
+                            </div>
+                        </Form.Item>
+                        <Form.Item
+                            label={
+                                    <span className={styles["advanced-config-form-label"]}>
+                                        {t("HttpQueryAdvancedConfig.disable_Advanced_set")}
+                                        <Tooltip
+                                            title={t("HttpQueryAdvancedConfig.disable_Advanced_set_tip")}
+                                        >
+                                            <InformationCircleIcon className={styles["info-icon"]} />
+                                        </Tooltip>
+                                    </span>    
+                                }
+                            className={styles["form-item-with-reset-button"]}
+                            name={"disableAdvancedSet"}
+                            valuePropName='checked'
+                            style={{marginBottom: 0}}
+                        >
+                            <YakitSwitch />
+                        </Form.Item>
+                    </Form>
+                </>
+            }
+        >
+            {children}
+        </YakitPopover>
+    )
+})
 
 
 const ConcurrencyItem: React.FC<SequenceItemProps> = memo((props) => {
@@ -320,5 +443,6 @@ const ConcurrencyItem: React.FC<SequenceItemProps> = memo((props) => {
 export {
     AdvancedSet,
     ConcurrencyItem,
-    initSetValue
+    initSetValue,
+    AdvancedSetV2
 }

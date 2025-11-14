@@ -12,7 +12,7 @@ import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
-import {yakitFailed} from "@/utils/notification"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {ResponseProps} from "./FuzzerSequenceType"
 import {MatcherValueProps, ExtractorValueProps} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
@@ -218,12 +218,29 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
         updatePagesDataCacheById(YakitRoute.HTTPFuzzer, newPageData)
     })
 
+    const handleMatchSubmit = useMemoizedFn(()=>{
+        if (concurrencyConfig?.matchers?.length || concurrencyConfig?.extractors?.length) {
+            onMatchSubmit?.()
+        } else {
+            onOpenMatcherDrawer?.()
+        }
+    })
+
+
+    const onApply = useMemoizedFn(()=>{
+        if(!cachedTotal){
+            yakitNotify("warning", `请发送多个请求包后再应用`)
+            return;
+        }
+        handleMatchSubmit()
+    })
+
     const moreLimtAlertMsg = useMemo(
         () => (
             <div style={{fontSize: 12}}>
                 {t("HTTPFuzzerPage.response_overflow", {maxData: fuzzerTableMaxData})}
                 <YakitButton type='text' onClick={onShowAll} style={{padding: 0}}>
-                    {t("HTTPFuzzerPage.trafficAnalysisMode")}
+                    {t("HTTPFuzzerPage.trafficAnalysis")}
                 </YakitButton>
                 {t("HTTPFuzzerPage.view_all_suffix")}
             </div>
@@ -245,13 +262,7 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
             onSearch={() => {
                 setDefaultResponseSearch(affixSearch)
             }}
-            matchSubmit={() => {
-                if (concurrencyConfig && concurrencyConfig.matchers?.length > 0) {
-                    onMatchSubmit?.()
-                } else {
-                    onOpenMatcherDrawer?.()
-                }
-            }}
+            matchSubmit={handleMatchSubmit}
             successFuzzer={successFuzzer}
             failedFuzzer={failedFuzzer}
             secondNodeSize={secondNodeSize}
@@ -303,12 +314,14 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
                                         onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
                                         onEdit={onEditMatchers}
                                         onSetValue={onSetValue}
+                                        onApply={onApply}
                                     />
                                     <ExtractorsPanel
                                         key='数据提取器'
                                         onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
                                         onEdit={onEditExtractors}
                                         onSetValue={onSetValue}
+                                        onApply={onApply}
                                     />
                                 </YakitCollapse>
                                 <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>

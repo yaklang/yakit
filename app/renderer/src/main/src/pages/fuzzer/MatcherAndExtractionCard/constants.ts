@@ -103,3 +103,10 @@ export const defMatcherAndExtractionCode =
     "<html>" +
     '<!doctype html>\n<html>\n<body>\n  <div id="result">%d</div>\n</body>\n</html>' +
     "</html>"
+
+export const ScopeList = [
+    {label: "请求头", value: "request_header"},
+    {label: "请求体", value: "request_body"},
+    {label: "全部请求", value: "request_raw"},
+    {label: "请求Url", value: "request_url"}
+]

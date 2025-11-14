@@ -26,6 +26,7 @@ export interface MatcherAndExtractionProps {
     defActiveKeyAndOrder: MatcherActiveKey
     pageType: MatcherAndExtractionDrawerPageType
     hasApplyBtn?: boolean
+    setDefActiveType? : (type: MatchingAndExtraction) => void
 }
 
 export interface MatcherAndExtractionRefProps {
@@ -166,4 +167,5 @@ export interface MatcherAndExtractionDrawerProps {
     /**匹配器默认选中 */
     defActiveKeyAndOrder: MatcherActiveKey
     hasApplyBtn?: boolean
+    setDefActiveType?: (type: MatchingAndExtraction) => void
 }
