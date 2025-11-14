@@ -1,0 +1,19 @@
+@use "../../../../../styles/mixin.scss" as mixin;
+
+.file-tree-system-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 22px;
+    border-radius: 4px;
+    span {
+        font-size: 12px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        @include mixin.text-ellipsis(1, false, false, true);
+    }
+    img {
+        width: 16px;
+        height: 16px;
+    }
+}

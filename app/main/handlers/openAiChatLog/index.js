@@ -98,7 +98,7 @@ module.exports = {
             // === 加载完成后发送日志 ===
             childWindow.webContents.once("did-finish-load", () => {
                 childWindow.show()
-                childWindow.webContents.openDevTools()
+                // childWindow.webContents.openDevTools()
 
                 // 将已有日志推送过去
                 for (const log of aiChatLogMap.values()) {
