@@ -1,7 +1,7 @@
-import React, {useEffect, useRef} from "react"
+import React, {MutableRefObject, useMemo} from "react"
 import {AIReActChatContentsPProps, AIStreamNodeProps} from "./AIReActChatContentsType.d"
 import styles from "./AIReActChatContents.module.scss"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation} from "ahooks"
 import {AIChatToolColorCard} from "@/pages/ai-agent/components/aiChatToolColorCard/AIChatToolColorCard"
 import {AIMarkdown} from "@/pages/ai-agent/components/aiMarkdown/AIMarkdown"
 import {AIStreamChatContent} from "@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent"
@@ -13,6 +13,9 @@ import useAIChatUIData from "../hooks/useAIChatUIData"
 import {AIYaklangCode} from "@/pages/ai-agent/components/aiYaklangCode/AIYaklangCode"
 import {ModalInfoProps} from "@/pages/ai-agent/components/ModelInfo"
 import {AIStreamContentType} from "../hooks/defaultConstant"
+import {Virtuoso} from "react-virtuoso"
+import useVirtuosoAutoScroll from "../hooks/useVirtuosoAutoScroll"
+import {AIChatQSData} from "../hooks/aiRender"
 
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     const {stream, aiMarkdownProps} = props
@@ -61,30 +64,36 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
 })
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {
     const {chats} = props
-    const listRef = useRef<HTMLDivElement>(null)
-    useEffect(() => {
-        scrollToBottom()
-    }, [chats])
+    const {scrollerRef, virtuosoRef} = useVirtuosoAutoScroll(chats)
 
-    const scrollToBottom = useMemoizedFn(() => {
-        const messagesWrapper = listRef.current
-        if (!messagesWrapper) return
-        requestAnimationFrame(() => {
-            const {clientHeight, scrollHeight, scrollTop} = messagesWrapper
-            const scrollBottom = scrollHeight - scrollTop - clientHeight
-            if (scrollBottom > 80) return
-            if (scrollHeight > clientHeight) {
-                messagesWrapper.scrollTop = messagesWrapper.scrollHeight
-            }
-        })
-    })
+    const renderItem = (item: AIChatQSData) => {
+        return <AIChatListItem key={item.id} item={item} type='re-act' />
+    }
+
+    const components = useMemo(
+        () => ({
+            Item: ({children, style, "data-index": dataIndex}) => (
+                <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
+                    {children}
+                </div>
+            )
+        }),
+        []
+    )
     return (
-        <div ref={listRef} className={styles["ai-re-act-chat-contents"]}>
-            <div className={styles["re-act-contents-list"]}>
-                {chats.map((item) => (
-                    <AIChatListItem key={item.id} item={item} type='re-act' />
-                ))}
-            </div>
+        <div className={styles["ai-re-act-chat-contents"]}>
+            <Virtuoso
+                scrollerRef={(ref) =>
+                    ((scrollerRef as MutableRefObject<HTMLDivElement>).current = ref as HTMLDivElement)
+                }
+                ref={virtuosoRef}
+                data={chats}
+                totalCount={chats.length}
+                itemContent={(_, item) => renderItem(item)}
+                overscan={300}
+                components={components}
+                className={styles["re-act-contents-list"]}
+            />
         </div>
     )
 })

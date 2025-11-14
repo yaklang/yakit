@@ -8,9 +8,7 @@ import {
     ChatStreamCollapseProps,
     ChatStreamContentProps
 } from "../aiAgentType"
-import {
-    OutlineChevrondownIcon,
-    OutlineChevronrightIcon} from "@/assets/icon/outline"
+import {OutlineChevrondownIcon, OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
@@ -94,8 +92,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                 <div key={dataIndex} style={style} data-index={dataIndex} className={styles["item-wrapper"]}>
                     {children}
                 </div>
-            ),
-            Footer: () => <div style={{height: "20px"}} />
+            )
         }),
         []
     )
