@@ -9,7 +9,7 @@ fi
 
 file_name="$1.zip"
 echo "Start to download ${file_name}"
-wget -O ${file_name} https://oss-qn.yaklang.com/irify/render/${RENDER_VERSION}/${file_name} || {
+wget -O ${file_name} https://yaklang.oss-accelerate.aliyuncs.com/irify/render/${RENDER_VERSION}/${file_name} || {
     echo "Error: Download Render Failed" >&2
     exit 1
 }

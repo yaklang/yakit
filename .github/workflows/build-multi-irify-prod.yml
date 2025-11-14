@@ -44,7 +44,7 @@ jobs:
                       echo "Failed to download!" >&2
                       exit 1
                   }
-                  wget -O bins/scripts/google-chrome-plugin.zip https://oss-qn.yaklang.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
+                  wget -O bins/scripts/google-chrome-plugin.zip https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
               shell: bash
 
             - name: "Fetch Latest Engine Version And Set To Env"
@@ -56,33 +56,33 @@ jobs:
 
             - name: "Download Yak Engine via wget(Linux)"
               id: download-linux-engine
-              run: wget -O bins/yak_linux_amd64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
+              run: wget -O bins/yak_linux_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
             - name: "Download Yak Engine via wget(Linux-arm64)"
               id: download-linux-engine-arm64
-              run: wget -O bins/yak_linux_arm64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_linux_arm64 && zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
+              run: wget -O bins/yak_linux_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_linux_arm64 && zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
 
             - name: "Download Yak Engine via wget(Windows)"
               id: download-windows-engine
-              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_windows_amd64.exe && zip ./bins/yak_windows_normal_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+              run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_windows_amd64.exe && zip ./bins/yak_windows_normal_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
             - name: "Download Yak Legacy Engine via wget(Windows)"
               id: download-windows-leagacy-engine
-              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_legacy_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+              run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_legacy_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
 
             - name: "Download Yak Engine via wget(MacOS)"
               id: download-darwin-engine
-              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_amd64
+              run: wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_amd64
             - name: "Download Yak Engine via wget(MacOS-arm64)"
               id: download-darwin-engine-arm64
-              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_arm64
+              run: wget -O bins/yak_darwin_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_arm64
 
             - name: Signature Mac Engine
               run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh
               shell: bash
 
             - name: "Fetch Mac-Amd Sha256"
-              run: wget -O bins/yak_darwin_amd64.sha256.txt https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_amd64.sha256.txt
+              run: wget -O bins/yak_darwin_amd64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_amd64.sha256.txt
             - name: "Fetch Mac-Arm Sha256"
-              run: wget -O bins/yak_darwin_arm64.sha256.txt https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_arm64.sha256.txt
+              run: wget -O bins/yak_darwin_arm64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_arm64.sha256.txt
 
             - name: Echo IRify Package Version To Env
               run: |
