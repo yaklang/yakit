@@ -1,9 +1,5 @@
 import {YakitRoute} from "@/enums/yakitRoute"
-import {useSyncExternalStore} from "react"
-
-const editorSearchMap = new Map<string, string>()
-
-const listeners = new Set<() => void>()
+import { bindExternalStoreHook, createExternalStore } from "@/utils/createExternalStore"
 
 // 目前就这两个界面需要这个功能、history 关不了
 const routeToKey = {
@@ -14,37 +10,37 @@ const routeToKey = {
 /**
  * editor 需要保存查找的名字
  */
-export const keepSearchNameMapStore = {
-    subscribe(listener: () => void) {
-        listeners.add(listener)
-        return () => {
-            listeners.delete(listener)
-        }
-    },
-    getKeepSearchNameMap: () => {
-        return editorSearchMap
-    },
-    setKeepSearchNameMap: (name: string, value: string) => {
-        editorSearchMap.set(name, value)
-        emitChange()
-    },
+const store = createExternalStore<Map<string, string>>(new Map<string, string>())
 
-    removeKeepSearchRouteNameMap: (name: string) => {
-        const key = routeToKey[name]
-        editorSearchMap.delete(`${key}-request`)
-        editorSearchMap.delete(`${key}-response`)
-        emitChange()
+export const keepSearchNameMapStore = {
+    subscribe: store.subscribe,
+    getKeepSearchNameMap: store.getSnapshot,
+
+    setKeepSearchNameMap(name: string, value: string) {
+        store.setSnapshot(prev => {
+            const next = new Map(prev)
+            next.set(name, value)
+            return next
+        })
     },
-    removeKeepSearchNameMap: (name: string) => {
-        editorSearchMap.delete(name)
-        emitChange()
+    removeKeepSearchRouteNameMap(route: YakitRoute) {
+        const key = routeToKey[route]
+        if (!key) return
+
+        store.setSnapshot(prev => {
+            const next = new Map(prev)
+            next.delete(`${key}-request`)
+            next.delete(`${key}-response`)
+            return next
+        })
+    },
+    removeKeepSearchNameMap(name: string) {
+        store.setSnapshot(prev => {
+            const next = new Map(prev)
+            next.delete(name)
+            return next
+        })
     }
 }
 
-function emitChange() {
-    listeners.forEach((listener) => listener())
-}
-
-export function useKeepSearchNameMap() {
-    return useSyncExternalStore(keepSearchNameMapStore.subscribe, keepSearchNameMapStore.getKeepSearchNameMap)
-}
+export const useKeepSearchNameMap = bindExternalStoreHook(store)
