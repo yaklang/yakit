@@ -43,6 +43,8 @@ export interface UseCasualChatParams extends UseHookBaseParams {
     getRequest: () => AIAgentSetting | undefined
     /** 触发 review-release 后的回调事件 */
     onReviewRelease?: (id: string) => void
+    /** 接口里返回文件夹路径时的回调事件 */
+    onGrpcFolder?: (path: string) => void
 }
 
 export interface UseCasualChatState {
@@ -65,6 +67,8 @@ export interface UseTaskChatParams extends UseHookBaseParams {
     onReviewRelease?: (id: string) => void
     /** 向接口发送消息 */
     sendRequest?: (request: AIInputEvent) => void
+    /** 接口里返回文件夹路径时的回调事件 */
+    onGrpcFolder?: (path: string) => void
 }
 
 export interface UseTaskChatState {
@@ -116,6 +120,8 @@ export interface UseChatIPCState {
     casualChat: UseCasualChatState
     /** 任务规划相关数据 */
     taskChat: UseTaskChatState
+    /** 接口运行过程中的数据文件夹合集 */
+    grpcFolders: string[]
 }
 
 /** 执行流途中发送消息的参数 */

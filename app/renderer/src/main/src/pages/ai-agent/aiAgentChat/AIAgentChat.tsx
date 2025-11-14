@@ -157,7 +157,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onTimelineMessage: handleTimelineMessage,
         getRequest: getSetting
     })
-    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult} = chatIPCData
+    const {execute, runTimeIDs, aiPerfData, casualChat, taskChat, yakExecResult, grpcFolders} = chatIPCData
 
     // 保存上次对话信息
     const handleSaveChatInfo = useMemoizedFn(() => {
@@ -172,7 +172,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 yakExecResult: cloneDeep({
                     ...yakExecResult,
                     execFileRecord: Array.from(yakExecResult.execFileRecord.entries())
-                })
+                }),
+                grpcFolders: cloneDeep(grpcFolders)
             }
             setChats &&
                 setChats((old) => {
@@ -630,7 +631,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 })
 
 export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React.memo((props) => {
-    const {reviewInfo, planReviewTreeKeywordsMap,onStopTask} = props
+    const {reviewInfo, planReviewTreeKeywordsMap, onStopTask} = props
     const {reviewExpand} = useChatIPCStore()
     const {handleSendTask} = useChatIPCDispatcher()
     const [expand, setReviewExpand] = useState<boolean>(true)
@@ -651,7 +652,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
                     {expand ? "隐藏，稍后审阅" : "展开审阅信息"}
                 </YakitButton>
                 <div className={styles["review-footer-extra"]}>
-                    <RoundedStopButton onClick={onStopTask}/>
+                    <RoundedStopButton onClick={onStopTask} />
                     {node}
                 </div>
             </div>

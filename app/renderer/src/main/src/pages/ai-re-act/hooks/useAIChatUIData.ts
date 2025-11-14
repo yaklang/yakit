@@ -17,6 +17,13 @@ function useAIChatUIData() {
         return chatIPCData.runTimeIDs || defaultChatIPCData.runTimeIDs
     }, [activeChat, chatIPCData.runTimeIDs])
 
+    const grpcFolders: string[] = useCreation(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.grpcFolders) {
+            return activeChat.answer.grpcFolders
+        }
+        return chatIPCData.grpcFolders || defaultChatIPCData.grpcFolders
+    }, [activeChat, chatIPCData.grpcFolders])
+
     const taskChat: UseTaskChatState = useCreation(() => {
         if (activeChat && activeChat.answer && activeChat.answer.taskChat) {
             return activeChat.answer.taskChat
@@ -51,7 +58,7 @@ function useAIChatUIData() {
         return chatIPCData.casualChat
     }, [activeChat, chatIPCData.casualChat])
 
-    return {runTimeIDs, taskChat, yakExecResult, aiPerfData, casualChat}
+    return {runTimeIDs, grpcFolders, taskChat, yakExecResult, aiPerfData, casualChat}
 }
 
 export default useAIChatUIData
