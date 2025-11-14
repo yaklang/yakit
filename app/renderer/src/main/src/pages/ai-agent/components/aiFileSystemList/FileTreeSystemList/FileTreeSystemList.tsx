@@ -14,7 +14,7 @@ interface FileTreeSystemListWapperProps {
     path: string[]
     title: string
     isOpen?: boolean
-    setSelected: (v: FileNodeProps) => void
+    setSelected: (v?: FileNodeProps) => void
     setOpenFolder?: (v: string) => void
 }
 const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
@@ -65,13 +65,14 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
 interface FileTreeSystemListProps {
     path: string
     isOpen?: boolean
-    setSelected: (v: FileNodeProps) => void
+    setSelected: FileTreeSystemListWapperProps["setSelected"]
 }
 const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen, setSelected}) => {
     const [expandedKeys, setExpandedKeys] = useState<string[]>([])
+    const [loadedKeys,setLoadedKeys] = useState<string[]>([])
     const [data, setData] = useState<FileNodeProps[]>([])
     const [_, startTransition] = useTransition()
-    const [fileTree, {onLoadFolderChildren}] = useFileTree({
+    const [fileTree, {onLoadFolderChildren, onResetTree}] = useFileTree({
         path,
         onRefreshTreeData: () => {
             updateData()
@@ -81,7 +82,6 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen, setSelec
             setData(tree ? [cloneDeep(tree)] : [])
         }
     })
-
     const updateData = useCallback(() => {
         startTransition(() => {
             const tree = fileTree.treeData.current
@@ -91,6 +91,7 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen, setSelec
 
     const loadData = async (nodeData) => {
         try {
+            setLoadedKeys([...loadedKeys, nodeData.path])
             const path = nodeData.path
             if (!fileTree.folderChildrenSet.current.has(path)) {
                 await onLoadFolderChildren(path)
@@ -102,6 +103,12 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen, setSelec
         return Promise.resolve(true)
     }
 
+    const onResetTreeList = () => {
+        setExpandedKeys([])
+        setSelected(undefined)
+        setLoadedKeys([])
+        onResetTree()
+    }
     return (
         <Tree.DirectoryTree
             switcherIcon={<OutlineChevrondownIcon />}
@@ -117,9 +124,15 @@ const FileTreeSystemList: FC<FileTreeSystemListProps> = ({path, isOpen, setSelec
                 if (node.isFolder) return
                 setSelected(node)
             }}
+            loadedKeys={loadedKeys}
             loadData={loadData}
             titleRender={(nodeData) => (
-                <FileTreeSystemItem data={nodeData} isOpen={isOpen} expanded={expandedKeys.includes(nodeData.path)} />
+                <FileTreeSystemItem
+                    data={nodeData}
+                    isOpen={isOpen}
+                    onResetTree={onResetTreeList}
+                    expanded={expandedKeys.includes(nodeData.path)}
+                />
             )}
         />
     )
