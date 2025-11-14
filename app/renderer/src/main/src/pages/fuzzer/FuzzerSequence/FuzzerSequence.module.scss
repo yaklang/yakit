@@ -70,6 +70,12 @@
                 }
             }
 
+            &-active {
+                svg {
+                    color: var(--Colors-Use-Warning-Primary);
+                }
+            }
+
             &-extra {
                 @extend .display-flex-center;
 
