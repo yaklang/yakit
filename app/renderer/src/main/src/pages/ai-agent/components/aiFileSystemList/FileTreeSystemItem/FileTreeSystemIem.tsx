@@ -5,7 +5,7 @@ import styles from "./FileTreeSystemItem.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {customFolderStore} from "../store/useCustomFolder"
 import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
-import { setClipboardText } from "@/utils/clipboard"
+import {setClipboardText} from "@/utils/clipboard"
 
 const FileTreeSystemItem: FC<{
     data: FileNodeProps
@@ -22,11 +22,15 @@ const FileTreeSystemItem: FC<{
     // 菜单数据
     const menuData = useMemo(() => {
         return [
-            ...((data.depth === 1 && isOpen)
+            ...(data.depth === 1 && isOpen
                 ? [
                       {
                           key: "closeFolder",
                           label: "关闭文件夹"
+                      },
+                      {
+                          key: "refreshFolder",
+                          label: "刷新"
                       }
                   ]
                 : []),
@@ -37,7 +41,7 @@ const FileTreeSystemItem: FC<{
             {
                 key: "path",
                 label: "复制路径"
-            },
+            }
         ]
     }, [])
     // 菜单点击事件
@@ -51,6 +55,9 @@ const FileTreeSystemItem: FC<{
                 break
             case "path":
                 setClipboardText(data.path)
+                break
+            case "refreshFolder":
+                customFolderStore.addCustomFolder(data.path)
                 break
             default:
                 break
