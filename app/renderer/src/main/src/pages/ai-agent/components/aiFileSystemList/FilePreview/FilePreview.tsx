@@ -112,8 +112,7 @@ const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
                         <YakitEditor
                             key={fileInfo?.path || "empty-editor"}
                             value={fileInfo?.content}
-                            noMiniMap={true}
-                            noWordWrap={true}
+                            readOnly
                             editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
                             type={fileInfo?.language}
                         />
